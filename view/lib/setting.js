@@ -1,5 +1,7 @@
 ﻿var DEFAULT_SETTING =
 {	menu:
+	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
+	// TODO: 설정 기능..이 필요한가??
 	[	[	"파일(&F)"
 		,	"새 파일(&N)|saveFile()"
 		,	"열기(&O)|openFile()"
@@ -8,18 +10,18 @@
             	]
 	,	[	"편집(&S)"
 		,	"찾기/바꾸기(&F)|SmiEditor.Finder.open()"
-		,	"색상코드 입력(&C)|alert('어느 세월에 개발해')"
+		,	"색상코드 입력(&C)|alert('어느 세월에 개발해')" // TODO: C#에서 작업 필요...
 		,	"화면 싱크 매니저(&M)|openAddon('SyncManager')"
 		,	"특수태그 정규화(&N)|tabs[tab].normalize()"
             	]
 	,	[	"창(&W)"
 		,	"설정(&S)|openSetting()"
 		,	"미리보기창 실행|SmiEditor.Viewer.open()"
-	            ]
+		]
 	,	[	"도움말(&H)"
 		,	"프로그램 정보|alert(\"설명 페이지 만들어야 되는데 귀찮\\n\\n변태적인 SMI 자막 제작 기능을 위해 만든 허접한 프로그램\")"
-		,	"싱크표현에 대하여|alert(\"설명 페이지 만들어야 되는데 귀찮\\n\\n본 프로그램에선 일반적인 프로그램과 달리, 화면 싱크 기능이 존재합니다.\\n화면 싱크는 싱크 줄 맨 뒤의 닫는 꺽쇠(>) 앞의 공백문자로 구분되며\\n화면 싱크 매니저를 통해 Aegisub에서 편집할 수 있도록 지원합니다.\\n\\n그 외에, 탭문자로 중간 싱크를 체크하고 있으며\\n정규화를 거치면 자동으로 중간 싱크가 생성됩니다.\\n해당 기능과 관련해서, 한 싱크의 대사가 여러 줄이 되는 경우를 권장하지 않습니다.\")"
-		,	"특수태그에 대하여|alert(\"설명 페이지 만들어야 되는데 귀찮\\n\\n다음과 같은 특수 태그가 존재하며, 정규화를 통해 출력값을 만들어줍니다.\\n해당 기능은 탭문자로 체크된 중간 싱크를 생성합니다.\\n(─라고 써놓고 파싱 로직 수정하다 말았음)\\n\\n<font color=\\\"#9abcde\\\" fade=\\\"in\\\">페이드 인</font>\\n<font color=\\\"#89abcd\\\" fade=\\\"out\\\">페이드 아웃</font>\\n<font typing='typewriter'>테스트텍스트</font>\\n<font typing='keyboard'>테스트텍스트</font>\\n<font typing='keyboard(]'>테스트텍스트</font>\\n<font typing='keyboard[]'>테스트텍스트</font>\\n<font typing='keyboard invisible'>테스트텍스트</font>\\n<font typing='keyboard hangeul'>test텍스트</font>\\n\\n페이드 기능은 한 대사에 여러개를 넣을 수 있지만\\n타이핑 기능은 한 대사에 하나로 제한됩니다.\")"
+		,	"싱크 표현에 대하여|alert(\"설명 페이지 만들어야 되는데 귀찮\\n\\n본 프로그램에선 일반적인 프로그램과 달리, 화면 싱크 기능이 존재합니다.\\n화면 싱크는 싱크 줄 맨 뒤의 닫는 꺽쇠(>) 앞의 공백문자로 구분되며\\n화면 싱크 매니저를 통해 Aegisub에서 편집할 수 있도록 지원합니다.\\n\\n그 외에, 탭문자로 중간 싱크를 체크하고 있으며\\n정규화를 거치면 자동으로 중간 싱크가 생성됩니다.\\n해당 기능과 관련해서, 한 싱크의 대사가 여러 줄이 되는 경우를 권장하지 않습니다.\")"
+		,	"특수 태그에 대하여|alert(\"설명 페이지 만들어야 되는데 귀찮\\n\\n다음과 같은 특수 태그가 존재하며, 정규화를 통해 출력값을 만들어줍니다.\\n해당 기능은 탭문자로 체크된 중간 싱크를 생성합니다.\\n(─라고 써놓고 파싱 로직 수정하다 말았음)\\n\\n<font color=\\\"#9abcde\\\" fade=\\\"in\\\">페이드 인</font>\\n<font color=\\\"#89abcd\\\" fade=\\\"out\\\">페이드 아웃</font>\\n<font typing='typewriter'>테스트텍스트</font>\\n<font typing='keyboard'>테스트텍스트</font>\\n<font typing='keyboard(]'>테스트텍스트</font>\\n<font typing='keyboard[]'>테스트텍스트</font>\\n<font typing='keyboard invisible'>테스트텍스트</font>\\n<font typing='keyboard hangeul'>test텍스트</font>\\n\\n페이드 기능은 한 대사에 여러개를 넣을 수 있지만\\n타이핑 기능은 한 대사에 하나로 제한됩니다.\")"
 		]
             ]
 ,	window:
@@ -41,7 +43,8 @@
 ,	command:
 	{	withCtrls:
 		{	'1': 'editor.tagging("<font color=\\"#aaaaaa\\">")'
-		,	'2': 'var text = editor.getText();\n'
+		,	'2': '// 여러 줄에 자동으로 줄표 넣어주기\n'
+			   + 'var text = editor.getText();\n'
 			   + 'var lines = text.text.split("\\n");\n'
 			   + 'var lineNo = text.text.substring(0, text.selection[0]).split("\\n").length - 1;\n'
 			   + 'var lineRange = [lineNo, lineNo];\n'
@@ -68,7 +71,8 @@
 		,	'3': 'editor.inputText("<br><b>　</b>")'
 		,	'4': 'editor.taggingRange("<i>")'
 		,	'5': 'editor.taggingRange("<u>")'
-		,	'6': 'var text = editor.getText();\n'
+		,	'6': '// RUBY 태그 생성([쓰기|읽기])\n'
+			   + 'var text = editor.getText();\n'
 			   + 'if (text.selection[0] == text.selection[1]) {\n'
 			   + '	return;\n'
 			   + '}\n'
@@ -141,7 +145,7 @@
 		+	".sync.error { background: #f88; }\n"
 		+	".sync.equal { background: #8f8; }\n"
 		+	".sync.range { color     : #888; }\n"
-,	viewer: { // 혹시... 이거 투명 창으로 플레이어 위에 띄울 수 있나? -> 하려면 하단 맞춤 구현해야 함...
+,	viewer: {
 		window:
 		{	x: 640
 		,	y: 720
@@ -164,13 +168,13 @@
 	}
 ,	player:
 	{	window:
-		{	x: 640 // 재생 시 / 종료 시 값 가져오기
+		{	x: 640
 		,	y: 0
 		,	width: 1280
 		,	height: 720
 		,	use: true
 		}
-	,	exts: "mp4,mkv,avi,ts,m2ts" // 동영상 파일 찾기 우선순위 순으로
+	,	exts: "mp4,mkv,avi,ts,m2ts" // 동영상 파일 찾기 우선순위 순으로 -> TODO: 기능 안 만듦...
 	,	control: { // C#에서 플레이어 브리지 dll 폴더 긁어서 전달해주는 기능 필요?
 			dll: "PotPlayer" // 재생기 설정
 		,	PotPlayer:
