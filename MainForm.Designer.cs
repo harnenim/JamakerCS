@@ -84,6 +84,7 @@ namespace SmiEdit
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
             this.Text = "SmiEdit";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.KeyDownInMenuStrip);
             this.ResumeLayout(false);
             this.PerformLayout();
 

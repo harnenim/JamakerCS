@@ -439,6 +439,18 @@ namespace SmiEdit
         #endregion
 
         #region 메뉴
+        private void KeyDownInMenuStrip(object sender, KeyEventArgs e)
+        {   // 메뉴를 다 끈 다음에야 이벤트가 잡히는 듯...?
+            switch ((int)e.KeyCode)
+            {
+                case 27: // ESC
+                    {
+                        mainView.Focus();
+                        break;
+                    }
+            }
+        }
+
         public void SetMenus(string[][] menus)
         {
             if (InvokeRequired)

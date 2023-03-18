@@ -7,23 +7,24 @@
 		,	"열기(&O)|openFile()"
 		,	"저장(&S)|saveFile()"
 		,	"다른 이름으로 저장(&A)|saveFile(true)"
-            	]
+		]
 	,	[	"편집(&S)"
 		,	"찾기/바꾸기(&F)|SmiEditor.Finder.open()"
 		,	"색상코드 입력(&C)|alert('어느 세월에 개발해')" // TODO: C#에서 작업 필요...
 		,	"화면 싱크 매니저(&M)|openAddon('SyncManager')"
 		,	"특수태그 정규화(&N)|tabs[tab].normalize()"
-            	]
+		]
 	,	[	"창(&W)"
 		,	"설정(&S)|openSetting()"
 		,	"미리보기창 실행|SmiEditor.Viewer.open()"
 		]
 	,	[	"도움말(&H)"
 		,	"프로그램 정보|alert(\"설명 페이지 만들어야 되는데 귀찮\\n\\n변태적인 SMI 자막 제작 기능을 위해 만든 허접한 프로그램\")"
+		,	"화면 싱크 매니저 사용법(구버전임)|SmiEditor.Addon.open('https://noitamina.moe/SyncManager/index.html')"
 		,	"싱크 표현에 대하여|alert(\"설명 페이지 만들어야 되는데 귀찮\\n\\n본 프로그램에선 일반적인 프로그램과 달리, 화면 싱크 기능이 존재합니다.\\n화면 싱크는 싱크 줄 맨 뒤의 닫는 꺽쇠(>) 앞의 공백문자로 구분되며\\n화면 싱크 매니저를 통해 Aegisub에서 편집할 수 있도록 지원합니다.\\n\\n그 외에, 탭문자로 중간 싱크를 체크하고 있으며\\n정규화를 거치면 자동으로 중간 싱크가 생성됩니다.\\n해당 기능과 관련해서, 한 싱크의 대사가 여러 줄이 되는 경우를 권장하지 않습니다.\")"
 		,	"특수 태그에 대하여|alert(\"설명 페이지 만들어야 되는데 귀찮\\n\\n다음과 같은 특수 태그가 존재하며, 정규화를 통해 출력값을 만들어줍니다.\\n해당 기능은 탭문자로 체크된 중간 싱크를 생성합니다.\\n(─라고 써놓고 파싱 로직 수정하다 말았음)\\n\\n<font color=\\\"#9abcde\\\" fade=\\\"in\\\">페이드 인</font>\\n<font color=\\\"#89abcd\\\" fade=\\\"out\\\">페이드 아웃</font>\\n<font typing='typewriter'>테스트텍스트</font>\\n<font typing='keyboard'>테스트텍스트</font>\\n<font typing='keyboard(]'>테스트텍스트</font>\\n<font typing='keyboard[]'>테스트텍스트</font>\\n<font typing='keyboard invisible'>테스트텍스트</font>\\n<font typing='keyboard hangeul'>test텍스트</font>\\n\\n페이드 기능은 한 대사에 여러개를 넣을 수 있지만\\n타이핑 기능은 한 대사에 하나로 제한됩니다.\")"
 		]
-            ]
+	]
 ,	window:
 	{	x: 0
 	,	y: 0
@@ -102,10 +103,11 @@
 			   + '\n'
 			   + 'editor.setText(prev + result + next, [text.selection[0], text.selection[0] + result.length]);'
 		,	'M': 'openAddon("SyncManager");' // 예제
-		,	'P': 'editor.moveToSync();' // 집에선 다른 프로그램이 Ctrl+Q 먹음...
 		}
 	,	withAlts:
-		{	'M': 'openAddon("SyncManager");' // 예제
+		{	"1": "var text = editor.getText();\nextSubmit(\"post\", \"http://speller.cs.pusan.ac.kr/results\", { text1: text.text.substring(text.selection[0], text.selection[1]) });"
+		,	"2": "var text = editor.getText();\nextSubmit(\"get\", \"https://ko.dict.naver.com/%23/search\", { query: text.text.substring(text.selection[0], text.selection[1]) });"
+		,	'M': 'openAddon("SyncManager");' // 예제
 		,	'N': 'openAddon("Normalizer");' // 예제 -> self.normalize()가 나은가...?
 		}
 	,	withCtrlAlts:
@@ -115,7 +117,7 @@
 		}
 	,	withCtrlShifts:
 		{	'F': 'editor.fillSync();'
-		,	'Q': 'editor.findSync();'
+		,	'Q': 'editor.findSync();' // 웹브라우저로 테스트할 때 Alt+Q 안 돼서 넣은 건데 익숙해져버림...
 		}
 	}
 ,	autoComplete:
@@ -145,6 +147,29 @@
 		+	".sync.error { background: #f88; }\n"
 		+	".sync.equal { background: #8f8; }\n"
 		+	".sync.range { color     : #888; }\n"
+,	newFile:"<SAMI>\n"
+		+	"<HEAD>\n"
+		+	"<TITLE>제목</TITLE>\n"
+		+	"<STYLE TYPE=\"text/css\">\n"
+		+	"<!--\n"
+		+	"P { margin-left:8pt; margin-right:8pt; margin-bottom:2pt; margin-top:2pt;\n"
+		+	"text-align:center; font-size:14pt; font-family:맑은 고딕, 굴림, arial, sans-serif;\n"
+		+	"font-weight:normal; color:white;\n"
+		+	"background-color:black; }\n"
+		+	".KRCC { Name:한국어; lang:ko-KR; SAMIType:CC; }\n"
+		+	"-->\n"
+		+	"</STYLE>\n"
+		+	"<!--\n"
+		+	"우선 이 자막은 상업적으로 이용할만한 가치가 없으므로 이건 생략\n"
+		+	"\n"
+		+	"오역이 있으면 수정하지 마시고 블로그나 트위터 멘션을 주세요.\n"
+		+	"하느@harne_\n"
+		+	"-->\n"
+		+	"</HEAD>\n"
+		+	"<BODY>\n"
+		+	"\n"
+		+	"</BODY>\n"
+		+	"</SAMI>"
 ,	viewer: {
 		window:
 		{	x: 640

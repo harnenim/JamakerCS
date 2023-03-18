@@ -1,58 +1,8 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
 <title>설정</title>
-
-<!--
-
-// 창 설정
-setting.window.x
-setting.window.y
-setting.window.width
-setting.window.height
-setting.viewer.window
-setting.player.window
-setting.window.follow
-
-// 싱크 설정
-setting.sync.insert: 1    // 싱크 입력 시 커서 이동
-setting.sync.update: 2    // 싱크 수정 시 커서 이동 (기본: 0 / 싱크 새로 찍기: 2 등)
-setting.sync.weight: -450 // 가중치 설정
-setting.sync.unit: 42     // 싱크 조절량 설정 (24fps이면 1프레임당 41.7ms)
-setting.sync.move: 2000   // 앞으로/뒤로 이동 단위
-setting.sync.lang: // 언어
-setting.sync.preset: "<Sync Start={start}><P Class={lang}{type}>" // 싱크 태그 형태
-
-// 단축키 설정
-setting.command.withCtrls
-setting.command.withAlts
-setting.command.withCtrlAlts
-setting.command.withCtrlShifts
-
-// 자동완성 설정
-setting.autoComplete["50" ] // @
-setting.autoComplete["51" ] // #
-setting.autoComplete["52" ] // $
-setting.autoComplete["53" ] // %
-setting.autoComplete["54" ] // ^
-setting.autoComplete["55" ] // &
-setting.autoComplete["57" ] // (
-setting.autoComplete["48" ] // )
-setting.autoComplete["188"] // <
-setting.autoComplete["190"] // >
-
-// 에디터 스타일
-setting.useTab
-setting.css
-// 미리보기 스타일
-setting.viewer.css
-
-// 플레이어 설정
-setting.player.control
-
--->
-
 <script src="lib/jquery-3.2.1.min.js"></script>
 <script src="lib/setting.js"></script>
 <link rel="stylesheet" type="text/css" href="lib/common.css" />
@@ -283,7 +233,7 @@ $(function() {
 		var keys = "ABCDEFGHIJKLMKNOPQRSTUVWXYZ1234567890";
 		var reserved = {
 				withCtrls: "ACDFHNOQSTVXYZ"
-			,	withAlts: "FHSQW"
+			,	withAlts: "FHSQW" // TODO: 메뉴 구성에 따라 달라짐 -> 여기에 정적으로 박혀있으면 안 됨...
 			,	withCtrlAlts: ""
 			,	withCtrlShifts: "FS"
 		};
@@ -473,7 +423,6 @@ $(function() {
 	}
 	
 	{	// 자동완성
-		// 숫자 안 되는 범인 찾아야 함
 		$("form:eq(3)").on("submit", function(e) {
 			e.preventDefault();
 			$(this).find("textarea").each(function() {
@@ -560,6 +509,7 @@ $(function() {
 textarea {
 	width: 100%;
 	height: 100px;
+	font-family: '돋움체'; /* 여기선 고정폭 문자 써야 할 듯 */
 }
 
 #fieldEditor,
@@ -881,7 +831,11 @@ input[type=number] { width: 50px; }
 		</label>
 		<br />
 		<label>미리보기
-			<textarea name="viewer_css" spellcheck="false"></textarea>
+			<textarea name="viewer_css" spellcheck="false" style="height: 300px;"></textarea>
+		</label>
+		<br />
+		<label>새 문서
+			<textarea name="newFile" spellcheck="false" style="height: 400px;"></textarea>
 		</label>
 		<br />
 		<button type="submit">적용</button>

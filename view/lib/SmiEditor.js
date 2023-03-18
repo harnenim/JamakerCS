@@ -18,8 +18,6 @@ function linesToText(lines) {
 	return textLines.join("\n");
 }
 
-// TODO: 사전, 맞춤법 등 검색 특수기능 만들기 -> 만들긴 했는데 테스트를...
-
 var SmiEditor = function(text, path) {
 	var editor = this;
 	
@@ -103,7 +101,6 @@ SmiEditor.setSetting = function(setting) {
 		SmiEditor.withCtrls["Y"] = "editor.history.forward();";
 		SmiEditor.withCtrls["Z"] = "editor.history.back();";
 		SmiEditor.withAlts["Q"] = "editor.findSync();";
-		SmiEditor.withCtrlShifts["Q"] = "editor.findSync();";
 		
 		// 설정값 반영
 		for (var i = 0; i < withs.length; i++) {
@@ -137,7 +134,7 @@ SmiEditor.sync = {
 ,	unit: 42 // 싱크 조절량 설정
 ,	move: 2000 // 앞으로/뒤로
 ,	lang: "KRCC" // 그냥 아래 preset 설정으로 퉁치는 게 나은가...?
-,	preset: "<Sync Start={sync}><P Class={lang}{type}>"
+,	preset: "<Sync Start={sync}><P Class={lang}{type}>" // TODO: 설정할 때 문법 경고?
 };
 SmiEditor.autoComplete = [];
 SmiEditor.PlayerAPI = {
@@ -235,7 +232,7 @@ $(document).on("keydown", function(e) {
 							
 						} else {
 							// 싱크 이동 -> TODO: Ctrl+Shift vs Ctrl+Alt
-							// TODO: 안 되는 이유 있었나...?
+							// 원래 쓰던 단축키가 웹브라우저에서 안 돼서 억지로 테스트해본 거였나?
 							if (editor) {
 								e.preventDefault();
 								editor.moveSync(true);
@@ -448,6 +445,7 @@ $(document).on("keydown", function(e) {
 						editor.insertBR();
 					} else {
 						editor.inputTextLikeNative("\n");
+						editor.input.scrollLeft(0); // 엔터일 땐 스크롤 맨 왼쪽
 					}
 				}
 				break;
@@ -607,6 +605,8 @@ SmiEditor.prototype.inputText = function(input, standCursor) {
 	this.scrollToCursor();
 }
 SmiEditor.prototype.inputTextLikeNative = function(input) {
+	// 좌우 스크롤까지 하는 건 연산량 부담...
+	// 애초에 예외적인 경우에 필요한 기능
 	var text = this.input.val();
 	var selection = this.getCursor();
 	var cursor = selection[0] + input.length;
@@ -1522,12 +1522,13 @@ SmiEditor.Viewer = {
 SmiEditor.Addon = {
 		window: null
 	,	open: function(name) {
-			var url = (name.substring(0, 4) == "http") ? url : "addon/" + name.split("..").join("").split(":").join("") + ".html";
+			var url = (name.substring(0, 4) == "http") ? name : "addon/" + name.split("..").join("").split(":").join("") + ".html";
 			this.window = window.open(url, "addon", "scrollbars=no,location=no,width=0,height=0");
 			this.moveWindowToSetting();
 			binder.focus("addon");
 		}
 	,	openExtSubmit: function(method, url, values) {
+			// TODO: 현재 submit 하면 addon 이름이 지워져버림... iframe 만들까?
 			this.window = window.open("", "addon", "scrollbars=no,location=no,width=0,height=0");
 			this.moveWindowToSetting();
 			binder.focus("addon");
