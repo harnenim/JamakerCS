@@ -70,8 +70,7 @@ namespace SmiEdit
 
                     Script("init", new string[] { strSettingJson }); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
                     Script("setPlayerDlls", new string[] { "|(없음),PotPlayer|팟플레이어" }); // TODO: dll 폴더 내용물 체크하는 것 필요...
-
-                    SetDragEvent("body", DragDropEffects.All, new DropActionDelegate(DropListFile));
+                    Script("setDroppable");
 
                     WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
                     useFollowWindow = true;
@@ -340,19 +339,13 @@ namespace SmiEdit
 
         protected string Script(string name) { return mainView.Script(name, null); }
         protected string Script(string name, object[] args) { return mainView.Script(name, args); }
-        protected void SetClickEvent(string id, string action) { mainView.SetClickEvent(id, action); }
-        protected void SetChangeEvent(string id, string action) { mainView.SetChangeEvent(id, action); }
         
         #region 드래그 관련
 
         protected delegate void DropActionDelegate(DragEventArgs e);
-        protected string dragging = null;
-        protected Dictionary<string, DragDropEffects> dragEffects = new Dictionary<string, DragDropEffects>();
-        protected Dictionary<string, DropActionDelegate> dropActions = new Dictionary<string, DropActionDelegate>();
 
-        public void ShowDragging(string id)
+        public void ShowDragging()
         {
-            dragging = id;
             if (InvokeRequired)
             {
                 Invoke(new Action(() => {
@@ -368,13 +361,17 @@ namespace SmiEdit
         }
 
         protected void DragLeaveMain(object sender, EventArgs e) { HideDragging(); }
-        protected void DragOverMain(object sender, DragEventArgs e) { try { e.Effect = dragEffects[dragging]; } catch { } }
-        protected void DragDropMain(object sender, DragEventArgs e) { dropActions[dragging]?.Invoke(e); HideDragging(); }
-        protected void SetDragEvent(string id, DragDropEffects effect, DropActionDelegate action)
-        {
-            dragEffects.Add(id, effect);
-            dropActions.Add(id, action);
-            Script("setDroppable", new object[] { id });
+        protected void DragOverMain(object sender, DragEventArgs e) { try { e.Effect = DragDropEffects.All; } catch { } }
+        protected void DragDropMain(object sender, DragEventArgs e) {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { DragDropMain(sender, e); }));
+            }
+            else
+            {
+                DropListFile(e);
+                HideDragging();
+            }
         }
 
         #endregion

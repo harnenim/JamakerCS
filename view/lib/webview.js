@@ -8,29 +8,16 @@ var showDrag = false;
 function setShowDrag(dragging) {
 	showDrag = dragging;
 }
-function getRectOf(id) {
-	var obj = $("#" + id);
-	var pos = obj.offset();
-	return [pos.left, pos.top, obj.outerWidth(), obj.outerHeight()];
-}
-function getPositionOf(id) {
-	return getRectOf(id).join(",");
-}
-function setDroppable(id) {
-	var view = $("#" + id);
-	view.on("dragleave", function () {
+function setDroppable() {
+	var doc = $(document);
+	doc.on("dragleave", function () {
 		return false;
 	});
-	view.on("dragover", function () {
+	doc.on("dragover", function () {
 		if (!showDrag) {
-			binder.showDragging(id);
+			binder.showDragging();
 		}
 		return false;
-	});
-}
-function setClickEvent(id, action) {
-	$("#" + id).on("click", function () {
-		binder[action]();
 	});
 }
 
@@ -92,7 +79,7 @@ $(function () {
 		}
 	});
 
-		// 우클릭 방지
+	// 우클릭 방지
 	doc.on("contextmenu", function () {
 		return false;
 	});

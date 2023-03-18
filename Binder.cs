@@ -38,9 +38,9 @@ namespace SmiEdit
             _.GetWindows(targets);
         }
 
-        public void ShowDragging(string id)
+        public void ShowDragging()
         {
-            _.ShowDragging(id);
+            _.ShowDragging();
         }
         public void HideDragging()
         {

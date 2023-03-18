@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using CefSharp;
 using CefSharp.WinForms;
 
@@ -86,48 +84,6 @@ namespace SmiEdit
 
             if (result == null) return null;
             return result.ToString();
-        }
-
-        #endregion
-
-
-        #region 클릭 이벤트
-
-        public void SetClickEvent(string id, string action)
-        {
-            Script("setClickEvent", new object[] { id, action });
-        }
-        public void SetChangeEvent(string id, string action)
-        {
-            Script("setChangeEvent", new object[] { id, action });
-        }
-
-        #endregion
-
-
-        #region 파일 열기 대화상자
-
-        public delegate bool OpenFileDelegate(string path);
-        public Dictionary<string, OpenFileDelegate> openFileActions = new Dictionary<string, OpenFileDelegate>();
-
-        public void OpenFile(string id)
-        {
-            OpenFileDialog dialog = new OpenFileDialog();
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                string path = dialog.FileName;
-                if (OpenFile(id, path))
-                    Script("setFile", new object[] { id, path });
-            }
-        }
-        private bool OpenFile(string id, string path)
-        {
-            bool? result = openFileActions[id]?.Invoke(path);
-            return result == null ? false : (bool)result;
-        }
-        public void SetOpenFileEvent(string id, OpenFileDelegate action)
-        {
-            openFileActions.Add(id, action);
         }
 
         #endregion
