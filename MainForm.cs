@@ -441,13 +441,14 @@ namespace SmiEdit
         #region 메뉴
         private void KeyDownInMenuStrip(object sender, KeyEventArgs e)
         {   // 메뉴를 다 끈 다음에야 이벤트가 잡히는 듯...?
-            switch ((int)e.KeyCode)
+            switch (e.KeyCode)
             {
-                case 27: // ESC
-                    {
-                        mainView.Focus();
-                        break;
-                    }
+                case Keys.Tab: // 안 먹힘...
+                case Keys.Alt: // Alt로는 안 먹히고
+                case Keys.Menu: // Menu로 먹힘
+                case Keys.Escape:
+                    mainView.Focus();
+                    break;
             }
         }
 
@@ -462,7 +463,7 @@ namespace SmiEdit
             }
             else
             {
-                menuStrip1.Items.Clear();
+                menuStrip.Items.Clear();
                 foreach (string[] menu in menus)
                 {
                     string menuName = menu[0];
@@ -471,7 +472,7 @@ namespace SmiEdit
                     ,   Name = menuName.Split('(')[0]
                     ,   Size = new Size(60, 20)
                     };
-                    menuStrip1.Items.Add(menuItem);
+                    menuStrip.Items.Add(menuItem);
 
                     for (int i = 1; i < menu.Length; i++)
                     {
@@ -508,9 +509,9 @@ namespace SmiEdit
             }
             else
             {
-                menuStrip1.Focus();
-                ToolStripMenuItem toOpen = (ToolStripMenuItem)menuStrip1.Items[0];
-                foreach (ToolStripItem item in menuStrip1.Items)
+                menuStrip.Focus();
+                ToolStripMenuItem toOpen = (ToolStripMenuItem)menuStrip.Items[0];
+                foreach (ToolStripItem item in menuStrip.Items)
                 {
                     int index = item.Text.IndexOf("&") + 1;
                     if (index > 0)

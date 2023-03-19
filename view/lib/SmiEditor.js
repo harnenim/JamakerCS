@@ -775,7 +775,7 @@ SmiEditor.prototype.toggleSyncType = function() {
 			this.setCursor(cursor, cursor);
 			
 			this.history.log();
-			this.afterMoveSync([lineNo, lineNo+1]);
+			this.afterMoveSync([i, i+1]);
 			return;
 		}
 	}

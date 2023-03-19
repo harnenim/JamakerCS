@@ -31,7 +31,7 @@ namespace SmiEdit
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.layerForDrag = new SmiEdit.TransparentPanel();
             this.timer = new System.Windows.Forms.Timer(this.components);
             this.mainView = new SmiEdit.WebView();
@@ -39,11 +39,11 @@ namespace SmiEdit
             // 
             // menuStrip1
             // 
-            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(800, 24);
-            this.menuStrip1.TabIndex = 1;
-            this.menuStrip1.Text = "menuStrip1";
+            this.menuStrip.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip.Name = "menuStrip1";
+            this.menuStrip.Size = new System.Drawing.Size(800, 24);
+            this.menuStrip.TabIndex = 1;
+            this.menuStrip.Text = "menuStrip1";
             // 
             // layerForDrag
             // 
@@ -79,9 +79,9 @@ namespace SmiEdit
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.layerForDrag);
-            this.Controls.Add(this.menuStrip1);
+            this.Controls.Add(this.menuStrip);
             this.Controls.Add(this.mainView);
-            this.MainMenuStrip = this.menuStrip1;
+            this.MainMenuStrip = this.menuStrip;
             this.Name = "MainForm";
             this.Text = "SmiEdit";
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.KeyDownInMenuStrip);
@@ -95,7 +95,7 @@ namespace SmiEdit
         protected WebView mainView;
         protected TransparentPanel layerForDrag;
         protected Timer timer;
-        private MenuStrip menuStrip1;
+        private MenuStrip menuStrip;
     }
 }
 
