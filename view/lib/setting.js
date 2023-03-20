@@ -11,12 +11,17 @@
 	,	[	"편집(&S)"
 		,	"찾기/바꾸기(&F)|SmiEditor.Finder.open()"
 		,	"색상코드 입력(&C)|alert('어느 세월에 개발해')" // TODO: C#에서 작업 필요...
-		,	"화면 싱크 매니저(&M)|openAddon('SyncManager')"
 		,	"특수태그 정규화(&N)|tabs[tab].normalize()"
-		]
-	,	[	"창(&W)"
-		,	"설정(&S)|openSetting()"
 		,	"미리보기창 실행|SmiEditor.Viewer.open()"
+		]
+	,	[	"부가기능(&A)"
+		,	"화면 싱크 매니저(&M)|openAddon('SyncManager')"
+		,	"겹치는 대사 합치기(&C)|openAddon('Combine');"
+		,	"겹치는 대사 나누기(&D)|openAddon('Devide');"
+		,	"싱크 유지 텍스트 대체(&F)|openAddon('Fusion');"
+		,	"맞춤법 검사기|extSubmit(\"post\", \"http://speller.cs.pusan.ac.kr/results\", \"text1\");"
+		,	"국어사전|extSubmit(\"get\", \"https://ko.dict.naver.com/%23/search\", \"query\");"
+		,	"설정(&S)|openSetting()"
 		]
 	,	[	"도움말(&H)"
 		,	"프로그램 정보|alert(\"설명 페이지 만들어야 되는데 귀찮\\n\\n변태적인 SMI 자막 제작 기능을 위해 만든 허접한 프로그램\")"

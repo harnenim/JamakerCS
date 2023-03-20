@@ -216,12 +216,12 @@ namespace SmiEdit
         }
         public void FocusWindow(string target)
         {
-            int hwnd = GetHwnd(target);
-            WinAPI.SetForegroundWindow(hwnd);
             if (target.Equals("player"))
             {
                 return;
             }
+            int hwnd = GetHwnd(target);
+            WinAPI.SetForegroundWindow(hwnd);
         }
         public void SetFollowWindow(bool follow)
         {
@@ -271,6 +271,7 @@ namespace SmiEdit
             {
                 return;
             }
+            // TODO: 창 최소화 시 동작 막아야 함
             WinAPI.GetWindowRect(windows["editor"], ref offset);
             if ((   lastOffset.top != offset.top
                  || lastOffset.left != offset.left
