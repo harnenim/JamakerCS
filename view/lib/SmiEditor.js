@@ -75,7 +75,7 @@ SmiEditor.setSetting = function(setting) {
 		
 		// 설정값 초기화
 		for (var i = 0; i < withs.length; i++) {
-			var command = SmiEditor[withs[i]] = {};
+			var command = SmiEditor[withs[i]] = { reserved: "" /* 설정에서 건드릴 수 없는 예약 단축키 */ };
 			for (var j = 0; j < keys.length; j++) {
 				command[keys[j]] = " ";
 			}
@@ -86,12 +86,20 @@ SmiEditor.setSetting = function(setting) {
 		SmiEditor.withCtrls["C"] = null;
 		SmiEditor.withCtrls["V"] = null;
 		SmiEditor.withCtrls["X"] = null;
+		SmiEditor.withCtrls.reserved += "ACVX";
 
 		// 메뉴
-		SmiEditor.withAlts["F"] = "binder.focusToMenu(70);";
-		SmiEditor.withAlts["S"] = "binder.focusToMenu(83);";
-		SmiEditor.withAlts["W"] = "binder.focusToMenu(87);";
-		SmiEditor.withAlts["H"] = "binder.focusToMenu(72);";
+		for (var i = 0; i < setting.menu.length; i++) {
+			var menu = setting.menu[i][0];
+			var index = menu.indexOf("&") + 1;
+			if (index > 0 && index < menu.length) {
+				var key = menu[index];
+				if ("A" <= key && key <= "Z") {
+					SmiEditor.withAlts[key] = "binder.focusToMenu(" + key.charCodeAt() + ");";
+					SmiEditor.withAlts.reserved += key;
+				}
+			}
+		}
 		
 		// 예약 단축키
 		SmiEditor.withCtrls["D"] = "editor.deleteLine();";
@@ -101,6 +109,8 @@ SmiEditor.setSetting = function(setting) {
 		SmiEditor.withCtrls["Y"] = "editor.history.forward();";
 		SmiEditor.withCtrls["Z"] = "editor.history.back();";
 		SmiEditor.withAlts["Q"] = "editor.findSync();";
+		SmiEditor.withCtrls.reserved += "DFHQYZ";
+		SmiEditor.withAlts.reserved += "Q";
 		
 		// 설정값 반영
 		for (var i = 0; i < withs.length; i++) {
@@ -634,6 +644,10 @@ SmiEditor.prototype.reSync = function() {
 		if (this.lines[i][LINE.SYNC]) {
 			break;
 		}
+	}
+	if (i == this.lines.length) {
+		// 적용할 싱크 없음
+		return;
 	}
 	var add = sync - this.lines[lineNo = i][1];
 	var lines = this.lines.slice(0, lineNo);
@@ -1528,20 +1542,21 @@ SmiEditor.Addon = {
 			binder.focus("addon");
 		}
 	,	openExtSubmit: function(method, url, values) {
-			// TODO: 현재 submit 하면 addon 이름이 지워져버림... iframe 만들까?
 			this.window = window.open("", "addon", "scrollbars=no,location=no,width=0,height=0");
 			this.moveWindowToSetting();
 			binder.focus("addon");
 			
-			var html = $("<html>").append("<head>");
-			var body = $("<body>");
-			var form = $("<form>").attr({"action": url, "method": (method ? method : "get")});
+			// 직접 submit 하면 addon 식별자가 지워져버려서 iframe으로 넣음
+			var fill = "margin: 0; border: 0; padding: 0; width: 100%; height: 100%;";
+			var form = $("<form>").attr({"target": "ext", "action": url, "method": (method ? method : "get")}).hide();
 			for (var key in values) {
 				form.append($("<input>").attr({"type": "hidden", "name": key, "value": values[key]}));
 			}
-			body.append(form);
-			html.append(body);
-			this.window.document.write("<!doctype html><html>" + html.html() + "</html>");
+			var html = $("<div>").append($("<iframe name='ext' style='" + fill + "'>")).append(form).html();
+			
+			fill += " overflow: hidden";
+			this.window.document.body.innerHTML = "";
+			this.window.document.write("<!doctype html><html style='" + fill + "'><head><title>외부 검색</title></head><body style='" + fill + "'>" + html + "</body></html>");
 			this.window.document.getElementsByTagName('form')[0].submit();
 		}
 	,	moveWindowToSetting: function() {
@@ -1556,7 +1571,20 @@ SmiEditor.Addon = {
 		}
 };
 function openAddon(name) { SmiEditor.Addon.open(name); }
-function extSubmit(method, url, values) { SmiEditor.Addon.openExtSubmit(method, url, values); }
+function extSubmit(method, url, values) {
+	if (typeof values == "string") {
+		var name = values;
+		var editor = SmiEditor.selected;
+		if (editor) {
+			var text = editor.getText();
+			var params = {};
+			params[name] = text.text.substring(text.selection[0], text.selection[1]);
+			SmiEditor.Addon.openExtSubmit(method, url, params);
+		}
+	} else {
+		SmiEditor.Addon.openExtSubmit(method, url, params);
+	}
+}
 
 // 선택영역 C# 특수 가공 처리
 SmiEditor.transforming = {};

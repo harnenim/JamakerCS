@@ -97,13 +97,11 @@ function init(jsonSetting) {
 				saveSetting();
 			}
 		} else {
-			console.log("기본 세팅 가져오기");
 			setting = deepCopyObj(DEFAULT_SETTING);
 			saveSetting();
 		}
 		
 	} catch (e) {
-		console.log("기본 세팅 가져오기");
 		setting = deepCopyObj(DEFAULT_SETTING);
 		saveSetting();
 	}
@@ -219,6 +217,8 @@ function setSetting(setting) {
 	SmiEditor.withCtrls["T"] = openNewTab;
 //	SmiEditor.withAlts ["S"] = "openSetting();";
 	SmiEditor.withCtrlShifts["S"] = openSetting;
+	SmiEditor.withCtrls.reserved += "NOST";
+	SmiEditor.withCtrlShifts.reserved += "S";
 	
 	// 가중치 등
 	$("#inputWeight").val(setting.sync.weight);

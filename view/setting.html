@@ -5,13 +5,38 @@
 <title>설정</title>
 <script src="lib/jquery-3.2.1.min.js"></script>
 <script src="lib/setting.js"></script>
-<link rel="stylesheet" type="text/css" href="lib/common.css" />
+<script src="lib/popup.js"></script>
+<link rel="stylesheet" type="text/css" href="lib/popup.css" />
 <script>
+var SmiEditor = opener.SmiEditor;
+
 function show(index) {
 	$("#settingArea > form").hide();
 	$("#settingArea > form:eq(" + index + ")").show();
 	$("#settingNav > a.selected").removeClass("selected");
 	$("#settingNav > a:eq(" + index + ")").addClass("selected");
+}
+
+var saved = {};
+saved.cmd = { status: true, name: "단축키 설정" };
+function checkSaved(key) {
+	if (saved[key].status) return true;
+	return saved[key].status = confirm(saved[key].name + " 변경사항이 사라집니다.");
+}
+function setSaved(key, status) {
+	saved[key].status = status;
+}
+function requestClose() {
+	var success = true;
+	for (var key in saved) {
+		if (!checkSaved(key)) {
+			success = false;
+			break;
+		}
+	}
+	if (success) {
+		window.close();
+	}
 }
 
 $(function() {
@@ -170,7 +195,7 @@ $(function() {
 	{	// 창
 		refreshWindow();
 	
-		$("form:eq(0)").on("submit", function(e) {
+		$("form#window").on("submit", function(e) {
 			e.preventDefault();
 			setting.window.x             = Number($("input[name=window_x]"            ).val());
 			setting.window.y             = Number($("input[name=window_y]"            ).val());
@@ -212,7 +237,7 @@ $(function() {
 	}
 	
 	{	// 싱크
-		$("form:eq(1)").on("submit", function(e) {
+		$("form#sync").on("submit", function(e) {
 			e.preventDefault();
 			setting.sync.insert = Number($("input[name=sync_insert]").val());
 			setting.sync.update = Number($("input[name=sync_update]").val());
@@ -231,12 +256,6 @@ $(function() {
 		var tbody = tableCommand.find("tbody");
 		var withs = ["withCtrls", "withAlts", "withCtrlAlts", "withCtrlShifts"];
 		var keys = "ABCDEFGHIJKLMKNOPQRSTUVWXYZ1234567890";
-		var reserved = {
-				withCtrls: "ACDFHNOQSTVXYZ"
-			,	withAlts: "FHSQW" // TODO: 메뉴 구성에 따라 달라짐 -> 여기에 정적으로 박혀있으면 안 됨...
-			,	withCtrlAlts: ""
-			,	withCtrlShifts: "FS"
-		};
 		function refreshTableCommand() {
 			tbody.empty();
 			for (var i = 0; i < keys.length; i++) {
@@ -245,7 +264,7 @@ $(function() {
 				for (var j = 0; j < withs.length; j++) {
 					var w = withs[j];
 					var td = $("<td>");
-					if (reserved[w].indexOf(key) >= 0) {
+					if (SmiEditor[w].reserved.indexOf(key) >= 0) {
 						td.addClass("fixed").text("예약 단축키");
 					} else {
 						var func = setting.command[w][key];
@@ -267,17 +286,8 @@ $(function() {
 			}
 		}
 		refreshTableCommand();
-
-		var cmdSaved = true;
-		function checkSaved() {
-			if (cmdSaved) return true;
-			return confirm("변경사항이 사라집니다.");
-		}
 		
 		tableCommand.on("click", "td:not(.fixed)", function() {
-			if (!checkSaved()) {
-				return;
-			}
 			var data = $(this).data();
 			var key = " + " + data.key;
 			switch (data.with) {
@@ -298,6 +308,15 @@ $(function() {
 					break;
 				}
 			}
+			
+			if (inputCommandKey.val() == key) {
+				// 현재 작업 중인 것
+				return;
+			}
+			if (!checkSaved("cmd")) {
+				return;
+			}
+			
 			inputCommandName.val(data.name);
 			inputCommandKey .val(key);
 			inputCommandFunc.val(data.func);
@@ -306,9 +325,6 @@ $(function() {
 		inputCommandKey.on("keydown", function(e) {
 			e.preventDefault();
 			
-			if (!checkSaved()) {
-				return;
-			}
 			var name = "";
 			var key = String.fromCharCode(e.keyCode);
 			var func = "";
@@ -320,7 +336,7 @@ $(function() {
 						if (e.altKey) {
 							
 						} else {
-							if (reserved.withCtrlShifts.indexOf(key) >= 0) {
+							if (SmiEditor.withCtrlShifts.reserved.indexOf(key) >= 0) {
 								key = "Ctrl + Shift + ";
 							} else {
 								func = tableCommand.find("tr.key-" + key + " > td:eq(3)").data("func");
@@ -332,7 +348,7 @@ $(function() {
 				} else {
 					if (e.ctrlKey) {
 						if (e.altKey) {
-							if (reserved.withCtrlAlts.indexOf(key) >= 0) {
+							if (SmiEditor.withCtrlAlts.reserved.indexOf(key) >= 0) {
 								key = "Ctrl + Alt + ";
 							} else {
 								func = tableCommand.find("tr.key-" + key + " > td:eq(2)").data("func");
@@ -340,7 +356,7 @@ $(function() {
 								key = "Ctrl + Alt + " + key;
 							}
 						} else {
-							if (reserved.withCtrls.indexOf(key) >= 0) {
+							if (SmiEditor.withCtrls.reserved.indexOf(key) >= 0) {
 								key = "Ctrl + ";
 							} else {
 								func = tableCommand.find("tr.key-" + key + " > td:eq(0)").data("func");
@@ -350,7 +366,7 @@ $(function() {
 						}
 					} else {
 						if (e.altKey) {
-							if (reserved.withAlts.indexOf(key) >= 0) {
+							if (SmiEditor.withAlts.reserved.indexOf(key) >= 0) {
 								key = "Alt + ";
 							} else {
 								func = tableCommand.find("tr.key-" + key + " > td:eq(1)").data("func");
@@ -362,6 +378,19 @@ $(function() {
 						}
 					}
 				}
+
+				if (inputCommandKey.val() == key) {
+					// 현재 작업 중인 것
+					return;
+				}
+				if (!checkSaved("cmd")) {
+					return;
+				}
+				
+				inputCommandName.val(name);
+				inputCommandKey .val(key);
+				inputCommandFunc.val(func);
+				
 			} else {
 				if (e.shiftKey) {
 					if (e.ctrlKey) {
@@ -387,24 +416,21 @@ $(function() {
 					}
 				}
 			}
-			inputCommandName.val(name);
-			inputCommandKey .val(key);
-			inputCommandFunc.val(func);
 		});
 		
 		inputCommandFunc.bind("input propertychange", function() {
 			if (inputCommandName.val()) {
-				cmdSaved = false;
+				setSaved("cmd", false);
 			}
 		});
 
 		$("#areaFunctions").on("click", "dt", function() {
 			var func = inputCommandFunc.val();
 			inputCommandFunc.val((func ? func + "\n" : "") + $(this).data("input"));
-			cmdSaved = false;
+			setSaved("cmd", false);
 		});
 		
-		$("form:eq(2)").on("submit", function(e) {
+		$("form#cmd").on("submit", function(e) {
 			e.preventDefault();
 			var name = inputCommandName.val();
 			if (name) {
@@ -413,7 +439,7 @@ $(function() {
 					func = " ";
 				}
 				eval(name + " = func;");
-				cmdSaved = true;
+				setSaved("cmd", true);
 				refreshTableCommand();
 				opener.setSetting(setting);
 				opener.saveSetting();
@@ -423,7 +449,7 @@ $(function() {
 	}
 	
 	{	// 자동완성
-		$("form:eq(3)").on("submit", function(e) {
+		$("form#ac").on("submit", function(e) {
 			e.preventDefault();
 			$(this).find("textarea").each(function() {
 				var textarea = $(this);
@@ -443,11 +469,12 @@ $(function() {
 	}
 	
 	{	// 스타일
-		$("form:eq(4)").on("submit", function(e) {
+		$("form#style").on("submit", function(e) {
 			e.preventDefault();
 			setting.useTab     = $("input[name=useTab]").prop("checked");
 			setting.css        = $("textarea[name=css]"       ).val();
 			setting.viewer.css = $("textarea[name=viewer_css]").val();
+			setting.newFile    = $("textarea[name=newFile]"   ).val();
 			opener.setSetting(setting);
 			opener.saveSetting();
 			return false;
@@ -481,8 +508,9 @@ $(function() {
 			$("input[name=player_control_what_withExit]").prop("checked", dllSetting.withExit);
 		});
 	
-		$("form:eq(5)").on("submit", function(e) {
+		$("form#player").on("submit", function(e) {
 			e.preventDefault();
+			setting.player.exts = $("input[name=player_exts]").val();
 			var dll = setting.player.control.dll = select.val();
 			var dllSetting = setting.player.control[dll];
 			if (!dllSetting) {
@@ -610,9 +638,10 @@ input[type=number] { width: 50px; }
 	<a href="javascript:show(3)">자동완성</a>
 	<a href="javascript:show(4)">스타일</a>
 	<a href="javascript:show(5)">플레이어</a>
+	<a href="javascript:show(6)">메뉴</a>
 </nav>
 <div id="settingArea">
-	<form style="height: 100%;">
+	<form id="window" style="height: 100%;">
 		<div style="width: 100%; height: calc(100% - 100px); position: relative;">
 			<fieldset id="fieldEditor">
 				<legend>에디터</legend>
@@ -648,7 +677,7 @@ input[type=number] { width: 50px; }
 		<button type="submit">적용</button>
 	</form>
 	
-	<form>
+	<form id="sync">
 		<label>싱크 입력 시 <input type="number" name="sync_insert" />줄 아래로 이동</label><br />
 		<label>싱크 수정 시 <input type="number" name="sync_update" />줄 아래로 이동</label><br />
 		<label>싱크 가중치: <input type="number" name="sync_weight" />ms</label><br />
@@ -659,7 +688,7 @@ input[type=number] { width: 50px; }
 		<button type="submit">적용</button>
 	</form>
 	
-	<form>
+	<form id="cmd">
 		<table style="width: calc(100% - 17px);">
 			<cols>
 				<col style="width: 8%;" />
@@ -784,68 +813,76 @@ input[type=number] { width: 50px; }
 		</div>
 	</form>
 	
-	<form>
+	<form id="ac">
 		<p>
 			줄 단위로 자동완성 문자열을 지정할 수 있습니다.<br />
 			반드시 시작 문자가 일치해야 하며, '|'를 이용해 입력값과 출력값이 다르게 설정할 수 있습니다. 
 		</p>
-		<label>@
+		<label>@ <button type="submit">적용</button>
 			<textarea name="autoComplete_50_1"  spellcheck="false"></textarea>
 		</label>
-		<label>#
+		<label># <button type="submit">적용</button>
 			<textarea name="autoComplete_51_1"  spellcheck="false"></textarea>
 		</label>
-		<label>$
+		<label>$ <button type="submit">적용</button>
 			<textarea name="autoComplete_52_1"  spellcheck="false"></textarea>
 		</label>
-		<label>%
+		<label>% <button type="submit">적용</button>
 			<textarea name="autoComplete_53_1"  spellcheck="false"></textarea>
 		</label>
-		<label>^
+		<label>^ <button type="submit">적용</button>
 			<textarea name="autoComplete_54_1"  spellcheck="false"></textarea>
 		</label>
-		<label>&
+		<label>& <button type="submit">적용</button>
 			<textarea name="autoComplete_55_1"  spellcheck="false"></textarea>
 		</label>
-		<label>(
+		<label>( <button type="submit">적용</button>
 			<textarea name="autoComplete_57_1"  spellcheck="false"></textarea>
 		</label>
-		<label>)
+		<label>) <button type="submit">적용</button>
 			<textarea name="autoComplete_48_1"  spellcheck="false"></textarea>
 		</label>
-		<label>&lt;
+		<label>&lt; <button type="submit">적용</button>
 			<textarea name="autoComplete_188_1" spellcheck="false"></textarea>
 		</label>
-		<label>&gt;
+		<label>&gt; <button type="submit">적용</button>
 			<textarea name="autoComplete_190_1" spellcheck="false"></textarea>
 		</label>
-		<div style="position: fixed; top: 0; right: 20px;">
-			<button type="submit">적용</button>
-		</div>
 	</form>
 	
-	<form>
+	<form id="style">
 		<label><input type="checkbox" name="useTab" /> 탭 사용</label><br />
-		<label>에디터
+		<label>에디터 <button type="submit">적용</button>
 			<textarea name="css" spellcheck="false" style="height: 200px;"></textarea>
 		</label>
 		<br />
-		<label>미리보기
+		<label>미리보기 <button type="submit">적용</button>
 			<textarea name="viewer_css" spellcheck="false" style="height: 300px;"></textarea>
 		</label>
 		<br />
-		<label>새 문서
+		<label>새 문서 <button type="submit">적용</button>
 			<textarea name="newFile" spellcheck="false" style="height: 400px;"></textarea>
 		</label>
-		<br />
-		<button type="submit">적용</button>
 	</form>
 	
-	<form>
+	<form id="player">
+		<label>동영상 파일 확장자: <input type="text" name="player_exts" style="width: calc(100% - 140px);" /></label><br />
 		<label>플레이어: <select name="player_control_dll"></select></label><br />
 		<label>플레이어 실행파일: <input type="text" name="player_control_what_path" style="width: calc(100% - 130px);" /></label><br /><!-- TODO: 찾아보기 창이 필요할까? -->
 		<label><input type="checkbox" name="player_control_what_withRun"  /> 프로그램 실행 시 플레이어 실행</label><br />
 		<label><input type="checkbox" name="player_control_what_withExit" /> 프로그램 종료 시 플레이어 종료</label><br />
+		<button type="submit">적용</button>
+	</form>
+	
+	<form id="menu">
+		<ol>
+			<li>
+				<fieldset>
+					<legend><input type="text" value="파일(&F)" /></legend>
+					
+				</fieldset>
+			</li>
+		</ol>
 		<button type="submit">적용</button>
 	</form>
 </div>
