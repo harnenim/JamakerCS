@@ -84,7 +84,5 @@ $(function () {
 		return false;
 	});
 
-	if (window.binder && binder.initAfterLoad && !binder_init) binder.initAfterLoad();
+	if (window.binder) binder.initAfterLoad();
 });
-
-var binder_init = false;

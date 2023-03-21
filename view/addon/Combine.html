@@ -6,50 +6,27 @@
 	<title>겹치는 싱크 결합</title>
 	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/popup.js"></script>
+	<script src="../lib/setting.js"></script>
+	<script src="../lib/SmiEditor.js"></script>
 	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
 	<script>
-var SmiEditor = {};
-var LINE = {};
-var TYPE = {};
-var setting = {};
-var defaultCss = {
-		whiteSpace: "nowrap"
-	,	fontSize: "39.4px"
-	,	fontFamily: "맑은 고딕"
-	,	fontWeight: "bold"
-};
 if (opener) {
-	SmiEditor = opener.SmiEditor;
-	LINE = opener.LINE;
-	TYPE = opener.TYPE;
 	setting = opener.setting;
-	if (SmiEditor.Viewer.window) {
-		defaultCss = { font: SmiEditor.Viewer.window.$("#viewer").css("font") };
+}
+
+var style = null;
+function setSetting(setting) {
+	if (style == null) {
+		$("head").append(style = $("<style>"));
 	}
-	
-} else {
-	LINE = {
-			TEXT: 0
-		,	SYNC: 1
-		,	TYPE: 2
-	};
-	TYPE = {
-			TEXT: null
-		,	BASIC: 1
-		,	FRAME: 2
-		,	RANGE: 3
-	};
-	TIDs = [null, "", " ", "	"];
-	var preset = "<Sync Start={sync}><P Class=KRCC{type}>"
-	SmiEditor.makeSyncLine = function(time, type) {
-		return preset.split("{sync}").join(Math.floor(time)).split("{type}").join(TIDs[type ? type : 1]);
-	}
+	style.html("#preview {\n" + setting.viewer.css + "}");
 }
 
 function getWidth(smi, css) {
 	if (!css) {
 		// 가능하면 미리보기 폰트 설정을 따라감
-		css = defaultCss;
+		//css = defaultCss;
+		css = { font: $("#preview").css("font") };
 	}
 	// RUBY태그 문법이 미묘하게 달라서 가공 필요
 	smi = smi.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
@@ -203,7 +180,9 @@ var UPPER = 4;
 var LOWER = 5;
 
 $(function() {
-	$("#preview").css(defaultCss);
+	//$("#preview").css(defaultCss);
+	setSetting(setting);
+	
 	$("#btnCombine").on("click", function() {
 		// [[시작,종료,대사,줄수], ...]
 		// {lines:[시작,종료,위,아래], maxLines:[1,1]}//, maxWidth: 100
@@ -390,7 +369,7 @@ $(function() {
 					li++;
 					
 				} else { // 둘이 같이 바뀜(그룹 첫 싱크에서만 가능)
-					var ss = (us[ETIME] < ls[ETIME] ? us : ls);
+					var ss = (us[ETIME] > ls[ETIME] ? us : ls);
 					group.lines.push(last = [us[STIME], us[STYPE], ss[ETIME], ss[ETYPE], us, ls]);
 					ui++;
 					li++;
@@ -515,6 +494,7 @@ textarea {
 	left: calc(50% + 10px);
 	width: calc(50% - 10px);
 	height: 200px;
+	border-bottom: 1px solid #000;
 	background: #000;
 	text-align: left;
 	white-space: nowrap;

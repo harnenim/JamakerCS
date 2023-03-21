@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -18,136 +18,30 @@ $(document).on("keydown", function(e) {
 	}
 });
 
+// TODO: opener 분리 가능한가...?
+// 기능은 모두 SmiEditor 쪽으로 옮기고, 명령만 내리는 건?
+var Finder = opener.SmiEditor.Finder;
+
 $(function () {
 	var target; 
 	var values = {};
 	
-	$(".button-find"       ).on("click", function() { runFind(); });
-	$(".button-replace"    ).on("click", function() { runReplace(); });
-	$(".button-replace-all").on("click", function() { runReplaceAll(); });
+	console.log(Finder);
+	$(".button-find"       ).on("click", function() { afterRun(Finder.runFind      (getParams())); });
+	$(".button-replace"    ).on("click", function() { afterRun(Finder.runReplace   (getParams())); });
+	$(".button-replace-all").on("click", function() { afterRun(Finder.runReplaceAll(getParams())); });
 
-	function beforeFind() {
-		if (opener.tabs.length == 0) {
-			alert("열려있는 파일이 없습니다.");
-			return false;
-		}
-		target = opener.tabs[opener.tab].input; 
-		values.find      = $("[name=find]"   ).val();
-		values.replace   = $("[name=replace]").val();
-		values.withCase  = $("[name=case]").prop("checked");
-		values.reverse   = $("[name=direction][value=-1]").prop("checked");
-		values.text      = target.val();
-		values.upperText = values.text.toUpperCase();
-		values.upperFind = values.find.toUpperCase();
-		return true;
+	function getParams() {
+		var params = {};
+		params.find      = $("[name=find]"   ).val();
+		params.replace   = $("[name=replace]").val();
+		params.withCase  = $("[name=case]").prop("checked");
+		params.reverse   = $("[name=direction][value=-1]").prop("checked");
+		return params
 	}
-	function afterFind() {
-		var tab = opener.tabs[opener.tab];
-		tab.updateSync();
-		tab.scrollToCursor();
-		Finder.last.find    = values.find;
-		Finder.last.replace = values.replace;
-		Finder.last.withCase= values.withCase;
-		Finder.last.reverse = values.reverse;
-	};
-
-	function doFind(selection) {
-		if (!selection) selection = [target.prop("selectionStart"), target.prop("selectionEnd")];
-		var index = -1;
-		var text = values.text;
-		var find = values.find;
-		if (!values.withCase) {
-			text = values.upperText;
-			find = values.upperFind;
-		}
-		if (values.reverse) {
-			index = text.lastIndexOf(find, selection[0] - 1);
-		} else {
-			index = text.indexOf(find, selection[1]);
-		}
-		if (index < 0) return null;
-		return [index, index + find.length];
+	function afterRun(msg) {
+		if (msg) alert(msg);
 	}
-	function doReplace(selection) {
-		if (!selection) selection = [target.prop("selectionStart"), target.prop("selectionEnd")];
-		var index = -1;
-		var text = values.text;
-		var find = values.find;
-		if (!values.withCase) {
-			text = values.upperText;
-			find = values.upperFind;
-		}
-		if (values.text.substring(selection[0], selection[1]) == find) {
-			values.text      = values.text     .substring(0, selection[0]) + values.replace + values.text     .substring(selection[1]);
-			values.upperText = values.upperText.substring(0, selection[0]) + values.replace + values.upperText.substring(selection[1]);
-			selection[1] = selection[0] + values.replace.length;
-			return selection;
-		}
-		return null;
-	}
-	
-	function runFind() {
-		if (!beforeFind()) return;
-
-		var selection = doFind();
-		if (selection) {
-			target[0].setSelectionRange(selection[0], selection[1]);
-			afterFind();
-		} else {
-			alert("찾을 수 없습니다.");
-		}
-	}
-	function runReplace() {
-		if (!beforeFind()) return;
-		
-		// 선택돼 있었으면 바꾸기
-		var selection = doReplace();
-		if (selection) {
-			target.val(values.text);
-			target[0].setSelectionRange(selection[0], selection[1]);
-			afterFind();
-		}
-		
-		// 다음 거 찾기
-		if (selection = doFind(selection)) {
-			target[0].setSelectionRange(selection[0], selection[1]);
-			afterFind();
-			
-		} else {
-			alert("찾을 수 없습니다.");
-		}
-	}
-	function runReplaceAll() {
-		if (!beforeFind()) return;
-
-		var count = 0;
-		var last = null;
-		
-		// 바꾸기
-		var selection = doReplace();
-		if (selection) count++;
-		// 다음 찾기
-		selection = doFind(selection);
-		
-		// 바꾸기-찾기 반복
-		while (selection) {
-			count++;
-			last = selection;
-			selection = doFind(doReplace(selection));
-		}
-		
-		if (count) {
-			target.val(values.text);
-			target[0].setSelectionRange(last[0], last[1]);
-			afterFind();
-			setTimeout(function() {
-				alert(count + "개 바꿈");
-			}, 1);
-		} else {
-			alert("찾을 수 없습니다.");
-		}
-	}
-	
 	$("textarea").on("keydown", function(e) {
 		if (e.keyCode == 13) { // Enter
 			if (!e.shiftKey && !e.altKey) {
@@ -159,16 +53,15 @@ $(function () {
 					this.setSelectionRange(cursor, cursor);
 				} else {
 					if (this.name == "find") {
-						runFind();
+						$(".button-find").click()
 					} else if (this.name == "replace") {
-						runReplace();
+						$(".button-replace").click()
 					}
 				}
 			}
 		}
 	});
 });
-var Finder = opener.SmiEditor.Finder;
 </script>
 </head>
 <body onload="opener.SmiEditor.Finder.onload();">

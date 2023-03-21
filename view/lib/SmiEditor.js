@@ -128,6 +128,9 @@ SmiEditor.setSetting = function(setting) {
 	{	// 스타일
 		if (!SmiEditor.style) {
 			$("head").append(SmiEditor.style = $("<style>"));
+			
+			// 최초 접근일 경우 키보드 이벤트도 활성화
+			SmiEditor.activateKeyEvent();
 		}
 		SmiEditor.style.html(setting.css);
 
@@ -205,338 +208,340 @@ SmiEditor.prototype.bindEvent = function() {
 };
 
 SmiEditor.selected = null;
-var lastKeyDown = 0;
-$(document).on("keydown", function(e) {
-	lastKeyDown = e.keyCode;
-	var editor = SmiEditor.selected;
-	var hasFocus = editor && editor.input.is(":focus");
-	
-	if (!editor || editor.act.selected < 0) { // auto complete 작동 중엔 무시
-		if (e.keyCode < 33 || e.keyCode > 34) {
-			// PageUp/Down 아닐 경우 커서 위치 초기화
-			if (hasFocus) {
-				editor.leftOfPgUpDn = -1;
-			}
-		}
-		switch (e.keyCode) {
-			case 33: { // PgUp
-				if (hasFocus) {
-					e.preventDefault();
-					editor.movePage(false);
-					editor.history.logIfCursorMoved();
-				}
-				break;
-			}
-			case 34: { // PgDn
-				if (hasFocus) {
-					e.preventDefault();
-					editor.movePage(true);
-					editor.history.logIfCursorMoved();
-				}
-				break;
-			}
-			case 38: { // ↑
-				if (e.shiftKey) {
-					if (e.ctrlKey) {
-						if (e.altKey) {
-							
-						} else {
-							// 싱크 이동 -> TODO: Ctrl+Shift vs Ctrl+Alt
-							// 원래 쓰던 단축키가 웹브라우저에서 안 돼서 억지로 테스트해본 거였나?
-							if (editor) {
-								e.preventDefault();
-								editor.moveSync(true);
-							}
-						}
-					}
-				} else {
-					if (e.ctrlKey) {
-						if (e.altKey) {
-							// 싱크 이동
-							if (editor) {
-								e.preventDefault();
-								editor.moveSync(true);
-							}
-						} else {
-							// 스크롤 이동
-							if (hasFocus) {
-								e.preventDefault();
-								editor.input.scrollTop(Math.max(0, editor.input.scrollTop() - LH));
-							}
-						}
-					} else {
-						if (e.altKey) {
-							// 줄 이동
-							if (hasFocus) {
-								e.preventDefault();
-								editor.moveLine(false);
-							}
-						} else {
-							
-						}
-					}
-				}
-				if (editor) {
-					editor.history.logIfCursorMoved();
-				}
-				return;
-			}
-			case 40: { // ↓
-				if (e.shiftKey) {
-					if (e.ctrlKey) {
-						if (e.altKey) {
-							
-						} else {
-							// 싱크 이동
-							if (editor) {
-								e.preventDefault();
-								editor.moveSync(false);
-							}
-						}
-					}
-				} else {
-					if (e.ctrlKey) {
-						if (e.altKey) {
-							// 싱크 이동
-							if (editor) {
-								e.preventDefault();
-								editor.moveSync(false);
-							}
-						} else {
-							// 스크롤 이동
-							if (hasFocus) {
-								e.preventDefault();
-								editor.input.scrollTop(editor.input.scrollTop() + LH);
-							}
-						}
-					} else {
-						if (e.altKey) {
-							// 줄 이동
-							if (hasFocus) {
-								e.preventDefault();
-								editor.moveLine(true);
-							}
-						} else {
-							
-						}
-					}
-				}
-				if (editor) {
-					editor.history.logIfCursorMoved();
-				}
-				return;
-			}
-			case 37: { // ←
-				if (e.shiftKey) {
-					if (e.ctrlKey) {
-						if (e.altKey) {
-							
-						} else {
-							
-						}
-					}
-				} else {
-					if (e.ctrlKey) {
-						if (e.altKey) {
-							
-						} else {
-						}
-					} else {
-						if (e.altKey) {
-							// 뒤로
-							e.preventDefault();
-							SmiEditor.PlayerAPI.move(-SmiEditor.sync.move);
-							SmiEditor.PlayerAPI.play();
-							
-						} else {
-							
-						}
-					}
-				}
-				if (editor) {
-					editor.history.logIfCursorMoved();
-				}
-				return;
-			}
-			case 39: { // →
-				if (e.shiftKey) {
-					if (e.ctrlKey) {
-						if (e.altKey) {
-							
-						} else {
-							
-						}
-					}
-				} else {
-					if (e.ctrlKey) {
-						if (e.altKey) {
-							
-						} else {
-						}
-					} else {
-						if (e.altKey) {
-							// 앞으로
-							e.preventDefault();
-							SmiEditor.PlayerAPI.move(SmiEditor.sync.move);
-							SmiEditor.PlayerAPI.play();
-							
-						} else {
-							
-						}
-					}
-				}
-				if (editor) {
-					editor.history.logIfCursorMoved();
-				}
-				return;
-			}
-			case 116: { // F5: 싱크
-				if (editor) {
-					e.preventDefault();
-					if (!hasFocus) editor.input.focus();
-					if (e.ctrlKey) {
-						editor.reSync();
-					} else {
-						editor.insertSync();
-					}
-				}
-				break;
-			}
-			case 117: { // F6: 화면 싱크
-				if (editor) {
-					e.preventDefault();
-					if (!hasFocus) editor.input.focus();
-					editor.insertSync(true);
-				}
-				break;
-			}
-			case 118: { // F7: 화면 싱크 토글
-				if (editor) {
-					e.preventDefault();
-					if (!hasFocus) editor.input.focus();
-					editor.toggleSyncType();
-				}
-				break;
-			}
-			case 119: { // F8: 싱크 삭제
-				if (editor) {
-					e.preventDefault();
-					if (!hasFocus) editor.input.focus();
-					editor.removeSync();
-				}
-				break;
-			}
-			case 120: { // F9: 재생/일시정지
-				e.preventDefault();
-				SmiEditor.PlayerAPI.playOrPause();
-				break;
-			}
-			case 121: { // F10: 재생 (정지화면 있을 경우 재생 중인지 확신이 안 설 때가 있어서 토글이 아닌 재생이 있는 게 맞을 듯)
-				e.preventDefault();
-				SmiEditor.PlayerAPI.play();
-				break;
-			}
-			case 122: { // F11: 정지
-				e.preventDefault();
-				SmiEditor.PlayerAPI.stop();
-				break;
-			}
-			case 9: { // Tab
-				e.preventDefault();
-				if (hasFocus) {
-					editor.inputTextLikeNative("\t");
-				}
-				break;
-			}
-			case 13: { // Enter
-				if (hasFocus) { // 크로뮴 textarea 버그 있음...
-					e.preventDefault();
-					if (e.ctrlKey) { // Ctrl+Enter → <br>
-						editor.insertBR();
-					} else {
-						editor.inputTextLikeNative("\n");
-						editor.input.scrollLeft(0); // 엔터일 땐 스크롤 맨 왼쪽
-					}
-				}
-				break;
-			}
-		}
+SmiEditor.activateKeyEvent = function() {
+	var lastKeyDown = 0;
+	$(document).on("keydown", function(e) {
+		lastKeyDown = e.keyCode;
+		var editor = SmiEditor.selected;
+		var hasFocus = editor && editor.input.is(":focus");
 		
-		{	// 단축키 설정
-			var f = null;
-			var key = String.fromCharCode(e.keyCode);
-			if (e.shiftKey) {
-				if (e.ctrlKey) {
-					if (e.altKey) {
-						
-					} else {
-						f = SmiEditor.withCtrlShifts[key];
-					}
+		if (!editor || editor.act.selected < 0) { // auto complete 작동 중엔 무시
+			if (e.keyCode < 33 || e.keyCode > 34) {
+				// PageUp/Down 아닐 경우 커서 위치 초기화
+				if (hasFocus) {
+					editor.leftOfPgUpDn = -1;
 				}
-			} else {
-				if (e.ctrlKey) {
-					if (e.altKey) {
-						f = SmiEditor.withCtrlAlts[key];
+			}
+			switch (e.keyCode) {
+				case 33: { // PgUp
+					if (hasFocus) {
+						e.preventDefault();
+						editor.movePage(false);
+						editor.history.logIfCursorMoved();
+					}
+					break;
+				}
+				case 34: { // PgDn
+					if (hasFocus) {
+						e.preventDefault();
+						editor.movePage(true);
+						editor.history.logIfCursorMoved();
+					}
+					break;
+				}
+				case 38: { // ↑
+					if (e.shiftKey) {
+						if (e.ctrlKey) {
+							if (e.altKey) {
+								
+							} else {
+								// 싱크 이동 -> TODO: Ctrl+Shift vs Ctrl+Alt
+								// 원래 쓰던 단축키가 웹브라우저에서 안 돼서 억지로 테스트해본 거였나?
+								if (editor) {
+									e.preventDefault();
+									editor.moveSync(true);
+								}
+							}
+						}
 					} else {
-						f = SmiEditor.withCtrls[key];
-						if (f == null) {
-							if (key == "X") {
-								// 잘라내기 전 상태 기억
-								editor.history.log();
+						if (e.ctrlKey) {
+							if (e.altKey) {
+								// 싱크 이동
+								if (editor) {
+									e.preventDefault();
+									editor.moveSync(true);
+								}
+							} else {
+								// 스크롤 이동
+								if (hasFocus) {
+									e.preventDefault();
+									editor.input.scrollTop(Math.max(0, editor.input.scrollTop() - LH));
+								}
+							}
+						} else {
+							if (e.altKey) {
+								// 줄 이동
+								if (hasFocus) {
+									e.preventDefault();
+									editor.moveLine(false);
+								}
+							} else {
 								
-							} else if (key == "V") {
-								// 붙여넣기 전 상태 기억
-								editor.history.log();
-								
-								// 크로뮴 textarea 버그 있음...
-								/* https에서만 동작함?? C# 네이티브 연구?
-								e.preventDefault();
-								navigator.clipboard.readText().then(function(paste) {
-									editor.inputTextLikeNative(paste.split("\r\n").join("\n"));
-								}).catch(function(err) {
-									console.log(err);
-									alert("붙여넣기 실패");
-								});
-								*/
 							}
 						}
 					}
-				} else {
-					if (e.altKey) {
-						// TODO: Alt 예약된 단축키 체크 필요
-						f = SmiEditor.withAlts[key];
+					if (editor) {
+						editor.history.logIfCursorMoved();
+					}
+					return;
+				}
+				case 40: { // ↓
+					if (e.shiftKey) {
+						if (e.ctrlKey) {
+							if (e.altKey) {
+								
+							} else {
+								// 싱크 이동
+								if (editor) {
+									e.preventDefault();
+									editor.moveSync(false);
+								}
+							}
+						}
 					} else {
-						
+						if (e.ctrlKey) {
+							if (e.altKey) {
+								// 싱크 이동
+								if (editor) {
+									e.preventDefault();
+									editor.moveSync(false);
+								}
+							} else {
+								// 스크롤 이동
+								if (hasFocus) {
+									e.preventDefault();
+									editor.input.scrollTop(editor.input.scrollTop() + LH);
+								}
+							}
+						} else {
+							if (e.altKey) {
+								// 줄 이동
+								if (hasFocus) {
+									e.preventDefault();
+									editor.moveLine(true);
+								}
+							} else {
+								
+							}
+						}
+					}
+					if (editor) {
+						editor.history.logIfCursorMoved();
+					}
+					return;
+				}
+				case 37: { // ←
+					if (e.shiftKey) {
+						if (e.ctrlKey) {
+							if (e.altKey) {
+								
+							} else {
+								
+							}
+						}
+					} else {
+						if (e.ctrlKey) {
+							if (e.altKey) {
+								
+							} else {
+							}
+						} else {
+							if (e.altKey) {
+								// 뒤로
+								e.preventDefault();
+								SmiEditor.PlayerAPI.move(-SmiEditor.sync.move);
+								SmiEditor.PlayerAPI.play();
+								
+							} else {
+								
+							}
+						}
+					}
+					if (editor) {
+						editor.history.logIfCursorMoved();
+					}
+					return;
+				}
+				case 39: { // →
+					if (e.shiftKey) {
+						if (e.ctrlKey) {
+							if (e.altKey) {
+								
+							} else {
+								
+							}
+						}
+					} else {
+						if (e.ctrlKey) {
+							if (e.altKey) {
+								
+							} else {
+							}
+						} else {
+							if (e.altKey) {
+								// 앞으로
+								e.preventDefault();
+								SmiEditor.PlayerAPI.move(SmiEditor.sync.move);
+								SmiEditor.PlayerAPI.play();
+								
+							} else {
+								
+							}
+						}
+					}
+					if (editor) {
+						editor.history.logIfCursorMoved();
+					}
+					return;
+				}
+				case 116: { // F5: 싱크
+					if (editor) {
+						e.preventDefault();
+						if (!hasFocus) editor.input.focus();
+						if (e.ctrlKey) {
+							editor.reSync();
+						} else {
+							editor.insertSync();
+						}
+					}
+					break;
+				}
+				case 117: { // F6: 화면 싱크
+					if (editor) {
+						e.preventDefault();
+						if (!hasFocus) editor.input.focus();
+						editor.insertSync(true);
+					}
+					break;
+				}
+				case 118: { // F7: 화면 싱크 토글
+					if (editor) {
+						e.preventDefault();
+						if (!hasFocus) editor.input.focus();
+						editor.toggleSyncType();
+					}
+					break;
+				}
+				case 119: { // F8: 싱크 삭제
+					if (editor) {
+						e.preventDefault();
+						if (!hasFocus) editor.input.focus();
+						editor.removeSync();
+					}
+					break;
+				}
+				case 120: { // F9: 재생/일시정지
+					e.preventDefault();
+					SmiEditor.PlayerAPI.playOrPause();
+					break;
+				}
+				case 121: { // F10: 재생 (정지화면 있을 경우 재생 중인지 확신이 안 설 때가 있어서 토글이 아닌 재생이 있는 게 맞을 듯)
+					e.preventDefault();
+					SmiEditor.PlayerAPI.play();
+					break;
+				}
+				case 122: { // F11: 정지
+					e.preventDefault();
+					SmiEditor.PlayerAPI.stop();
+					break;
+				}
+				case 9: { // Tab
+					e.preventDefault();
+					if (hasFocus) {
+						editor.inputTextLikeNative("\t");
+					}
+					break;
+				}
+				case 13: { // Enter
+					if (hasFocus) { // 크로뮴 textarea 버그 있음...
+						e.preventDefault();
+						if (e.ctrlKey) { // Ctrl+Enter → <br>
+							editor.insertBR();
+						} else {
+							editor.inputTextLikeNative("\n");
+							editor.input.scrollLeft(0); // 엔터일 땐 스크롤 맨 왼쪽
+						}
+					}
+					break;
+				}
+			}
+			
+			{	// 단축키 설정
+				var f = null;
+				var key = String.fromCharCode(e.keyCode);
+				if (e.shiftKey) {
+					if (e.ctrlKey) {
+						if (e.altKey) {
+							
+						} else {
+							f = SmiEditor.withCtrlShifts[key];
+						}
+					}
+				} else {
+					if (e.ctrlKey) {
+						if (e.altKey) {
+							f = SmiEditor.withCtrlAlts[key];
+						} else {
+							f = SmiEditor.withCtrls[key];
+							if (f == null) {
+								if (key == "X") {
+									// 잘라내기 전 상태 기억
+									editor.history.log();
+									
+								} else if (key == "V") {
+									// 붙여넣기 전 상태 기억
+									editor.history.log();
+									
+									// 크로뮴 textarea 버그 있음...
+									/* https에서만 동작함?? C# 네이티브 연구?
+									e.preventDefault();
+									navigator.clipboard.readText().then(function(paste) {
+										editor.inputTextLikeNative(paste.split("\r\n").join("\n"));
+									}).catch(function(err) {
+										console.log(err);
+										alert("붙여넣기 실패");
+									});
+									*/
+								}
+							}
+						}
+					} else {
+						if (e.altKey) {
+							// TODO: Alt 예약된 단축키 체크 필요
+							f = SmiEditor.withAlts[key];
+						} else {
+							
+						}
+					}
+				}
+	
+				if (f) {
+					e.preventDefault();
+					if (!hasFocus && editor) editor.input.focus();
+					
+					var type = typeof f;
+					if (type == "function") {
+						f();
+					} else if (type == "string") {
+						eval("(function(){" + f + "})()");
 					}
 				}
 			}
-
-			if (f) {
-				e.preventDefault();
-				if (!hasFocus && editor) editor.input.focus();
-				
-				var type = typeof f;
-				if (type == "function") {
-					f();
-				} else if (type == "string") {
-					eval("(function(){" + f + "})()");
+		}
+	}).on("keyup", function(e) {
+		if (lastKeyDown == e.keyCode) {
+			lastKeyDown = null;
+			switch (e.keyCode) {
+				case 18: { // Alt키만 눌렀다 뗐을 경우
+					// 메뉴에 포커스 넘기기
+					e.preventDefault();
+					binder.focusToMenu(0);
+					break;
 				}
 			}
 		}
-	}
-}).on("keyup", function(e) {
-	if (lastKeyDown == e.keyCode) {
-		lastKeyDown = null;
-		switch (e.keyCode) {
-			case 18: { // Alt키만 눌렀다 뗐을 경우
-				// 메뉴에 포커스 넘기기
-				e.preventDefault();
-				binder.focusToMenu(0);
-				break;
-			}
-		}
-	}
-});
+	});
+};
 
 SmiEditor.prototype.getCursor = function() {
 	return [this.input[0].selectionStart, this.input[0].selectionEnd];
@@ -1466,7 +1471,7 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 }
 
 SmiEditor.Finder = {
-		last: { find: "", replace: "", withCase: "", reverse: "" }
+		last: { find: "", replace: "", withCase: false, reverse: false }
 	,	open: function(onload) {
 			var w = 440 * DPI;
 			var h = 220 * DPI;
@@ -1507,6 +1512,130 @@ SmiEditor.Finder = {
 	,	onloadChange: function() {
 			if (this.onloadFind()) {
 				this.popup.find("[name=replace]").focus();
+			}
+		}
+
+	,	finding: {
+			find: ""
+		,	replace: ""
+		,	withCase: false
+		,	reverse: false
+		}
+	,	checkError: function(params) {
+			if (!SmiEditor.selected) {
+				return "열려있는 파일이 없습니다.";
+			}
+			this.finding = params;
+			this.finding.input = SmiEditor.selected.input[0];
+			this.finding.text      = this.finding.input.value;
+			this.finding.upperText = this.finding.text.toUpperCase();
+			this.finding.upperFind = this.finding.find.toUpperCase();
+		}
+	,	afterFind: function() {
+			var tab = SmiEditor.selected;
+			tab.updateSync();
+			tab.scrollToCursor();
+			this.last.find    = this.finding.find;
+			this.last.replace = this.finding.replace;
+			this.last.withCase= this.finding.withCase;
+			this.last.reverse = this.finding.reverse;
+		}
+	
+	,	doFind: function(selection) {
+			if (!selection) selection = [this.finding.input.selectionStart, this.finding.input.selectionEnd];
+			var index = -1;
+			var text = this.finding.text;
+			var find = this.finding.find;
+			if (!this.finding.withCase) {
+				text = this.finding.upperText;
+				find = this.finding.upperFind;
+			}
+			if (this.finding.reverse) {
+				index = text.lastIndexOf(find, selection[0] - 1);
+			} else {
+				index = text.indexOf(find, selection[1]);
+			}
+			if (index < 0) return null;
+			return [index, index + find.length];
+		}
+	,	doReplace: function(selection) {
+			if (!selection) selection = [this.finding.input.selectionStart, this.finding.input.selectionEnd];
+			var index = -1;
+			var text = this.finding.text;
+			var find = this.finding.find;
+			if (!this.finding.withCase) {
+				text = this.finding.upperText;
+				find = this.finding.upperFind;
+			}
+			if (this.finding.text.substring(selection[0], selection[1]) == find) {
+				this.finding.text      = this.finding.text     .substring(0, selection[0]) + this.finding.replace + this.finding.text     .substring(selection[1]);
+				this.finding.upperText = this.finding.upperText.substring(0, selection[0]) + this.finding.replace + this.finding.upperText.substring(selection[1]);
+				selection[1] = selection[0] + this.finding.replace.length;
+				return selection;
+			}
+			return null;
+		}
+		
+	,	runFind: function(params) {
+			var err = this.checkError(params);
+			if (err) return err;
+	
+			var selection = this.doFind();
+			if (selection) {
+				this.finding.input.setSelectionRange(selection[0], selection[1]);
+				this.afterFind();
+			} else {
+				return "찾을 수 없습니다.";
+			}
+		}
+	,	runReplace: function(params) {
+			var err = this.checkError(params);
+			if (err) return err;
+			
+			// 선택돼 있었으면 바꾸기
+			var selection = this.doReplace();
+			if (selection) {
+				this.finding.input.value = this.finding.text;
+				this.finding.input.setSelectionRange(selection[0], selection[1]);
+				this.afterFind();
+			}
+			
+			// 다음 거 찾기
+			if (selection = this.doFind(selection)) {
+				this.finding.input.setSelectionRange(selection[0], selection[1]);
+				this.afterFind();
+				
+			} else {
+				return "찾을 수 없습니다.";
+			}
+		}
+	,	runReplaceAll: function(params) {
+			var err = this.checkError(params);
+			if (err) return err;
+	
+			var count = 0;
+			var last = null;
+			
+			// 바꾸기
+			var selection = this.doReplace();
+			if (selection) count++;
+			// 다음 찾기
+			selection = this.doFind(selection);
+			
+			// 바꾸기-찾기 반복
+			while (selection) {
+				count++;
+				last = selection;
+				selection = this.doFind(this.doReplace(selection));
+			}
+			
+			if (count) {
+				this.finding.input.value = this.finding.text;
+				this.finding.input.setSelectionRange(last[0], last[1]);
+				this.afterFind();
+				return count + "개 바꿈";
+			} else {
+				return "찾을 수 없습니다.";
 			}
 		}
 };
@@ -1583,7 +1712,10 @@ function extSubmit(method, url, values) {
 		if (editor) {
 			var text = editor.getText();
 			var params = {};
-			params[name] = text.text.substring(text.selection[0], text.selection[1]);
+			var value = text.text.substring(text.selection[0], text.selection[1]);
+			// string일 경우 태그 탈출 처리
+			value = $("<p>").html(value.split(/<br>/gi).join(" ")).text();
+			params[name] = value;
 			SmiEditor.Addon.openExtSubmit(method, url, params);
 		}
 	} else {

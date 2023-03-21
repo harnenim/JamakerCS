@@ -3,7 +3,7 @@
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	// TODO: 설정 기능..이 필요한가??
 	[	[	"파일(&F)"
-		,	"새 파일(&N)|saveFile()"
+		,	"새 파일(&N)|newFile()"
 		,	"열기(&O)|openFile()"
 		,	"저장(&S)|saveFile()"
 		,	"다른 이름으로 저장(&A)|saveFile(true)"

@@ -8,33 +8,32 @@
 	<script src="../lib/popup.js"></script>
 	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
 	<script>
-var SmiEditor = opener.SmiEditor;
-
-//초기 상태 기억
-var origin = {};
+// 초기 상태 기억
+// TODO: 경우에 따라 opener 분리 필요
+var origin = null;
+var tab = opener.SmiEditor.selected;
+if (tab) {
+	origin = tab.getText();
+}
 
 function init() {
-	if (opener.tabs.length == 0 || opener.tabs.length < opener.tab) {
+	if (!origin) {
 		alert("작업 대상이 없습니다.");
 		window.close();
 		return false;
 	}
-	var tab = origin.tab = opener.tabs[opener.tab];
-	var text = origin.text = tab.text;
-	
 	var start = 0;
-	var end = tab.lines.length;
+	var end = 0;
 
 	// 선택 범위만 작업
-	var range = tab.getCursor();
-	if (range[0] != range[1]) {
-		start = text.substring(0, range[0]).split("\n").length - 1;
-		end   = text.substring(0, range[1]).split("\n").length;
+	if (origin.selection[0] != origin.selection[1]) {
+		start = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
+		end   = origin.text.substring(0, origin.selection[1]).split("\n").length;
+	} else {
+		end = origin.text.split("\n").length;
 	}
-	origin.start = start;
-	origin.end = end;
 
-	$("#input").val(tab.text.split("\n").slice(start, end).join("\n"));
+	$("#input").val(origin.text.split("\n").slice(start, end).join("\n"));
 }
 
 function smiTrim(text) {
@@ -106,6 +105,7 @@ function devide() {
 	
 	var keeps = null;
 	function devideKeeps() {
+		console.log(keeps);
 		var last = keeps[0];
 		
 		if (keeps.length == 1) {
@@ -190,6 +190,10 @@ function devide() {
 		} else {
 			if (keeps) {
 				devideKeeps();
+			}
+			if (!sync.text[0]) {
+				// 공백일 경우 윗줄에도 추가
+				upper.push(sync);
 			}
 			lower.push(sync);
 		}

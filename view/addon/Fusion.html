@@ -8,7 +8,18 @@
 	<script src="../lib/popup.js"></script>
 	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
 	<script>
-var SmiEditor = opener.SmiEditor;
+// 초기 상태 기억
+// TODO: 경우에 따라 opener 분리 필요
+var origin = null;
+var tab = opener.SmiEditor.selected;
+if (tab) {
+	origin = tab.getText();
+}
+var binder = {
+	setText: function(text, range) {
+		origin.tab.setText(text, range);
+	}
+};
 
 function requestClose() {
 	if (confirm("작업을 취소하시겠습니까?")) {
@@ -16,31 +27,26 @@ function requestClose() {
 	}
 }
 
-//초기 상태 기억
-var origin = {};
 
 function init() {
-	if (opener.tabs.length == 0 || opener.tabs.length < opener.tab) {
+	if (!origin) {
 		alert("작업 대상이 없습니다.");
 		window.close();
 		return false;
 	}
-	var tab = origin.tab = opener.tabs[opener.tab];
-	var text = origin.text = tab.text;
-	
-	var start = 0;
-	var end = tab.lines.length;
+	origin.tab = tab;
+	origin.start = 0;
+	origin.end = 0;
 
 	// 선택 범위만 작업
-	var range = tab.getCursor();
-	if (range[0] != range[1]) {
-		start = text.substring(0, range[0]).split("\n").length - 1;
-		end   = text.substring(0, range[1]).split("\n").length;
+	if (origin.selection[0] != origin.selection[1]) {
+		origin.start = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
+		origin.end   = origin.text.substring(0, origin.selection[1]).split("\n").length;
+	} else {
+		origin.end = origin.text.split("\n").length;
 	}
-	origin.start = start;
-	origin.end = end;
 
-	$("#inputSync").val(tab.text.split("\n").slice(start, end).join("\n"));
+	$("#inputSync").val(origin.text.split("\n").slice(origin.start, origin.end).join("\n"));
 	resizeTextarea();
 }
 
@@ -97,7 +103,7 @@ function apply() {
 	range.push(range[0] + text.length);
 	
 	// 교체 및 종료
-	origin.tab.setText(front.concat(text).concat(origLines.slice(origin.end)).join("\n"), range);
+	binder.setText(front.concat(text).concat(origLines.slice(origin.end)).join("\n"), range);
 	
 	window.close();
 }

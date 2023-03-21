@@ -6,12 +6,23 @@
 	<title>화면 싱크 매니저</title>
 	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/popup.js"></script>
+	<script src="../lib/SmiEditor.js"></script>
 	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
 	<script>
-var SmiEditor = opener.SmiEditor;
-var LINE = opener.LINE;
-var TYPE = opener.TYPE;
-var FL   = opener.FL;
+// 초기 상태 기억
+// TODO: 경우에 따라 opener 분리 필요
+var origin = null;
+var FL = 42;
+var tab = opener.SmiEditor.selected;
+if (tab) {
+	origin = tab.getText();
+	FL  = opener.FL;
+}
+var binder = {
+	setText: function(text, range) {
+		origin.tab.setText(text, range);
+	}
+};
 
 function smi2assTime(ms) {
 	ms = Math.max(0, ms);
@@ -32,29 +43,24 @@ function requestClose() {
 	}
 }
 
-// 초기 상태 기억
-var origin = {};
-
 function splitOrigin() {
-	if (opener.tabs.length == 0 || opener.tabs.length < opener.tab) {
+	if (!origin) {
 		alert("작업 대상이 없습니다.");
 		window.close();
 		return false;
 	}
-	var tab = origin.tab = opener.tabs[opener.tab];
-	var text = origin.text = tab.text;
-	
-	var start = 0;
-	var end = tab.lines.length;
+	origin.tab = tab;
+	origin.lines = tab.lines;
+	origin.start = 0;
+	origin.end = 0;
 
 	// 선택 범위만 작업
-	var range = tab.getCursor();
-	if (range[0] != range[1]) {
-		start = text.substring(0, range[0]).split("\n").length - 1;
-		end   = text.substring(0, range[1]).split("\n").length;
+	if (origin.selection[0] != origin.selection[1]) {
+		origin.start = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
+		origin.end   = origin.text.substring(0, origin.selection[1]).split("\n").length;
+	} else {
+		origin.end = origin.text.split("\n").length;
 	}
-	origin.start = start;
-	origin.end = end;
 	
 	var syncs = [];
 	var last = {
@@ -66,17 +72,17 @@ function splitOrigin() {
 	};
 	var header = [], footer = [];
 	
-	var i = start;
-	for (; i < end; i++) {
-		var line = tab.lines[i];
+	var i = origin.start;
+	for (; i < origin.end; i++) {
+		var line = origin.lines[i];
 		if (line[2] != null) {
 			break;
 		}
 		header.push(line[0]);
 	}
 	var frameCount = 0;
-	for (; i < end; i++) {
-		var line = tab.lines[i];
+	for (; i < origin.end; i++) {
+		var line = origin.lines[i];
 		if (line[0].toUpperCase() == "</BODY>") {
 			break;
 		}
@@ -108,8 +114,8 @@ function splitOrigin() {
 		window.close();
 		return false;
 	}
-	for (; i < end; i++) {
-		var line = tab.lines[i];
+	for (; i < origin.end; i++) {
+		var line = origin.lines[i];
 		footer.push(line[0]);
 	}
 
@@ -346,8 +352,8 @@ function checkDiff() {
 					}));
 				}
 				// 일반 싱크와 충돌 검사
-				for (var j = 0; j < origin.tab.lines.length; j++) {
-					var line = origin.tab.lines[j];
+				for (var j = 0; j < origin.lines.length; j++) {
+					var line = origin.lines[j];
 					if (line[LINE.TYPE] == TYPE.BASIC) {
 						if ((originLines[i] < line[LINE.SYNC] && line[LINE.SYNC] < targetLines[i])
 						 || (targetLines[i] < line[LINE.SYNC] && line[LINE.SYNC] < originLines[i])) {
@@ -472,7 +478,7 @@ function apply() {
 	range.push(range[0] + lines.join("\n").length);
 	
 	// 교체 및 종료
-	origin.tab.setText(front.concat(lines).concat(origLines.slice(origin.end)).join("\n"), range);
+	binder.setText(front.concat(lines).concat(origLines.slice(origin.end)).join("\n"), range);
 	
 	window.close();
 }
