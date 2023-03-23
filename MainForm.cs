@@ -69,8 +69,10 @@ namespace SmiEdit
                 {
                     windows.Add("editor", Handle.ToInt32());
 
-                    Script("init", new string[] { strSettingJson }); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
-                    Script("setPlayerDlls", new string[] { "|(없음),PotPlayer|팟플레이어" }); // TODO: dll 폴더 내용물 체크하는 것 필요...
+                    //Script("init", new string[] { strSettingJson }); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
+                    //Script("setPlayerDlls", new string[] { "|(없음),PotPlayer|팟플레이어" }); // TODO: dll 폴더 내용물 체크하는 것 필요...
+                    Script("init", strSettingJson); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
+                    Script("setPlayerDlls", "|(없음),PotPlayer|팟플레이어"); // TODO: dll 폴더 내용물 체크하는 것 필요...
                     Script("setDroppable");
 
                     WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
@@ -223,7 +225,7 @@ namespace SmiEdit
                         WinAPI.MoveWindow(hwnd, x - 7, y, width + 14, height + 9, true);
                         if (target.Equals("editor"))
                         {
-                            Script("setDpiBy", new object[] { width });
+                            Script("setDpiBy", width);
                         }
                     }
                 }
@@ -320,35 +322,35 @@ namespace SmiEdit
                 if (--saveSettingAfter == 0)
                 {
                     WinAPI.GetWindowRect(windows["editor"], ref offset);
-                    Script("eval", new object[] {
+                    Script("eval", 
                         $"setting.window.x = { offset.left + 7 };"
                     +   $"setting.window.y = { offset.top };"
                     +   $"setting.window.width = { offset.right - offset.left - 14 };"
                     +   $"setting.window.height = { offset.bottom - offset.top - 9 };"
-                    });
+                    );
 
                     int viewer = windows["viewer"];
                     if (viewer > 0)
                     {
                         WinAPI.GetWindowRect(viewer, ref viewerOffset);
-                        Script("eval", new object[] {
+                        Script("eval",
                             $"setting.viewer.window.x = { viewerOffset.left + 7};"
                         +   $"setting.viewer.window.y = { viewerOffset.top };"
                         +   $"setting.viewer.window.width = { viewerOffset.right - viewerOffset.left - 14 };"
                         +   $"setting.viewer.window.height = { viewerOffset.bottom - viewerOffset.top - 9 };"
-                        });
+                        );
                     }
 
                     int player = this.player.hwnd;
                     if (player > 0)
                     {
                         SmiEditBridge.RECT playerOffset = this.player.GetWindowPosition();
-                        Script("eval", new object[] {
+                        Script("eval",
                             $"setting.player.window.x = { playerOffset.left };"
                         +   $"setting.player.window.y = { playerOffset.top };"
                         +   $"setting.player.window.width = { playerOffset.right - playerOffset.left };"
                         +   $"setting.player.window.height = { playerOffset.bottom - playerOffset.top };"
-                        });
+                        );
                     }
                     Script("saveSetting");
                 }
@@ -358,8 +360,8 @@ namespace SmiEdit
 
         #region 브라우저 통신
         protected string Script(string name) { return mainView.Script(name); }
-        protected string Script(string name, object[] args) { return mainView.Script(name, args); }
-        //protected string Script(string name, string arg) { return mainView.Script(name, arg); }
+        //protected string Script(string name, object[] args) { return mainView.Script(name, args); }
+        protected string Script(string name, object arg) { return mainView.Script(name, arg); }
 
         protected void ScriptToPopup(string name, string func, object arg)
         {
@@ -374,11 +376,11 @@ namespace SmiEdit
             {
                 if (name.Equals("viewer"))
                 {
-                    Script("SmiEditor.Viewer.window." + func, new object[] { arg });
+                    Script("SmiEditor.Viewer.window." + func, arg);
                 }
                 else if (name.Equals("finder"))
                 {
-                    Script("SmiEditor.Finder.window." + func, new object[] { arg });
+                    Script("SmiEditor.Finder.window." + func, arg);
                 }
             }
         }
@@ -386,9 +388,9 @@ namespace SmiEdit
         // Finder, Viewer는 팝업 형태 제한
         public void SendMsg(string target, string msg) { ScriptToPopup(target, "sendMsg", msg); }
         public void OnloadFinder (string last ) { ScriptToPopup("finder", "init", last); }
-        public void RunFind      (string param) { mainView.Script("SmiEditor.Finder.runFind"      , param); }
-        public void RunReplace   (string param) { mainView.Script("SmiEditor.Finder.runReplace"   , param); }
-        public void RunReplaceAll(string param) { mainView.Script("SmiEditor.Finder.runReplaceAll", param); }
+        public void RunFind      (string param) { Script("SmiEditor.Finder.runFind"      , param); }
+        public void RunReplace   (string param) { Script("SmiEditor.Finder.runReplace"   , param); }
+        public void RunReplaceAll(string param) { Script("SmiEditor.Finder.runReplaceAll", param); }
 
         public void UpdateViewerSetting(     ) { ScriptToPopup("viewer", "setSetting", strSettingJson); }
         public void UpdateViewerTime(int time) { ScriptToPopup("viewer", "refreshTime", time); }
@@ -513,8 +515,7 @@ namespace SmiEdit
                                 ,   Size = new Size(200, 22)
                                 };
                                 subMenuItem.Click += new EventHandler(new EventHandler((object sender, EventArgs e) => {
-                                    Console.WriteLine(tmp[1]);
-                                    Script("eval", new object[] { tmp[1] });
+                                    Script("eval", tmp[1]);
                                 }));
                                 menuItem.DropDownItems.Add(subMenuItem);
                             }
@@ -564,7 +565,7 @@ namespace SmiEdit
             else
             {
                 layerForDrag.Visible = true;
-                Script("setShowDrag", new object[] { true });
+                Script("setShowDrag", true);
             }
         }
         public void HideDragging()
@@ -576,7 +577,7 @@ namespace SmiEdit
             else
             {
                 layerForDrag.Visible = false;
-                Script("setShowDrag", new object[] { false });
+                Script("setShowDrag", false);
             }
         }
 
@@ -649,18 +650,19 @@ namespace SmiEdit
             catch { }
             finally { if (sr != null) sr.Close(); }
 
-            Script("openFile", new string[] { path, text });
+            Script("openFile", new object[] { path, text });
         }
+
+        string[] exts = new string[] { "mkv", "mp4", "avi", "m2ts", "ts" }; // TODO: 우선순위 설정 기능...?
         public void CheckLoadVideoFile(string smiPath)
         {
-            string[] exts = new string[] { "mkv", "mp4", "avi", "m2ts", "ts" }; // TODO: 우선순위 설정 기능...?
             string withoutExt = smiPath.Substring(0, smiPath.Length - 4);
             foreach (string ext in exts)
             {
                 string videoPath = withoutExt + "." + ext;
                 if (File.Exists(videoPath))
                 {
-                    Script("confirmLoadVideo", new string[] { videoPath });
+                    Script("confirmLoadVideo", videoPath);
                     return;
                 }
             }
@@ -696,12 +698,12 @@ namespace SmiEdit
             try
             {   // 무조건 UTF-8로 저장
                 (sw = new StreamWriter(path, false, Encoding.UTF8)).Write(text);
-                Script("afterSaveFile", new object[] { path });
+                Script("afterSaveFile", path);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                Script("alert", new object[] { "저장되지 않았습니다." });
+                Script("alert", "저장되지 않았습니다.");
             }
             finally
             {
@@ -724,11 +726,11 @@ namespace SmiEdit
         }
         public void InputText(string text)
         {
-            Script("SmiEditor.inputText", new object[] { text });
+            Script("SmiEditor.inputText", text);
         }
         public void AfterTransform(string text)
         {
-            Script("SmiEditor.afterTransform", new object[] { text });
+            Script("SmiEditor.afterTransform", text);
         }
         #endregion
 

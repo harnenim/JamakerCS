@@ -88,44 +88,8 @@ namespace SmiEdit
 
         delegate string ScriptHandler(string name, object[] args);
         public string Script(string name) { return Script(name, new object[] { }); }
-        public string Script(string name, object[] args)
+        public string Script(string name, object arg)
         {
-            object result = null;
-
-            try
-            {
-                if (InvokeRequired)
-                {
-                    result = Invoke(new ScriptHandler(Script), new object[] { name, args });
-                }
-                else
-                {
-                    int len = (args == null) ? 0 : Math.Min(10, args.Length);
-                    object[] param = new object[len + 1];
-                    param[0] = name;
-                    for (int i = 0; i < len; i++)
-                    {
-                        param[i + 1] = args[i];
-                    }
-                    this.ExecuteScriptAsync("call", param);
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                //Environment.Exit(0);
-            }
-
-            if (result == null) return null;
-            return result.ToString();
-        }
-        /*
-        */
-        public string Script(string name, string arg)
-        {
-            return Script(name, new object[] { arg });
-
-            /*
             object result = null;
 
             try
@@ -136,7 +100,8 @@ namespace SmiEdit
                 }
                 else
                 {
-                    this.ExecuteScriptAsync("call", new object[] { arg });
+                    object[] args = arg.GetType().IsArray ? (object[])arg : new object[] { arg };
+                    this.ExecuteScriptAsync(name, args);
                 }
             }
             catch (Exception e)
@@ -146,7 +111,6 @@ namespace SmiEdit
 
             if (result == null) return null;
             return result.ToString();
-            */
         }
 
         #endregion
