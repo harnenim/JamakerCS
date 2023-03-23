@@ -131,7 +131,7 @@ SmiEditor.setSetting = function(setting) {
 			// 최초 접근일 경우 키보드 이벤트도 활성화
 			SmiEditor.activateKeyEvent();
 		}
-		SmiEditor.style.html(setting.css);}
+		SmiEditor.style.html(setting.css);
 	}
 }
 
