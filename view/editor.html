@@ -64,7 +64,11 @@ function setDefault(target, dflt) {
 	for (var key in dflt) {
 		if (typeof dflt[key] == "object") {
 			if (Array.isArray(dflt[key])) {
-				target[key] = JSON.parse(JSON.stringify(dflt[key]));
+				if (Array.isArray(target[key])) {
+					
+				} else {
+					target[key] = JSON.parse(JSON.stringify(dflt[key]));
+				}
 				count++;
 			} else {
 				if (target[key] && (typeof target[key] == "object") && !Array.isArray(target[key])) {
@@ -107,10 +111,12 @@ function init(jsonSetting) {
 	}
 	
 	var btnSync = $("#btnSync").on("click", function() {
+		if (tabs.length == 0) return;
 		tabs[tab].insertSync();
 		tabs[tab].input.focus();
 	});
 	var btnSyncFrame = $("#btnSyncFrame").on("click", function() {
+		if (tabs.length == 0) return;
 		tabs[tab].insertSync(true);
 		tabs[tab].input.focus();
 	});
@@ -137,10 +143,12 @@ function init(jsonSetting) {
 		}
 	});
 	var btnMoveToBack = $("#btnMoveToBack").on("click", function() {
+		if (tabs.length == 0) return;
 		tabs[tab].moveSync(false);
 		tabs[tab].input.focus();
 	});
 	var btnMoveToForward = $("#btnMoveToForward").on("click", function() {
+		if (tabs.length == 0) return;
 		tabs[tab].moveSync(true);
 		tabs[tab].input.focus();
 	});
@@ -162,6 +170,7 @@ function init(jsonSetting) {
 			}
 		}
 		SmiEditor.selected = selectedTab;
+		SmiEditor.Viewer.refresh();
 		
 	}).on("click", ".btn-close-tab", function(e) {
 		e.preventDefault();
@@ -175,13 +184,14 @@ function init(jsonSetting) {
 		var selectedTab = th.data("tab");
 		var saved = (selectedTab.input.val() != selectedTab.saved);
 		
-		if (confirm((saved ? "저장되지 않았습니다.\n" : "") + "탭을 닫으시겠습니까?")) {
+		confirm((saved ? "저장되지 않았습니다.\n" : "") + "탭을 닫으시겠습니까?", function() {
 			var index = tabs.indexOf(selectedTab);
 			tabs.splice(index, 1);
 			selectedTab.area.remove();
 			th.remove();
 			delete selectedTab;
 			SmiEditor.selected = null;
+			SmiEditor.Viewer.refresh();
 			
 			if (tabs.length) {
 				tab = Math.min(index, tabs.length - 1);
@@ -190,7 +200,7 @@ function init(jsonSetting) {
 					$(selector).click();
 				}, 1);
 			}
-		}
+		});
 	});
 	$(document).on("keydown", function(e) {
 		// Ctrl+F4 닫기
@@ -215,8 +225,6 @@ function setSetting(setting) {
 	SmiEditor.withCtrls["O"] = openFile;
 	SmiEditor.withCtrls["S"] = saveFile;
 	SmiEditor.withCtrls["T"] = openNewTab;
-//	SmiEditor.withAlts ["S"] = "openSetting();";
-	SmiEditor.withCtrlShifts["S"] = openSetting;
 	SmiEditor.withCtrls.reserved += "NOST";
 	SmiEditor.withCtrlShifts.reserved += "S";
 	
@@ -234,11 +242,15 @@ function setSetting(setting) {
 		}
 	}
 
-	if (setting.player.control.dll) {
-		var dll = setting.player.control.dll;
-		binder.setPlayer(dll);
-		if (setting.player.control[dll].withRun) {
-			binder.runPlayer(setting.player.control[dll].path);
+	var dll = setting.player.control.dll;
+	if (dll) {
+		var playerSetting = setting.player.control[dll];
+		if (playerSetting) {
+			var path = playerSetting.path.split("\\").join("/").split("/");
+			binder.setPlayer(dll, path[path.length - 1]);
+			if (playerSetting.withRun) {
+				binder.runPlayer(playerSetting.path); // 실행파일 이름을 넘겨줘야 함
+			}
 		}
 	}
 	
@@ -295,14 +307,12 @@ function saveSetting() {
 	}
 }
 
-function canOpenNewTab() {
+function runIfCanOpenNewTab(func) {
 	if (!setting.useTab) {
 		// 탭 미사용 -> 현재 파일 닫기
 		if (tabs.length) {
 			if (tabs[0].input.val() != tabs[0].saved) {
-				if (!confirm("현재 파일을 닫을까요?")) {
-					return false;
-				}
+				confirm("현재 파일을 닫을까요?", func);
 			}
 			$("#tabSelector > .th:not(#btnNewTab)").remove();
 			$("#editor").empty();
@@ -310,18 +320,22 @@ function canOpenNewTab() {
 			tabs.splice(0);
 		}
 	}
-	return true;
+	if (func) func();
 }
 
 function newFile() {
-	if (canOpenNewTab()) {
-		openNewTab();
-	}
+	runIfCanOpenNewTab(openNewTab);
+	//binder.test(setting);
+}
+function test(obj) {
+	console.log(obj);
+	console.log(typeof obj);
+	console.log(obj == setting);
 }
 
 function openFile(path, text) {
-	// C#에서 파일 열 동안 canOpenNewTab 결과가 달라질 리는 없겠지만, 일단은 바깥에서 감싸주기	
-	if (canOpenNewTab()) {
+	// C#에서 파일 열 동안 canOpenNewTab 결과가 달라질 리는 없겠지만, 일단은 바깥에서 감싸주기
+	runIfCanOpenNewTab(function() {
 		if (path) {
 			// 새 탭 열기
 			openNewTab(text, path);
@@ -329,7 +343,7 @@ function openFile(path, text) {
 			// C#에서 파일 열기 대화상자 실행
 			binder.openFile();
 		}
-	}
+	});
 }
 
 function saveFile(asNew) {
@@ -339,22 +353,24 @@ function saveFile(asNew) {
 		asNew = true;
 	}
 	var text = currentTab.input.val(); // currentTab.text 동기화 실패 가능성 고려, 현재 값 다시 불러옴
-	
 	if (asNew) {
-		return binder.save(text, "");
+		path = "";
 	}
 	
+	/*
 	if (text == currentTab.saved) {
 		// 마지막 저장 이후 수정된 게 없음
-		return false;
+		//return false;
 	}
+	*/  // 수정된 게 없어 보여도, 다른 프로그램에서 수정한 걸 덮어쓸 수도 있음
 	
 	if (currentTab.area.find(".sync.error,.sync.equal").length) {
-		if (!confirm("싱크 오류가 있습니다.\n저장하시겠습니까?")) {
-			return false;
-		}
+		confirm("싱크 오류가 있습니다.\n저장하시겠습니까?", function() {
+			binder.save(text, path);
+		});
+	} else {
+		binder.save(text, path);
 	}
-	return binder.save(text, path);
 }
 // 저장 후 C#에서 호출
 function afterSaveFile(path) {
@@ -385,9 +401,9 @@ function openNewTab(text, path) {
 	return tab;
 }
 function confirmLoadVideo(path) {
-	if (confirm("동영상 파일을 같이 열까요?\n" + path)) {
+	confirm("동영상 파일을 같이 열까요?\n" + path, function() {
 		binder.loadVideoFile(path);
-	}
+	});
 }
 
 // 종료 전 C#에서 호출
@@ -399,12 +415,11 @@ function beforeExit() {
 			break;
 		}
 	}
-	if (saved) {
-		doExit();
+	var msg = "종료하시겠습니까?";
+	if (!saved) {
+		msg = "저장되지 않은 파일이 있습니다.\n" + msg;
 	}
-	if (confirm("저장되지 않은 파일이 있습니다.\n종료하시겠습니까?")) {
-		doExit();
-	}
+	confirm(msg, doExit);
 }
 function doExit() {
 	saveSetting(); // 창 위치 최신값으로 저장

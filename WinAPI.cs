@@ -32,17 +32,21 @@ namespace SmiEdit
 
         public static void SetTaskbarHide(int hwnd)
         {
-            ulong style = GetWindowLongPtr(hwnd, -20).ToUInt64();
-            style |= 0x00000080L;
-            style |= 0x80880000L;
+            uint style = GetWindowLongPtr(hwnd, -20).ToUInt32();
+            style |= 0x00000080;
+            style |= 0x80880000;
             SetWindowLongPtr32(hwnd, -20, new UIntPtr(style));
+            /*
+            */
         }
 
         public static void DisableResize(int hwnd)
         {
-            ulong style = GetWindowLongPtr(hwnd, -20).ToUInt64();
-            style &= ~(ulong)0x00040000L;
+            uint style = GetWindowLongPtr(hwnd, -20).ToUInt32();
+            style &= ~(uint)0x00040000;
             SetWindowLongPtr32(hwnd, -20, new UIntPtr(style));
+            /*
+            */
         }
 
         public static void MoveWindow(int hwnd, int x, int y, ref RECT offset)

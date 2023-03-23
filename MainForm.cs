@@ -17,6 +17,7 @@ namespace SmiEdit
         public PlayerBridge player = null;
 
         private readonly Dictionary<string, int> windows = new Dictionary<string, int>();
+        private readonly Dictionary<string, Popup> popups = new Dictionary<string, Popup>();
 
         public string strSettingJson = "불러오기 실패 예제";
 
@@ -49,7 +50,7 @@ namespace SmiEdit
             timer.Interval = 10;
             timer.Enabled = true;
             timer.Tick += FollowWindow;
-            timer.Tick += RefreshPlyaer;
+            timer.Tick += RefreshPlayer;
             timer.Start();
 
             FormClosing += new FormClosingEventHandler(BeforeExit);
@@ -82,14 +83,32 @@ namespace SmiEdit
         {
             RemoveWindow(name); // 남아있을 수 있음
             windows.Add(name, hwnd);
-            Invoke(new Action(() =>
+            if (name.Equals("viewer") || name.Equals("finder"))
             {
-                WinAPI.SetTaskbarHide(hwnd);
-            }));
+                if (!LSH.useCustomPopup)
+                {
+                    Invoke(new Action(() =>
+                    {
+                        WinAPI.SetTaskbarHide(hwnd);
+                    }));
+                }
+            }
+        }
+        public void SetWindow(string name, int hwnd, Popup popup)
+        {
+            RemoveWindow(name); // 남아있을 수 있음
+            windows.Add(name, hwnd);
+            popups.Add(name, popup);
+            popup.mainView.JavascriptObjectRepository.Register("binder", new Binder(this), false, BindingOptions.DefaultBinder);
         }
         public void RemoveWindow(string name)
         {
             windows.Remove(name);
+            popups.Remove(name);
+        }
+        public Popup GetPopup(string name)
+        {
+            return popups.ContainsKey(name) ? popups[name] : null;
         }
         // window.open 시에 브라우저에 커서 가도록
         public void SetFocus(IWebBrowser chromiumWebBrowser)
@@ -107,7 +126,7 @@ namespace SmiEdit
             }
         }
 
-        public void RefreshPlyaer(object sender, EventArgs e)
+        public void RefreshPlayer(object sender, EventArgs e)
         {
             if (player != null)
             {
@@ -118,6 +137,7 @@ namespace SmiEdit
                         int fps = player.GetFps();
                         int time = player.GetTime();
                         Script("refreshTime", new object[] { time, fps });
+                        UpdateViewerTime(time);
                     }
                     else
                     {   // 실행 직후 초기 위치 가져옴
@@ -336,8 +356,47 @@ namespace SmiEdit
         }
         #endregion
 
-        protected string Script(string name) { return mainView.Script(name, null); }
+        #region 브라우저 통신
+        protected string Script(string name) { return mainView.Script(name); }
         protected string Script(string name, object[] args) { return mainView.Script(name, args); }
+        //protected string Script(string name, string arg) { return mainView.Script(name, arg); }
+
+        protected void ScriptToPopup(string name, string func, object arg)
+        {
+            if (LSH.useCustomPopup)
+            {
+                if (popups.ContainsKey(name))
+                {
+                    popups[name].Script(func, arg);
+                }
+            }
+            else
+            {
+                if (name.Equals("viewer"))
+                {
+                    Script("SmiEditor.Viewer.window." + func, new object[] { arg });
+                }
+                else if (name.Equals("finder"))
+                {
+                    Script("SmiEditor.Finder.window." + func, new object[] { arg });
+                }
+            }
+        }
+        
+        // Finder, Viewer는 팝업 형태 제한
+        public void SendMsg(string target, string msg) { ScriptToPopup(target, "sendMsg", msg); }
+        public void OnloadFinder (string last ) { ScriptToPopup("finder", "init", last); }
+        public void RunFind      (string param) { mainView.Script("SmiEditor.Finder.runFind"      , param); }
+        public void RunReplace   (string param) { mainView.Script("SmiEditor.Finder.runReplace"   , param); }
+        public void RunReplaceAll(string param) { mainView.Script("SmiEditor.Finder.runReplaceAll", param); }
+
+        public void UpdateViewerSetting(     ) { ScriptToPopup("viewer", "setSetting", strSettingJson); }
+        public void UpdateViewerTime(int time) { ScriptToPopup("viewer", "refreshTime", time); }
+        private string viewerLines = "[]";
+        public void UpdateViewerLines(string lines) {
+        	ScriptToPopup("viewer", "setLines", viewerLines = lines);
+        }
+        #endregion
 
         #region 설정
         private void LoadSetting()
@@ -366,21 +425,23 @@ namespace SmiEdit
             StreamWriter sw = new StreamWriter("view/setting.json", false, Encoding.UTF8);
             sw.WriteLine(strSettingJson);
             sw.Close();
+            
+            UpdateViewerSetting();
         }
 
-        public void SetPlayer(string dll)
+        public void SetPlayer(string dll, string exe)
         {
             if (InvokeRequired)
             {
                 Invoke(new Action(() =>
                 {
-                    SetPlayer(dll);
+                    SetPlayer(dll, exe);
                 }));
             }
             else
             {
                 // TODO: DLL 불러오기 필요?
-                player = new PotPlayerBridge();
+                player = new PotPlayerBridge(exe);
             }
         }
 
@@ -502,7 +563,6 @@ namespace SmiEdit
             }
             else
             {
-                Console.WriteLine("show");
                 layerForDrag.Visible = true;
                 Script("setShowDrag", new object[] { true });
             }
@@ -515,7 +575,6 @@ namespace SmiEdit
             }
             else
             {
-                Console.WriteLine("hide");
                 layerForDrag.Visible = false;
                 Script("setShowDrag", new object[] { false });
             }

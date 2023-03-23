@@ -56,9 +56,9 @@ namespace SmiEdit
         {
             _.SaveSetting(setting);
         }
-        public void SetPlayer(string dll)
+        public void SetPlayer(string dll, string exe)
         {
-            _.SetPlayer(dll);
+            _.SetPlayer(dll, exe);
         }
         public void RunPlayer(string path)
         {
@@ -85,6 +85,19 @@ namespace SmiEdit
         {
             _.DoExit(resetPlayer, exitPlayer);
         }
+        
+        #region 팝업 통신 (opener 못 쓰는 경우)
+        public void SendMsg(string target, string msg) {
+            _.SendMsg(target, msg);
+        }
+        public void UpdateViewerSetting() { _.UpdateViewerSetting(); }
+        public void UpdateViewerLines(string lines) { _.UpdateViewerLines(lines); }
+
+        public void OnloadFinder (string last ) { _.OnloadFinder (last ); }
+        public void RunFind      (string param) { _.RunFind      (param); }
+        public void RunReplace   (string param) { _.RunReplace   (param); }
+        public void RunReplaceAll(string param) { _.RunReplaceAll(param); }
+        #endregion
 
         #region 플레이어
         public void PlayOrPause() { _.player.PlayOrPause(); }
@@ -114,5 +127,10 @@ namespace SmiEdit
             _.AfterTransform(output);
         }
         #endregion
+
+        public void Test(object obj)
+        {
+            _.Test(obj);
+        }
     }
 }

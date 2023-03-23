@@ -9,15 +9,51 @@ namespace SmiEdit
     {
         private readonly MainForm mainForm;
 
+        public const bool useCustomPopup = false;
+
         public LSH(MainForm mainForm)
         {
             this.mainForm = mainForm;
         }
-
-        public bool OnBeforePopup(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, string targetUrl, string targetFrameName, WindowOpenDisposition targetDisposition, bool userGesture, IPopupFeatures popupFeatures, IWindowInfo windowInfo, IBrowserSettings browserSettings, ref bool noJavascriptAccess, out IWebBrowser newBrowser)
+        
+        public bool OnBeforePopup(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame
+            , string targetUrl, string targetFrameName
+            , WindowOpenDisposition targetDisposition, bool userGesture
+            , IPopupFeatures popupFeatures, IWindowInfo windowInfo, IBrowserSettings browserSettings
+            , ref bool noJavascriptAccess, out IWebBrowser newBrowser)
         {
-            newBrowser = null;
-            return false;
+            if (useCustomPopup)
+            {
+                string name = targetFrameName;
+                if (name.Equals("finder") || name.Equals("viewer"))
+                {
+                    Popup popup = mainForm.GetPopup(name);
+                    if (popup == null)
+                    {
+                        popup = new Popup(targetUrl);
+                        popup.Show();
+                        mainForm.SetWindow(name, popup.Handle.ToInt32(), popup);
+                    }
+                    else
+                    {
+                        WinAPI.SetForegroundWindow(popup.Handle.ToInt32());
+                        popup.mainView.Focus();
+                        popup.SetFocus();
+                    }
+                    newBrowser = null;
+                    return true;
+                }
+                else
+                {
+                    newBrowser = null;
+                    return false;
+                }
+            }
+            else
+            {
+                newBrowser = null;
+                return false;
+            }
         }
 
         public void OnAfterCreated(IWebBrowser chromiumWebBrowser, IBrowser browser)
@@ -27,7 +63,6 @@ namespace SmiEdit
             {
                 int hwnd = browser.GetHost().GetWindowHandle().ToInt32();
                 mainForm.SetWindow(names[0], hwnd);
-                WinAPI.SetTaskbarHide(hwnd);
             }
             mainForm.SetFocus(chromiumWebBrowser);
         }
@@ -52,7 +87,7 @@ namespace SmiEdit
         #region 스크립트 핸들러
 
         delegate string ScriptHandler(string name, object[] args);
-        public string Script(string name) { return Script(name, null); }
+        public string Script(string name) { return Script(name, new object[] { }); }
         public string Script(string name, object[] args)
         {
             object result = null;
@@ -72,7 +107,6 @@ namespace SmiEdit
                     {
                         param[i + 1] = args[i];
                     }
-                    //result = Document.InvokeScript("call", param);
                     this.ExecuteScriptAsync("call", param);
                 }
             }
@@ -84,6 +118,35 @@ namespace SmiEdit
 
             if (result == null) return null;
             return result.ToString();
+        }
+        /*
+        */
+        public string Script(string name, string arg)
+        {
+            return Script(name, new object[] { arg });
+
+            /*
+            object result = null;
+
+            try
+            {
+                if (InvokeRequired)
+                {
+                    result = Invoke(new Action(() => { Script(name, arg);  }));
+                }
+                else
+                {
+                    this.ExecuteScriptAsync("call", new object[] { arg });
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            if (result == null) return null;
+            return result.ToString();
+            */
         }
 
         #endregion

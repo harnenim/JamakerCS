@@ -41,7 +41,6 @@ var SmiEditor = function(text, path) {
 
 	this.syncUpdating = false;
 	this.needToUpdateSync = false;
-	this.leftOfPgUpDn = -1; // 마지막 커서 이동이 PageUp/Down일 경우 커서 left값 기록
 	
 	this.bindEvent();
 	
@@ -95,20 +94,20 @@ SmiEditor.setSetting = function(setting) {
 			if (index > 0 && index < menu.length) {
 				var key = menu[index];
 				if ("A" <= key && key <= "Z") {
-					SmiEditor.withAlts[key] = "binder.focusToMenu(" + key.charCodeAt() + ");";
+					SmiEditor.withAlts[key] = "/*메뉴 접근*/ binder.focusToMenu(" + key.charCodeAt() + ");";
 					SmiEditor.withAlts.reserved += key;
 				}
 			}
 		}
 		
 		// 예약 단축키
-		SmiEditor.withCtrls["D"] = "editor.deleteLine();";
-		SmiEditor.withCtrls["F"] = "SmiEditor.Finder.open();";
-		SmiEditor.withCtrls["H"] = "SmiEditor.Finder.openChange();";
-		SmiEditor.withCtrls["Q"] = "editor.moveToSync();";
-		SmiEditor.withCtrls["Y"] = "editor.history.forward();";
-		SmiEditor.withCtrls["Z"] = "editor.history.back();";
-		SmiEditor.withAlts["Q"] = "editor.findSync();";
+		SmiEditor.withCtrls["D"] = "/*줄 삭제*/ editor.deleteLine();";
+		SmiEditor.withCtrls["F"] = "/*찾기*/ SmiEditor.Finder.open();";
+		SmiEditor.withCtrls["H"] = "/*바꾸기*/ SmiEditor.Finder.openChange();";
+		SmiEditor.withCtrls["Q"] = "/*현재 위치 재생*/ editor.moveToSync();";
+		SmiEditor.withCtrls["Y"] = "/*다시 실행*/ editor.history.forward();";
+		SmiEditor.withCtrls["Z"] = "/*실행 취소*/ editor.history.back();";
+		SmiEditor.withAlts["Q"] = "/*재생 위치 찾기*/ editor.findSync();";
 		SmiEditor.withCtrls.reserved += "DFHQYZ";
 		SmiEditor.withAlts.reserved += "Q";
 		
@@ -132,11 +131,7 @@ SmiEditor.setSetting = function(setting) {
 			// 최초 접근일 경우 키보드 이벤트도 활성화
 			SmiEditor.activateKeyEvent();
 		}
-		SmiEditor.style.html(setting.css);
-
-		if (SmiEditor.Viewer.window) {
-			SmiEditor.Viewer.window.location.reload();
-		}
+		SmiEditor.style.html(setting.css);}
 	}
 }
 
@@ -202,7 +197,6 @@ SmiEditor.prototype.bindEvent = function() {
 	
 	this.input.on("mousedown", function(e) {
 		// PageUp/Down 아닐 경우 커서 위치 초기화
-		this.leftOfPgUpDn = -1;
 		editor.history.log();
 	});
 };
@@ -216,25 +210,26 @@ SmiEditor.activateKeyEvent = function() {
 		var hasFocus = editor && editor.input.is(":focus");
 		
 		if (!editor || editor.act.selected < 0) { // auto complete 작동 중엔 무시
-			if (e.keyCode < 33 || e.keyCode > 34) {
-				// PageUp/Down 아닐 경우 커서 위치 초기화
-				if (hasFocus) {
-					editor.leftOfPgUpDn = -1;
-				}
-			}
 			switch (e.keyCode) {
 				case 33: { // PgUp
 					if (hasFocus) {
-						e.preventDefault();
-						editor.movePage(false);
+						if (!e.shiftKey) {
+							// 종스크롤은 문제 없지만 횡스크롤 문제 발생
+							editor.fixScrollAroundEvent();
+						}
 						editor.history.logIfCursorMoved();
 					}
 					break;
 				}
 				case 34: { // PgDn
 					if (hasFocus) {
+						/*
 						e.preventDefault();
 						editor.movePage(true);
+						*/
+						if (!e.shiftKey) {
+							editor.fixScrollAroundEvent();
+						}
 						editor.history.logIfCursorMoved();
 					}
 					break;
@@ -448,18 +443,22 @@ SmiEditor.activateKeyEvent = function() {
 				case 9: { // Tab
 					e.preventDefault();
 					if (hasFocus) {
-						editor.inputTextLikeNative("\t");
+						editor.inputTextLikeNative("\t"); // TODO: 횡스크롤을 안 잡고 있음...
 					}
 					break;
 				}
 				case 13: { // Enter
 					if (hasFocus) { // 크로뮴 textarea 버그 있음...
-						e.preventDefault();
 						if (e.ctrlKey) { // Ctrl+Enter → <br>
+							e.preventDefault();
 							editor.insertBR();
 						} else {
+							/*
+							e.preventDefault();
 							editor.inputTextLikeNative("\n");
 							editor.input.scrollLeft(0); // 엔터일 땐 스크롤 맨 왼쪽
+							*/
+							editor.fixScrollAroundEvent(0);
 						}
 					}
 					break;
@@ -491,23 +490,13 @@ SmiEditor.activateKeyEvent = function() {
 								} else if (key == "V") {
 									// 붙여넣기 전 상태 기억
 									editor.history.log();
-									
-									// 크로뮴 textarea 버그 있음...
-									/* https에서만 동작함?? C# 네이티브 연구?
-									e.preventDefault();
-									navigator.clipboard.readText().then(function(paste) {
-										editor.inputTextLikeNative(paste.split("\r\n").join("\n"));
-									}).catch(function(err) {
-										console.log(err);
-										alert("붙여넣기 실패");
-									});
-									*/
+									// 붙여넣기도 스크롤 버그 있음
+									editor.fixScrollAroundEvent(0);
 								}
 							}
 						}
 					} else {
 						if (e.altKey) {
-							// TODO: Alt 예약된 단축키 체크 필요
 							f = SmiEditor.withAlts[key];
 						} else {
 							
@@ -556,14 +545,28 @@ SmiEditor.prototype.scrollToCursor = function(lineNo) {
 	}
 	var top = lineNo * LH;
 	var scrollTop = this.input.scrollTop();
-	if (top < scrollTop) {
+	if (top < scrollTop) { // 커서가 보이는 영역보다 위
 		this.input.scrollTop(top);
 	} else {
 		top += LH + SB - this.input.height();
-		if (top > scrollTop) {
+		if (top > scrollTop) { // 커서가 보이는 영역보다 아래
 			this.input.scrollTop(top);
 		}
 	}
+}
+
+SmiEditor.prototype.fixScrollAroundEvent = function(scrollLeft) {
+	var scrollTop = this.input.scrollTop();
+	if (scrollLeft == undefined) {
+		scrollLeft = this.input.scrollLeft()
+	}
+	var editor = this;
+	setTimeout(function() {
+		// 원래 이벤트 진행 후
+		editor.input.scrollTop (scrollTop );
+		editor.input.scrollLeft(scrollLeft);
+		editor.scrollToCursor();
+	}, 1);
 }
 
 //사용자 정의 명령 지원
@@ -599,10 +602,13 @@ SmiEditor.prototype.setLine = function(text, selection) {
 	this.history.log();
 	
 	var cursor = this.input[0].selectionEnd;
-	var lines = this.input.val().substring(0, cursor).split("\n");
-	var offset = cursor - lines[lines.length - 1].length;
-	this.lines[lines.length - 1][LINE.TEXT] = text;
-	this.input.val(linesToText(this.lines));
+	var value = this.input.val();
+	var lines = value.substring(0, cursor).split("\n");
+	var lineNo = lines.length - 1;
+	var offset = cursor - lines[lineNo].length;
+	lines = value.split("\n");
+	lines[lineNo] = text;
+	this.input.val(lines.join("\n"));
 	if (selection) {
 		this.setCursor(offset + selection[0], offset + selection[1]);
 	} else {
@@ -625,8 +631,9 @@ SmiEditor.prototype.inputText = function(input, standCursor) {
 	this.scrollToCursor();
 }
 SmiEditor.prototype.inputTextLikeNative = function(input) {
+	// TODO: 횡스크롤을 안 잡고 있음...
 	// 좌우 스크롤까지 하는 건 연산량 부담...
-	// 애초에 예외적인 경우에 필요한 기능
+	// 애초에 예외적인 경우에 필요한 기능이긴 한데...
 	var text = this.input.val();
 	var selection = this.getCursor();
 	var cursor = selection[0] + input.length;
@@ -924,9 +931,7 @@ SmiEditor.prototype.tagging = function(tag, fromCursor) {
 	var closer = "</" + tag.substring(1, index) + ">";
 	
 	var line = this.getLine();
-	console.log(line);
 	if (line.selection[0] == line.selection[1]) {
-		console.log("단일");
 		if (fromCursor) {
 			// 현재 위치부터 끝까지
 			this.setLine(line.text.substring(0, line.selection[0]) + tag + line.text.substring(line.selection[0]) + closer
@@ -938,7 +943,6 @@ SmiEditor.prototype.tagging = function(tag, fromCursor) {
 		}
 		
 	} else {
-		console.log("블록");
 		// 선택 영역에 대해
 		var selected = line.text.substring(line.selection[0], line.selection[1]);
 		if (selected.substring(0, tag.length) == tag && selected.substring(selected.length - closer.length) == closer) {
@@ -1219,58 +1223,6 @@ SmiEditor.prototype.updateSync = function(range) {
 		}, 100);
 	}, 1);
 }
-SmiEditor.prototype.movePage = function(down) {
-	var text = this.input.val();
-	var lines = text.split("\n");
-	var move = Math.floor((this.area.height() - SB) / LH) - 1;
-	
-	var cursor = this.getCursor();
-	var lineRange = cursor[1] ? text.substring(0, cursor[1]).split("\n") : [""];
-	lineRange = [lineRange.length - 1, lineRange[lineRange.length - 1].length];
-	
-	if (this.leftOfPgUpDn < 0) {
-		var tmp = $("<span>").text(lines[lineRange[0]].substring(0, lineRange[1]));
-		this.area.append(tmp);
-		this.leftOfPgUpDn = tmp.width();
-		tmp.remove();
-	}
-
-	var lineNo = 0;
-	if (down) {
-		lineRange[0] = Math.min(lineRange[0] + move, lines.length - 1);
-	} else {
-		lineRange[0] = Math.max(lineRange[0] - move, 0);
-	}
-	for (var i = 0; i < lineRange[0]; i++) {
-		lineNo += lines[i].length + 1;
-	}
-	this.scrollToCursor(lineRange[0]);
-	
-	// 커서 left 위치 보정
-	var tmp = $("<span>");
-	this.area.append(tmp);
-	
-	var line = lines[lineRange[0]];
-	var last = 0;
-	var i = 0;
-	for (; i < line.length; i++) {
-		tmp.append(line[i]);
-		var w = tmp.width();
-		if (w >= this.leftOfPgUpDn) {
-			if (this.leftOfPgUpDn - last < w - this.leftOfPgUpDn) {
-				if (i > 0) {
-					i--;
-				}
-			}
-			break;
-		}
-		last = w;
-	}
-	tmp.remove();
-	
-	lineNo = Math.max(0, lineNo + i);
-	this.setCursor(lineNo, lineNo);
-}
 SmiEditor.prototype.moveLine = function(toNext) {
 	if (this.syncUpdating) return;
 	this.history.log();
@@ -1472,27 +1424,20 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 
 SmiEditor.Finder = {
 		last: { find: "", replace: "", withCase: false, reverse: false }
-	,	open: function(onload) {
+	,	open: function(isReplace) {
 			var w = 440 * DPI;
 			var h = 220 * DPI;
 			var x = Math.ceil((setting.window.x + (setting.window.width  / 2)) - (w / 2));
 			var y = Math.ceil((setting.window.y + (setting.window.height / 2)) - (h / 2));
 		
-			this.onload = (onload ? onload : this.onloadFind);
+			this.onload = (isReplace ? this.onloadReplace : this.onloadFind);
 			
 			this.window = window.open("finder.html", "finder", "scrollbars=no,location=no,width="+w+",height="+h);
 			binder.moveWindow("finder", x, y, w, h, false);
 			binder.focus("finder");
 		}
-	,	onloadFind: function() {
-			var popup = this.popup = $(this.window.document.body);
-			if (this.last){
-				popup.find("[name=find]"   ).val(this.last.find   )[0].setSelectionRange(0, this.last.find   .length);
-				popup.find("[name=replace]").val(this.last.replace)[0].setSelectionRange(0, this.last.replace.length);
-				popup.find("[name=case]").prop("checked", this.last.withCase);
-				popup.find("[name=direction][value=" + (this.last.reverse ? "-" : "") + "1]").click();
-			}
-			popup.find("[name=find]").focus();
+	,	onloadFind: function(isReplace) {
+			this.last.toFocus = "[name=find]";
 			
 			if (SmiEditor.selected) {
 				var editor = SmiEditor.selected;
@@ -1500,19 +1445,17 @@ SmiEditor.Finder = {
 				var length = selection[1] - selection[0];
 				if (length) {
 					this.last.find = editor.text.substring(selection[0], selection[1]);
-					popup.find("[name=find]").val(this.last.find)[0].setSelectionRange(0, length);
-					popup.find(".button-find").focus();
-					return true;
+					this.last.toFocus = (isReplace ? "[name=replace]" : ".button-find");
 				}
 			}
+			
+			binder.onloadFinder(JSON.stringify(this.last));
 		}
 	,	openChange: function() {
-			this.open(this.onloadChange);
+			this.open(true);
 		}
-	,	onloadChange: function() {
-			if (this.onloadFind()) {
-				this.popup.find("[name=replace]").focus();
-			}
+	,	onloadReplace: function() {
+			this.onloadFind(true);
 		}
 
 	,	finding: {
@@ -1525,7 +1468,7 @@ SmiEditor.Finder = {
 			if (!SmiEditor.selected) {
 				return "열려있는 파일이 없습니다.";
 			}
-			this.finding = params;
+			this.finding = JSON.parse(params);
 			this.finding.input = SmiEditor.selected.input[0];
 			this.finding.text      = this.finding.input.value;
 			this.finding.upperText = this.finding.text.toUpperCase();
@@ -1578,19 +1521,19 @@ SmiEditor.Finder = {
 		
 	,	runFind: function(params) {
 			var err = this.checkError(params);
-			if (err) return err;
+			if (err) return this.sendMsgAfterRun(err);
 	
 			var selection = this.doFind();
 			if (selection) {
 				this.finding.input.setSelectionRange(selection[0], selection[1]);
 				this.afterFind();
 			} else {
-				return "찾을 수 없습니다.";
+				this.sendMsgAfterRun("찾을 수 없습니다.");
 			}
 		}
 	,	runReplace: function(params) {
 			var err = this.checkError(params);
-			if (err) return err;
+			if (err) return this.sendMsgAfterRun(err);
 			
 			// 선택돼 있었으면 바꾸기
 			var selection = this.doReplace();
@@ -1606,12 +1549,12 @@ SmiEditor.Finder = {
 				this.afterFind();
 				
 			} else {
-				return "찾을 수 없습니다.";
+				this.sendMsgAfterRun("찾을 수 없습니다.");
 			}
 		}
 	,	runReplaceAll: function(params) {
 			var err = this.checkError(params);
-			if (err) return err;
+			if (err) return this.sendMsgAfterRun(err);
 	
 			var count = 0;
 			var last = null;
@@ -1633,10 +1576,13 @@ SmiEditor.Finder = {
 				this.finding.input.value = this.finding.text;
 				this.finding.input.setSelectionRange(last[0], last[1]);
 				this.afterFind();
-				return count + "개 바꿈";
+				this.sendMsgAfterRun(count + "개 바꿈");
 			} else {
-				return "찾을 수 없습니다.";
+				this.sendMsgAfterRun("찾을 수 없습니다.");
 			}
+		}
+	,	sendMsgAfterRun: function(msg) {
+			binder.sendMsg("finder", msg);
 		}
 };
 
@@ -1657,13 +1603,13 @@ SmiEditor.Viewer = {
 					, setting.viewer.window.height
 					, true);
 		}
-	,	onload: function() {
-			this.window.setSetting(setting.viewer);
-		}
 	,	refresh: function() {
+			/*
 			if (this.window && this.window.refresh) {
 				this.window.refresh();
 			}
+			*/
+			binder.updateViewerLines(JSON.stringify(SmiEditor.selected ? SmiEditor.selected.lines : [["", 0, TYPE.TEXT]]));
 		}
 };
 

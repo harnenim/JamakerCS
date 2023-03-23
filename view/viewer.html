@@ -1,10 +1,12 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
 <title>미리보기</title>
 <script src="lib/jquery-3.2.1.min.js"></script>
 <script src="lib/SmiEditor.js"></script>
+<script src="lib/webview.js"></script>
+<script src="lib/popup.js"></script>
 <script>
 var lastTab = null;
 var lastTime = 0;
@@ -12,135 +14,133 @@ var showText = "";
 var i = 0;
 
 var style = null;
-function setSetting(setting) {
+var setting = {}
+function setSetting(jsonSetting) {
+	setting = JSON.parse(jsonSetting);
 	if (style == null) {
 		$("head").append(style = $("<style>"));
 	}
-	style.html("#viewer {\n" + setting.css + "}");
+	style.html("#viewer {\n" + setting.viewer.css + "}");
 }
-function refresh() {
+var lines = [];
+var viewer = null;
+function setLines(newLines) {
+	if (viewer) viewer.html("");
+	lines = JSON.parse(newLines);
+	
+	var time = lastTime;
 	lastTime = -1;
+	refreshTime(time);
 }
+function refreshTime(time) {
+	if (time < lastTime || lastTime < 0) {
+		// 역방향 탐색 초기화
+		i = 0;
+		viewer.html("");
+	}
+	// 현재 시간 이전의 가장 마지막 싱크 찾기
+	var index = i;
+	for (var j = i; j < lines.length; j++) {
+		if (lines[j][LINE.SYNC]) {
+			if (lines[j][LINE.SYNC] > time) {
+				break;
+			}
+			index = j;
+		}
+	}
+	if (index == i) {
+		// 변화 없음
+		return;
+	}
+	i = index;
+	var showLines = [];
+	var hasLine = false;
+	if (i >= 0) {
+		for (var j = i + 1; j < lines.length; j++) {
+			if (lines[j][LINE.SYNC]) {
+				break;
+			}
+			var line = lines[j][LINE.TEXT].split(/<br>/gi);
+			for (var k = 0; k < line.length; k++) {
+				if ($("<span>").html(line[k][0]).text()[0] == '-') {
+					hasLine = true;
+				}
+				showLines.push(line[k]);
+			}
+		}
+	}
+	if (hasLine) {
+		for (var j = 0; j < showLines.length; j++) {
+			var line = showLines[j];
+			if ($("<span>").html(line).text()[0] != '-') {
+				line = "<span style='opacity: 0;'>-</span>" + line;
+			}
+			showLines[j] = line + "<span style='opacity: 0;'>-</span>";
+		}
+	}
+	showText = showLines.join("<br>");
+	// RUBY태그 문법이 미묘하게 달라서 가공 필요
+	showText = showText.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
+	// font size도 추가 작업
+	{	var j = 0;
+		var begin = 0;
+		while ((begin = showText.toUpperCase().indexOf("<FONT", j)) >= 0) {
+			if (begin > showText.length) {
+				break;
+			}
+			var end = showText.indexOf(">", begin);
+			if (end < 0) break;
+			
+			var tag = showText.substring(begin, end);
+			var index = tag.toUpperCase().indexOf("SIZE=");
+			if (index > 0) {
+				var q = tag[index + 5];
+				var size = 0;
+				var qEnd = 0;
+				if (q == '"' || q == "'") {
+					qEnd = tag.indexOf(q, index + 7);
+					if (qEnd > 0) {
+						try {
+							size = Number(tag.substring(index + 6, qEnd));
+							qEnd++;
+						} catch (e) {}
+					}
+				} else {
+					q = "";
+				}
+				if (size == 0) {
+					var tmp = tag.substring(index + 5 + q.length);
+					for (qEnd = index + 5 + q.length; qEnd < tag.length; qEnd++) {
+						var c = tag[qEnd];
+						if (isFinite(c)) {
+							size = size * 10 + Number(c);
+						} else {
+							break;
+						}
+					}
+				}
+				if (size) {
+					var style = 'style="font-size: ' + ((window.innerWidth / 586) * size) + 'px;"'; // 팟플레이어 기준
+					showText = showText.substring(0, begin + index) + style + showText.substring(begin + qEnd);
+					end = end - qEnd + index + style.length;
+				}
+			}
+			j = end;
+		}
+	}
+	viewer.html("<div" + (hasLine ? " style='text-align: left; width: fit-content; margin: 0 auto;'" : "") + ">" + showText + "</div>");
+	
+	lastTime = time;
+};
 
 $(function() {
-	opener.SmiEditor.Viewer.onload(); // TODO: opener
-	
-	var viewer = $("#viewer");
-	
-	setInterval(function() {
-		var tab = opener.SmiEditor.selected; // TODO: opener
-		if (!tab) {
-			viewer.html("");
-			return;
-		}
-		if (tab != lastTab) {
-			// 탭 바뀌었을 경우 초기화
-			lastTab = tab;
-			i = 0;
-			viewer.html("");
-		}
-		var time = opener.time; // TODO: opener
-		var lines = tab.lines;
-		
-		if (time < lastTime || lastTime < 0) {
-			// 역방향 탐색 초기화
-			i = 0;
-			viewer.html("");
-		}
-		// 현재 시간 이전의 가장 마지막 싱크 찾기
-		var index = i;
-		for (var j = i; j < lines.length; j++) {
-			if (lines[j][LINE.SYNC]) {
-				if (lines[j][LINE.SYNC] > time) {
-					break;
-				}
-				index = j;
-			}
-		}
-		if (index == i) {
-			// 변화 없음
-			return;
-		}
-		i = index;
-		var showLines = [];
-		var hasLine = false;
-		if (i >= 0) {
-			for (var j = i + 1; j < lines.length; j++) {
-				if (lines[j][LINE.SYNC]) {
-					break;
-				}
-				var line = lines[j][LINE.TEXT].split(/<br>/gi);
-				for (var k = 0; k < line.length; k++) {
-					if ($("<span>").html(line[k][0]).text()[0] == '-') {
-						hasLine = true;
-					}
-					showLines.push(line[k]);
-				}
-			}
-		}
-		if (hasLine) {
-			for (var j = 0; j < showLines.length; j++) {
-				var line = showLines[j];
-				if ($("<span>").html(line).text()[0] != '-') {
-					line = "<span style='opacity: 0;'>-</span>" + line;
-				}
-				showLines[j] = line + "<span style='opacity: 0;'>-</span>";
-			}
-		}
-		showText = showLines.join("<br>");
-		// RUBY태그 문법이 미묘하게 달라서 가공 필요
-		showText = showText.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
-		// font size도 추가 작업
-		{	var j = 0;
-			var begin = 0;
-			while ((begin = showText.toUpperCase().indexOf("<FONT", j)) >= 0) {
-				if (begin > showText.length) {
-					break;
-				}
-				var end = showText.indexOf(">", begin);
-				if (end < 0) break;
-				
-				var tag = showText.substring(begin, end);
-				var index = tag.toUpperCase().indexOf("SIZE=");
-				if (index > 0) {
-					var q = tag[index + 5];
-					var size = 0;
-					var qEnd = 0;
-					if (q == '"' || q == "'") {
-						qEnd = tag.indexOf(q, index + 7);
-						if (qEnd > 0) {
-							try {
-								size = Number(tag.substring(index + 6, qEnd));
-								qEnd++;
-							} catch (e) {}
-						}
-					} else {
-						q = "";
-					}
-					if (size == 0) {
-						var tmp = tag.substring(index + 5 + q.length);
-						for (qEnd = index + 5 + q.length; qEnd < tag.length; qEnd++) {
-							var c = tag[qEnd];
-							if (isFinite(c)) {
-								size = size * 10 + Number(c);
-							} else {
-								break;
-							}
-						}
-					}
-					if (size) {
-						var style = 'style="font-size: ' + ((window.innerWidth / 586) * size) + 'px;"'; // 팟플레이어 기준
-						showText = showText.substring(0, begin + index) + style + showText.substring(begin + qEnd);
-						end = end - qEnd + index + style.length;
-					}
-				}
-				j = end;
-			}
-		}
-		viewer.html("<div" + (hasLine ? " style='text-align: left; width: fit-content; margin: 0 auto;'" : "") + ">" + showText + "</div>");
-		
-		lastTime = time;
-	}, 20);
+	viewer = $("#viewer");
+	if (opener) {
+		opener.binder.updateViewerSetting();
+	}
+	if (binder && binder.onloadViewer) {
+		binder.onloadViewer();
+	}
 });
 
 $(document).on("keydown", function(e) {
