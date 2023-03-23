@@ -598,6 +598,7 @@ $(function() {
 			dllSetting.withExit = $("input[name=player_control_what_withExit]").prop("checked");
 			opener.setSetting(setting);
 			opener.saveSetting();
+			opener.binder.setVideoExts(setting.player.exts);
 		};
 	}
 	

@@ -69,8 +69,6 @@ namespace SmiEdit
                 {
                     windows.Add("editor", Handle.ToInt32());
 
-                    //Script("init", new string[] { strSettingJson }); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
-                    //Script("setPlayerDlls", new string[] { "|(없음),PotPlayer|팟플레이어" }); // TODO: dll 폴더 내용물 체크하는 것 필요...
                     Script("init", strSettingJson); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
                     Script("setPlayerDlls", "|(없음),PotPlayer|팟플레이어"); // TODO: dll 폴더 내용물 체크하는 것 필요...
                     Script("setDroppable");
@@ -360,7 +358,6 @@ namespace SmiEdit
 
         #region 브라우저 통신
         protected string Script(string name) { return mainView.Script(name); }
-        //protected string Script(string name, object[] args) { return mainView.Script(name, args); }
         protected string Script(string name, object arg) { return mainView.Script(name, arg); }
 
         protected void ScriptToPopup(string name, string func, object arg)
@@ -429,6 +426,11 @@ namespace SmiEdit
             sw.Close();
             
             UpdateViewerSetting();
+        }
+
+        public void SetVideoExts(string exts)
+        {
+            videoExts = exts.Split(',');
         }
 
         public void SetPlayer(string dll, string exe)
@@ -653,11 +655,11 @@ namespace SmiEdit
             Script("openFile", new object[] { path, text });
         }
 
-        string[] exts = new string[] { "mkv", "mp4", "avi", "m2ts", "ts" }; // TODO: 우선순위 설정 기능...?
+        string[] videoExts = new string[] { "mkv", "mp4", "avi", "m2ts", "ts" }; // TODO: 우선순위 설정 기능...?
         public void CheckLoadVideoFile(string smiPath)
         {
             string withoutExt = smiPath.Substring(0, smiPath.Length - 4);
-            foreach (string ext in exts)
+            foreach (string ext in videoExts)
             {
                 string videoPath = withoutExt + "." + ext;
                 if (File.Exists(videoPath))

@@ -56,6 +56,10 @@ namespace SmiEdit
         {
             _.SaveSetting(setting);
         }
+        public void SetVideoExts(string exts)
+        {
+            _.SetVideoExts(exts);
+        }
         public void SetPlayer(string dll, string exe)
         {
             _.SetPlayer(dll, exe);
