@@ -30,15 +30,20 @@ namespace SmiEdit
                     Popup popup = mainForm.GetPopup(name);
                     if (popup == null)
                     {
-                        popup = new Popup(targetUrl);
+                        popup = new Popup(mainForm, name, targetUrl);
+                        popup.Text = name.Equals("finder") ? "찾기/바꾸기" : "미리보기";
                         popup.Show();
                         mainForm.SetWindow(name, popup.Handle.ToInt32(), popup);
                     }
                     else
                     {
-                        WinAPI.SetForegroundWindow(popup.Handle.ToInt32());
-                        popup.mainView.Focus();
-                        popup.SetFocus();
+                        try
+                        {
+                            WinAPI.SetForegroundWindow(popup.Handle.ToInt32());
+                            popup.mainView.Focus();
+                            popup.SetFocus();
+                        }
+                        finally { }
                     }
                     newBrowser = null;
                     return true;
@@ -59,12 +64,16 @@ namespace SmiEdit
         public void OnAfterCreated(IWebBrowser chromiumWebBrowser, IBrowser browser)
         {
             List<string> names = browser.GetFrameNames();
+            Console.WriteLine($"OnAfterCreated: {names}");
             if (names.Count > 0)
             {
                 int hwnd = browser.GetHost().GetWindowHandle().ToInt32();
                 mainForm.SetWindow(names[0], hwnd);
+                if (names[0].Equals("finder"))
+                {
+                    mainForm.SetFocus(chromiumWebBrowser);
+                }
             }
-            mainForm.SetFocus(chromiumWebBrowser);
         }
 
         public bool DoClose(IWebBrowser chromiumWebBrowser, IBrowser browser)

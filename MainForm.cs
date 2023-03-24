@@ -100,7 +100,6 @@ namespace SmiEdit
             RemoveWindow(name); // 남아있을 수 있음
             windows.Add(name, hwnd);
             popups.Add(name, popup);
-            popup.mainView.JavascriptObjectRepository.Register("binder", new Binder(this), false, BindingOptions.DefaultBinder);
         }
         public void RemoveWindow(string name)
         {
@@ -410,6 +409,7 @@ namespace SmiEdit
         
         // Finder, Viewer는 팝업 형태 제한
         public void SendMsg(string target, string msg) { ScriptToPopup(target, "sendMsg", msg); }
+        public void OnloadFinder() { Script("SmiEditor.Finder.onload"); }
         public void OnloadFinder (string last ) { ScriptToPopup("finder", "init", last); }
         public void RunFind      (string param) { Script("SmiEditor.Finder.runFind"      , param); }
         public void RunReplace   (string param) { Script("SmiEditor.Finder.runReplace"   , param); }
