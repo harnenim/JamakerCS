@@ -677,6 +677,13 @@ $(function() {
 		var submitFunc = submitFuncs[opened];
 		if (submitFunc) submitFunc();
 	});
+
+	$("form").each(function() {
+		var form = $(this);
+		console.log("submitFuncs['" + form.attr("id") + "'](); return false;");
+		form.attr("onsubmit", "submitFuncs['" + form.attr("id") + "'](); return false;");
+		form.append($("<button type='submit'>").hide());
+	});
 	
 	show(0);
 });
