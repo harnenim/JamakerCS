@@ -224,9 +224,7 @@ function setSetting(setting) {
 	SmiEditor.withCtrls["N"] = newFile;
 	SmiEditor.withCtrls["O"] = openFile;
 	SmiEditor.withCtrls["S"] = saveFile;
-	SmiEditor.withCtrls["T"] = openNewTab;
-	SmiEditor.withCtrls.reserved += "NOST";
-	SmiEditor.withCtrlShifts.reserved += "S";
+	SmiEditor.withCtrls.reserved += "NOS";
 	
 	// 가중치 등
 	$("#inputWeight").val(setting.sync.weight);
@@ -307,6 +305,18 @@ function saveSetting() {
 	}
 }
 
+function openHelp(name) {
+	var url = (name.substring(0, 4) == "http") ? name : "help/" + name.split("..").join("").split(":").join("") + ".html";
+	window.open(url, "help", "scrollbars=no,location=no,resizable=no,width=0,height=0");
+	binder.moveWindow("help"
+			, setting.window.x + (40 * DPI)
+			, setting.window.y + (40 * DPI)
+			, 800 * DPI
+			, (600+30) * DPI
+			, false);
+	binder.focus("help");
+}
+
 function runIfCanOpenNewTab(func) {
 	if (!setting.useTab) {
 		// 탭 미사용 -> 현재 파일 닫기
@@ -326,12 +336,6 @@ function runIfCanOpenNewTab(func) {
 
 function newFile() {
 	runIfCanOpenNewTab(openNewTab);
-	//binder.test(setting);
-}
-function test(obj) {
-	console.log(obj);
-	console.log(typeof obj);
-	console.log(obj == setting);
 }
 
 function openFile(path, text) {
@@ -358,12 +362,12 @@ function saveFile(asNew) {
 		path = "";
 	}
 	
-	/*
+	/* // 수정된 게 없어 보여도, 다른 프로그램에서 수정한 걸 덮어쓸 수도 있음
 	if (text == currentTab.saved) {
 		// 마지막 저장 이후 수정된 게 없음
 		//return false;
 	}
-	*/  // 수정된 게 없어 보여도, 다른 프로그램에서 수정한 걸 덮어쓸 수도 있음
+	*/
 	
 	if (currentTab.area.find(".sync.error,.sync.equal").length) {
 		confirm("싱크 오류가 있습니다.\n저장하시겠습니까?", function() {
