@@ -493,47 +493,60 @@ namespace SmiEdit
             videoExts = exts.Split(',');
         }
 
-        public void SetPlayer(string dll, string exe)
+        public void SetPlayer(string dll, string path, bool withRun)
         {
             if (InvokeRequired)
             {
                 Invoke(new Action(() =>
                 {
-                    SetPlayer(dll, exe);
+                    SetPlayer(dll, path, withRun);
                 }));
             }
             else
             {
                 // TODO: DLL 불러오기 필요?
-                if (dll.Equals("NoPlayer"))
-                {
-                    player = new NoPlayer(exe);
-                }
-                else if (dll.Equals("PotPlayer"))
-                {
-                    player = new PotPlayerBridge(exe);
-                }
-                else
+
+                // 플레이어 선택이 바뀌었으면 연결 끊기
+                if (player != null && !dll.Equals(player.GetType().Name))
                 {
                     player = null;
                 }
-            }
-        }
 
-        public void RunPlayer(string path)
-        {
-            if (player.hwnd > 0) return;
+                string[] paths = path.Replace('\\', '/').Split('/');
+                string exe = paths[paths.Length - 1];
 
-            try
-            {
-                Console.WriteLine("path: " + path);
-                ProcessStartInfo startInfo = new ProcessStartInfo
-                {   FileName = path
-                ,   Arguments = null
-                };
-                Process.Start(startInfo);
+                // 잔여 플레이어가 없으면 실행
+                if (player == null)
+                {
+                    if (dll.Equals("NoPlayer"))
+                    {
+                        player = new NoPlayer();
+                    }
+                    else if (dll.Equals("PotPlayer"))
+                    {
+                        player = new PotPlayer();
+                    }
+                }
+
+                // 플레이어 있으면 exe 파일 설정
+                if (player != null)
+                {
+                    player.FindPlayer(exe);
+
+                    if (withRun && player.hwnd == 0)
+                    {
+                        try
+                        {
+                            ProcessStartInfo startInfo = new ProcessStartInfo
+                            {   FileName = path
+                            ,   Arguments = null
+                            };
+                            Process.Start(startInfo);
+                        }
+                        catch { }
+                    }
+                }
             }
-            catch { }
         }
         #endregion
 
