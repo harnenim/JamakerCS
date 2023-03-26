@@ -355,6 +355,8 @@ function openFileForVideo(path, text) {
 
 function saveFile(asNew) {
 	var currentTab = tabs[tab];
+	currentTab.history.log();
+
 	var path = currentTab.path;
 	if (!path) {
 		asNew = true;
