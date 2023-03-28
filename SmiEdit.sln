@@ -5,11 +5,11 @@ VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmiEdit", "SmiEdit.csproj", "{E61B05F0-30E9-4CBA-B372-E25B91D6D927}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmiEditBridge", "..\SmiEditBridge\SmiEditBridge\SmiEditBridge.csproj", "{DFE0D759-C398-4E88-A957-8973A0941B13}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerBridge", "..\PlayerBridge\PlayerBridge\PlayerBridge.csproj", "{DFE0D759-C398-4E88-A957-8973A0941B13}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmiEditBridge_PotPlayer", "..\SmiEditBridge\SmiEditBridge_PotPlayer\SmiEditBridge_PotPlayer.csproj", "{05F45C0D-679E-4863-BF8F-25DD1EEADB87}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerBridge_NoPlayer", "..\PlayerBridge\PlayerBridge_NoPlayer\PlayerBridge_NoPlayer.csproj", "{EE0510D9-C061-4831-BAC8-67256727B165}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmiEditBridge_NoPlayer", "..\SmiEditBridge\SmiEditBridge_NoPlayer\SmiEditBridge_NoPlayer.csproj", "{EE0510D9-C061-4831-BAC8-67256727B165}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerBridge_PotPlayer", "..\PlayerBridge\PlayerBridge_PotPlayer\PlayerBridge_PotPlayer.csproj", "{05F45C0D-679E-4863-BF8F-25DD1EEADB87}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,14 +25,14 @@ Global
 		{DFE0D759-C398-4E88-A957-8973A0941B13}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DFE0D759-C398-4E88-A957-8973A0941B13}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DFE0D759-C398-4E88-A957-8973A0941B13}.Release|Any CPU.Build.0 = Release|Any CPU
-		{05F45C0D-679E-4863-BF8F-25DD1EEADB87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{05F45C0D-679E-4863-BF8F-25DD1EEADB87}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{05F45C0D-679E-4863-BF8F-25DD1EEADB87}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{05F45C0D-679E-4863-BF8F-25DD1EEADB87}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EE0510D9-C061-4831-BAC8-67256727B165}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EE0510D9-C061-4831-BAC8-67256727B165}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EE0510D9-C061-4831-BAC8-67256727B165}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EE0510D9-C061-4831-BAC8-67256727B165}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05F45C0D-679E-4863-BF8F-25DD1EEADB87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05F45C0D-679E-4863-BF8F-25DD1EEADB87}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05F45C0D-679E-4863-BF8F-25DD1EEADB87}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05F45C0D-679E-4863-BF8F-25DD1EEADB87}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

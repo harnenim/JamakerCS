@@ -7,14 +7,14 @@ using System.Windows.Forms;
 using CefSharp;
 using CefSharp.WinForms;
 using System.Diagnostics;
-using SmiEditBridge;
 using SmiEdit.addon;
+using PlayerBridge;
 
 namespace SmiEdit
 {
     public partial class MainForm : Form
     {
-        public PlayerBridge player = null;
+        public PlayerBridge.PlayerBridge player = null;
 
         private readonly Dictionary<string, int> windows = new Dictionary<string, int>();
         private readonly Dictionary<string, Popup> popups = new Dictionary<string, Popup>();
@@ -339,12 +339,12 @@ namespace SmiEdit
                 }
                 catch { }
 
-                int player = this.player.hwnd;
+                int player = this.player == null ? 0 : this.player.hwnd;
                 if (player > 0)
                 {
                     int pMoveX = moveX;
                     int pMoveY = moveY;
-                    SmiEditBridge.RECT playerOffset = this.player.GetWindowPosition();
+                    PlayerBridge.RECT playerOffset = this.player.GetWindowPosition();
                     if (playerOffset.left - lastOffset.left > lastOffset.right - playerOffset.left)
                     {   // 오른쪽 경계에 더 가까울 땐 오른쪽을 따라감
                         pMoveX = offset.right - lastOffset.right;
@@ -386,7 +386,7 @@ namespace SmiEdit
                     int player = this.player.hwnd;
                     if (player > 0)
                     {
-                        SmiEditBridge.RECT playerOffset = this.player.GetWindowPosition();
+                        PlayerBridge.RECT playerOffset = this.player.GetWindowPosition();
                         Script("eval",
                             $"setting.player.window.x = { playerOffset.left };"
                         +   $"setting.player.window.y = { playerOffset.top };"
@@ -509,6 +509,7 @@ namespace SmiEdit
 
         public void SetPlayer(string dll, string path, bool withRun)
         {
+            Console.WriteLine($"SetPlayer: {InvokeRequired}");
             if (InvokeRequired)
             {
                 Invoke(new Action(() =>
@@ -518,7 +519,7 @@ namespace SmiEdit
             }
             else
             {
-                // TODO: DLL 불러오기 필요?
+                // TODO: DLL 동적 불러오기 필요?
 
                 // 플레이어 선택이 바뀌었으면 연결 끊기
                 if (player != null && !dll.Equals(player.GetType().Name))
@@ -813,11 +814,11 @@ namespace SmiEdit
         private void LoadFile(string path, bool forVideo)
         {
             string text = "";
-            Encoding encoding = TextFile.BOM.DetectEncoding(path); // TODO: BOM 없으면 버그 있나...?
-            //Console.WriteLine("encoding: " + encoding);
             StreamReader sr = null;
             try
             {
+                Encoding encoding = TextFile.BOM.DetectEncoding(path); // TODO: BOM 없으면 버그 있나...?
+                //Console.WriteLine("encoding: " + encoding);
                 sr = new StreamReader(path, encoding);
                 text = sr.ReadToEnd();
             }

@@ -56,6 +56,18 @@
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="NoPlayer, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\PlayerBridge\NoPlayer.dll</HintPath>
+    </Reference>
+    <Reference Include="PlayerBridge, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\PlayerBridge\PlayerBridge.dll</HintPath>
+    </Reference>
+    <Reference Include="PotPlayer, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\PlayerBridge\PotPlayer.dll</HintPath>
+    </Reference>
     <Reference Include="SubtitleObject, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\SubtitleObject.dll</HintPath>
@@ -144,6 +156,12 @@
     <Content Include="bridge\list.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="bridge\NoPlayer.dll" />
+    <Content Include="bridge\PlayerBridge.dll" />
+    <Content Include="bridge\PotPlayer.dll" />
+    <Content Include="NoPlayer.dll" />
+    <Content Include="PlayerBridge.dll" />
+    <Content Include="PotPlayer.dll" />
     <Content Include="view\addon\Combine.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -228,20 +246,6 @@
     <Content Include="view\viewer.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SmiEditBridge\SmiEditBridge\SmiEditBridge.csproj">
-      <Project>{dfe0d759-c398-4e88-a957-8973a0941b13}</Project>
-      <Name>SmiEditBridge</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SmiEditBridge\SmiEditBridge_NoPlayer\SmiEditBridge_NoPlayer.csproj">
-      <Project>{ee0510d9-c061-4831-bac8-67256727b165}</Project>
-      <Name>SmiEditBridge_NoPlayer</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SmiEditBridge\SmiEditBridge_PotPlayer\SmiEditBridge_PotPlayer.csproj">
-      <Project>{05f45c0d-679e-4863-bf8f-25dd1eeadb87}</Project>
-      <Name>SmiEditBridge_PotPlayer</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
