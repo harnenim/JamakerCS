@@ -26,11 +26,11 @@ var checkVersion;
 	var lastNotifyForCommand = "";
 	var lastNotifyForAutoComplete = "";
 	var lastNotifyForStyle = "";
-	var lastNotifyForMenu = "2023.03.27.v2";
+	var lastNotifyForMenu = "2023.03.28.v2";
 }
 
 var DEFAULT_SETTING =
-{	version: "2023.03.27.v2"
+{	version: "2023.03.28.v2"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -49,10 +49,11 @@ var DEFAULT_SETTING =
 		]
 	,	[	"부가기능(&A)"
 		,	"화면 싱크 매니저(&M)|openAddon('SyncManager')"
-		,	"겹치는 대사 합치기(&C)|openAddon('Combine');"
-		,	"겹치는 대사 나누기(&D)|openAddon('Devide');"
+		,	"겹치는 대사 결합(&C)|openAddon('Combine');"
+		,	"겹치는 대사 분리(&D)|openAddon('Devide');"
 		,	"싱크 유지 텍스트 대체(&F)|openAddon('Fusion');"
 		,	"노래방 자막(&K)|openAddon('Karaoke');"
+		,	"흔들기 효과(&S)|openAddon('Shake');"
 		,	"맞춤법 검사기|extSubmit(\"post\", \"http://speller.cs.pusan.ac.kr/results\", \"text1\");"
 		,	"국어사전|extSubmit(\"get\", \"https://ko.dict.naver.com/%23/search\", \"query\");"
 		]

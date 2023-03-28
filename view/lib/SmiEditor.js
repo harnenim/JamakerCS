@@ -1774,29 +1774,3 @@ SmiEditor.prototype.fillSync = function() {
 		binder.fillSync(text.join("\n"));
 	}
 };
-SmiEditor.prototype.shake = function() {
-	var start = 0;
-	var end = this.lines.length;
-	
-	var range = this.getCursor();
-	if (range[0] != range[1]) {
-		start = this.text.substring(0, range[0]).split("\n").length - 1;
-		end   = this.text.substring(0, range[1]).split("\n").length;
-	}
-	
-	var lastSync = null;
-	for (var i = start; i < end; i++) {
-		var line = this.lines[i];
-		if (line[LINE.TYPE]) {
-			if (lastSync) {
-				var text = [];
-				for (var j = lastSync[0] + 1; j < i; j++) {
-					text.push(this.lines[j][LINE.TEXT]);
-				}
-				text = text.join("\n").split(/<br>/gi);
-				// TODO: 다시 만들어야 되는데.........
-			}
-			lastSync = [i, line];
-		}
-	}
-};

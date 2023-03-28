@@ -18,7 +18,7 @@ windowName = "help";
 <br />
 다음과 같은 특수 태그가 존재하며, 정규화를 통해 출력값을 만들어줍니다.<br />
 해당 기능은 탭문자로 체크된 중간 싱크를 생성합니다.<br />
-(─라고 써놓고 파싱 로직 수정하다 말았음)<br />
+<s>─라고 써놓고 파싱 로직 수정하다 말았음</s><br />
 <br />
 &lt;font color="#9abcde" fade="in"&gt;페이드 인&lt;/font&gt;<br />
 &lt;font color="#89abcd" fade="out"&gt;페이드 아웃&lt;/font&gt;<br />
@@ -28,6 +28,12 @@ windowName = "help";
 &lt;font typing='keyboard[]'&gt;테스트텍스트&lt;/font&gt;<br />
 &lt;font typing='keyboard invisible'&gt;테스트텍스트&lt;/font&gt;<br />
 &lt;font typing='keyboard hangeul'&gt;test텍스트&lt;/font&gt;<br />
+<br />
+이렇게 바꾸려고는 하는데<br />
+지금 당장은 키보드 문법이 이렇게 생겼음<br />
+<br />
+&lt;font typing='keyboard(0,1)'&gt;테스트텍스트&lt;/font&gt;<br />
+&lt;font typing='keyboard(1,1)'&gt;테스트텍스트&lt;/font&gt;<br />
 <br />
 페이드 기능은 한 대사에 여러개를 넣을 수 있지만<br />
 타이핑 기능은 한 대사에 하나로 제한됩니다.

@@ -1,0 +1,323 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>흔들기 효과</title>
+	<script src="../lib/jquery-3.2.1.min.js"></script>
+	<script src="../lib/popup.js"></script>
+	<script src="../lib/setting.js"></script>
+	<script src="../lib/SmiEditor.js"></script>
+	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
+	<script>
+windowName = "addon";
+
+if (opener) {
+	setting = opener.setting;
+}
+
+var style = null;
+function setSetting(setting) {
+	if (style == null) {
+		$("head").append(style = $("<style>"));
+	}
+	style.html("#preview {\n" + setting.viewer.css + "}");
+}
+
+var editor = null;
+
+function shakeSync(lines, index, size) {
+	/*
+	 * ５０３
+	 * ２※６
+	 * ７４１
+	 */
+	var step = index % 8;
+	
+	var text = [];
+	
+	{	// 좌우로 흔들기
+		// 플레이어에서 사이즈 미지원해도 좌우로는 흔들리도록
+		var tag = "<font size=\"" + (5 * size) + "\">";
+		var min = "";
+		var mid = tag + " </font>";
+		var max = tag + "  </font>";
+		
+		if (step == 2 || step == 5 || step == 7) {
+			for (var i = 0; i < lines.length; i++) {
+				text.push("​" + min + lines[i] + max + "​");
+			}
+		} else if (step == 0 || step == 4) {
+			for (var i = 0; i < lines.length; i++) {
+				text.push("​" + mid + lines[i] + mid + "​");
+			}
+		} else {
+			for (var i = 0; i < lines.length; i++) {
+				text.push("​" + max + lines[i] + min + "​");
+			}
+		}
+	}
+
+	{	// 상하로 흔들기
+		// 플레이어에서 사이즈 미지원하면 상하로 흔들리지 않도록
+		if (step == 0 || step == 3 || step == 5) {
+			text.unshift("<font size=\"" + (0 * size) + "\">　</font>");
+			text.push   ("<font size=\"" + (4 * size) + "\">　</font>");
+		} else if (step == 2 || step == 6) {
+			text.unshift("<font size=\"" + (2 * size) + "\">　</font>");
+			text.push   ("<font size=\"" + (2 * size) + "\">　</font>");
+		} else {
+			text.unshift("<font size=\"" + (4 * size) + "\">　</font>");
+			text.push   ("<font size=\"" + (0 * size) + "\">　</font>");
+		}
+	}
+	
+	return text.join("<br>");
+}
+
+var start = 0;
+var end = 0;
+
+function shake() {
+	var speed = $("#inputSpeed").val();
+	var size  = $("#inputSize" ).val();
+
+	var previewList = [];
+	var result = [];
+	var groups = [];
+	var group = {}; // {start:0,end:10,lines:[]}
+	var lastSyncIndex = -1;
+	
+	var i = start;
+	for (; i < end; i++) {
+		var line = editor.lines[i];
+		if (line[LINE.TYPE]) {
+			break;
+		} else {
+			result.push(line[LINE.TEXT]);
+		}
+	}
+	for (; i < end; i++) {
+		var line = editor.lines[i];
+		if (line[LINE.TYPE]) {
+			group.end = line[LINE.SYNC];
+			groups.push(group = { start: line[LINE.SYNC], type: line[LINE.TYPE], end: 0, text: [] });
+			lastSyncIndex = i;
+		} else {
+			group.text.push(line[LINE.TEXT]);
+		}
+	}
+	if (lastSyncIndex < 0) {
+		// 작업할 게 없음
+		alert("작업 대상이 없습니다.");
+		
+	} else {
+		// 마지막에 추가한 건 종료싱크 없음
+		var footer = [editor.lines[lastSyncIndex][LINE.TEXT]].concat(group.text);
+		
+		var shaked = [];
+		var index = 0;
+		for (var i = 0; i < groups.length - 1; i++) {
+			group = groups[i];
+			var text = group.text.join(" ");
+			if (text.split("&nbsp;").join("").trim().length == 0) {
+				shaked.push({ time: group.start, type: group.type, text: "&nbsp;" });
+				
+			} else {
+				var count = Math.floor(((group.end - group.start) / speed) + 0.5);
+				var lines = text.split(/<br>/gi);
+				shaked.push({ time: group.start, type: group.type, text: shakeSync(lines, index++, size) });
+				for (var j = 1; j < count; j++) {
+					var time = Math.floor((group.start * (count - j) + group.end * j) / count);
+					shaked.push({ time: time, type: TYPE.RANGE, text: shakeSync(lines, index++, size) });
+				}
+			}
+		}
+		
+		for (var i = 0; i < shaked.length; i++) {
+			var item = shaked[i];
+			result.push(SmiEditor.makeSyncLine(item.time, item.type));
+			result.push(item.text);
+			previewList.push(item.text);
+		}
+		result = result.concat(footer);
+	}
+	
+	$("#output").val(result.join("\n"));
+	
+	setPreview(previewList, speed);
+};
+
+var refreshPreview = 0;
+function setPreview(list, speed) {
+	if (refreshPreview) {
+		clearInterval(refreshPreview);
+	}
+
+	var preview = $("#preview");
+	if (!list || !list.length) {
+		preview.html("");
+		return;
+	}
+	
+	var i = 0;
+	refreshPreview = setInterval(function() {
+		while (i >= list.length) {
+			i -= list.length;
+		}
+		preview.html(toShowText(list[i++]));
+	}, speed);
+}
+function toShowText(showText) {
+	// RUBY태그 문법이 미묘하게 달라서 가공 필요
+	showText = showText.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
+	// font size도 추가 작업
+	{	var j = 0;
+		var begin = 0;
+		while ((begin = showText.toUpperCase().indexOf("<FONT", j)) >= 0) {
+			if (begin > showText.length) {
+				break;
+			}
+			var end = showText.indexOf(">", begin);
+			if (end < 0) break;
+			
+			var tag = showText.substring(begin, end);
+			var index = tag.toUpperCase().indexOf("SIZE=");
+			if (index > 0) {
+				var q = tag[index + 5];
+				var size = 0;
+				var qEnd = 0;
+				if (q == '"' || q == "'") {
+					qEnd = tag.indexOf(q, index + 7);
+					if (qEnd > 0) {
+						try {
+							size = Number(tag.substring(index + 6, qEnd));
+							qEnd++;
+						} catch (e) {}
+					}
+				} else {
+					q = "";
+				}
+				if (size == 0) {
+					var tmp = tag.substring(index + 5 + q.length);
+					for (qEnd = index + 5 + q.length; qEnd < tag.length; qEnd++) {
+						var c = tag[qEnd];
+						if (isFinite(c)) {
+							size = size * 10 + Number(c);
+						} else {
+							break;
+						}
+					}
+				}
+				if (size) {
+					//var style = 'style="font-size: ' + ((window.innerWidth / 586) * size) + 'px;"'; // 팟플레이어 기준
+					var style = 'style="font-size: ' + (2 * size) + 'px; line-height: ' + (2 * size + 24) + 'px;"'; // 미리보기랑은 사이즈가 안 맞음
+					showText = showText.substring(0, begin + index) + style + showText.substring(begin + qEnd);
+					end = end - qEnd + index + style.length;
+				}
+			}
+			j = end;
+		}
+	}
+	return showText;
+}
+
+function apply() {
+	// 해당 줄 앞뒤 전체 선택되도록 조정
+	var lines = editor.text.split("\n");
+	var range = [((start > 0) ? (lines.slice(0, start).join("\n").length + 1) : 0), lines.slice(0, end).join("\n")];
+	
+	// 교체 및 종료
+	editor.setText($("#output").val(), range);
+	
+	window.close();
+}
+
+$(function() {
+	editor = opener.SmiEditor.selected;
+	if (!editor) {
+		alert("작업 대상이 없습니다.");
+	}
+
+	setSetting(setting);
+	
+	start = 0;
+	end = editor.lines.length;
+	
+	var range = editor.getCursor();
+	if (range[0] != range[1]) {
+		start = editor.text.substring(0, range[0]).split("\n").length - 1;
+		end   = editor.text.substring(0, range[1]).split("\n").length;
+	}
+	$("#input").val(linesToText(editor.lines.slice(start, end)));
+	
+	$("#btnShake").on("click", shake);
+	$("#btnApply").on("click", apply);
+});
+	</script>
+	<style>
+#areaInput {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: calc(50% - 10px);
+	bottom: 200px;
+}
+#input {
+	width: 100%;
+	height: calc(100% - 24px);
+}
+#areaInput > label {
+	display: block;
+	float: left;
+	width: 50%;
+}
+#areaInput > label > input {
+	width: 50px;
+}
+#btnShake {
+	position: absolute;
+	top: 0;
+	left: calc(50% - 10px);
+	width: 20px;
+	bottom: 200px;
+}
+#output {
+	position: absolute;
+	top: 0;
+	left: calc(50% + 10px);
+	width: calc(50% - 10px);
+	bottom: 224px;
+}
+#btnApply {
+	position: absolute;
+	left: calc(50% + 10px);
+	width: calc(50% - 10px);
+	height: 24px;
+	bottom: 200px;
+}
+#preview {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 200px;
+	background: #000;
+	border-top: 1px solid #000;
+	white-space: nowrap;
+	color: #fff;
+}
+	</style>
+</head>
+<body>
+	<div id="areaInput">
+		<textarea id="input" spellcheck="false" readonly></textarea>
+		<label>속도: <input type="number" id="inputSpeed" value="100" />ms</label>
+		<label>흔들림 크기: <input type="number" id="inputSize" value="1" /></label>
+	</div>
+	<button id="btnShake">＞</button>
+	<textarea id="output"></textarea>
+	<button id="btnApply">적용</button>
+	<div id="preview"></div>
+</body>
+</html>

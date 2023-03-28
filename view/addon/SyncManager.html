@@ -484,13 +484,9 @@ function apply() {
 
 $(function() {
 	if (splitOrigin()) {
-		$("#btnFrameAssToSmi").on("click", function() {
-			frameAssToSmi()
-		});
+		$("#btnFrameAssToSmi").on("click", frameAssToSmi);
 		
-		$("#btnJoinFrame").on("click", function() {
-			joinFrame();
-		});
+		$("#btnJoinFrame").on("click", joinFrame);
 		
 		// 마지막 입력 1초 후 체크
 		var checkOnChange = null;
@@ -503,9 +499,7 @@ $(function() {
 		});
 		checkDiff();
 		
-		$("#btnApply").on("click", function() {
-			apply();
-		});
+		$("#btnApply").on("click", apply);
 		
 		var originFrameAss = $("#originFrameAss").focus();
 		originFrameAss[0].select();
