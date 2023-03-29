@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PlayerBridge</name>
+    </assembly>
+    <members>
+        <member name="M:PlayerBridge.PlayerBridge.SendMessage(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            현재 가지고 있는 hwnd 값으로 SendMessage를 수행합니다.
+            </summary>
+            <param name="wMsg">wMsg</param>
+            <param name="wParam">wParam</param>
+            <param name="lParam">lParam</param>
+            <returns></returns>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.#ctor">
+            <summary>
+            브리지를 생성할 경우 현재 켜져있는 플레이어가 있는지를 찾습니다.
+            </summary>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.CheckAndRerfreshPlayer">
+            <summary>
+            현재 플레이어가 연결된 상태인지를 반환하고
+            연결이 안 돼있을 경우 켜져있는 플레이어를 찾습니다.
+            </summary>
+            <returns>연결 여부</returns>
+        </member>
+        <member name="F:PlayerBridge.PlayerBridge.initialOffset">
+            <summary>
+            프로그램에서 건드리기 전
+            플레이어 창의 원래 위치를 기억합니다.
+            </summary>
+        </member>
+        <member name="F:PlayerBridge.PlayerBridge.currentOffset">
+            <summary>
+            프로그램과 연결된 후 플레이어 창의 현재 위치입니다.
+            </summary>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.GetWindowInitialPosition">
+            <summary>
+            프로그램에서 건드리기 전
+            플레이어 창의 원래 위치를 기억합니다.
+            상하 크기가 100보다 작을 경우 렌더링이 끝나지 않은 것으로 보고 무시합니다.
+            </summary>
+            <returns>최초 창의 위치</returns>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.GetWindowPosition">
+            <summary>
+            현재 창의 위치를 가져옵니다.
+            </summary>
+            <returns>현재 창의 위치</returns>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.ResetPosition">
+            <summary>
+            프로그램 종료 전에 창을 원래 위치로 되돌립니다.
+            </summary>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.MoveWindow">
+            <summary>
+            프로그램에서 설정한 창 위치로 창을 옮깁니다.
+            여기에서 값을 지정하지 않고
+            프로그램에서 currentOffset을 조작한 후 호출합니다.
+            </summary>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.MoveWindow(System.Int32,System.Int32)">
+            <summary>
+            지정한 좌표만큼 창을 옮깁니다.
+            </summary>
+            <param name="x">X 좌표 이동값</param>
+            <param name="y">Y 좌표 이동값</param>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.DoExit">
+            <summary>
+            플레이어에 종료 요청을 보냅니다.
+            </summary>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.SetEditorHwnd(System.Int32)">
+            <summary>
+            플레이어를 호출하는 프로그램의 hwnd를 기억합니다.
+            플레이어에 원래 프로그램의 hwnd를 보내야 하는 경우가 있습니다.
+            </summary>
+            <param name="hwnd">프로그램의 윈도우 핸들</param>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.FindPlayer">
+            <summary>
+            열려있는 플레이어를 찾습니다.
+            </summary>
+            <returns>플레이어의 윈도우 핸들</returns>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.FindPlayer(System.String)">
+            <summary>
+            플레이어의 실행파일명을 지정한 후
+            열려있는 플레이어를 찾습니다.
+            </summary>
+            <param name="exe">실행파일명</param>
+            <returns>플레이어의 윈도우 핸들</returns>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.OpenFile(System.String)">
+            <summary>
+            플레이어에 해당 경로의 파일을 열도록 요청합니다.
+            </summary>
+            <param name="path">파일 경로</param>
+            <returns>윈도우 메시지 리턴값</returns>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.GetFileName">
+            <summary>
+            플레이어에 파일명 요청을 보냅니다.
+            </summary>
+            <returns>윈도우 메시지 리턴값</returns>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.AfterGetFileName(System.Windows.Forms.Message)">
+            <summary>
+            플레이어에서 파일명을 SendMessage로 보내줬을 때 메시지를 해석합니다.
+            </summary>
+            <param name="m">윈도우 메시지</param>
+            <returns>파일 경로</returns>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.GetFps">
+            <summary>
+            현재 동영상의 FPS 값을 구합니다.
+            </summary>
+            <returns>FPS</returns>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.PlayOrPause">
+            <summary>
+            플레이어의 재생/일시정지를 토글합니다.
+            </summary>
+            <returns>윈도우 메시지 리턴값</returns>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.Pause">
+            <summary>
+            플레이어를 일시정지합니다.
+            </summary>
+            <returns>윈도우 메시지 리턴값</returns>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.Play">
+            <summary>
+            플레이어를 재생시킵니다.
+            </summary>
+            <returns>윈도우 메시지 리턴값</returns>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.Stop">
+            <summary>
+            플레이어를 정지합니다.
+            </summary>
+            <returns>윈도우 메시지 리턴값</returns>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.GetTime">
+            <summary>
+            현재 재생 위치를 구합니다.
+            </summary>
+            <returns>재생 위치</returns>
+        </member>
+        <member name="M:PlayerBridge.PlayerBridge.MoveTo(System.Int32)">
+            <summary>
+            재생 위치를 이동시킵니다.
+            </summary>
+            <param name="time">재생 위치</param>
+            <returns>윈도우 메시지 리턴값</returns>
+        </member>
+        <member name="T:PlayerBridge.Properties.Resources">
+            <summary>
+              지역화된 문자열 등을 찾기 위한 강력한 형식의 리소스 클래스입니다.
+            </summary>
+        </member>
+        <member name="P:PlayerBridge.Properties.Resources.ResourceManager">
+            <summary>
+              이 클래스에서 사용하는 캐시된 ResourceManager 인스턴스를 반환합니다.
+            </summary>
+        </member>
+        <member name="P:PlayerBridge.Properties.Resources.Culture">
+            <summary>
+              이 강력한 형식의 리소스 클래스를 사용하여 모든 리소스 조회에 대해 현재 스레드의 CurrentUICulture 속성을
+              재정의합니다.
+            </summary>
+        </member>
+    </members>
+</doc>
