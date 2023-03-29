@@ -8,8 +8,8 @@ using CefSharp;
 using CefSharp.WinForms;
 using System.Diagnostics;
 using SmiEdit.addon;
-using PlayerBridge;
 using Subtitle;
+using System.Reflection;
 
 namespace SmiEdit
 {
@@ -206,7 +206,7 @@ namespace SmiEdit
             {
                 if (target.Equals("player"))
                 {
-                    return player.hwnd;
+                    return player == null ? 0 : player.hwnd;
                 }
                 return windows[target];
             }
@@ -550,14 +550,14 @@ namespace SmiEdit
                 // 잔여 플레이어가 없으면 실행
                 if (player == null)
                 {
-                    if (dll.Equals("NoPlayer"))
-                    {
-                        player = new NoPlayer();
+                    try
+                    {   // DLL 파일 동적 호출
+                        string dllPath = Path.Combine(Directory.GetCurrentDirectory(), $"bridge/{dll}.dll");
+                        Assembly asm = Assembly.LoadFile(dllPath);
+                        Type[] types = asm.GetExportedTypes();
+                        player = (PlayerBridge.PlayerBridge) Activator.CreateInstance(types[0]);
                     }
-                    else if (dll.Equals("PotPlayer"))
-                    {
-                        player = new PotPlayer();
-                    }
+                    finally { }
                     if (player != null)
                     {
                         player.SetEditorHwnd(Handle.ToInt32());

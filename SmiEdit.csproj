@@ -56,17 +56,9 @@
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="NoPlayer, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\PlayerBridge\NoPlayer.dll</HintPath>
-    </Reference>
     <Reference Include="PlayerBridge, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\PlayerBridge\PlayerBridge.dll</HintPath>
-    </Reference>
-    <Reference Include="PotPlayer, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\PlayerBridge\PotPlayer.dll</HintPath>
     </Reference>
     <Reference Include="SubtitleObject, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -156,8 +148,12 @@
     <Content Include="bridge\list.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="bridge\NoPlayer.dll" />
-    <Content Include="bridge\PotPlayer.dll" />
+    <Content Include="bridge\NoPlayer.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="bridge\PotPlayer.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="NoPlayer.dll" />
     <Content Include="PlayerBridge.dll" />
     <Content Include="PotPlayer.dll" />
