@@ -139,6 +139,10 @@ namespace SmiEdit
             string output = new SmiFile() { body = input }.ToTxt().Trim();
             _.AfterTransform(output);
         }
+        public void ToAss(string text, string afterFunc)
+        {
+            _.ToAss(text, afterFunc);
+        }
         #endregion
     }
 }

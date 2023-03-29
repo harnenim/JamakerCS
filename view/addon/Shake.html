@@ -38,7 +38,7 @@ function shakeSync(lines, index, size) {
 	
 	{	// 좌우로 흔들기
 		// 플레이어에서 사이즈 미지원해도 좌우로는 흔들리도록
-		var tag = "<font size=\"" + (5 * size) + "\">";
+		var tag = "<font size=\"" + (3 * size) + "\">";
 		var min = "";
 		var mid = tag + " </font>";
 		var max = tag + "  </font>";
@@ -62,12 +62,12 @@ function shakeSync(lines, index, size) {
 		// 플레이어에서 사이즈 미지원하면 상하로 흔들리지 않도록
 		if (step == 0 || step == 3 || step == 5) {
 			text.unshift("<font size=\"" + (0 * size) + "\">　</font>");
-			text.push   ("<font size=\"" + (4 * size) + "\">　</font>");
-		} else if (step == 2 || step == 6) {
-			text.unshift("<font size=\"" + (2 * size) + "\">　</font>");
 			text.push   ("<font size=\"" + (2 * size) + "\">　</font>");
+		} else if (step == 2 || step == 6) {
+			text.unshift("<font size=\"" + (1 * size) + "\">　</font>");
+			text.push   ("<font size=\"" + (1 * size) + "\">　</font>");
 		} else {
-			text.unshift("<font size=\"" + (4 * size) + "\">　</font>");
+			text.unshift("<font size=\"" + (2 * size) + "\">　</font>");
 			text.push   ("<font size=\"" + (0 * size) + "\">　</font>");
 		}
 	}

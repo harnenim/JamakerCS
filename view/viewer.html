@@ -6,8 +6,11 @@
 <script src="lib/jquery-3.2.1.min.js"></script>
 <script src="lib/SmiEditor.js"></script>
 <script>
+if (opener && opener.SmiEditor) SmiEditor = opener.SmiEditor;
+
+var title = document.getElementsByTagName("title")[0];
 var lastTab = null;
-var lastTime = 0;
+var time = 0;
 var showText = "";
 var i = 0;
 
@@ -26,12 +29,22 @@ function setLines(newLines) {
 	if (viewer) viewer.html("");
 	lines = JSON.parse(newLines);
 	
-	var time = lastTime;
-	lastTime = -1;
-	refreshTime(time);
+	var receiveTime = time;
+	time = -1;
+	refreshTime(receiveTime);
 }
-function refreshTime(time) {
-	if (time < lastTime || lastTime < 0) {
+var titleTime = -1;
+function refreshTime(receiveTime) {
+	if (receiveTime != titleTime) {
+		var h = receiveTime;
+		var ms = h % 1000; h = (h - ms) / 1000;
+		var s  = h %   60; h = (h -  s) /   60;
+		var m  = h %   60; h = (h -  m) /   60;
+		title.innerText = ("미리보기 - " + h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms);
+		titleTime = receiveTime;
+	}
+	
+	if (receiveTime < time || time < 0) {
 		// 역방향 탐색일 경우 초기화
 		i = 0;
 		viewer.html("");
@@ -40,7 +53,7 @@ function refreshTime(time) {
 	var index = i;
 	for (var j = i; j < lines.length; j++) {
 		if (lines[j][LINE.SYNC]) {
-			if (lines[j][LINE.SYNC] > time) {
+			if (lines[j][LINE.SYNC] > receiveTime) {
 				break;
 			}
 			index = j;
@@ -79,8 +92,21 @@ function refreshTime(time) {
 	showText = showLines.join("<br>");
 	// RUBY태그 문법이 미묘하게 달라서 가공 필요
 	showText = showText.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
-	// font size도 추가 작업
-	{	var j = 0;
+	
+	{	// 팟플레이어에선 공백문자 그대로 표시됨
+		var a = showText.split("<");
+		a[0] = a[0].split(" ").join("&nbsp;");
+		for (var j = 1; j < a.length; j++) {
+			var b = a[j].indexOf(">");
+			if (b >= 0) {
+				a[j] = a[j].substring(0, b) + ">" + a[j].substring(b+1).split(" ").join("&nbsp;");
+			}
+		}
+		showText = a.join("<");
+	}
+	
+	{	// font size도 추가 작업
+		var j = 0;
 		var begin = 0;
 		while ((begin = showText.toUpperCase().indexOf("<FONT", j)) >= 0) {
 			if (begin > showText.length) {
@@ -118,7 +144,14 @@ function refreshTime(time) {
 					}
 				}
 				if (size) {
-					var style = 'style="font-size: ' + ((window.innerWidth / 586) * size) + 'px;"'; // 팟플레이어 기준
+					// 팟플레이어 기준 계산 
+					var potSize = (window.innerWidth / 586) * size;
+					
+					// 크로뮴에서 10보다 작으면 제대로 안 보임
+					// 이런 크기는 사실상 흔들기 기능 공백으로만 쓰임
+					//if (potSize < 10) potSize += 50;
+					
+					var style = 'style="font-size: ' + potSize + 'px;"';
 					showText = showText.substring(0, begin + index) + style + showText.substring(begin + qEnd);
 					end = end - qEnd + index + style.length;
 				}
@@ -128,15 +161,14 @@ function refreshTime(time) {
 	}
 	viewer.html("<div" + (hasLine ? " style='text-align: left; width: fit-content; margin: 0 auto;'" : "") + ">" + showText + "</div>");
 	
-	lastTime = time;
+	time = receiveTime;
 };
 
 $(function() {
 	viewer = $("#viewer");
 	if (opener) {
 		opener.binder.updateViewerSetting();
-	}
-	if (binder && binder.onloadViewer) {
+	} else if (binder && binder.onloadViewer) {
 		binder.onloadViewer();
 	}
 });

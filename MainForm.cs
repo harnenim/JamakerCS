@@ -9,6 +9,7 @@ using CefSharp.WinForms;
 using System.Diagnostics;
 using SmiEdit.addon;
 using PlayerBridge;
+using Subtitle;
 
 namespace SmiEdit
 {
@@ -20,6 +21,8 @@ namespace SmiEdit
         private readonly Dictionary<string, Popup> popups = new Dictionary<string, Popup>();
 
         public string strSettingJson = "불러오기 실패 예제";
+        string strBridgeList = "NoPlayer: (없음)"; // 기본값
+        public Dictionary<string, string> bridgeDlls = new Dictionary<string, string>();
 
         public MainForm()
         {
@@ -72,7 +75,7 @@ namespace SmiEdit
                     windows.Add("editor", Handle.ToInt32());
 
                     Script("init", strSettingJson); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
-                    Script("setPlayerDlls", "NoPlayer|(없음),PotPlayer|팟플레이어"); // TODO: dll 폴더 내용물 체크하는 것 필요...
+                    Script("setPlayerDlls", strBridgeList); // 플레이어 브리지 추가 가능토록
                     Script("setDroppable");
 
                     WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
@@ -472,15 +475,30 @@ namespace SmiEdit
         #region 설정
         private void LoadSetting()
         {
+        	StreamReader sr = null;
             try
             {
-                StreamReader sr = new StreamReader("view/setting.json", Encoding.UTF8);
+                sr = new StreamReader("view/setting.json", Encoding.UTF8);
                 strSettingJson = sr.ReadToEnd();
                 sr.Close();
+                
+                sr = new StreamReader("bridge/list.txt", Encoding.UTF8);
+                strBridgeList = sr.ReadToEnd();
+                sr.Close();
             }
-            catch (Exception e)
+            catch (Exception e) { Console.WriteLine(e); }
+            finally { if (sr != null) sr.Close(); }
+
+            string[] bridgeList = strBridgeList.Split('\n');
+            for (int i = 0; i < bridgeList.Length; i++)
             {
-                Console.WriteLine(e);
+                string strBridge = bridgeList[i].Trim();
+                int devider = strBridge.IndexOf(":");
+                if (devider > 0)
+                {
+                    string[] bridge = { strBridge.Substring(0, devider).Trim(), strBridge.Substring(devider + 1).Trim() };
+                    bridgeDlls.Add(bridge[0], bridge[1]);
+                }
             }
         }
 
@@ -509,7 +527,6 @@ namespace SmiEdit
 
         public void SetPlayer(string dll, string path, bool withRun)
         {
-            Console.WriteLine($"SetPlayer: {InvokeRequired}");
             if (InvokeRequired)
             {
                 Invoke(new Action(() =>
@@ -909,6 +926,12 @@ namespace SmiEdit
         public void AfterTransform(string text)
         {
             Script("SmiEditor.afterTransform", text);
+        }
+        public void ToAss(string text, string afterFunc)
+        {
+            SmiFile input = new SmiFile().FromTxt(text);
+            AssFile output = new AssFile().FromSync(input.ToSync());
+            Script(afterFunc, output.ToTxt());
         }
         #endregion
     }

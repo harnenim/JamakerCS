@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -523,10 +523,9 @@ $(function() {
 	
 		var select = $("select[name=player_control_dll]");
 		if (opener.playerDlls) {
-			var dlls = opener.playerDlls.split(",");
-			for (var i = 0; i < dlls.length; i++) {
-				var dll = dlls[i].split("|");
-				select.append($("<option>").val(dll[0]).text(dll[1]));
+			for (var i = 0; i < opener.playerDlls.length; i++) {
+				var dll = opener.playerDlls[i].split(":");
+				select.append($("<option>").val(dll[0].trim()).text(dll[1].trim()));
 			}
 			select.find("option[value=" + select.data("value") + "]").prop("selected", true);
 		}

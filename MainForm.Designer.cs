@@ -87,7 +87,9 @@ namespace SmiEdit
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.KeyDownInMenuStrip);
             this.ResumeLayout(false);
             this.PerformLayout();
-
+            this.menuStrip.KeyDown += new System.Windows.Forms.KeyEventHandler(this.KeyDownInMenuStrip);
+            this.menuStrip.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.KeyDownInMenuStrip);
+            this.mainView.GotFocus += new System.EventHandler(this.CloseMenuStrip);
         }
 
         #endregion

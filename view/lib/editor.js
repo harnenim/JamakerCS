@@ -280,11 +280,10 @@ function setDpiBy(width) {
 	}, 1000); // 로딩 덜 됐을 수가 있어서 딜레이 줌
 }
 
-var playerDlls = "";
+var playerDlls = [];
 // C# 쪽에서 호출
-// TODO: 이중 배열로 받을까?
 function setPlayerDlls(dlls) {
-	playerDlls = dlls;
+	playerDlls = dlls.split("\n");
 }
 
 function openSetting() {
@@ -432,11 +431,18 @@ function beforeExit() {
 			break;
 		}
 	}
+	/*
 	var msg = "종료하시겠습니까?";
 	if (!saved) {
 		msg = "저장되지 않은 파일이 있습니다.\n" + msg;
 	}
 	confirm(msg, doExit);
+	*/
+	if (saved) {
+		doExit(); // 그냥 꺼지는 게 맞는 것 같음
+	} else {
+		confirm("저장되지 않은 파일이 있습니다.\n종료하시겠습니까?", doExit);
+	}
 }
 function doExit() {
 	saveSetting(); // 창 위치 최신값으로 저장
