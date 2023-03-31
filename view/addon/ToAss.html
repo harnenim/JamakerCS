@@ -54,26 +54,16 @@ opener.afterGetOutput = function(output) {
 	width: 40%;
 	bottom: 0;
 }
-#comment {
-	position: absolute;
-	top: 0;
-	left: 40%;
-	width: 60%;
-	height: 50px;
-    padding: 4px;
-    background: #fff;
-    line-height: 21px;
-}
 #btnExport {
 	position: absolute;
-	top: 50px;
+	top: 0;
 	left: 40%;
 	width: 20px;
 	bottom: 0;
 }
 #output {
 	position: absolute;
-	top: 50px;
+	top: 0;
 	left: calc(40% + 20px);
 	width: calc(60% - 20px);
 	bottom: 0;
@@ -83,10 +73,7 @@ opener.afterGetOutput = function(output) {
 <body>
 	<textarea id="input" spellcheck="false"></textarea>
 	<button id="btnExport">＞</button>
-	<div id="comment">
-		이곳의 결과물은 완성본이 아니며, Aegisub에 복사한 후 추가 작업이 필요합니다.<br />
-		화면 싱크를 사용한 경우 Default가 아닌 （］,［）,［］로 분류됩니다.
-	</div>
-	<textarea id="output"></textarea>
+	<textarea id="output">이곳의 결과물은 완성본이 아니며, Aegisub에 복사한 후 추가 작업이 필요합니다.
+화면 싱크를 사용한 경우 Default가 아닌 （］,［）,［］로 분류됩니다.</textarea>
 </body>
 </html>

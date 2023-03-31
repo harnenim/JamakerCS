@@ -12,34 +12,38 @@ windowName = "help";
 	</script>
 	<style>
 #example {
-	width: 100%;
-	height: calc(100% - 230px);
+	width: calc(100% - 20px);
+	height: calc(100% - 200px);
+	margin: 10px;
 	overflow: scroll;
 	white-space: nowrap;
 }
-#example td {
+#example * {
+	user-select: text;
+}
+#example table {
+	width: 100%;
+}
+#example td:first-child,
+#example td:last-child > div {
 	padding: 4px;
 }
-#example tr.future td {
-	text-decoration: line-through;
+#example td > div {
+	max-height: 100px;
+	overflow-y: scroll;
 }
 	</style>
 </head>
 <body>
-이 프로그램에선 중간 작업용 특수 태그가 존재하며<br />
-정규화를 통해 최종 완성본을 만들어줍니다.<br />
+이 프로그램에선 중간 작업용 특수 태그가 존재하며, 정규화를 통해 최종 완성본을 만들어줍니다.<br />
 <br />
-정규화 과정에서 한 싱크에 여러 줄의 텍스트가 있는 경우<br />
-해당 싱크는 탭문자로 체크된 균등한 싱크로 나뉘게 됩니다.<br />
-<br />
-정규화 기능의 예시는 다음과 같습니니다.<br />
-<s>─라고 써놓고 파싱 로직 수정하다 말았음 (취소선인 것 적용 예정)</s><br />
-<br />
+정규화 기능의 예시는 다음과 같습니다.<br />
+<s>파싱 로직 수정하려다 만 상태 (취소선인 걸로 적용하려고 하는데...)</s><br />
 <div id="example">
 	<table>
 		<colgroup>
-			<col />
-			<col />
+			<col style="width: 50%;" />
+			<col style="width: 50%;" />
 		</colgroup>
 		<thead>
 			<tr>
@@ -48,91 +52,344 @@ windowName = "help";
 			</tr>
 		</thead>
 		<tbody>
-			<tr>
+			<tr title="페이드 인">
 				<td>&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
 					&lt;font color="#9abcde" fade="in"&gt;페이드 인&lt;/font&gt;<br />
 					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;
 				</td>
-				<td>
-				</td>
+				<td><div>
+					&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
+					&lt;FONT color="#030304"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1041&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#090B0D"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1083&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#101317"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1125&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#161B20"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1166&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#1C2329"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1208&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#232B32"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1250&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#29323C"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1291&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#303A45"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1333&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#36424E"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1375&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#3C4A57"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1416&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#435261"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1458&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#495A6A"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1500&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#506173"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1541&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#56697C"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1583&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#5D7186"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1625&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#63798F"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1666&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#698198"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1708&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#7089A1"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1750&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#7690AB"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1791&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#7D98B4"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1833&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#83A0BD"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1875&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#89A8C6"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1916&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#90B0D0"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=1958&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#96B8D9"&gt;페이드 인&lt;/FONT&gt;<br />
+					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;
+				</div></td>
 			</tr>
-			<tr>
+			<tr title="페이드 아웃">
 				<td>&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
 					&lt;font color="#89abcd" fade="out"&gt;페이드 아웃&lt;/font&gt;<br />
 					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;
 				</td>
-				<td>
-				</td>
+				<td><div>
+					&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
+					&lt;FONT color="#86A7C8"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1041&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#80A0C0"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1083&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#7A99B7"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1125&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#7592AF"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1166&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#6F8AA6"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1208&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#69839E"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1250&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#637C95"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1291&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#5E758C"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1333&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#586E84"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1375&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#52677B"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1416&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#4D6073"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1458&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#47596A"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1500&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#415162"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1541&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#3B4A59"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1583&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#364351"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1625&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#303C48"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1666&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#2A3540"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1708&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#252E37"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1750&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#1F272E"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1791&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#192026"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1833&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#13181D"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1875&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#0E1115"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1916&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#080A0C"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=1958&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;FONT color="#020304"&gt;페이드 아웃&lt;/FONT&gt;<br />
+					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;<br />
+				</div></td>
 			</tr>
-			<tr>
+			<tr title="타자기 형태 입력 효과">
 				<td>&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
 					&lt;font typing='typewriter'&gt;테스트텍스트&lt;/font&gt;<br />
 					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;
 				</td>
-				<td>
-				</td>
+				<td><div>
+					&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
+					&lt;U&gt; &lt;/U&gt;  　　　　　​<br />
+					&lt;Sync Start=1071&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;U&gt;ᄐ&lt;/U&gt;   　　　　​<br />
+					&lt;Sync Start=1142&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;U&gt;테&lt;/U&gt;   　　　　​<br />
+					&lt;Sync Start=1214&gt;&lt;P Class=KRCC	&gt;<br />
+					테&lt;U&gt;ᄉ&lt;/U&gt;   　　　​<br />
+					&lt;Sync Start=1285&gt;&lt;P Class=KRCC	&gt;<br />
+					테&lt;U&gt;스&lt;/U&gt;   　　　​<br />
+					&lt;Sync Start=1357&gt;&lt;P Class=KRCC	&gt;<br />
+					테스&lt;U&gt;ᄐ&lt;/U&gt;   　　​<br />
+					&lt;Sync Start=1428&gt;&lt;P Class=KRCC	&gt;<br />
+					테스&lt;U&gt;트&lt;/U&gt;   　　​<br />
+					&lt;Sync Start=1500&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트&lt;U&gt;ᄐ&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1571&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트&lt;U&gt;테&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1642&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트&lt;U&gt;텍&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1714&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텍&lt;U&gt;ᄉ&lt;/U&gt;　​<br />
+					&lt;Sync Start=1785&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텍&lt;U&gt;스&lt;/U&gt;　​<br />
+					&lt;Sync Start=1857&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텍스&lt;U&gt;ᄐ&lt;/U&gt;​<br />
+					&lt;Sync Start=1928&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텍스&lt;U&gt;트&lt;/U&gt;​<br />
+					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;
+				</div></td>
 			</tr>
-			<tr>
+			<tr title="키보드 형태 입력 효과">
 				<td>&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
 					&lt;font typing='keyboard'&gt;테스트텍스트&lt;/font&gt;<br />
 					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;
 				</td>
-				<td>
-				</td>
-			</tr>
-			<tr class="future">
-				<td>&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
-					&lt;font typing='keyboard(]'&gt;테스트텍스트&lt;/font&gt;<br />
+				<td><div>
+					&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
+					&lt;U&gt; &lt;/U&gt;  　　　　　​<br />
+					&lt;Sync Start=1071&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;U&gt;ㅌ&lt;/U&gt;   　　　　​<br />
+					&lt;Sync Start=1142&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;U&gt;테&lt;/U&gt;   　　　　​<br />
+					&lt;Sync Start=1214&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;U&gt;텟&lt;/U&gt;   　　　　​<br />
+					&lt;Sync Start=1285&gt;&lt;P Class=KRCC	&gt;<br />
+					테&lt;U&gt;스&lt;/U&gt;   　　　​<br />
+					&lt;Sync Start=1357&gt;&lt;P Class=KRCC	&gt;<br />
+					테&lt;U&gt;슽&lt;/U&gt;   　　　​<br />
+					&lt;Sync Start=1428&gt;&lt;P Class=KRCC	&gt;<br />
+					테스&lt;U&gt;트&lt;/U&gt;   　　​<br />
+					&lt;Sync Start=1500&gt;&lt;P Class=KRCC	&gt;<br />
+					테스&lt;U&gt;틑&lt;/U&gt;   　　​<br />
+					&lt;Sync Start=1571&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트&lt;U&gt;테&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1642&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트&lt;U&gt;텍&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1714&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트&lt;U&gt;텏&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1785&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텍&lt;U&gt;스&lt;/U&gt;　​<br />
+					&lt;Sync Start=1857&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텍&lt;U&gt;슽&lt;/U&gt;　​<br />
+					&lt;Sync Start=1928&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텍스&lt;U&gt;트&lt;/U&gt;​<br />
 					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;
-				</td>
-				<td>
-				</td>
+				</div></td>
 			</tr>
-			<tr class="future">
-				<td>&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
-					&lt;font typing='keyboard[]'&gt;테스트텍스트&lt;/font&gt;<br />
-					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;
-				</td>
-				<td>
-				</td>
-			</tr>
-			<tr>
-				<td>&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
+			<tr title="타이핑 완성 상태 제외하고 생성">
+				<td><s>&lt;font typing='keyboard[)'&gt;테스트텍스트&lt;/font&gt;</s><br />
+					&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
 					&lt;font typing='keyboard(0,1)'&gt;테스트텍스트&lt;/font&gt;<br />
-					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;
+					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;<br />
+					테스트텍스&lt;U&gt;트&lt;/U&gt;
 				</td>
-				<td>
-				</td>
+				<td><div>
+					&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
+					&lt;U&gt; &lt;/U&gt;  　　　　　​<br />
+					&lt;Sync Start=1076&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;U&gt;ㅌ&lt;/U&gt;   　　　　​<br />
+					&lt;Sync Start=1153&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;U&gt;테&lt;/U&gt;   　　　　​<br />
+					&lt;Sync Start=1230&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;U&gt;텟&lt;/U&gt;   　　　　​<br />
+					&lt;Sync Start=1307&gt;&lt;P Class=KRCC	&gt;<br />
+					테&lt;U&gt;스&lt;/U&gt;   　　　​<br />
+					&lt;Sync Start=1384&gt;&lt;P Class=KRCC	&gt;<br />
+					테&lt;U&gt;슽&lt;/U&gt;   　　　​<br />
+					&lt;Sync Start=1461&gt;&lt;P Class=KRCC	&gt;<br />
+					테스&lt;U&gt;트&lt;/U&gt;   　　​<br />
+					&lt;Sync Start=1538&gt;&lt;P Class=KRCC	&gt;<br />
+					테스&lt;U&gt;틑&lt;/U&gt;   　　​<br />
+					&lt;Sync Start=1615&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트&lt;U&gt;테&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1692&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트&lt;U&gt;텍&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1769&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트&lt;U&gt;텏&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1846&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텍&lt;U&gt;스&lt;/U&gt;　​<br />
+					&lt;Sync Start=1923&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텍&lt;U&gt;슽&lt;/U&gt;　​<br />
+					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;<br />
+					테스트텍스&lt;U&gt;트&lt;/U&gt;
+				</div></td>
 			</tr>
-			<tr>
-				<td>&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
+			<tr title="타이핑 공백/완성 상태 제외하고 생성">
+				<td><s>&lt;font typing='keyboard()'&gt;테스트텍스트&lt;/font&gt;</s><br />
+					&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
 					&lt;font typing='keyboard(1,1)'&gt;테스트텍스트&lt;/font&gt;<br />
-					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;
+					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;<br />
+					테스트텍스&lt;U&gt;트&lt;/U&gt;
 				</td>
-				<td>
-				</td>
+				<td><div>
+					&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
+					&lt;U&gt;ㅌ&lt;/U&gt;   　　　　​<br />
+					&lt;Sync Start=1083&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;U&gt;테&lt;/U&gt;   　　　　​<br />
+					&lt;Sync Start=1166&gt;&lt;P Class=KRCC	&gt;<br />
+					&lt;U&gt;텟&lt;/U&gt;   　　　　​<br />
+					&lt;Sync Start=1250&gt;&lt;P Class=KRCC	&gt;<br />
+					테&lt;U&gt;스&lt;/U&gt;   　　　​<br />
+					&lt;Sync Start=1333&gt;&lt;P Class=KRCC	&gt;<br />
+					테&lt;U&gt;슽&lt;/U&gt;   　　　​<br />
+					&lt;Sync Start=1416&gt;&lt;P Class=KRCC	&gt;<br />
+					테스&lt;U&gt;트&lt;/U&gt;   　　​<br />
+					&lt;Sync Start=1500&gt;&lt;P Class=KRCC	&gt;<br />
+					테스&lt;U&gt;틑&lt;/U&gt;   　　​<br />
+					&lt;Sync Start=1583&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트&lt;U&gt;테&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1666&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트&lt;U&gt;텍&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1750&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트&lt;U&gt;텏&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1833&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텍&lt;U&gt;스&lt;/U&gt;　​<br />
+					&lt;Sync Start=1916&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텍&lt;U&gt;슽&lt;/U&gt;　​<br />
+					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;<br />
+					테스트텍스&lt;U&gt;트&lt;/U&gt;
+				</div></td>
 			</tr>
-			<tr>
+			<tr title="키보드 입력에서 커서 안 보이도록">
 				<td>&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
 					&lt;font typing='keyboard invisible'&gt;테스트텍스트&lt;/font&gt;<br />
 					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;
 				</td>
-				<td>
-				</td>
+				<td><div>
+					&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
+					   　　　　　​<br />
+					&lt;Sync Start=1071&gt;&lt;P Class=KRCC	&gt;<br />
+					ㅌ   　　　　​<br />
+					&lt;Sync Start=1142&gt;&lt;P Class=KRCC	&gt;<br />
+					테   　　　　​<br />
+					&lt;Sync Start=1214&gt;&lt;P Class=KRCC	&gt;<br />
+					텟   　　　　​<br />
+					&lt;Sync Start=1285&gt;&lt;P Class=KRCC	&gt;<br />
+					테스   　　　​<br />
+					&lt;Sync Start=1357&gt;&lt;P Class=KRCC	&gt;<br />
+					테슽   　　　​<br />
+					&lt;Sync Start=1428&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트   　　​<br />
+					&lt;Sync Start=1500&gt;&lt;P Class=KRCC	&gt;<br />
+					테스틑   　　​<br />
+					&lt;Sync Start=1571&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트테   　​<br />
+					&lt;Sync Start=1642&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텍   　​<br />
+					&lt;Sync Start=1714&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텏   　​<br />
+					&lt;Sync Start=1785&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텍스　​<br />
+					&lt;Sync Start=1857&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텍슽　​<br />
+					&lt;Sync Start=1928&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트텍스트​<br />
+					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;
+				</div></td>
 			</tr>
-			<tr>
+			<tr title="키보드 입력에서 한글 커서만 보이도록">
 				<td>&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
 					&lt;font typing='keyboard hangeul'&gt;test텍스트&lt;/font&gt;<br />
 					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;
 				</td>
-				<td>
-				</td>
+				<td><div>
+					&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
+					  　　　　​<br />
+					&lt;Sync Start=1083&gt;&lt;P Class=KRCC	&gt;<br />
+					t 　　　　​<br />
+					&lt;Sync Start=1166&gt;&lt;P Class=KRCC	&gt;<br />
+					te  　　　​<br />
+					&lt;Sync Start=1250&gt;&lt;P Class=KRCC	&gt;<br />
+					tes 　　　​<br />
+					&lt;Sync Start=1333&gt;&lt;P Class=KRCC	&gt;<br />
+					test　　　​<br />
+					&lt;Sync Start=1416&gt;&lt;P Class=KRCC	&gt;<br />
+					test&lt;U&gt;ㅌ&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1500&gt;&lt;P Class=KRCC	&gt;<br />
+					test&lt;U&gt;테&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1583&gt;&lt;P Class=KRCC	&gt;<br />
+					test&lt;U&gt;텍&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1666&gt;&lt;P Class=KRCC	&gt;<br />
+					test&lt;U&gt;텏&lt;/U&gt;　　​<br />
+					&lt;Sync Start=1750&gt;&lt;P Class=KRCC	&gt;<br />
+					test텍&lt;U&gt;스&lt;/U&gt;　​<br />
+					&lt;Sync Start=1833&gt;&lt;P Class=KRCC	&gt;<br />
+					test텍&lt;U&gt;슽&lt;/U&gt;　​<br />
+					&lt;Sync Start=1916&gt;&lt;P Class=KRCC	&gt;<br />
+					test텍스&lt;U&gt;트&lt;/U&gt;​<br />
+					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;
+				</div></td>
 			</tr>
 		</tbody>
 	</table>
 </div>
+페이드 기능은 겹쳐서 넣을 수 있지만, 타이핑 기능은 하나씩으로 제한됩니다.<br />
 <br />
-페이드 기능은 동시에 여러 개를 넣을 수 있지만<br />
-타이핑 기능은 하나씩으로 제한됩니다.
+<s>정규화 과정에서 한 싱크에 여러 줄의 텍스트가 있는 경우, 해당 싱크는 탭문자로 체크된 균등한 싱크로 나뉘게 됩니다.</s><br />
+현재 미적용, 싱크 채우기 기능 별도로 존재. 합치는 게 맞나...
 </body>
 </html>
