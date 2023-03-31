@@ -217,11 +217,12 @@ $(function() {
 			refresh($("#sync"), setting);
 			setSaved("sync", setting == opener.setting);
 		})(setting);
-	
+		
 		submitFuncs["sync"] = function() {
 			var preset = $("input[name=sync_preset]").val();
 			
 			// TODO: 프리셋 양식 오류 확인 필요
+			//<Sync Start={sync}><P Class={lang}{type}>
 			
 			setting.sync.insert = Number($("input[name=sync_insert]").val());
 			setting.sync.update = Number($("input[name=sync_update]").val());
@@ -549,6 +550,13 @@ $(function() {
 			$("input[name=player_control_what_withRun]" ).prop("checked", dllSetting.withRun);
 			$("input[name=player_control_what_withExit]").prop("checked", dllSetting.withExit);
 		});
+	
+		$("#btnPlayerPath").on("click", function() {
+			opener.binder.selectPlayerPath();
+		});
+		opener.afterSelectPlayerPath = function(path) {
+			$("input[name=player_control_what_path]").val(path);
+		};
 
 		submitFuncs["player"] = function() {
 			setting.player.exts = $("input[name=player_exts]").val();
@@ -709,7 +717,7 @@ input[type=number] { width: 50px; }
 fieldset {
 	border-color: #888;
 	padding: 8px;
-	margin-top: 8px;
+	margin: 8px 0;
 }
 
 /* 기본 틀 */
@@ -862,7 +870,11 @@ fieldset {
 </nav>
 <div id="settingArea">
 	<form id="window" style="height: 100%;">
-		<div style="width: 100%; height: calc(100% - 100px); position: relative;">
+		<div>
+			<button type="button" id="btnGetWindows" style="padding: 4px;">현재 위치 가져오기</button>
+			<label><input type="checkbox" name="window_follow" /> 창 함께 이동</label>
+		</div>
+		<div style="width: 100%; height: calc(100% - 50px); position: relative;">
 			<fieldset id="fieldEditor">
 				<legend>에디터</legend>
 				<label>↦: <input type="number" name="window_x" /></label>
@@ -890,8 +902,6 @@ fieldset {
 				<label><input type="checkbox" name="player_window_use" /> 위치 고정 사용</label>
 			</fieldset>
 		</div>
-		<button type="button" id="btnGetWindows">현재 위치 가져오기</button><br />
-		<label><input type="checkbox" name="window_follow" /> 창 함께 이동</label><br />
 	</form>
 	
 	<form id="sync">
@@ -1071,10 +1081,11 @@ fieldset {
 		<label>동영상 파일 확장자: <input type="text" name="player_exts" style="width: calc(100% - 140px);" /></label>
 		<fieldset>
 			<legend>플레이어: <select name="player_control_dll"></select></legend>
-			<label>실행파일: <input type="text" name="player_control_what_path" style="width: calc(100% - 70px);" /></label><br /><!-- TODO: 찾아보기 창이 필요할까? -->
+			<label>실행파일: <input type="text" name="player_control_what_path" style="width: calc(100% - 170px);" /></label><button id="btnPlayerPath" style="width: 100px;">찾아보기...</button><br />
 			<label><input type="checkbox" name="player_control_what_withRun"  /> 프로그램 실행 시 플레이어 실행</label><br />
 			<label><input type="checkbox" name="player_control_what_withExit" /> 프로그램 종료 시 플레이어 종료</label><br />
 		</fieldset>
+		<span>※ 다른 플레이어를 연동하고 싶으신 분은 "프로그램 폴더\bridge\Readme.txt"를 참고하시기 바랍니다.</span>
 	</form>
 
 	<form id="menu">

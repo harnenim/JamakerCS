@@ -33,10 +33,6 @@ namespace SmiEdit
         {
             _.SetFollowWindow(follow);
         }
-        public void GetWindows(string[] targets)
-        {
-            _.GetWindows(targets);
-        }
 
         public void ShowDragging()
         {
@@ -95,6 +91,10 @@ namespace SmiEdit
         public void SendMsg(string target, string msg) {
             _.SendMsg(target, msg);
         }
+        // setting.html
+        public void GetWindows(string[] targets) { _.GetWindows(targets); }
+        public void SelectPlayerPath() { _.SelectPlayerPath(); }
+        
         // addon 설정 용
         public void LoadAddonSetting(string path) { _.LoadAddonSetting(path); }
         public void SaveAddonSetting(string path, string text) { _.SaveAddonSetting(path, text); }

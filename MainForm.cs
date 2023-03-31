@@ -584,6 +584,23 @@ namespace SmiEdit
                 }
             }
         }
+        
+        public void SelectPlayerPath() {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => {
+                    SelectPlayerPath();
+                }));
+            }
+            else
+            {
+                OpenFileDialog dialog = new OpenFileDialog{ Filter = "실행 파일|*.exe" };
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    Script("afterSelectPlayerPath", dialog.FileName);
+                }
+            }
+        }
 
         public void LoadAddonSetting(string path)
         {
