@@ -210,14 +210,42 @@ function toShowText(showText) {
 					}
 				}
 				if (size) {
-					//var style = 'style="font-size: ' + ((window.innerWidth / 586) * size) + 'px;"'; // 팟플레이어 기준
-					var style = 'style="font-size: ' + (2 * size) + 'px; line-height: ' + (2 * size + 24) + 'px;"'; // 미리보기랑은 사이즈가 안 맞음
+					var potSize = (window.innerWidth / 586) * size; // 팟플레이어 기준 계산 
+					
+					// 크로뮴에서 10보다 작으면 제대로 안 보임
+					// 이런 크기는 사실상 흔들기 기능 공백으로만 쓰임
+					//if (potSize < 10) potSize += 50;
+					
+					var style = 'style="font-size: ' + potSize + 'px;"';
 					showText = showText.substring(0, begin + index) + style + showText.substring(begin + qEnd);
 					end = end - qEnd + index + style.length;
 				}
 			}
 			j = end;
 		}
+	}
+	{	// 팟플레이어에선 공백문자 그대로 표시됨
+		var a = showText.split("<");
+		a[0] = a[0].split(" ").join("&nbsp;");
+		for (var j = 1; j < a.length; j++) {
+			var b = a[j].indexOf(">");
+			if (b >= 0) {
+				a[j] = a[j].substring(0, b) + ">" + a[j].substring(b+1).split(" ").join("&nbsp;");
+			}
+		}
+		showText = a.join("<");
+	}
+	{	// 흔들기 효과 상하 공백줄 처리 -> 맨 윗줄만
+		var showLines = showText.split(/<br>/gi);
+		if (showLines.length > 2) {
+			var line = showLines[0];
+			if ($("<span>").html(line).text() == "　") {
+				if (line.indexOf("font-size:") > 0) {
+					showLines[0] = line.split("<font style=\"font-size:").join("<div style=\"height:").split("</font>").join("</div>");
+				}
+			}
+		}
+		showText = showLines.join("<br>");
 	}
 	return showText;
 }
@@ -306,6 +334,7 @@ $(function() {
 	border-top: 1px solid #000;
 	white-space: nowrap;
 	color: #fff;
+	text-align: center;
 }
 	</style>
 </head>

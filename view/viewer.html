@@ -159,6 +159,20 @@ function refreshTime(receiveTime) {
 			j = end;
 		}
 	}
+	
+	{	// 흔들기 효과 상하 공백줄 처리 -> 맨 윗줄만
+		var showLines = showText.split(/<br>/gi);
+		if (lines.length > 2) {
+			var line = showLines[0];
+			if ($("<span>").html(line).text() == "　") {
+				if (line.indexOf("font-size:") > 0) {
+					showLines[0] = line.split("<font style=\"font-size:").join("<div style=\"height:").split("</font>").join("</div>");
+				}
+			}
+		}
+		showText = showLines.join("<br>");
+	}
+	
 	viewer.html("<div" + (hasLine ? " style='text-align: left; width: fit-content; margin: 0 auto;'" : "") + ">" + showText + "</div>");
 	
 	time = receiveTime;
