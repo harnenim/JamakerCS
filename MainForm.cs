@@ -20,9 +20,9 @@ namespace SmiEdit
         private readonly Dictionary<string, int> windows = new Dictionary<string, int>();
         private readonly Dictionary<string, Popup> popups = new Dictionary<string, Popup>();
 
-        public string strSettingJson = "불러오기 실패 예제";
-        string strBridgeList = "NoPlayer: (없음)"; // 기본값
-        public Dictionary<string, string> bridgeDlls = new Dictionary<string, string>();
+        private string strSettingJson = "불러오기 실패 예제";
+        private string strBridgeList = "NoPlayer: (없음)"; // 기본값
+        private Dictionary<string, string> bridgeDlls = new Dictionary<string, string>();
 
         public MainForm()
         {
@@ -33,6 +33,7 @@ namespace SmiEdit
             };
             settings.CefCommandLineArgs.Add("disable-web-security");
             Cef.Initialize(settings);
+            CefSharpSettings.ShutdownOnExit = false;
 
             InitializeComponent();
 
@@ -520,6 +521,7 @@ namespace SmiEdit
             UpdateViewerSetting();
         }
 
+        string[] videoExts = new string[] { "mkv", "mp4", "avi", "m2ts", "ts" };
         public void SetVideoExts(string exts)
         {
             videoExts = exts.Split(',');
@@ -536,8 +538,6 @@ namespace SmiEdit
             }
             else
             {
-                // TODO: DLL 동적 불러오기 필요?
-
                 // 플레이어 선택이 바뀌었으면 연결 끊기
                 if (player != null && !dll.Equals(player.GetType().Name))
                 {
@@ -764,6 +764,20 @@ namespace SmiEdit
         #endregion
 
         #region 파일
+        
+        private delegate void AfterGetString(string str);
+        private AfterGetString afterGetFileName = null;
+        protected override void WndProc(ref Message m)
+        {
+            // 파일명 말곤 수신할 일 없다는 가정
+            if (player != null && afterGetFileName != null)
+            {
+                string path = player.AfterGetFileName(m);
+                afterGetFileName(path);
+            }
+
+            base.WndProc(ref m);
+        }
 
         const string FileDialogFilter = "SAMI 자막 파일|*.smi";
 
@@ -803,27 +817,24 @@ namespace SmiEdit
         }
         public void OpenFileForVideo()
         {
+            // 파일명 수신 시 동작 설정
+            afterGetFileName = new AfterGetString(OpenFileAfterGetVideoFileName);
             // player에 현재 재생 중인 파일명 요청
             player.GetFileName();
         }
-        protected override void WndProc(ref Message m)
+        private void OpenFileAfterGetVideoFileName(string path)
         {
-            // 파일명 말곤 수신할 일 없다는 가정
-            if (player != null)
+            if (path != null && path.Length > 0)
             {
-                string path = player.AfterGetFileName(m);
-                if (path != null && path.Length > 0)
+                int index = path.LastIndexOf(".");
+                if (index > 0)
                 {
-                    int index = path.LastIndexOf(".");
-                    if (index > 0)
-                    {
-                        LoadFile(path.Substring(0, index) + ".smi", true);
-                    }
+                    LoadFile(path.Substring(0, index) + ".smi", true);
                 }
+	            afterGetFileName = null;
             }
-
-            base.WndProc(ref m);
         }
+        
         private void LoadFile(string path)
         {
             LoadFile(path, false);
@@ -848,18 +859,38 @@ namespace SmiEdit
             Script("openFile", new object[] { path, text, forVideo });
         }
 
-        string[] videoExts = new string[] { "mkv", "mp4", "avi", "m2ts", "ts" }; // TODO: 우선순위 설정 기능...?
-        public void CheckLoadVideoFile(string smiPath)
+        private string smiPath;
+        public void CheckLoadVideoFile(string path)
         {
-            string withoutExt = smiPath.Substring(0, smiPath.Length - 4);
-            foreach (string ext in videoExts)
+            // 파일명 수신 시 동작 설정
+            afterGetFileName = new AfterGetString(CheckLoadVideoFileAfterGetVideoFileName);
+            smiPath = path;
+            // player에 현재 재생 중인 파일명 요청
+            player.GetFileName();
+        }
+        private void CheckLoadVideoFileAfterGetVideoFileName(string path)
+        {
+            if (path != null && path.Length > 0)
             {
-                string videoPath = withoutExt + "." + ext;
-                if (File.Exists(videoPath))
+                string withoutExt = path.Substring(0, path.LastIndexOf('.'));
+                string smiWithoutExt = smiPath.Substring(0, smiPath.LastIndexOf('.'));
+                if (withoutExt.Equals(smiWithoutExt))
                 {
-                    Script("confirmLoadVideo", videoPath);
-                    return;
+                    // 현재 열려있는 동영상 파일이 자막과 일치 -> 추가동작 없음
                 }
+                else
+                {
+                    foreach (string ext in videoExts)
+                    {
+                        string videoPath = smiWithoutExt + "." + ext;
+                        if (File.Exists(videoPath))
+                        {
+                            Script("confirmLoadVideo", videoPath);
+                            return;
+                        }
+                    }
+                }
+                afterGetFileName = null;
             }
         }
         public void LoadVideoFile(string path)
