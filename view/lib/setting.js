@@ -31,11 +31,11 @@ var checkVersion;
 	var lastNotifyForCommand = "";
 	var lastNotifyForAutoComplete = "";
 	var lastNotifyForStyle = "";
-	var lastNotifyForMenu = "2023.03.30.v1";
+	var lastNotifyForMenu = "2023.03.31.v1";
 }
 
 var DEFAULT_SETTING =
-{	version: "2023.03.30.v1"
+{	version: "2023.03.31.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -48,7 +48,8 @@ var DEFAULT_SETTING =
 	,	[	"편집(&S)"
 		,	"찾기/바꾸기(&F)|SmiEditor.Finder.open()"
 		,	"색상코드 입력(&C)|binder.runColorPicker()"
-		,	"특수태그 정규화(&N)|tabs[tab].normalize()"
+		,	"특수태그 정규화|tabs.length && tabs[tab].normalize()"
+		,	"싱크 채우기|tabs.length && tabs[tab].fillSync()"
 		,	"미리보기창 실행|SmiEditor.Viewer.open()"
 		,	"설정(&S)|openSetting()"
 		]
