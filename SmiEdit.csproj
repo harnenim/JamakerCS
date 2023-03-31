@@ -155,9 +155,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="bridge\readme.txt" />
-    <Content Include="NoPlayer.dll" />
     <Content Include="PlayerBridge.dll" />
-    <Content Include="PotPlayer.dll" />
     <Content Include="view\addon\Combine.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
