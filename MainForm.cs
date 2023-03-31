@@ -127,7 +127,7 @@ namespace SmiEdit
             }
         }
         private int requestFocus = 0;
-        public void FocusIfRequested(object sender, EventArgs e)
+        private void FocusIfRequested(object sender, EventArgs e)
         {
             if (requestFocus > 0)
             {
@@ -149,7 +149,7 @@ namespace SmiEdit
             }
         }
 
-        public void RefreshPlayer(object sender, EventArgs e)
+        private void RefreshPlayer(object sender, EventArgs e)
         {
             if (player != null)
             {
@@ -172,8 +172,8 @@ namespace SmiEdit
                 }
             }
         }
-        
-        public void BeforeExit(object sender, FormClosingEventArgs e)
+
+        private void BeforeExit(object sender, FormClosingEventArgs e)
         {
             e.Cancel = true;
             Script("beforeExit");
@@ -195,7 +195,7 @@ namespace SmiEdit
             Process.GetCurrentProcess().Kill();
         }
 
-        public void WebFormClosed(object sender, FormClosedEventArgs e)
+        private void WebFormClosed(object sender, FormClosedEventArgs e)
         {
             Process.GetCurrentProcess().Kill();
         }
@@ -304,7 +304,7 @@ namespace SmiEdit
         bool useFollowWindow = false;
         RECT lastOffset, offset, viewerOffset;
         int saveSettingAfter = 0;
-        public void FollowWindow(object sender, EventArgs e)
+        private void FollowWindow(object sender, EventArgs e)
         {
             if (!useFollowWindow)
             {
@@ -405,10 +405,10 @@ namespace SmiEdit
         #endregion
 
         #region 브라우저 통신
-        protected string Script(string name) { return mainView.Script(name); }
-        protected string Script(string name, object arg) { return mainView.Script(name, arg); }
+        private string Script(string name) { return mainView.Script(name); }
+        private string Script(string name, object arg) { return mainView.Script(name, arg); }
 
-        protected void ScriptToPopup(string name, string func, object arg)
+        private void ScriptToPopup(string name, string func, object arg)
         {
             if (LSH.useCustomPopup < 1 && name.Equals("viewer"))
             {
@@ -436,13 +436,14 @@ namespace SmiEdit
             ScriptToPopup("viewer", "setSetting", strSettingJson);
             ScriptToPopup("viewer", "setLines", viewerLines);
         }
-        public void UpdateViewerTime(int time) { ScriptToPopup("viewer", "refreshTime", time); }
+        private void UpdateViewerTime(int time) { ScriptToPopup("viewer", "refreshTime", time); }
         private string viewerLines = "[]";
         public void UpdateViewerLines(string lines) {
         	ScriptToPopup("viewer", "setLines", viewerLines = lines);
         }
 
-        string msgTitle = "하늣 ;>ㅅ<;";
+        // TODO: 뭐라고 하지...
+        readonly string msgTitle = "하늣 ;>ㅅ<;";
         public void Alert(string target, string msg)
         {if (InvokeRequired)
             {
@@ -521,7 +522,7 @@ namespace SmiEdit
             UpdateViewerSetting();
         }
 
-        string[] videoExts = new string[] { "mkv", "mp4", "avi", "m2ts", "ts" };
+        private string[] videoExts = new string[] { "mkv", "mp4", "avi", "m2ts", "ts" };
         public void SetVideoExts(string exts)
         {
             videoExts = exts.Split(',');
@@ -796,7 +797,7 @@ namespace SmiEdit
             base.WndProc(ref m);
         }
 
-        const string FileDialogFilter = "SAMI 자막 파일|*.smi";
+        private const string FileDialogFilter = "SAMI 자막 파일|*.smi";
 
         private void DropListFile(DragEventArgs e)
         {
