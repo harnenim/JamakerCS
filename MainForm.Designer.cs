@@ -44,6 +44,9 @@ namespace SmiEdit
             this.menuStrip.Size = new System.Drawing.Size(800, 24);
             this.menuStrip.TabIndex = 1;
             this.menuStrip.Text = "menuStrip";
+            this.menuStrip.KeyDown += new System.Windows.Forms.KeyEventHandler(this.KeyDownInMenuStrip);
+            this.menuStrip.MenuDeactivate += new System.EventHandler(this.EscapeMenuFocusAfterCheck);
+            this.menuStrip.LostFocus += new System.EventHandler(this.CloseMenuStrip);
             // 
             // layerForDrag
             // 
@@ -84,12 +87,8 @@ namespace SmiEdit
             this.MainMenuStrip = this.menuStrip;
             this.Name = "MainForm";
             this.Text = "SmiEdit";
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.KeyDownInMenuStrip);
             this.ResumeLayout(false);
             this.PerformLayout();
-            this.menuStrip.KeyDown += new System.Windows.Forms.KeyEventHandler(this.KeyDownInMenuStrip);
-            this.menuStrip.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.KeyDownInMenuStrip);
-            this.mainView.GotFocus += new System.EventHandler(this.CloseMenuStrip);
         }
 
         #endregion

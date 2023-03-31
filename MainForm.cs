@@ -632,43 +632,44 @@ namespace SmiEdit
             }
             Script("afterSaveAddonSetting");
         }
-        #endregion
+#endregion
 
         #region 메뉴
         private void KeyDownInMenuStrip(object sender, KeyEventArgs e)
-        {   // 메뉴를 다 끈 다음에야 이벤트가 잡히는 듯...?
+        {   
             switch (e.KeyCode)
             {
                 case Keys.Tab: // 안 먹힘...
                 case Keys.Alt: // Alt로는 안 먹히고
                 case Keys.Menu: // Menu로 먹힘
                 case Keys.Escape:
+                    e.Handled = true;
                     mainView.Focus();
                     break;
             }
         }
+        private void EscapeMenuFocusAfterCheck(object sender, EventArgs e)
+        {
+            foreach (ToolStripMenuItem item in menuStrip.Items)
+            {
+                if (item.Checked) return;
+            }
+            mainView.Focus();
+        }
         private void CloseMenuStrip(object sender, EventArgs e)
         {
-            Console.WriteLine("CloseMenuStrip");
             foreach (ToolStripMenuItem item in menuStrip.Items)
             {
                 item.Checked = false;
                 item.HideDropDown();
             }
         }
-        private void KeyDownInMenuStrip(object sender, PreviewKeyDownEventArgs e)
-        {
-            Console.WriteLine($"KeyDownInMenuStrip: {e.KeyCode}");
-        }
 
         public void SetMenus(string[][] menus)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() =>
-                {
-                    SetMenus(menus);
-                }));
+                Invoke(new Action(() => { SetMenus(menus); }));
             }
             else
             {
