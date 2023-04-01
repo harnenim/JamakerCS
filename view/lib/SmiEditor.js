@@ -544,15 +544,15 @@ SmiEditor.activateKeyEvent = function() {
 			}
 		}
 	}).on("keyup", function(e) {
-		if (lastKeyDown == e.keyCode) {
-			lastKeyDown = null;
-			switch (e.keyCode) {
-				case 18: { // Alt키만 눌렀다 뗐을 경우
-					// 메뉴에 포커스 넘기기
+		switch (e.keyCode) {
+			case 18: {
+				if (lastKeyDown == 18) {
+					// Alt키만 눌렀다 뗐을 경우 메뉴에 포커스 넘기기
 					e.preventDefault();
 					binder.focusToMenu(0);
-					break;
 				}
+				lastKeyDown = null;
+				break;
 			}
 		}
 	});

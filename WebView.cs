@@ -29,7 +29,15 @@ namespace SmiEdit
                 if (popup == null)
                 {
                     popup = new Popup(mainForm, name, targetUrl);
-                    popup.Text = name.Equals("viewer") ? "미리보기" : "찾기/바꾸기";
+                    if (name.Equals("viewer"))
+                    {
+                        popup.Text = "미리보기";
+                        popup.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable;
+                    }
+                    else
+                    {
+                        popup.Text = "찾기/바꾸기";
+                    }
                     popup.Show();
                     mainForm.SetWindow(name, popup.Handle.ToInt32(), popup);
                 }

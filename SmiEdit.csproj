@@ -86,8 +86,6 @@
     <Compile Include="addon\ColorPicker.Designer.cs">
       <DependentUpon>ColorPicker.cs</DependentUpon>
     </Compile>
-    <Compile Include="addon\Nico.cs" />
-    <Compile Include="addon\Shake.cs" />
     <Compile Include="PopupBinder.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>

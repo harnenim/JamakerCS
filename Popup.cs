@@ -98,5 +98,17 @@ namespace SmiEdit
                 mainView.Focus();
             }
         }
+
+        public void SetTitle(string title)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { SetTitle(title); }));
+            }
+            else
+            {
+                Text = title;
+            }
+        }
     }
 }

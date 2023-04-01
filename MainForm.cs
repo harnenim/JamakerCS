@@ -436,7 +436,22 @@ namespace SmiEdit
             ScriptToPopup("viewer", "setSetting", strSettingJson);
             ScriptToPopup("viewer", "setLines", viewerLines);
         }
-        private void UpdateViewerTime(int time) { ScriptToPopup("viewer", "refreshTime", time); }
+        private void UpdateViewerTime(int time) {
+            ScriptToPopup("viewer", "refreshTime", time);
+            if (LSH.useCustomPopup > 0)
+            {
+                Popup viewer = GetPopup("viewer");
+                if (viewer != null)
+                {
+                    int h = time;
+                    int ms = h % 1000; h = (h - ms) / 1000;
+                    int s = h % 60; h = (h - s) / 60;
+                    int m = h % 60; h = (h - m) / 60;
+                    string title = $"미리보기 - {h}:{ (m > 9 ? "" : "0") + m }:{ (s > 9 ? "" : "0") + s }:{ (ms > 99 ? "" : "0") + (ms > 9 ? "" : "0") + ms }";
+                    viewer.SetTitle(title);
+                }
+            }
+        }
         private string viewerLines = "[]";
         public void UpdateViewerLines(string lines) {
         	ScriptToPopup("viewer", "setLines", viewerLines = lines);
@@ -662,6 +677,10 @@ namespace SmiEdit
         }
         private void CloseMenuStrip(object sender, EventArgs e)
         {
+            CloseMenuStrip();
+        }
+        private void CloseMenuStrip()
+        {
             foreach (ToolStripMenuItem item in menuStrip.Items)
             {
                 item.Checked = false;
@@ -723,6 +742,7 @@ namespace SmiEdit
             }
             else
             {
+                // 메뉴에 포커스 주기
                 menuStrip.Focus();
                 ToolStripMenuItem toOpen = (ToolStripMenuItem)menuStrip.Items[0];
                 foreach (ToolStripItem item in menuStrip.Items)
