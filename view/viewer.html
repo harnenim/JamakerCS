@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -73,13 +73,17 @@ function refreshTime(receiveTime) {
 			}
 			var line = lines[j][LINE.TEXT].split(/<br>/gi);
 			for (var k = 0; k < line.length; k++) {
+				// 줄표 있을 때 왼쪽 정렬
+				/* 완성본이면 몰라도 제작 시엔 안 좋은 기능으로 보임
 				if ($("<span>").html(line[k][0]).text()[0] == '-') {
 					hasLine = true;
 				}
+				*/
 				showLines.push(line[k]);
 			}
 		}
 	}
+	/*
 	if (hasLine) {
 		for (var j = 0; j < showLines.length; j++) {
 			var line = showLines[j];
@@ -89,6 +93,7 @@ function refreshTime(receiveTime) {
 			showLines[j] = line + "<span style='opacity: 0;'>-</span>";
 		}
 	}
+	*/
 	showText = showLines.join("<br>");
 	// RUBY태그 문법이 미묘하게 달라서 가공 필요
 	showText = showText.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
