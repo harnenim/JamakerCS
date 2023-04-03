@@ -47,7 +47,7 @@ var SmiEditor = function(text, path) {
 	
 	this.history = new History(this.input, 32, function() {
 		editor.scrollToCursor();
-		editor.updateSync();
+		editor.updateSync([0, editor.lines.length]); // 실행취소일 땐 전체 갱신하도록
 	});
 	setTimeout(function() {
 		editor.act = new AutoCompleteTextarea(editor.input, SmiEditor.autoComplete, function() {
@@ -215,7 +215,7 @@ SmiEditor.activateKeyEvent = function() {
 				case 33: { // PgUp
 					if (hasFocus) {
 						if (!e.shiftKey) {
-							// 종스크롤은 문제 없지만 횡스크롤 문제 발생
+							// 크로뮴에서 횡스크롤이 오른쪽으로 튀는 버그 존재
 							editor.fixScrollAroundEvent();
 						}
 						editor.history.logIfCursorMoved();
@@ -225,6 +225,7 @@ SmiEditor.activateKeyEvent = function() {
 				case 34: { // PgDn
 					if (hasFocus) {
 						if (!e.shiftKey) {
+							// 크로뮴에서 횡스크롤이 오른쪽으로 튀는 버그 존재
 							editor.fixScrollAroundEvent();
 						}
 						editor.history.logIfCursorMoved();
@@ -235,6 +236,8 @@ SmiEditor.activateKeyEvent = function() {
 					if (hasFocus) {
 						if (!e.ctrlKey) {
 							// 공백 줄일 경우 End키 이벤트 방지
+							// ※ 크로뮴 textarea 공백줄에서 End키 누르면 커서가 다음 줄로 내려가는 버그
+							//    어이 없는 게, IE에서 똑같이 하면 커서가 윗줄로 올라감(...)
 							// 블록지정일 경우 selectionStart가 문제될 수도 있긴 한데... 그렇게 쓰는 경우는 거의 없을 듯
 							var text = editor.input.val();
 							var index = editor.input[0].selectionEnd;
@@ -251,8 +254,7 @@ SmiEditor.activateKeyEvent = function() {
 							if (e.altKey) {
 								
 							} else {
-								// 싱크 이동 -> TODO: Ctrl+Shift vs Ctrl+Alt
-								// 원래 쓰던 단축키가 웹브라우저에서 안 돼서 억지로 테스트해본 거였나?
+								// 싱크 이동
 								if (editor) {
 									e.preventDefault();
 									editor.moveSync(true);
@@ -263,12 +265,7 @@ SmiEditor.activateKeyEvent = function() {
 					} else {
 						if (e.ctrlKey) {
 							if (e.altKey) {
-								// 싱크 이동
-								if (editor) {
-									e.preventDefault();
-									editor.moveSync(true);
-									return;
-								}
+								
 							} else {
 								// 스크롤 이동
 								if (hasFocus) {
@@ -291,7 +288,7 @@ SmiEditor.activateKeyEvent = function() {
 						}
 					}
 					if (hasFocus) {
-						// 커서가 맨 윗줄일 경우 맨 앞으로 가는 이벤트 방지
+						// 커서가 맨 윗줄일 경우 맨 앞으로 가는 이벤트 방지(크로뮴 버그? 기능?)
 						// 블록지정일 경우 애매...
 						if (editor.input.val().substring(0, editor.input[0].selectionEnd).indexOf("\n") < 0) {
 							e.preventDefault();
@@ -318,12 +315,7 @@ SmiEditor.activateKeyEvent = function() {
 					} else {
 						if (e.ctrlKey) {
 							if (e.altKey) {
-								// 싱크 이동
-								if (editor) {
-									e.preventDefault();
-									editor.moveSync(false);
-									return;
-								}
+								
 							} else {
 								// 스크롤 이동
 								if (hasFocus) {
@@ -346,7 +338,7 @@ SmiEditor.activateKeyEvent = function() {
 						}
 					}
 					if (hasFocus) {
-						// 커서가 맨 아랫줄일 경우 맨 뒤로 가는 이벤트 방지
+						// 커서가 맨 아랫줄일 경우 맨 뒤로 가는 이벤트 방지(크로뮴 버그? 기능?)
 						// 블록지정일 경우 애매...
 						if (editor.input.val().substring(editor.input[0].selectionStart).indexOf("\n") < 0) {
 							e.preventDefault();
@@ -424,8 +416,10 @@ SmiEditor.activateKeyEvent = function() {
 					if (editor) {
 						e.preventDefault();
 						if (!hasFocus) editor.input.focus();
-						if (e.ctrlKey) {
+						if (e.ctrlKey && !e.shiftKey && !e.altKey) {
 							editor.reSync();
+						} else if (e.altKey && !e.ctrlKey && !e.shiftKey) {
+							editor.reSyncPrompt();
 						} else {
 							editor.insertSync();
 						}
@@ -461,7 +455,9 @@ SmiEditor.activateKeyEvent = function() {
 					SmiEditor.PlayerAPI.playOrPause();
 					break;
 				}
-				case 121: { // F10: 재생 (정지화면 있을 경우 재생 중인지 확신이 안 설 때가 있어서 토글이 아닌 재생이 있는 게 맞을 듯)
+				case 121: { // F10: 재생
+					// ※ 정지화면 있을 경우 재생 중인지 확신이 안 설 때가 있어서
+					//    토글이 아닌 재생이 있는 게 맞을 듯
 					e.preventDefault();
 					SmiEditor.PlayerAPI.play();
 					break;
@@ -474,7 +470,7 @@ SmiEditor.activateKeyEvent = function() {
 				case 9: { // Tab
 					e.preventDefault();
 					if (hasFocus) {
-						editor.inputTextLikeNative("\t"); // TODO: 횡스크롤을 안 잡고 있음...
+						editor.inputTextLikeNative("\t"); // TODO: 횡스크롤 이동 안 되고 있음...
 					}
 					break;
 				}
@@ -575,23 +571,26 @@ SmiEditor.prototype.scrollToCursor = function(lineNo) {
 	if (top < scrollTop) { // 커서가 보이는 영역보다 위
 		this.input.scrollTop(top);
 	} else {
-		top += LH + SB - this.input.css("height").split("px")[0] + 2;
+		top += LH + SB - this.input.css("height").split("px")[0] + 2; // .height()는 padding을 빼고 반환함
 		if (top > scrollTop) { // 커서가 보이는 영역보다 아래
 			this.input.scrollTop(top);
 		}
 	}
+	// ※ 현재 좌우 스크롤까지 계산하진 않음... 연산량이 어떨지...
 }
 
 SmiEditor.prototype.fixScrollAroundEvent = function(scrollLeft) {
+	// 원래 스크롤 기억
 	var scrollTop = this.input.scrollTop();
 	if (scrollLeft == undefined) {
 		scrollLeft = this.input.scrollLeft()
 	}
 	var editor = this;
 	setTimeout(function() {
-		// 원래 이벤트 진행 후
+		// 이벤트 진행 후 원래 스크롤 복원
 		editor.input.scrollTop (scrollTop );
 		editor.input.scrollLeft(scrollLeft);
+		// 스크롤 이동 필요하면 이동
 		editor.scrollToCursor();
 	}, 1);
 }
@@ -671,7 +670,17 @@ SmiEditor.prototype.inputTextLikeNative = function(input) {
 	this.scrollToCursor();
 }
 
-SmiEditor.prototype.reSync = function() {
+SmiEditor.prototype.reSyncPrompt = function() {
+	var editor = this;
+	prompt("싱크 시작 시간을 입력하세요.", function(value) {
+		if (!isFinite(value)) {
+			alert("잘못된 값입니다.");
+			return;
+		}
+		editor.reSync(Number(value));
+	});
+}
+SmiEditor.prototype.reSync = function(sync) {
 	if (this.syncUpdating) {
 		return;
 	}
@@ -681,7 +690,9 @@ SmiEditor.prototype.reSync = function() {
 	var cursor = this.input[0].selectionEnd;
 	var lineNo = this.input.val().substring(0, cursor).split("\n").length - 1;
 
-	var sync = SmiEditor.getSyncTime();
+	if (!sync) {
+		sync = SmiEditor.getSyncTime();
+	}
 	
 	// 적용 시작할 싱크 찾기
 	var i = lineNo;

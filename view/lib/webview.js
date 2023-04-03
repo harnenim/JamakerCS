@@ -31,6 +31,14 @@ confirm = function(msg, yes, no) {
 	afterConfirmNo  = no  ? no  : function() {};
 	binder.confirm(windowName, msg);
 }
+// prompt 재정의
+_prompt = prompt;
+var afterPrompt  = function(value) {};
+prompt = function(msg, after) {
+	afterPrompt = after ? after : function() {};
+	//binder.prompt(windowName, msg);
+	afterPrompt(_prompt(msg));
+}
 
 var ctrl  = false;
 
