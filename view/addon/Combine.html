@@ -221,7 +221,7 @@ $(function() {
 			} else if (ls[STIME] < us[STIME]) { // 아래가 바뀜
 				if (group && group.upper.length && (group.upper[group.upper.length - 1][ETIME] > ls[STIME])) { // 그룹 유지
 					group.lower.push(ls);
-					group.maxLines[1] = Math.max(group.maxLines[0], ls[LINES]);
+					group.maxLines[1] = Math.max(group.maxLines[1], ls[LINES]);
 					group.maxWidth = Math.max(group.maxWidth, ls[WIDTH]);
 					
 				} else { // 위가 없거나 끝남 -> 그룹 끊김
@@ -300,7 +300,7 @@ $(function() {
 					}
 					
 					// 줄 높이 맞춰주기
-					for (var k = sync[LINES]; k < group.maxLines[0]; k++) {
+					for (var k = sync[LINES]; k < group.maxLines[i]; k++) {
 						sync[TEXT] = "<b>　</b><br>" + sync[TEXT];
 					}
 				}
