@@ -1551,7 +1551,7 @@ SmiEditor.Finder = {
 				text = this.finding.upperText;
 				find = this.finding.upperFind;
 			}
-			if (this.finding.text.substring(selection[0], selection[1]) == find) {
+			if (this.finding.text.substring(selection[0], selection[1]).toUpperCase() == find.toUpperCase()) {
 				this.finding.text      = this.finding.text     .substring(0, selection[0]) + this.finding.replace + this.finding.text     .substring(selection[1]);
 				this.finding.upperText = this.finding.upperText.substring(0, selection[0]) + this.finding.replace + this.finding.upperText.substring(selection[1]);
 				selection[1] = selection[0] + this.finding.replace.length;
