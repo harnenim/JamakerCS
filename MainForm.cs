@@ -89,8 +89,10 @@ namespace SmiEdit
         {
             RemoveWindow(name); // 남아있을 수 있음
             windows.Add(name, hwnd);
+            /*
+            */
             if ((LSH.useCustomPopup < 1 && name.Equals("viewer"))
-                || (LSH.useCustomPopup < 2 && name.Equals("finder")))
+             || (LSH.useCustomPopup < 2 && name.Equals("finder")))
             {
                 WinAPI.SetTaskbarHide(hwnd);
             }
@@ -457,8 +459,7 @@ namespace SmiEdit
         	ScriptToPopup("viewer", "setLines", viewerLines = lines);
         }
 
-        // TODO: 뭐라고 하지...
-        readonly string msgTitle = "하늣 ;>ㅅ<;";
+        readonly string msgTitle = "Jamaker";
         public void Alert(string target, string msg)
         {if (InvokeRequired)
             {
@@ -484,6 +485,22 @@ namespace SmiEdit
                 else
                 {
                     Script("afterConfirmNo");
+                }
+            }
+        }
+        public void Prompt(string target, string msg)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { Prompt(target, msg); }));
+            }
+            else
+            {
+                Prompt prompt = new Prompt(GetHwnd(target), msg, msgTitle);
+                DialogResult result = prompt.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    Script("afterPrompt", prompt.value);
                 }
             }
         }

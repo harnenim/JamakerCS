@@ -36,8 +36,7 @@ _prompt = prompt;
 var afterPrompt  = function(value) {};
 prompt = function(msg, after) {
 	afterPrompt = after ? after : function() {};
-	//binder.prompt(windowName, msg);
-	afterPrompt(_prompt(msg));
+	binder.prompt(windowName, msg);
 }
 
 var ctrl  = false;

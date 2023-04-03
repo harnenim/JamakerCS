@@ -87,7 +87,7 @@ namespace SmiEdit
         }
         
         #region 팝업 통신
-        // 이거 결국 안 쓰나?
+        // 이거 결국 finder 말곤 안 쓰나?
         public void SendMsg(string target, string msg) {
             _.SendMsg(target, msg);
         }
@@ -110,6 +110,7 @@ namespace SmiEdit
 
         public void Alert  (string target, string msg) { _.Alert  (target, msg); }
         public void Confirm(string target, string msg) { _.Confirm(target, msg); }
+        public void Prompt (string target, string msg) { _.Prompt (target, msg); }
         #endregion
 
         #region 플레이어
