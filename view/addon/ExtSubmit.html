@@ -1,0 +1,45 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>외부 검색</title>
+	<script src="../lib/jquery-3.2.1.min.js"></script>
+	<script src="../lib/popup.js"></script>
+	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
+	<script>
+windowName = "addon";
+
+var editor = null;
+
+$(function() {
+	opener.SmiEditor.Addon.onloadExtSubmit();
+});
+function submit(method, url, values) {
+	var form = $("form");
+	form.attr({
+			action: url
+		,	method: method
+	});
+	for (var key in values) {
+		form.append($("<input>").attr({"type": "hidden", "name": key, "value": values[key]}));
+	}
+	form[0].submit();
+}
+	</script>
+	<style>
+iframe {
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+form {
+	display: none;
+}
+	</style>
+</head>
+<body>
+	<iframe name="ext" tabindex="-1"></iframe>
+	<form target="ext" method="get"></form>
+</body>
+</html>

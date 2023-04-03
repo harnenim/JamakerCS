@@ -1647,22 +1647,17 @@ SmiEditor.Addon = {
 			binder.focus("addon");
 		}
 	,	openExtSubmit: function(method, url, values) {
-			this.window = window.open("", "addon", "scrollbars=no,location=no,width=0,height=0");
+			this.ext = {
+					method: method
+				,	url: url
+				,	values: values
+			}
+			this.window = window.open("addon/ExtSubmit.html", "addon", "scrollbars=no,location=no,width=0,height=0");
 			this.moveWindowToSetting();
 			binder.focus("addon");
-			
-			// 직접 submit 하면 addon 식별자가 지워져버려서 iframe으로 넣음
-			var fill = "margin: 0; border: 0; padding: 0; width: 100%; height: 100%;";
-			var form = $("<form>").attr({"target": "ext", "action": url, "method": (method ? method : "get")}).hide();
-			for (var key in values) {
-				form.append($("<input>").attr({"type": "hidden", "name": key, "value": values[key]}));
-			}
-			var html = $("<div>").append($("<iframe name='ext' style='" + fill + "'>")).append(form).html();
-			
-			fill += " overflow: hidden";
-			this.window.document.body.innerHTML = "";
-			this.window.document.write("<!doctype html><html style='" + fill + "'><head><title>외부 검색</title></head><body style='" + fill + "'>" + html + "</body></html>");
-			this.window.document.getElementsByTagName('form')[0].submit();
+		}
+	,	onloadExtSubmit: function() {
+			this.window.submit(this.ext.method, this.ext.url, this.ext.values);
 		}
 	,	moveWindowToSetting: function() {
 			// 플레이어 창 위에
