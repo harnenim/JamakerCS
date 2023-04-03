@@ -1,6 +1,6 @@
-# SmiEdit → Jamaker/자메이커 이름 변경 예정
+# Jamaker/자메이커
 
-[이미지 넣을 예정]   
+![자메이커 이미지](https://pbs.twimg.com/media/FsylhvCacAAFu0J.png)   
 ~변태적인 SMI 자막 제작 기능을 위해 만든 허접한 프로그램~
 
 파일 제어, 창 제어 등을 제외한 에디터 기능은   
@@ -15,6 +15,7 @@
 그냥 기존에 혼자 만들어 쓰던 툴을 통합한 프로그램을 만들기로 했습니다.   
 
 알아보니 팟플레이어 연동은 2021년까진 불가능했던 걸로...   
+
 [![팟플레이어 Q&A](https://pbs.twimg.com/media/FsyCVmRacAE8Cl3.png)](https://cafe.daum.net/pot-tool/Hqfm/6938)
 
 ***
@@ -24,3 +25,7 @@
 웹에서 천 줄 단위 리치 텍스트를 다루는 건 성능 문제가 발생해서...
 
 ~그나저나 Chromium의 <textarea>는 은근히 많은 버그를 잡아줘야~
+
+***
+
+![작명 과정](https://pbs.twimg.com/media/FsyliqgaAAAEi_G.png)
