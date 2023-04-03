@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -21,6 +21,7 @@ function show(index) {
 var opened = null;
 var submitFuncs = {};
 var refreshFuncs = {};
+var refreshTableCommand;
 
 var saved = {};
 function checkSaved(key, ok, no) {
@@ -265,7 +266,7 @@ $(function() {
 		var tbody = tableCommand.find("tbody");
 		var withs = ["withCtrls", "withAlts", "withCtrlAlts", "withCtrlShifts"];
 		var keys = "ABCDEFGHIJKLMKNOPQRSTUVWXYZ1234567890";
-		function refreshTableCommand() {
+		(refreshTableCommand = function() {
 			tbody.empty();
 			for (var i = 0; i < keys.length; i++) {
 				var key = keys[i];
@@ -313,8 +314,7 @@ $(function() {
 				}
 				tbody.append(tr);
 			}
-		}
-		refreshTableCommand();
+		})();
 		
 		tableCommand.on("click", "td:not(.fixed)", function() {
 			var data = $(this).data();
@@ -667,6 +667,9 @@ $(function() {
 			setSaved("menu", true);
 			opener.setSetting(setting);
 			opener.saveSetting();
+			
+			// Alt 단축키 바뀌었을 수 있으므로 단축키 설정 새로고침
+			refreshTableCommand();
 		};
 	}
 	
