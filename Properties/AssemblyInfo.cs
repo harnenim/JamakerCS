@@ -4,13 +4,13 @@ using System.Runtime.InteropServices;
 // 어셈블리에 대한 일반 정보는 다음 특성 집합을 통해 
 // 제어됩니다. 어셈블리와 관련된 정보를 수정하려면
 // 이러한 특성 값을 변경하세요.
-[assembly: AssemblyTitle("SmiEdit")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Jamaker")]
+[assembly: AssemblyDescription("SAMI 자막 제작 프로그램, 자메이커")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("SmiEdit")]
+[assembly: AssemblyCompany("Q@harne_")]
+[assembly: AssemblyProduct("Jamaker")]
 [assembly: AssemblyCopyright("Copyright ©  2023")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyTrademark("Jamaker/자메이커")]
 [assembly: AssemblyCulture("")]
 
 // ComVisible을 false로 설정하면 이 어셈블리의 형식이 COM 구성 요소에 
