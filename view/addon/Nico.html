@@ -21,8 +21,13 @@ input[type=number]::-webkit-inner-spin-button {
 	<script>
 windowName = "addon";
 
+var FR = 23976;
+var FL = 1000000 / FR;
+
 if (opener) {
 	setting = opener.setting;
+	FR = opener.FR;
+	FL = opener.FL;
 }
 
 var style = null;
@@ -50,9 +55,6 @@ function getWidth(smi, css) {
 function nbsp(text) {
 	return text.split(" ").join("&nbsp;");
 }
-
-var FR = 23976;
-var FL = 1000000 / FR;
 	</script>
 	<style>
 #input {
@@ -336,14 +338,14 @@ $(function() {
 					// 싱크 내용물 없었으면 생성
 					if (i >= 0) {
 						var last = item.syncs[i];
-						item.syncs.splice(i, 0, { time: sync, type: last.type, text: last.text });
+						item.syncs.splice(i, 0, { time: Number(sync), type: last.type, text: last.text });
 					}
 				}
 			}
 			
 			for (var i = 0; i < item.syncs.length; i++) {
 				var sync = item.syncs[i];
-				
+
 				if (!syncLines[sync.time]) {
 					syncLines[sync.time] = { type: sync.type, lines: [] };
 					syncLines[sync.time].lines.length = lineCount;
@@ -598,6 +600,22 @@ function setPreview(list) {
 					<input  type="number" class="end"   value="4000" />
 					<input  type="text"   class="color" value="#00ffff" />
 					<input  type="text"   class="text"  value="테스트" />
+					<button type="button" class="removeLine">✕</button>
+				</div>
+				<div class="line">
+					<input  type="number" class="line"  value="3" />
+					<input  type="number" class="start" value="111" />
+					<input  type="number" class="end"   value="7777" />
+					<input  type="text"   class="color" value="#ffff00" />
+					<input  type="text"   class="text"  value="awedpopawhgwaafwe" />
+					<button type="button" class="removeLine">✕</button>
+				</div>
+				<div class="line">
+					<input  type="number" class="line"  value="1" />
+					<input  type="number" class="start" value="4000" />
+					<input  type="number" class="end"   value="5200" />
+					<input  type="text"   class="color" value="#ff00ff" />
+					<input  type="text"   class="text"  value="ㅁㄴㅇㄹ" />
 					<button type="button" class="removeLine">✕</button>
 				</div>
 			</div>
