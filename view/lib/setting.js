@@ -28,14 +28,14 @@ var checkVersion;
 			}, 1);
 		}
 	}
-	var lastNotifyForCommand = "";
+	var lastNotifyForCommand = "2023.04.07.v1";
 	var lastNotifyForAutoComplete = "";
 	var lastNotifyForStyle = "2023.04.06.v1";
 	var lastNotifyForMenu = "2023.04.05.v1";
 }
 
 var DEFAULT_SETTING =
-{	version: "2023.04.06.v1"
+{	version: "2023.04.07.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -92,32 +92,34 @@ var DEFAULT_SETTING =
 ,	command:
 	{	withCtrls:
 		{	'1': '/* 색상태그 */\n' + 'editor.tagging("<font color=\\"#aaaaaa\\">")'
-		,	'2': '/* 여러 줄에 자동으로 줄표 넣어주기 */\n'
+		,	'2': '/* 한 줄씩 줄표 넣어주기 */\n'
 			   + 'var text = editor.getText();\n'
 			   + 'var lines = text.text.split("\\n");\n'
 			   + 'var lineNo = text.text.substring(0, text.selection[0]).split("\\n").length - 1;\n'
-			   + 'var lineRange = [lineNo, lineNo];\n'
-			   + 'while (lineRange[0] >= 0) {\n'
-			   + '	if (lines[lineRange[0]].substring(0, 6).toUpperCase() == "<SYNC ") {\n'
-			   + '		lineRange[0]++;\n'
+			   + '// 현재 싱크 맨 윗줄 찾기\n'
+			   + 'var syncLineNo = lineNo;\n'
+			   + 'while (syncLineNo >= 0) {\n'
+			   + '	if (lines[syncLineNo].substring(0, 6).toUpperCase() == "<SYNC ") {\n'
 			   + '		break;\n'
 			   + '	}\n'
-			   + '	lineRange[0]--;\n'
+			   + '	syncLineNo--;\n'
 			   + '}\n'
-			   + 'while (lineRange[1] < Math.min(lines.length, lineRange[0] + 5)) { // 과도한 작업 방지\n'
-			   + '	if (lines[lineRange[1]].substring(0, 6).toUpperCase() == "<SYNC ") {\n'
-			   + '		lineRange[1]--;\n'
-			   + '		break;\n'
-			   + '	}\n'
-			   + '	lineRange[1]++;\n'
+			   + '// 작업 대상 있는지 확인\n'
+			   + 'if (syncLineNo + 2 > lines.length\n'
+			   + ' || lines[syncLineNo + 1].substring(0, 6).toUpperCase() == "<SYNC "\n'
+			   + ' || lines[syncLineNo + 2].substring(0, 6).toUpperCase() == "<SYNC ") {\n'
+			   + '	return;\n'
 			   + '}\n'
-			   + 'if (lineRange[0] < lineRange[1]) {\n'
-			   + '	lineRange[1]++;\n'
-			   + '	var newText = "- " + lines.slice(lineRange[0], lineRange[1]).join("<br>- ");\n'
-			   + '	var cursor = lines.slice(0, lineRange[0]).join("\\n").length + 1;\n'
-			   + '	lines.splice(lineRange[0], (lineRange[1] - lineRange[0]), newText);\n'
-			   + '	editor.setText(lines.join("\\n"), [cursor, cursor]);\n'
-			   + '}'
+			   + '// 줄표 없으면 넣기\n'
+			   + 'if (lines[syncLineNo + 1][0] != "-") {\n'
+			   + '	lines[syncLineNo + 1] = "- " + lines[syncLineNo + 1];\n'
+			   + '}\n'
+			   + 'if (lines[syncLineNo + 2][0] != "-") {\n'
+			   + '	lines[syncLineNo + 2] = "- " + lines[syncLineNo + 2];\n'
+			   + '}\n'
+			   + 'var cursor = lines.slice(0, syncLineNo + 1).join("\\n").length + 1;\n'
+			   + 'lines.splice(syncLineNo + 1, 2, (lines[syncLineNo + 1] + "<br>" + lines[syncLineNo + 2]));\n'
+			   + 'editor.setText(lines.join("\\n"), [cursor, cursor]);'
 		,	'3': '/* 공백줄 */\n' + 'editor.inputText("<br><b>　</b>")'
 		,	'4': '/* 기울임 */\n' + 'editor.taggingRange("<i>")'
 		,	'5': '/* 밑줄 */\n'   + 'editor.taggingRange("<u>")'
@@ -151,19 +153,21 @@ var DEFAULT_SETTING =
 			   + '}\nvar result = blocks.join("");\n'
 			   + '\n'
 			   + 'editor.setText(prev + result + next, [text.selection[0], text.selection[0] + result.length]);'
+		,	'9': '/* 색상태그 시작 */\n' + 'editor.inputText("<font color=\\"#aaaaaa\\">")'
+		,	'0': '/* 색상태그 종료 */\n' + 'editor.inputText("</font>")'
 		,	'M': '/* 화면 싱크 매니저 실행 */\n' + 'openAddon("SyncManager");'
 		}
 	,	withAlts:
 		{	'1': '/* 맞춤법 검사기 */\n'
-		       + 'var text = editor.getText();\n'
-		       + 'extSubmit("post", "http://speller.cs.pusan.ac.kr/results", { text1: text.text.substring(text.selection[0], text.selection[1]) });'
+			   + 'var text = editor.getText();\n'
+			   + 'extSubmit("post", "http://speller.cs.pusan.ac.kr/results", "text1");'
 		,	'2': '/* 국어사전 */\n'
-		       + 'var text = editor.getText();\n'
-		       + 'extSubmit("get", "https://ko.dict.naver.com/%23/search", { query: text.text.substring(text.selection[0], text.selection[1]) });'
+			   + 'var text = editor.getText();\n'
+			   + 'extSubmit("get", "https://ko.dict.naver.com/%23/search", "query");'
 		}
 	,	withCtrlAlts:
-		{	'C': '/* 겹치는 대사 합치기 */\n'    + 'openAddon("Combine");'
-		,	'D': '/* 겹치는 대사 나누기 */\n'    + 'openAddon("Devide");'
+		{	'C': '/* 겹치는 대사 결합 */\n'      + 'openAddon("Combine");'
+		,	'D': '/* 겹치는 대사 분리 */\n'      + 'openAddon("Devide");'
 		,	'F': '/* 싱크 유지 텍스트 대체 */\n' + 'openAddon("Fusion");'
 		}
 	,	withCtrlShifts:
