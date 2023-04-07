@@ -172,6 +172,32 @@ namespace Jamaker
                             player.MoveWindow(); // 설정 위치로 이동
                         }
                     }
+
+                    // 저장 대화상자를 띄우기 위해 현재 영상 파일명 요청 후 대기
+                    if (saveAfter > 0)
+                    {
+                        saveAfter--;
+                        if (saveAfter == 0)
+                        {   // 파일명 응답 대기 시간 만료
+                            if (saveAfter > 0) SaveWithDialogAfterGetVideoFileName("-");
+                        }
+                    }
+                }
+                else
+                {   // 플레이어 죽었으면 바로 저장 대화상자 띄우기
+                    if (saveAfter > 0)
+                    {
+                        saveAfter = 0;
+                        SaveWithDialogAfterGetVideoFileName("-");
+                    }
+                }
+            }
+            else
+            {   // 플레이어 죽었으면 바로 저장 대화상자 띄우기
+                if (saveAfter > 0)
+                {
+                    saveAfter = 0;
+                    SaveWithDialogAfterGetVideoFileName("-");
                 }
             }
         }
@@ -891,7 +917,7 @@ namespace Jamaker
         {
             if (path != null && path.Length > 0)
             {
-                int index = path.LastIndexOf(".");
+                int index = path.LastIndexOf('.');
                 if (index > 0)
                 {
                     LoadFile(path.Substring(0, index) + ".smi", true);
@@ -963,26 +989,21 @@ namespace Jamaker
             player.OpenFile(path);
         }
 
+        private int saveAfter = 0;
+        private string textToSave = "";
         public void Save(string text, string path)
         {
             if (path == null || path.Length == 0)
             {
-                if (InvokeRequired)
-                {
-                    Invoke(new Action(() => {
-                        Save(text, path);
-                    }));
-                    return;
-                }
-                else
-                {
-                    SaveFileDialog dialog = new SaveFileDialog{ Filter = FileDialogFilter };
-                    if (dialog.ShowDialog() != DialogResult.OK)
-                    {   // 저장 취소
-                        return;
-                    }
-                    path = dialog.FileName;
-                }
+                // 파일명 수신 시 동작 설정
+                saveAfter = 100;
+                textToSave = text;
+                afterGetFileName = new AfterGetString(SaveWithDialogAfterGetVideoFileName);
+                // player에 현재 재생 중인 파일명 요청
+                player.GetFileName();
+
+                //SaveWithDialog(text, null);
+                return;
             }
 
             StreamWriter sw = null;
@@ -999,6 +1020,48 @@ namespace Jamaker
             finally
             {
                 if (sw != null) sw.Close();
+            }
+        }
+        public void SaveWithDialogAfterGetVideoFileName(string path)
+        {
+            if (path != null && path.Length > 0)
+            {
+                saveAfter = 0;
+                SaveWithDialog(textToSave, path);
+                afterGetFileName = null;
+            }
+        }
+        public void SaveWithDialog(string text, string videoPath)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { SaveWithDialog(text, videoPath); }));
+            }
+            else
+            {
+                string directory = null;
+                string filename = null;
+                if (videoPath != null)
+                {
+                    videoPath = videoPath.Replace('/', '\\');
+                    if (videoPath.IndexOf('\\') > 0)
+                    {
+                        directory = videoPath.Substring(0, videoPath.LastIndexOf('\\'));
+                        filename = videoPath.Substring(directory.Length + 1);
+                        filename = filename.Substring(0, filename.LastIndexOf('.')) + ".smi";
+                    }
+                }
+
+                SaveFileDialog dialog = new SaveFileDialog {
+                    Filter = FileDialogFilter
+                ,   InitialDirectory = directory
+                ,   FileName = filename
+                };
+                if (dialog.ShowDialog() != DialogResult.OK)
+                {   // 저장 취소
+                    return;
+                }
+                Save(text, dialog.FileName);
             }
         }
         #endregion
