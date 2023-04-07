@@ -589,9 +589,12 @@ namespace Jamaker
                         string dllPath = Path.Combine(Directory.GetCurrentDirectory(), $"bridge/{dll}.dll");
                         Assembly asm = Assembly.LoadFile(dllPath);
                         Type[] types = asm.GetExportedTypes();
-                        player = (PlayerBridge.PlayerBridge) Activator.CreateInstance(types[0]);
+                        player = (PlayerBridge.PlayerBridge)Activator.CreateInstance(types[0]);
                     }
-                    finally { }
+                    catch
+                    {
+                        Script("alert", "플레이어 브리지 라이브러리가 없습니다.");
+                    }
                     if (player != null)
                     {
                         player.SetEditorHwnd(Handle.ToInt32());
