@@ -28,14 +28,14 @@ var checkVersion;
 			}, 1);
 		}
 	}
-	var lastNotifyForCommand = "2023.04.07.v1";
+	var lastNotifyForCommand = "2023.04.07.v2";
 	var lastNotifyForAutoComplete = "";
 	var lastNotifyForStyle = "2023.04.06.v1";
 	var lastNotifyForMenu = "2023.04.05.v1";
 }
 
 var DEFAULT_SETTING =
-{	version: "2023.04.07.v1"
+{	version: "2023.04.07.v2"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -90,8 +90,20 @@ var DEFAULT_SETTING =
 	,	preset: "<Sync Start={sync}><P Class={lang}{type}>" // 싱크 태그 형태
 	}
 ,	command:
-	{	withCtrls:
-		{	'1': '/* 색상태그 */\n' + 'editor.tagging("<font color=\\"#aaaaaa\\">")'
+	{	fn: // F1~F12: pqrstuvwxyz{
+		{	't': '/* 기본 싱크 */\n' + 'editor.insertSync()'
+		,	'u': '/* 화면 싱크 */\n' + 'editor.insertSync(true)'
+		,	'v': '/* 기본/화면 싱크 토글 */\n' + 'editor.toggleSyncType()'
+		,	'w': '/* 선택 영역 싱크 삭제 */\n' + 'editor.removeSync()'
+		,	'x': '/* 재생/일시정지 */\n' + 'SmiEditor.PlayerAPI.playOrPause()'
+		,	'y': '/* 재생 */\n' + 'SmiEditor.PlayerAPI.play();\n'
+			   + '// ※ 정지화면 있을 경우 재생 중인지 확신이 안 설 때가 있어서\n'
+			   + '//    토글이 아닌 재생이 있는 게 맞을 듯'
+		,	'z': '/* 정지 */\n' + 'SmiEditor.PlayerAPI.stop()'
+		}
+	,	withCtrls:
+		{	't': '/* 일괄 싱크 찍기 */\n' + 'editor.reSync();'
+		,	'1': '/* 색상태그 */\n' + 'editor.tagging("<font color=\\"#aaaaaa\\">")'
 		,	'2': '/* 한 줄씩 줄표 넣어주기 */\n'
 			   + 'var text = editor.getText();\n'
 			   + 'var lines = text.text.split("\\n");\n'
@@ -155,15 +167,19 @@ var DEFAULT_SETTING =
 			   + 'editor.setText(prev + result + next, [text.selection[0], text.selection[0] + result.length]);'
 		,	'9': '/* 색상태그 시작 */\n' + 'editor.inputText("<font color=\\"#aaaaaa\\">")'
 		,	'0': '/* 색상태그 종료 */\n' + 'editor.inputText("</font>")'
+		,	'D': '/* 줄 삭제 */\n' + 'editor.deleteLine();'
 		,	'M': '/* 화면 싱크 매니저 실행 */\n' + 'openAddon("SyncManager");'
+		,	'Q': '/* 현재 위치 재생 */\n' + 'editor.moveToSync();'
 		}
 	,	withAlts:
-		{	'1': '/* 맞춤법 검사기 */\n'
+		{	't': '/* 일괄 싱크 입력 */\n' + 'editor.reSyncPrompt();'
+		,	'1': '/* 맞춤법 검사기 */\n'
 			   + 'var text = editor.getText();\n'
 			   + 'extSubmit("post", "http://speller.cs.pusan.ac.kr/results", "text1");'
 		,	'2': '/* 국어사전 */\n'
 			   + 'var text = editor.getText();\n'
 			   + 'extSubmit("get", "https://ko.dict.naver.com/%23/search", "query");'
+		,	'Q': '/* 재생 위치 찾기 */\n' + 'editor.findSync();'
 		}
 	,	withCtrlAlts:
 		{	'C': '/* 겹치는 대사 결합 */\n'      + 'openAddon("Combine");'

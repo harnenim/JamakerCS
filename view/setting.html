@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -265,12 +265,35 @@ $(function() {
 	
 		var tbody = tableCommand.find("tbody");
 		var withs = ["withCtrls", "withAlts", "withCtrlAlts", "withCtrlShifts"];
-		var keys = "ABCDEFGHIJKLMKNOPQRSTUVWXYZ1234567890";
+		var keys = "pqrstuvwxyz{ABCDEFGHIJKLMKNOPQRSTUVWXYZ1234567890";
 		(refreshTableCommand = function() {
 			tbody.empty();
 			for (var i = 0; i < keys.length; i++) {
 				var key = keys[i];
-				var tr = $("<tr>").addClass("key-" + key).append($("<th>").text(key));
+				var keyName = key;
+				if (i < 12) {
+					keyName = "F" + (i + 1);
+				}
+				var th = $("<th>").text(keyName);
+				if (i < 12) {
+					var func = setting.command.fn[key];
+					if (!func || !func.trim()) {
+						func = "";
+						th.addClass("not-used");
+					} else {
+						var label = func.trim();
+						if (label.substring(0, 2) == "/*") {
+							label = label.substring(2).split("*/")[0].trim();
+						}
+						th.addClass("used").attr({ title: label });
+					}
+					th.data({
+							"name": "setting.command.fn['" + key + "']"
+						,	"key" : key
+						,	"func": func
+					});
+				}
+				var tr = $("<tr>").addClass("key-" + keyName).append(th);
 				for (var j = 0; j < withs.length; j++) {
 					var w = withs[j];
 					var td = $("<td>");
@@ -316,36 +339,39 @@ $(function() {
 			}
 		})();
 		
-		tableCommand.on("click", "td:not(.fixed)", function() {
+		tableCommand.on("click", "th.used, th.not-used, td:not(.fixed)", function() {
 			var data = $(this).data();
-			var key = " + " + data.key;
+			var keyName = data.key;
+			if (data.key.charCodeAt() > 111) {
+				keyName = "F" + (data.key.charCodeAt() - 111);
+			}
 			switch (data.with) {
 				case 0: {
-					key = "Ctrl" + key;
+					keyName = "Ctrl + " + keyName;
 					break;
 				}
 				case 1: {
-					key = "Alt" + key;
+					keyName = "Alt + " + keyName;
 					break;
 				}
 				case 2: {
-					key = "Ctrl + Alt" + key;
+					keyName = "Ctrl + Alt + " + keyName;
 					break;
 				}
 				case 3: {
-					key = "Ctrl + Shift" + key;
+					keyName = "Ctrl + Shift + " + keyName;
 					break;
 				}
 			}
 			
-			if (inputCommandKey.val() == key) {
+			if (inputCommandKey.val() == keyName) {
 				// 현재 작업 중인 것
 				return;
 			}
 			checkSaved("cmd", function() {
 				setSaved("cmd", true);
 				inputCommandName.val(data.name);
-				inputCommandKey .val(key);
+				inputCommandKey .val(keyName);
 				inputCommandFunc.val(data.func);
 			});
 		});
@@ -358,6 +384,11 @@ $(function() {
 			var func = "";
 			
 			if (keys.indexOf(key) >= 0) {
+				var keyName = key;
+				if (e.keyCode > 111) {
+					keyName = "F" + (e.keyCode - 111);
+				}
+				
 				var w = null;
 				if (e.shiftKey) {
 					if (e.ctrlKey) {
@@ -365,11 +396,11 @@ $(function() {
 							
 						} else {
 							if (SmiEditor.withCtrlShifts.reserved.indexOf(key) >= 0) {
-								key = "Ctrl + Shift + ";
+								keyName = "Ctrl + Shift + 예약키";
 							} else {
-								func = tableCommand.find("tr.key-" + key + " > td:eq(3)").data("func");
+								func = tableCommand.find("tr.key-" + keyName + " > td:eq(3)").data("func");
 								name = "setting.command.withCtrlShifts[\"" + key + "\"]";
-								key = "Ctrl + Shift + " + key;
+								keyName = "Ctrl + Shift + " + keyName;
 							}
 						}
 					}
@@ -377,43 +408,44 @@ $(function() {
 					if (e.ctrlKey) {
 						if (e.altKey) {
 							if (SmiEditor.withCtrlAlts.reserved.indexOf(key) >= 0) {
-								key = "Ctrl + Alt + ";
+								keyName = "Ctrl + Alt + 예약키";
 							} else {
-								func = tableCommand.find("tr.key-" + key + " > td:eq(2)").data("func");
+								func = tableCommand.find("tr.key-" + keyName + " > td:eq(2)").data("func");
 								name = "setting.command.withCtrlAlts[\"" + key + "\"]";
-								key = "Ctrl + Alt + " + key;
+								keyName = "Ctrl + Alt + " + keyName;
 							}
 						} else {
 							if (SmiEditor.withCtrls.reserved.indexOf(key) >= 0) {
-								key = "Ctrl + ";
+								keyName = "Ctrl + 예약키";
 							} else {
-								func = tableCommand.find("tr.key-" + key + " > td:eq(0)").data("func");
+								func = tableCommand.find("tr.key-" + keyName + " > td:eq(0)").data("func");
 								name = "setting.command.withCtrls[\"" + key + "\"]";
-								key = "Ctrl + " + key;
+								keyName = "Ctrl + " + keyName;
 							}
 						}
 					} else {
 						if (e.altKey) {
 							if (SmiEditor.withAlts.reserved.indexOf(key) >= 0) {
-								key = "Alt + ";
+								keyName = "Alt + 예약키";
 							} else {
-								func = tableCommand.find("tr.key-" + key + " > td:eq(1)").data("func");
+								func = tableCommand.find("tr.key-" + keyName + " > td:eq(1)").data("func");
 								name = "setting.command.withAlts[\"" + key + "\"]";
-								key = "Alt + " + key;
+								keyName = "Alt + " + keyName;
 							}
 						} else {
-							
+							func = tableCommand.find("tr.key-" + keyName + " > th:eq(0)").data("func");
+							name = "setting.fn[\"" + key + "\"]";
 						}
 					}
 				}
 
-				if (inputCommandKey.val() == key) {
+				if (inputCommandKey.val() == keyName) {
 					// 현재 작업 중인 것
 					return;
 				}
 				checkSaved("cmd", function() {
 					inputCommandName.val(name);
-					inputCommandKey .val(key);
+					inputCommandKey .val(keyName);
 					inputCommandFunc.val(func);
 				});
 				
@@ -445,8 +477,11 @@ $(function() {
 		});
 		
 		inputCommandFunc.bind("input propertychange", function() {
-			if (inputCommandName.val()) {
+			if (inputCommandKey.val().length > 1) { // 한 글자인 경우 단축키 조합 아님
 				setSaved("cmd", false);
+			} else {
+				// 입력 차단
+				inputCommandFunc.val("");
 			}
 		});
 
@@ -854,6 +889,16 @@ fieldset {
 #tableCommand tr {
 	height: 20px;
 }
+#tableCommand th {
+	background: #e1e1e1;
+}
+#tableCommand th.not-used {
+	background: #fff;
+}
+#tableCommand th.used,
+#tableCommand th.not-used {
+	cursor: pointer;
+}
 #tableCommand td {
 	height: 20px;
 	overflow: hidden;
@@ -861,6 +906,7 @@ fieldset {
 	text-overflow: ellipsis;
 	cursor: pointer;
 }
+#tableCommand th.not-used:hover,
 #tableCommand td:hover {
 	background: #ff8;
 }
@@ -868,9 +914,11 @@ fieldset {
 	background: #f88;
 	cursor: default;
 }
+#tableCommand th.used,
 #tableCommand td.used {
 	background: #8ff;
 }
+#tableCommand th.used:hover,
 #tableCommand td.used:hover {
 	background: #cfc;
 }
@@ -985,11 +1033,11 @@ fieldset {
 			</table>
 		</div>
 		<input type="hidden" id="inputCommandName" />
-		<label>조합 <input type="text" id="inputCommandKey" readonly style="width: 100px;" /></label>
+		<label>조합 <input type="text" id="inputCommandKey" readonly style="width: 100px;" /> (여기를 선택한 상태에서 단축키를 입력할 수 있습니다.)</label>
 		<br />
 		<textarea id="inputCommandFunc" spellcheck="false"></textarea>
 		
-		<fieldset id="areaFunctions">
+		<fieldset id="areaFunctions" style="height: 364px; overflow-y: scroll;">
 			<legend>사용자 정의 명령 함수 지원</legend>
 			<ul>
 				<li data-input="editor.getText()">
@@ -1028,6 +1076,38 @@ fieldset {
 					<h4>editor.findSync()</h4>
 					<p>현재 재생 중인 대사를 찾습니다.</p>
 				</li>
+				<li data-input="editor.deleteLine()">
+					<h4>editor.deleteLine()</h4>
+					<p>현재 줄을 삭제합니다.</p>
+				</li>
+				<li data-input="editor.insertSync()">
+					<h4>editor.insertSync()</h4>
+					<p>싱크를 찍습니다.</p>
+				</li>
+				<li data-input="editor.insertSync(true)">
+					<h4>editor.insertSync(true)</h4>
+					<p>화면 싱크를 찍습니다.</p>
+				</li>
+				<li data-input="editor.toggleSyncType()">
+					<h4>editor.toggleSyncType()</h4>
+					<p>기본 싱크 ↔ 화면 싱크 토글</p>
+				</li>
+				<li data-input="editor.removeSync()">
+					<h4>editor.removeSync()</h4>
+					<p>선택 영역 싱크를 삭제합니다.</p>
+				</li>
+				<li data-input="SmiEditor.PlayerAPI.playOrPause()">
+					<h4>SmiEditor.PlayerAPI.playOrPause()</h4>
+					<p>재생/일시정지</p>
+				</li>
+				<li data-input="SmiEditor.PlayerAPI.play()">
+					<h4>SmiEditor.PlayerAPI.play()</h4>
+					<p>재생</p>
+				</li>
+				<li data-input="SmiEditor.PlayerAPI.stop()">
+					<h4>SmiEditor.PlayerAPI.stop()</h4>
+					<p>정지</p>
+				</li>
 				<li data-input="newFile()">
 					<h4>newFile()</h4>
 					<p>새 파일</p>
@@ -1051,14 +1131,6 @@ fieldset {
 				<li data-input="openAddon('~~.html')">
 					<h4>openAddon("~~.html")</h4>
 					<p>직접 만든 부가기능 창을 열 수 있습니다.</p>
-				</li>
-				<li data-input="">
-					<h4></h4>
-					<p></p>
-				</li>
-				<li data-input="">
-					<h4></h4>
-					<p></p>
 				</li>
 			</ul>
 		</fieldset>
@@ -1103,16 +1175,16 @@ fieldset {
 	
 	<form id="style">
 		<label><input type="checkbox" name="useTab" /> 탭 사용</label><br />
-		<label>에디터
-			<textarea name="css" spellcheck="false" style="height: 200px;"></textarea>
+		<label>새 문서
+			<textarea name="newFile" spellcheck="false" style="height: 400px;"></textarea>
 		</label>
 		<br />
 		<label>미리보기
 			<textarea name="viewer_css" spellcheck="false" style="height: 300px;"></textarea>
 		</label>
 		<br />
-		<label>새 문서
-			<textarea name="newFile" spellcheck="false" style="height: 400px;"></textarea>
+		<label>에디터
+			<textarea name="css" spellcheck="false" style="height: 200px;"></textarea>
 		</label>
 	</form>
 	

@@ -71,7 +71,8 @@ SmiEditor.setSetting = function(setting, appendStyle) {
 
 	{	// 단축키
 		var withs = ["withCtrls", "withAlts", "withCtrlAlts", "withCtrlShifts"];
-		var keys = "ABCDEFGHIJKLMKNOPQRSTUVWXYZ1234567890";
+		var keys = "pqrstuvwxyz{ABCDEFGHIJKLMKNOPQRSTUVWXYZ1234567890";
+		SmiEditor.fn = setting.command.fn; // F숫자 조합은 기본값 추가 없이 그대로 사용
 		
 		// 설정값 초기화
 		for (var i = 0; i < withs.length; i++) {
@@ -87,6 +88,8 @@ SmiEditor.setSetting = function(setting, appendStyle) {
 		SmiEditor.withCtrls["V"] = null;
 		SmiEditor.withCtrls["X"] = null;
 		SmiEditor.withCtrls.reserved += "ACVX";
+		SmiEditor.withAlts["s"] = null; // Alt+F4
+		SmiEditor.withAlts.reserved += "s";
 
 		// 메뉴
 		for (var i = 0; i < setting.menu.length; i++) {
@@ -102,15 +105,11 @@ SmiEditor.setSetting = function(setting, appendStyle) {
 		}
 		
 		// 예약 단축키
-		SmiEditor.withCtrls["D"] = "/* 줄 삭제        */ editor.deleteLine();";
 		SmiEditor.withCtrls["F"] = "/* 찾기           */ SmiEditor.Finder.open();";
 		SmiEditor.withCtrls["H"] = "/* 바꾸기         */ SmiEditor.Finder.openChange();";
-		SmiEditor.withCtrls["Q"] = "/* 현재 위치 재생 */ editor.moveToSync();";
 		SmiEditor.withCtrls["Y"] = "/* 다시 실행      */ editor.history.forward();";
 		SmiEditor.withCtrls["Z"] = "/* 실행 취소      */ editor.history.back();";
-		SmiEditor.withAlts ["Q"] = "/* 재생 위치 찾기 */ editor.findSync();";
-		SmiEditor.withCtrls.reserved += "DFHQYZ";
-		SmiEditor.withAlts .reserved += "Q";
+		SmiEditor.withCtrls.reserved += "FHYZ";
 		
 		// 설정값 반영
 		for (var i = 0; i < withs.length; i++) {
@@ -419,61 +418,6 @@ SmiEditor.activateKeyEvent = function() {
 					}
 					return;
 				}
-				case 116: { // F5: 싱크
-					if (editor) {
-						e.preventDefault();
-						if (!hasFocus) editor.input.focus();
-						if (e.ctrlKey && !e.shiftKey && !e.altKey) {
-							editor.reSync();
-						} else if (e.altKey && !e.ctrlKey && !e.shiftKey) {
-							editor.reSyncPrompt();
-						} else {
-							editor.insertSync();
-						}
-					}
-					break;
-				}
-				case 117: { // F6: 화면 싱크
-					if (editor) {
-						e.preventDefault();
-						if (!hasFocus) editor.input.focus();
-						editor.insertSync(true);
-					}
-					break;
-				}
-				case 118: { // F7: 화면 싱크 토글
-					if (editor) {
-						e.preventDefault();
-						if (!hasFocus) editor.input.focus();
-						editor.toggleSyncType();
-					}
-					break;
-				}
-				case 119: { // F8: 싱크 삭제
-					if (editor) {
-						e.preventDefault();
-						if (!hasFocus) editor.input.focus();
-						editor.removeSync();
-					}
-					break;
-				}
-				case 120: { // F9: 재생/일시정지
-					e.preventDefault();
-					SmiEditor.PlayerAPI.playOrPause();
-					break;
-				}
-				case 121: { // F10: 재생
-					// ※ 정지화면 있을 경우 재생 중인지 확신이 안 설 때가 있어서
-					//    토글이 아닌 재생이 있는 게 맞을 듯
-					e.preventDefault();
-					SmiEditor.PlayerAPI.play();
-					break;
-				}
-				case 122: { // F11: 정지
-					e.preventDefault();
-					SmiEditor.PlayerAPI.stop();
-					break;
-				}
 				case 9: { // Tab
 					e.preventDefault();
 					if (hasFocus) {
@@ -529,7 +473,7 @@ SmiEditor.activateKeyEvent = function() {
 						if (e.altKey) {
 							f = SmiEditor.withAlts[key];
 						} else {
-							
+							f = SmiEditor.fn[key];
 						}
 					}
 				}
@@ -542,7 +486,7 @@ SmiEditor.activateKeyEvent = function() {
 					if (type == "function") {
 						f();
 					} else if (type == "string") {
-						eval("(function(){ " + f + " })()");
+						eval("(function(){ " + f + "// */\n})()"); // 내용물이 주석으로 끝날 수도 있음
 					}
 				}
 			}
