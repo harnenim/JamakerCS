@@ -35,7 +35,7 @@ var checkVersion;
 }
 
 var DEFAULT_SETTING =
-{	version: "2023.04.07.v2"
+{	version: "2023.04.09.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
