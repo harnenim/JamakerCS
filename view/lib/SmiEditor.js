@@ -123,9 +123,6 @@ SmiEditor.setSetting = function(setting, appendStyle) {
 			}
 		}
 	}
-
-	// 스타일
-	SmiEditor.refreshStyle(setting, appendStyle);
 }
 SmiEditor.refreshStyle = function(setting, appendStyle) {
 	if (!SmiEditor.style) {

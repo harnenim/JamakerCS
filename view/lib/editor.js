@@ -270,6 +270,11 @@ function moveWindowsToSetting() {
 		// TODO: false->true일 때 플레이어 위치 다시 구하기?
 	}
 	binder.setFollowWindow(setting.window.follow);
+
+	// 창 위치 초기화 후 호출
+	setTimeout(function() {
+		SmiEditor.refreshStyle(setting, getAppendStyle());
+	}, 1);
 }
 
 // C# 쪽에서 호출
