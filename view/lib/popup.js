@@ -29,7 +29,6 @@ var windowName = null;
 
 // alert 재정의
 _alert = alert;
-_confirm = confirm;
 alert = function(msg) {
 	if (windowName) {
 		if (opener) {
@@ -42,6 +41,7 @@ alert = function(msg) {
 	}
 }
 // confirm 재정의
+_confirm = confirm;
 var afterConfirmYes = function() {};
 var afterConfirmNo  = function() {};
 confirm = function(msg, yes, no) {
@@ -53,7 +53,15 @@ confirm = function(msg, yes, no) {
 		} else {
 			afterConfirmYes = yes ? yes : function() {};
 			afterConfirmNo  = no  ? no  : function() {};
-			binder.confirm(windowName, msg);
+			if (window.binder) {
+				binder.confirm(windowName, msg);
+			} else {
+				if (_confirm(msg)) {
+					afterConfirmYes();
+				} else {
+					afterConfirmNo();
+				}
+			}
 		}
 	} else {
 		var result = _confirm(msg);

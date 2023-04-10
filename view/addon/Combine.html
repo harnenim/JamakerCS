@@ -371,10 +371,14 @@ $(function() {
 					li++;
 					
 				} else { // 둘이 같이 바뀜(그룹 첫 싱크에서만 가능)
-					var ss = (us[ETIME] > ls[ETIME] ? us : ls);
+					var ss = us;
+					if (ls[ETIME] < us[ETIME]) {
+						ss = ls;
+						li++;
+					} else {
+						ui++;
+					}
 					group.lines.push(last = [us[STIME], us[STYPE], ss[ETIME], ss[ETYPE], us, ls]);
-					ui++;
-					li++;
 				}
 			}
 		}
