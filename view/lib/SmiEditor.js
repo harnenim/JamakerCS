@@ -551,6 +551,9 @@ SmiEditor.prototype.scrollToCursor = function(lineNo) {
 			this.input.scrollLeft(left);
 		}
 	}
+	
+	// 간헐적 에디터 외부 스크롤 버그 교정
+	this.area.scrollTop(0);
 }
 SmiEditor.prototype.getWidth = function(text) {
 	var checker = SmiEditor.prototype.widthChecker;
