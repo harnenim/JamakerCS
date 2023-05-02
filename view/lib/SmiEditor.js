@@ -27,6 +27,7 @@ var SmiEditor = function(text, path) {
 	
 	this.area = $("<div class='tab'>");
 	this.area.append(this.colSync = $("<div class='col-sync'>"));
+	this.area.append($("<div class='col-sync' style='background: transparent;'>")); // 블록지정 방지 영역
 	this.area.append(this.input   = $("<textarea class='input' spellcheck='false'>"));
 	this.colSync.html('<span class="sync"><br /></span>');
 	if (text) {
@@ -1067,7 +1068,7 @@ SmiEditor.prototype.updateSync = function(range) {
 		// 수정된 범위 직후의 싱크 찾기
 		for (i = range[1] + 1; i < self.lines.length; i++) {
 			if (self.lines[i][LINE.TYPE]) {
-				range[1] = i;
+				range[1] = ++i;
 				break;
 			}
 		}
