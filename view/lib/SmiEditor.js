@@ -666,17 +666,17 @@ SmiEditor.prototype.reSyncPrompt = function() {
 			alert("잘못된 값입니다.");
 			return;
 		}
-		editor.reSync(Number(value));
+		editor.reSync(Number(value), true);
 	});
 }
-SmiEditor.prototype.reSync = function(sync) {
+SmiEditor.prototype.reSync = function(sync, limitRange) {
 	if (this.syncUpdating) {
 		return;
 	}
 	this.history.log();
 	
 	// 커서가 위치한 줄
-	var cursor = this.input[0].selectionEnd;
+	var cursor = this.input[0].selectionStart;
 	var lineNo = this.input.val().substring(0, cursor).split("\n").length - 1;
 
 	if (!sync) {
@@ -697,9 +697,16 @@ SmiEditor.prototype.reSync = function(sync) {
 	var add = sync - this.lines[lineNo = i][LINE.SYNC];
 	var lines = this.lines.slice(0, lineNo);
 	
+	var limitLine = this.lines.length;
+	if (limitRange) {
+		var endCursor = this.input[0].selectionEnd;
+		if (endCursor > cursor) {
+			limitLine = this.input.val().substring(0, endCursor).split("\n").length;
+		}
+	}
 	for (; i < this.lines.length; i++) {
 		var line = this.lines[i];
-		if (line[LINE.SYNC]) {
+		if (i < limitLine && line[LINE.SYNC]) {
 			var sync = line[LINE.SYNC];
 			var newSync = sync + add;
 			lines.push([line[LINE.TEXT].split(sync).join(newSync), newSync, line[LINE.TYPE]]);
@@ -1439,7 +1446,13 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 				nextSync[1].removeClass("equal").removeClass("error");
 			}
 		}
-		
+
+		if (SmiEditor.PlayerAPI && SmiEditor.PlayerAPI.setLines) {
+			SmiEditor.PlayerAPI.setLines(newLines);
+		}
+		if (SmiEditor.Viewer.window) {
+			SmiEditor.Viewer.refresh();
+		}
 		self.syncUpdating = false;
 		self.afterChangeSaved(self.isSaved());
 		

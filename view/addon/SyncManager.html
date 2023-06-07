@@ -414,7 +414,8 @@ function apply() {
 		alert("작업이 이뤄지지 않았습니다.");
 		return;
 	}
-	basicLines = basicLines.split("\n");
+	basicLines = basicLines.length
+	           ? basicLines.split("\n") : [];
 	frameLines = frameLines.split("\n");
 	
 	var bi = 0;
