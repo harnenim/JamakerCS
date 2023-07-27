@@ -73,7 +73,7 @@ function splitOrigin() {
 	var i = origin.start;
 	for (; i < origin.end; i++) {
 		var line = origin.lines[i];
-		if (line[2] != null) {
+		if (line[LINE.TYPE] != null) {
 			break;
 		}
 		header.push(line[0]);
@@ -84,27 +84,27 @@ function splitOrigin() {
 		if (line[0].toUpperCase() == "</BODY>") {
 			break;
 		}
-		if (line[2]) { // 싱크
-			if (line[2] == 3) { // 중간 싱크
+		if (line[LINE.TYPE]) { // 싱크
+			if (line[LINE.TYPE] == TYPE.RANGE) { // 중간 싱크
 				last.lines.push("<~>");
 				
 			} else {
-				last.end = line[1];
-				last.endType = line[2];
+				last.end     = line[LINE.SYNC];
+				last.endType = line[LINE.TYPE];
 				syncs.push(last = {
-						start: line[1]
-					,	startType: line[2]
+						start    : line[LINE.SYNC]
+					,	startType: line[LINE.TYPE]
 					,	end: 0
 					,	endType: 0
 					,	lines: []
 				});
-				if (line[2] == TYPE.FRAME) {
+				if (line[LINE.TYPE] == TYPE.FRAME) {
 					frameCount++;
 				}
 			}
 			
 		} else { // 텍스트
-			last.lines.push(line[0]);
+			last.lines.push(line[LINE.TEXT]);
 		}
 	}
 	if (frameCount == 0) {
@@ -114,7 +114,7 @@ function splitOrigin() {
 	}
 	for (; i < origin.end; i++) {
 		var line = origin.lines[i];
-		footer.push(line[0]);
+		footer.push(line[LINE.TEXT]);
 	}
 
 	var forBasic = header, forFrameAss = [], forFrameSmi = [];
@@ -247,17 +247,17 @@ function joinFrame() {
 	
 	var lines = [];
 	var lastSync = 0;
-	var lastLine = [];
 	for (var i = 0; i < originLines.length; i++) {
 		if (isFinite(originLines[i])) {
 			var thisSync = targetLines[i];
-			for (var j = 1; j < lastLine.length; j++) {
-				lines.push(SmiEditor.makeSyncLine(Math.floor(lastSync + (thisSync - lastSync) * j / lastLine.length), TYPE.RANGE));
-				lines.push(lastLine[j]);
-			}
 			lines.push(SmiEditor.makeSyncLine(lastSync = thisSync, TYPE.FRAME));
 		} else {
-			lines.push((lastLine = originLines[i].split("<~>"))[0]);
+			var lastLine = originLines[i].split("<~>");
+			lines.push(lastLine[0]);
+			for (var j = 1; j < lastLine.length; j++) {
+				lines.push("<~>");
+				lines.push(lastLine[j]);
+			}
 		}
 	}
 	
@@ -475,6 +475,26 @@ function apply() {
 	var origLines = origin.text.split("\n");
 	var front = origLines.slice(0, origin.start);
 	var range = [(origin.start > 0) ? (front.join("\n").length + 1) : 0];
+	
+	var lastSyncLine = -1;
+	for (var i = 0; i < lines.length; i++) {
+		var line = lines[i];
+		if (line == "<~>") {
+			for (var j = i+1; j < lines.length; j++) {
+				if (lines[j].substring(0, 6).toUpperCase() == "<SYNC ") {
+					var text = lines.slice(lastSyncLine, j+1).join("\n");
+					text = SmiEditor.fillSync(text);
+					lines = lines.slice(0, lastSyncLine).concat(text.split("\n").slice(0, j - lastSyncLine)).concat(lines.slice(j));
+					lastSyncLine++;
+					i = j + 1;
+					break;
+				}
+			}
+			
+		} else if (line.substring(0, 6).toUpperCase() == "<SYNC ") {
+			lastSyncLine = i;
+		}
+	}
 	range.push(range[0] + lines.join("\n").length);
 	
 	// 교체 및 종료
