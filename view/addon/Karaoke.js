@@ -422,9 +422,9 @@ $(function() {
 						var d = nokori.indexOf('|');
 						if (d) {
 							// [..., ['[生命|いのち]',3,false], ...]
-							oc.push(o.substring(0, begin));
-							oc.push([[o.substring(begin+1, d), o.substring(d+1, end)], (end - d - 1), false]);
-							nokori = o.substring(end + 1);
+							oc.push(nokori.substring(0, begin));
+							oc.push([[nokori.substring(begin+1, d), nokori.substring(d+1, end)], (end - d - 1), false]);
+							nokori = nokori.substring(end + 1);
 						}
 					}
 				}
