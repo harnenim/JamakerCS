@@ -161,9 +161,11 @@ for (var i = 0; i < gana.length; i++) {
 }
 
 $(function() {
-	loadAddonSetting(KANJI_FILE, function(text) {
-		afterLoadKanji(savedKanjiList = text);
-	});
+	if (loadAddonSetting) {
+		loadAddonSetting(KANJI_FILE, function(text) {
+			afterLoadKanji(savedKanjiList = text);
+		});
+	}
 
 	var inputLyrics = $("#inputLyrics");
 	var inputDivider = $("#inputDivider");
@@ -418,9 +420,9 @@ $(function() {
 				var nokori = o;
 				while ((begin = nokori.indexOf('[')) >= 0) {
 					end = nokori.indexOf(']', begin);
-					if (end) {
+					if (end > 0) {
 						var d = nokori.indexOf('|');
-						if (d) {
+						if (d > 0) {
 							// [..., ['[生命|いのち]',3,false], ...]
 							oc.push(nokori.substring(0, begin));
 							oc.push([[nokori.substring(begin+1, d), nokori.substring(d+1, end)], (end - d - 1), false]);

@@ -43,7 +43,23 @@ $(function() {
 	});
 });
 opener.afterGetOutput = function(output) {
-	$("#output").val(output);
+	// 완성 후에도 화면 싱크 체크용으로 {} 표시
+	var lines = output.split("\n");
+	for (var i = 0; i < lines.length; i++) {
+		var line = lines[i].spilt(",");
+		if (line.length > 9) {
+			var type = line[3];
+			if (type[0] == "［") {
+				type[9] = "{}" + type[9];
+			}
+			line = line.join(",");
+			if (type[1] == "］") {
+				line = line + "{}";
+			}
+			lines[i] = line;
+		}
+	}
+	$("#output").val(lines.join("\n"));
 }
 	</script>
 	<style>

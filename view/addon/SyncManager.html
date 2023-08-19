@@ -15,7 +15,7 @@ windowName = "addon";
 // TODO: 경우에 따라 opener 분리 필요
 var origin = null;
 var FL = 42;
-var tab = opener.SmiEditor.selected;
+var tab = opener ? opener.SmiEditor.selected : null;
 if (tab) {
 	origin = tab.getText();
 	FL  = opener.FL;
@@ -23,6 +23,9 @@ if (tab) {
 var binder = {
 	setText: function(text, range) {
 		origin.tab.setText(text, range);
+	}
+,	alert: function(msg) {
+		_alert(msg);
 	}
 };
 

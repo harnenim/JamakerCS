@@ -160,6 +160,7 @@ SmiEditor.sync = {
 ,	move: 2000 // 앞으로/뒤로
 ,	lang: "KRCC" // 그냥 아래 preset 설정으로 퉁치는 게 나은가...?
 ,	preset: "<Sync Start={sync}><P Class={lang}{type}>" // TODO: 설정할 때 문법 경고?
+,	frame: true
 };
 SmiEditor.autoComplete = [];
 SmiEditor.PlayerAPI = {
@@ -172,7 +173,10 @@ SmiEditor.PlayerAPI = {
 SmiEditor.getSyncTime = function(sync) {
 	if (!sync) sync = (time + SmiEditor.sync.weight);
 	// 프레임 단위 싱크 보정
-	return Math.max(1, Math.floor(Math.floor((sync / FL) + 0.5) * FL));
+	if (SmiEditor.sync.frame) {
+		sync = Math.max(1, Math.floor(Math.floor((sync / FL) + 0.5) * FL));
+	}
+	return sync;
 }
 SmiEditor.makeSyncLine = function(time, type) {
 	return SmiEditor.sync.preset.split("{sync}").join(Math.floor(time)).split("{lang}").join(SmiEditor.sync.lang).split("{type}").join(TIDs[type ? type : 1]);
@@ -1670,7 +1674,10 @@ SmiEditor.Viewer = {
 	,	open: function() {
 			this.window = window.open("viewer.html", "viewer", "scrollbars=no,location=no,width=0,height=0");
 			this.moveWindowToSetting();
-			binder.focus("editor");
+			binder.focus("viewer");
+			setTimeout(function() {
+				binder.focus("editor");
+			}, 100);
 			return this.window;
 		}
 	,	moveWindowToSetting: function() {

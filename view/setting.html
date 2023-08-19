@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -232,6 +232,7 @@ $(function() {
 			setting.sync.move   = Number($("input[name=sync_move]"  ).val());
 			setting.sync.lang   = $("input[name=sync_lang]"  ).val();
 			setting.sync.preset = preset;
+			setting.sync.frame  = $("input[name=sync_frame]").prop("checked");
 			opener.setSetting(setting);
 			opener.saveSetting();
 		};
@@ -999,6 +1000,11 @@ fieldset {
 		<label>재생 이동 단위: <input type="number" name="sync_move" />ms</label><br />
 		<label>싱크 언어: <input type="text" name="sync_lang" /></label><br />
 		<label>싱크 태그 형태: <input type="text" name="sync_preset" style="width: 400px;" /></label><br />
+		<br />
+		<label><input type="checkbox" name="sync_frame" /> 프레임 단위 싱크 보정</label><br />
+		<p>※ FPS를 기준으로 프레임 단위 싱크로 보정이 들어갑니다.<br />
+			가변 프레임 영상의 경우 문제가 생길 수 있습니다. 
+		</p>
 	</form>
 	
 	<form id="cmd">

@@ -33,7 +33,7 @@ namespace Jamaker
                     if (name.Equals("viewer"))
                     {
                         popup.Text = "미리보기";
-                        popup.FormBorderStyle = FormBorderStyle.Sizable;
+                        //popup.FormBorderStyle = FormBorderStyle.Sizable;
                     }
                     else
                     {

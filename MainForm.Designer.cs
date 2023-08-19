@@ -87,6 +87,7 @@ namespace Jamaker
             this.Controls.Add(this.mainView);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip;
+            this.MaximizeBox = false;
             this.Name = "MainForm";
             this.Text = "Jamaker";
             this.ResumeLayout(false);

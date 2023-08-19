@@ -35,7 +35,7 @@ var checkVersion;
 }
 
 var DEFAULT_SETTING =
-{	version: "2023.07.27.v1"
+{	version: "2023.08.19.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -88,6 +88,7 @@ var DEFAULT_SETTING =
 	,	move: 2000   // 재생 이동 단위
 	,	lang: "KRCC" // 그냥 아래 preset 설정으로 퉁치는 게 나은가...?
 	,	preset: "<Sync Start={sync}><P Class={lang}{type}>" // 싱크 태그 형태
+	,	frame: true
 	}
 ,	command:
 	{	fn: // F1~F12: pqrstuvwxyz{
