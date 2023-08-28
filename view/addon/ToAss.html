@@ -46,17 +46,16 @@ opener.afterGetOutput = function(output) {
 	// 완성 후에도 화면 싱크 체크용으로 {} 표시
 	var lines = output.split("\n");
 	for (var i = 0; i < lines.length; i++) {
-		var line = lines[i].spilt(",");
+		var line = lines[i].split("\r")[0].split(",");
 		if (line.length > 9) {
 			var type = line[3];
 			if (type[0] == "［") {
-				type[9] = "{}" + type[9];
+				line[9] = "{}" + line[9];
 			}
-			line = line.join(",");
 			if (type[1] == "］") {
-				line = line + "{}";
+				line[9] = line[9] + "{}";
 			}
-			lines[i] = line;
+			lines[i] = line.join(",");
 		}
 	}
 	$("#output").val(lines.join("\n"));
