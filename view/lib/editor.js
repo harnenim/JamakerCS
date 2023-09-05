@@ -197,12 +197,18 @@ function init(jsonSetting) {
 			var index = closeTab(th);
 
 			setTimeout(function() {
-				// 선택돼있던 탭을 닫았을 경우 다른 탭 선택
 				if (tabs.length && $("#tabSelector .th.selected").length == 0) {
+					// 선택돼있던 탭을 닫았을 경우 다른 탭 선택
 					tab = Math.min(index, tabs.length - 1);
-					var selector = "#tabSelector .th:eq(" + tab + ")";
-					$(selector).click();
+				} else {
+					// 비활성 탭을 닫았을 경우
+					if (index < tab) {
+						// 닫힌 탭보다 뒤면 1씩 당겨서 재선택
+						tab--;
+					}
 				}
+				var selector = "#tabSelector .th:eq(" + tab + ")";
+				$(selector).click();
 			}, 1);
 		});
 	});

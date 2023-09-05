@@ -79,12 +79,12 @@ function splitOrigin() {
 		if (line[LINE.TYPE] != null) {
 			break;
 		}
-		header.push(line[0]);
+		header.push(line[LINE.TEXT]);
 	}
 	var frameCount = 0;
 	for (; i < origin.end; i++) {
 		var line = origin.lines[i];
-		if (line[0].toUpperCase() == "</BODY>") {
+		if (line[LINE.TEXT].toUpperCase() == "</BODY>") {
 			break;
 		}
 		if (line[LINE.TYPE]) { // 싱크
@@ -107,7 +107,7 @@ function splitOrigin() {
 			}
 			
 		} else { // 텍스트
-			last.lines.push(line[LINE.TEXT]);
+			last.lines.push(line[LINE.TEXT].split("\r")[0]);
 		}
 	}
 	if (frameCount == 0) {
@@ -126,10 +126,10 @@ function splitOrigin() {
 		var sync = syncs[i];
 		if (sync.startType == 1) {
 			forBasic.push(sync.start);
-			forBasic.push(sync.lines.join(""));
+			forBasic.push(sync.lines.join("\n").split("\n<~>\n").join("<~>"));
 		} else {
 			forFrameSmi.push(SmiEditor.makeSyncLine(sync.start, TYPE.FRAME));
-			forFrameSmi.push(sync.lines.join(""));
+			forFrameSmi.push(sync.lines.join("</>").split("</><~></>").join("<~>"));
 		}
 	}
 	{	// forBasic
@@ -459,7 +459,7 @@ function apply() {
 				break;
 			}
 		} else {
-			lines.push(fLine);
+			lines.push(fLine.split("</>").join("\n"));
 			if (++fi >= frameLines.length) break;
 			var sync = getSync(frameLines[fi]);
 			if (sync) fLast = sync;
