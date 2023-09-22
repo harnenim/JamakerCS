@@ -132,24 +132,7 @@ namespace Jamaker
         private int requestFocus = 0;
         private void FocusIfRequested(object sender, EventArgs e)
         {
-            if (requestFocus > 0)
-            {
-                if (InvokeRequired)
-                {
-                    Invoke(new Action(() => { FocusIfRequested(sender, e); }));
-                }
-                else
-                {
-                    Console.WriteLine("focus");
-                    mainView.Focus();
-                    requestFocus = -requestFocus;
-                }
-            }
-            else if (requestFocus < 0)
-            {
-                WinAPI.SetForegroundWindow(-requestFocus);
-                requestFocus = 0;
-            }
+
         }
 
         private void RefreshPlayer(object sender, EventArgs e)
@@ -282,6 +265,7 @@ namespace Jamaker
             }
             catch { }
         }
+
         public void FocusWindow(string target)
         {
             if (target.Equals("player"))
@@ -294,7 +278,17 @@ namespace Jamaker
             // 에디터 활성화할 땐 커서까지 포커싱
             if (target.Equals("editor"))
             {
+                delayFocusing = 10; // 창 전환 후 바로 호출하면 꼬임
+                timer.Tick += FocusEditor;
+            }
+        }
+        private int delayFocusing = 0;
+        private void FocusEditor(object sender, EventArgs e)
+        {
+            if (--delayFocusing == 0)
+            {
                 mainView.Focus();
+                timer.Tick -= FocusEditor;
             }
         }
         public void SetFollowWindow(bool follow)
@@ -1088,6 +1082,7 @@ namespace Jamaker
         {
             Script("SmiEditor.inputText", text);
         }
+
         public void AfterTransform(string text)
         {
             Script("SmiEditor.afterTransform", text);
