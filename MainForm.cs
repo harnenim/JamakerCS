@@ -1064,6 +1064,30 @@ namespace Jamaker
                 Save(text, dialog.FileName);
             }
         }
+        public void SaveTemp(string text, string path)
+        {   // 임시 파일 저장
+            int index = path.LastIndexOf("\\");
+            string filename = path.Substring(index + 1);
+
+            try
+            {   // 임시 파일 폴더 없으면 생성
+                DirectoryInfo di = new DirectoryInfo("temp");
+                if (!di.Exists)
+                {
+                    di.Create();
+                }
+
+                // 임시 파일 저장
+                long now = DateTime.Now.Ticks;
+                StreamWriter sw = new StreamWriter("temp/" + now + "_" + filename, false, Encoding.UTF8);
+                sw.Write(text);
+                sw.Close();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
         #endregion
 
         #region 부가기능

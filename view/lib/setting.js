@@ -35,7 +35,7 @@ var checkVersion;
 }
 
 var DEFAULT_SETTING =
-{	version: "2023.08.28.v1"
+{	version: "2023.10.08.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -244,7 +244,8 @@ var DEFAULT_SETTING =
 	, { from: "맥주있"    , to: "비어있"  , use: false }
 	, { from: "터키"      , to: "튀르키예", use: false }
 	, { from: "켄튀르키예", to: "켄터키"  , use: false }
-	]
+		]
+,	tempSave: 300
 ,	useTab: false // 탭 사용 기본값은 꺼두는 걸로
 ,	css	:	".sync     { border-color: #000; }\n"
 		+	".sync.error { background: #f88; }\n"

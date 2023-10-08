@@ -8,6 +8,8 @@ var tabs = [];
 var tab = 0;
 var closingTab = null;
 
+var autoSaveTemp = null;
+
 // C# 쪽에서 호출
 function refreshTime(now, fr) {
 	time = now;
@@ -225,6 +227,10 @@ function init(jsonSetting) {
 	
 	setSetting(setting);
 	moveWindowsToSetting();
+
+	autoSaveTemp = setInterval(function () {
+		saveTemp();
+	}, setting.tempSave * 1000);
 }
 
 function setSetting(setting) {
@@ -492,6 +498,26 @@ function afterSaveFile(path) {
 	
 	var title = path ? ("..." + path.substring(path.length - 14, path.length - 4)) : "새 문서";
 	$("#tabSelector .th:eq(" + tab + ") span").text(title);
+}
+
+function saveTemp() {
+	var currentTab = tabs[tab];
+	if (!currentTab) {
+		return;
+	}
+
+	// 마지막 임시 저장 이후 변경 사항 없으면 무시
+	var text = currentTab.input.val();
+	if (text == currentTab.tempSavedText) {
+		return;
+	}
+
+	var path = currentTab.path;
+	if (!path) {
+		path = "\\new.smi";
+	}
+	binder.saveTemp(text, path);
+	currentTab.tempSavedText = text;
 }
 
 var _for_video_ = false;

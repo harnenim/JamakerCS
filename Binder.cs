@@ -65,6 +65,10 @@ namespace Jamaker
         {
             _.Save(text, path);
         }
+        public void SaveTemp(string text, string path)
+        {
+            _.SaveTemp(text, path);
+        }
         public void OpenFile()
         {
             _.OpenFile();
