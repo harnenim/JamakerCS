@@ -15,6 +15,9 @@
 	line-height: 22px;
 	cursor: default;
 }
+.th:first-child {
+	margin-left: -1px;
+}
 .th:hover {
 	background: #f0f0f0;
 }
