@@ -244,7 +244,7 @@ var DEFAULT_SETTING =
 	, { from: "맥주있"    , to: "비어있"  , use: false }
 	, { from: "터키"      , to: "튀르키예", use: false }
 	, { from: "켄튀르키예", to: "켄터키"  , use: false }
-		]
+	]
 ,	tempSave: 300
 ,	useTab: false // 탭 사용 기본값은 꺼두는 걸로
 ,	css	:	".sync     { border-color: #000; }\n"

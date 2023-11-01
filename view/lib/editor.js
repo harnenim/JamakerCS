@@ -257,7 +257,7 @@ function setSetting(setting) {
 	// 가중치 등
 	$("#inputWeight").val(setting.sync.weight);
 	$("#inputUnit"  ).val(setting.sync.unit  );
-		var dll = setting.player.control.dll;
+	var dll = setting.player.control.dll;
 	if (dll) {
 		var playerSetting = setting.player.control[dll];
 		if (playerSetting) {
@@ -336,7 +336,7 @@ function getAppendStyle() {
 
 function openHelp(name) {
 	var url = (name.substring(0, 4) == "http") ? name : "help/" + name.split("..").join("").split(":").join("") + ".html";
-	window.open(url, "help", "scrollbars=no,location=no,resizable=no,width=0,height=0");
+	SmiEditor.helpWindow = window.open(url, "help", "scrollbars=no,location=no,resizable=no,width=0,height=0");
 	binder.moveWindow("help"
 			, setting.window.x + (40 * DPI)
 			, setting.window.y + (40 * DPI)
@@ -495,7 +495,7 @@ function saveFile(asNew) {
 function afterSaveFile(path) {
 	tabs[tab].afterSave(path);
 	
-	var title = path ? ("..." + path.substring(path.length - 14, path.length - 4)) : "새 문서";
+	var title = path ? ((path.length > 14) ? ("..." + path.substring(path.length - 14, path.length - 4)) : path.substring(0, path.length - 4)) : "새 문서";
 	$("#tabSelector .th:eq(" + tab + ") span").text(title);
 }
 
@@ -529,7 +529,13 @@ function openNewTab(text, path, forVideo) {
 		return;
 	}
 	
-	var title = path ? ("..." + path.substring(path.length - 14, path.length - 4)) : "새 문서";
+	// SRT 파일 불러왔을 경우 SMI로 변환
+	if (path && path.substring(path.length - 4).toUpperCase() == ".SRT") {
+		path = path.substring(0, path.length - 4) + ".smi";
+		text = srt2smi(text);
+	}
+
+	var title = path ? ((path.length > 14) ? ("..." + path.substring(path.length - 14, path.length - 4)) : path.substring(0, path.length - 4)) : "새 문서";
 	
 	var tab = new SmiEditor(text ? text : setting.newFile, path);
 	tabs.push(tab);
@@ -551,6 +557,10 @@ function confirmLoadVideo(path) {
 	confirm("동영상 파일을 같이 열까요?\n" + path, function() {
 		binder.loadVideoFile(path);
 	});
+}
+
+function openTempDir() {
+	binder.openTempDir();
 }
 
 // 종료 전 C# 쪽에서 호출
@@ -579,4 +589,75 @@ function doExit() {
 	saveSetting(); // 창 위치 최신값으로 저장
 	binder.doExit(setting.player.window.use
 		, setting.player.control[setting.player.control.dll].withExit);
+}
+
+var REG_SRT_SYNC = /^([0-9]{2}:){1,2}[0-9]{2}[,.][0-9]{2,3}( )*-->( )*([0-9]{2}:){1,2}[0-9]{2}[,.][0-9]{2,3}$/;
+function srt2smi(text) {
+	var lines = text.split("\r\n").join("\n").split("\n");
+	var items = [];
+	var last = { start: 0, end: 0, lines: [], length: 0 };
+	var lastLength = 0;
+	
+	for (var i = 0; i < lines.length; i++) {
+		var line = lines[i];
+		if (line) {
+			if (isFinite(line)) {
+				// 숫자뿐인 대사줄 or 싱크 시작 불분명
+				last.lines.push(line);
+				last.length = Math.max(last.length, lastLength); // 기존 숫자뿐인 줄은 대사줄로 편입
+				lastLength = last.lines.length;
+				
+			} else {
+				if (REG_SRT_SYNC.test(line)) {
+					// 새 싱크 시작
+					last.lines.length = last.length;
+					items.push(last = { start: 0, end: 0, lines: [], length: 0 });
+					var syncs = line.split("-->");
+					{	// 시작 싱크
+						var times = syncs[0].trim().split(",").join(".").split(":");
+						var start = Number(times[0]) * 60 + Number(times[1]);
+						if (times.length > 2) {
+							start = start * 60 + Number(times[2]);
+						}
+						last.start = Math.round(start * 1000);
+					}
+					{	// 종료 싱크
+						var times = syncs[1].trim().split(",").join(".").split(":");
+						var end = Number(times[0]) * 60 + Number(times[1]);
+						if (times.length > 2) {
+							end = end * 60 + Number(times[2]);
+						}
+						last.end = Math.round(end * 1000);
+					}
+					lastLength = 0;
+					
+				} else {
+					// 대사줄 추가
+					last.lines.push(line);
+					last.length = last.lines.length;
+				}
+			}
+		} else {
+			// 공백줄 or 싱크 종료 불분명
+			last.lines.push(line);
+		}
+	}
+	last.lines.length = last.length;
+	
+	lines = [];
+	last = 0;
+	for (var i = 0; i < items.length; i++) {
+		var item = items[i];
+		if (last && last < item.start) {
+			lines.push(SmiEditor.makeSyncLine(last));
+			lines.push("&nbsp;");
+		}
+		lines.push(SmiEditor.makeSyncLine(item.start));
+		lines.push(item.lines.join("<br>"));
+		last = item.end;
+	}
+	lines.push(SmiEditor.makeSyncLine(last));
+	lines.push("&nbsp;");
+	
+	return lines.join("\n");
 }

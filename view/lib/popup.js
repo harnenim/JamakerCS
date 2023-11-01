@@ -10,7 +10,7 @@ $(document).on("keydown", function(e) {
 window._close = window.close;
 window.close = function() {
 	if (windowName != "finder") {
-		opener.binder.focus("editor");
+		(opener ? opener.binder : binder).focus("editor");
 	}
 	window._close();
 };
@@ -39,11 +39,7 @@ var windowName = null;
 _alert = alert;
 alert = function(msg) {
 	if (windowName) {
-		if (opener) {
-			opener.binder.alert(windowName, msg);
-		} else {
-			binder.alert(windowName, msg);
-		}
+		(opener ? opener.binder : binder).alert(windowName, msg);
 	} else {
 		_alert(msg);
 	}
