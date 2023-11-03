@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>플레이어</title>
+<script src="lib/jquery-3.2.1.min.js"></script>
+<script>
+// 팟플레이어 SDK 값 가져옴
+var WM_USER = 0x0400;
+var POT_COMMAND = WM_USER;
+var POT_GET_CURRENT_TIME = 0x5004;
+var POT_SET_CURRENT_TIME = 0x5005;
+var POT_SET_PLAY_STATUS  = 0x5007;
+var POT_SET_PLAY_CLOSE   = 0x5009;
+var POT_GET_VIDEO_FPS    = 0x6032;
+
+var video = null;
+var status = 0;
+$(function() {
+	video = $("video")[0];
+	video.onplaying = function() { status = 2; }
+	video.onpause = function() { status = 1; }
+	video.onload = function() { video.currentTime = 0; }
+	
+	var dropLayer = $("<div>").css({
+			position: "absolute"
+		,	top: 0
+		,	left: 0
+		,	right: 0
+		,	bottom: 0
+		,	background: "#fff"
+		,	opacity: 0.5
+		,	padding: 40
+		,	textAlign: "center"
+		,	fontSize: 20
+	}).text("동영상 파일을 드래그해서 가져옵니다.");
+	$("body").append(dropLayer);
+	
+	document.addEventListener("dragenter", function(e) {
+		e.preventDefault();
+		dropLayer.show();
+	});
+	dropLayer[0].addEventListener("dragleave", function(e) {
+		e.preventDefault();
+		dropLayer.hide();
+	});
+	dropLayer[0].addEventListener("dragover", function(e) {
+		e.preventDefault();
+	});
+	dropLayer[0].addEventListener("drop", function(e) {
+		e.preventDefault();
+		if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+			var file = e.dataTransfer.files[0];
+			var ext = file.name.substring(file.name.length - 4);
+			switch (ext.toLowerCase()) {
+				case ".mp4":
+				case ".mkv": {
+					video.src = URL.createObjectURL(file);
+					break;
+				}
+			}
+		}
+		dropLayer.hide();
+	});
+});
+
+wndProc = function(m) {
+	switch (m.wParam) {
+		case POT_SET_PLAY_STATUS : {
+			return setStatus(m.lParam);
+		}
+		case POT_SET_PLAY_CLOSE : {
+			return stop();
+		}
+		case POT_GET_CURRENT_TIME: {
+			return getTime();
+		}
+		case POT_SET_CURRENT_TIME: {
+			return moveTo(m.lParam);
+		}
+		case POT_GET_VIDEO_FPS   : {
+			return getFps();
+		}
+		case 0x0010: {
+			window.close();
+			break;
+		}
+	}
+};
+
+
+setStatus = function(stat) {
+	switch (stat) {
+		case 0: return this.playOrPause();
+		case 1: return this.pause();
+		case 2: return this.play();
+	}
+}
+playOrPause = function() {
+	if (status == 2) {
+		this.pause();
+	} else {
+		this.play();
+	}
+}
+play = function() {
+	video.play();
+}
+pause = function() {
+	video.pause();
+}
+stop = function() {
+	video.pause();
+	video.currentTime = 0;
+	status = 0;
+}
+getTime = function() {
+	return video ? Math.round(video.currentTime * 1000) : 0;
+}
+moveTo = function(time) {
+	video.currentTime = time / 1000;
+}
+getFps = function() {
+	return null;
+}
+</script>
+<style>
+* { margin: 0; padding: 0; overflow: hidden; }
+html, body, video { width: 100%; height: 100%; background: #000; }
+</style>
+</head>
+<body>
+	<video controls></video>
+</body>
+</html>

@@ -142,6 +142,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="Jamaker.bat" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -167,6 +168,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="bridge\readme.txt" />
+    <Content Include="cs\Binder.js" />
+    <Content Include="cs\Bridge.js" />
+    <Content Include="cs\tempDir.html" />
+    <Content Include="cs\WinAPI.js" />
+    <Content Include="index.html" />
     <Content Include="jamaker.ico" />
     <Content Include="PlayerBridge.dll" />
     <Content Include="view\addon\Combine.html">
@@ -268,6 +274,7 @@
     <Content Include="view\lib\webview.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="view\player.html" />
     <Content Include="view\setting.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -559,10 +559,6 @@ function confirmLoadVideo(path) {
 	});
 }
 
-function openTempDir() {
-	binder.openTempDir();
-}
-
 // 종료 전 C# 쪽에서 호출
 function beforeExit() {
 	var saved = true;
