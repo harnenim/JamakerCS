@@ -15,11 +15,14 @@ windowName = "addon";
 // TODO: 경우에 따라 opener 분리 필요
 var origin = null;
 var FL = 42;
-var tab = opener ? opener.SmiEditor.selected : null;
-if (tab) {
-	origin = tab.getText();
-	FL  = opener.FL;
-}
+var tab = null;
+$(function() {
+	tab = opener ? opener.SmiEditor.selected : null;
+	if (tab) {
+		origin = tab.getText();
+		FL  = opener.FL;
+	}
+});
 var binder = {
 	setText: function(text, range) {
 		origin.tab.setText(text, range);
@@ -542,13 +545,12 @@ $(function() {
 		
 		$("#btnApply").on("click", apply);
 		
-		var originFrameAss = $("#originFrameAss").focus();
-		originFrameAss[0].select();
-		originFrameAss.scrollTop(0).scrollLeft(0);
 		setTimeout(function() {
+			var originFrameAss = $("#originFrameAss").focus();
+			originFrameAss[0].select();
+			originFrameAss.scrollTop(0).scrollLeft(0);
 			confirm("작업할 내역을 복사하시겠습니까?\nAegisub에서 작업이 필요합니다.", function() {
-				// C# 쪽에선 동작하지만 브라우저 테스트에선 안 됨
-				document.execCommand("copy");
+				navigator.clipboard.writeText(originFrameAss.val());
 			});
 		}, 100);
 	}

@@ -38,7 +38,6 @@ windowName = "help";
 이 프로그램에선 중간 작업용 특수 태그가 존재하며, 정규화를 통해 최종 완성본을 만들어줍니다.<br />
 <br />
 정규화 기능의 예시는 다음과 같습니다.<br />
-<s>파싱 로직 수정하려다 만 상태 (취소선인 걸로 적용하려고 하는데...)</s><br />
 <div id="example">
 	<table>
 		<colgroup>
@@ -248,10 +247,29 @@ windowName = "help";
 					&amp;nbsp;
 				</div></td>
 			</tr>
-			<tr title="타이핑 완성 상태 제외하고 생성">
-				<td><s>&lt;font typing='keyboard[)'&gt;테스트텍스트&lt;/font&gt;</s><br />
+			<tr title="타이핑 앞뒤 일부 제외하고 생성">
+				<td>&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
+					&lt;font typing='keyboard(5,5)'&gt;테스트텍스트&lt;/font&gt;<br />
+					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;<br />
+					&amp;nbsp;
+				</td>
+				<td><div>
 					&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
-					&lt;font typing='keyboard(0,1)'&gt;테스트텍스트&lt;/font&gt;<br />
+					테&lt;U&gt;슽&lt;/U&gt;   　　　​<br />
+					&lt;Sync Start=1250&gt;&lt;P Class=KRCC	&gt;<br />
+					테스&lt;U&gt;트&lt;/U&gt;   　　​<br />
+					&lt;Sync Start=1500&gt;&lt;P Class=KRCC	&gt;<br />
+					테스&lt;U&gt;틑&lt;/U&gt;   　　​<br />
+					&lt;Sync Start=1750&gt;&lt;P Class=KRCC	&gt;<br />
+					테스트&lt;U&gt;테&lt;/U&gt;   　​<br />
+					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;<br />
+					&amp;nbsp;
+				</div></td>
+			</tr>
+			<tr title="타이핑 완성 상태 제외하고 생성">
+				<td>
+					&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
+					&lt;font typing='keyboard[)'&gt;테스트텍스트&lt;/font&gt;<br />
 					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;<br />
 					테스트텍스&lt;U&gt;트&lt;/U&gt;
 				</td>
@@ -287,9 +305,9 @@ windowName = "help";
 				</div></td>
 			</tr>
 			<tr title="타이핑 공백/완성 상태 제외하고 생성">
-				<td><s>&lt;font typing='keyboard()'&gt;테스트텍스트&lt;/font&gt;</s><br />
+				<td>
 					&lt;Sync Start=1000&gt;&lt;P Class=KRCC&gt;<br />
-					&lt;font typing='keyboard(1,1)'&gt;테스트텍스트&lt;/font&gt;<br />
+					&lt;font typing='keyboard()'&gt;테스트텍스트&lt;/font&gt;<br />
 					&lt;Sync Start=2000&gt;&lt;P Class=KRCC&gt;<br />
 					테스트텍스&lt;U&gt;트&lt;/U&gt;
 				</td>

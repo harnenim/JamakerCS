@@ -79,15 +79,27 @@ function WebPlayerBridge() {
 		if (!this.hwnd) {
 			this.hwnd = {
 				wndProc: function(m) {
-					return (this.window && this.window.wndProc) ? this.window.wndProc(m) : null;
+					if (this.window) {
+						if (this.window.wndProc) {
+							return this.window.wndProc(m);
+						}
+						if (this.window.iframe && this.window.iframe.contentWindow && this.window.iframe.contentWindow.wndProc) {
+							return this.window.iframe.contentWindow.wndProc(m);
+						}
+					}
+					return null;
 				}
 			,	run: function() {
 					if (this.window && this.window.name) {
 						return;
 					}
-					this.window = window.open(location.href.split("index.html")[0] + "view/player.html", "player", "scrollbars=no,location=no");
+					this.window = window.open(location.href.substring(0, location.href.lastIndexOf("/")) + "/bridge/player.html", "player", "scrollbars=no,location=no");
 					if (this.window) {
-						this.window.document.title = "플레이어";
+						if (this.window.document) {
+							this.window.document.title = "플레이어";
+						} else if (this.window.setTitle) {
+							this.window.setTitle("플레이어");
+						}
 					}
 				}
 			}

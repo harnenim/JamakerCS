@@ -6,7 +6,7 @@
 	<title>ASS 자막으로 변환</title>
 	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/popup.js"></script>
-	<script src="../lib/setting.js"></script>
+	<script src="../lib/SubtitleObject.js"></script>
 	<script src="../lib/SmiEditor.js"></script>
 	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
 	<script>
@@ -30,6 +30,7 @@ $(function() {
 	}
 	$("#input").val(linesToText(editor.lines.slice(start, end)));
 	
+	/*
 	$("#btnExport").on("click", function() {
 		var input = $("#input").val();
 		
@@ -41,26 +42,50 @@ $(function() {
 			opener.afterGetOutput(input);
 		}
 	});
-});
-opener.afterGetOutput = function(output) {
-	// 완성 후에도 화면 싱크 체크용으로 {} 표시
-	var lines = output.split("\n");
-	for (var i = 0; i < lines.length; i++) {
-		var line = lines[i].split("\r")[0].split(",");
-		if (line.length > 9) {
-			var type = line[3];
-			if (type[0] == "［") {
-				line[9] = "{}" + line[9];
+	
+	opener.afterGetOutput = function(output) {
+		// 완성 후에도 화면 싱크 체크용으로 {} 표시
+		var lines = output.split("\n");
+		for (var i = 0; i < lines.length; i++) {
+			var line = lines[i].split("\r")[0].split(",");
+			if (line.length > 9) {
+				var type = line[3];
+				if (type[0] == "［") {
+					line[9] = "{}" + line[9];
+				}
+				line = line.join(",");
+				if (type[1] == "］") {
+					line = line + "{}";
+				}
+				lines[i] = line;
 			}
-			line = line.join(",");
-			if (type[1] == "］") {
-				line = line + "{}";
-			}
-			lines[i] = line;
 		}
+		$("#output").val(lines.join("\n"));
 	}
-	$("#output").val(lines.join("\n"));
-}
+	*/
+	$("#btnExport").on("click", function() {
+		var input  = new Subtitle.SmiFile().fromTxt($("#input").val());
+		var output = new Subtitle.AssFile().fromSync(input.toSync()).toTxt();
+		
+		// 완성 후에도 화면 싱크 체크용으로 {} 표시
+		var lines = output.split("\n");
+		for (var i = 0; i < lines.length; i++) {
+			var line = lines[i].split("\r")[0].split(",");
+			if (line.length > 9) {
+				var type = line[3];
+				if (type[0] == "［") {
+					line[9] = "{}" + line[9];
+				}
+				line = line.join(",");
+				if (type[1] == "］") {
+					line = line + "{}";
+				}
+				lines[i] = line;
+			}
+		}
+		$("#output").val(lines.join("\n"));
+	});
+});
 	</script>
 	<style>
 #input {

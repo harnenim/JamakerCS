@@ -877,7 +877,7 @@ $(function() {
 		var result = ["","",""];
 		
 		// 활성, 비활성
-		for (var i = 0; i <= 2; i += 2){
+		for (var i = 0; i <= 2; i += 2) {
 			if (line[i]) {
 				var lineI = [], nokori = line[i];
 				var begin, end;

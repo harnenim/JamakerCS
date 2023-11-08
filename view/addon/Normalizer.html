@@ -10,7 +10,10 @@
 	<script>
 windowName = "addon";
 
-var SmiEditor = opener.SmiEditor;
+var SmiEditor = {};
+$(function() {
+	SmiEditor = opener.SmiEditor;
+});
 
 //초기 상태 기억
 var origin = {};

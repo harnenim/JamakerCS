@@ -104,6 +104,7 @@ function Binder(editor) {
 
 	// 부가기능
 	this.runColorPicker = function() { alert("C#에서 동작합니다."); }
+	/*
 	this.normalize = function(text) {
 		var smi = new Subtitle.SmiFile();
 		var input = smi.fromTxt(text).body;
@@ -123,4 +124,5 @@ function Binder(editor) {
 	this.toAss = function(text, afterFunc) {
 		_.toAss(text, afterFunc);
 	}
+	*/
 };

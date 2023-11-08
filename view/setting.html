@@ -9,8 +9,6 @@
 <script>
 windowName = "setting";
 
-var SmiEditor = opener.SmiEditor;
-
 function show(index) {
 	$("#settingNav > a.selected").removeClass("selected");
 	$("#settingNav > a:eq(" + index + ")").addClass("selected");
@@ -59,6 +57,7 @@ function requestClose(keys) {
 }
 
 $(function() {
+	var SmiEditor = opener.SmiEditor;
 	var setting = opener.setting;
 	
 	function refresh(form, setting) {
@@ -1134,7 +1133,7 @@ fieldset ol button,
 			</table>
 		</div>
 		<input type="hidden" id="inputCommandName" />
-		<label>조합 <input type="text" id="inputCommandKey" readonly style="width: 100px;" /> (여기를 선택한 상태에서 단축키를 입력할 수 있습니다.)</label>
+		<label>조합 <input type="text" id="inputCommandKey" readonly style="width: 100px;" /> (← 여기를 선택한 상태에서 단축키를 입력할 수 있습니다.)</label>
 		<br />
 		<textarea id="inputCommandFunc" spellcheck="false"></textarea>
 		

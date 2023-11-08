@@ -6,7 +6,7 @@
 <script src="lib/jquery-3.2.1.min.js"></script>
 <script src="lib/SmiEditor.js"></script>
 <script>
-if (opener && opener.SmiEditor) SmiEditor = opener.SmiEditor;
+var SmiEditor = {};
 
 var title = document.getElementsByTagName("title")[0];
 var lastTab = null;
@@ -33,6 +33,9 @@ function setLines(newLines) {
 	time = -1;
 	refreshTime(receiveTime, true); // 내용 바꿀 땐 시간 표시는 갱신 X
 }
+function setTitle(text) {
+	title.innerText = text;
+}
 var titleTime = -1;
 function refreshTime(receiveTime, withoutTitle) {
 	if (receiveTime != titleTime) {
@@ -41,7 +44,7 @@ function refreshTime(receiveTime, withoutTitle) {
 			var ms = h % 1000; h = (h - ms) / 1000;
 			var s  = h %   60; h = (h -  s) /   60;
 			var m  = h %   60; h = (h -  m) /   60;
-			title.innerText = ("미리보기 - " + h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms);
+			setTitle("미리보기 - " + h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms);
 		}
 		titleTime = receiveTime;
 	}
@@ -190,6 +193,7 @@ function refreshTime(receiveTime, withoutTitle) {
 $(function() {
 	viewer = $("#viewer");
 	if (opener) {
+		SmiEditor = opener.SmiEditor;
 		opener.binder.updateViewerSetting();
 	} else if (binder && binder.onloadViewer) {
 		binder.onloadViewer();

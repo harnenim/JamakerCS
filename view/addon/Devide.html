@@ -17,10 +17,12 @@ windowName = "addon";
 // 초기 상태 기억
 // TODO: 경우에 따라 opener 분리 필요
 var origin = null;
-var tab = opener && opener.SmiEditor.selected;
-if (tab) {
-	origin = tab.getText();
-}
+var tab = null;
+$(function() {
+	if (tab = opener.SmiEditor.selected) {
+		origin = tab.getText();
+	}
+});
 
 function init() {
 	if (!origin) {

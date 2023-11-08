@@ -310,7 +310,7 @@ function setPlayerDlls(dlls) {
 }
 
 function openSetting() {
-	SmiEditor.settingWindow = window.open("setting.html", "setting", "scrollbars=no,location=no,resizable=no,width=0,height=0");
+	SmiEditor.settingWindow = window.open("setting.html", "setting", "scrollbars=no,location=no,resizable=no,width=1,height=1");
 	binder.moveWindow("setting"
 			, setting.window.x + (40 * DPI)
 			, setting.window.y + (40 * DPI)
@@ -336,7 +336,7 @@ function getAppendStyle() {
 
 function openHelp(name) {
 	var url = (name.substring(0, 4) == "http") ? name : "help/" + name.split("..").join("").split(":").join("") + ".html";
-	SmiEditor.helpWindow = window.open(url, "help", "scrollbars=no,location=no,resizable=no,width=0,height=0");
+	SmiEditor.helpWindow = window.open(url, "help", "scrollbars=no,location=no,resizable=no,width=1,height=1");
 	binder.moveWindow("help"
 			, setting.window.x + (40 * DPI)
 			, setting.window.y + (40 * DPI)
@@ -589,6 +589,7 @@ function doExit() {
 
 var REG_SRT_SYNC = /^([0-9]{2}:){1,2}[0-9]{2}[,.][0-9]{2,3}( )*-->( )*([0-9]{2}:){1,2}[0-9]{2}[,.][0-9]{2,3}$/;
 function srt2smi(text) {
+	/*
 	var lines = text.split("\r\n").join("\n").split("\n");
 	var items = [];
 	var last = { start: 0, end: 0, lines: [], length: 0 };
@@ -656,4 +657,11 @@ function srt2smi(text) {
 	lines.push("&nbsp;");
 	
 	return lines.join("\n");
+	*/
+	/*
+	var srt = new Subtitle.SrtFile().fromTxt(text);
+	var smi = new Subtitle.SmiFile().fromSync(srt.toSync());
+	return smi.toTxt();
+	*/
+	return new Subtitle.SmiFile().fromSync(new Subtitle.SrtFile().fromTxt(text).toSync()).toTxt();
 }

@@ -1705,7 +1705,7 @@ SmiEditor.Finder = {
 SmiEditor.Viewer = {
 		window: null
 	,	open: function() {
-			this.window = window.open("viewer.html", "viewer", "scrollbars=no,location=no,width=0,height=0");
+			this.window = window.open("viewer.html", "viewer", "scrollbars=no,location=no,width=1,height=1");
 			this.moveWindowToSetting();
 			binder.focus("viewer");
 			setTimeout(function() {
@@ -1731,7 +1731,7 @@ SmiEditor.Addon = {
 		window: null
 	,	open: function(name) {
 			var url = (name.substring(0, 4) == "http") ? name : "addon/" + name.split("..").join("").split(":").join("") + ".html";
-			this.window = window.open(url, "addon", "scrollbars=no,location=no,width=0,height=0");
+			this.window = window.open(url, "addon", "scrollbars=no,location=no,width=1,height=1");
 			this.moveWindowToSetting();
 			binder.focus("addon");
 		}
@@ -1741,7 +1741,7 @@ SmiEditor.Addon = {
 				,	url: url
 				,	values: values
 			}
-			this.window = window.open("addon/ExtSubmit.html", "addon", "scrollbars=no,location=no,width=0,height=0");
+			this.window = window.open("addon/ExtSubmit.html", "addon", "scrollbars=no,location=no,width=1,height=1");
 			this.moveWindowToSetting();
 			binder.focus("addon");
 		}
@@ -1836,12 +1836,20 @@ SmiEditor.afterTransform = function(result) { // 주로 C#에서 호출
 SmiEditor.prototype.normalize = function() {
 	var text = this.getTransformText();
 	if (text) {
+		/*
 		binder.normalize(text);
+		*/
+		var smi = new Subtitle.SmiFile();
+		var input = smi.fromTxt(text).body;
+		Subtitle.Smi.normalize(input);
+		smi.body = input;
+		SmiEditor.afterTransform(smi.toTxt().trim());
 	}
 };
 SmiEditor.prototype.fillSync = function() {
 	var text = this.getTransformText();
 	if (text) {
+		/*
 		// 기존 중간싱크 제거 후 진행
 		var lines = text.split("\n");
 		text = [];
@@ -1855,8 +1863,15 @@ SmiEditor.prototype.fillSync = function() {
 		}
 		
 		SmiEditor.afterTransform(SmiEditor.fillSync(text.join("\n")));
+		*/
+		var smi = new Subtitle.SmiFile();
+		var input = smi.fromTxt(text).body;
+		Subtitle.Smi.fillEmptySync(input);
+		smi.body = input;
+		SmiEditor.afterTransform(smi.toTxt().trim());
 	}
 };
+/*
 SmiEditor.fillSync = function(text) {
 	if (typeof(text) != "string") return null;
 	
@@ -1961,3 +1976,4 @@ SmiEditor.fillSync = function(text) {
 	
 	return lines.join("\n");
 };
+*/

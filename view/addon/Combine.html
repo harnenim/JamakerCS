@@ -16,9 +16,11 @@
 windowName = "addon";
 var LOG = false;
 
-if (opener) {
-	setting = opener.setting;
-}
+$(function() {
+	if (opener) {
+		setting = opener.setting;
+	}
+});
 
 var style = null;
 function setSetting(setting) {

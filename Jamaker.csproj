@@ -158,20 +158,23 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="bridge\Binder.js" />
+    <Content Include="bridge\Bridge.js" />
     <Content Include="bridge\list.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="bridge\NoPlayer.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="bridge\player.html" />
     <Content Include="bridge\PotPlayer.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="bridge\readme.txt" />
-    <Content Include="cs\Binder.js" />
-    <Content Include="cs\Bridge.js" />
-    <Content Include="cs\tempDir.html" />
-    <Content Include="cs\WinAPI.js" />
+    <Content Include="bridge\readme.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="bridge\tempDir.html" />
+    <Content Include="bridge\WinAPI.js" />
     <Content Include="index.html" />
     <Content Include="jamaker.ico" />
     <Content Include="PlayerBridge.dll" />
@@ -271,10 +274,12 @@
     <Content Include="view\lib\SmiEditor.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="view\lib\SubtitleObject.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="view\lib\webview.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="view\player.html" />
     <Content Include="view\setting.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

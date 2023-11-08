@@ -24,11 +24,13 @@ windowName = "addon";
 var FR = 23976;
 var FL = 1000000 / FR;
 
-if (opener) {
-	setting = opener.setting;
-	FR = opener.FR;
-	FL = opener.FL;
-}
+$(function() {
+	if (opener) {
+		setting = opener.setting;
+		FR = opener.FR;
+		FL = opener.FL;
+	}
+});
 
 var style = null;
 function setSetting(setting) {
