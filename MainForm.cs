@@ -8,7 +8,6 @@ using CefSharp;
 using CefSharp.WinForms;
 using System.Diagnostics;
 using Jamaker.addon;
-using Subtitle;
 using System.Reflection;
 
 namespace Jamaker
@@ -1110,12 +1109,6 @@ namespace Jamaker
         public void AfterTransform(string text)
         {
             Script("SmiEditor.afterTransform", text);
-        }
-        public void ToAss(string text, string afterFunc)
-        {
-            SmiFile input = new SmiFile().FromTxt(text);
-            AssFile output = new AssFile().FromSync(input.ToSync());
-            Script(afterFunc, output.ToTxt());
         }
         #endregion
     }

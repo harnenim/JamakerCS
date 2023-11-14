@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Subtitle;
 
 namespace Jamaker
 {
@@ -128,25 +127,6 @@ namespace Jamaker
         public void RunColorPicker()
         {
             _.RunColorPicker();
-        }
-        public void Normalize(string text)
-        {
-            // TODO: 기능 수정 필요. 문법 바꾸고 싶어짐...
-            List<Smi> input = new SmiFile().FromTxt(text).body;
-            Smi.Normalize(input);
-            string output = new SmiFile() { body = input }.ToTxt().Trim();
-            _.AfterTransform(output);
-        }
-        public void FillSync(string text)
-        {
-            List<Smi> input = new SmiFile().FromTxt(text).body;
-            Smi.FillEmptySync(input);
-            string output = new SmiFile() { body = input }.ToTxt().Trim();
-            _.AfterTransform(output);
-        }
-        public void ToAss(string text, string afterFunc)
-        {
-            _.ToAss(text, afterFunc);
         }
         #endregion
     }

@@ -1582,7 +1582,7 @@ Subtitle.Smi.prototype.fromAttr = function(attrs) {
 				text += "<FONT";
 				if (attr.fs   >  0 ) text += " size=\"" + attr.fs + "\"";
 				if (attr.fn   != "") text += " face=\"" + attr.fn + "\"";
-				if (attr.fc   != "") text += " color=\""+ this.colorFromAttr(attr.fc) + "\"";
+				if (attr.fc   != "") text += " color=\""+ Subtitle.Smi.colorFromAttr(attr.fc) + "\"";
 				if (attr.fade != 0 ) text += " fade=\"" + (attr.fade > 0 ? "in" : "out") + "\"";
 				if (attr.typing != null) text += " typing=\"" + Typing.Mode.toString(attr.typing.mode) + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString(attr.typing.cursor) + "\"";
 				text += ">";
