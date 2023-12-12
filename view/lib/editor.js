@@ -11,9 +11,16 @@ var tabToCloseAfterRun = null;
 
 var autoSaveTemp = null;
 
+var autoFindSync = false;
+
 // C# 쪽에서 호출
 function refreshTime(now, fr) {
-	time = now;
+	if (time != now) {
+		time = now;
+		if (autoFindSync && tabs.length && tabs[tab]) {
+			tabs[tab].findSync();
+		}
+	}
 	if (fr) {
 		if (fr == 23975) {
 			fr = 23975.7; // 일부 영상 버그
@@ -156,6 +163,12 @@ function init(jsonSetting) {
 	var btnMoveToForward = $("#btnMoveToForward").on("click", function() {
 		if (tabs.length == 0) return;
 		tabs[tab].moveSync(true);
+		tabs[tab].input.focus();
+	});
+	
+	var checkAutoFindSync = $("#checkAutoFindSync").on("click", function() {
+		autoFindSync = $(this).prop("checked");
+		if (tabs.length == 0) return;
 		tabs[tab].input.focus();
 	});
 	

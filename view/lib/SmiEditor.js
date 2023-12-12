@@ -1746,7 +1746,11 @@ SmiEditor.Addon = {
 			binder.focus("addon");
 		}
 	,	onloadExtSubmit: function() {
-			this.window.submit(this.ext.method, this.ext.url, this.ext.values);
+			var w = this.window;
+			if (w.iframe) {
+				w = w.iframe.contentWindow;
+			}
+			w.submit(this.ext.method, this.ext.url, this.ext.values);
 		}
 	,	moveWindowToSetting: function() {
 			// 플레이어 창 위에
