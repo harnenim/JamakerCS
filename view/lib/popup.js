@@ -38,8 +38,8 @@ var windowName = null;
 // alert 재정의
 _alert = alert;
 alert = function(msg) {
-	if (windowName && opener) {
-		opener.alert(windowName, msg);
+	if (windowName && opener && opener.binder) {
+		opener.binder.alert(windowName, msg);
 	} else if (windowName && window.binder) {
 		binder.alert(windowName, msg);
 	} else {
