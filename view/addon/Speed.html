@@ -179,6 +179,12 @@ function convert() {
 }
 
 $(function() {
+	$("#btnConvert").on("click", convert);
+	
+	if (!opener) {
+		$("#inputSpeed").val(24);
+		return;
+	}
 	editor = opener.SmiEditor.selected;
 	if (!editor) {
 		alert("작업 대상이 없습니다.");
@@ -197,8 +203,6 @@ $(function() {
 	}
 	$("#input").val(linesToText(editor.lines.slice(start, end)));
 	$("#inputSpeed").val(opener.FR / 1000);
-	
-	$("#btnConvert").on("click", convert);
 });
 	</script>
 	<style>
