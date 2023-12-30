@@ -253,12 +253,16 @@ function toShowText(showText) {
 }
 
 function apply() {
+	var text = $("#output").val();
+	
 	// 해당 줄 앞뒤 전체 선택되도록 조정
-	var lines = editor.text.split("\n");
-	var range = [((start > 0) ? (lines.slice(0, start).join("\n").length + 1) : 0), lines.slice(0, end).join("\n")];
+	var origLines = editor.text.split("\n");
+	var front = origLines.slice(0, start);
+	var range = [(start > 0) ? (front.join("\n").length + 1) : 0];
+	range.push(range[0] + text.length);
 	
 	// 교체 및 종료
-	editor.setText($("#output").val(), range);
+	editor.setText(front.concat(text).concat(origLines.slice(end)).join("\n"), range);
 	
 	window.close();
 }
