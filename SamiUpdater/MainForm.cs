@@ -88,11 +88,6 @@ namespace Jamaker
                 mainView.Focus();
             }
         }
-        private int requestFocus = 0;
-        private void FocusIfRequested(object sender, EventArgs e)
-        {
-
-        }
 
         private void WebFormClosed(object sender, FormClosedEventArgs e)
         {
