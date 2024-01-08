@@ -1,0 +1,705 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>수정사항 반영하기</title>
+	<script src="lib/jquery-3.2.1.min.js"></script>
+	<script src="lib/popup.js"></script>
+	<script src="lib/AutoCompleteTextarea.js"></script>
+	<script src="lib/History.js"></script>
+	<script src="lib/SmiEditor.js"></script>
+	<script src="lib/SubtitleObject.js"></script>
+	<script src="lib/editor.js"></script>
+	<script>
+var FL = 1000000 / 23976;
+var DPI = 1;
+var tmpBinder = {
+		focus: function() {}
+	,	alert: function(windowName, msg) {
+			return sm._alert(msg);
+		}
+	,	confirm: function(windowName, msg) {
+			if (sm._confirm(msg)) {
+				afterConfirmYes();
+			} else {
+				afterConfirmNo();
+			}
+		}
+	,	save: async function(dir, suggestedName, text) {
+			var fileBuffer = await window.showSaveFilePicker({
+				suggestedName: suggestedName
+			,	types: [
+					{ description: "SAMI", accept: { "text/sami": [".smi"] } }
+				]
+			});
+			if (fileBuffer) {
+				var stream = await fileBuffer.createWritable();
+				await stream.write("\ufeff" + text); // BOM 넣어줌
+				await stream.close();
+			}
+		}
+	,	dropFileToArea: async function(dropArea, file) {
+			var text = await file.text();
+			setFile(dropArea, text, file.name);
+		}
+
+	,	showDragging: function() {
+			$("body > div > div > div > div").show();
+			$("#cover").show();
+		}
+	,	hideDragging: function() {
+			$("body > div > div > div > div").hide();
+			$("#cover").hide();
+		}
+};
+
+async function drop(x, y, file) {
+	binder.hideDragging();
+	var dropArea = 1;
+	var area = $("body>div>div:eq(1)");
+	if (y <= area.height()) {
+		var left = area.offset().left;
+		if (x < left) {
+			dropArea = 0;
+		} else if (x > left + area.width()) {
+			dropArea = 2;
+		}
+	}
+	await binder.dropFileToArea(dropArea, file);
+}
+function setFile(dropArea, text, name, path) {
+	// 싱크 라인 분리되도록 양식 변환
+	var lines = text.split("\r\n").join("\n").split("\n");
+	var newLines = [];
+	var cnt = 0;
+	for (var i = 0; i < lines.length; i++) {
+		var line = lines[i];
+		if (line.substring(0, 6).toUpperCase() == "<SYNC ") {
+			var blocks = line.split(">");
+			for (var j = 1; j < blocks.length; j++) {
+				if (blocks[j].substring(0, 6).toUpperCase() == "<SYNC ") continue;
+				if (blocks[j].substring(0, 3).toUpperCase() == "<P ") continue;
+
+				var syncLine = blocks.splice(0, j).join(">") + ">";
+				line = blocks.join(">");
+				if (line.length) {
+					newLines.push(syncLine);
+					cnt++;
+				} else {
+					line = syncLine;
+				}
+				break;
+			}
+		}
+		newLines.push(line);
+	}
+	if (cnt) {
+		text = newLines.join("\n");
+	}
+
+	var area = $("body>div>div:eq(" + dropArea + ")");
+	area.find("h5>span").text(" - " + name);
+	area.find("textarea").val(text);
+	switch (dropArea) {
+		case 2: {
+			if (path && $("#outputPath").val().trim() == "") {
+				$("#outputPath").val(path);
+			}
+			break;
+		}
+		case 0: {
+			$("#outputName").val(name);
+			break;
+		}
+	}
+	$("body>div:eq(1) textarea").val("");
+}
+
+var checklist = [0, 1, 2, 3, 4, -1, -2, 5, 6, -3, 7, 8, -4, 9, 10];
+$(function() {
+	if (!window.binder) {
+		binder = tmpBinder;
+	}
+	SmiEditor.setSetting({
+			command: { withCtrls: { 'M': 'openSyncManager();' }, fn: {} }
+		,	autoComplete: {}
+	});
+	var tmp = $("#targetAftFrames");
+
+	var $originBfrUpdate = $("#originBfrUpdate");
+	var $originAftUpdate = $("#originAftUpdate");
+	var $targetBfrUpdate = $("#targetBfrUpdate");
+	var $targetAftUpdate = $("#targetAftUpdate");
+	var $targetAftFrames = (SmiEditor.selected = new SmiEditor(tmp.val())).input.attr({ id: "targetAftFrames", placeholder: "중간: B영상용 자막 추가 작업 대상" });
+	var $targetAftFinish = $("#targetAftFinish");
+
+	tmp.parent().append($targetAftFrames);
+	tmp.remove();
+	SmiEditor.activateKeyEvent();
+
+	dragLayers = $("body > div > div > div > div");
+	document.addEventListener("dragenter", function(e) {
+		e.preventDefault();
+		binder.showDragging();
+	});
+	$("#cover").on("click", function(e) {
+		binder.hideDragging();
+	}).on("dragover", function(e) {
+		e.preventDefault();
+	}).on("drop", async function(e) {
+		e.preventDefault();
+		await drop(e.offsetX, e.offsetY, (e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.files && e.originalEvent.dataTransfer.files[0]) ? e.originalEvent.dataTransfer.files[0] : null);
+	});
+
+	$("h5").on("click", function() {
+		if ($originBfrUpdate.val()) return;
+
+		$targetBfrUpdate.val([
+				"<SAMI>\n<HEAD><TITLE>B영상용 자막</TITLE></HEAD>\n<BODY>"
+			,	"<Sync Start=12300><P Class=KRCC>"
+			,	"샘플입니다"
+			,	"<Sync Start=13301><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=14302><P Class=KRCC>"
+			,	"샘플 테스트입니다"
+			,	"<Sync Start=15303><P Class=KRCC>"
+			,	"이렇게 나눠진 줄을"
+			,	"<Sync Start=16305><P Class=KRCC>"
+			,	"합친 경우라든가"
+			,	"<Sync Start=17308><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=18313><P Class=KRCC>"
+			,	"싱크를 잘못 찍어서"
+			,	"<Sync Start=18434><P Class=KRCC>"
+			,	"이처럼 조정한다든가"
+			,	"<Sync Start=20389><P Class=KRCC>"
+			,	"작업한 부분들을<br>자동으로 적용시켜줍니다"
+			,	"<Sync Start=21355><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=21713><P Class=KRCC>"
+			,	"혹은"
+			,	"<Sync Start=22708><P Class=KRCC>"
+			,	"대사를 추가한 경우"
+			,	"<Sync Start=23705><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=25703><P Class=KRCC>"
+			,	"1, 2, 3"
+			,	"<Sync Start=27701><P Class=KRCC>"
+			,	"이런 것도 수정합니다"
+			,	"<Sync Start=28700><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=29704><P Class=KRCC>"
+			,	"끄트머리에 가까우면"
+			,	"<Sync Start=30716><P Class=KRCC>"
+			,	"잘못 처리될 여지가 큽니다"
+			,	"<Sync Start=31732><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=33333><P Class=KRCC>"
+			,	"by 제작자"
+			,	"</BODY>\n</SAMI>"
+		].join("\n"));
+		$originBfrUpdate.val([
+				"<SAMI>\n<HEAD><TITLE>A영상용 자막</TITLE></HEAD>\n<BODY>"
+			,	"<Sync Start=10000><P Class=KRCC>"
+			,	"샘플입니다"
+			,	"<Sync Start=11001><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=12002><P Class=KRCC>"
+			,	"샘플 테스트입니다"
+			,	"<Sync Start=13003><P Class=KRCC>"
+			,	"이렇게 나눠진 줄을"
+			,	"<Sync Start=14005><P Class=KRCC>"
+			,	"합친 경우라든가"
+			,	"<Sync Start=15008><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=16013><P Class=KRCC>"
+			,	"싱크를 잘못 찍어서"
+			,	"<Sync Start=16134><P Class=KRCC>"
+			,	"이처럼 조정한다든가"
+			,	"<Sync Start=18089><P Class=KRCC>"
+			,	"작업한 부분들을<br>자동으로 적용시켜줍니다"
+			,	"<Sync Start=19055><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=20034><P Class=KRCC>"
+			,	"아이캐치"
+			,	"<Sync Start=21021><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=22013><P Class=KRCC>"
+			,	"혹은"
+			,	"<Sync Start=23008><P Class=KRCC>"
+			,	"대사를 추가한 경우"
+			,	"<Sync Start=24005><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=26003><P Class=KRCC>"
+			,	"1, 2, 3"
+			,	"<Sync Start=28001><P Class=KRCC>"
+			,	"이런 것도 수정합니다"
+			,	"<Sync Start=29000><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=30004><P Class=KRCC>"
+			,	"끄트머리에 가까우면"
+			,	"<Sync Start=31016><P Class=KRCC>"
+			,	"잘못 처리될 여지가 큽니다"
+			,	"<Sync Start=32032><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"</BODY>\n</SAMI>"
+		].join("\n"));
+		$originAftUpdate.val([
+				"<SAMI>\n<HEAD><TITLE>A영상용 자막 수정본</TITLE></HEAD>\n<BODY>"
+			,	"<Sync Start=10000><P Class=KRCC>"
+			,	"샘플입니다"
+			,	"<Sync Start=11001><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=12002><P Class=KRCC>"
+			,	"샘플 테스트입니다"
+			,	"<Sync Start=13003><P Class=KRCC>"
+			,	"이렇게 나눠진 줄을<br>합친 경우라든가"
+			,	"<Sync Start=15008><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=16013><P Class=KRCC>"
+			,	"싱크를 잘못 찍어서"
+			,	"<Sync Start=17034><P Class=KRCC>"
+			,	"이처럼 조정한다든가"
+			,	"<Sync Start=18089><P Class=KRCC>"
+			,	"작업한 부분들을<br>자동으로 적용시켜줍니다"
+			,	"<Sync Start=19055><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=20034><P Class=KRCC>"
+			,	"아이캐치"
+			,	"<Sync Start=21021><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=22013><P Class=KRCC>"
+			,	"혹은"
+			,	"<Sync Start=23008><P Class=KRCC>"
+			,	"대사를 추가한 경우"
+			,	"<Sync Start=24005><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=25003><P Class=KRCC>"
+			,	"1"
+			,	"<Sync Start=26002><P Class=KRCC>"
+			,	"2"
+			,	"<Sync Start=27001><P Class=KRCC>"
+			,	"3"
+			,	"<Sync Start=28001><P Class=KRCC>"
+			,	"이런 것도 수정합니다"
+			,	"<Sync Start=29000><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=30004><P Class=KRCC>"
+			,	"끄트머리에 가까우면"
+			,	"<Sync Start=31016><P Class=KRCC>"
+			,	"잘못 처리될 여지가 큽니다"
+			,	"<Sync Start=32032><P Class=KRCC>"
+			,	"&nbsp;"
+			,	"<Sync Start=32033><P Class=KRCC>"
+			,	"대사 하나 추가함"
+			,	"</BODY>\n</SAMI>"
+		].join("\n"));
+	});
+
+	$("#btnUpdate").on("click", function() {
+		var originBfrUpdate = new Subtitle.SmiFile().fromTxt($originBfrUpdate.val());
+		var originAftUpdate = new Subtitle.SmiFile().fromTxt($originAftUpdate.val());
+		var targetBfrUpdate = new Subtitle.SmiFile().fromTxt($targetBfrUpdate.val());
+		var targetAftUpdate = new Subtitle.SmiFile();
+		var targetAftFrames = new Subtitle.SmiFile();
+		targetAftUpdate.header = targetAftFrames.header = targetBfrUpdate.header;
+		targetAftUpdate.footer = targetAftFrames.footer = targetBfrUpdate.footer;
+
+		var pairList = []; // [i:targetBfrUpdate / j:originBfrUpdate / k:originAftUpdate]
+		var lastDist = 0;
+		{	// targetBfrUpdate & originBfrUpdate
+			var ti = 0, bi = 0;
+			while (ti < targetBfrUpdate.body.length) {
+				// 오차가 크지 않게 되는 부분(그룹의 시작) 찾기
+				// 싱크, 텍스트 모두 거의 같아야 함
+				var tSync = targetBfrUpdate.body[ti];
+				var c = 0;
+				var pointMax = 0;
+				var shift = 0;
+				for (var cShift = bi - ti; cShift < bi - ti + 10; cShift++) {
+					if (ti + cShift < 0 || ti + cShift >= originBfrUpdate.body.length) {
+						continue;
+					}
+					var bSync = originBfrUpdate.body[ti + cShift];
+					if (bSync.syncType != tSync.syncType) {
+						continue;
+					}
+					if (!bSync.text.startsWith(tSync.text) && !tSync.text.startsWith(bSync.text)) {
+						continue;
+					}
+					var dist = (tSync.syncType == Subtitle.SyncType.normal) ? bSync.start - tSync.start : null;
+
+					var point = 1;
+					var max = Math.min(targetBfrUpdate.body.length, originBfrUpdate.body.length - cShift);
+					for (var i = ti + 1; i < max; i++) {
+						var tSyncI = targetBfrUpdate.body[i];
+						var bSyncI = originBfrUpdate.body[i + cShift];
+						if (bSyncI.syncType != tSyncI.syncType) {
+							break;
+						}
+						if (bSyncI.syncType == Subtitle.SyncType.normal) {
+							if (dist == null) {
+								dist = bSyncI.start - tSyncI.start;
+							} else if (tSyncI.start + dist != bSyncI.start) {
+								break;
+							}
+						}
+						if (!bSyncI.text.startsWith(tSyncI.text) && !tSyncI.text.startsWith(bSyncI.text)) {
+							break;
+						}
+						point++;
+					}
+					if (point > pointMax) {
+						pointMax = point;
+						shift = cShift;
+						if (dist != null) {
+							lastDist = dist;
+						}
+					}
+				}
+				if (pointMax == 0) {
+					// 찾지 못했을 경우
+					pairList.push([tSync, null, null]);
+					ti++;
+					continue;
+				}
+
+				for (var i = bi - shift; i < ti + pointMax; i++) {
+					var tSyncI = i < ti ? null : targetBfrUpdate.body[i];
+					var bSyncI = originBfrUpdate.body[i + shift];
+					pairList.push([tSyncI, bSyncI, null]);
+				}
+				ti += pointMax;
+				bi = ti + shift;
+			}
+		}
+		{	// originBfrUpdate & originAftUpdate
+			var ai = 0, bi = 0, pi = 0;
+			while (bi < originBfrUpdate.body.length) {
+				// 오차가 크지 않게 되는 부분(그룹의 시작) 찾기
+				// 싱크 일치 위주로 확인
+				var bSync = originBfrUpdate.body[bi];
+
+				var c = 0;
+				var lengthMax = 0;
+				var pointMax = 0;
+				var shift = 0;
+				for (var cShift = ai - bi; cShift < ai - bi + 10; cShift++) {
+					if (bi + cShift < 0 || bi + cShift >= originBfrUpdate.body.length) {
+						continue;
+					}
+					var aSync = originAftUpdate.body[bi + cShift];
+					if (aSync.syncType != bSync.syncType) {
+						continue;
+					}
+
+					var point = 0;
+					var max = Math.min(originBfrUpdate.body.length, originAftUpdate.body.length - cShift);
+					var err = [0, 0, 0]
+					for (var i = bi; i < max; i++) {
+						var bSyncI = originBfrUpdate.body[i];
+						var aSyncI = originAftUpdate.body[i + cShift];
+						if (aSyncI.syncType == bSyncI.syncType && aSyncI.start != bSyncI.start) {
+							err[i % 3] = 1;
+							if (err[0] + err[1] + err[2] < 2) {
+								point++;
+								continue;
+							} else {
+								point--;
+								break;
+							}
+						} else {
+							err[i % 3] = 0;
+						}
+						point++;
+					}
+					if (point > pointMax) {
+						pointMax = point;
+						shift = cShift;
+					}
+				}
+				if (pointMax == 0) {
+					// 찾지 못했을 경우
+					while (pi < pairList.length) {
+						if ((pairList[pi][1] == bSync)
+						 || (pairList[pi][1] != null && pairList[pi][1].start > bSync.start)) {
+							break;
+						}
+						pi++;
+					}
+					bi++;
+					continue;
+				}
+
+				for (var i = ai - shift; i < bi + pointMax; i++) {
+					var bSyncI = i < bi ? null : originBfrUpdate.body[i];
+					var aSyncI = originAftUpdate.body[i + shift];
+					if (bSyncI == null) {
+						while (pi < pairList.length) {
+							if ((pairList[pi][1] != null && pairList[pi][1].start > aSyncI.start)) {
+								pairList.splice(pi++, 0, [null, null, aSyncI]);
+								break;
+							}
+							pi++;
+						}
+					} else {
+						while (pi < pairList.length) {
+							if ((pairList[pi][1] == bSyncI)
+							 || (pairList[pi][1] != null && pairList[pi][1].start > bSyncI.start)) {
+								pairList[pi][2] = aSyncI;
+								break;
+							}
+							pi++;
+						}
+					}
+				}
+				bi += pointMax;
+				ai = bi + shift;
+			}
+			while (ai < originAftUpdate.body.length) {
+				var aSync = originAftUpdate.body[ai];
+				while (pi < pairList.length) {
+					if ((pairList[pi][0] != null && pairList[pi][0].start > aSync.start - lastDist)) {
+						pairList.splice(pi++, 0, [null, null, aSync]);
+						break;
+					}
+					pi++;
+				}
+				if (pi == pairList.length) {
+					pairList.push([null, null, aSync]);
+					pi++;
+				}
+				ai++;
+			}
+		}
+
+		console.log(pairList);
+
+		var dist = 0, distFrame = 0;
+		var frameChanged = 0;
+		for (var i = 0; i < pairList.length; i++) {
+			var pair = pairList[i];
+
+			var aft = pair[2];
+			if (pair[0] == null) {
+				if (pair[1] != null) continue;
+				// 없던 싱크가 추가된 경우 - 추가된 그대로
+				var sync = new Subtitle.Smi(aft.start + dist, aft.syncType, aft.text);
+				targetAftUpdate.body.push(sync);
+				targetAftFrames.body.push(sync);
+				continue;
+			}
+
+			var target = pair[0];
+			if (pair[1] == null) {
+				// 대상 자막에만 있는 싱크인 경우 - 기존 그대로
+				targetAftUpdate.body.push(target);
+				targetAftFrames.body.push(target);
+				continue;
+			}
+
+			if (pair[2] == null) {
+				// 싱크가 삭제된 경우
+				continue;
+			}
+
+			// 싱크 내용이 수정된 경우
+			var bfr = pair[1];
+			var target = pair[0];
+			var upd = new Subtitle.Smi(target.start, target.syncType, target.text);
+			var frm = new Subtitle.Smi(target.start, target.syncType, target.text);
+			targetAftUpdate.body.push(upd);
+			targetAftFrames.body.push(frm);
+			if (frm.syncType == Subtitle.SyncType.frame) {
+				frm.syncType = Subtitle.SyncType.normal;
+			}
+
+			var isNormal = (aft.syncType == Subtitle.SyncType.normal && bfr.syncType == Subtitle.SyncType.normal);
+			var add = isNormal ? (aft.start - bfr.start) : 0;
+			if (add != 0 || aft.text != bfr.text) {
+				upd.start += add;
+				upd.text = aft.text;
+				frm.start += add;
+				frm.text = aft.text;
+			}
+
+			if (aft.syncType == bfr.syncType) {
+				if (aft.syncType == Subtitle.SyncType.normal) {
+					// 마지막 일반 싱크 차이 기억
+					dist = upd.start - aft.start;
+				} else if (aft.syncType == Subtitle.SyncType.frame) {
+					// 마지막 화면 싱크 차이 기억
+					distFrame = upd.start - aft.start;
+				}
+			}
+			if (aft.syncType != bfr.syncType) {
+				// 싱크 유형 수정
+				if ((frm.syncType = aft.syncType) == Subtitle.SyncType.frame) {
+					// 일반 싱크 -> 화면 싱크
+					upd.start = frm.start = aft.start + distFrame;
+					frameChanged++;
+				} else {
+					// 화면 싱크 -> 일반 싱크 (아마 거의 없을 듯)
+					upd.start = frm.start = aft.start + dist;
+				}
+			}
+		}
+
+		$targetAftFrames.val("");
+		SmiEditor.selected.updateSync();
+		$targetAftUpdate.val(targetAftUpdate.toTxt());
+		$targetAftFrames.val(targetAftFrames.toTxt());
+		SmiEditor.selected.updateSync();
+
+		if (frameChanged) {
+			// updateSync 딜레이 고려
+			setTimeout(function() {
+				openSyncManager();
+			}, 500);
+		} else {
+			$("#btnFinish").click();
+		}
+	});
+
+	$("#btnFinish").on("click", async function() {
+		var targetAftFinish = new Subtitle.SmiFile().fromTxt($targetAftUpdate.val());
+		var targetAftFrames = new Subtitle.SmiFile().fromTxt($targetAftFrames.val());
+
+		if (targetAftFinish.body.length != targetAftFrames.body.length) {
+			alert("좌측 둘의 싱크 수는 같아야 합니다.");
+			return;
+		}
+
+		for (var i = 0; i < targetAftFinish.body.length; i++) {
+			if (targetAftFrames.body[i].syncType == Subtitle.SyncType.frame) {
+				targetAftFinish.body[i].syncType = Subtitle.SyncType.frame;
+				targetAftFinish.body[i].start = targetAftFrames.body[i].start;
+			}
+		}
+
+		var result = targetAftFinish.toTxt();
+		$targetAftFinish.val(result);
+
+		binder.save($("#outputPath").val(), $("#outputName").val(), result);
+	});
+});
+
+var sm = null;
+function openSyncManager() {
+	sm = window.open("addon/SyncManager.html", "sm", "scrollbars=no,location=no"
+			+ ",top="    + (window.screenTop   + 20)
+			+ ",left="   + (window.screenLeft  + 20)
+			+ ",width="  + (window.outerWidth  - 40)
+			+ ",height=" + (window.outerHeight - 40));
+	binder.focus("sm");
+	setTimeout(function() {
+		sm.windowName = "sm";
+		sm.resizeTo(window.outerWidth - 40, window.outerHeight - 40);
+	}, 100);
+}
+</script>
+<style>
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	font-family: '맑은 고딕';
+}
+html, body {
+	width: 100%;
+	height: 100%;
+}
+textarea {
+	font-size: 14px;
+	line-height: 20px;
+	padding: 2px;
+	resize: none;
+	white-space: pre;
+}
+textarea::placeholder {
+	color: #c66;
+}
+body > div {
+	width: 100%;
+	height: calc(50% - 10px);
+	position: relative;
+}
+#btnUpdate {
+	display: block;
+	width: 100%;
+	height: 20px;
+}
+body > div > div {
+	position: absolute;
+	height: 100%;
+	top: 0;
+}
+body > div > div > h5 {
+	width: 100%;
+	height: 20px;
+}
+body > div > div > div {
+	width: 100%;
+	height: calc(100% - 20px);
+	position: relative;
+}
+body > div > div > div > * {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+body > div > div > div > div {
+	display: none;
+	top: -20px;
+	height: calc(100% + 20px);
+	background: rgba(127,127,127,0.5);
+	border: 2px solid #c66;
+}
+#btnFinish {
+	position: absolute;
+	top: 0;
+	left: 66%;
+	width: 20px;
+	height: 100%;
+}
+</style>
+</head>
+<body>
+	<div>
+		<div style="left: 0; width: calc(34% - 20px);">
+			<h5>대상 - 수정 전 <span></span></h5>
+			<div><textarea id="targetBfrUpdate" readonly="readonly" placeholder="입력: B영상용 자막"></textarea><div></div></div>
+		</div>
+		<div style="left: 34%; width: 33%;">
+			<h5>완료 - 수정 전 <span></span></h5>
+			<div><textarea id="originBfrUpdate" readonly="readonly" placeholder="입력: A영상용 자막 / 위의 라벨 클릭 시 샘플 생성"></textarea><div></div></div>
+		</div>
+		<div style="left: 67%; width: 33%;">
+			<h5>완료 - 수정 후 <span></span></h5>
+			<div><textarea id="originAftUpdate" readonly="readonly" placeholder="입력: A영상용 자막 수정본"></textarea><div></div></div>
+		</div>
+	</div>
+	<button type="button" id="btnUpdate">▼</button>
+	<div>
+		<div style="left: 0; width: 33%;">
+			<h5>대상 - 내용 수정</h5>
+			<div><textarea id="targetAftUpdate" readonly="readonly" placeholder="중간: B영상용 자막 1차 수정본"></textarea></div>
+		</div>
+		<div style="left: 33%; width: 33%;">
+			<h5>대상 - 신규 화면 싱크</h5>
+			<div><textarea id="targetAftFrames" readonly="readonly" placeholder="중간: B영상용 자막 추가 작업 대상"></textarea></div>
+		</div>
+		<button type="button" id="btnFinish">▶</button>
+		<div style="left: calc(66% + 20px); width: calc(34% - 20px);">
+			<h5>완료
+				<input type="text" id="outputPath" style="width: calc(50% - 20px);"
+			 />/<input type="text" id="outputName" style="width: calc(50% - 20px);" />
+			</h5>
+			<div><textarea id="targetAftFinish" readonly="readonly" placeholder="출력: B영상용 자막 수정본"></textarea></div>
+		</div>
+	</div>
+	<div id="cover" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(127,127,127,0.1);"></div>
+</body>
+</html>

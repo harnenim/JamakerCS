@@ -1,0 +1,16 @@
+.act-select {
+	position: fixed;
+	list-style: none;
+	border: 1px solid #888;
+	background: #fff;
+	max-height: 200px;
+	overflow-y: scroll;
+	padding: 0;
+	opacity: 0.9;
+}
+.act-select > li {
+	white-space: pre;
+}
+.act-select > li.selected {
+	background: #acf;
+}

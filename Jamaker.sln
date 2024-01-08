@@ -3,17 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jamaker", "Jamaker.csproj", "{E61B05F0-30E9-4CBA-B372-E25B91D6D927}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jamaker", "Jamaker\Jamaker.csproj", "{E61B05F0-30E9-4CBA-B372-E25B91D6D927}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerBridge", "..\PlayerBridge\PlayerBridge\PlayerBridge.csproj", "{DFE0D759-C398-4E88-A957-8973A0941B13}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerBridge", "PlayerBridge\PlayerBridge\PlayerBridge.csproj", "{DFE0D759-C398-4E88-A957-8973A0941B13}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerBridge_NoPlayer", "..\PlayerBridge\PlayerBridge_NoPlayer\PlayerBridge_NoPlayer.csproj", "{EE0510D9-C061-4831-BAC8-67256727B165}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerBridge_NoPlayer", "PlayerBridge\PlayerBridge_NoPlayer\PlayerBridge_NoPlayer.csproj", "{EE0510D9-C061-4831-BAC8-67256727B165}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerBridge_PotPlayer", "..\PlayerBridge\PlayerBridge_PotPlayer\PlayerBridge_PotPlayer.csproj", "{05F45C0D-679E-4863-BF8F-25DD1EEADB87}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerBridge_PotPlayer", "PlayerBridge\PlayerBridge_PotPlayer\PlayerBridge_PotPlayer.csproj", "{05F45C0D-679E-4863-BF8F-25DD1EEADB87}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerBridge_WebPlayer", "..\PlayerBridge\PlayerBridge_WebPlayer\PlayerBridge_WebPlayer.csproj", "{9B6AC9AC-8039-4E24-BFC5-E084A9B84AD8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerBridge_WebPlayer", "PlayerBridge\PlayerBridge_WebPlayer\PlayerBridge_WebPlayer.csproj", "{9B6AC9AC-8039-4E24-BFC5-E084A9B84AD8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamiUpdater", "..\SamiUpdater\SamiUpdater.csproj", "{E928336E-0966-43D4-A9D7-BFB923C50E04}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamiUpdater", "SamiUpdater\SamiUpdater.csproj", "{E928336E-0966-43D4-A9D7-BFB923C50E04}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
