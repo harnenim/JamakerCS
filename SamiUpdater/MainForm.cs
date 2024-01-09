@@ -280,11 +280,11 @@ namespace Jamaker
 
         #region 파일
 
-        string dropedFile = null;
+        string droppedFile = null;
 
         private void DropListFile(DragEventArgs e)
         {
-            dropedFile = null;
+            droppedFile = null;
             try
             {
                 string[] strFiles = (string[])e.Data.GetData(DataFormats.FileDrop);
@@ -292,7 +292,7 @@ namespace Jamaker
                 {
                     if (strFile.ToUpper().EndsWith(".SMI") || strFile.ToUpper().EndsWith(".SRT"))
                     {
-                        dropedFile = strFile;
+                        droppedFile = strFile;
                         Script("drop", new object[] { e.X - Location.X, e.Y - Location.Y });
                         break;
                     }
@@ -302,7 +302,7 @@ namespace Jamaker
         }
         public void DropFileToArea(int dropArea)
         {
-            if (dropedFile == null)
+            if (droppedFile == null)
             {
                 return;
             }
@@ -311,9 +311,9 @@ namespace Jamaker
             StreamReader sr = null;
             try
             {
-                Encoding encoding = TextFile.BOM.DetectEncoding(dropedFile); // TODO: BOM 없으면 버그 있나...?
+                Encoding encoding = TextFile.BOM.DetectEncoding(droppedFile); // TODO: BOM 없으면 버그 있나...?
                 //Console.WriteLine("encoding: " + encoding);
-                sr = new StreamReader(dropedFile, encoding);
+                sr = new StreamReader(droppedFile, encoding);
                 text = sr.ReadToEnd();
             }
             catch
@@ -322,8 +322,8 @@ namespace Jamaker
             }
             finally { sr?.Close(); }
 
-            string name = dropedFile;
-            string path = dropedFile;
+            string name = droppedFile;
+            string path = droppedFile;
             switch (dropArea)
             {
                 case 1:
