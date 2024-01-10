@@ -31,7 +31,7 @@ namespace Jamaker
             StreamReader sr = null;
             try
             {   // 설정 파일 경로
-                sr = new StreamReader("setting/updater.txt", Encoding.UTF8);
+                sr = new StreamReader("setting/MergeUpdates.txt", Encoding.UTF8);
                 string[] strRect = sr.ReadToEnd().Split(',');
                 if (strRect.Length >= 4)
                 {
@@ -58,7 +58,7 @@ namespace Jamaker
             AllowTransparency = true;
 
             mainView.LifeSpanHandler = new LSH(this);
-            mainView.LoadUrl(Path.Combine(Directory.GetCurrentDirectory(), "view/Updater.html"));
+            mainView.LoadUrl(Path.Combine(Directory.GetCurrentDirectory(), "view/MergeUpdates.html"));
             mainView.JavascriptObjectRepository.Settings.LegacyBindingEnabled = true;
             mainView.JavascriptObjectRepository.Register("binder", new Binder(this), false, BindingOptions.DefaultBinder);
             mainView.RequestHandler = new RequestHandler(); // TODO: 팝업에서 이동을 막아야 되는데...
@@ -103,7 +103,7 @@ namespace Jamaker
                     di.Create();
                 }
 
-                StreamWriter sw = new StreamWriter("setting/updater.txt", false, Encoding.UTF8);
+                StreamWriter sw = new StreamWriter("setting/MergeUpdates.txt", false, Encoding.UTF8);
                 sw.Write(offset.left + "," + offset.top + "," + (offset.right - offset.left) + "," + (offset.bottom - offset.top));
                 sw.Close();
             }

@@ -7,10 +7,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{E928336E-0966-43D4-A9D7-BFB923C50E04}</ProjectGuid>
+    <ProjectGuid>{4F37D19E-208B-4033-B4B9-0EBE24739FF5}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>SamiUpdater</RootNamespace>
-    <AssemblyName>SamiUpdater</AssemblyName>
+    <RootNamespace>MergeUpdates</RootNamespace>
+    <AssemblyName>MergeUpdates</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -136,7 +136,7 @@
     <Content Include="view\lib\common.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="view\Updater.html">
+    <Content Include="view\MergeUpdates.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="view\lib\AutoCompleteTextarea.css">

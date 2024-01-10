@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace SamiUpdater.Properties {
+namespace MergeUpdates.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
