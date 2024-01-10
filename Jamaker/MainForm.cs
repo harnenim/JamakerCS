@@ -538,7 +538,7 @@ namespace Jamaker
         	StreamReader sr = null;
             try
             {   // 설정 파일 경로
-                sr = new StreamReader("setting/jamaker.json", Encoding.UTF8);
+                sr = new StreamReader("setting/Jamaker.json", Encoding.UTF8);
                 strSettingJson = sr.ReadToEnd();
             }
             catch (Exception e)
@@ -587,7 +587,7 @@ namespace Jamaker
                     di.Create();
                 }
 
-                StreamWriter sw = new StreamWriter("setting/jamaker.json", false, Encoding.UTF8);
+                StreamWriter sw = new StreamWriter("setting/Jamaker.json", false, Encoding.UTF8);
                 sw.Write(strSettingJson);
                 sw.Close();
             }

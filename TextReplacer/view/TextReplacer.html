@@ -7,86 +7,12 @@
 	<script src="lib/jquery-3.2.1.min.js"></script>
 	<script src="lib/webview.js"></script>
 	<script src="lib/ListView.js"></script>
-	<link rel="stylesheet" type="text/css" href="lib/common.css" />
+	<link rel="stylesheet" type="text/css" href="lib/webview.css" />
 	<link rel="stylesheet" type="text/css" href="lib/ListView.css" />
 	<script>
-var testBinder = {
-		focus: function() {}
-	,	alert: function(windowName, msg) {
-			return sm._alert(msg);
-		}
-	,	confirm: function(windowName, msg) {
-			if (sm._confirm(msg)) {
-				afterConfirmYes();
-			} else {
-				afterConfirmNo();
-			}
-		}
-	,	init: function() {
-			init('{"filters":"*.txt, *.smi, *.ass","replacers":[{"use":true,"from":"다시 한번","to":"다시 한 번"},{"use":true,"from":"그리고 보니","to":"그러고 보니"},{"use":true,"from":"뒤쳐","to":"뒤처"},{"use":true,"from":"제 정신","to":"제정신"},{"use":true,"from":"스탠드 얼론","to":"스탠드얼론"},{"use":true,"from":"멘테넌스","to":"메인터넌스"},{"use":true,"from":"뒷처리","to":"뒤처리"},{"use":true,"from":"스탭도","to":"스태프도"},{"use":true,"from":"등 져선","to":"등져선"},{"use":true,"from":"타코이즈","to":"터쿼이즈"},{"use":true,"from":"쓰레드","to":"스레드"},{"use":true,"from":"져버리지","to":"저버리지"},{"use":true,"from":"글러먹","to":"글러 먹"}]}');
-		}
-	,	submit: function(files, froms, tos) {
-			console.log(files);
-			console.log(froms);
-			console.log(tos);
-		}
-	,	importSetting: async function() {
-			var fileBuffer = await window.showOpenFilePicker({ types: [ { description: "JSON 파일", accept:{ "text/json": [".json"] } } ] });
-			if (fileBuffer && fileBuffer[0]) {
-				var file = await fileBuffer[0].getFile();
-				var text = await file.text();
-				init(text);
-			}
-		}
-	,	exportSetting: async function(setting) {
-			var fileBuffer = await window.showSaveFilePicker({
-				types: [
-					{ description: "JSON 파일", accept:{ "text/json": [".json"] } }
-				]
-			});
-			if (fileBuffer) {
-				var stream = await fileBuffer.createWritable();
-				await stream.write("\ufeff" + setting); // BOM 넣어줌
-				await stream.close();
-			}
-		}
-	,	compare: function(file) {
-			console.log(file);
-		}
-	,	showDragging: function() {
-			showDragging();
-		}
-	,	hideDragging: function() {
-			hideDragging();
-		}
-	,	addFiles: function (file) {
-			addFile(file.name);
-		}
-    ,	loadSetting: async function (file) {
-			init(await file.text());
-		}
-};
-
-async function drop(x, y, file) {
-	binder.hideDragging();
-	
-	var area = $("#listFiles");
-	if (x >= area.offset().left && y >= area.offset().top && x <= area.offset().left + area.outerWidth() && y <= area.offset().top + area.outerHeight()) {
-        if (binder == testBinder) {
-            binder.addFiles(file);
-        } else {
-            binder.addFiles();
-        }
-		return;
-	}
-	area = $("#areaRight");
-	if (x >= area.offset().left && y >= area.offset().top && x <= area.offset().left + area.outerWidth() && y <= area.offset().top + area.outerHeight()) {
-		if (binder == testBinder) {
-			await binder.loadSetting(file);
-		} else {
-            binder.loadSetting();
-		}
-	}
+function setTextareaHeight(obj) {
+	var lineCount = obj.val().split("\n").length;
+	obj.css("height", 4 + 14 * lineCount);
 }
 
 var listFiles;
@@ -118,43 +44,53 @@ function init(jsonSetting) {
 	}
 }
 
-function selectView(index) {
-	$(".view").hide();
-	$(".view:eq("+index+")").show();
-}
-
-var listFiles;
 function addFile(file) {
 	var filters = inputFilters.val().split(",").join(";").split(";");
 	for (var i = 0; i < filters.length; i++) {
-		if (new RegExp(filters[i].trim().split(".").join("\\.").split("*").join(".*")).test(file)) {
+		var regex = new RegExp("^" + filters[i].trim().split(".").join("\\.").split("*").join(".*") + "$");
+		if (regex.test(file)) {
 			listFiles.add(file, true);
 			return;
 		}
 	}
 }
-function getFiles() {
-	var files = [];
-	for (var i = 0; i < listFiles.list.length; i++) {
-		files.push(listFiles.list[i].value);
+
+function findDragArea(x, y) {
+	var area = $("#listFiles");
+	if (x >= area.offset().left && y >= area.offset().top && x <= area.offset().left + area.outerWidth() && y <= area.offset().top + area.outerHeight()) {
+		return "#listFiles";
 	}
-	return files;
+	area = $("#areaRight");
+	if (x >= area.offset().left && y >= area.offset().top && x <= area.offset().left + area.outerWidth() && y <= area.offset().top + area.outerHeight()) {
+		return "#areaRight";
+	}
+	return "#none";
+}
+function dragover(x, y) {
+	var area = findDragArea(x, y);
+	$(".hover").removeClass("hover");
+	$(area).addClass("hover");
+}
+function drop(x, y) {
+	$(".hover").removeClass("hover");
+	switch (findDragArea(x, y)) {
+		case "#listFiles": {
+			binder.addFilesByDrag();
+			break;
+		}
+		case "#areaRight": {
+			binder.loadSettingByDrag();
+			break;
+		}
+	}
 }
 
-function setTextareaHeight(obj) {
-	var lineCount = obj.val().split("\n").length;
-	obj.css("height", 4 + 14 * lineCount);
-}
-
-function getFilters() {
-	return inputFilters.val();
-}
 function addReplacer(replacer) {
-    var li = listReplacer.data("preset").clone();
-    li.find("[name=use]").prop("checked", replacer.use);
-    setTextareaHeight(li.find("[name=from]").val(replacer.from));
-    setTextareaHeight(li.find("[name=to]"  ).val(replacer.to  ));
-    listReplacer.append(li);
+	var li = listReplacer.data("preset").clone();
+	li.find("[name=use]").prop("checked", replacer.use);
+	setTextareaHeight(li.find("[name=from]").val(replacer.from));
+	setTextareaHeight(li.find("[name=to]"  ).val(replacer.to  ));
+	listReplacer.append(li);
 }
 function getSetting() {
 	var replacers = [];
@@ -163,38 +99,26 @@ function getSetting() {
 		var from = li.find("[name=from]").val();
 		if (from == "") return;
 		var to = li.find("[name=to]").val();
-	    var use = li.find("[name=use]").prop("checked");
+		var use = li.find("[name=use]").prop("checked");
 		replacers.push({ use: use, from: from, to: to });
 	});
 	return JSON.stringify({ filters: inputFilters.val(), replacers: replacers });
 }
 
-$(function() {
-	$("#view1left, #view1right").on("click", function() {
-		selectView(0);
-	});
-});
+function selectView(index) {
+	$(".view").hide();
+	$(".view:eq("+index+")").show();
+}
 function showPreview(source, replaced) {
 	selectView(1);
 	$("#view1left").html(source.split("\n").join("<br />"));
 	$("#view1right").html(replaced.split("\n").join("<br />"));
-}
-
-function showDragging() {
-	$("body").addClass("drag-file");
-}
-function hideDragging() {
-	$("body").removeClass("drag-file");
 }
 function beforeExit() {
 	binder.exitAfterSaveSetting(getSetting());
 }
 
 $(function() {
-	if (!window.binder) {
-		binder = testBinder;
-	}
-	
 	listFiles = new ListView($("#listFiles"));
 	listFiles.run = function(item) {
 		binder.compare(item.value);
@@ -217,32 +141,37 @@ $(function() {
 		addReplacer({ use: true, from: "", to: "" });
 	});
 	
-	$("#btnSubmit").on("click", function() {
-		var files = getFiles();
+	$("#btnReplace").on("click", function() {
+		var files = [];
+		for (var i = 0; i < listFiles.list.length; i++) {
+			files.push(listFiles.list[i].value);
+		}
 		if (files.length == 0) {
 			alert("변환할 파일이 없습니다.");
+			return;
 		}
 		var froms = [];
 		var tos = [];
 		listReplacer.find("li").each(function() {
 			var li = $(this);
-		    if (!li.find("[name=use]").prop("checked")) return;
+			if (!li.find("[name=use]").prop("checked")) return;
 			var from = li.find("[name=from]").val();
 			if (from == "") return;
 			var to = li.find("[name=to]").val();
 			froms.push(from);
 			tos.push(to);
-        });
-        if (froms.length == 0) {
-            alert("변환할 문자열이 없습니다.");
-        }
-		binder.submit(files, froms, tos);
+		});
+		if (froms.length == 0) {
+			alert("변환할 문자열이 없습니다.");
+			return;
+		}
+		binder.replace(files, froms, tos);
 	});
 	$("#btnImportSetting").on("click", function() {
 		binder.importSetting();
 	});
 	$("#btnExportSetting").on("click", function() {
-        binder.exportSetting(getSetting());
+		binder.exportSetting(getSetting());
 	});
 	
 	document.addEventListener("dragenter", function(e) {
@@ -251,16 +180,11 @@ $(function() {
 	});
 	$("#cover").on("click", function(e) {
 		binder.hideDragging();
-	}).on("dragover", function(e) {
-		e.preventDefault();
-	}).on("drop", async function(e) {
-		e.preventDefault();
-		if (e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.files && e.originalEvent.dataTransfer.files[0]) {
-            var file = e.originalEvent.dataTransfer.files[0];
-            await drop(e.offsetX, e.offsetY, file);
-		}
 	});
-
+	
+	$("#view1left, #view1right").on("click", function() {
+		selectView(0);
+	});
 	selectView(0);
 });
 	</script>
@@ -368,7 +292,7 @@ label[for=inputFilters] {
 	padding: 1px;
 }
 
-#btnSubmit {
+#btnReplace {
 	width: 100%;
 	height: 100%;
 }
@@ -387,8 +311,8 @@ label[for=inputFilters] {
 	color: #f00;
 }
 
-body.drag-file #listFiles,
-body.drag-file #areaRight {
+#listFiles.hover,
+#areaRight.hover {
 	border: 2px solid #c66;
 }
 	</style>
@@ -417,7 +341,7 @@ body.drag-file #areaRight {
 			</div>
 		</div>
 		<div id="areaSubmit">
-			<button id="btnSubmit">치환</button>
+			<button id="btnReplace">치환</button>
 		</div>
 	</div>
 	<div class="view">

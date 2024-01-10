@@ -1,0 +1,336 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>TextReplacer 샘플</title>
+<script src="view/lib/jquery-3.2.1.min.js"></script>
+<script src="bridge/WinAPI.js"></script>
+<script>
+function Binder(editor) {
+	var _ = this._ = editor;
+
+	var init = false;
+	this.initAfterLoad = function() {
+		if (this.init) return;
+		this.init = true;
+		_.initAfterLoad();
+	}
+	
+	this.showDragging = function() {
+		_.showDragging();
+	}
+	this.hideDragging = function() {
+		_.hideDragging();
+	}
+
+	this.alert   = function(target, msg) { _.alert  (target, msg); }
+	this.confirm = function(target, msg) { _.confirm(target, msg); }
+	this.prompt  = function(target, msg) { _.prompt (target, msg); }
+	
+	this.addFilesByDrag = function() {
+		_.addFilesByDrag();
+	}
+	this.loadSettingByDrag = function() {
+		_.loadSettingByDrag();
+	}
+	this.compare = function(file, froms, tos) {
+		_.compare(file, froms, tos);
+	}
+	this.replace = function(files, froms, tos) {
+		_.replace(files, froms, tos);
+	}
+	this.importSetting = function() {
+		_.importSetting();
+	}
+	this.exportSetting = function(setting) {
+		_.exportSetting(setting);
+	}
+	this.exitAfterSaveSetting = function(setting) {
+		_.exitAfterSaveSetting(setting);
+	}
+}
+</script>
+<script>
+_alert = alert;
+_confirm = confirm;
+_prompt = prompt;
+
+var main = {}; // 에디터
+{
+	main.script = function(names, p) {
+		var func = eval("this.window.contentWindow." + names);
+		if (p) {
+			return func(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9]);
+		} else {
+			return func();
+		}
+	}
+	main.alert = function(target, msg) {
+		// C#에선 target 창 위치에 따라 alert 위치를 지정함
+		alert(msg);
+	}
+	main.confirm = function(target, msg) {
+		// C#에선 target 창 위치에 따라 confirm 위치를 지정함
+		/*
+		var hwnd = this.getHwnd(target);
+		*/
+		if (confirm(msg)) {
+			main.window.contentWindow.afterConfirmYes();
+		} else {
+			main.window.contentWindow.afterConfirmNo();
+		}
+	}
+	main.prompt = function(target, msg) {
+		main.window.contentWindow.afterPrompt(prompt(msg));
+	}
+	
+	var dropLayer = $("<div>").css({
+			position: "fixed"
+		,	top: 0
+		,	left: 0
+		,	right: 0
+		,	bottom: 0
+		,	background: "rgba(127,127,127,0)"
+		,	padding: 80
+		,	textAlign: "center"
+		,	fontSize: 20
+	}).hide();
+	main.showDragging = function(id) {
+		dropLayer.show();
+		main.script("showDragging");
+	}
+	main.hideDragging = function() {
+		dropLayer.hide();
+		main.script("hideDragging");
+	}
+	main.droppedFiles = null;
+	$(function() {	
+		$("body").append(dropLayer);
+		
+		document.addEventListener("dragenter", function(e) {
+			e.preventDefault();
+			main.showDragging();
+		});
+		dropLayer[0].addEventListener("dragleave", function(e) {
+			e.preventDefault();
+			main.hideDragging();
+		});
+		dropLayer[0].addEventListener("dragover", function(e) {
+			e.preventDefault();
+			main.script("dragover", [ e.offsetX, e.offsetY ]);
+		});
+		dropLayer[0].addEventListener("drop", async function(e) {
+			e.preventDefault();
+			if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+				main.droppedFiles = e.dataTransfer.files;
+			}
+			main.hideDragging();
+			main.script("drop", [ e.offsetX, e.offsetY ]);
+		});
+	});
+}
+
+{	// main
+	main.settingJson = '{"filters":"*.txt, *.smi, *.ass","replacers":[{"use":true,"from":"다시 한번","to":"다시 한 번"},{"use":true,"from":"그리고 보니","to":"그러고 보니"},{"use":true,"from":"뒤쳐","to":"뒤처"},{"use":true,"from":"제 정신","to":"제정신"},{"use":true,"from":"스탠드 얼론","to":"스탠드얼론"},{"use":true,"from":"멘테넌스","to":"메인터넌스"},{"use":true,"from":"뒷처리","to":"뒤처리"},{"use":true,"from":"스탭도","to":"스태프도"},{"use":true,"from":"등 져선","to":"등져선"},{"use":true,"from":"타코이즈","to":"터쿼이즈"},{"use":true,"from":"쓰레드","to":"스레드"},{"use":true,"from":"져버리지","to":"저버리지"},{"use":true,"from":"글러먹","to":"글러 먹"}]}';
+	
+	main.run = function() {
+		this.window = document.getElementById("main");
+		
+		var settingJson = localStorage.getItem("setting.TextReplacer");
+		if (settingJson) {
+			main.settingJson = settingJson;
+		}
+		
+		main.window.src = "view/TextReplacer.html";
+		main.window.onload = function() {
+			// 브라우저 샘플에선 url 변형 필요
+			main.window.contentWindow._open_ = main.window.contentWindow.open;
+			main.window.contentWindow.open = function(url, name, options) {
+				if (url.substring(0, 4) != "http") {
+					url = location.href.substring(0, location.href.lastIndexOf("/")) + "/view/" + url;
+				}
+				return window_open(url, name, options, main.window.contentWindow);
+			}
+			
+			main.window.contentWindow.binder = main.binder = new Binder(main);
+			// 브라우저 샘플에선 이게 안 도는 경우가 있나?
+			/*
+			setTimeout(function() {
+				main.window.contentWindow.binder.initAfterLoad();
+			}, 1000);
+			*/
+
+			var cd = main.window.contentDocument;
+			cd.addEventListener("dragenter", function(e) {
+				e.preventDefault();
+				main.showDragging();
+			});
+		};
+		
+		//FormClosing += new FormClosingEventHandler(BeforeExit);
+		//FormClosed += new FormClosedEventHandler(WebFormClosed);
+	}
+
+	main.initAfterLoad = function() {
+		main.script("init", [main.settingJson]);
+	};
+	
+	main.beforeExit = function(e) {
+		script("beforeExit");
+	}
+	/*
+	public void DoExit(bool resetPlayer, bool exitPlayer)
+
+	public void WebFormClosed(object sender, FormClosedEventArgs e)
+	*/
+}
+{
+	main.addFilesByDrag = function() {
+		if (!main.droppedFiles) return;
+		if (main.droppedFiles.length < 1) {
+			main.droppedFiles = null;
+			return;
+		}
+		for (var i = 0; i < main.droppedFiles.length; i++) {
+			main.script("addFile", [ main.droppedFiles[i].name ]);
+		}
+		main.droppedFiles = null;
+	}
+	main.loadSettingByDrag = async function() {
+		if (!main.droppedFiles) return;
+		if (main.droppedFiles.length < 1) {
+			main.droppedFiles = null;
+			return;
+		}
+		main.script("init", [ await main.droppedFiles[0].text() ]);
+		main.droppedFiles = null;
+	}
+	main.compare = function(file, froms, tos) {
+		console.log(file);
+		console.log(froms);
+		console.log(tos);
+	}
+	main.replace = function(files, froms, tos) {
+		console.log(files);
+		console.log(froms);
+		console.log(tos);
+	}
+	main.getReplaced = function(text, froms, tos) {
+		var origin = text;
+		var originReplaced = [];
+		var result = text;
+		var resultReplaced = [];
+		var count = 0;
+		
+		for (var i = 0; i < froms.length; i++) {
+			var checked = 0, rPos;
+			while ((rPos = result.indexOf(froms[i], checked)) >= 0) {
+				var rIndex = 1;
+				for (; rIndex < resultReplaced.length; rIndex++) {
+					if (rPos <= resultReplaced[rIndex][0]) {
+						break;
+					}
+				}
+				if (rIndex < resultReplaced.length) {
+					if (rIndex > 0 && rPos <= resultReplaced[rIndex - 1][1]) { // 앞이랑 겹칠 때
+						var before = rIndex - 1;
+						var oEnd = rPos - resultReplaced[before][0] + originReplaced[before][0] + froms[i].length;
+						if (oEnd < originReplaced[before][1]) {
+							resultReplaced[before][1] += tos[i].length - froms[i].length;
+						} else {
+							resultReplaced[before][1] = rPos + tos[i].length;
+							originReplaced[before][1] = oEnd;
+						}
+					} else {
+						originReplaced.splice(rIndex, 0, [rPos + origin.length - result.length, rPos + froms[i].length + origin.length - result.length]);
+						resultReplaced.splice(rIndex, 0, [rPos, rPos + tos[i].length]);
+						rIndex++;
+					}
+					var addLength = tos[i].length - froms[i].length;
+					for (var j = rIndex + 1; j < resultReplaced.length; j++) {
+						resultReplaced[j][0] += addLength;
+						resultReplaced[j][1] += addLength;
+					}
+					if (rIndex + 1 < resultReplaced.length) {
+						if (originReplaced[rIndex][1] <= originReplaced[rIndex + 1][0]) { // 뒤랑 겹칠 때
+							originReplaced[rIndex + 1][0] = originReplaced[rIndex][0];
+							resultReplaced[rIndex + 1][0] = resultReplaced[rIndex][0] + addLength;
+							originReplaced.splice(rIndex, 1);
+							resultReplaced.splice(rIndex, 1);
+						}
+					}
+					
+				} else {
+					// 맨 끝
+					originReplaced.push([rPos + origin.length - result.length, rPos + froms[i].length + origin.length - result.length]);
+					resultReplaced.push([rPos, rPos + tos[i].length]);
+				}
+				result = result.substring(0, rPos) + tos[i] + result.substring(rPos + froms[i].length);
+				checked = rPos + tos[i].length;
+				count++;
+			}
+		}
+		
+		return {
+				origin: origin
+			,	originReplaced: originReplaced
+			,	result: result
+			,	resultReplaced: resultReplaced
+			,	count: count
+		};
+	}
+}
+{
+	main.importSetting = async function() {
+		var fileBuffer = await window.showOpenFilePicker({ types: [ { description: "JSON 파일", accept:{ "text/json": [".json"] } } ] });
+		if (fileBuffer && fileBuffer[0]) {
+			var file = await fileBuffer[0].getFile();
+			var text = await file.text();
+			main.script("init", [text]);
+		}
+	};
+	main.exportSetting = async function(setting) {
+		var fileBuffer = await window.showSaveFilePicker({
+			types: [
+				{ description: "JSON 파일", accept:{ "text/json": [".json"] } }
+			]
+		});
+		if (fileBuffer) {
+			var stream = await fileBuffer.createWritable();
+			await stream.write(setting);
+			await stream.close();
+		}
+	};
+	main.exitAfterSaveSetting = function(setting) {
+		localStorage.setItem("setting.TextReplacer", setting);
+	}
+}
+$(function() {
+	main.run();
+	window.addEventListener("beforeunload", function(e) {
+		main.beforeExit(e);
+		return false;
+	});
+});
+</script>
+<style>
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+html, body, #main{
+	width: 100%;
+	height: 100%;
+	border: 0;
+	overflow: hidden;
+}
+#main {
+	position: fixed;
+	top: 0;
+	left: 0;
+}
+</style>
+</head>
+<body><iframe id="main"></iframe></body>
+</html>

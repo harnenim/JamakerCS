@@ -11,10 +11,6 @@ namespace Jamaker
             _ = mainForm;
         }
 
-        public void MoveWindow(string target, int x, int y, int width, int height, bool resizable)
-        {
-            _.MoveWindow(target, x, y, width, height, resizable);
-        }
         public void Focus(string target)
         {
             _.FocusWindow(target);
@@ -25,9 +21,35 @@ namespace Jamaker
             _.Init();
         }
 
-        public void Submit(string[] files, string[] froms, string[] tos)
+        public void ShowDragging()
         {
-            _.Submit(files, froms, tos);
+            _.ShowDragging();
+        }
+        public void HideDragging()
+        {
+            _.HideDragging();
+        }
+
+        public void Alert(string target, string msg) { _.Alert(target, msg); }
+        public void Confirm(string target, string msg) { _.Confirm(target, msg); }
+
+        public void AddFilesByDrag()
+        {
+            _.AddFilesByDrag();
+        }
+        public void LoadSettingByDrag()
+        {
+            _.LoadSettingByDrag();
+        }
+
+        public void Compare(string file, string[] froms, string[] tos)
+        {
+            _.Compare(file, froms, tos);
+        }
+
+        public void Replace(string[] files, string[] froms, string[] tos)
+        {
+            _.Replace(files, froms, tos);
         }
 
         public void ImportSetting()
@@ -40,37 +62,9 @@ namespace Jamaker
             _.ExportSetting(setting);
         }
 
-        public void Compare(string file, string[] froms, string[] tos)
-        {
-            _.Compare(file, froms, tos);
-        }
-
         public void ExitAfterSaveSetting(string setting)
         {
             _.ExitAfterSaveSetting(setting);
         }
-
-        public void ShowDragging()
-        {
-            _.ShowDragging();
-        }
-        public void HideDragging()
-        {
-            _.HideDragging();
-        }
-
-        public void AddFiles()
-        {
-            _.AddFiles();
-        }
-        public void LoadSetting()
-        {
-            _.LoadSetting();
-        }
-        
-        #region 팝업 통신
-        public void Alert  (string target, string msg) { _.Alert  (target, msg); }
-        public void Confirm(string target, string msg) { _.Confirm(target, msg); }
-        #endregion
     }
 }

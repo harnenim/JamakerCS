@@ -73,7 +73,7 @@ namespace Jamaker
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "MainForm";
-            this.Text = "TextReplacer";
+            this.Text = "텍스트 일괄 치환";
             this.ResumeLayout(false);
 
         }

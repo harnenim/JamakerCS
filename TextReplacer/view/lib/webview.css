@@ -4,10 +4,14 @@
     box-sizing: border-box;
     font-family: 돋움체;
     font-size: 12px;
-    background: #f0f0f0;
     white-space: nowrap;
     user-select: none;
     -ms-user-select: none;
+}
+html, body {
+	height: 100%;
+	overflow: hidden;
+    background: #f0f0f0;
 }
 ol, ul {
     list-style: none;

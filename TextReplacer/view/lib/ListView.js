@@ -294,6 +294,10 @@ ListView.prototype.select = function(index, toggle) {
 	this.shiftFrom = -1;
 }
 ListView.prototype.setCursor = function(index) {
+	if (this.list.length < 1) {
+		this.cursor = -1;
+		return;
+	}
 	if (this.cursor >= 0) {
 		this.list[this.cursor].li.removeClass("cursor");
 	}
