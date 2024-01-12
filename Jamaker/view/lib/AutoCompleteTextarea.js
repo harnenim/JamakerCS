@@ -10,7 +10,9 @@ var AutoCompleteTextarea = function(ta, sets, onSelect) {
 		,	"font-weight": font.fontWeight
 		,	"line-height": font.lineHeight
 	};
-	$("body").append(this.view = $("<ol class='act-select'>").css(this.font).hide());
+	if (!AutoCompleteTextarea.view) {
+		$("body").append(AutoCompleteTextarea.view = $("<ol class='act-select'>").css(this.font).hide());
+	}
 	
 	this.LH = Number(this.font["line-height"].split("px")[0]);
 	this.SB = 16; // 스크롤바 폭 계산하는 걸 만드는 게?
@@ -62,21 +64,21 @@ AutoCompleteTextarea.prototype.open = function(list) {
 	if (list.length) {
 		this.list = list;
 		this.lis = [];
-		this.view.empty();
+		AutoCompleteTextarea.view.empty();
 		for (var i = 0; i < list.length; i++) {
 			var li = $("<li>").text(list[i]);
 			this.lis.push(li);
-			this.view.append(li);
+			AutoCompleteTextarea.view.append(li);
 		}
-		this.view.height(this.lis.length * this.LH);
+		AutoCompleteTextarea.view.height(this.lis.length * this.LH);
 		this.select(0);
 		this.setPos();
-		this.view.show();
+		AutoCompleteTextarea.view.show();
 	}
 };
 // 닫기
 AutoCompleteTextarea.prototype.close = function() {
-	this.view.hide();
+	AutoCompleteTextarea.view.hide();
 	this.selected = -1;
 };
 // 커서 위치에 선택기 이동
@@ -98,14 +100,14 @@ AutoCompleteTextarea.prototype.setPos = function() {
 	tmp.remove();
 	
 	// 아래쪽에 넘칠 경우 맞춤
-	if (css.top + this.view.height() > offset.top + this.ta.height() - this.SB) {
-		css.top -= (this.view.height() + LH);
+	if (css.top + AutoCompleteTextarea.view.height() > offset.top + this.ta.height() - this.SB) {
+		css.top -= (AutoCompleteTextarea.view.height() + LH);
 	}
 
 	// 오른쪽에 넘칠 경우 맞춤
-	css.left = Math.min(css.left, offset.left + this.ta.width() - this.SB - this.view.width());
+	css.left = Math.min(css.left, offset.left + this.ta.width() - this.SB - AutoCompleteTextarea.view.width());
 	
-	this.view.css(css);
+	AutoCompleteTextarea.view.css(css);
 }
 AutoCompleteTextarea.prototype.getOffset = function() {
 	var offset = this.ta.offset();
@@ -189,16 +191,16 @@ AutoCompleteTextarea.prototype.onKeyup = function(e) {
 			// 최초 리스트에서 현재 입력값에 대해 검색
 			var value = this.ta.val().substring(this.pos, end);
 			this.lis = [];
-			this.view.empty();
+			AutoCompleteTextarea.view.empty();
 			for (var i = 0; i < this.list.length; i++) {
 				if (this.list[i].substring(0, length) == value) {
 					var li = $("<li>").text(this.list[i]);
 					this.lis.push(li);
-					this.view.append(li);
+					AutoCompleteTextarea.view.append(li);
 				}
 			}
 			if (this.lis.length) {
-				this.view.height(this.lis.length * this.LH);
+				AutoCompleteTextarea.view.height(this.lis.length * this.LH);
 				// 첫 번째 항목 선택
 				this.select(0);
 				
