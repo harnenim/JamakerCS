@@ -1,4 +1,5 @@
 ﻿using CefSharp.WinForms;
+using System;
 using System.Windows.Forms;
 
 namespace Jamaker
@@ -35,7 +36,7 @@ namespace Jamaker
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.layerForDrag = new Jamaker.TransparentPanel();
             this.timer = new System.Windows.Forms.Timer(this.components);
-            this.mainView = new ChromiumWebBrowser();
+            this.mainView = new CefSharp.WinForms.ChromiumWebBrowser();
             this.SuspendLayout();
             // 
             // layerForDrag
@@ -74,7 +75,7 @@ namespace Jamaker
             this.Controls.Add(this.mainView);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
-            this.Name = "WebForm";
+            this.Name = "MainForm";
             this.ResumeLayout(false);
         }
 

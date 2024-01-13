@@ -28,7 +28,6 @@ namespace Jamaker
 
             StartPosition = FormStartPosition.Manual;
             Location = new Point(-10000, -10000); // 처음에 안 보이게
-            Size = new Size(0, 0);
 
             SetStyle(ControlStyles.SupportsTransparentBackColor, true);
             BackColor = Color.Transparent;
@@ -55,13 +54,11 @@ namespace Jamaker
         private readonly MouseEventHandler clickMenuStrip;
         private void OverrideInitializeComponent()
         {
-            mainView.Location = new Point(0, 24);
-            mainView.Size = new Size(800, 426);
             menuStrip = new MenuStrip
             {
                 Location = new Point(0, 0),
                 Name = "menuStrip",
-                Size = new Size(800, 24),
+                Size = new Size(layerForDrag.Width, 0),
                 TabIndex = 1,
                 Text = "menuStrip"
             };
@@ -70,6 +67,13 @@ namespace Jamaker
             menuStrip.LostFocus += new EventHandler(CloseMenuStrip);
             Controls.Add(menuStrip);
             MainMenuStrip = menuStrip;
+
+            ResizeAfterRefreshMenuStrip();
+        }
+        private void ResizeAfterRefreshMenuStrip()
+        {
+            mainView.Location = new Point(0, menuStrip.Height);
+            mainView.Size = new Size(layerForDrag.Width, layerForDrag.Height - menuStrip.Height);
             ResumeLayout(false);
         }
 
@@ -685,44 +689,43 @@ namespace Jamaker
             if (InvokeRequired)
             {
                 Invoke(new Action(() => { SetMenus(menus); }));
+                return;
             }
-            else
+            menuStrip.Items.Clear();
+            foreach (string[] menu in menus)
             {
-                menuStrip.Items.Clear();
-                foreach (string[] menu in menus)
-                {
-                    string menuName = menu[0];
-                    ToolStripMenuItem menuItem = new ToolStripMenuItem
-                    {   Text = menuName
-                    ,   Name = menuName.Split('(')[0]
-                    ,   Size = new Size(60, 20)
-                    };
-                    menuItem.MouseDown += clickMenuStrip;
-                    menuStrip.Items.Add(menuItem);
+                string menuName = menu[0];
+                ToolStripMenuItem menuItem = new ToolStripMenuItem
+                {   Text = menuName
+                ,   Name = menuName.Split('(')[0]
+                ,   Size = new Size(60, 20)
+                };
+                menuItem.MouseDown += clickMenuStrip;
+                menuStrip.Items.Add(menuItem);
 
-                    for (int i = 1; i < menu.Length; i++)
+                for (int i = 1; i < menu.Length; i++)
+                {
+                    string[] tmp = menu[i].Split('|');
+                    string subMenuName = tmp[0];
+                    if (tmp.Length == 2)
                     {
-                        string[] tmp = menu[i].Split('|');
-                        string subMenuName = tmp[0];
-                        if (tmp.Length == 2)
+                        string subMenuFunc = tmp[1];
+                        if (subMenuFunc.Length > 0)
                         {
-                            string subMenuFunc = tmp[1];
-                            if (subMenuFunc.Length > 0)
-                            {
-                                ToolStripMenuItem subMenuItem = new ToolStripMenuItem
-                                {   Text = subMenuName
-                                ,   Name = subMenuName.Split('(')[0]
-                                ,   Size = new Size(200, 22)
-                                };
-                                subMenuItem.Click += new EventHandler(new EventHandler((object sender, EventArgs e) => {
-                                    Script("eval", tmp[1]);
-                                }));
-                                menuItem.DropDownItems.Add(subMenuItem);
-                            }
+                            ToolStripMenuItem subMenuItem = new ToolStripMenuItem
+                            {   Text = subMenuName
+                            ,   Name = subMenuName.Split('(')[0]
+                            ,   Size = new Size(200, 22)
+                            };
+                            subMenuItem.Click += new EventHandler(new EventHandler((object sender, EventArgs e) => {
+                                Script("eval", tmp[1]);
+                            }));
+                            menuItem.DropDownItems.Add(subMenuItem);
                         }
                     }
                 }
             }
+            ResizeAfterRefreshMenuStrip();
         }
         public void FocusToMenu(int keyCode)
         {
