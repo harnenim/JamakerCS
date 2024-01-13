@@ -14,16 +14,185 @@ namespace Jamaker
 {
     public partial class MainForm : Form
     {
-        public PlayerBridge.PlayerBridge player = null;
+        #region TODO: WebForm 분리 예정
+        protected string msgTitle = "WebForm";
 
-        private readonly Dictionary<string, int> windows = new Dictionary<string, int>();
-        private readonly Dictionary<string, Popup> popups = new Dictionary<string, Popup>();
+        #region 창 조작
+        protected readonly Dictionary<string, int> windows = new Dictionary<string, int>();
+        protected readonly Dictionary<string, Popup> popups = new Dictionary<string, Popup>();
 
-        private string strSettingJson = "불러오기 실패 예제";
-        private string strBridgeList = "NoPlayer: (없음)"; // 기본값
-        private Dictionary<string, string> bridgeDlls = new Dictionary<string, string>();
+        public virtual void SetWindow(string name, int hwnd)
+        {
+            RemoveWindow(name); // 남아있을 수 있음
+            windows.Add(name, hwnd);
+            OverrideSetWindow(name, hwnd);
+        }
+        public void SetWindow(string name, int hwnd, Popup popup)
+        {
+            RemoveWindow(name); // 남아있을 수 있음
+            windows.Add(name, hwnd);
+            popups.Add(name, popup);
+        }
+        public void RemoveWindow(string name)
+        {
+            windows.Remove(name);
+            popups.Remove(name);
+        }
+        public Popup GetPopup(string name)
+        {
+            return popups.ContainsKey(name) ? popups[name] : null;
+        }
+        // window.open 시에 브라우저에 커서 가도록
+        public void SetFocus(int hwnd)
+        {
+            if (LSH.useCustomPopup > 0)
+            {
+                requestFocus = hwnd;
+                return;
+            }
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { SetFocus(hwnd); }));
+                return;
+            }
+            mainView.Focus();
+        }
+        private int requestFocus = 0;
+        private void FocusIfRequested(object sender, EventArgs e)
+        {
+            // TODO: Popup에 대해선 미개발
+        }
+        protected virtual int GetHwnd(string target)
+        {
+            /*
+            try
+            {
+                return windows[target];
+            }
+            catch { }
+            return 0;
+            */
+            return OverrideGetHwnd(target);
+        }
 
-        public MainForm()
+        public void FocusWindow(string target)
+        {
+            //WinAPI.SetForegroundWindow(GetHwnd(target));
+            OverrideFocusWindow(target);
+        }
+        #endregion
+
+        public virtual void InitAfterLoad()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { InitAfterLoad(); }));
+                return;
+            }
+            windows.Add("editor", Handle.ToInt32());
+            OverrideInitAfterLoad();
+        }
+
+        protected string Script(string name) { return mainView.Script(name); }
+        protected string Script(string name, object arg) { return mainView.Script(name, arg); }
+
+        public void Alert(string target, string msg)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { Alert(target, msg); }));
+                return;
+            }
+            MessageBoxEx.Show(GetHwnd(target), msg, msgTitle);
+        }
+        public void Confirm(string target, string msg)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { Confirm(target, msg); }));
+                return;
+            }
+
+            if (MessageBoxEx.Show(GetHwnd(target), msg, msgTitle, MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                Script("afterConfirmYes");
+            }
+            else
+            {
+                Script("afterConfirmNo");
+            }
+        }
+
+        public void Prompt(string target, string msg)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { Prompt(target, msg); }));
+            }
+            else
+            {
+                Prompt prompt = new Prompt(GetHwnd(target), msg, msgTitle);
+                DialogResult result = prompt.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    Script("afterPrompt", prompt.value);
+                }
+            }
+        }
+
+        #region 파일 드래그
+        public void ShowDragging()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { ShowDragging(); }));
+                return;
+            }
+            layerForDrag.Visible = true;
+            Script("showDragging");
+        }
+        public void HideDragging()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { HideDragging(); }));
+                return;
+            }
+            layerForDrag.Visible = false;
+            Script("hideDragging");
+        }
+        string[] droppedFiles = null;
+        protected void DragLeaveMain(object sender, EventArgs e) { HideDragging(); }
+        protected void DragOverMain(object sender, DragEventArgs e)
+        {
+            try { e.Effect = DragDropEffects.All; } catch { }
+            Script("dragover", new object[] { e.X - Location.X, e.Y - Location.Y });
+        }
+        protected void DragDropMain(object sender, DragEventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { DragDropMain(sender, e); }));
+            }
+            else
+            {
+                droppedFiles = (string[])e.Data.GetData(DataFormats.FileDrop);
+                HideDragging();
+                Drop(e.X - Location.X, e.Y - Location.Y);
+            }
+        }
+        protected virtual void Drop(int x, int y)
+        {
+            OverrideDrop(x, y);
+        }
+        private void ClickLayerForDrag(object sender, MouseEventArgs e)
+        {
+            // 레이어가 클릭됨 -> 드래그 끝났는데 안 사라진 상태
+            HideDragging();
+        }
+        #endregion
+
+        public void WebForm()
         {
             // 브라우저 설정
             CefSettings settings = new CefSettings
@@ -32,9 +201,24 @@ namespace Jamaker
             };
             settings.CefCommandLineArgs.Add("disable-web-security");
             Cef.Initialize(settings);
-            CefSharpSettings.ShutdownOnExit = false; // Release일 땐 false 해줘야 함
+            CefSharpSettings.ShutdownOnExit = true; // Release일 땐 false 해줘야 함
 
             InitializeComponent();
+        }
+        #endregion
+
+        public PlayerBridge.PlayerBridge player = null;
+
+        private string strSettingJson = "불러오기 실패 예제";
+        private string strBridgeList = "NoPlayer: (없음)"; // 기본값
+        private Dictionary<string, string> bridgeDlls = new Dictionary<string, string>();
+
+        public MainForm()
+        {
+            WebForm();
+
+            msgTitle = "Jamaker";
+
             menuStrip.MouseDown += (clickMenuStrip = new MouseEventHandler(MouseDownInMenuStrip)); // 디자이너에 넣으면 오류 발생
 
             StartPosition = FormStartPosition.Manual;
@@ -63,75 +247,26 @@ namespace Jamaker
             FormClosed += new FormClosedEventHandler(WebFormClosed);
         }
 
-        public void InitAfterLoad()
+        public void OverrideInitAfterLoad()
         {
             try
             {
-                if (InvokeRequired)
-                {
-                    Invoke(new Action(() => { InitAfterLoad(); }));
-                }
-                else
-                {
-                    windows.Add("editor", Handle.ToInt32());
+                Script("init", strSettingJson); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
+                Script("setPlayerDlls", strBridgeList); // 플레이어 브리지 추가 가능토록
+                Script("setDroppable");
 
-                    Script("init", strSettingJson); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
-                    Script("setPlayerDlls", strBridgeList); // 플레이어 브리지 추가 가능토록
-                    Script("setDroppable");
-
-                    WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
-                    useFollowWindow = true;
-                }
+                WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
+                useFollowWindow = true;
             }
             catch { }
         }
-        public void SetWindow(string name, int hwnd)
+        public void OverrideSetWindow(string name, int hwnd)
         {
-            RemoveWindow(name); // 남아있을 수 있음
-            windows.Add(name, hwnd);
-            /*
-            */
             if ((LSH.useCustomPopup < 1 && name.Equals("viewer"))
              || (LSH.useCustomPopup < 2 && name.Equals("finder")))
             {
                 WinAPI.SetTaskbarHide(hwnd);
             }
-        }
-        public void SetWindow(string name, int hwnd, Popup popup)
-        {
-            RemoveWindow(name); // 남아있을 수 있음
-            windows.Add(name, hwnd);
-            popups.Add(name, popup);
-        }
-        public void RemoveWindow(string name)
-        {
-            windows.Remove(name);
-            popups.Remove(name);
-        }
-        public Popup GetPopup(string name)
-        {
-            return popups.ContainsKey(name) ? popups[name] : null;
-        }
-        // window.open 시에 브라우저에 커서 가도록
-        public void SetFocus(int hwnd)
-        {
-            if (LSH.useCustomPopup > 0)
-            {
-                requestFocus = hwnd;
-            }
-            else if (InvokeRequired)
-            {
-                Invoke(new Action(() => { SetFocus(hwnd); }));
-            }
-            else
-            {
-                mainView.Focus();
-            }
-        }
-        private int requestFocus = 0;
-        private void FocusIfRequested(object sender, EventArgs e)
-        {
-
         }
 
         private void RefreshPlayer(object sender, EventArgs e)
@@ -212,7 +347,7 @@ namespace Jamaker
         }
 
         #region 창 조작
-        private int GetHwnd(string target)
+        private int OverrideGetHwnd(string target)
         {
             try
             {
@@ -265,7 +400,7 @@ namespace Jamaker
             catch { }
         }
 
-        public void FocusWindow(string target)
+        public void OverrideFocusWindow(string target)
         {
             if (target.Equals("player"))
             {
@@ -433,8 +568,6 @@ namespace Jamaker
         #endregion
 
         #region 브라우저 통신
-        private string Script(string name) { return mainView.Script(name); }
-        private string Script(string name, object arg) { return mainView.Script(name, arg); }
 
         private void ScriptToPopup(string name, string func, object arg)
         {
@@ -483,52 +616,6 @@ namespace Jamaker
         private string viewerLines = "[]";
         public void UpdateViewerLines(string lines) {
         	ScriptToPopup("viewer", "setLines", viewerLines = lines);
-        }
-
-        readonly string msgTitle = "Jamaker";
-        public void Alert(string target, string msg)
-        {if (InvokeRequired)
-            {
-                Invoke(new Action(() => { Alert(target, msg); }));
-            }
-            else
-            {
-                MessageBoxEx.Show(GetHwnd(target), msg, msgTitle);
-            }
-        }
-        public void Confirm(string target, string msg)
-        {
-            if (InvokeRequired)
-            {
-                Invoke(new Action(() => { Confirm(target, msg); }));
-            }
-            else
-            {
-                if (MessageBoxEx.Show(GetHwnd(target), msg, msgTitle, MessageBoxButtons.YesNo) == DialogResult.Yes)
-                {
-                    Script("afterConfirmYes");
-                }
-                else
-                {
-                    Script("afterConfirmNo");
-                }
-            }
-        }
-        public void Prompt(string target, string msg)
-        {
-            if (InvokeRequired)
-            {
-                Invoke(new Action(() => { Prompt(target, msg); }));
-            }
-            else
-            {
-                Prompt prompt = new Prompt(GetHwnd(target), msg, msgTitle);
-                DialogResult result = prompt.ShowDialog();
-                if (result == DialogResult.OK)
-                {
-                    Script("afterPrompt", prompt.value);
-                }
-            }
         }
         #endregion
 
@@ -847,48 +934,7 @@ namespace Jamaker
         #endregion
 
         #region 파일 드래그 관련
-        public void ShowDragging()
-        {
-            if (InvokeRequired)
-            {
-                Invoke(new Action(() => { ShowDragging(); }));
-            }
-            else
-            {
-                layerForDrag.Visible = true;
-                Script("showDragging");
-            }
-        }
-        public void HideDragging()
-        {
-            if (InvokeRequired)
-            {
-                Invoke(new Action(() => { HideDragging(); }));
-            }
-            else
-            {
-                layerForDrag.Visible = false;
-                Script("hideDragging");
-            }
-        }
-
-        string[] droppedFiles = null;
-        protected void DragLeaveMain(object sender, EventArgs e) { HideDragging(); }
-        protected void DragOverMain(object sender, DragEventArgs e) { try { e.Effect = DragDropEffects.All; } catch { } }
-        protected void DragDropMain(object sender, DragEventArgs e)
-        {
-            if (InvokeRequired)
-            {
-                Invoke(new Action(() => { DragDropMain(sender, e); }));
-            }
-            else
-            {
-                droppedFiles = (string[])e.Data.GetData(DataFormats.FileDrop);
-                HideDragging();
-                Drop(e.X - Location.X, e.Y - Location.Y);
-            }
-        }
-        private void Drop(int x, int y)
+        private void OverrideDrop(int x, int y)
         {
             try
             {
@@ -902,11 +948,6 @@ namespace Jamaker
                 }
             }
             catch { }
-        }
-        private void ClickLayerForDrag(object sender, MouseEventArgs e)
-        {
-            // 레이어가 클릭됨 -> 드래그 끝났는데 안 사라진 상태
-            HideDragging();
         }
         #endregion
 

@@ -32,11 +32,9 @@ namespace Jamaker
             if (InvokeRequired)
             {
                 Invoke(new Action(() => { SetFocus(hwnd); }));
+                return;
             }
-            else
-            {
-                mainView.Focus();
-            }
+            mainView.Focus();
         }
         protected int GetHwnd(string target)
         {
@@ -102,24 +100,20 @@ namespace Jamaker
             if (InvokeRequired)
             {
                 Invoke(new Action(() => { ShowDragging(); }));
+                return;
             }
-            else
-            {
-                layerForDrag.Visible = true;
-                Script("showDragging");
-            }
+            layerForDrag.Visible = true;
+            Script("showDragging");
         }
         public void HideDragging()
         {
             if (InvokeRequired)
             {
                 Invoke(new Action(() => { HideDragging(); }));
+                return;
             }
-            else
-            {
-                layerForDrag.Visible = false;
-                Script("hideDragging");
-            }
+            layerForDrag.Visible = false;
+            Script("hideDragging");
         }
         string[] droppedFiles = null;
         protected void DragLeaveMain(object sender, EventArgs e) { HideDragging(); }
@@ -133,13 +127,11 @@ namespace Jamaker
             if (InvokeRequired)
             {
                 Invoke(new Action(() => { DragDropMain(sender, e); }));
+                return;
             }
-            else
-            {
-                droppedFiles = (string[])e.Data.GetData(DataFormats.FileDrop);
-                HideDragging();
-                Drop(e.X - Location.X, e.Y - Location.Y);
-            }
+            droppedFiles = (string[])e.Data.GetData(DataFormats.FileDrop);
+            HideDragging();
+            Drop(e.X - Location.X, e.Y - Location.Y);
         }
         protected virtual void Drop(int x, int y)
         {

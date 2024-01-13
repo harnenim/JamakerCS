@@ -1,36 +1,22 @@
-﻿using System.Collections.Generic;
-
-namespace Jamaker
+﻿namespace Jamaker
 {
-    class Binder
+    class BaseBinder
     {
         private readonly MainForm _;
 
-        public Binder(MainForm mainForm)
+        public BaseBinder(MainForm webForm)
         {
-            _ = mainForm;
+            _ = webForm;
+        }
+
+        public void Focus(string target)
+        {
+            _.FocusWindow(target);
         }
 
         public void InitAfterLoad()
         {
             _.InitAfterLoad();
-        }
-        public void SetMenus(string[][] menus)
-        {
-            _.SetMenus(menus);
-        }
-
-        public void MoveWindow(string target, int x, int y, int width, int height, bool resizable)
-        {
-            _.MoveWindow(target, x, y, width, height, resizable);
-        }
-        public void Focus(string target)
-        {
-            _.FocusWindow(target);
-        }
-        public void SetFollowWindow(bool follow)
-        {
-            _.SetFollowWindow(follow);
         }
 
         public void ShowDragging()
@@ -42,6 +28,33 @@ namespace Jamaker
             _.HideDragging();
         }
 
+        public void Alert(string target, string msg) { _.Alert(target, msg); }
+        public void Confirm(string target, string msg) { _.Confirm(target, msg); }
+        public void Prompt(string target, string msg) { _.Prompt(target, msg); }
+    }
+
+    class Binder : BaseBinder
+    {
+        private readonly MainForm _;
+
+        public Binder(MainForm mainForm) : base(mainForm)
+        {
+            _ = mainForm;
+        }
+
+        public void MoveWindow(string target, int x, int y, int width, int height, bool resizable)
+        {
+            _.MoveWindow(target, x, y, width, height, resizable);
+        }
+        public void SetFollowWindow(bool follow)
+        {
+            _.SetFollowWindow(follow);
+        }
+
+        public void SetMenus(string[][] menus)
+        {
+            _.SetMenus(menus);
+        }
         public void FocusToMenu(int keyCode)
         {
             _.FocusToMenu(keyCode);
@@ -110,10 +123,6 @@ namespace Jamaker
         public void RunFind      (string param) { _.RunFind      (param); }
         public void RunReplace   (string param) { _.RunReplace   (param); }
         public void RunReplaceAll(string param) { _.RunReplaceAll(param); }
-
-        public void Alert  (string target, string msg) { _.Alert  (target, msg); }
-        public void Confirm(string target, string msg) { _.Confirm(target, msg); }
-        public void Prompt (string target, string msg) { _.Prompt (target, msg); }
         #endregion
 
         #region 플레이어

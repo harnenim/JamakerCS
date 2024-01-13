@@ -36,7 +36,7 @@
     {
         private readonly MainForm _;
 
-        public Binder(MainForm mainForm): base(mainForm)
+        public Binder(MainForm mainForm) : base(mainForm)
         {
             _ = mainForm;
         }
