@@ -7,50 +7,96 @@ using CefSharp;
 using CefSharp.WinForms;
 using System.Diagnostics;
 using System.Collections.Generic;
-using static System.Net.Mime.MediaTypeNames;
-using TextFile;
-using static System.Net.WebRequestMethods;
 
 namespace Jamaker
 {
     public partial class MainForm : Form
-    { }
-    public partial class MainForm : Form
     {
-        #region 공통 기능... class 따로 만들어야?
-        private string Script(string name) { return mainView.Script(name); }
-        private string Script(string name, object arg) { return mainView.Script(name, arg); }
+        #region TODO: WebForm 분리 예정
+        protected string msgTitle = "WebForm";
+
+        #region 창 조작
+        protected readonly Dictionary<string, int> windows = new Dictionary<string, int>();
+        public void SetWindow(string name, int hwnd)
+        {
+            RemoveWindow(name); // 남아있을 수 있음
+            windows.Add(name, hwnd);
+        }
+        public void RemoveWindow(string name)
+        {
+            windows.Remove(name);
+        }
+        // window.open 시에 브라우저에 커서 가도록
+        public void SetFocus(int hwnd)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { SetFocus(hwnd); }));
+            }
+            else
+            {
+                mainView.Focus();
+            }
+        }
+        protected int GetHwnd(string target)
+        {
+            try
+            {
+                return windows[target];
+            }
+            catch { }
+            return 0;
+        }
+
+        public void FocusWindow(string target)
+        {
+            WinAPI.SetForegroundWindow(GetHwnd(target));
+        }
+        #endregion
+
+        public virtual void InitAfterLoad()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { InitAfterLoad(); }));
+                return;
+            }
+            windows.Add("editor", Handle.ToInt32());
+            OverrideInitAfterLoad();
+        }
+
+        protected string Script(string name) { return mainView.Script(name); }
+        protected string Script(string name, object arg) { return mainView.Script(name, arg); }
 
         public void Alert(string target, string msg)
         {
             if (InvokeRequired)
             {
                 Invoke(new Action(() => { Alert(target, msg); }));
+                return;
             }
-            else
-            {
-                MessageBoxEx.Show(GetHwnd(target), msg, msgTitle);
-            }
+
+            MessageBoxEx.Show(GetHwnd(target), msg, msgTitle);
         }
         public void Confirm(string target, string msg)
         {
             if (InvokeRequired)
             {
                 Invoke(new Action(() => { Confirm(target, msg); }));
+                return;
+            }
+
+            if (MessageBoxEx.Show(GetHwnd(target), msg, msgTitle, MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                Script("afterConfirmYes");
             }
             else
             {
-                if (MessageBoxEx.Show(GetHwnd(target), msg, msgTitle, MessageBoxButtons.YesNo) == DialogResult.Yes)
-                {
-                    Script("afterConfirmYes");
-                }
-                else
-                {
-                    Script("afterConfirmNo");
-                }
+                Script("afterConfirmNo");
             }
         }
 
+        #region 파일 드래그
         public void ShowDragging()
         {
             if (InvokeRequired)
@@ -95,9 +141,9 @@ namespace Jamaker
                 Drop(e.X - Location.X, e.Y - Location.Y);
             }
         }
-        private void Drop(int x, int y)
+        protected virtual void Drop(int x, int y)
         {
-            Script("drop", new object[] { x, y });
+            OverrideDrop(x, y);
         }
         private void ClickLayerForDrag(object sender, MouseEventArgs e)
         {
@@ -106,22 +152,28 @@ namespace Jamaker
         }
         #endregion
 
-        readonly string msgTitle = "TextReplacer";
-
-        private string settingJson = "{\"filters\":\"*.txt, *.smi, *.ass\",\"replacers\":[{\"use\":true,\"from\":\"다시 한번\",\"to\":\"다시 한 번\"},{\"use\":true,\"from\":\"그리고 보니\",\"to\":\"그러고 보니\"},{\"use\":true,\"from\":\"뒤쳐\",\"to\":\"뒤처\"},{\"use\":true,\"from\":\"제 정신\",\"to\":\"제정신\"},{\"use\":true,\"from\":\"스탠드 얼론\",\"to\":\"스탠드얼론\"},{\"use\":true,\"from\":\"멘테넌스\",\"to\":\"메인터넌스\"},{\"use\":true,\"from\":\"뒷처리\",\"to\":\"뒤처리\"},{\"use\":true,\"from\":\"스탭도\",\"to\":\"스태프도\"},{\"use\":true,\"from\":\"등 져선\",\"to\":\"등져선\"},{\"use\":true,\"from\":\"타코이즈\",\"to\":\"터쿼이즈\"},{\"use\":true,\"from\":\"쓰레드\",\"to\":\"스레드\"},{\"use\":true,\"from\":\"져버리지\",\"to\":\"저버리지\"},{\"use\":true,\"from\":\"글러먹\",\"to\":\"글러 먹\"}]}";
-
-        public MainForm()
+        public void WebForm()
         {
             // 브라우저 설정
             CefSettings settings = new CefSettings
-            { Locale = "ko"
-            , CachePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\CEF"
+            {   Locale = "ko"
+            ,   CachePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\CEF"
             };
             settings.CefCommandLineArgs.Add("disable-web-security");
             Cef.Initialize(settings);
             CefSharpSettings.ShutdownOnExit = true; // Release일 땐 false 해줘야 함
 
             InitializeComponent();
+        }
+        #endregion
+
+        private string settingJson = "{\"filters\":\"*.txt, *.smi, *.ass\",\"replacers\":[{\"use\":true,\"from\":\"다시 한번\",\"to\":\"다시 한 번\"},{\"use\":true,\"from\":\"그리고 보니\",\"to\":\"그러고 보니\"},{\"use\":true,\"from\":\"뒤쳐\",\"to\":\"뒤처\"},{\"use\":true,\"from\":\"제 정신\",\"to\":\"제정신\"},{\"use\":true,\"from\":\"스탠드 얼론\",\"to\":\"스탠드얼론\"},{\"use\":true,\"from\":\"멘테넌스\",\"to\":\"메인터넌스\"},{\"use\":true,\"from\":\"뒷처리\",\"to\":\"뒤처리\"},{\"use\":true,\"from\":\"스탭도\",\"to\":\"스태프도\"},{\"use\":true,\"from\":\"등 져선\",\"to\":\"등져선\"},{\"use\":true,\"from\":\"타코이즈\",\"to\":\"터쿼이즈\"},{\"use\":true,\"from\":\"쓰레드\",\"to\":\"스레드\"},{\"use\":true,\"from\":\"져버리지\",\"to\":\"저버리지\"},{\"use\":true,\"from\":\"글러먹\",\"to\":\"글러 먹\"}]}";
+
+        public MainForm()
+        {
+            WebForm();
+
+            msgTitle = "TextReplacer";
 
             int[] rect = { 0, 0, 1280, 800 };
             StreamReader sr = null;
@@ -145,10 +197,10 @@ namespace Jamaker
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                rect[0] = (System.Windows.Forms.SystemInformation.VirtualScreen.Width - 1280) / 2;
-                rect[1] = (System.Windows.Forms.SystemInformation.VirtualScreen.Height - 800) / 2;
+                rect[0] = (SystemInformation.VirtualScreen.Width - 1280) / 2;
+                rect[1] = (SystemInformation.VirtualScreen.Height - 800) / 2;
             }
-            finally { if (sr != null) sr.Close(); }
+            finally { sr?.Close(); }
 
             StartPosition = FormStartPosition.Manual;
             Location = new Point(rect[0], rect[1]);
@@ -166,8 +218,10 @@ namespace Jamaker
 
             FormClosing += new FormClosingEventHandler(BeforeExit);
             FormClosed += new FormClosedEventHandler(WebFormClosed);
-
-            windows.Add("editor", Handle.ToInt32());
+        }
+        public void OverrideInitAfterLoad()
+        {
+            Script("init", new object[] { settingJson });
         }
 
         private void BeforeExit(object sender, FormClosingEventArgs e)
@@ -183,6 +237,8 @@ namespace Jamaker
                 Invoke(new Action(() => { ExitAfterSaveSetting(setting); }));
                 return;
             }
+
+            StreamWriter sw = null;
             try
             {
                 RECT offset = new RECT();
@@ -195,13 +251,16 @@ namespace Jamaker
                     di.Create();
                 }
 
-                StreamWriter sw = new StreamWriter("setting/TextReplacer.txt", false, Encoding.UTF8);
+                sw = new StreamWriter("setting/TextReplacer.txt", false, Encoding.UTF8);
                 sw.Write(offset.left + "," + offset.top + "," + (offset.right - offset.left) + "," + (offset.bottom - offset.top) + ",\n" + setting);
-                sw.Close();
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
+            }
+            finally
+            {
+                sw?.Close();
             }
 
             Process.GetCurrentProcess().Kill();
@@ -212,69 +271,9 @@ namespace Jamaker
             Process.GetCurrentProcess().Kill();
         }
 
-        #region 창 조작
-        private readonly Dictionary<string, int> windows = new Dictionary<string, int>();
-        public void SetWindow(string name, int hwnd)
+        private void OverrideDrop(int x, int y)
         {
-            RemoveWindow(name); // 남아있을 수 있음
-            windows.Add(name, hwnd);
-        }
-        public void RemoveWindow(string name)
-        {
-            windows.Remove(name);
-        }
-        // window.open 시에 브라우저에 커서 가도록
-        public void SetFocus(int hwnd)
-        {
-            if (InvokeRequired)
-            {
-                Invoke(new Action(() => { SetFocus(hwnd); }));
-            }
-            else
-            {
-                mainView.Focus();
-            }
-        }
-        private int GetHwnd(string target)
-        {
-            try
-            {
-                return windows[target];
-            }
-            catch { }
-            return 0;
-        }
-
-        public void FocusWindow(string target)
-        {
-            if (target.Equals("player"))
-            {
-                return;
-            }
-            int hwnd = GetHwnd(target);
-            WinAPI.SetForegroundWindow(hwnd);
-
-            // 에디터 활성화할 땐 커서까지 포커싱
-            if (target.Equals("editor"))
-            {
-                delayFocusing = 10; // 창 전환 후 바로 호출하면 꼬임
-                timer.Tick += FocusEditor;
-            }
-        }
-        private int delayFocusing = 0;
-        private void FocusEditor(object sender, EventArgs e)
-        {
-            if (--delayFocusing == 0)
-            {
-                mainView.Focus();
-                timer.Tick -= FocusEditor;
-            }
-        }
-        #endregion
-
-        public void Init()
-        {
-            Script("init", new object[] { settingJson });
+            Script("drop", new object[] { x, y });
         }
 
         public void Compare(string file, string[] froms, string[] tos)
@@ -369,6 +368,7 @@ namespace Jamaker
             Script("alert", new object[] { msg });
         }
 
+        #region 설정
         public void ImportSetting()
         {
             if (InvokeRequired)
@@ -376,6 +376,7 @@ namespace Jamaker
                 Invoke(new Action(() => { ImportSetting(); }));
                 return;
             }
+
             OpenFileDialog dialog = new OpenFileDialog { Filter = "JSON 파일|*.json" };
             if (dialog.ShowDialog() == DialogResult.OK)
             {
@@ -405,12 +406,14 @@ namespace Jamaker
                 Invoke(new Action(() => { ExportSetting(setting); }));
                 return;
             }
+
             SaveFileDialog dialog = new SaveFileDialog{ Filter = "JSON 파일|*.json" };
             if (dialog.ShowDialog() != DialogResult.OK)
             {   // 저장 취소
                 return;
             }
             string path = dialog.FileName;
+
             StreamWriter sw = null;
             try
             {   // 무조건 UTF-8로 저장
@@ -426,6 +429,7 @@ namespace Jamaker
                 sw?.Close();
             }
         }
+        #endregion
 
         #region 파일
         public void AddFilesByDrag()

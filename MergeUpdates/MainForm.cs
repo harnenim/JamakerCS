@@ -12,40 +12,91 @@ namespace Jamaker
 {
     public partial class MainForm : Form
     {
-        #region 공통 기능... class 따로 만들어야?
-        private string Script(string name) { return mainView.Script(name); }
-        private string Script(string name, object arg) { return mainView.Script(name, arg); }
+        #region TODO: WebForm 분리 예정
+        protected string msgTitle = "WebForm";
+
+        #region 창 조작
+        protected readonly Dictionary<string, int> windows = new Dictionary<string, int>();
+        public void SetWindow(string name, int hwnd)
+        {
+            RemoveWindow(name); // 남아있을 수 있음
+            windows.Add(name, hwnd);
+        }
+        public void RemoveWindow(string name)
+        {
+            windows.Remove(name);
+        }
+        // window.open 시에 브라우저에 커서 가도록
+        public void SetFocus(int hwnd)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { SetFocus(hwnd); }));
+            }
+            else
+            {
+                mainView.Focus();
+            }
+        }
+        protected int GetHwnd(string target)
+        {
+            try
+            {
+                return windows[target];
+            }
+            catch { }
+            return 0;
+        }
+
+        public void FocusWindow(string target)
+        {
+            WinAPI.SetForegroundWindow(GetHwnd(target));
+        }
+        #endregion
+
+        public virtual void InitAfterLoad()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { InitAfterLoad(); }));
+                return;
+            }
+            windows.Add("editor", Handle.ToInt32());
+            //OverrideInitAfterLoad();
+        }
+
+        protected string Script(string name) { return mainView.Script(name); }
+        protected string Script(string name, object arg) { return mainView.Script(name, arg); }
 
         public void Alert(string target, string msg)
         {
             if (InvokeRequired)
             {
                 Invoke(new Action(() => { Alert(target, msg); }));
+                return;
             }
-            else
-            {
-                MessageBoxEx.Show(GetHwnd(target), msg, msgTitle);
-            }
+
+            MessageBoxEx.Show(GetHwnd(target), msg, msgTitle);
         }
         public void Confirm(string target, string msg)
         {
             if (InvokeRequired)
             {
                 Invoke(new Action(() => { Confirm(target, msg); }));
+                return;
+            }
+
+            if (MessageBoxEx.Show(GetHwnd(target), msg, msgTitle, MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                Script("afterConfirmYes");
             }
             else
             {
-                if (MessageBoxEx.Show(GetHwnd(target), msg, msgTitle, MessageBoxButtons.YesNo) == DialogResult.Yes)
-                {
-                    Script("afterConfirmYes");
-                }
-                else
-                {
-                    Script("afterConfirmNo");
-                }
+                Script("afterConfirmNo");
             }
         }
 
+        #region 파일 드래그
         public void ShowDragging()
         {
             if (InvokeRequired)
@@ -90,9 +141,9 @@ namespace Jamaker
                 Drop(e.X - Location.X, e.Y - Location.Y);
             }
         }
-        private void Drop(int x, int y)
+        protected virtual void Drop(int x, int y)
         {
-            Script("drop", new object[] { x, y });
+            OverrideDrop(x, y);
         }
         private void ClickLayerForDrag(object sender, MouseEventArgs e)
         {
@@ -101,9 +152,7 @@ namespace Jamaker
         }
         #endregion
 
-        readonly string msgTitle = "MergeUpdates";
-
-        public MainForm()
+        public void WebForm()
         {
             // 브라우저 설정
             CefSettings settings = new CefSettings
@@ -115,6 +164,12 @@ namespace Jamaker
             CefSharpSettings.ShutdownOnExit = true; // Release일 땐 false 해줘야 함
 
             InitializeComponent();
+        }
+        #endregion
+
+        public MainForm()
+        {
+            WebForm();
 
             int[] rect = { 0, 0, 1280, 800 };
             StreamReader sr = null;
@@ -136,7 +191,7 @@ namespace Jamaker
                 rect[0] = (System.Windows.Forms.SystemInformation.VirtualScreen.Width - 1280) / 2;
                 rect[1] = (System.Windows.Forms.SystemInformation.VirtualScreen.Height - 800) / 2;
             }
-            finally { if (sr != null) sr.Close(); }
+            finally { sr?.Close(); }
 
             StartPosition = FormStartPosition.Manual;
             Location = new Point(rect[0], rect[1]);
@@ -153,8 +208,6 @@ namespace Jamaker
             mainView.RequestHandler = new RequestHandler(); // TODO: 팝업에서 이동을 막아야 되는데...
 
             FormClosed += new FormClosedEventHandler(WebFormClosed);
-
-            windows.Add("editor", Handle.ToInt32());
         }
 
         private void WebFormClosed(object sender, FormClosedEventArgs e)
@@ -183,65 +236,10 @@ namespace Jamaker
             Process.GetCurrentProcess().Kill();
         }
 
-        #region 창 조작
-        private readonly Dictionary<string, int> windows = new Dictionary<string, int>();
-        public void SetWindow(string name, int hwnd)
+        private void OverrideDrop(int x, int y)
         {
-            RemoveWindow(name); // 남아있을 수 있음
-            windows.Add(name, hwnd);
+            Script("drop", new object[] { x, y });
         }
-        public void RemoveWindow(string name)
-        {
-            windows.Remove(name);
-        }
-        // window.open 시에 브라우저에 커서 가도록
-        public void SetFocus(int hwnd)
-        {
-            if (InvokeRequired)
-            {
-                Invoke(new Action(() => { SetFocus(hwnd); }));
-            }
-            else
-            {
-                mainView.Focus();
-            }
-        }
-        private int GetHwnd(string target)
-        {
-            try
-            {
-                return windows[target];
-            }
-            catch { }
-            return 0;
-        }
-
-        public void FocusWindow(string target)
-        {
-            if (target.Equals("player"))
-            {
-                return;
-            }
-            int hwnd = GetHwnd(target);
-            WinAPI.SetForegroundWindow(hwnd);
-
-            // 에디터 활성화할 땐 커서까지 포커싱
-            if (target.Equals("editor"))
-            {
-                delayFocusing = 10; // 창 전환 후 바로 호출하면 꼬임
-                timer.Tick += FocusEditor;
-            }
-        }
-        private int delayFocusing = 0;
-        private void FocusEditor(object sender, EventArgs e)
-        {
-            if (--delayFocusing == 0)
-            {
-                mainView.Focus();
-                timer.Tick -= FocusEditor;
-            }
-        }
-        #endregion
 
         #region 파일
         public void DropFileToArea(int dropArea)

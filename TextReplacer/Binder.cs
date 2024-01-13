@@ -1,14 +1,12 @@
-﻿using System.Collections.Generic;
-
-namespace Jamaker
+﻿namespace Jamaker
 {
-    class Binder
+    class BaseBinder
     {
         private readonly MainForm _;
 
-        public Binder(MainForm mainForm)
+        public BaseBinder(MainForm webForm)
         {
-            _ = mainForm;
+            _ = webForm;
         }
 
         public void Focus(string target)
@@ -18,7 +16,7 @@ namespace Jamaker
 
         public void InitAfterLoad()
         {
-            _.Init();
+            _.InitAfterLoad();
         }
 
         public void ShowDragging()
@@ -32,6 +30,16 @@ namespace Jamaker
 
         public void Alert(string target, string msg) { _.Alert(target, msg); }
         public void Confirm(string target, string msg) { _.Confirm(target, msg); }
+    }
+
+    class Binder : BaseBinder
+    {
+        private readonly MainForm _;
+
+        public Binder(MainForm mainForm): base(mainForm)
+        {
+            _ = mainForm;
+        }
 
         public void AddFilesByDrag()
         {
