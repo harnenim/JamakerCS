@@ -1,0 +1,159 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>SAMI 자막 내용 일괄 치환</title>
+	<script src="lib/jquery-3.2.1.min.js"></script>
+	<script src="lib/webview.js"></script>
+	<script src="lib/ListView.js"></script>
+	<link rel="stylesheet" type="text/css" href="lib/webview.css" />
+	<link rel="stylesheet" type="text/css" href="lib/ListView.css" />
+	<script>
+var listFiles;
+
+function init(jsonSetting) {
+	var setting = {};
+	try {
+		setting = JSON.parse(jsonSetting);
+	} catch (e) {
+		alert("설정 파일이 잘못됐습니다.");
+	}
+	$("#vFrom").val(setting.from);
+	$("#vTo"  ).val(setting.to  );
+}
+
+function drop(x, y) {
+	binder.addFilesByDrag();
+}
+
+function addFile(file) {
+	if (/^.*\.smi$/.test(file.toLowerCase())) {
+		listFiles.add(file, true);
+	}
+}
+
+function selectView(index) {
+	$(".view").hide();
+	$(".view:eq("+index+")").show();
+}
+function showPreview(source, replaced) {
+	selectView(1);
+	$("#view1left").html(source.split("\n").join("<br />"));
+	$("#view1right").html(replaced.split("\n").join("<br />"));
+}
+function beforeExit() {
+	binder.exitAfterSaveSetting(JSON.stringify({ from: $("#vFrom").val(), to: $("#vTo").val() }));
+}
+
+$(function() {
+	listFiles = new ListView($("#listFiles"));
+	listFiles.run = function(item) {
+		var from = $("#vFrom").val();
+		if (from.length == 0) {
+			alert("변환할 내용이 없습니다.");
+			return;
+		}
+		binder.compare(item.value, from, $("#vTo").val());
+	}
+	
+	$("#btnReplace").on("click", function() {
+		var files = [];
+		for (var i = 0; i < listFiles.list.length; i++) {
+			files.push(listFiles.list[i].value);
+		}
+		if (files.length == 0) {
+			alert("변환할 파일이 없습니다.");
+			return;
+		}
+		var from = $("#vFrom").val();
+		if (from.length == 0) {
+			alert("변환할 내용이 없습니다.");
+			return;
+		}
+		binder.replace(files, from, $("#vTo").val());
+	});
+	
+	document.addEventListener("dragenter", function(e) {
+		e.preventDefault();
+		binder.showDragging();
+	});
+	$("#cover").on("click", function(e) {
+		binder.hideDragging();
+	});
+	
+	$("#view1left, #view1right").on("click", function() {
+		selectView(0);
+	});
+	selectView(0);
+});
+	</script>
+	<style>
+#view0left, #view0right {
+	margin: 1px;
+	height: calc(100% - 34px);
+}
+#view0left  { float: left; width: 30%; }
+#view0right { float: right; width: calc(70% - 20px); }
+
+#listFiles {
+	width: 100%;
+	height: 100%;
+}
+
+#areaReplacer {
+	width: 100%;
+	height: 100%;
+	overflow-y: scroll;
+	border: 1px solid #000;
+}
+
+#view0right > * {
+}
+
+#view0right > textarea {
+	width: calc(50% - 8px);
+	height: 100%;
+	overflow-x: hidden;
+	overflow-y: scroll;
+	line-height: 14px;
+	white-space: pre;
+}
+
+#view0right > span {
+	display: inline-block;
+	width: 16px;
+	margin-top: 33%;
+	text-align: center;
+	vertical-align: top;
+}
+
+#areaSubmit {
+	clear: both;
+	width: 100%;
+	height: 32px;
+	padding: 1px;
+}
+
+#btnReplace {
+	width: 100%;
+	height: 100%;
+}
+
+body.drag-file #listFiles {
+	border: 2px solid #c66;
+}
+	</style>
+</head>
+<body>
+	<div class="view">
+		<div id="view0left">
+			<div id="listFiles"></div>
+		</div>
+		<div id="view0right"><textarea id="vFrom" wrap="off"></textarea><span>→</span><textarea id="vTo" wrap="off"></textarea></div>
+		<div id="areaSubmit">
+			<button id="btnReplace">변환</button>
+		</div>
+	</div>
+</body>
+</html>

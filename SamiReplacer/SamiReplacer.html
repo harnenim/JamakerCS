@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SamiReplacer 샘플</title>
+<link rel="stylesheet" type="text/css" href="bridge/WebForm.css" />
+<script src="view/lib/jquery-3.2.1.min.js"></script>
+<script src="bridge/WinAPI.js"></script>
+<script src="bridge/Binder.js"></script>
+<script>
+Binder.prototype.addFilesByDrag = function() {
+	this._.addFilesByDrag();
+}
+Binder.prototype.compare = function(file, froms, tos) {
+	this._.compare(file, froms, tos);
+}
+Binder.prototype.replace = function(files, froms, tos) {
+	this._.replace(files, froms, tos);
+}
+Binder.prototype.exitAfterSaveSetting = function(setting) {
+	this._.exitAfterSaveSetting(setting);
+}
+</script>
+<script src="bridge/WebForm.js"></script>
+<script>
+var main = new WebForm();
+{	// main
+	main.settingJson = '{"from":"from","to":"to"}';
+	
+	main.run = function() {
+		this.initializeComponent();
+		
+		var settingJson = localStorage.getItem("setting.SamiReplacer");
+		if (settingJson) {
+			main.settingJson = settingJson;
+		}
+		
+		main.mainView.src = "view/SamiReplacer.html";
+		main.mainView.onload = function() {
+			// 브라우저 샘플에선 url 변형 필요
+			main.mainView.contentWindow._open_ = main.mainView.contentWindow.open;
+			main.mainView.contentWindow.open = function(url, name, options) {
+				if (url.substring(0, 4) != "http") {
+					url = location.href.substring(0, location.href.lastIndexOf("/")) + "/view/" + url;
+				}
+				return main.windows[name] = window_open(url, name, options, main.mainView.contentWindow);
+			}
+			
+			main.mainView.contentWindow.binder = main.binder = new Binder(main);
+
+			var cd = main.mainView.contentDocument;
+			cd.addEventListener("dragenter", function(e) {
+				e.preventDefault();
+				main.showDragging();
+			});
+		};
+	}
+
+	main.initAfterLoad = function() {
+		this.super_initAfterLoad();
+		this.script("init", [main.settingJson]);
+	};
+	
+	main.beforeExit = function(e) {
+		this.script("beforeExit");
+	}
+}
+{
+	main.addFilesByDrag = function() {
+		if (!this.droppedFiles) return;
+		if (this.droppedFiles.length < 1) {
+			this.droppedFiles = null;
+			return;
+		}
+		for (var i = 0; i < this.droppedFiles.length; i++) {
+			main.script("addFile", [ this.droppedFiles[i].name ]);
+		}
+		this.droppedFiles = null;
+	}
+	main.compare = function(file, froms, tos) {
+		console.log(file);
+		console.log(froms);
+		console.log(tos);
+	}
+	main.replace = function(files, froms, tos) {
+		console.log(files);
+		console.log(froms);
+		console.log(tos);
+	}
+}
+{
+	main.exitAfterSaveSetting = function(setting) {
+		localStorage.setItem("setting.SamiReplacer", setting);
+	}
+}
+$(function() {
+	main.run();
+	window.addEventListener("beforeunload", function(e) {
+		main.beforeExit(e);
+		return false;
+	});
+});
+</script>
+<style>
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+html, body {
+	width: 100%;
+	height: 100%;
+	border: 0;
+	overflow: hidden;
+}
+</style>
+</head>
+<body></body>
+</html>
