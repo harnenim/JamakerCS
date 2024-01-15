@@ -35,19 +35,6 @@ namespace Jamaker
             _.RemoveWindow(name);
         }
 
-        public void OnloadViewer()
-        {
-            _.UpdateViewerSetting();
-        }
-        public void OnloadFinder()
-        {
-            _.OnloadFinder();
-        }
-
-        public void RunFind(string param) { _.RunFind(param); }
-        public void RunReplace(string param) { _.RunReplace(param); }
-        public void RunReplaceAll(string param) { _.RunReplaceAll(param); }
-
         readonly string msgTitle = "하늣 ;>ㅅ<;";
         public void Alert(string msg)
         {
@@ -132,5 +119,20 @@ namespace Jamaker
                 Text = title;
             }
         }
+
+        /*****************************************************/
+
+        public void OnloadViewer()
+        {
+            _.UpdateViewerSetting();
+        }
+        public void OnloadFinder()
+        {
+            _.OnloadFinder();
+        }
+
+        public void RunFind(string param) { _.RunFind(param); }
+        public void RunReplace(string param) { _.RunReplace(param); }
+        public void RunReplaceAll(string param) { _.RunReplaceAll(param); }
     }
 }

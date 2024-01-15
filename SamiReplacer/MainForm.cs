@@ -342,6 +342,27 @@ namespace Jamaker
         {
             foreach (string file in droppedFiles)
             {
+                GetFilesWithSubDir(file);
+            }
+        }
+        public void GetFilesWithSubDir(string file)
+        {
+            if (Directory.Exists(file))
+            {
+                DirectoryInfo dir = new DirectoryInfo(file);
+                DirectoryInfo[] subDirs = dir.GetDirectories();
+                foreach (DirectoryInfo subDir in subDirs)
+                {
+                    GetFilesWithSubDir(subDir.FullName);
+                }
+                FileInfo[] subFiles = dir.GetFiles();
+                foreach (FileInfo subFile in subFiles)
+                {
+                    Script("addFile", new object[] { subFile.FullName });
+                }
+            }
+            else
+            {
                 Script("addFile", new object[] { file });
             }
         }
