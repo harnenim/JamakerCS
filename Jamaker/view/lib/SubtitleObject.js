@@ -975,9 +975,9 @@ Subtitle.AssFile = function() {
 	this.body = [];
 }
 Subtitle.AssFile.prototype.toTxt = function() {
-	var result = this.header.split("\n").join("\r\n");
+	var result = this.header.split("\r\n").join("\n");
 	for (var i = 0; i < this.body.length; i++) {
-		result += this.body[i].toTxt() + "\r\n";
+		result += this.body[i].toTxt() + "\n";
 	}
 	return result;
 }
@@ -1052,12 +1052,12 @@ Subtitle.Smi = function(start, syncType, text) {
 }
 
 Subtitle.Smi.prototype.toTxt = function() {
-	return "<Sync Start=" + this.start + "><P Class=KRCC" + (this.syncType == Subtitle.SyncType.inner ? "\t" : (this.syncType == Subtitle.SyncType.frame ? " " : "")) + ">\r\n" + this.text;
+	return "<Sync Start=" + this.start + "><P Class=KRCC" + (this.syncType == Subtitle.SyncType.inner ? "\t" : (this.syncType == Subtitle.SyncType.frame ? " " : "")) + ">\n" + this.text;
 }
 Subtitle.Smi.smi2txt = function(smis) {
 	var result = "";
 	for (var i = 0; i < smis.length; i++) {
-		result += smis[i].toTxt() + "\r\n";
+		result += smis[i].toTxt() + "\n";
 	}
 	return result;
 }
@@ -1820,9 +1820,9 @@ Subtitle.SmiFile = function() {
 	this.body = [];
 }
 Subtitle.SmiFile.prototype.toTxt = function() {
-	return this.header.split("\n").join("\r\n")
+	return this.header.split("\r\n").join("\n")
 	     + Subtitle.Smi.smi2txt(this.body)
-	     + this.footer.split("\n").join("\r\n");
+	     + this.footer.split("\r\n").join("\n");
 }
 Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 	txt = txt.split("\r\n").join("\n");
@@ -1978,7 +1978,7 @@ Subtitle.Srt.prototype.toTxt = function() {
 Subtitle.Srt.srt2txt = function(srts) {
 	var result = "";
 	for (var i = 0; i < srts.length; i++) {
-		result += srts[i].toTxt() + "\r\n";
+		result += srts[i].toTxt() + "\n";
 	}
 	return result;
 }

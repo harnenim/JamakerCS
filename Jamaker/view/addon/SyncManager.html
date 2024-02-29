@@ -28,7 +28,7 @@ var binder = {
 	setText: function(text, range) {
 		origin.tab.setText(text, range);
 	}
-,	alert: function(msg) {
+,	alert: function(windowName, msg) {
 		_alert(msg);
 	}
 };
@@ -139,18 +139,12 @@ function splitOrigin() {
 	{	// forBasic
 		forBasic = forBasic.concat(footer);
 		var lines = [];
-		var lastSync = 0;
-		var lastLine = [];
 		for (var i = 0; i < forBasic.length; i++) {
-			if (forBasic[i] && (typeof forBasic[i] == "number")) {
-				var thisSync = forBasic[i];
-				for (var j = 1; j < lastLine.length; j++) {
-					lines.push(SmiEditor.makeSyncLine(Math.floor(lastSync + (thisSync - lastSync) * j / lastLine.length), TYPE.RANGE));
-					lines.push(lastLine[j]);
-				}
-				lines.push(SmiEditor.makeSyncLine(lastSync = thisSync, TYPE.BASIC));
-			} else {
-				lines.push((lastLine = forBasic[i].split("<~>"))[0]);
+			var thisSync = forBasic[i];
+			if (typeof thisSync == "number") {
+				lines.push(SmiEditor.makeSyncLine(thisSync, TYPE.BASIC));
+			} else if (typeof thisSync == "string") {
+				lines.push(thisSync);
 			}
 		}
 		forBasic = lines.join("\n");
@@ -375,6 +369,7 @@ function checkDiff() {
 					}));
 				}
 				// 일반 싱크와 충돌 검사
+				var count = 0;
 				for (var j = 0; j < origin.lines.length; j++) {
 					var line = origin.lines[j];
 					if (line[LINE.TYPE] == TYPE.BASIC) {
@@ -389,7 +384,12 @@ function checkDiff() {
 								,	height: "14px"
 								,	background: "rgba(255, 0, 0, " + alpha + ")"
 							}));
-							alert("기존 싱크(" + originLines[i] + ")와 바꿀 싱크(" + targetLines[i] + ") 사이에\n다른 일반 싱크가 있습니다.");
+							if (count++ < 5) {
+								alert("기존 싱크(" + originLines[i] + ")와 바꿀 싱크(" + targetLines[i] + ") 사이에\n다른 일반 싱크가 있습니다.");
+							} else {
+								alert("싱크 충돌 확인을 중단합니다.");
+								break;
+							}
 						}
 					}
 				}
@@ -471,7 +471,12 @@ function apply() {
 		var fLine = frameLines[fi];
 		
 		if (bLast <= fLast) {
-			lines.push(bLine);
+			var bLines = bLine.split("<~>");
+			lines.push(bLines[0]);
+			for (var i = 1; i < bLines.length; i++) {
+				lines.push("<~>");
+				lines.push(bLines[i]);
+			}
 			if (++bi >= basicLines.length) break;
 			var sync = getSync(basicLines[bi]);
 			if (sync) {
@@ -494,7 +499,7 @@ function apply() {
 	for (; bi < basicLines.length; bi++) {
 		lines.push(basicLines[bi]);
 	}
-
+	
 	// 해당 줄 앞뒤 전체 선택되도록 조정
 	var origLines = origin.text.split("\n");
 	var front = origLines.slice(0, origin.start);
@@ -509,7 +514,7 @@ function apply() {
 					var text = lines.slice(lastSyncLine, j+1).join("\n");
 					text = SmiEditor.fillSync(text);
 					lines = lines.slice(0, lastSyncLine).concat(text.split("\n").slice(0, j - lastSyncLine)).concat(lines.slice(j));
-					lastSyncLine++;
+					lastSyncLine = j;
 					i = j + 1;
 					break;
 				}
