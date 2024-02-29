@@ -9,7 +9,7 @@
 
 기타 특징은 프로그램 내 도움말을 참조하시기 바랍니다.
 
-[웹 샘플 사용해보기](https://noitamina.moe/_/Jamaker/run.html)
+[웹 샘플 사용해보기](https://harnenim.github.io/Jamaker/run.html)
 
 ***
 
