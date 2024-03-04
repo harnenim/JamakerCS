@@ -133,6 +133,7 @@ function splitOrigin() {
 			forBasic.push(sync.lines.join("\n").split("\n<~>\n").join("<~>"));
 		} else {
 			forFrameSmi.push(SmiEditor.makeSyncLine(sync.start, TYPE.FRAME));
+			// 싱크 내 줄바꿈은 임시로 존재하지 않는 문법 </>로 교체
 			forFrameSmi.push(sync.lines.join("</>").split("</><~></>").join("<~>"));
 		}
 	}
@@ -156,29 +157,30 @@ function splitOrigin() {
 	var add = Math.floor((FL / 2) + 0.5);
 	
 	var requiredEnd = false;
+	// 역순으로 탐색: 종료싱크보단 시작싱크가 화면싱크인 걸 먼저 탐색
 	for (var i = syncs.length - 1; i >= 0; i--) {
 		var sync = syncs[i];
 		if (sync.end == 0) sync.end = 35999999; // 마지막 싱크는 종료 시간이 없을 수 있음
 		if (sync.startType == 2) {
 			var text = $("<span>").html(sync.lines.join("\\N").split(/<br>/gi).join("\\N")).text().trim();
-			if (requiredEnd) {
+			if (requiredEnd) { // []
 				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.start - add) + "," + smi2assTime(sync.end - add) + ",［］,,0000,0000,0000,,{\\c&H00FFFF&}" + text);
 				requiredEnd = false;
 				
-			} else {
-				if (i == 0 && text.length == 0) {
+			} else { // [)
+				if (i == 0 && text.length == 0) { // 첫 싱크는 무시되지 않도록
 					text = "&nbsp;";
 				}
 				if (text.length) {
 					forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.start - add) + "," + smi2assTime(sync.end - add) + ",［）,,0000,0000,0000,,{\\c&HFFFF00&}" + text);
 					
-				} else {
+				} else { // 공백 싱크: 앞 싱크의 종료싱크 처리 필요
 					requiredEnd = true;
 				}
 			}
 			
 		} else {
-			if (requiredEnd) {
+			if (requiredEnd) { // (]
 				var text = $("<span>").html(sync.lines.join("\\N").split(/<br>/gi).join("\\N")).text().trim();
 				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.start - add) + "," + smi2assTime(sync.end - add) + ",（］,,0000,0000,0000,," + text);
 				requiredEnd = false;
@@ -186,7 +188,7 @@ function splitOrigin() {
 		}
 	}
 	
-	// Aegisub에서 편집하기 편하도록 스타일 순 정렬
+	// Aegisub에서 작업 편의성을 위해 스타일 순 정렬
 	forFrameAss.sort(function(a, b) {
 		var styleA = a.split(",")[3];
 		var styleB = b.split(",")[3];
@@ -215,7 +217,7 @@ function frameAssToSmi() {
 	// Aegisub용으로 반프레임 보정
 	var add = Math.floor((FL / 2) + 0.5);
 	
-	var origLines = $("#originFrameAss").val().split("\n").sort(); // 순서 섞어서 편집한 것 시간 순 정렬
+	var origLines = $("#originFrameAss").val().split("\n").sort(); // 순서 섞어서 작업한 것 시간 순 정렬
 	var last = 0;
 	var lines = [];
 	for (var i = 0; i < origLines.length; i++) {
@@ -485,7 +487,7 @@ function apply() {
 				break;
 			}
 		} else {
-			lines.push(fLine.split("</>").join("\n"));
+			lines.push(fLine);
 			if (++fi >= frameLines.length) break;
 			var sync = getSync(frameLines[fi]);
 			if (sync) fLast = sync;
@@ -505,12 +507,13 @@ function apply() {
 	var front = origLines.slice(0, origin.start);
 	var range = [(origin.start > 0) ? (front.join("\n").length + 1) : 0];
 	
+	// 중간 싱크 재생성
 	var lastSyncLine = -1;
 	for (var i = 0; i < lines.length; i++) {
 		var line = lines[i];
-		if (line == "<~>") {
+		if (line == "<~>") { // 중간 싱크 시작
 			for (var j = i+1; j < lines.length; j++) {
-				if (lines[j].substring(0, 6).toUpperCase() == "<SYNC ") {
+				if (lines[j].substring(0, 6).toUpperCase() == "<SYNC ") { // 중간 싱크 끝나는 곳 찾기
 					var text = lines.slice(lastSyncLine, j+1).join("\n");
 					text = SmiEditor.fillSync(text);
 					lines = lines.slice(0, lastSyncLine).concat(text.split("\n").slice(0, j - lastSyncLine)).concat(lines.slice(j));
@@ -522,6 +525,15 @@ function apply() {
 			
 		} else if (line.substring(0, 6).toUpperCase() == "<SYNC ") {
 			lastSyncLine = i;
+		}
+	}
+	
+	// 한 싱크에 여러 줄이었던 것 복원
+	for (var i = 0; i < lines.length; i++) {
+		var line = lines[i].split("</>");
+		if (line.length > 1) {
+			lines = lines.slice(0, i).concat(line).concat(lines.slice(i+1));
+			i += line.length - 1;
 		}
 	}
 	range.push(range[0] + lines.join("\n").length);
