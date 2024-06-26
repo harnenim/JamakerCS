@@ -32,7 +32,30 @@ $(function() {
 	
 	$("#btnExport").on("click", function() {
 		var input  = new Subtitle.SmiFile().fromTxt($("#input").val());
-		var output = new Subtitle.AssFile().fromSync(input.toSync()).toTxt();
+		{	// 프레임 단위 싱크 역보정... 필요한가?
+			if (opener && opener.SmiEditor && opener.SmiEditor.sync && opener.SmiEditor.sync.frame) {
+				var FL = opener.FL;
+				for (var i = 0; i < input.body.length; i++) {
+					var item = input.body[i];
+					item.start = Math.max(1, Math.round((Math.round(item.start / FL) - 0.5) * FL));
+				}
+			}
+		}
+		var ass = new Subtitle.AssFile().fromSync(input.toSync());
+		{	// 팟플레이어 겹치는 싱크 보정
+			var syncMap = {};
+			for (var i = 0; i < ass.body.length; i++) {
+				var item = ass.body[i];
+				if (syncMap[item.start]) { syncMap[item.start]++; } else { syncMap[item.start] = 1; }
+				if (syncMap[item.end  ]) { syncMap[item.end  ]++; } else { syncMap[item.end  ] = 1; }
+			}
+			for (var i = 0; i < ass.body.length; i++) {
+				var item = ass.body[i];
+				if (syncMap[item.start] > 1) item.start += 1;
+				if (syncMap[item.end  ] > 1) item.end   += 1;
+			}
+		}
+		var output = ass.toTxt();
 		
 		// 완성 후에도 화면 싱크 체크용으로 {} 표시
 		var lines = output.split("\n");

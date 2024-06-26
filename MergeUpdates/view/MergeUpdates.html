@@ -368,7 +368,11 @@ $(function() {
 						var aSyncI = originAftUpdate.body[i + cShift];
 						if (aSyncI.syncType == bSyncI.syncType && aSyncI.start != bSyncI.start) { // 싱크 타입이 유지됐는데 싱크가 어긋났으면
 							if (aSyncI.syncType == Subtitle.SyncType.frame // 화면 싱크일 경우 - 최초 배포 시 작업 빼먹었을 가능성
-							 && (bSyncI.text.startsWith(aSyncI.text) || aSyncI.text.startsWith(bSyncI.text))) {
+							 && (   bSyncI.text.startsWith(aSyncI.text)
+							     || aSyncI.text.startsWith(bSyncI.text)
+							     || (aSyncI.text.split("&nbsp;").join("") == bSyncI.text.split("&nbsp;").join(""))
+							    )
+							) {
 								// 화면 싱크인데 내용물이 같으면 넘기기
 								err[i % 3] = 0;
 								
@@ -449,6 +453,11 @@ $(function() {
 				ai++;
 			}
 		}
+
+		// 순서 엇갈린 것 정정
+		pairList.sort(function(a, b) {
+			return a[2].start < b[2].start ? -1 : 1;
+		});
 
 		var dist = 0, distFrame = 0;
 		var frameChanged = 0;

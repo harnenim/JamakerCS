@@ -780,6 +780,7 @@ Subtitle.Ass = function(start, end, style, text) {
 Subtitle.Ass.cols = [ "Layer", "Start", "End", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text" ];
 
 Subtitle.Ass.int2Time = function(time) {
+	time = Math.round(time);
 	var h = Math.floor(time / 360000);
 	var m = Math.floor(time / 6000) % 60;
 	var s = Math.floor(time / 100) % 60;
