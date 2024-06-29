@@ -455,8 +455,8 @@ $(function() {
 		}
 
 		// 순서 엇갈린 것 정정
-		pairList.sort(function(a, b) {
-			return a[2].start < b[2].start ? -1 : 1;
+		pairList.sort(function (a, b) {
+			return (a[2] && b[2]) ? (a[2].start < b[2].start ? -1 : 1) : -1;
 		});
 
 		var dist = 0, distFrame = 0;
