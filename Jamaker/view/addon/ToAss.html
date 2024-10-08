@@ -57,20 +57,74 @@ $(function() {
 		}
 		var output = ass.toTxt();
 		
-		// 완성 후에도 화면 싱크 체크용으로 {} 표시
 		var lines = output.split("\n");
 		for (var i = 0; i < lines.length; i++) {
 			var line = lines[i].split("\r")[0].split(",");
 			if (line.length > 9) {
-				var type = line[3];
-				if (type[0] == "［") {
-					line[9] = "{}" + line[9];
+				var text = line[9];
+				
+				// RUBY 태그 다중일 경우 처리
+				var sLines = text.split("\\N");
+				var rubyRanges = [];
+				var lastRange = null;
+				var overlapCount = 0;
+				for (var j = 0; j < sLines.length; j++) {
+					if (sLines[j].startsWith("{\\fscy50")) {
+						if (lastRange) {
+							lastRange[1] = j;
+							overlapCount++;
+						} else {
+							rubyRanges.push(lastRange = [j, j]);
+						}
+					}
 				}
-				line = line.join(",");
-				if (type[1] == "］") {
-					line = line + "{}";
+				if (overlapCount) {
+					var type = line[3];
+					var front = (type[0] == "［" ? "{}" : "") + "{" + $("#pos").val() + "}";
+					var end = (type[1] == "］" ? "{}" : "");
+					
+					function lineWithRuby(rangeIndex, on) {
+						var result = [];
+						var pos = 0;
+						for (var j = 0; j < rubyRanges.length; j++) {
+							var rubyRange = rubyRanges[j];
+							for (; pos < rubyRange[0]; pos++) {
+								result.push(sLines[pos]);
+							}
+							if (on && result.length) {
+								result[0] = "{\\bord0\\1a&HFF&}" + result[0];
+								result[result.length - 1] += "{\\1a\\bord}";
+							}
+							result.push(sLines[rubyRange[0] + (j == rangeIndex ? on : 0)] + (on ? "{\\bord0\\1a&HFF&}" : ""));
+							pos = rubyRange[1] + 1;
+						}
+						for (; pos < sLines.length; pos++) {
+							result.push(sLines[pos]);
+						}
+						line[9] = front + result.join("\\N") + end;
+						return line.join(",");
+					}
+					var newLines = [lineWithRuby(0, 0)];
+					for (var j = 0; j < rubyRanges.length; j++) {
+						var rubyRange = rubyRanges[j];
+						for (var k = 1; k <= rubyRange[1]; k++) {
+							newLines.push(lineWithRuby(j, k));
+						}
+					}
+					lines[i] = newLines.join("\n");
+					
+				} else {
+					// 완성 후에도 화면 싱크 체크용으로 {} 표시
+					var type = line[3];
+					if (type[0] == "［") {
+						line[9] = "{}" + text;
+					}
+					line = line.join(",");
+					if (type[1] == "］") {
+						line = line + "{}";
+					}
+					lines[i] = line;
 				}
-				lines[i] = line;
 			}
 		}
 		$("#output").val(lines.join("\n"));
@@ -83,7 +137,21 @@ $(function() {
 	top: 0;
 	left: 0;
 	width: 40%;
+	bottom: 20px;
+}
+label[for=pos] {
+	position: absolute;
+	left: 0;
+	width: 90px;
 	bottom: 0;
+	height: 20px;
+}
+#pos {
+	position: absolute;
+	left: 90px;
+	width: 40%;
+	bottom: 0;
+	height: 20px;
 }
 #btnExport {
 	position: absolute;
@@ -103,6 +171,8 @@ $(function() {
 </head>
 <body>
 	<textarea id="input" spellcheck="false"></textarea>
+	<label for="pos">위치 기본값</label>
+	<input type="text" id="pos" value="\pos(960,1040)" />
 	<button id="btnExport">＞</button>
 	<textarea id="output">이곳의 결과물은 완성본이 아니며, Aegisub에 복사한 후 추가 작업이 필요합니다.
 화면 싱크를 사용한 경우 Default가 아닌 （］,［）,［］로 분류됩니다.</textarea>
