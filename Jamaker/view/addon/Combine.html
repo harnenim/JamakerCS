@@ -310,7 +310,12 @@ $(function() {
 						}
 						pad = pad.split("&nbsp;").join(" ");
 						for (var k = 0; k < lines.length; k++) {
-							lines[k] = "​" + pad + lines[k] + pad + "​";
+							var line = lines[k].split("​").join(""); // Zero-Width-Space 중복으로 들어가지 않도록
+							
+							if ($("<span>").html(line).text().split("　").join("").split(" ").join("").length) {
+								// 공백 줄인 경우는 별도 처리 하지 않음
+								lines[k] = "​" + pad + line + pad + "​";
+							}
 						}
 						sync[TEXT] = lines.join("<br>");
 					}
