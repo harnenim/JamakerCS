@@ -5,6 +5,7 @@
 <title>미리보기</title>
 <script src="lib/jquery-3.2.1.min.js"></script>
 <script src="lib/SmiEditor.js"></script>
+<script src="lib/SubtitleObject.js"></script>
 <script>
 var SmiEditor = {};
 
@@ -12,7 +13,9 @@ var title = document.getElementsByTagName("title")[0];
 var lastTab = null;
 var time = 0;
 var showText = "";
+var hasLine = false;
 var i = -1;
+var normalizedIndex = 0;
 
 var style = null;
 var setting = {}
@@ -24,9 +27,11 @@ function setSetting(jsonSetting) {
 	style.html("#viewer {\n" + setting.viewer.css + "}");
 }
 var lines = [];
+var normalizedLines = null;
 var viewer = null;
 function setLines(newLines) {
 	lines = JSON.parse(newLines);
+	normalizedLines = null;
 	
 	var receiveTime = time;
 	time = -1;
@@ -66,31 +71,56 @@ function refreshTime(receiveTime, withoutTitle) {
 	}
 	if (index == i) {
 		// 변화 없음
+		if (normalizedLines) {
+			// 현재 시간 이전의 가장 마지막 싱크 찾기
+			var index = normalizedIndex;
+			for (var j = 0; j < normalizedLines.length; j++) {
+				if (normalizedLines[j].start > receiveTime) {
+					break;
+				}
+				index = j;
+			}
+			if (index == normalizedIndex) {
+				// 변화 없음
+			} else {
+				setTextToView(normalizedLines[normalizedIndex = index].text);
+				time = receiveTime;
+			}
+		}
 		return;
 	}
 	i = index;
+	if (i < 0) {
+		setTextToView("");
+		time = receiveTime;
+		return;
+	}
+	
+	normalizedLines = null;
+	hasLine = false;
 	var showLines = [];
-	var hasLine = false;
-	if (i >= 0) {
-		for (var j = i + 1; j < lines.length; j++) {
-			if (lines[j][LINE.SYNC]) {
-				break;
-			}
-			var line = lines[j][LINE.TEXT].split(/<br>/gi);
-			for (var k = 0; k < line.length; k++) {
-				// 줄표 있을 때 왼쪽 정렬
-				/* 완성본이면 몰라도 제작 시엔 안 좋은 기능으로 보임
-				if ($("<span>").html(line[k][0]).text()[0] == '-') {
-					hasLine = true;
-				}
-				*/
-				if (k == 0 || k < line.length - 1 || line[k].length) {
-					showLines.push(line[k]);
-				}
+	var nextSyncLine = null;
+	for (var j = i + 1; j < lines.length; j++) {
+		if (lines[j][LINE.SYNC]) {
+			nextSyncLine = lines[j];
+			break;
+		}
+		var line = lines[j][LINE.TEXT].split(/<br>/gi);
+		for (var k = 0; k < line.length; k++) {
+			if (k == 0 || k < line.length - 1 || line[k].length) {
+				showLines.push(line[k]);
 			}
 		}
 	}
-	/*
+	// 줄표 있을 때 왼쪽 정렬
+	if (setting.viewer.useAlign && showLines.length < 4) { // 줄 개수 제한 없으면 싱크 안 찍은 전체 내용에 대해 동작해버림
+		for (var k = 0; k < showLines.length; k++) {
+			if ($("<span>").html(showLines[k][0]).text()[0] == '-') {
+				hasLine = true;
+				break;
+			}
+		}
+	}
 	if (hasLine) {
 		for (var j = 0; j < showLines.length; j++) {
 			var line = showLines[j];
@@ -100,8 +130,20 @@ function refreshTime(receiveTime, withoutTitle) {
 			showLines[j] = line + "<span style='opacity: 0;'>-</span>";
 		}
 	}
-	*/
 	showText = showLines.join("<br>");
+	if (nextSyncLine && setting.saveWithNormalize) {
+		var toNormalize = new Subtitle.SmiFile().fromTxt(lines[i][LINE.TEXT] + "\n" + showText + "\n" + nextSyncLine[LINE.TEXT]);
+		Subtitle.Smi.normalize(toNormalize.body);
+		if (toNormalize.body.length > 2) {
+			normalizedLines = toNormalize.body.slice(0, toNormalize.body.length - 1);
+			showText = normalizedLines[normalizedIndex = 0].text; // 일단은 첫 싱크 출력, 다음 루프에 추가로 잡아주기
+		}
+	}
+	setTextToView(showText);
+	time = receiveTime;
+};
+
+function setTextToView(showText) {
 	// RUBY태그 문법이 미묘하게 달라서 가공 필요
 	showText = showText.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
 	
@@ -186,9 +228,7 @@ function refreshTime(receiveTime, withoutTitle) {
 	}
 	
 	viewer.html("<div" + (hasLine ? " style='text-align: left; width: fit-content; margin: 0 auto;'" : "") + ">" + showText + "</div>");
-	
-	time = receiveTime;
-};
+}
 
 $(function() {
 	viewer = $("#viewer");

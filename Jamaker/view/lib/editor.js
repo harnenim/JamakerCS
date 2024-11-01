@@ -586,12 +586,25 @@ function saveFile(asNew) {
 	
 	if (currentTab.area.find(".sync.error,.sync.equal").length) {
 		confirm("싱크 오류가 있습니다.\n저장하시겠습니까?", function() {
-			binder.save(text, path);
+			saveFileFinally(text, path);
 		});
+	} else {
+		saveFileFinally(text, path);
+	}
+}
+function saveFileFinally(text, path) {
+	if (setting.saveWithNormalize) {
+		// Normalize 등 작업 후 저장
+		var smi = new Subtitle.SmiFile();
+		var input = smi.fromTxt(text).body;
+		Subtitle.Smi.normalize(input, true);
+		smi.body = input;
+		binder.save(smi.toTxt().trim(), path);
 	} else {
 		binder.save(text, path);
 	}
 }
+
 // 저장 후 C# 쪽에서 호출
 function afterSaveFile(path) {
 	tabs[tab].afterSave(path);
@@ -630,10 +643,27 @@ function openNewTab(text, path, forVideo) {
 		return;
 	}
 	
-	// SRT 파일 불러왔을 경우 SMI로 변환
-	if (path && path.substring(path.length - 4).toUpperCase() == ".SRT") {
-		path = path.substring(0, path.length - 4) + ".smi";
-		text = srt2smi(text);
+	if (path) {
+		if (path.substring(path.length - 4).toUpperCase() == ".SRT") {
+			// SRT 파일 불러왔을 경우 SMI로 변환
+			path = path.substring(0, path.length - 4) + ".smi";
+			text = srt2smi(text);
+		} else {
+			// SMI 파일 역Normalize
+			if (setting.saveWithNormalize) {
+				text = new Subtitle.SmiFile().fromTxt(text).antiNormalize().toTxt().trim();
+			} else {
+				var parts = text.split("-->");
+				for (var i = 0; i < parts.length; i++) {
+					var part = parts[i];
+					var start = part.indexOf("<!--");
+					if (start >= 0) {
+						parts[i] = part.substring(0, start) + part.substring(start).split(/<SYNC/gi).join("<​SYNC");
+					}
+				}
+				text = parts.join("-->");
+			}
+		}
 	}
 
 	var title = path ? ((path.length > 14) ? ("..." + path.substring(path.length - 14, path.length - 4)) : path.substring(0, path.length - 4)) : "새 문서";

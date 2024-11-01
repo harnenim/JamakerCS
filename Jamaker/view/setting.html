@@ -553,6 +553,7 @@ $(function() {
 			);
 		}
 		(refreshFuncs["replace"] = function(setting) {
+			refresh($("#replace"), setting);
 			replaceList.empty();
 			for (var i = 0; i < setting.replace.length; i++) {
 				appendReplace(setting.replace[i]);
@@ -603,7 +604,8 @@ $(function() {
 					replaces.push(item);
 				}
 			});
-			
+
+			setting.saveWithNormalize = $("input[name=saveWithNormalize]").prop("checked");
 			setting.replace = replaces;
 			setSaved("replace", true);
 			opener.setSetting(setting);
@@ -1279,6 +1281,7 @@ fieldset ol button,
 		<p>
 			자막 파일 저장 시 자동치환 동작 설정입니다. 
 		</p>
+		<label><input type="checkbox" name="saveWithNormalize" /> 특수태그 정규화 자동 적용</label><br />
 		<ol id="replaceList"></ol>
 		<button type="button" class="add-replace">추가</button>
 	</form>

@@ -541,7 +541,8 @@ Typing.prototype.outputWithCursorOnlyHangeul = function() {
 
 Subtitle = {
 	SyncType:
-	{	normal: 0
+	{	comment: -1
+	,	normal: 0
 	,	frame: 1
 	,	inner: 2
 	}
@@ -1120,6 +1121,9 @@ Subtitle.Smi = function(start, syncType, text) {
 }
 
 Subtitle.Smi.prototype.toTxt = function() {
+	if (this.syncType == Subtitle.SyncType.comment) { // Normalize 시에만 존재
+		return "<!--" + this.text + "-->";
+	}
 	return "<Sync Start=" + this.start + "><P Class=KRCC" + (this.syncType == Subtitle.SyncType.inner ? "\t" : (this.syncType == Subtitle.SyncType.frame ? " " : "")) + ">\n" + this.text;
 }
 Subtitle.Smi.smi2txt = function(smis) {
@@ -1329,7 +1333,22 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 					break;
 					
 				case "fade":
-					this.fade.push(attrs[i][1] == "in" ? 1 : attrs[i][1] == "out" ? -1 : 0);
+					var fade = attrs[i][1];
+					if (fade == "in") {
+						fade = 1;
+					} else if (fade == "out") {
+						fade = -1;
+					} else {
+						if (typeof fade == "string" && fade.length == 7 && fade[0] == "#") {
+							// 16진수 맞는지 확인
+							if (!isFinite("0x" + fade.substring(1))) {
+								fade = 0;
+							}
+						} else {
+							fade = 0;
+						}
+					}
+					this.fade.push(fade);
 					break;
 					
 				case "typing": {
@@ -1685,7 +1704,7 @@ Subtitle.Smi.fromAttr = function(attrs) {
 			if (last.u) text += "</U>";
 			
 			// 기존에 속성이 있었을 때 닫는 태그
-			if (last.fs > 0 || !last.fn == ("") || !last.fc == ("") || last.fade > 0 || last.typing != null)
+			if (last.fs > 0 || !last.fn == ("") || !last.fc == ("") || last.fade != 0 || last.typing != null)
 				text += "</FONT>";
 			
 			if (attr.furigana) {
@@ -1697,12 +1716,12 @@ Subtitle.Smi.fromAttr = function(attrs) {
 			if (attr.u) text += "<U>";
 			
 			// 신규 속성이 있을 때 여는 태그
-			if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade > 0 || attr.typing != null) {
+			if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.typing != null) {
 				text += "<FONT";
 				if (attr.fs   >  0 ) text += " size=\"" + attr.fs + "\"";
 				if (attr.fn   != "") text += " face=\"" + attr.fn + "\"";
 				if (attr.fc   != "") text += " color=\""+ Subtitle.Smi.colorFromAttr(attr.fc) + "\"";
-				if (attr.fade != 0 ) text += " fade=\"" + (attr.fade > 0 ? "in" : "out") + "\"";
+				if (attr.fade != 0 ) text += " fade=\"" + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\"";
 				if (attr.typing != null) text += " typing=\"" + Typing.Mode.toString(attr.typing.mode) + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString(attr.typing.cursor) + "\"";
 				text += ">";
 			}
@@ -1731,16 +1750,16 @@ Subtitle.Smi.fromAttr = function(attrs) {
 					|| (last.typing != null && attr.typing == null)
 			) {
 				// 기존에 속성이 있었을 때만 닫는 태그
-				if (last.fs > 0 || !last.fn == ("") || !last.fc == ("") || last.fade > 0 || last.typing != null)
+				if (last.fs > 0 || !last.fn == ("") || !last.fc == ("") || last.fade != 0 || last.typing != null)
 					text += "</FONT>";
 				
 				// 신규 속성이 있을 때만 여는 태그
-				if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade > 0 || attr.typing != null) {
+				if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.typing != null) {
 					text += "<FONT";
 					if (attr.fs   >  0 ) text += " size=\"" + attr.fs + "\"";
 					if (attr.fn   != "") text += " face=\"" + attr.fn + "\"";
 					if (attr.fc   != "") text += " color=\""+ Subtitle.Smi.colorFromAttr(attr.fc) + "\"";
-					if (attr.fade != 0 ) text += " fade=\"" + (attr.fade > 0 ? "in" : "out") + "\"";
+					if (attr.fade != 0 ) text += " fade=\"" + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\"";
 					if (attr.typing != null) text += " typing=\"" + Typing.Mode.toString(attr.typing.mode) + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString(attr.typing.cursor) + "\"";
 					text += ">";
 				}
@@ -1768,12 +1787,28 @@ Subtitle.Smi.getLineWidth = function(text) {
 	return Subtitle.Width.getWidth(Subtitle.Smi.toAttr(text));
 }
 
-Subtitle.Smi.Color = function(index, isIn, color) {
+Subtitle.Smi.Color = function(index, target, color) {
 	this.index = index;
-	this.isIn  = isIn;
-	this.r = Subtitle.Smi.Color.v(color.substring(0, 2));
-	this.g = Subtitle.Smi.Color.v(color.substring(2, 4));
-	this.b = Subtitle.Smi.Color.v(color.substring(4, 6));
+	
+	this.r = this.tr = Subtitle.Smi.Color.v(color.substring(0, 2));
+	this.g = this.tg = Subtitle.Smi.Color.v(color.substring(2, 4));
+	this.b = this.tb = Subtitle.Smi.Color.v(color.substring(4, 6));
+	
+	if (target == 1) {
+		this.r = this.g = this.b = 0;
+	} else if (target == -1) {
+		this.tr = this.tg = this.tb = 0;
+	} else {
+		if (typeof target == "string" && target.length == 7 && target[0] == "#") {
+			// 16진수 맞는지 확인
+			target = target.substring(1);
+			if (isFinite("0x" + target)) {
+				this.tr = Subtitle.Smi.Color.v(target.substring(0, 2));
+				this.tg = Subtitle.Smi.Color.v(target.substring(2, 4));
+				this.tb = Subtitle.Smi.Color.v(target.substring(4, 6));
+			}
+		}
+	}
 }
 Subtitle.Smi.Color.v = function(c) {
 	if (c.length == 1) {
@@ -1800,11 +1835,11 @@ Subtitle.Smi.Color.hex = function(v) {
 	return "" + Subtitle.Smi.Color.c(v / 16) + Subtitle.Smi.Color.c(v % 16);
 }
 Subtitle.Smi.Color.prototype.get = function(value, total) {
-	return Subtitle.Smi.Color.hex(this.r * value / total)
-	     + Subtitle.Smi.Color.hex(this.g * value / total)
-	     + Subtitle.Smi.Color.hex(this.b * value / total);
+	return Subtitle.Smi.Color.hex(((this.r * (total - value)) + (this.tr * value)) / total)
+	     + Subtitle.Smi.Color.hex(((this.g * (total - value)) + (this.tg * value)) / total)
+	     + Subtitle.Smi.Color.hex(((this.b * (total - value)) + (this.tb * value)) / total);
 }
-Subtitle.Smi.normalize = function(smis)  {
+Subtitle.Smi.normalize = function(smis, withComment=false)  {
 	var startIndex = -1;
 	for (var i = 1; i < smis.length; i++) {
 		if (smis[i].syncType == Subtitle.SyncType.inner) {
@@ -1834,15 +1869,15 @@ Subtitle.Smi.normalize = function(smis)  {
 			// 전후 싱크 타입이 맞을 때만 안전함
 			continue;
 		}
-
+		
 		var lower = smi.text.toLowerCase();
 		if (lower.indexOf(" fade=") > 0) {
 			var fadeColors = [];
 			var attrs = smi.toAttr();
+			var origin = smi.text;
 			for (var j = 0; j < attrs.length; j++) {
 				if (attrs[j].fade != 0) {
-					var color = (attrs[j].fc.length == 6) ? attrs[j].fc : "ffffff";
-					fadeColors.push(new Subtitle.Smi.Color(j, attrs[j].fade > 0, color)); // TODO Color
+					fadeColors.push(new Subtitle.Smi.Color(j, attrs[j].fade, ((attrs[j].fc.length == 6) ? attrs[j].fc : "ffffff")));
 					attrs[j].fade = 0;
 				}
 			}
@@ -1855,25 +1890,18 @@ Subtitle.Smi.normalize = function(smis)  {
 
 			for (var j = 0; j < fadeColors.length; j++) {
 				var color = fadeColors[j];
-				var attr = attrs[color.index];
-				if (color.isIn) {
-					attr.fc = color.get(1, 2 * frames);
-				} else {
-					attr.fc = color.get(2 * frames - 1, 2 * frames);
-				}
+				attrs[color.index].fc = color.get(1, 2 * frames);
 			}
 			smi.fromAttr(attrs);
 			for (var j = 1; j < frames; j++) {
 				for (var k = 0; k < fadeColors.length; k++) {
 					var color = fadeColors[k];
-					var attr = attrs[color.index];
-					if (color.isIn) {
-						attr.fc = color.get(1 + 2 * j, 2 * frames);
-					} else {
-						attr.fc = color.get(2 * frames - (1 + 2 * j), 2 * frames);
-					}
+					attrs[color.index].fc = color.get(1 + 2 * j, 2 * frames);
 				}
 				smis.splice(i + j, 0, new Subtitle.Smi((start * (frames - j) + end * j) / frames, Subtitle.SyncType.inner).fromAttr(attrs));
+			}
+			if (withComment) {
+				smi.text = "<!-- End=" + end + "\n" + origin.split("<").join("<​") + "\n-->\n" + smi.text;
 			}
 			i += frames - 1;
 			
@@ -1929,8 +1957,11 @@ Subtitle.Smi.normalize = function(smis)  {
 				if (!isLastAttr) {
 					tAttrs = tAttrs.concat(attrs.slice(attrIndex + 1, attrs.length - attrIndex - 1));
 				}
-
+				
 				smis.splice(i + j, 0, new Subtitle.Smi((start * (count - j) + end * (j)) / count,j == 0 ? smi.syncType : Subtitle.SyncType.inner).fromAttr(tAttrs));
+			}
+			if (withComment) {
+				smis[i].text = "<!-- End=" + end + "\n" + smi.text.split("<").join("<​") + "\n-->\n" + smis[i].text;
 			}
 			i += count - 1;
 		}
@@ -2106,6 +2137,74 @@ Subtitle.SmiFile.prototype.fromSync = function(syncs) {
 	}
 
 	this.body = smis;
+	return this;
+}
+
+Subtitle.SmiFile.prototype.antiNormalize = function() {
+	var commentRange = [-1, -1];
+	var comment = null;
+	
+	for (i = 0; i < this.body.length; i++) {
+		var smi = this.body[i];
+		
+		if (commentRange[0] < 0) {
+			// 주석 시작점 찾기
+			if (!smi.text.startsWith("<!-- End=")) {
+				continue;
+			}
+			commentRange[0] = i;
+			
+			var commentEnd = smi.text.indexOf("-->");
+			if (commentEnd < 0) {
+				// 주석이 여기에서 안 끝났을 경우
+				continue;
+			}
+			// 주석이 여기에서 온전히 끝났을 경우
+			comment = smi.text.substring(9, commentEnd).trim();
+			commentRange[1] = i + 1;
+			
+		} else if (commentRange[1] < 0) {
+			// 주석 나머지 내용
+			var commentEnd = smi.text.indexOf("-->");
+			if (commentEnd < 0) {
+				// 주석이 여기에서 안 끝났을 경우
+				continue;
+			}
+			// 주석이 여기에서 끝났을 경우
+			comment += "\n" + smi.text.substring(0, commentEnd).trim();
+			commentRange[1] = i + 1;
+			
+		} else {
+			continue;
+		}
+
+		comment = comment.split("<​").join("<");
+		try {
+			var index = comment.indexOf("\n");
+			var syncEnd = Number(comment.substring(0, index));
+			
+			// 주석 시작 싱크 내용물을 주석 내용물로
+			// TODO: 추후 이게 한 줄이 아니게 될 수도 있음
+			this.body[commentRange[0]].text = comment.substring(index + 1);
+			
+			// 특수 태그 자동 생성 내용물 삭제
+			var removeStart = commentRange[0] + 1;
+			var removeEnd = removeStart;
+			for(; removeEnd < this.body.length; removeEnd++) {
+				if (this.body[removeEnd].start >= syncEnd) {
+					break;
+				}
+			}
+			this.body.splice(removeStart, removeEnd - removeStart);
+			
+		} catch (e) {
+			console.log(e);
+		}
+		
+		commentRange = [-1, -1];
+		comment = "";
+	}
+	
 	return this;
 }
 
