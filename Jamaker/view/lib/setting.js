@@ -78,7 +78,7 @@ var DEFAULT_SETTING =
 		,	"싱크 표현에 대하여|openHelp('aboutSync')"
 		,	"특수 태그에 대하여|openHelp('aboutTag')"
 		,	"화면 싱크 매니저 도움말|openHelp('SyncManager')"
-//		,	"업데이트 확인|openHelp('update')"
+		,	"업데이트 확인|openHelp('update')"
 		]
 	]
 ,	window:
