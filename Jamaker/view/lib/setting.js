@@ -4,17 +4,22 @@ var checkVersion;
 		if (!version) version = "";
 
 		var notify = [];
+		var notified = {};
 		if (version < lastNotifyForCommand) {
 			notify.push("단축키");
+			notified.command = true;
 		}
 		if (version < lastNotifyForAutoComplete) {
 			notify.push("자동완성");
+			notified.autoComplete = true;
 		}
 		if (version < lastNotifyForStyle) {
 			notify.push("스타일");
+			notified.style = true;
 		}
 		if (version < lastNotifyForMenu) {
 			notify.push("메뉴");
+			notified.menu = true;
 		}
 		if (notify.length) {
 			/* 창 초기화 전에 동작하지 않도록 의도적으로 timeout
@@ -27,15 +32,16 @@ var checkVersion;
 				alert(notify.join(", ") + " 기본값이 변경되었습니다.\n설정에서 검토하시기 바랍니다.");
 			}, 1);
 		}
+		return notified;
 	}
-	var lastNotifyForCommand = "2023.04.07.v2";
+	var lastNotifyForCommand = "2024.11.02.v1";
 	var lastNotifyForAutoComplete = "";
 	var lastNotifyForStyle = "2023.04.06.v1";
-	var lastNotifyForMenu = "2023.08.28.v1";
+	var lastNotifyForMenu = "2024.11.02.v1";
 }
 
 var DEFAULT_SETTING =
-{	version: "2024.03.04.v1"
+{	version: "2024.11.02.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -167,6 +173,8 @@ var DEFAULT_SETTING =
 			   + '}\nvar result = blocks.join("");\n'
 			   + '\n'
 			   + 'editor.setText(prev + result + next, [text.selection[0], text.selection[0] + result.length]);'
+		,	'7': '/* Zero-width */\neditor.inputText("​")'
+		,	'8': '/* ㄱ한자1 */\neditor.inputText("　")'
 		,	'9': '/* 색상태그 시작 */\n' + 'editor.inputText("<font color=\\"#aaaaaa\\">")'
 		,	'0': '/* 색상태그 종료 */\n' + 'editor.inputText("</font>")'
 		,	'D': '/* 줄 삭제 */\n' + 'editor.deleteLine();'
