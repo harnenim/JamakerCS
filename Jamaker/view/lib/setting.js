@@ -186,7 +186,7 @@ var DEFAULT_SETTING =
 		{	't': '/* 일괄 싱크 입력 */\n' + 'editor.reSyncPrompt();'
 		,	'1': '/* 맞춤법 검사기 */\n'
 			   + 'var text = editor.getText();\n'
-			+ 'extSubmit("post", "https://nara-speller.co.kr/speller/results", "text1");'
+			   + 'extSubmit("post", "https://nara-speller.co.kr/speller/results", "text1");'
 		,	'2': '/* 국어사전 */\n'
 			   + 'var text = editor.getText();\n'
 			   + 'extSubmit("get", "https://ko.dict.naver.com/%23/search", "query");'

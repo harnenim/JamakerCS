@@ -76,6 +76,9 @@ function stringify(obj, depth=0, pad=2, isChild=false) {
 		}
 		default: {
 			str = JSON.stringify(obj);
+			if (typeof str != "string") {
+				str = "null";
+			}
 		}
 	}
 	return str;
