@@ -25,6 +25,7 @@ function linesToText(lines) {
 var SmiEditor = function(text, path) {
 	var editor = this;
 	
+	this.initialize = false;
 	this.area = $("<div class='tab'>");
 	this.area.append(this.colSync = $("<div class='col-sync'>"));
 	this.area.append($("<div class='col-sync' style='background: transparent;'>")); // 블록지정 방지 영역
@@ -74,7 +75,7 @@ var SmiEditor = function(text, path) {
 	
 	this.text = "";
 	this.lines = [["", 0, TYPE.TEXT]];
-
+	
 	this.syncUpdating = false;
 	this.needToUpdateSync = false;
 	
@@ -1103,7 +1104,7 @@ SmiEditor.prototype.updateSync = function(range) {
 	
 	// 프로세스 분리할 필요가 있나?
 	var self = this;
-	setTimeout(function() {
+	var thread = function() {
 		var textLines = text.split("\n");
 		var syncLines = [];
 		
@@ -1332,7 +1333,7 @@ SmiEditor.prototype.updateSync = function(range) {
 		if (self.input.scrollTop() != self.colSync.scrollTop()) {
 			self.input.scroll();
 		}
-
+		
 		self.afterChangeSaved(self.isSaved());
 		
 		setTimeout(function() {
@@ -1341,7 +1342,13 @@ SmiEditor.prototype.updateSync = function(range) {
 				self.updateSync();
 			}
 		}, 100);
-	}, 1);
+	};
+	if (this.initialized) {
+		setTimeout(thread, 1);
+	} else {
+		thread();
+		this.initialized = true;
+	}
 }
 SmiEditor.prototype.moveLine = function(toNext) {
 	if (this.syncUpdating) return;

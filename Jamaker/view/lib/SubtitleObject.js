@@ -1903,7 +1903,7 @@ Subtitle.Smi.normalize = function(smis, withComment=false)  {
 				smis.splice(i + j, 0, new Subtitle.Smi((start * (frames - j) + end * j) / frames, Subtitle.SyncType.inner).fromAttr(attrs));
 			}
 			if (withComment) {
-				smi.text = "<!-- End=" + end + "\n" + origin.split("<").join("<​") + "\n-->\n" + smi.text;
+				smi.text = "<!-- End=" + end + "\n" + origin.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smi.text;
 			}
 			i += frames - 1;
 			
@@ -1963,7 +1963,7 @@ Subtitle.Smi.normalize = function(smis, withComment=false)  {
 				smis.splice(i + j, 0, new Subtitle.Smi((start * (count - j) + end * (j)) / count,j == 0 ? smi.syncType : Subtitle.SyncType.inner).fromAttr(tAttrs));
 			}
 			if (withComment) {
-				smis[i].text = "<!-- End=" + end + "\n" + smi.text.split("<").join("<​") + "\n-->\n" + smis[i].text;
+				smis[i].text = "<!-- End=" + end + "\n" + smi.text.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[i].text;
 			}
 			i += count - 1;
 		}
@@ -2009,11 +2009,11 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 	this.header = "";
 	this.footer = "";
 	this.body = [];
-
+	
 	var index = 0;
 	var pos = 0;
 	var last = null;
-
+	
 	while ((pos = txt.indexOf('<', index)) >= 0) {
 		if (txt.length > pos + 6 && txt.substring(pos, pos + 6).toUpperCase() == ("<SYNC ")) {
 			if (last == null) {
@@ -2040,7 +2040,14 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 			this.body.push(last = new Subtitle.Smi(start));
 			
 		} else if (txt.length > pos + 4 && txt.substring(pos, pos + 3).toUpperCase() == ("<P ")) {
-			index = txt.indexOf('>', pos + 3) + 1;
+			var endOfP = txt.indexOf('>', pos + 3) + 1;
+			if (last == null) {
+				this.header = txt.substring(0, pos);
+			} else {
+				// last.text가 있음 -> <P> 태그가 <SYNC> 태그 바로 뒤에 붙은 게 아님 - 별도 텍스트로 삽입
+				last.text += txt.substring(index, last.text ? endOfP : pos);
+			}
+			index = endOfP;
 			if (index == 0) {
 				index = txt.length;
 				break;
@@ -2179,17 +2186,14 @@ Subtitle.SmiFile.prototype.antiNormalize = function() {
 		} else {
 			continue;
 		}
-
-		comment = comment.split("<​").join("<");
+		
+		comment = comment.split("<​").join("<").split("​>").join(">");
 		try {
 			var index = comment.indexOf("\n");
 			var syncEnd = Number(comment.substring(0, index));
 			
-			// 주석 시작 싱크 내용물을 주석 내용물로
-			// TODO: 추후 이게 한 줄이 아니게 될 수도 있음
-			this.body[commentRange[0]].text = comment.substring(index + 1);
-			
-			// 특수 태그 자동 생성 내용물 삭제
+			// 자동 생성 내용물 삭제하고 주석 내용물 복원
+			comment = comment.substring(index + 1);
 			var removeStart = commentRange[0] + 1;
 			var removeEnd = removeStart;
 			for(; removeEnd < this.body.length; removeEnd++) {
@@ -2197,7 +2201,23 @@ Subtitle.SmiFile.prototype.antiNormalize = function() {
 					break;
 				}
 			}
-			this.body.splice(removeStart, removeEnd - removeStart);
+			if (comment.length > 6 && comment.substring(0, 6).toUpperCase() == "<SYNC ") {
+				var newBody = new Subtitle.SmiFile().fromTxt(comment).body;
+				if (commentRange[0] > 0) {
+					newBody = this.body.slice(0, commentRange[0]).concat(newBody);
+				}
+				if (removeEnd < this.body.length
+						&& !this.body[removeEnd].text.split("&nbsp;").join("").trim()
+						&& !newBody[newBody.length - 1].text.split("&nbsp;").join("").trim()) {
+					this.body = newBody.concat(this.body.slice(removeEnd + 1));
+				} else {
+					this.body = newBody.concat(this.body.slice(removeEnd));
+				}
+				
+			} else {
+				this.body[commentRange[0]].text = comment;
+				this.body.splice(removeStart, removeEnd - removeStart);
+			}
 			
 		} catch (e) {
 			console.log(e);
