@@ -22,10 +22,11 @@ function linesToText(lines) {
 	return textLines.join("\n");
 }
 
-var SmiEditor = function(text, path) {
+var SmiEditor = function(text) {
 	var editor = this;
-	
-	this.area = $("<div class='tab'>");
+
+	this.initialize = false;
+	this.area = $("<div class='hold'>");
 	this.area.append(this.colSync = $("<div class='col-sync'>"));
 	this.area.append($("<div class='col-sync' style='background: transparent;'>")); // 블록지정 방지 영역
 	this.area.append(this.input   = $("<textarea class='input' spellcheck='false'>"));
@@ -68,13 +69,10 @@ var SmiEditor = function(text, path) {
 	} else {
 		this.saved = "";
 	}
-	if (path) {
-		this.path = path;
-	}
 	
 	this.text = "";
 	this.lines = [["", 0, TYPE.TEXT]];
-
+	
 	this.syncUpdating = false;
 	this.needToUpdateSync = false;
 	
@@ -88,7 +86,7 @@ var SmiEditor = function(text, path) {
 		if (SmiEditor.autoComplete.length) {
 			editor.act = new AutoCompleteTextarea(editor.input, SmiEditor.autoComplete, function() {
 				editor.history.log();
-				editor.updateSync();
+				editor.updateSync(null, 1);
 			});
 		}
 	}, 1);
@@ -217,10 +215,7 @@ SmiEditor.makeSyncLine = function(time, type) {
 SmiEditor.prototype.isSaved = function() {
 	return (this.saved == this.input.val());
 };
-SmiEditor.prototype.afterSave = function(path) {
-	if (path) {
-		this.path = path;
-	}
+SmiEditor.prototype.afterSave = function() {
 	this.saved = this.input.val();
 	this.afterChangeSaved(true);
 };
@@ -1083,7 +1078,7 @@ SmiEditor.prototype.taggingRange = function(tag) {
 	this.tagging(tag, true);
 }
 
-SmiEditor.prototype.updateSync = function(range) {
+SmiEditor.prototype.updateSync = function(range=null) {
 	if (this.syncUpdating) {
 		// 이미 렌더링 중이면 대기열 활성화
 		this.needToUpdateSync = true;
@@ -1103,7 +1098,7 @@ SmiEditor.prototype.updateSync = function(range) {
 	
 	// 프로세스 분리할 필요가 있나?
 	var self = this;
-	setTimeout(function() {
+	var thread = function() {
 		var textLines = text.split("\n");
 		var syncLines = [];
 		
@@ -1332,7 +1327,7 @@ SmiEditor.prototype.updateSync = function(range) {
 		if (self.input.scrollTop() != self.colSync.scrollTop()) {
 			self.input.scroll();
 		}
-
+		
 		self.afterChangeSaved(self.isSaved());
 		
 		setTimeout(function() {
@@ -1341,7 +1336,13 @@ SmiEditor.prototype.updateSync = function(range) {
 				self.updateSync();
 			}
 		}, 100);
-	}, 1);
+	};
+	if (this.initialized) {
+		setTimeout(thread, 1);
+	} else {
+		thread();
+		this.initialized = true;
+	}
 }
 SmiEditor.prototype.moveLine = function(toNext) {
 	if (this.syncUpdating) return;
@@ -1572,12 +1573,17 @@ SmiEditor.prototype.moveToSide = function(direction) {
 	}
 	
 	// 다음 싱크 라인 찾기
-	var nextLine = cursorLine + 1;
+	var nextLine = cursorLine;
 	for (; nextLine < this.lines.length; nextLine++) {
 		if (this.lines[nextLine][LINE.SYNC]) {
 			break;
 		}
 		if (this.lines[nextLine][LINE.TEXT].toUpperCase().startsWith("</BODY>")) {
+			break;
+		}
+		// <br>로 끝나는 라인이 아닐 경우 아직 싱크 찍지 않은 부분으로 간주
+		if (!this.lines[nextLine][LINE.TEXT].toUpperCase().endsWith("<BR>")) {
+			nextLine++;
 			break;
 		}
 	}
@@ -1872,7 +1878,28 @@ SmiEditor.Viewer = {
 					, true);
 		}
 	,	refresh: function() {
-			binder.updateViewerLines(JSON.stringify(SmiEditor.selected ? SmiEditor.selected.lines : [["", 0, TYPE.TEXT]]));
+			setTimeout(function() {
+				var lines = [[["", 0, TYPE.TEXT]]];
+				if (SmiEditor.selected) {
+					if (SmiEditor.selected.owner) {
+						var holds = SmiEditor.selected.owner.holds.slice(0);
+						holds.sort(function(a, b) {
+							var aPos = a.pos;
+							var bPos = b.pos;
+							if (aPos < bPos) return 1;
+							if (aPos > bPos) return -1;
+							return 0;
+						});
+						lines = [];
+						for (var i = 0; i < holds.length; i++) {
+							lines.push(holds[i].lines);
+						}
+					} else {
+						lines[0] = SmiEditor.selected.lines;
+					}
+				}
+				binder.updateViewerLines(JSON.stringify(lines));
+			}, 1);
 		}
 };
 

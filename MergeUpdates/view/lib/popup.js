@@ -12,7 +12,9 @@ window.close = function() {
 	if (windowName != "finder") {
 		(opener ? opener.binder : binder).focus("editor");
 	}
-	window._close();
+	if (opener) {
+		window._close();
+	}
 };
 
 // 종료 전 확인 필요한 경우 override
