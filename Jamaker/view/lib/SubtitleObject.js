@@ -1555,6 +1555,11 @@ Subtitle.Smi.toAttr = function(text) {
 										break;
 								}
 							}
+							// 끝나는 따옴표를 찾지 못함
+							if (attrPos == text.length) {
+								attrs.push([name, text.substring(attrValueStart, attrPos).toLowerCase()]);
+								mode = -1;
+							}
 							break;
 						}
 						case 3: { // 속성 값 (큰 따옴표)
@@ -1570,6 +1575,11 @@ Subtitle.Smi.toAttr = function(text) {
 										attrNameStart = attrPos + 1;
 										break;
 								}
+							}
+							// 끝나는 따옴표를 찾지 못함
+							if (attrPos == text.length) {
+								attrs.push([name, text.substring(attrValueStart, attrPos).toLowerCase()]);
+								mode = -1;
 							}
 							break;
 						}
@@ -1839,7 +1849,18 @@ Subtitle.Smi.Color.prototype.get = function(value, total) {
 	     + Subtitle.Smi.Color.hex(((this.g * (total - value)) + (this.tg * value)) / total)
 	     + Subtitle.Smi.Color.hex(((this.b * (total - value)) + (this.tb * value)) / total);
 }
-Subtitle.Smi.normalize = function(smis, withComment=false)  {
+Subtitle.Smi.normalize = function(smis, withComment=false) {
+	var origin = new Subtitle.SmiFile();
+	origin.body = smis;
+	origin.fromTxt(origin.toTxt());
+	var result = {
+			origin: origin.body
+		,	result: smis
+		,	logs: []
+	};
+	var added = 0;
+
+	// 중간 싱크 재계산
 	var startIndex = -1;
 	for (var i = 1; i < smis.length; i++) {
 		if (smis[i].syncType == Subtitle.SyncType.inner) {
@@ -1855,7 +1876,7 @@ Subtitle.Smi.normalize = function(smis, withComment=false)  {
 					var count = endIndex - startIndex;
 
 					for (var j = 1; j < count; j++) {
-						smis[startIndex + j].start = ((count - j) * startSync + j * endSync) / count;
+						smis[startIndex + j].start = Math.round(((count - j) * startSync + j * endSync) / count);
 					}
 				}
 				startIndex = -1;
@@ -1865,12 +1886,10 @@ Subtitle.Smi.normalize = function(smis, withComment=false)  {
 
 	for (var i = 0; i < smis.length - 1; i++) {
 		var smi = smis[i];
-		/*
 		if (smi.syncType != smis[i + 1].syncType) {
 			// 전후 싱크 타입이 맞을 때만 안전함
 			continue;
 		}
-		*/
 		
 		var lower = smi.text.toLowerCase();
 		if (lower.indexOf(" fade=") > 0) {
@@ -1905,7 +1924,15 @@ Subtitle.Smi.normalize = function(smis, withComment=false)  {
 			if (withComment) {
 				smi.text = "<!-- End=" + end + "\n" + origin.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smi.text;
 			}
-			i += frames - 1;
+			result.logs.push({
+					from: [i - added, i - added + 1]
+				,	to  : [i, i + frames]
+				,	start: start
+				,	end: end
+			});
+			var add = frames - 1;
+			i += add;
+			added += add;
 			
 		} else if (lower.indexOf(" typing=") > 0) {
 			// 타이핑은 한 싱크에 하나만 가능
@@ -1965,9 +1992,19 @@ Subtitle.Smi.normalize = function(smis, withComment=false)  {
 			if (withComment) {
 				smis[i].text = "<!-- End=" + end + "\n" + smi.text.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[i].text;
 			}
-			i += count - 1;
+			result.logs.push({
+					from: [i - added, i - added + 1]
+				,	to  : [i, i + count]
+				,	start: start
+				,	end: end
+			});
+			var add = count - 1;
+			i += add;
+			added += add;
 		}
 	}
+	
+	return result;
 }
 Subtitle.Smi.fillEmptySync = function(smis) {
 	for (var i = 0; i < smis.length - 1; i++) {

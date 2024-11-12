@@ -37,11 +37,12 @@ $(function() {
 				var FL = opener.FL;
 				for (var i = 0; i < input.body.length; i++) {
 					var item = input.body[i];
-					item.start = Math.max(1, Math.round((Math.round(item.start / FL) - 0.5) * FL));
+					item.start = Math.max(1, ((Math.round(item.start / FL) - 0.5) * FL));
 				}
 			}
 		}
 		var ass = new Subtitle.AssFile().fromSync(input.toSync());
+		/*
 		{	// 팟플레이어 겹치는 싱크 보정
 			var syncMap = {};
 			for (var i = 0; i < ass.body.length; i++) {
@@ -55,6 +56,7 @@ $(function() {
 				if (syncMap[item.end  ] > 1) item.end   += 1;
 			}
 		}
+		*/
 		var output = ass.toTxt();
 		
 		var lines = output.split("\n");

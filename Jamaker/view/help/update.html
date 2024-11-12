@@ -11,8 +11,12 @@
 windowName = "help";
 $(function() {
 	$("#version").text(opener.setting.version);
-
-	$.ajax({url : "https://harnenim.github.io/Jamaker/updates.json"
+	
+	var url = (opener && opener.binder && !opener.binder._)
+		? /* C# 프로그램에서 서버 호출 */ "https://harnenim.github.io/Jamaker/updates.json"
+		: /* 웹버전 내부에서 로컬 호출 */ "../../updates.json"
+		;
+	$.ajax({url : url
 		,	success: function(updates) {
 				var isLatest = true;
 				var log = [];

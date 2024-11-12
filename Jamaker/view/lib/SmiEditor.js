@@ -1084,7 +1084,7 @@ SmiEditor.prototype.taggingRange = function(tag) {
 	this.tagging(tag, true);
 }
 
-SmiEditor.prototype.updateSync = function(range) {
+SmiEditor.prototype.updateSync = function(range=null) {
 	if (this.syncUpdating) {
 		// 이미 렌더링 중이면 대기열 활성화
 		this.needToUpdateSync = true;
@@ -1579,12 +1579,17 @@ SmiEditor.prototype.moveToSide = function(direction) {
 	}
 	
 	// 다음 싱크 라인 찾기
-	var nextLine = cursorLine + 1;
+	var nextLine = cursorLine;
 	for (; nextLine < this.lines.length; nextLine++) {
 		if (this.lines[nextLine][LINE.SYNC]) {
 			break;
 		}
 		if (this.lines[nextLine][LINE.TEXT].toUpperCase().startsWith("</BODY>")) {
+			break;
+		}
+		// <br>로 끝나는 라인이 아닐 경우 아직 싱크 찍지 않은 부분으로 간주
+		if (!this.lines[nextLine][LINE.TEXT].toUpperCase().endsWith("<BR>")) {
+			nextLine++;
 			break;
 		}
 	}
@@ -1879,7 +1884,9 @@ SmiEditor.Viewer = {
 					, true);
 		}
 	,	refresh: function() {
-			binder.updateViewerLines(JSON.stringify(SmiEditor.selected ? SmiEditor.selected.lines : [["", 0, TYPE.TEXT]]));
+			setTimeout(function() {
+				binder.updateViewerLines(JSON.stringify(SmiEditor.selected ? SmiEditor.selected.lines : [["", 0, TYPE.TEXT]]));
+			}, 1);
 		}
 };
 
