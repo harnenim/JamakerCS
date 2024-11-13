@@ -22,11 +22,11 @@ function linesToText(lines) {
 	return textLines.join("\n");
 }
 
-var SmiEditor = function(text, path) {
+var SmiEditor = function(text) {
 	var editor = this;
-	
+
 	this.initialize = false;
-	this.area = $("<div class='tab'>");
+	this.area = $("<div class='hold'>");
 	this.area.append(this.colSync = $("<div class='col-sync'>"));
 	this.area.append($("<div class='col-sync' style='background: transparent;'>")); // 블록지정 방지 영역
 	this.area.append(this.input   = $("<textarea class='input' spellcheck='false'>"));
@@ -69,9 +69,6 @@ var SmiEditor = function(text, path) {
 	} else {
 		this.saved = "";
 	}
-	if (path) {
-		this.path = path;
-	}
 	
 	this.text = "";
 	this.lines = [["", 0, TYPE.TEXT]];
@@ -89,7 +86,7 @@ var SmiEditor = function(text, path) {
 		if (SmiEditor.autoComplete.length) {
 			editor.act = new AutoCompleteTextarea(editor.input, SmiEditor.autoComplete, function() {
 				editor.history.log();
-				editor.updateSync();
+				editor.updateSync(null, 1);
 			});
 		}
 	}, 1);
@@ -218,10 +215,7 @@ SmiEditor.makeSyncLine = function(time, type) {
 SmiEditor.prototype.isSaved = function() {
 	return (this.saved == this.input.val());
 };
-SmiEditor.prototype.afterSave = function(path) {
-	if (path) {
-		this.path = path;
-	}
+SmiEditor.prototype.afterSave = function() {
 	this.saved = this.input.val();
 	this.afterChangeSaved(true);
 };
@@ -1156,6 +1150,7 @@ SmiEditor.prototype.updateSync = function(range=null) {
 			}
 			range[1]++;
 		}
+		
 		// 수정된 범위 직후의 싱크 찾기
 		for (i = range[1] + 1; i < self.lines.length; i++) {
 			if (self.lines[i][LINE.TYPE]) {
@@ -1885,7 +1880,26 @@ SmiEditor.Viewer = {
 		}
 	,	refresh: function() {
 			setTimeout(function() {
-				binder.updateViewerLines(JSON.stringify(SmiEditor.selected ? SmiEditor.selected.lines : [["", 0, TYPE.TEXT]]));
+				var lines = [[["", 0, TYPE.TEXT]]];
+				if (SmiEditor.selected) {
+					if (SmiEditor.selected.owner) {
+						var holds = SmiEditor.selected.owner.holds.slice(0);
+						holds.sort(function(a, b) {
+							var aPos = a.pos;
+							var bPos = b.pos;
+							if (aPos < bPos) return 1;
+							if (aPos > bPos) return -1;
+							return 0;
+						});
+						lines = [];
+						for (var i = 0; i < holds.length; i++) {
+							lines.push(holds[i].lines);
+						}
+					} else {
+						lines[0] = SmiEditor.selected.lines;
+					}
+				}
+				binder.updateViewerLines(JSON.stringify(lines));
 			}, 1);
 		}
 };

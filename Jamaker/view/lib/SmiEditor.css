@@ -54,17 +54,111 @@
 .tab.not-saved {
 	background: #f86;
 }
-.tab > * {
+.hold-selector {
+	display: none;
+	overflow: hidden;
 	position: absolute;
 	top: 2px;
+	left: 2px;
+	right: 2px;
+	height: 80px;
+	border: 1px solid #aaa;
+	background: #ccc;
+}
+.hold-selector > .selector {
+	overflow: hidden;
+	position: absolute;
+	top: 30%;
+	height: 40%;
+	border: 1px solid #aaa;
+	background: #ddd;
+}
+.hold-selector > .selector.selected {
+	background: #eee;
+}
+.hold-selector > .selector:hover {
+	background: #eee;
+	z-index: 9999;
+}
+.hold-selector > .selector .hold-name {
+	padding: 2px;
+	line-height: 28px;
+}
+.hold-selector > .selector button {
+	position: absolute;
+	padding: 0;
+	font-size: 12px;
+}
+.hold-selector > .selector button:hover {
+	background: #fff;
+}
+.hold-selector > .selector .btn-hold-remove {
+	top: 0;
+	right: 0;
 	bottom: 0;
+	width: 20px;
+	border-width: 0 0 0 1px;
+	font-size: 20px;
+}
+.hold-selector > .selector .btn-hold-upper {
+	top: 0;
+	right: 20px;
+	width: 20px;
+	height: 50%;
+	border-width: 0 0 1px 1px;
+}
+.hold-selector > .selector .btn-hold-lower {
+	bottom: 0;
+	right: 20px;
+	width: 20px;
+	height: 50%;
+	border-width: 1px 0 0 1px;
+}
+.hold-selector > .selector .btn-hold-remove:after {
+	content: "×";
+}
+.hold-selector > .selector .btn-hold-upper:after {
+	content: "▲";
+	font-size: 10px;
+}
+.hold-selector > .selector .btn-hold-lower:after {
+	content: "▼";
+	font-size: 10px;
+}
+.holds {
+	overflow: hidden;
+	position: absolute;
+	top: 2px;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+.hold {
+	overflow: hidden;
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+.tab.with-hold .hold-selector {
+	display: block;
+}
+.tab.with-hold .holds {
+	top: 84px;
+}
+.hold > * {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+}
+.hold * {
 	font-family: '맑은 고딕';
 	font-size: 14px;
 	line-height: 20px;
-	white-space: pre;
+	color: #000;
+	caret-color: #000;
 	outline: 0;
 }
-.tab > .col-sync {
+.hold > .col-sync {
 	left: 0;
 	width: 100px;
 	height: 100%;
@@ -74,9 +168,10 @@
 	border: 1px solid transparent;
 	background: #f0f0f0;
 }
-.tab > .input {
+.hold > .input {
 	left: 100px;
 	right: 0;
+	white-space: pre;
 	overflow: scroll;
 	resize: none;
 	border: 1px solid #aaa;

@@ -12,10 +12,11 @@ var SmiEditor = {};
 var title = document.getElementsByTagName("title")[0];
 var lastTab = null;
 var time = 0;
-var showText = "";
-var hasLine = false;
-var i = -1;
-var normalizedIndex = 0;
+var showText = [];
+var hasLine = [];
+var indexes = [];
+var normalizedLines = [];
+var normalizedIndex = [];
 
 var style = null;
 var setting = {}
@@ -26,16 +27,25 @@ function setSetting(jsonSetting) {
 	}
 	style.html("#viewer {\n" + setting.viewer.css + "}");
 }
-var lines = [];
-var normalizedLines = null;
+var lines = [[],[],[]];
 var viewer = null;
+var viewers = [];
 function setLines(newLines) {
 	lines = JSON.parse(newLines);
-	normalizedLines = null;
+	if (lines.length == 0) {
+		lines.push([]);
+	}
+	normalizedLines = [];
 	
 	var receiveTime = time;
 	time = -1;
-	if (viewer) viewer.html("");
+	if (viewer) {
+		viewer.empty();
+		viewers = [];
+		for (var i = 0; i < lines.length; i++) {
+			viewer.append(viewers[i] = $("<div>"));
+		}
+	}
 	refreshTime(receiveTime, true); // 내용 바꿀 땐 시간 표시는 갱신 X
 }
 function setTitle(text) {
@@ -54,101 +64,103 @@ function refreshTime(receiveTime, withoutTitle) {
 		titleTime = receiveTime;
 	}
 	
-	if (receiveTime < time || time < 0) {
-		// 역방향 탐색일 경우 초기화
-		i = -1;
-		viewer.html("");
-	}
-	// 현재 시간 이전의 가장 마지막 싱크 찾기
-	var index = i;
-	for (var j = (i < 0 ? 0 : i); j < lines.length; j++) {
-		if (lines[j][LINE.SYNC]) {
-			if (lines[j][LINE.SYNC] > receiveTime) {
-				break;
-			}
-			index = j;
+	for (var hold = 0; hold < lines.length; hold++) {
+		if (receiveTime < time || time < 0) {
+			// 역방향 탐색일 경우 초기화
+			indexes[hold] = -1;
+			viewers[hold].empty();
 		}
-	}
-	if (index == i) {
-		// 변화 없음
-		if (normalizedLines) {
-			// 현재 시간 이전의 가장 마지막 싱크 찾기
-			var index = normalizedIndex;
-			for (var j = 0; j < normalizedLines.length; j++) {
-				if (normalizedLines[j].start > receiveTime) {
+		// 현재 시간 이전의 가장 마지막 싱크 찾기
+		var index = indexes[hold];
+		for (var j = (indexes[hold] < 0 ? 0 : indexes[hold]); j < lines[hold].length; j++) {
+			if (lines[hold][j][LINE.SYNC]) {
+				if (lines[hold][j][LINE.SYNC] > receiveTime) {
 					break;
 				}
 				index = j;
 			}
-			if (index == normalizedIndex) {
-				// 변화 없음
-			} else {
-				setTextToView(normalizedLines[normalizedIndex = index].text);
-				time = receiveTime;
+		}
+		if (index == indexes[hold]) {
+			// 변화 없음
+			if (normalizedLines[hold]) {
+				// 현재 시간 이전의 가장 마지막 싱크 찾기
+				var index = normalizedIndex[hold];
+				for (var j = 0; j < normalizedLines[hold].length; j++) {
+					if (normalizedLines[hold][j].start > receiveTime) {
+						break;
+					}
+					index = j;
+				}
+				if (index == normalizedIndex[hold]) {
+					// 변화 없음
+				} else {
+					setTextToView(normalizedLines[hold][normalizedIndex[hold] = index].text, hold);
+					time = receiveTime;
+				}
 			}
+			continue;
 		}
-		return;
-	}
-	i = index;
-	if (i < 0) {
-		setTextToView("");
-		time = receiveTime;
-		return;
-	}
-	
-	normalizedLines = null;
-	hasLine = false;
-	var showLines = [];
-	var nextSyncLine = null;
-	for (var j = i + 1; j < lines.length; j++) {
-		if (lines[j][LINE.SYNC]) {
-			nextSyncLine = lines[j];
-			break;
+		indexes[hold] = index;
+		if (indexes[hold] < 0) {
+			setTextToView("", hold);
+			time = receiveTime;
+			continue;
 		}
-		var line = lines[j][LINE.TEXT].split(/<br>/gi);
-		for (var k = 0; k < line.length; k++) {
-			if (k == 0 || k < line.length - 1 || line[k].length) {
-				showLines.push(line[k]);
-			}
-		}
-	}
-	// 줄표 있을 때 왼쪽 정렬
-	if (setting.viewer.useAlign && showLines.length < 4) { // 줄 개수 제한 없으면 싱크 안 찍은 전체 내용에 대해 동작해버림
-		for (var k = 0; k < showLines.length; k++) {
-			if ($("<span>").html(showLines[k][0]).text()[0] == '-') {
-				hasLine = true;
+		
+		normalizedLines[hold] = null;
+		hasLine[hold] = false;
+		var showLines = [];
+		var nextSyncLine = null;
+		for (var j = indexes[hold] + 1; j < lines[hold].length; j++) {
+			if (lines[hold][j][LINE.SYNC]) {
+				nextSyncLine = lines[hold][j];
 				break;
 			}
-		}
-	}
-	if (hasLine) {
-		for (var j = 0; j < showLines.length; j++) {
-			var line = showLines[j];
-			if ($("<span>").html(line).text()[0] != '-') {
-				line = "<span style='opacity: 0;'>-</span>" + line;
+			var line = lines[hold][j][LINE.TEXT].split(/<br>/gi);
+			for (var k = 0; k < line.length; k++) {
+				if (k == 0 || k < line.length - 1 || line[k].length) {
+					showLines.push(line[k]);
+				}
 			}
-			showLines[j] = line + "<span style='opacity: 0;'>-</span>";
 		}
-	}
-	showText = showLines.join("<br>");
-	if (nextSyncLine && setting.saveWithNormalize) {
-		var toNormalize = new Subtitle.SmiFile().fromTxt(lines[i][LINE.TEXT] + "\n" + showText + "\n" + nextSyncLine[LINE.TEXT]);
-		Subtitle.Smi.normalize(toNormalize.body);
-		if (toNormalize.body.length > 2) {
-			normalizedLines = toNormalize.body.slice(0, toNormalize.body.length - 1);
-			showText = normalizedLines[normalizedIndex = 0].text; // 일단은 첫 싱크 출력, 다음 루프에 추가로 잡아주기
+		// 줄표 있을 때 왼쪽 정렬
+		if (setting.viewer.useAlign && showLines.length < 4) { // 줄 개수 제한 없으면 싱크 안 찍은 전체 내용에 대해 동작해버림
+			for (var k = 0; k < showLines.length; k++) {
+				if ($("<span>").html(showLines[k][0]).text()[0] == '-') {
+					hasLine[hold] = true;
+					break;
+				}
+			}
 		}
+		if (hasLine[hold]) {
+			for (var j = 0; j < showLines.length; j++) {
+				var line = showLines[j];
+				if ($("<span>").html(line).text()[0] != '-') {
+					line = "<span style='opacity: 0;'>-</span>" + line;
+				}
+				showLines[j] = line + "<span style='opacity: 0;'>-</span>";
+			}
+		}
+		showText[hold] = showLines.join("<br>");
+		if (nextSyncLine && setting.saveWithNormalize) {
+			var toNormalize = new Subtitle.SmiFile().fromTxt(lines[hold][indexes[hold]][LINE.TEXT] + "\n" + showText[hold] + "\n" + nextSyncLine[LINE.TEXT]);
+			Subtitle.Smi.normalize(toNormalize.body);
+			if (toNormalize.body.length > 2) {
+				normalizedLines[hold] = toNormalize.body.slice(0, toNormalize.body.length - 1);
+				showText[hold] = normalizedLines[hold][normalizedIndex[hold] = 0].text; // 일단은 첫 싱크 출력, 다음 루프에 추가로 잡아주기
+			}
+		}
+		setTextToView(showText[hold], hold);
 	}
-	setTextToView(showText);
 	time = receiveTime;
 };
 
-function setTextToView(showText) {
+function setTextToView(text, hold) {
 	// RUBY태그 문법이 미묘하게 달라서 가공 필요
-	showText = showText.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
+	text = text.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
 	
 	{	// 팟플레이어에선 공백문자 그대로 표시됨
-		var a = showText.split("<");
+		var a = text.split("<");
 		a[0] = a[0].split(" ").join("&nbsp;");
 		for (var j = 1; j < a.length; j++) {
 			var b = a[j].indexOf(">");
@@ -156,20 +168,20 @@ function setTextToView(showText) {
 				a[j] = a[j].substring(0, b) + ">" + a[j].substring(b+1).split(" ").join("&nbsp;");
 			}
 		}
-		showText = a.join("<");
+		text = a.join("<");
 	}
 	
 	{	// font size도 추가 작업
 		var j = 0;
 		var begin = 0;
-		while ((begin = showText.toUpperCase().indexOf("<FONT", j)) >= 0) {
-			if (begin > showText.length) {
+		while ((begin = text.toUpperCase().indexOf("<FONT", j)) >= 0) {
+			if (begin > text.length) {
 				break;
 			}
-			var end = showText.indexOf(">", begin);
+			var end = text.indexOf(">", begin);
 			if (end < 0) break;
 			
-			var tag = showText.substring(begin, end);
+			var tag = text.substring(begin, end);
 			var index = tag.toUpperCase().indexOf("SIZE=");
 			if (index > 0) {
 				var q = tag[index + 5];
@@ -206,7 +218,7 @@ function setTextToView(showText) {
 					//if (potSize < 10) potSize += 50;
 					
 					var style = 'style="font-size: ' + potSize + 'px;"';
-					showText = showText.substring(0, begin + index) + style + showText.substring(begin + qEnd);
+					text = text.substring(0, begin + index) + style + text.substring(begin + qEnd);
 					end = end - qEnd + index + style.length;
 				}
 			}
@@ -215,19 +227,25 @@ function setTextToView(showText) {
 	}
 	
 	{	// 흔들기 효과 상하 공백줄 처리 -> 맨 윗줄만
-		var showLines = showText.split(/<br>/gi);
-		if (lines.length > 2) {
-			var line = showLines[0];
+		var showLines = text.split(/<br>/gi);
+		if (lines[hold].length > 2) {
+			var line = showLines;
 			if ($("<span>").html(line).text() == "　") {
 				if (line.indexOf("font-size:") > 0) {
-					showLines[0] = line.split("<font style=\"font-size:").join("<div style=\"height:").split("</font>").join("</div>");
+					showlines[hold] = line.split("<font style=\"font-size:").join("<div style=\"height:").split("</font>").join("</div>");
 				}
 			}
 		}
-		showText = showLines.join("<br>");
+		text = showLines.join("<br>");
 	}
 	
-	viewer.html("<div" + (hasLine ? " style='text-align: left; width: fit-content; margin: 0 auto;'" : "") + ">" + showText + "</div>");
+	//viewers[hold].html("<div" + (hasLine[hold] ? " class='has-line'" : "") + ">" + text + "</div>");
+	var viewer = viewers[hold].html(text);
+	if (hasLine[hold]) {
+		viewer.addClass("has-line");
+	} else {
+		viewer.removeClass("has-line");
+	}
 }
 
 $(function() {
@@ -295,6 +313,11 @@ html, body {
 	right: 0;
 	bottom: 0;
 	text-align: center;
+}
+#viewer div.has-line {
+	text-align: left;
+	width: fit-content;
+	margin: 0 auto;
 }
 </style>
 </head>

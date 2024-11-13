@@ -2100,6 +2100,7 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 		} else if (txt.length > pos + 6 && txt.substring(pos, pos + 7).toUpperCase() == ("</BODY>")) {
 			if (last == null) {
 				this.header = txt.substring(0, pos);
+				last = { text: "" }; // 아래에서 헤더에 중복으로 추가되지 않도록 함
 			} else {
 				last.text += txt.substring(index, pos);
 			}
