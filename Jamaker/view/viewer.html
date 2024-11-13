@@ -239,7 +239,11 @@ function setTextToView(text, hold) {
 		text = showLines.join("<br>");
 	}
 	
-	//viewers[hold].html("<div" + (hasLine[hold] ? " class='has-line'" : "") + ">" + text + "</div>");
+	// 비어있으면 높이 차지하지 않게 내용 없애기
+	if (!text.split("&nbsp;").join(" ").trim().length) {
+		text = "";
+	}
+	
 	var viewer = viewers[hold].html(text);
 	if (hasLine[hold]) {
 		viewer.addClass("has-line");

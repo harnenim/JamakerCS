@@ -172,6 +172,9 @@
 	left: 100px;
 	right: 0;
 }
+.highlight-textarea {
+	overflow: hidden;
+}
 .highlight-textarea > * {
 	position: absolute;
 	top: 0;

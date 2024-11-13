@@ -78,7 +78,6 @@ var SmiEditor = function(text) {
 	
 	this.text = "";
 	this.lines = [["", 0, TYPE.TEXT]];
-	this.inputLines = [];
 	this.highlightLines = [];
 	
 	this.syncUpdating = false;
@@ -1365,7 +1364,6 @@ SmiEditor.prototype.updateHighlight = function(lines=null) {
 		this.hArea.removeClass("nonactive");
 	} else {
 		this.hArea.addClass("nonactive");
-		this.inputLines = [];
 		this.highlightLines = [];
 		return;
 	}
@@ -1373,20 +1371,20 @@ SmiEditor.prototype.updateHighlight = function(lines=null) {
 		lines = this.input.val().split("\n");
 	}
 	
-	var changeBegin = 0; changeEnd = Math.min(lines.length, this.inputLines.length);
-	if (this.inputLines.length) {
+	var changeBegin = 0; changeEnd = Math.min(lines.length, this.highlightLines.length);
+	if (this.highlightLines.length) {
 		{	// 수정된 범위 찾기
 			var i;
 			for (i = 0; i < changeEnd; i++) {
-				if (this.inputLines[i] != lines[i]) {
+				if (this.highlightLines[i] != lines[i]) {
 					break;
 				}
 			}
 			changeBegin = i;
 			
-			var add = lines.length - this.inputLines.length;
-			for (i = this.inputLines.length - 1; i > (add > 0 ? changeBegin : changeBegin - add); i--) {
-				if (this.inputLines[i] != lines[i + add]) {
+			var add = lines.length - this.highlightLines.length;
+			for (i = this.highlightLines.length - 1; i > (add > 0 ? changeBegin : changeBegin - add); i--) {
+				if (this.highlightLines[i] != lines[i + add]) {
 					break;
 				}
 			}
@@ -1395,9 +1393,9 @@ SmiEditor.prototype.updateHighlight = function(lines=null) {
 		}
 		
 		{	// 기존 결과물 삭제
-			var removeLines = this.highlightLines.splice(changeBegin, changeEnd - changeBegin);
+			var removeLines = this.hview.children().splice(changeBegin, changeEnd - changeBegin);
 			for (var i = 0; i < removeLines.length; i++) {
-				removeLines[i].remove();
+				$(removeLines[i]).remove();
 			}
 		}
 	} else {
@@ -1405,9 +1403,10 @@ SmiEditor.prototype.updateHighlight = function(lines=null) {
 	}
 	
 	var newLines = [];
-	var lastLine = (changeBegin > 0) ? this.highlightLines[changeBegin - 1] : null;
+	var highlightLines = this.hview.children();
+	var lastLine = (changeBegin > 0) ? $(highlightLines[changeBegin - 1]) : null;
 	for (var i = changeBegin; i < changeEnd + add; i++) {
-		var highlightLine = this.highlightText(lines[i]).append("<br />");
+		var highlightLine = SmiEditor.highlightText(lines[i]).append("<br />");
 		newLines.push(highlightLine);
 		if (lastLine) {
 			lastLine.after(highlightLine);
@@ -1417,10 +1416,9 @@ SmiEditor.prototype.updateHighlight = function(lines=null) {
 		lastLine = highlightLine;
 	}
 	
-	this.highlightLines = this.highlightLines.slice(0, changeBegin).concat(newLines).concat(this.highlightLines.slice(changeEnd + add));
-	this.inputLines = lines;
+	this.highlightLines = lines;
 }
-SmiEditor.prototype.highlightText = function(text) {
+SmiEditor.highlightText = function(text) {
 	var previewLine = $("<span>");
 	if (text.startsWith("<Sync ")) {
 		return previewLine.addClass("sync").text(text);
