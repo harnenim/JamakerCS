@@ -105,6 +105,7 @@ var Tab = function(text, path) {
 		tab.holdArea.find(".hold").hide();
 		hold.selector.addClass("selected");
 		hold.area.show();
+		hold.input.focus();
 		tab.hold = tab.holds.indexOf(hold);
 		SmiEditor.Viewer.refresh();
 		
@@ -387,6 +388,10 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 			smi.header = smi.footer = "";
 			if (setting.saveWithNormalize) {
 				Subtitle.Smi.normalize(smi.body, false);
+			}
+			
+			if (smi.body.length == 0) {
+				continue;
 			}
 			
 			var start = smi.body[0].start;
@@ -749,15 +754,9 @@ function init(jsonSetting) {
 		saveSetting();
 	}
 	
-	var btnSync = $("#btnSync").on("click", function() {
+	var btnAddHold = $("#btnAddHold").on("click", function() {
 		if (tabs.length == 0) return;
-		tabs[tab].holds[tabs[tab].hold].insertSync();
-		tabs[tab].holds[tabs[tab].hold].input.focus();
-	});
-	var btnSyncFrame = $("#btnSyncFrame").on("click", function() {
-		if (tabs.length == 0) return;
-		tabs[tab].holds[tabs[tab].hold].insertSync(true);
-		tabs[tab].holds[tabs[tab].hold].input.focus();
+		tabs[tab].addHold();
 	});
 	var inputWeight = $("#inputWeight").bind("input propertychange", function() {
 		var weight = inputWeight.val();
