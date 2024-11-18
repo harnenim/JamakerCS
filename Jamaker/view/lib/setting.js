@@ -65,7 +65,7 @@ var DEFAULT_SETTING =
 		,	"겹치는 대사 결합(&C)|openAddon('Combine');"
 		,	"겹치는 대사 분리(&D)|openAddon('Devide');"
 		,	"싱크 유지 텍스트 대체(&F)|openAddon('Fusion');"
-		,	"노래방 자막(&K)|openAddon('Karaoke');"
+		,	"노래방 자막(&K)|openAddon('Karaoke', 'karaoke');"
 		,	"흔들기 효과(&S)|openAddon('Shake');"
 		,	"니코동 효과(&N)|openAddon('Nico');"
 		,	"ASS 자막으로 변환(&A)|openAddon('ToAss');"

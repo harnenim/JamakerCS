@@ -2231,12 +2231,12 @@ SmiEditor.Viewer = {
 };
 
 SmiEditor.Addon = {
-		window: null
-	,	open: function(name) {
+		windows: {}
+	,	open: function(name, target="addon") {
 			var url = (name.substring(0, 4) == "http") ? name : "addon/" + name.split("..").join("").split(":").join("") + ".html";
-			this.window = window.open(url, "addon", "scrollbars=no,location=no,width=1,height=1");
-			this.moveWindowToSetting();
-			binder.focus("addon");
+			this.windows[target] = window.open(url, target, "scrollbars=no,location=no,width=1,height=1");
+			this.moveWindowToSetting(target);
+			binder.focus(target);
 		}
 	,	openExtSubmit: function(method, url, values) {
 			this.ext = {
@@ -2244,29 +2244,39 @@ SmiEditor.Addon = {
 				,	url: url
 				,	values: values
 			}
-			this.window = window.open("addon/ExtSubmit.html", "addon", "scrollbars=no,location=no,width=1,height=1");
-			this.moveWindowToSetting();
+			this.windows.addon = window.open("addon/ExtSubmit.html", "addon", "scrollbars=no,location=no,width=1,height=1");
+			this.moveWindowToSetting("addon");
 			binder.focus("addon");
 		}
 	,	onloadExtSubmit: function() {
-			var w = this.window;
+			var w = this.windows.addon;
 			if (w.iframe) {
 				w = w.iframe.contentWindow;
 			}
 			w.submit(this.ext.method, this.ext.url, this.ext.values);
 		}
-	,	moveWindowToSetting: function() {
+	,	moveWindowToSetting: function(target) {
 			// 플레이어 창 위에
 			var margin = 40 * DPI;
-			binder.moveWindow("addon"
-					, setting.player.window.x + margin
-					, setting.player.window.y + margin
-					, setting.player.window.width  - (margin * 2)
-					, setting.player.window.height - (margin * 2)
-					, true);
+			var targets = [];
+			if (target) {
+				targets = [target];
+			} else {
+				for (var key in this.windows) {
+					targets.push(key);
+				}
+			}
+			for (var i = 0; i < targets.length; i++) {
+				binder.moveWindow(targets[i]
+						, setting.player.window.x + margin
+						, setting.player.window.y + margin
+						, setting.player.window.width  - (margin * 2)
+						, setting.player.window.height - (margin * 2)
+						, true);
+			}
 		}
 };
-function openAddon(name) { SmiEditor.Addon.open(name); }
+function openAddon(name, target) { SmiEditor.Addon.open(name, target); }
 function extSubmit(method, url, values) {
 	if (typeof values == "string") {
 		var name = values;
