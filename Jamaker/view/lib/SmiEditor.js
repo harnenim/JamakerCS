@@ -1036,6 +1036,9 @@ SmiEditor.prototype.deleteLine = function() {
 	
 	var text = this.input.val();
 	var range = this.getCursor();
+	if ((range[0] < range[1]) && (text[range[1] - 1] == "\n")) {
+		range[1]--;
+	}
 	var lineRange = [text.substring(0, range[0]).split("\n").length - 1, text.substring(0, range[1]).split("\n").length - 1];
 	var tmp = text.substring(0, range[0]).split("\n");
 	var cursor = range[0] - tmp[tmp.length - 1].length;
