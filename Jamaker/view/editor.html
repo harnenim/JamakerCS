@@ -37,17 +37,18 @@ button {
 body:not(.drag-file) #cover {
 	display: none;
 }
-#btnSync {}
-#btnSyncFrame {}
+#btnAddHold { padding: 1px 4px; }
 #inputWeight { width: 50px; }
 #inputUnit { width: 50px; }
-#btnMoveToBack {}
-#btnMoveToForward {}
+#btnMoveToBack,
+#btnMoveToForward {
+	border-left: 0;
+}
 </style>
 </head>
 <body id="body">
 	<div style="padding: 3px; height: 24px;"><!--
-	--><button type="button" style="padding: 1px 4px;" id="btnAddHold">홀드 추가</button><!--
+	--><button type="button" id="btnAddHold">홀드 추가</button><!--
 	--><label>가중치<input type="text" id="inputWeight" value="0" /></label><!--
 	--><label>싱크 조절<input type="text" id="inputUnit" value="0" /></label><!--
 	--><button type="button" id="btnMoveToBack"  title="싱크 당기기(Ctrl+Shift+↓)">－</button><!--
