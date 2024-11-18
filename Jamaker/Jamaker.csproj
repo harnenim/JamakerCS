@@ -210,7 +210,7 @@
     <Content Include="view\help\aboutTag.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="view\help\hold.html">
+    <Content Include="view\help\aboutHold.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="view\help\img\hold1.png">
