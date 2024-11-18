@@ -34,14 +34,14 @@ var checkVersion;
 		}
 		return notified;
 	}
-	var lastNotifyForCommand = "2024.11.01.v1";
+	var lastNotifyForCommand = "2024.11.11.v1";
 	var lastNotifyForAutoComplete = "";
 	var lastNotifyForStyle = "2023.04.06.v1";
-	var lastNotifyForMenu = "2024.11.01.v1";
+	var lastNotifyForMenu = "2024.11.18.v1";
 }
 
 var DEFAULT_SETTING =
-{	version: "2024.11.13.v1"
+{	version: "2024.11.18.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"

@@ -73,7 +73,7 @@ var Tab = function(text, path) {
 			,	text: hold.substring(begin, end).trim().split("<​").join("<").split("​>").join(">")
 		});
 	}
-
+	
 	if (setting.saveWithNormalize) {
 		// SMI 파일 역정규화
 		for (var i = 0; i < holdInfos.length; i++) {
