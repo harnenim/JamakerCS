@@ -368,8 +368,18 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 	}
 	
 	if (withCombine) {
+		// 시작 시간 순으로 저장
+		var holds = this.holds.slice(1);
+		holds.sort(function(a, b) {
+			return a.start - b.start;
+		});
+		for (var hi = 0; hi < holds.length; hi++) {
+			var hold = holds[hi];
+			result[hi+1] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + hold.text.split("<").join("<​").split(">").join("​>") + "\n-->";
+		}
+		
 		// 메인에 가까운 걸 먼저 작업해야 함
-		var holds = this.holds.slice(0);
+		holds = this.holds.slice(0);
 		holds.sort(function(a, b) {
 			var aPos = a.pos;
 			var bPos = b.pos;
@@ -382,8 +392,6 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 		
 		for (var hi = 1; hi < holds.length; hi++) {
 			var hold = holds[hi];
-			result[hi] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + hold.text.split("<").join("<​").split(">").join("​>") + "\n-->";
-
 			var smi = new Subtitle.SmiFile().fromTxt(hold.text);
 			smi.header = smi.footer = "";
 			if (setting.saveWithNormalize) {
@@ -415,9 +423,8 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 			}
 			
 			var mainEnd = mainBegin;
-			for (var i = mainBegin; i < main.body.length; i++) {
-				mainEnd = i;
-				if (main.body[i].start > end) {
+			for (; mainEnd < main.body.length; mainEnd++) {
+				if (main.body[mainEnd].start > end) {
 					break;
 				}
 			}
@@ -430,7 +437,7 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 			// 홀드 결합
 			var sliced = new Subtitle.SmiFile();
 			sliced.body = main.body.slice(mainBegin, mainEnd);
-
+			
 			var slicedText = sliced.toTxt().trim();
 			var combineText = smi.toTxt().trim();
 			var combined = new Subtitle.SmiFile().fromTxt(((hold.pos < 0) ? Combine.combine(slicedText, combineText) : Combine.combine(combineText, slicedText)).join("\n"));
@@ -446,6 +453,7 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 					}
 				}
 				var added = mainBegin + combined.body.length - mainEnd;
+				end = (mainEnd == main.body.length) ? 999999999 : combined.body[combined.body.length - 1].start;
 				
 				if (logIndexes.length) {
 					// 기존 정규화 로그와 겹칠 때
@@ -467,12 +475,10 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 					}
 					if (mainEnd > combinedLog.to[1]) {
 						combinedLog.from[1] += mainEnd - combinedLog.to[1];
-						combinedLog.to  [1] = mainEnd;
-						
-						if (added) {
-							combinedLog.from[1] += added;
-							combinedLog.to  [1] += added;
-						}
+						combinedLog.to  [1] = mainEnd + added;
+					}
+					if (end > combinedLog.end) {
+						combinedLog.end = end;
 					}
 					
 				} else {
@@ -481,6 +487,7 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 							from: [mainBegin, mainEnd]
 						,	to  : [mainBegin, mainBegin + combined.body.length]
 						,	start: combined.body[0].start
+						,	end: end
 					};
 					// 앞에 다른 로그가 있는지 확인
 					var lastLog = null;
@@ -530,7 +537,7 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 		}
 	}
 	result[0] = main.toTxt();
-	return result.join("\n");
+	return withComment ? result.join("\n") : result[0];
 }
 Tab.prototype.onChangeSaved = function(hold) {
 	if (this.isSaved()) {
@@ -581,8 +588,8 @@ SmiEditor.prototype.updateTimeRange = function() {
 		}
 	}
 	if (end) {
-		this.start = (start == end) ? 0 : start;
-		this.end   = end;
+		this.start = start;
+		this.end   = (start == end) ? 999999999 : end;
 	} else {
 		this.start = 0;
 		this.end = 1;

@@ -50,14 +50,13 @@ var DEFAULT_SETTING =
 		,	"현재 동영상의 자막 열기|openFileForVideo()"
 		,	"저장(&S)|saveFile()"
 		,	"다른 이름으로 저장(&A)...|saveFile(true)"
-		,	"내보내기(&A)...|saveFile(true, true)"
+		,	"내보내기(&E)...|saveFile(true, true)"
 		]
 	,	[	"편집(&E)"
 		,	"찾기/바꾸기(&F)|SmiEditor.Finder.open()"
 		,	"색상코드 입력(&C)|binder.runColorPicker()"
 		,	"특수태그 정규화|SmiEditor.selected && SmiEditor.selected.normalize()"
 		,	"싱크 채우기|SmiEditor.selected && SmiEditor.selected.fillSync()"
-		,	"홀드 추가|tabs.length && tabs[tab].addHold()"
 		,	"미리보기창 실행|SmiEditor.Viewer.open()"
 		,	"설정(&S)|openSetting()"
 		]
@@ -77,6 +76,7 @@ var DEFAULT_SETTING =
 	,	[	"도움말(&H)"
 		,	"프로그램 정보|openHelp('info')"
 		,	"기본 단축키|openHelp('key')"
+		,	"홀드에 대하여|openHelp('hold')"
 		,	"싱크 표현에 대하여|openHelp('aboutSync')"
 		,	"특수 태그에 대하여|openHelp('aboutTag')"
 		,	"화면 싱크 매니저 도움말|openHelp('SyncManager')"

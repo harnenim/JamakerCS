@@ -79,8 +79,11 @@
 .hold-selector > .selector:hover {
 	background: #eee;
 }
-.hold-selector > .selector:not(:first-child):hover {
+.hold-selector > .selector:not(:first-child).selected {
 	z-index: 9999;
+}
+.hold-selector > .selector:not(:first-child):hover {
+	z-index: 99999;
 }
 .hold-selector > .selector .hold-name {
 	padding: 2px;
