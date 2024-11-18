@@ -216,10 +216,14 @@ namespace Jamaker
 
         public void WebForm()
         {
+            WebForm(@"CEF");
+        }
+        public void WebForm(string name)
+        {
             // 브라우저 설정
             CefSettings settings = new CefSettings
             {   Locale = "ko"
-            ,   CachePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\CEF"
+            ,   CachePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\" + (name == null ? @"CEF" : name)
             };
             settings.CefCommandLineArgs.Add("disable-web-security");
             Cef.Initialize(settings);

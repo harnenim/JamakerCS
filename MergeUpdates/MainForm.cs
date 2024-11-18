@@ -12,7 +12,7 @@ namespace Jamaker
     {
         public MainForm()
         {
-            WebForm();
+            WebForm("MergeUpdates");
 
             int[] rect = { 0, 0, 1280, 800 };
             StreamReader sr = null;

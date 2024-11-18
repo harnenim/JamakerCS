@@ -17,7 +17,7 @@ namespace Jamaker
 
         public MainForm()
         {
-            WebForm();
+            WebForm("SamiReplacer");
 
             int[] rect = { 0, 0, 1280, 800 };
             StreamReader sr = null;
