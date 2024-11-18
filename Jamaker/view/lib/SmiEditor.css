@@ -205,16 +205,12 @@
 	background: #fff;
 	color: #000;
 }
-.highlight-textarea > div .clamp { color: #888888; }
-.highlight-textarea > div .tag   { color: #22863a; }
-.highlight-textarea > div .attr  { color: #005cc5; }
-.highlight-textarea > div .value { color: #032f62; }
-/*
-.highlight-textarea > div .tag   { color: #aaffbb; }
-.highlight-textarea > div .attr  { color: #aaccff; }
-.highlight-textarea > div .value { color: #aabbdd; }
-*/
-.highlight-textarea > div .sync  { color: #aaaaaa; }
+.highlight-textarea > div .clamp,
+.highlight-textarea > div .tag   { color: #3F7F7F; }
+.highlight-textarea > div .attr  { color: #AB0095; }
+.highlight-textarea > div .value { color: #2A00FF; }
+.highlight-textarea > div .comment,
+.highlight-textarea > div .sync  { color: #3F5FBF; }
 .hold > .input > textarea {
 	border: 1px solid #aaa;
 	border-width: 1px 0 0 1px;
