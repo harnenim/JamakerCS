@@ -2194,7 +2194,7 @@ Subtitle.SmiFile.prototype.fromSync = function(syncs) {
 	return this;
 }
 
-Subtitle.SmiFile.prototype.antiNormalize = function() {
+Subtitle.SmiFile.prototype.antiNormalize = function () {
 	var commentRange = [-1, -1];
 	var comment = null;
 	
@@ -2235,11 +2235,13 @@ Subtitle.SmiFile.prototype.antiNormalize = function() {
 		comment = comment.split("<​").join("<").split("​>").join(">");
 		try {
 			var index = comment.indexOf("\n");
-			var syncEnd = Number(comment.substring(0, index));
+			var syncEnd = Number(index < 0 ? comment : comment.substring(0, index));
 			
 			// 자동 생성 내용물 삭제하고 주석 내용물 복원
-			comment = comment.substring(index + 1);
-			var removeStart = commentRange[0] + 1;
+			if (index > 0) {
+				comment = comment.substring(index + 1);
+			}
+			var removeStart = commentRange[0] + (index < 0 ? 0 : 1);
 			var removeEnd = removeStart;
 			for(; removeEnd < this.body.length; removeEnd++) {
 				if (this.body[removeEnd].start >= syncEnd) {
