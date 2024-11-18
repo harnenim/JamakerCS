@@ -442,6 +442,7 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 			var combineText = smi.toTxt().trim();
 			var combined = new Subtitle.SmiFile().fromTxt(((hold.pos < 0) ? Combine.combine(slicedText, combineText) : Combine.combine(combineText, slicedText)).join("\n"));
 			// 원칙상 normalized.result를 다뤄야 맞을 것 같지만...
+			end = (mainEnd < main.body.length) ? main.body[mainEnd].start : 999999999;
 			main.body = main.body.slice(0, mainBegin).concat(combined.body).concat(main.body.slice(mainEnd));
 			
 			if (withComment) {
@@ -453,7 +454,7 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 					}
 				}
 				var added = mainBegin + combined.body.length - mainEnd;
-				end = (mainEnd == main.body.length) ? 999999999 : combined.body[combined.body.length - 1].start;
+				
 				
 				if (logIndexes.length) {
 					// 기존 정규화 로그와 겹칠 때
