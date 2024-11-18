@@ -375,7 +375,8 @@ $(function() {
 				inputCommandFunc.val(data.func);
 			});
 		});
-		
+
+		var keyNames = ["F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","F11","F12"].concat("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split(""));
 		inputCommandKey.on("keydown", function(e) {
 			e.preventDefault();
 			
@@ -388,6 +389,7 @@ $(function() {
 				if (e.keyCode > 111) {
 					keyName = "F" + (e.keyCode - 111);
 				}
+				var keyIndex = keyNames.indexOf(keyName);
 				
 				var w = null;
 				if (e.shiftKey) {
@@ -443,6 +445,7 @@ $(function() {
 					// 현재 작업 중인 것
 					return;
 				}
+				$("#areaTableCommand").scrollTop(keyIndex * 20);
 				checkSaved("cmd", function() {
 					inputCommandName.val(name);
 					inputCommandKey .val(keyName);
