@@ -1378,6 +1378,8 @@ SmiEditor.prototype.updateHighlight = function () {
 		} else {
 			self.hArea.addClass("nonactive");
 			self.highlightLines = [];
+			self.hview.empty();
+			self.highlightUpdating = false;
 			return;
 		}
 		var lines = self.input.val().split("\n");
@@ -1442,7 +1444,7 @@ SmiEditor.prototype.updateHighlight = function () {
 		}
 		
 		self.highlightLines = lines;
-
+		
 		self.highlightUpdating = false;
 		setTimeout(function () {
 			if (self.needToUpdateHighlight) {
@@ -1453,300 +1455,20 @@ SmiEditor.prototype.updateHighlight = function () {
 	};
 	setTimeout(thread, 1);
 }
+$(function() {
+	var style = $("#style_highlight");
+	if (style.length == 0) {
+		$("head").append(style = $("<style>").attr({ id: "style_highlight" }));
+	}
+	style.html(".highlight-textarea > div .sync  { color: #3F5FBF; }");
+});
 SmiEditor.highlightText = function(text, state=null) {
 	var previewLine = $("<span>");
 	if (text.toUpperCase().startsWith("<SYNC ")) {
-		return previewLine.addClass("sync").text(text).data({ state: null, next: null });
+		previewLine.addClass("sync");
 	}
-	previewLine.data({ state: state });
-	
-	/*
-	 * 상태값
-	 * 텍스트: null
-	 * 태그?!: /
-	 * 태그명: <
-	 * 태그내: >
-	 * 속성명: a
-	 * 속성값: =, ', "
-	 * 주석  : !
-	 */
-	var pos = 0;
-	var html = "";
-	switch (state) {
-		case '/': html = "<span class='clamp'>"; break;
-		case '>': html = "<span class='tag'  >"; break;
-		case "'": html = "<span class='value'>"; break;
-		case '"': html = "<span class='value'>"; break;
-		case '!': html = "<span class='comment'>"; break;
-	}
-	
-	for (var pos = 0; pos < text.length; pos++) {
-		var c = text[pos];
-		switch (state) {
-			case '/': { // 태그?!
-				state = '<';
-				if (c == '/') { // 종료 태그 시작일 경우
-					html += "/</span><span class='tag'>";
-					break;
-				}
-				// 종료 태그 아닐 경우 아래로 이어서 진행
-				html += "</span><span class='tag'>";
-			}
-			case '<': { // 태그명
-				switch (c) {
-					case '>': { // 태그 종료
-						html += "</span><span class='clamp'>&gt;</span>";
-						state = null;
-						break;
-					}
-					case ' ': { // 태그명 끝
-						html += '</span>&nbsp;';
-						state = '>';
-						break;
-					}
-					case '\t': {
-						html += '</span>&#09;';
-						state = '>';
-						break;
-					}
-					case '<': { // 잘못된 문법
-						html += "&lt;";
-						break;
-					}
-					case '&': {
-						html += "&amp;";
-						break;
-					}
-					default: {
-						html += c;
-						break;
-					}
-				}
-				break;
-			}
-			case '>': { // 태그 내
-				switch (c) {
-					case '>': { // 태그 종료
-						html += "</span><span class='clamp'>&gt;</span>";
-						state = null;
-						break;
-					}
-					case ' ': {
-						html += '&nbsp;';
-						break;
-					}
-					case '\t': {
-						html += '&#09;';
-						break;
-					}
-					case '<': { // 잘못된 문법
-						html += "&lt;";
-						break;
-					}
-					case '&': {
-						html += "&amp;";
-						break;
-					}
-					default: { // 속성명 시작
-						html += "<span class='attr'>" + c;
-						state = 'a';
-						break;
-					}
-				}
-				break;
-			}
-			case 'a': { // 속성명
-				switch (c) {
-					case '>': { // 태그 종료
-						html += "</span></span><span class='clamp'>&gt;</span>";
-						state = null;
-						break;
-					}
-					case '=': { // 속성값 시작
-						html += "</span>=<span class='value'>";
-						state = '=';
-						break;
-					}
-					case ' ': { // 속성 종료
-						html += "</span>&nbsp;";
-						state = '>';
-						break;
-					}
-					case '\t': {
-						html += "</span>&#09;";
-						state = '>';
-						break;
-					}
-					default: {
-						html += c;
-					}
-				}
-				break;
-			}
-			case '=': { // 속성값
-				switch (c) {
-					case '>': { // 태그 종료
-						html += "</span></span><span class='clamp'>&gt;</span>";
-						state = null;
-						break;
-					}
-					case '"': { // 속성값 따옴표 시작
-						html += c;
-						state = '"';
-						break;
-					}
-					case "'": { // 속성값 따옴표 시작
-						html += c;
-						state = "'";
-						break;
-					}
-					case ' ': { // 속성 종료
-						html += "</span>&nbsp;";
-						state = '>';
-						break;
-					}
-					case '\t': {
-						html += "</span>&#09;";
-						state = '>';
-						break;
-					}
-					case '<': {
-						html += "&lt;";
-						break;
-					}
-					case '&': {
-						html += "&amp;";
-						break;
-					}
-					default: {
-						html += c;
-					}
-				}
-				break;
-			}
-			case '"': {
-				switch (c) {
-					case '"': {
-						html += '"</span>';
-						state = '>';
-						break;
-					}
-					case ' ': {
-						html += "&nbsp;";
-						break;
-					}
-					case '\t': {
-						html += "&#09;";
-						break;
-					}
-					case '<': {
-						html += "&lt;";
-						break;
-					}
-					case '&': {
-						html += "&amp;";
-						break;
-					}
-					default: {
-						html += c;
-					}
-				}
-				break;
-			}
-			case "'": {
-				switch (c) {
-					case "'": {
-						html += "'</span>";
-						state = '>';
-						break;
-					}
-					case ' ': {
-						html += "&nbsp;";
-						break;
-					}
-					case '\t': {
-						html += "&#09;";
-						break;
-					}
-					case '<': {
-						html += "&lt;";
-						break;
-					}
-					case '&': {
-						html += "&amp;";
-						break;
-					}
-					default: {
-						html += c;
-					}
-				}
-				break;
-			}
-			case '!': { // 주석
-				if ((pos + 3 <= text.length) && (text.substring(pos, pos+3) == "-->")) {
-					html += "--&gt;</span>";
-					state = null;
-					pos += 2;
-				} else {
-					switch (c) {
-						case '<': {
-							html += "&lt;";
-							break;
-						}
-						case '&': {
-							html += "&amp;";
-							break;
-						}
-						default: {
-							html += c;
-						}
-					}
-				}
-				break;
-			}
-			default: { // 텍스트
-				switch (c) {
-					case '<': { // 태그 시작
-						if ((pos + 4 <= text.length) && (text.substring(pos, pos+4) == "<!--")) {
-							html += "<span class='comment'>&lt;!--";
-							state = '!';
-							pos += 3;
-						} else {
-							html += "<span class='clamp'>&lt;";
-							state = '/';
-						}
-						break;
-					}
-					case '&': {
-						html += "&amp;";
-						break;
-					}
-					case ' ': {
-						html += '&nbsp;';
-						break;
-					}
-					case '\t': {
-						html += '&#09;';
-						break;
-					}
-					default: {
-						html += c;
-					}
-				}
-			}
-		}
-	}
-
-	switch (state) {
-		case '<':
-		case '/':
-		case 'a':
-		case '=':
-			state = null;
-	}
-	return previewLine.html(html ? html : "").data({ next: state });
+	return previewLine.text(text);
 }
-
 SmiEditor.prototype.moveLine = function(toNext) {
 	if (this.syncUpdating) return;
 	this.history.log();

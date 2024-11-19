@@ -205,12 +205,6 @@
 	background: #fff;
 	color: #000;
 }
-.highlight-textarea > div .clamp,
-.highlight-textarea > div .tag   { color: #3F7F7F; }
-.highlight-textarea > div .attr  { color: #AB0095; }
-.highlight-textarea > div .value { color: #2A00FF; }
-.highlight-textarea > div .comment,
-.highlight-textarea > div .sync  { color: #3F5FBF; }
 .hold > .input > textarea {
 	border: 1px solid #aaa;
 	border-width: 1px 0 0 1px;
