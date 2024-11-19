@@ -286,6 +286,7 @@ var DEFAULT_SETTING =
 		+	".sync.range { color     : #888; }\n"
 		+	".highlight-textarea > div .attr  { color: #034f82; }\n"
 		+	".highlight-textarea > div .value { color: #005cc5; }\n"
+		+	".highlight-textarea.nonactive > textarea { background: #000; color: #fff; }\n"
 		+	"/* */\n"
 ,	newFile:"<SAMI>\n"
 		+	"<HEAD>\n"
