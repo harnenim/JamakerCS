@@ -355,15 +355,7 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 		logs = normalized.logs;
 	} else {
 		if (this.holds.length > 1) {
-			/*
-			normalized = {
-					origin: JSON.parse(JSON.stringify(main.body))
-				,	result: main.body
-				,	logs: []
-			};
-			*/
 			originBody = JSON.parse(JSON.stringify(main.body));
-			logs = [];
 		}
 	}
 	
@@ -518,14 +510,30 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 						}
 					}
 				}
-				
-				if (combinedLog) {
-					// 정규화 로그 분할 가능한지 확인
-					// TODO: 생각해보니 이렇게 할 거면...
-					//       그냥 정규화 로그 관리하지 말고 전체 변환 후에 돌려도 되나?
-					var logIndex = logIndexes[0];
-					var oi = combinedLog.from[0];
-					var ni = combinedLog.to  [0];
+			}
+		}
+		
+		if (withComment) {
+			if (withCombine) {
+				// 홀드 결합 있을 경우 주석처리 재계산
+				logs = [];
+				var oi = 0;
+				var ni = 0;
+
+				while ((oi < originBody.length) && (ni < main.body.length)) {
+					if ((originBody[oi].start == main.body[ni].start)
+					 && (originBody[oi].text  == main.body[ni].text )) {
+						oi++;
+						ni++;
+						continue;
+					}
+
+					// 변환결과가 원본과 동일하지 않은 범위 찾기
+					var newLog = {
+							from: [oi]
+						,	to  : [ni]
+						,	start: main.body[ni].start
+					};
 					while ((oi < originBody.length) && (ni < main.body.length)) {
 						if (originBody[oi].start < main.body[ni].start) {
 							oi++;
@@ -535,41 +543,21 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 							ni++;
 							continue;
 						}
-						if (originBody[oi].text == main.body[ni].text) {
-							// 변환결과가 원본과 동일한 범위 찾기
-							var i = 1;
-							while ((oi + i < originBody.length) && (ni + i < main.body.length)) {
-								if ((originBody[oi + i].start != main.body[ni + i].start)
-								 || (originBody[oi + i].text  != main.body[ni + i].text )) {
-									break;
-								}
-								i++;
-							}
-							if (i > 2 && (oi + i < originBody.length) && (ni + i < main.body.length)) {
-								// 동일한 범위는 제외하고 앞뒤로 남기기
-								var splittedLog = {
-										from: [combinedLog.from[0], oi]
-									,	to  : [combinedLog.to  [0], ni]
-									,	start: combinedLog.start
-									,	end: main.body[ni].start
-								}
-								combinedLog.from[0] = oi + i;
-								combinedLog.to  [0] = ni + i;
-								combinedLog.start = main.body[ni + i].start;
-								logs.splice(logIndex++, 0, splittedLog);
-							}
-							oi += i;
-							ni += i;
-						} else {
+						if (originBody[oi].text != main.body[ni].text) {
 							oi++;
 							ni++;
+							continue;
 						}
+						// 싱크-내용 모두 동일한 곳 찾음
+						newLog.from[1] = oi;
+						newLog.to  [1] = ni;
+						newLog.end = main.body[ni].start;
+						logs.push(newLog);
+						break;
 					}
 				}
 			}
-		}
-		
-		if (withComment) {
+
 			var origin = new Subtitle.SmiFile();
 			for (var i = 0; i < logs.length; i++) {
 				var log = logs[i];
