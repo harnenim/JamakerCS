@@ -14,10 +14,7 @@ var Combine = {
 
 	var LOG = false;
 	
-	function getWidth(smi, css) {
-		if (!css) {
-			css = Combine.css;
-		}
+	function getWidth(smi, checker) {
 		// RUBY태그 문법이 미묘하게 달라서 가공 필요
 		smi = smi.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
 		
@@ -31,17 +28,17 @@ var Combine = {
 			}
 		}
 		smi = tags.join("<");
-		
+
+		return checker.html(smi).width();
+	}
+	function getChecker() {
 		var checker = $("<span>");
-		checker.css(css);
-		checker.html(smi);
+		checker.css(Combine.css);
 		$("body").append(checker);
-		var width = checker.width();
-		checker.remove();
-		return width;
+		return checker;
 	}
 
-	function parse(text) {
+	function parse(text, checker) {
 		var lines = text.split("\n");
 		var parseds = [];
 		
@@ -164,7 +161,7 @@ var Combine = {
 					if (text.split("&nbsp;").join("").trim()) {
 						var lineCount = text.split(/<br>/gi).length;
 						//[STIME, STYPE, ETIME, ETYPE, TEXT, LINES, WIDTH];
-						syncs.push([last[LINE.SYNC], last[LINE.TYPE], parsed[LINE.SYNC], parsed[LINE.TYPE], text, lineCount, getWidth(text)]);
+						syncs.push([last[LINE.SYNC], last[LINE.TYPE], parsed[LINE.SYNC], parsed[LINE.TYPE], text, lineCount, getWidth(text, checker)]);
 					}
 				}
 				last = [i, parsed[LINE.SYNC], parsed[LINE.TYPE]];
@@ -175,8 +172,9 @@ var Combine = {
 	}
 	
 	Combine.combine = function (inputUpper, inputLower) {
-		var upperSyncs = parse(inputUpper);
-		var lowerSyncs = parse(inputLower);
+		var checker = getChecker();
+		var upperSyncs = parse(inputUpper, checker);
+		var lowerSyncs = parse(inputLower, checker);
 		
 		var ui = 0;
 		var li = 0;
@@ -231,7 +229,7 @@ var Combine = {
 				li++;
 			}
 		}
-		
+
 		for (var gi = 0; gi < groups.length; gi++) {
 			var group = groups[gi];
 			group.lines = [];
@@ -256,7 +254,7 @@ var Combine = {
 						if (lines.length > 1) {
 							var maxWidth = 0;
 							for (var k = 0; k < lines.length; k++) {
-								var width = getWidth(lines[k]);
+								var width = getWidth(lines[k], checker);
 								if (width > maxWidth) {
 									maxWidth = width;
 									line = lines[k];
@@ -266,7 +264,7 @@ var Combine = {
 						
 						// 여백을 붙여서 제일 적절한 값 찾기
 						var pad = "";
-						var width = getWidth(line);
+						var width = getWidth(line, checker);
 						var lastPad;
 						var lastWidth;
 						if (LOG) console.log(line.split("&nbsp;").join(" ") + ": " + width);
@@ -275,7 +273,7 @@ var Combine = {
 							lastWidth = width;
 							pad = lastPad + "&nbsp;";
 							var curr = "​" + pad + line + pad + "​";
-							width = getWidth(curr);
+							width = getWidth(curr, checker);
 							if (LOG) console.log(curr.split("&nbsp;").join(" ") + ": " + width);
 							
 						} while (width < group.maxWidth);
@@ -284,7 +282,7 @@ var Combine = {
 							pad = lastPad;
 							if (LOG) {
 								var curr = "​" + pad + line + pad + "​";
-								width = getWidth(curr);
+								width = getWidth(curr, checker);
 							}
 						}
 						pad = pad.split("&nbsp;").join(" ");
@@ -405,6 +403,7 @@ var Combine = {
 				}
 			}
 		}
+		checker.remove();
 		
 		var lines = [];
 		var lastSync = 0;
