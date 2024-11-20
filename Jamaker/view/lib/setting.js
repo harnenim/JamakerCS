@@ -287,7 +287,7 @@ var DEFAULT_SETTING =
 		+	".highlight-textarea > div .attr  { color: #034f82; }\n"
 		+	".highlight-textarea > div .value { color: #005cc5; }\n"
 		+	".highlight-textarea.nonactive > textarea { background: #000; color: #fff; }\n"
-		+	"/* */\n"
+		+	"/* */"
 ,	newFile:"<SAMI>\n"
 		+	"<HEAD>\n"
 		+	"<TITLE>제목</TITLE>\n"

@@ -112,6 +112,10 @@ var Tab = function(text, path) {
 	}).on("dblclick", ".hold-name", function(e) {
 		e.stopPropagation();
 		var hold = $(this).parents(".selector").data("hold");
+		if (hold == tab.holds[0]) {
+			// 메인 홀드는 이름 변경 X
+			return;
+		}
 		prompt("홀드 이름 변경", function(input) {
 			if (!input) {
 				alert("잘못된 입력입니다.");
