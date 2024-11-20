@@ -11,6 +11,8 @@
 
 [웹 샘플 사용해보기](https://harnenim.github.io/Jamaker/run.html)
 
+[최신버전 다운로드](https://drive.google.com/file/d/1g0C0zJUntBfPUZj4kQWtH5y8w1fqd62v/view?usp=drive_link)
+
 ***
 
 원래는 CC4에 팟플 연동하는 법을 궁리하다가   
