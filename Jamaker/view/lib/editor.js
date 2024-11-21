@@ -192,7 +192,6 @@ Tab.prototype.updateHoldSelector = function() {
 		return;
 	}
 	this.area.addClass("with-hold");
-	console.log("updateHoldSelector");
 
 	var BEGIN = 1;
 	var END = -1;
@@ -249,7 +248,6 @@ Tab.prototype.updateHoldSelector = function() {
 			}
 		}
 	}
-	console.log(JSON.parse(JSON.stringify(timers)));
 
 	var posStatus = {};
 	for (var i = 0; i < timers.length; i++) {
@@ -257,7 +255,6 @@ Tab.prototype.updateHoldSelector = function() {
 		var rate = (timer.rate / (timers.length + add - 1) * 100);
 		for (var j = 0; j < timer.holds.length; j++) {
 			var selector = timer.holds[j];
-			console.log(i + ", " + j + ": " + JSON.stringify(selector));
 			var hold = this.holds[selector.index];
 			if (selector.type == BEGIN) {
 				// 홀드 시작
