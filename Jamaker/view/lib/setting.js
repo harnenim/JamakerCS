@@ -41,7 +41,7 @@ var checkVersion;
 }
 
 var DEFAULT_SETTING =
-{	version: "2024.11.21.v1"
+{	version: "2024.11.21.v2"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -227,7 +227,7 @@ var DEFAULT_SETTING =
 		]]
 	,	"190": ['>', ['>>>|…']]
 	}
-,	saveWithNormalize: false
+,	saveWithNormalize: true
 ,	replace:
 	[ { from: "...", to: "…", use: false }
 	
@@ -260,7 +260,7 @@ var DEFAULT_SETTING =
 	]
 ,	tempSave: 300
 ,	useTab: false // 탭 사용 기본값은 꺼두는 걸로
-,	useHighlight: false // 하이라이트도 기본값 꺼둠
+,	useHighlight: true
 ,	css	:	".sync     { border-color: #000; }\n"
 		+	".sync.error { background: #f88; }\n"
 		+	".sync.equal { background: #8f8; }\n"

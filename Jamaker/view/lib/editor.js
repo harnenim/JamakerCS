@@ -74,24 +74,9 @@ var Tab = function(text, path) {
 		});
 	}
 	
-	if (setting.saveWithNormalize) {
-		// SMI 파일 역정규화
-		for (var i = 0; i < holdInfos.length; i++) {
-			holdInfos[i].text = new Subtitle.SmiFile().fromTxt(holdInfos[i].text).antiNormalize().toTxt().trim();
-		}
-	} else {
-		// 역정규화 없을 경우 주석 내 싱크 인식 방지
-		for (var i = 0; i < holdInfos.length; i++) {
-			var parts = holdInfos[i].text.split("-->");
-			for (var j = 0; j < parts.length; j++) {
-				var part = parts[j];
-				var start = part.indexOf("<!--");
-				if (start >= 0) {
-					parts[j] = part.substring(0, start) + part.substring(start).split(/<SYNC/gi).join("<​SYNC");
-				}
-			}
-			holdInfos[i].text = parts.join("-->");
-		}
+	// SMI 파일 역정규화
+	for (var i = 0; i < holdInfos.length; i++) {
+		holdInfos[i].text = new Subtitle.SmiFile().fromTxt(holdInfos[i].text).antiNormalize().toTxt().trim();
 	}
 	
 	for (var i = 0; i < holdInfos.length; i++) {
@@ -359,7 +344,7 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 		logs = normalized.logs;
 	} else {
 		if (this.holds.length > 1) {
-			originBody = JSON.parse(JSON.stringify(main.body));
+			originBody = main.body.slice(0, main.body.length);
 		}
 	}
 	
