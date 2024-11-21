@@ -2036,7 +2036,7 @@ SmiEditor.Addon = {
 			var url = (name.substring(0, 4) == "http") ? name : "addon/" + name.split("..").join("").split(":").join("") + ".html";
 			this.windows[target] = window.open(url, target, "scrollbars=no,location=no,width=1,height=1");
 			setTimeout(function() { // 웹버전에서 딜레이 안 주면 위치를 못 잡는 경우가 있음
-				this.moveWindowToSetting(target);
+				SmiEditor.Addon.moveWindowToSetting(target);
 			}, 1);
 			binder.focus(target);
 		}
@@ -2048,7 +2048,7 @@ SmiEditor.Addon = {
 			}
 			this.windows.addon = window.open("addon/ExtSubmit.html", "addon", "scrollbars=no,location=no,width=1,height=1");
 			setTimeout(function() {
-				this.moveWindowToSetting("addon");
+				SmiEditor.Addon.moveWindowToSetting("addon");
 			}, 1);
 			binder.focus("addon");
 		}
