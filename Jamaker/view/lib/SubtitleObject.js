@@ -2195,12 +2195,17 @@ Subtitle.SmiFile.prototype.fromSync = function(syncs) {
 }
 
 Subtitle.SmiFile.prototype.antiNormalize = function () {
+	var result = [this];
 	var commentRange = [-1, -1];
 	var comment = null;
 	
 	for (i = 0; i < this.body.length; i++) {
 		var smi = this.body[i];
-		
+		var afterComment = null;
+
+		// TODO: 생각해보니...
+		// body 자체가 텍스트 라인이 아니라 싱크 단위로 나뉜 거라서
+		// 주석이 여러 개로 나뉠 리가 없겠구나...
 		if (commentRange[0] < 0) {
 			// 주석 시작점 찾기
 			if (!smi.text.startsWith("<!-- End=")) {
@@ -2215,6 +2220,7 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 			}
 			// 주석이 여기에서 온전히 끝났을 경우
 			comment = smi.text.substring(9, commentEnd).trim();
+			afterComment = smi.text.substring(commentEnd + 3).trim();
 			commentRange[1] = i + 1;
 			
 		} else if (commentRange[1] < 0) {
@@ -2226,6 +2232,7 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 			}
 			// 주석이 여기에서 끝났을 경우
 			comment += "\n" + smi.text.substring(0, commentEnd).trim();
+			afterComment = smi.text.substring(commentEnd).trim();
 			commentRange[1] = i + 1;
 			
 		} else {
@@ -2241,6 +2248,7 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 			if (index > 0) {
 				comment = comment.substring(index + 1);
 			}
+			console.log(comment);
 			var removeStart = commentRange[0] + (index < 0 ? 0 : 1);
 			var removeEnd = removeStart;
 			for(; removeEnd < this.body.length; removeEnd++) {
@@ -2261,6 +2269,26 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 					this.body = newBody.concat(this.body.slice(removeEnd));
 				}
 				
+			} else if (comment.startsWith("Hold=")) {
+				removeStart = commentRange[0];
+				var hold = new Subtitle.SmiFile();
+				hold.body = this.body.splice(removeStart, removeEnd - removeStart);
+				hold.body[0].text = afterComment;
+
+				hold.name = comment = comment.substring(5);
+				hold.pos = 1;
+				var index = comment.indexOf("|");
+				if (index) {
+					try {
+						hold.pos = Number(comment.substring(0, index));
+					} catch (e) {
+						console.log(e);
+					}
+					hold.name = comment.substring(index + 1);
+				}
+				result.push(hold);
+				i--;
+				
 			} else {
 				this.body[commentRange[0]].text = comment;
 				this.body.splice(removeStart, removeEnd - removeStart);
@@ -2273,8 +2301,9 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 		commentRange = [-1, -1];
 		comment = "";
 	}
-	
-	return this;
+
+	console.log(result);
+	return result;
 }
 
 

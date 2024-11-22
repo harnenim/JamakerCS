@@ -43,7 +43,7 @@ var Tab = function(text, path) {
 	this.path = path;
 
 	var texts = text.split("\r\n").join("\n").split("\n<!-- Hold=");
-	var holdInfos = [{ pos: 0, name: "메인", text: texts[0] }];
+	var holdInfos = [{ text: texts[0] }];
 	for (var i = 1; i < texts.length; i++) {
 		var hold = texts[i];
 		var begin = hold.indexOf("\n");
@@ -75,8 +75,15 @@ var Tab = function(text, path) {
 	}
 	
 	// SMI 파일 역정규화
-	for (var i = 0; i < holdInfos.length; i++) {
-		holdInfos[i].text = new Subtitle.SmiFile().fromTxt(holdInfos[i].text).antiNormalize().toTxt().trim();
+	var normalized = new Subtitle.SmiFile().fromTxt(holdInfos[0].text).antiNormalize();
+	normalized[0].pos = 0;
+	normalized[0].name = "메인";
+	holdInfos = normalized.concat(holdInfos.slice(1));
+	for (var i = 0; i < normalized.length; i++) {
+		holdInfos[i].text = holdInfos[i].toTxt().trim();
+	}
+	for (var i = normalized.length; i < holdInfos.length; i++) {
+		holdInfos[i].text = new Subtitle.SmiFile().fromTxt(holdInfos[i].text).antiNormalize()[0].toTxt().trim();
 	}
 	
 	for (var i = 0; i < holdInfos.length; i++) {
@@ -391,7 +398,7 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 		});
 		for (var hi = 0; hi < holds.length; hi++) {
 			var hold = holds[hi];
-			result[hi+1] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + hold.text.split("<").join("<​").split(">").join("​>") + "\n-->";
+			result[hold.resultIndex = (hi + 1)] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + hold.text.split("<").join("<​").split(">").join("​>") + "\n-->";
 		}
 		
 		// 메인에 가까운 걸 먼저 작업해야 함
@@ -406,9 +413,10 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 			return 0;
 		});
 		
+		var holdSmis = [];
 		for (var hi = 1; hi < holds.length; hi++) {
 			var hold = holds[hi];
-			var smi = new Subtitle.SmiFile().fromTxt(hold.text);
+			var smi = holdSmis[hi] = new Subtitle.SmiFile().fromTxt(hold.text);
 			smi.header = smi.footer = "";
 			if (setting.saveWithNormalize) {
 				Subtitle.Smi.normalize(smi.body, false);
@@ -460,89 +468,11 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 			// 원칙상 normalized.result를 다뤄야 맞을 것 같지만...
 			end = (mainEnd < main.body.length) ? main.body[mainEnd].start : 999999999;
 			main.body = main.body.slice(0, mainBegin).concat(combined.body).concat(main.body.slice(mainEnd));
-			
-			if (withComment) {
-				// 기존의 정규화 로그와 겹치는 것 확인
-				var logIndexes = [];
-				for (var i = 0; i < logs.length; i++) {
-					if (mainBegin < logs[i].to[1] && logs[i].to[0] < mainEnd) {
-						logIndexes.push(i);
-					}
-				}
-				var added = mainBegin + combined.body.length - mainEnd;
-				
-				var combinedLog = null;
-				if (logIndexes.length) {
-					// 기존 정규화 로그와 겹칠 때
-					combinedLog = logs[logIndexes[0]];
-					if (logIndexes.length > 1) {
-						// 겹치는 게 여러 개면 하나로 통합
-						for (var i = 1; i < logIndexes.length; i++) {
-							var log = logs[logIndexes[i]];
-							combinedLog.from[1] = log.from[1];
-							combinedLog.to  [1] = log.to  [1];
-						}
-						logs.splice(i + 1, logIndexes.length - 1);
-					}
-					
-					// 정규화 로그 범위 확장
-					if (mainBegin < combinedLog.to[0]) {
-						combinedLog.from[0] += mainBegin - combinedLog.to[0];
-						combinedLog.to  [0] = mainBegin;
-					}
-					if (mainEnd > combinedLog.to[1]) {
-						combinedLog.from[1] += mainEnd - combinedLog.to[1];
-						combinedLog.to  [1] = mainEnd + added;
-					}
-					if (end > combinedLog.end) {
-						combinedLog.end = end;
-					}
-					
-				} else {
-					// 신규 정규화 로그
-					combinedLog = {
-							from: [mainBegin, mainEnd]
-						,	to  : [mainBegin, mainBegin + combined.body.length]
-						,	start: combined.body[0].start
-						,	end: end
-					};
-					// 앞에 다른 로그가 있는지 확인
-					var lastLog = null;
-					var i = 0;
-					for (; i < logs.length; i++) {
-						if (logs[i].to[1] > mainBegin) {
-							break;
-						}
-						lastLog = logs[i];
-					}
-					if (lastLog) {
-						// 있을 경우 그걸 기준으로 원래 위치 잡아주기
-						var lastAdded = lastLog.to[1] - lastLog.from[1];
-						combinedLog.from[0] = combinedLog.from[0] - lastAdded;
-						combinedLog.from[1] = combinedLog.from[1] - lastAdded;
-					}
-					logs.splice(i, 0, combinedLog);
-					logIndexes = [i];
-				}
-				
-				// 뒤쪽에 해당하는 로그가 있었으면 위치 잡아주기
-				if (added) {
-					for (var i = 0; i < logs.length; i++) {
-						if (logs[i].to[0] > mainBegin) {
-							logs[i].to[0] += added;
-							logs[i].to[1] += added;
-						}
-					}
-				}
-			}
 		}
 		
 		if (withComment) {
 			if (withCombine) {
 				// 홀드 결합 있을 경우 주석처리 재계산
-				// TODO: 홀드를 합칠 때 결합이 아예 없을 경우 중복을 줄이는 형태로 개선할 수 있으면 좋을 듯함
-				//       오프닝/엔딩 홀드를 분리하는 식으로 쓰려면 필수일 듯
-				//       노래방 자막 크기가 커져도 태그 하이라이트 기능에 지장이 생김
 				logs = [];
 				var oi = 0;
 				var ni = 0;
@@ -583,6 +513,15 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 						break;
 					}
 				}
+				// 메인 홀드에 없는 내용만 남음
+				if (ni < main.body.length) {
+					var newLog = {
+							from: [oi, oi]
+						,	to  : [ni, main.body.length]
+						,	start: main.body[ni].start
+					};
+					logs.push(newLog);
+				}
 			}
 
 			var origin = new Subtitle.SmiFile();
@@ -597,11 +536,39 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 				}
 				origin.body = originBody.slice(log.from[0], log.from[1]);
 				var comment = origin.toTxt().trim();
+				
+				// 메인 홀드 내용이 없으면 다른 홀드가 통째로 들어왔는지 확인
+				if (comment.length == 0) {
+					var start = log.to[0];
+					for (var hi = 1; hi < holds.length; hi++) {
+						var smi = holdSmis[hi];
+						var isEqual = true;
+						for (var j = 0; j < smi.body.length; j++) {
+							if ((smi.body[j].start != main.body[start+j].start)
+							 || (smi.body[j].text  != main.body[start+j].text )
+							) {
+								isEqual = false;
+								break;
+							}
+						}
+						if (isEqual) {
+							var hold = holds[hi];
+							comment = "Hold=" + hold.pos + "|" + hold.name;
+							result[hold.resultIndex] = "";
+							break;
+						}
+					}
+				}
 				main.body[log.to[0]].text = "<!-- End=" + log.end + "\n" + (comment.split("<").join("<​").split(">").join("​>")) + "\n-->\n" + main.body[log.to[0]].text;
 			}
 		}
 	}
 	result[0] = main.toTxt();
+	for (var i = 1; i < result.length; i++) {
+		if (result[i].length == 0) {
+			result.splice(i--, 1);
+		}
+	}
 	return withComment ? result.join("\n") : result[0];
 }
 Tab.prototype.onChangeSaved = function(hold) {
