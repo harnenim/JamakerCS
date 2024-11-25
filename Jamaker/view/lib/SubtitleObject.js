@@ -2202,48 +2202,25 @@ Subtitle.SmiFile.prototype.fromSync = function(syncs) {
 
 Subtitle.SmiFile.prototype.antiNormalize = function () {
 	var result = [this];
-	var commentRange = [-1, -1];
-	var comment = null;
 	
 	for (i = 0; i < this.body.length; i++) {
 		var smi = this.body[i];
 		var afterComment = null;
-
-		// TODO: 생각해보니...
-		// body 자체가 텍스트 라인이 아니라 싱크 단위로 나뉜 거라서
-		// 주석이 여러 개로 나뉠 리가 없겠구나...
-		if (commentRange[0] < 0) {
-			// 주석 시작점 찾기
-			if (!smi.text.startsWith("<!-- End=")) {
-				continue;
-			}
-			commentRange[0] = i;
-			
-			var commentEnd = smi.text.indexOf("-->");
-			if (commentEnd < 0) {
-				// 주석이 여기에서 안 끝났을 경우
-				continue;
-			}
-			// 주석이 여기에서 온전히 끝났을 경우
-			comment = smi.text.substring(9, commentEnd).trim();
-			afterComment = smi.text.substring(commentEnd + 3).trim();
-			commentRange[1] = i + 1;
-			
-		} else if (commentRange[1] < 0) {
-			// 주석 나머지 내용
-			var commentEnd = smi.text.indexOf("-->");
-			if (commentEnd < 0) {
-				// 주석이 여기에서 안 끝났을 경우
-				continue;
-			}
-			// 주석이 여기에서 끝났을 경우
-			comment += "\n" + smi.text.substring(0, commentEnd).trim();
-			afterComment = smi.text.substring(commentEnd).trim();
-			commentRange[1] = i + 1;
-			
-		} else {
+		
+		// 주석 시작점 찾기
+		if (!smi.text.startsWith("<!-- End=")) {
 			continue;
 		}
+		
+		// 주석 끝 찾기
+		var commentEnd = smi.text.indexOf("-->");
+		if (commentEnd < 0) {
+			continue;
+		}
+		
+		// 주석이 여기에서 온전히 끝났을 경우
+		var comment = smi.text.substring(9, commentEnd).trim();
+		afterComment = smi.text.substring(commentEnd + 3).trim();
 		
 		comment = comment.split("<​").join("<").split("​>").join(">");
 		try {
@@ -2254,8 +2231,7 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 			if (index > 0) {
 				comment = comment.substring(index + 1);
 			}
-			console.log(comment);
-			var removeStart = commentRange[0] + (index < 0 ? 0 : 1);
+			var removeStart = i + (index < 0 ? 0 : 1);
 			var removeEnd = removeStart;
 			for(; removeEnd < this.body.length; removeEnd++) {
 				if (this.body[removeEnd].start >= syncEnd) {
@@ -2263,9 +2239,9 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 				}
 			}
 			if (comment.length > 6 && comment.substring(0, 6).toUpperCase() == "<SYNC ") {
-				var newBody = new Subtitle.SmiFile().fromTxt(comment).body;
-				if (commentRange[0] > 0) {
-					newBody = this.body.slice(0, commentRange[0]).concat(newBody);
+				var newBody = new Subtitle.SmiFile(comment).body;
+				if (i > 0) {
+					newBody = this.body.slice(0, i).concat(newBody);
 				}
 				if (removeEnd < this.body.length
 						&& !this.body[removeEnd].text.split("&nbsp;").join("").trim()
@@ -2276,11 +2252,12 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 				}
 				
 			} else if (comment.startsWith("Hold=")) {
-				removeStart = commentRange[0];
+				removeStart = i;
 				var hold = new Subtitle.SmiFile();
 				hold.body = this.body.splice(removeStart, removeEnd - removeStart);
 				hold.body[0].text = afterComment;
-
+				hold.next = this.body[removeStart];
+				
 				hold.name = comment = comment.substring(5);
 				hold.pos = 1;
 				var index = comment.indexOf("|");
@@ -2296,19 +2273,15 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 				i--;
 				
 			} else {
-				this.body[commentRange[0]].text = comment;
+				this.body[i].text = comment;
 				this.body.splice(removeStart, removeEnd - removeStart);
 			}
 			
 		} catch (e) {
 			console.log(e);
 		}
-		
-		commentRange = [-1, -1];
-		comment = "";
 	}
-
-	console.log(result);
+	
 	return result;
 }
 
