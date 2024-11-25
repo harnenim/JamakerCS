@@ -41,7 +41,7 @@ var Tab = function(text, path) {
 	this.holds = [];
 	this.hold = 0;
 	this.path = path;
-
+	
 	var texts = text.split("\r\n").join("\n").split("\n<!-- Hold=");
 	var holdInfos = [{ text: texts[0] }];
 	for (var i = 1; i < texts.length; i++) {
@@ -75,7 +75,7 @@ var Tab = function(text, path) {
 	}
 	
 	// SMI 파일 역정규화
-	var normalized = new Subtitle.SmiFile().fromTxt(holdInfos[0].text).antiNormalize();
+	var normalized = new Subtitle.SmiFile(holdInfos[0].text).antiNormalize();
 	normalized[0].pos = 0;
 	normalized[0].name = "메인";
 	holdInfos = normalized.concat(holdInfos.slice(1));
@@ -209,8 +209,8 @@ Tab.prototype.updateHoldSelector = function() {
 	var timers = [];
 	for (var i = 0; i < this.holds.length; i++) {
 		var hold = this.holds[i];
-		timers.push({ time: hold.start, holds: [{ index: i, type: 1 }] });
-		timers.push({ time: hold.end  , holds: [{ index: i, type:-1 }] });
+		timers.push({ time: hold.start, holds: [{ index: i, type: BEGIN }] });
+		timers.push({ time: hold.end  , holds: [{ index: i, type: END   }] });
 	}
 	timers[0].time = timers[0].rate = 0; // 메인 홀드는 시작 시간 0으로 출력
 	timers.sort(function(a, b) {
@@ -255,7 +255,7 @@ Tab.prototype.updateHoldSelector = function() {
 			}
 		}
 	}
-
+	
 	var posStatus = {};
 	for (var i = 0; i < timers.length; i++) {
 		var timer = timers[i];
@@ -376,7 +376,7 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 	var logs = [];
 	var originBody = [];
 	
-	var main = new Subtitle.SmiFile().fromTxt(this.holds[0].text);
+	var main = new Subtitle.SmiFile(this.holds[0].text);
 	withCombine = withCombine && this.holds.length > 1;
 	
 	// 정규화 등 작업
@@ -416,7 +416,7 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 		var holdSmis = [];
 		for (var hi = 1; hi < holds.length; hi++) {
 			var hold = holds[hi];
-			var smi = holdSmis[hi] = new Subtitle.SmiFile().fromTxt(hold.text);
+			var smi = holdSmis[hi] = new Subtitle.SmiFile(hold.text);
 			smi.header = smi.footer = "";
 			if (setting.saveWithNormalize) {
 				Subtitle.Smi.normalize(smi.body, false);
@@ -464,7 +464,7 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 			
 			var slicedText = sliced.toTxt().trim();
 			var combineText = smi.toTxt().trim();
-			var combined = new Subtitle.SmiFile().fromTxt(((hold.pos < 0) ? Combine.combine(slicedText, combineText) : Combine.combine(combineText, slicedText)).join("\n"));
+			var combined = new Subtitle.SmiFile(((hold.pos < 0) ? Combine.combine(slicedText, combineText) : Combine.combine(combineText, slicedText)).join("\n"));
 			// 원칙상 normalized.result를 다뤄야 맞을 것 같지만...
 			end = (mainEnd < main.body.length) ? main.body[mainEnd].start : 999999999;
 			main.body = main.body.slice(0, mainBegin).concat(combined.body).concat(main.body.slice(mainEnd));
@@ -1273,5 +1273,5 @@ function doExit() {
 
 var REG_SRT_SYNC = /^([0-9]{2}:){1,2}[0-9]{2}[,.][0-9]{2,3}( )*-->( )*([0-9]{2}:){1,2}[0-9]{2}[,.][0-9]{2,3}$/;
 function srt2smi(text) {
-	return new Subtitle.SmiFile().fromSync(new Subtitle.SrtFile().fromTxt(text).toSync()).toTxt();
+	return new Subtitle.SmiFile().fromSync(new Subtitle.SrtFile(text).toSync()).toTxt();
 }

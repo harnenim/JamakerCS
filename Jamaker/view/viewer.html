@@ -145,7 +145,7 @@ function refreshTime(receiveTime, withoutTitle) {
 		
 		// 정규화 자동 적용
 		if (nextSyncLine && setting.saveWithNormalize) {
-			var toNormalize = new Subtitle.SmiFile().fromTxt(lines[hold][indexes[hold]][LINE.TEXT] + "\n" + showText[hold] + "\n" + nextSyncLine[LINE.TEXT]);
+			var toNormalize = new Subtitle.SmiFile(lines[hold][indexes[hold]][LINE.TEXT] + "\n" + showText[hold] + "\n" + nextSyncLine[LINE.TEXT]);
 			Subtitle.Smi.normalize(toNormalize.body);
 			if (toNormalize.body.length > 2) {
 				normalizedLines[hold] = toNormalize.body.slice(0, toNormalize.body.length - 1);

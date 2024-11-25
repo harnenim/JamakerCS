@@ -320,7 +320,6 @@ var Combine = {
 								}
 								line = prev + "​" + pad + line + pad + "​" + next;
 								lines[k] = line;
-								console.log(line);
 							}
 						}
 						sync[TEXT] = lines.join("<br>");

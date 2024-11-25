@@ -1039,9 +1039,12 @@ Subtitle.Ass.prototype.fromSync = function(sync) {
 	return this;
 }
 
-Subtitle.AssFile = function() {
+Subtitle.AssFile = function(txt) {
 	this.header = "";
 	this.body = [];
+	if (txt) {
+		this.fromTxt(txt);
+	}
 }
 Subtitle.AssFile.prototype.toTxt = function() {
 	var result = this.header.split("\r\n").join("\n");
@@ -2038,10 +2041,13 @@ Subtitle.Smi.fillEmptySync = function(smis) {
 		}
 	}
 }
-Subtitle.SmiFile = function() {
+Subtitle.SmiFile = function(txt) {
 	this.header = ""; // 세부적으로 나누려다가 주석도 있고 해서 일단 패스
 	this.footer = "";
 	this.body = [];
+	if (txt) {
+		this.fromTxt(txt);
+	}
 }
 Subtitle.SmiFile.prototype.toTxt = function() {
 	return this.header.split("\r\n").join("\n")
@@ -2349,8 +2355,11 @@ Subtitle.Srt.int2Time = function(time) {
 	return intPadding(h) + ":" + intPadding(m) + ":" + intPadding(s) + "," + intPadding(ms);
 }
 
-Subtitle.SrtFile = function() {
+Subtitle.SrtFile = function(txt) {
 	this.body = [];
+	if (txt) {
+		this.fromTxt(txt);
+	}
 }
 Subtitle.SrtFile.prototype.toTxt = function() {
 	var items = [];

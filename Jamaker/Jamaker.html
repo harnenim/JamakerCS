@@ -65,12 +65,6 @@ Binder.prototype.loadVideoFile = function(path) {
 Binder.prototype.openTempDir = function() {
 	this._.openTempDir();
 }
-Binder.prototype.exportSetting = function() {
-	this._.exportSetting();
-}
-Binder.prototype.importSetting = function() {
-	this._.importSetting();
-}
 Binder.prototype.doExit = function(resetPlayer, exitPlayer) {
 	this._.doExit(resetPlayer, exitPlayer);
 }
@@ -197,9 +191,7 @@ var window_open = function(url, name, options, opener) {
 		if (this.loaded) return;
 		this.loaded = true;
 		
-		if (!this.windows[this.mainView.contentWindow.windowName]) {
-			this.windows[this.mainView.contentWindow.windowName] = window;
-		}
+		this.windows[this.mainView.contentWindow.windowName] = window;
 		
 		this.script("init", [this.strSettingJson]); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
 		this.script("setPlayerDlls", [this.strBridgeList]);
@@ -549,10 +541,11 @@ var accessHandle;
 		menus = menus.concat([["샘플용"
 			, "GitHub실행|window.open('https://github.com/harnenim/Jamaker')"
 			, "플레이어 실행|binder.runPlayer()"
-			, "임시 저장 파일 확인하기|binder.openTempDir()"
-			, "설정 export|binder.exportSetting()"
-			, "설정 import|binder.importSetting()"
+			, "임시 저장 파일 확인하기|Jamaker.openTempDir()"
+			, "설정 export|Jamaker.exportSetting()"
+			, "설정 import|Jamaker.importSetting()"
 			]]);
+		editor.mainView.contentWindow.Jamaker = editor;
 		
 		for (var i = 0; i < menus.length; i++) {
 			var list = menus[i];
@@ -699,7 +692,8 @@ var accessHandle;
 	editor.saveTemp = function(text, path) {
 		path = path.split(":");
 		var filename = path[1] ? path[1] : path[0];
-		var key = "tmp_" + new Date().getTime() + "_" + filename;
+//		var key = "tmp_" + new Date().getTime() + "_" + filename;
+		var key = "tmp_" + filename;
 		
 		var keys = localStorage.getItem("tmpKeys");
 		keys = keys ? keys.split(":") : [];
