@@ -408,10 +408,20 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 		}
 		
 		// 메인에 가까운 걸 먼저 작업해야 함
+		// 단, 아래쪽부터 쌓아야 함
 		holds = this.holds.slice(0);
 		holds.sort(function(a, b) {
 			var aPos = a.viewPos;
 			var bPos = b.viewPos;
+			if (aPos < 0) {
+				if (bPos > 0) {
+					return -1;
+				}
+			} else {
+				if (bPos < 0) {
+					return 1;
+				}
+			}
 			if (aPos < 0) aPos = -aPos;
 			if (bPos < 0) bPos = -bPos;
 			if (aPos < bPos) return -1;
