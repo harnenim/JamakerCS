@@ -79,11 +79,17 @@ var Tab = function(text, path) {
 	normalized[0].pos = 0;
 	normalized[0].name = "메인";
 	holdInfos = normalized.concat(holdInfos.slice(1));
-	for (var i = 0; i < normalized.length; i++) {
-		holdInfos[i].text = holdInfos[i].toTxt().trim();
+	holdInfos[0].text = holdInfos[0].toTxt().trim();
+	for (var i = 1; i < normalized.length; i++) {
+		// 내포된 홀드는 종료싱크가 빠졌을 수 있음
+		var hold = holdInfos[i];
+		if (hold.next && hold.body[hold.body.length - 1].text.split("&nbsp;").join("").trim().length > 0) {
+			hold.body.push(new Subtitle.Smi(hold.next.start, hold.next.syncType, "&nbsp;"));
+		}
+		holdInfos[i].text = hold.toTxt().trim();
 	}
 	for (var i = normalized.length; i < holdInfos.length; i++) {
-		holdInfos[i].text = new Subtitle.SmiFile().fromTxt(holdInfos[i].text).antiNormalize()[0].toTxt().trim();
+		holdInfos[i].text = new Subtitle.SmiFile(holdInfos[i].text).antiNormalize()[0].toTxt().trim();
 	}
 	
 	for (var i = 0; i < holdInfos.length; i++) {
@@ -544,9 +550,17 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 						var smi = holdSmis[hi];
 						var isEqual = true;
 						for (var j = 0; j < smi.body.length; j++) {
-							if ((smi.body[j].start != main.body[start+j].start)
-							 || (smi.body[j].text  != main.body[start+j].text )
-							) {
+							if (smi.body[j].start != main.body[start+j].start) {
+								isEqual = false;
+								break;
+							}
+							if (smi.body[j].text != main.body[start+j].text) {
+								if (j == smi.body.length - 1) {
+									// 마지막 싱크일 경우 공백이면 통과시키기
+									if (smi.body[j].text.split("&nbsp;").join("").trim().length == 0) {
+										continue;
+									}
+								}
 								isEqual = false;
 								break;
 							}
