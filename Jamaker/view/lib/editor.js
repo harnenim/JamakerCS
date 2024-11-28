@@ -435,7 +435,7 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 			var smi = holdSmis[hi] = new Subtitle.SmiFile(hold.text);
 			smi.header = smi.footer = "";
 			if (setting.saveWithNormalize) {
-				Subtitle.Smi.normalize(smi.body, false);
+				Subtitle.Smi.normalize(smi.body, withComment);
 			}
 			
 			if (smi.body.length == 0) {

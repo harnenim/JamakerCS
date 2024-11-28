@@ -2256,6 +2256,7 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 				var hold = new Subtitle.SmiFile();
 				hold.body = this.body.splice(removeStart, removeEnd - removeStart);
 				hold.body[0].text = afterComment;
+				hold.antiNormalize();
 				hold.next = this.body[removeStart];
 				
 				hold.name = comment = comment.substring(5);
