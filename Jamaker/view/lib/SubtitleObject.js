@@ -1926,8 +1926,9 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 				}
 				smis.splice(i + j, 0, new Subtitle.Smi((start * (frames - j) + end * j) / frames, Subtitle.SyncType.inner).fromAttr(attrs));
 			}
+			smi.comment = "<!-- End=" + end + "\n" + origin.split("<").join("<​").split(">").join("​>") + "\n-->";
 			if (withComment) {
-				smi.text = "<!-- End=" + end + "\n" + origin.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smi.text;
+				smi.text = smi.comment + "\n" + smi.text;
 			}
 			result.logs.push({
 					from: [i - added, i - added + 1]

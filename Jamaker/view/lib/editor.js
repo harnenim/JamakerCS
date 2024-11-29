@@ -435,7 +435,7 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 			var smi = holdSmis[hi] = new Subtitle.SmiFile(hold.text);
 			smi.header = smi.footer = "";
 			if (setting.saveWithNormalize) {
-				Subtitle.Smi.normalize(smi.body, withComment);
+				Subtitle.Smi.normalize(smi.body, false);
 			}
 			
 			if (smi.body.length == 0) {
@@ -579,6 +579,15 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 							var hold = holds[hi];
 							comment = "Hold=" + hold.pos + "|" + hold.name;
 							result[hold.resultIndex] = "";
+
+							if (withComment) {
+								for (var j = 0; j < smi.body.length; j++) {
+									var sync = smi.body[j];
+									if (sync.comment) {
+										main.body[start + j].text = sync.comment + "\n" + sync.text;
+									}
+								}
+							}
 							break;
 						}
 					}
