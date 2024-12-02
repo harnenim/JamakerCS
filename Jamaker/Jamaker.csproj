@@ -161,6 +161,7 @@
     <Content Include="bridge\player.html" />
     <Content Include="bridge\WinAPI.js" />
     <Content Include="index.html" />
+    <Content Include="Jamaker.html" />
     <Content Include="jamaker.ico" />
     <Content Include="view\addon\Combine.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

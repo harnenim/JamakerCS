@@ -279,20 +279,23 @@ var main = new WebForm();
 				var path = file.name;
 				var ext = path.substring(path.length - 4);
 				switch (ext) {
-					/*
 					case ".avi":
 					case ".mkv":
 					case ".mp4":
 					case ".ts":
 					case ".m2ts": {
+						/*
 						if (hasVideo) break;
 						hasVideo = true;
 						main.isOriginVideoFile = true;
 						main.withSaveSkf = withSaveSkf;
 						main.readVideoFile(file);
+						*/
+                        if (hasVideo) break;
+                        hasVideo = true;
+						alert("웹버전은 동영상 대신 skf 파일만 지원합니다.");
 						break;
 					}
-					*/
 					case ".skf": {
 						if (hasVideo) break;
 						hasVideo = true;
@@ -331,18 +334,21 @@ var main = new WebForm();
 				var path = file.name;
 				var ext = path.substring(path.length - 4);
 				switch (ext) {
-					/*
 					case ".avi":
 					case ".mkv":
 					case ".mp4":
 					case ".ts":
 					case ".m2ts": {
+						/*
 						main.isOriginVideoFile = false;
 						main.withSaveSkf = withSaveSkf;
 						main.readVideoFile(file);
+						*/
+                        if (hasVideo) break;
+                        hasVideo = true;
+                        alert("웹버전은 동영상 대신 skf 파일만 지원합니다.");
 						break;
 					}
-					*/
 					case ".skf": {
 						hasVideo = true;
 						main.isOriginVideoFile = false;
@@ -428,13 +434,12 @@ var main = new WebForm();
 			main.setProgress("#settingCalc", 0);
 		});
 	}
-	main.save = function(text, operation) {
+	main.save = async function(text, operation) {
+		/*
 		if (main.targetVideoFile == null) {
 			main.script("alert", ["목표 영상 파일을 선택해주세요."]);
 			return;
 		}
-		main.script("alert", "C# only");
-		/*
 		var path = targetVideoFile.path.Substring(0, targetVideoFile.path.Length - new FileInfo(targetVideoFile.path).Extension.Length) + "." + operation;
 
 		StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8);
@@ -443,6 +448,28 @@ var main = new WebForm();
 
 		main.script("alert", ["저장했습니다."]);
 		*/
+		var types = [];
+        switch (operation) {
+            case "smi": {
+                types.push({ description: "SAMI", accept: { "text/sami": [".smi"] } });
+                break;
+            }
+            case "srt": {
+                types.push({ description: "SRT", accept: { "text/srt": [".srt"] } });
+                break;
+            }
+            case "ass": {
+                types.push({ description: "ASS", accept: { "text/ass": [".ass"] } });
+                break;
+            }
+		}
+        var fileBuffer = await window.showSaveFilePicker({ types: types });
+        if (fileBuffer) {
+            var stream = await fileBuffer.createWritable();
+            await stream.write("\ufeff" + text); // BOM 넣어줌
+            await stream.close();
+            main.script("alert", ["저장했습니다."]);
+        }
 	}
 	/*
 	main.readVideoFile = function(path) {
