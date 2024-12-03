@@ -44,7 +44,6 @@ SyncShift.GetShiftsForRange = function(origin, target, range, progress) {
 					console.log("오차가 기존값보다 작음(+)");
 					point.add = add;
 					minPoint = point;
-					console.log(point);
 					if (point.value == 0.0) {
 						console.log("완전히 일치: 정답 찾음");
 						// 완전히 일치: 정답 찾음
@@ -53,7 +52,6 @@ SyncShift.GetShiftsForRange = function(origin, target, range, progress) {
 				} else if (point.value > minPoint.value * 20) {
 					console.log("오차가 기존값에 비해 지나치게 큼(+)");
 					// 오차가 기존값에 비해 지나치게 큼: 이미 정답을 찾았다고 간주
-					console.log(point);
 					doPlus = false;
 				}
 				
@@ -79,7 +77,6 @@ SyncShift.GetShiftsForRange = function(origin, target, range, progress) {
 					console.log("오차가 기존값보다 작음(-)");
 					point.add = -add;
 					minPoint = point;
-					console.log(point);
 					if (point.value == 0.0) {
 						// 완전히 일치: 정답 찾음
 						console.log("완전히 일치: 정답 찾음");
@@ -88,7 +85,6 @@ SyncShift.GetShiftsForRange = function(origin, target, range, progress) {
 				} else if (point.value > minPoint.value * 20) {
 					// 오차가 기존값에 비해 지나치게 큼: 이미 정답을 찾았다고 간주
 					console.log("오차가 기존값에 비해 지나치게 큼(-)");
-					console.log(point);
 					doMinus = false;
 				}
 			} else {

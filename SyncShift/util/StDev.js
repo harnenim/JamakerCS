@@ -31,8 +31,8 @@ StDev.prototype.calc = function () {
 	this.value = Math.sqrt((this.pSum / this.values.length) - (this.avg * this.avg));
 	return this;
 }
-StDev.from = function (values) {
-	return  new StDev(values).calc();
+StDev.from = function(values) {
+	return new StDev(values).calc();
 }
 
 MathFunc = {};

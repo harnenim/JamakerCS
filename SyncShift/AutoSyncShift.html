@@ -93,7 +93,7 @@ var main = new WebForm();
 }
 {
 	main.saveSetting = async function(setting) {
-		// TODO: C#
+		// TODO: C#에서 진행
 	}
 }
 {
@@ -121,71 +121,14 @@ var main = new WebForm();
 		var progress = isOriginVideoFile ? "#originVideo > .input" : "#targetVideo > .input";
 		main.readingVideoFile = new VideoInfo(file, new WebProgress(main, progress));
 		setTimeout(function() {
-			main.readingVideoFile.refreshInfo(main.afterRefreshInfo);
+			main.readingVideoFile.RefreshInfo(main.afterRefreshInfo);
 		});
 	}
 	main.afterRefreshInfo = function(video) {
 		console.log("AfterRefreshInfo");
 		if (video.length > 0) {
-			/*
-			if (isOriginVideoFile) {
-				originVideoFile = video;
-				main.script("setOriginVideoFile", [video.path]);
-			} else {
-				targetVideoFile = video;
-				main.script("setTargetVideoFile", [video.path]);
-			}
-
-			var streams = video.streams;
-
-			var audios = [];
-			for (int i = 0; i < streams.length; i++) {
-				var stream = streams[i];
-				console.log("Stream {0}: {1}({2})".split("{0}").join(i).split("{1}").join(stream.type)).split("{2}").join(stream.language));
-				foreach (KeyValuePair<string, string> pair in stream.metadata)
-				{
-					console.log("  {0}: {1}".split("{0}").join(pair.Key).split("{1}").join(pair.Value));
-				}
-				if (streams[i].type.Equals("audio"))
-				{
-					audios.Add(i);
-				}
-			}
-			console.log("audios.Count: {0}".split("{0}").join(audios.Count));
-			//this.streams = streams;
-			switch (audios.Count)
-			{
-				case 0:
-					main.script("alert", "오디오 없음");
-					HideProcessing();
-					return;
-				case 1:
-					{
-						SelectAudio(audios[0]);
-						int index = audios[0];
-						StreamAttr audio = streams[index];
-						foreach (string key in audio.metadata.Keys)
-						{
-							console.log(key + ": " + audio.metadata[key]);
-						}
-
-						//string.Format("[{0}] {1}", streams[index].language, streams[index].metadata["title"]);
-						break;
-					}
-				default:
-					List<object[]> data = new List<object[]>();
-					foreach (int index in audios)
-					{
-						data.Add([index, "[{0}] {1}".split("{0}").join(streams[index].language).split("{1}").join(streams[index].metadata["title"])]);
-						console.log("[{0}] {1}".split("{0}").join(streams[index].language).split("{1}").join(streams[index].metadata["title"]));
-					}
-					//main.script("showAudioSelector", new object[] { Newtonsoft.Json.JsonConvert.SerializeObject(data) });
-					break;
-			}
-			*/
-		}
-		else
-		{
+			// TODO: C#에서 진행
+		} else {
 			video.progress.Set(0);
 			main.hideProcessing();
 		}
@@ -246,7 +189,15 @@ var main = new WebForm();
 		var setting = {types:[{description:'자막 파일',accept:{'text/*':['.smi', '.srt', '.ass']}}]};
 		if (type % 10 == 0) {
 			// 동영상 혹은 skf 파일
-			setting = {types:[{description:'동영상 혹은 skf 파일',accept:{'video/*':['.avi', '.mkv', '.mp4', '.ts', '.m2ts', '.skf']}}]};
+			setting = { types: [{ description: '동영상 혹은 skf 파일', accept: { 'video/*': ['.avi', '.mkv', '.mp4', '.ts', '.m2ts', '.skf'] } }] };
+		} else {
+			$.ajax({url: "view/LookBack.ass"
+				, dataType: "text"
+				, success: function (text) {
+					main.script("setOriginSubtitleFile", ["LookBack.ass", text]);
+				}
+			})
+			return;
 		}
 		var fb = await window.showOpenFilePicker(setting);
 		if (fb && fb[0]) {
@@ -291,8 +242,8 @@ var main = new WebForm();
 						main.withSaveSkf = withSaveSkf;
 						main.readVideoFile(file);
 						*/
-                        if (hasVideo) break;
-                        hasVideo = true;
+						if (hasVideo) break;
+						hasVideo = true;
 						alert("웹버전은 동영상 대신 skf 파일만 지원합니다.");
 						break;
 					}
@@ -344,9 +295,9 @@ var main = new WebForm();
 						main.withSaveSkf = withSaveSkf;
 						main.readVideoFile(file);
 						*/
-                        if (hasVideo) break;
-                        hasVideo = true;
-                        alert("웹버전은 동영상 대신 skf 파일만 지원합니다.");
+						if (hasVideo) break;
+						hasVideo = true;
+						alert("웹버전은 동영상 대신 skf 파일만 지원합니다.");
 						break;
 					}
 					case ".skf": {
@@ -412,18 +363,12 @@ var main = new WebForm();
 				}
 			}
 
-			var progress = new WebProgress(main, "#settingCalc");
-			/*
-			var result = [];
-			for (var i = 0; i < ranges.length; i++) {
-				var range = ranges[i];
-				SyncShift.GetShifts(main.originVideoFile.GetSfs(), main.targetVideoFile.GetSfs()
-					, progress, result
-					, [range]
-					, range.shift);
-			}
-			*/
-			var result = SyncShift.GetShiftsForRanges(main.originVideoFile.GetSfs(), main.targetVideoFile.GetSfs(), ranges, progress);
+			var result = SyncShift.GetShiftsForRanges(
+					main.originVideoFile.GetSfs()
+				,	main.targetVideoFile.GetSfs()
+				,	ranges
+				,	new WebProgress(main, "#settingCalc")
+			);
 			
 			for (var i = 0; i < result.length; i++) {
 				var shift = result[i];
@@ -435,6 +380,7 @@ var main = new WebForm();
 		});
 	}
 	main.save = async function(text, operation) {
+		// 웹버전에선 특정 경로 파일 자동 생성 불가
 		/*
 		if (main.targetVideoFile == null) {
 			main.script("alert", ["목표 영상 파일을 선택해주세요."]);
@@ -448,239 +394,30 @@ var main = new WebForm();
 
 		main.script("alert", ["저장했습니다."]);
 		*/
+		// 무조건 대화상자 열어야 함
 		var types = [];
-        switch (operation) {
-            case "smi": {
-                types.push({ description: "SAMI", accept: { "text/sami": [".smi"] } });
-                break;
-            }
-            case "srt": {
-                types.push({ description: "SRT", accept: { "text/srt": [".srt"] } });
-                break;
-            }
-            case "ass": {
-                types.push({ description: "ASS", accept: { "text/ass": [".ass"] } });
-                break;
-            }
-		}
-        var fileBuffer = await window.showSaveFilePicker({ types: types });
-        if (fileBuffer) {
-            var stream = await fileBuffer.createWritable();
-            await stream.write("\ufeff" + text); // BOM 넣어줌
-            await stream.close();
-            main.script("alert", ["저장했습니다."]);
-        }
-	}
-	/*
-	main.readVideoFile = function(path) {
-		main.script("showProcessing", [ "불러오는 중" ]);
-		var progress = main.isOriginVideoFile ? "#originVideo > .input" : "#targetVideo > .input";
-		
-		// TODO: C# - ffmpeg
-		{
-			var i = 0;
-			var interval = setInterval(function() {
-				if (i == 20) {
-					i = 0;
-					clearInterval(interval);
-				}
-				main.setProgress(progress, i++ * 0.05);
-			}, 50);
-		}
-		setTimeout(function() {
-			if (true) { // 성공했다고 가정
-				if (main.isOriginVideoFile) {
-					main.originVideoFilePath = path;
-					main.script("setOriginVideoFile", [path]);
-				} else {
-					main.tragetVideoFilePath = path;
-					main.script("setTargetVideoFile", [path]);
-				}
-				
-				// TODO: C#
-				var audios = [ "track1", "track2", "track3" ];
-				
-				if (audios.length == 0) {
-					// 오디오가 없을 때
-					main.alert("오디오가 없습니다.");
-					main.script("hideProcessing");
-					
-				} else if (audios.length == 1) {
-					// 오디오가 하나일 때
-					main.selectAudio(audios[0]);
-					
-				} else {
-					// 오디오가 여러 개라고 가정
-					main.script("showAudioSelector", [ audios.join("|") ]);
-					
-				}
-				
-			} else {
-				main.setProgress(progress, 0);
-				main.script("hideProcessing");
+		switch (operation) {
+			case "smi": {
+				types.push({ description: "SAMI", accept: { "text/sami": [".smi"] } });
+				break;
 			}
-		}, 1000);
-	}
-	main.selectAudio = function(track) {
-		// TODO: C#에서 진행
-		if (main.withSaveSkf) {
-			if (main.isOriginVideoFile) {
-				console.log("save origin skf");
-				main.script("refreshRangeAfterReadOriginVideoFile", [ 142857 ]);
-				
-			} else {
-				console.log("save target skf");
+			case "srt": {
+				types.push({ description: "SRT", accept: { "text/srt": [".srt"] } });
+				break;
+			}
+			case "ass": {
+				types.push({ description: "ASS", accept: { "text/ass": [".ass"] } });
+				break;
 			}
 		}
-		main.setProgress(main.isOriginVideoFile ? "#originVideo > .input" : "#targetVideo > .input", 0);
-		main.script("hideProcessing");
-	}
-	main.readSkfFile = async function(path) {
-		main.script("showProcessing", [ "불러오는 중" ]);
-		if (true) { // 성공했다고 가정
-			if (main.isOriginVideoFile) {
-				main.originVideoFilePath = path;
-				main.script("setOriginVideoFile", [path]);
-			} else {
-				main.targetVideoFilePath = path;
-				main.script("setTargetVideoFile", [path]);
-			}
-			
-		} else {
-			main.setProgress(main.isOriginVideoFile ? "#originVideo > .input" : "#targetVideo > .input", 0);
-			main.script("hideProcessing");
+		var fileBuffer = await window.showSaveFilePicker({ types: types });
+		if (fileBuffer) {
+			var stream = await fileBuffer.createWritable();
+			await stream.write("\ufeff" + text); // BOM 넣어줌
+			await stream.close();
+ 		   main.script("alert", ["저장했습니다."]);
 		}
 	}
-	main.readSubtitleFile = async function(path, file) {
-		this.script("setOriginSubtitleFile", [path, await file.text()]);
-	}
-	main.openFileDialog = async function(type, withSaveSkf) {
-		var setting = {types:[{description:'자막 파일',accept:{'text/*':['.smi', '.srt', '.ass']}}]};
-		if (type % 10 == 0) {
-			// 동영상 혹은 skf 파일
-			setting = {types:[{description:'동영상 혹은 skf 파일',accept:{'video/*':['.avi', '.mkv', '.mp4', '.ts', '.m2ts', '.skf']}}]};
-		}
-		var fb = await window.showOpenFilePicker(setting);
-		if (fb && fb[0]) {
-			this.droppedFiles = [await fb[0].getFile()];
-			switch (Math.floor(type / 10)) {
-				case 1: {
-					main.dropOriginFile(withSaveSkf);
-					break;
-				}
-				case 2: {
-					main.dropTargetFile(withSaveSkf);
-					break;
-				}
-			} 
-		}
-	}
-	main.dropOriginFile = async function(withSaveSkf) {
-		if (!this.droppedFiles) return;
-		if (this.droppedFiles.length < 1) {
-			this.droppedFiles = null;
-			return;
-		}
-		var hasVideo = false;
-		var hasSubtitle = false;
-		for (var i = 0; i < this.droppedFiles.length; i++) {
-			try {
-				var file = this.droppedFiles[i];
-				var path = file.name;
-				var ext = path.substring(path.length - 4);
-				switch (ext) {
-					case ".avi":
-					case ".mkv":
-					case ".mp4":
-					case ".ts":
-					case ".m2ts": {
-						if (hasVideo) break;
-						hasVideo = true;
-						main.isOriginVideoFile = true;
-						main.withSaveSkf = withSaveSkf;
-						main.readVideoFile(path);
-						break;
-					}
-					case ".skf": {
-						if (hasVideo) break;
-						hasVideo = true;
-						main.isOriginVideoFile = true;
-						main.readSkfFile(path);
-						break;
-					}
-					case ".smi":
-					case ".ass":
-					case ".srt": {
-						if (hasSubtitle) break;
-						hasSubtitle = true;
-						main.readSubtitleFile(path, file);
-						break;
-					}
-				}
-				if (hasVideo && hasSubtitle) {
-					break;
-				}
-			} catch (e) {
-				console.log(e);
-			}
-		}
-	}
-	main.dropTargetFile = function(withSaveSkf) {
-		if (!this.droppedFiles) return;
-		if (this.droppedFiles.length < 1) {
-			this.droppedFiles = null;
-			return;
-		}
-		for (var i = 0; i < this.droppedFiles.length; i++) {
-			try {
-				var file = this.droppedFiles[i];
-				var path = file.name;
-				var ext = path.substring(path.length - 4);
-				switch (ext) {
-					case ".avi":
-					case ".mkv":
-					case ".mp4":
-					case ".ts":
-					case ".m2ts": {
-						hasVideo = true;
-						main.isOriginVideoFile = false;
-						main.withSaveSkf = withSaveSkf;
-						main.readVideoFile(path);
-						break;
-					}
-				}
-			} catch (e) {}
-		}
-	}
-	main.calcShift = async function(ranges) {
-		ranges = ranges.split("|");
-		for (var i = 0; i < ranges.length; i++) {
-			main.script("addShift", [ranges[i].split("~")[0], i * 11111]);
-		}
-		
-		// TODO: C#에서 진행
-		main.script("showProcessing", [ "작업 중" ]);
-		{
-			var i = 0;
-			var interval = setInterval(function() {
-				if (i == 20) {
-					i = 0;
-					clearInterval(interval);
-				}
-				main.setProgress("#settingCalc", i++ * 0.05);
-			}, 50);
-		}
-		setTimeout(function() {
-			main.script("hideProcessing");
-			main.setProgress("#settingCalc", 0);
-		}, 1000);
-	}
-	main.save = async function(text) {
-		
-		
-		// TODO: C#에서 진행
-	}
-	*/
 }
 
 function WebProgress(main, selector) {
@@ -697,30 +434,6 @@ function Range(start, end, shift=0) {
 	this.shift = shift;
 }
 
-
-
-
-var Skf = function(sfps, kfps) {
-	this.sfps = sfps;
-	this.kfps = kfps;
-}
-Skf.prototype.save = function(path) {}
-Skf.prototype.load = function(path) {}
-Skf.prototype.getSfps10 = function() {}
-
-var FFmpeg = function(filePath) {
-	this.filePath = filePath;
-}
-FFmpeg.path = null;
-FFmpeg.prototype.getVideoInfo = function() {}
-FFmpeg.prototype.getVideoLength = function() {}
-FFmpeg.prototype.getTracks = function() {}
-FFmpeg.prototype.trackToSfps = function(index) {}
-FFmpeg.prototype.trackToKfps = function() {}
-
-var CalcShift = function () {
-		
-};
 $(function() {
 	main.run();
 	window.addEventListener("beforeunload", function(e) {

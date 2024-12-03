@@ -38,7 +38,7 @@ namespace Jamaker
             , Range range
             , WebProgress progress)
         {
-            progress.Set(range.start / origin.Count);
+            progress.Set((double) range.start / origin.Count);
 
             List<SyncShift> shifts = new List<SyncShift>();
             int start = range.start;

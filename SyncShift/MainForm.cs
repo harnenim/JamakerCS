@@ -217,24 +217,16 @@ namespace Jamaker
                     case 1:
                         {
                             SelectAudio(audios[0]);
-                            int index = audios[0];
-                            StreamAttr audio = streams[index];
-                            foreach (string key in audio.metadata.Keys)
-                            {
-                                Console.WriteLine(key + ": " + audio.metadata[key]);
-                            }
-
-                            //string.Format("[{0}] {1}", streams[index].language, streams[index].metadata["title"]);
                             break;
                         }
                     default:
-                        List<object[]> data = new List<object[]>();
+                        string data = null;
                         foreach (int index in audios)
                         {
-                            data.Add(new object[] { index, string.Format("[{0}] {1}", streams[index].language, streams[index].metadata["title"]) });
-                            Console.WriteLine(string.Format("[{0}] {1}", streams[index].language, streams[index].metadata["title"]));
+                            string item = string.Format("{0}: [{1}] {2}", index, streams[index].language, streams[index].metadata["title"]);
+                            data = data == null ? item : (data + "|" + item);
                         }
-                        //Script("showAudioSelector", new object[] { Newtonsoft.Json.JsonConvert.SerializeObject(data) });
+                        Script("showAudioSelector", new object[] { data });
                         break;
                 }
             }
@@ -247,7 +239,6 @@ namespace Jamaker
         public void SelectAudio(int track)
         {
             Console.WriteLine("SelectAudio: {0}", track);
-            // TODO: C#에서 진행
             if (isOriginVideoFile)
             {
                 Script("refreshRangeAfterReadOriginVideoFile", new object[] { originVideoFile.length });
@@ -452,7 +443,6 @@ namespace Jamaker
                 Script("alert", "파일을 선택해주세요.");
             }
 
-            // TODO: C#에서 진행
             ShowProcessing("작업 중");
 
             new Thread(new ThreadStart(() =>
@@ -503,18 +493,7 @@ namespace Jamaker
                     }
                 }
 
-                WebProgress progress = new WebProgress(this, "#settingCalc");
-                /*
-                List<SyncShift> result = new List<SyncShift>();
-                foreach (Range range in ranges)
-                {
-                    SyncShift.GetShifts(originVideoFile.GetSfs(), targetVideoFile.GetSfs()
-                        , progress, result
-                        , new Range[] { range }
-                        , range.shift);
-                }
-                */
-                List<SyncShift> result = SyncShift.GetShiftsForRanges(originVideoFile.GetSfs(), targetVideoFile.GetSfs(), ranges, progress);
+                List<SyncShift> result = SyncShift.GetShiftsForRanges(originVideoFile.GetSfs(), targetVideoFile.GetSfs(), ranges, new WebProgress(this, "#settingCalc"));
 
                 foreach (SyncShift shift in result)
                 {

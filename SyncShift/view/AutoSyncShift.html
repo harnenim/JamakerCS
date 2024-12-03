@@ -9,1018 +9,998 @@
 	<script src="lib/webview.js"></script>
 	<link rel="stylesheet" type="text/css" href="lib/webview.css" />
 	<script>
-		var isProcessing = false;
-		function showProcessing(text) {
-			isProcessing = true;
-			$("#processing").show().find("span").text(text ? text : "작업 중…");
-		}
-		function hideProcessing() {
-			$("#processing").hide();
-			isProcessing = false;
-		}
-		var progresses = {};
-		function setProgress(name, ratio) {
-			var obj = $(name);
-			var id = obj.attr("id");
-			if (!id) {
-				obj.attr("id", (id = "id_" + Math.random()));
-			}
+var isProcessing = false;
+function showProcessing(text) {
+	isProcessing = true;
+	$("#processing").show().find("span").text(text ? text : "작업 중…");
+}
+function hideProcessing() {
+	$("#processing").hide();
+	isProcessing = false;
+}
+var progresses = {};
+function setProgress(name, ratio) {
+	var obj = $(name);
+	var id = obj.attr("id");
+	if (!id) {
+		obj.attr("id", (id = "id_" + Math.random()));
+	}
 
-			if (progresses[id] == null) {
-				obj.css({ position: "relative" })
-					.prepend(progresses[id] = $("<div>").css({
-						  "position": "absolute"
-						, "top": 0
-						, "left": 0
-						, "width": 0
-						, "height": "100%"
-						, "background": "rgba(0, 122, 202, 0.5)"
-					}));
-			}
-			progresses[id].width(ratio * 100 + "%");
-		}
-		function showAudioSelector(list) {
-			var list = list.split("|");
-			var ol = $("#selectAudio").show().find(".list").empty();
-			for (var i = 0; i < list.length; i++) {
-				ol.append($("<li>").text(list[i]));
-			}
-		}
-		$(function () {
-			$("#selectAudio .list").on("click", "li", function () {
-				binder.selectAudio($(this).text());
-				$("#selectAudio").hide();
-			});
-		});
+	if (progresses[id] == null) {
+		obj.css({ position: "relative" })
+		.prepend(progresses[id] = $("<div>").css({
+				"position": "absolute"
+			,	"top": 0
+			,	"left": 0
+			,	"width": 0
+			,	"height": "100%"
+			,	"background": "rgba(0, 122, 202, 0.5)"
+		}));
+	}
+	progresses[id].width(ratio * 100 + "%");
+}
+function showAudioSelector(list) {
+	var list = list.split("|");
+	var ol = $("#selectAudio").show().find(".list").empty();
+	for (var i = 0; i < list.length; i++) {
+		ol.append($("<li>").text(list[i]));
+	}
+}
+$(function() {
+	$("#selectAudio .list").on("click", "li", function() {
+		binder.selectAudio($(this).text().split(":")[0]);
+		$("#selectAudio").hide();
+	});
+});
 	</script>
 	<script>
-		var $fieldOrigin;
-		var $fieldTarget;
-		var operation = { type: null, input: [] };
+var $fieldOrigin;
+var $fieldTarget;
+var operation = { type: null, input: [] };
 
-        function syncText(sync) {
-            var h = sync;
-            var ms = h % 1000; h = (h - ms) / 1000;
-            var s = h % 60; h = (h - s) / 60;
-			var m = h % 60; h = (h - m) / 60;
-			return h + ":" + (m > 9 ? "" : "0") + m + ":" + (s > 9 ? "" : "0") + s + ":" + (ms > 99 ? "" : "0") + (ms > 9 ? "" : "0") + ms;
-		}
+function syncText(sync) {
+    var h = sync;
+    var ms = h % 1000; h = (h - ms) / 1000;
+    var s = h % 60; h = (h - s) / 60;
+	var m = h % 60; h = (h - m) / 60;
+	return h + ":" + (m > 9 ? "" : "0") + m + ":" + (s > 9 ? "" : "0") + s + ":" + (ms > 99 ? "" : "0") + (ms > 9 ? "" : "0") + ms;
+}
 
-		$(function () {
-			$(".preset").each(function () {
-				var preset = $(this);
-				preset.parent().data("preset", preset.clone().removeClass("preset"));
-				preset.remove();
-			});
-			$fieldOrigin = $("#fieldOrigin");
-			$fieldTarget = $("#fieldTarget");
-
-			$("#btnAddRangeList").on("click", function () { addRange(); });
-			$("#btnAddShiftList").on("click", function () { addShift(); });
-
-			$("#btnCalc").on("click", function () { calcShift(); });
-			$("#btnApply").on("click", function () { apply(); });
-			$("#btnSave").on("click", function () { save(); });
-			$("#btnApplySave").on("click", function () { applySave(); });
-
-			function findSyncLine(sync) {
-				var result = null;
-				$fieldOrigin.find(".preview-body").children().each(function () {
-					if (sync <= $(this).data("item").start) {
-						result = $(this);
-						return false;
-					}
-				});
-				return result;
+$(function() {
+	$(".preset").each(function() {
+		var preset = $(this);
+		preset.parent().data("preset", preset.clone().removeClass("preset"));
+		preset.remove();
+	});
+	$fieldOrigin = $("#fieldOrigin");
+	$fieldTarget = $("#fieldTarget");
+	
+	$("#btnAddRangeList").on("click", function() { addRange (); });
+	$("#btnAddShiftList").on("click", function() { addShift (); });
+	
+	$("#btnCalc"        ).on("click", function() { calcShift(); });
+	$("#btnApply"       ).on("click", function() { apply    (); });
+	$("#btnSave"        ).on("click", function() { save     (); });
+	$("#btnApplySave"   ).on("click", function() { applySave(); });
+	
+	function findSyncLine(sync) {
+		var result = null;
+		$fieldOrigin.find(".preview-body").children().each(function() {
+			if (sync <= $(this).data("item").ms) {
+				result = $(this);
+				return false;
 			}
-			$("#originVideo button").on("click", function () {
-				binder.openFileDialog(10, $("#chkSaveSkfOrigin").prop("checked"));
-			});
-			$("#originSub button").on("click", function () {
-				binder.openFileDialog(11, $("#chkSaveSkfOrigin").prop("checked"));
-			});
-			$("#targetVideo button").on("click", function () {
-				binder.openFileDialog(20, $("#chkSaveSkfTarget").prop("checked"));
-			});
-			$("#rangeList, #shiftList").on("mouseover", "input.start, input.end", function () {
-				$fieldOrigin.find(".hover").removeClass("hover");
-				var line = findSyncLine($(this).val());
-				if (!line) return;
-
-				line.addClass("hover");
-
-			}).on("mouseout", "input.start, input.end", function () {
-				$fieldOrigin.find(".hover").removeClass("hover");
-
-			}).on("dblclick", "input.start, input.end", function () {
-				var line = findSyncLine($(this).val());
-				if (!line) return;
-
-				var body = $fieldOrigin.find(".preview-body");
-				body.scrollTop(body.scrollTop() + line.offset().top - body.offset().top - 100);
-			}).on("click", "button.remove", function () {
-				$(this).parent().remove();
-			});
-			$fieldOrigin.find(".preview-body").on("scroll", function () {
-				$fieldTarget.find(".preview-body").scrollTop($(this).scrollTop());
-			});
-			$fieldTarget.find(".preview-body").on("scroll", function () {
-				$fieldOrigin.find(".preview-body").scrollTop($(this).scrollTop());
-			});
-
-            document.addEventListener("dragenter", function (e) {
-                e.preventDefault();
-                binder.showDragging();
-            });
-            $("#cover").on("click", function (e) {
-                binder.hideDragging();
-            });
 		});
+		return result;
+	}
+	$("#originVideo button").on("click", function() {
+		binder.openFileDialog(10, $("#chkSaveSkfOrigin").prop("checked"));
+	});
+	$("#originSub button").on("click", function() {
+		binder.openFileDialog(11, $("#chkSaveSkfOrigin").prop("checked"));
+	});
+	$("#targetVideo button").on("click", function() {
+		binder.openFileDialog(20, $("#chkSaveSkfTarget").prop("checked"));
+	});
+	$("#rangeList, #shiftList").on("mouseover", "input.start, input.end", function() {
+		$fieldOrigin.find(".hover").removeClass("hover");
+		var line = findSyncLine($(this).val());
+		if (!line) return;
+		
+		line.addClass("hover");
+		
+	}).on("mouseout", "input.start, input.end", function() {
+		$fieldOrigin.find(".hover").removeClass("hover");
+		
+	}).on("dblclick", "input.start, input.end", function() {
+		var line = findSyncLine($(this).val());
+		if (!line) return;
+		
+		var body = $fieldOrigin.find(".preview-body");
+		body.scrollTop(body.scrollTop() + line.offset().top - body.offset().top - 100);
+		
+	}).on("click", "button.remove", function() {
+		$(this).parent().remove();
+	});
+	$fieldOrigin.find(".preview-body").on("scroll", function() {
+		$fieldTarget.find(".preview-body").scrollTop($(this).scrollTop());
+	});
+	$fieldTarget.find(".preview-body").on("scroll", function() {
+		$fieldOrigin.find(".preview-body").scrollTop($(this).scrollTop());
+	});
 
-		function findDragArea(x, y) {
-			if (isProcessing) {
-				return null;
-			}
-			var center = $(document.body).width() / 2
-			if (x < center - 66) {
-				return $fieldOrigin;
-			}
-			if (x > center + 66) {
-				return $fieldTarget;
-			}
-		}
-		function dragover(x, y) {
-			$(".hover").removeClass("hover");
-			var area = findDragArea(x, y);
-			if (area) {
-				area.addClass("hover");
-			}
-		}
-		function drop(x, y) {
-			$(".hover").removeClass("hover");
-			var area = findDragArea(x, y);
-			if (area == $fieldOrigin) {
-				binder.dropOriginFile($("#chkSaveSkfOrigin").prop("checked"));
-			} else if (area == $fieldTarget) {
-				binder.dropTargetFile($("#chkSaveSkfTarget").prop("checked"));
-			}
-		}
+    document.addEventListener("dragenter", function(e) {
+        e.preventDefault();
+        binder.showDragging();
+    });
+    $("#cover").on("click", function(e) {
+        binder.hideDragging();
+    });
+});
 
-		function setOriginVideoFile(path) {
-			$("#originVideo input").val(path);
-		}
-		function setTargetVideoFile(path) {
-			$("#targetVideo input").val(path);
-		}
-		function setOriginSubtitleFile(path, text) {
-            $("#originSub input").val(path);
+function findDragArea(x, y) {
+	if (isProcessing) {
+		return null;
+	}
+	var center = $(document.body).width() / 2
+	if (x < center - 66) {
+		return $fieldOrigin;
+	}
+	if (x > center + 66) {
+		return $fieldTarget;
+	}
+}
+function dragover(x, y) {
+	$(".hover").removeClass("hover");
+	var area = findDragArea(x, y);
+	if (area) {
+		area.addClass("hover");
+	}
+}
+function drop(x, y) {
+	$(".hover").removeClass("hover");
+	var area = findDragArea(x, y);
+	if (area == $fieldOrigin) {
+		binder.dropOriginFile($("#chkSaveSkfOrigin").prop("checked"));
+	} else if (area == $fieldTarget) {
+		binder.dropTargetFile($("#chkSaveSkfTarget").prop("checked"));
+	}
+}
 
-            var range = [0, 0]
-            var ranges = [];
+// 20초 이상 벌어지면 범위 분리... 설정 가능하게?
+var MAX_EMPTY_LENGTH = 20000;
 
-            var separators = $("#inputSeparator").val().split("\n");
-            for (var i = 0; i < separators.length; i++) {
-                var separator = separators[i].trim();
-                if (separator.length == 0) {
-                    separators.splice(i--, 1);
-                }
-            }
-            separators.push("\n\n");
+function setOriginVideoFile(path) {
+	$("#originVideo input").val(path);
+}
+function setTargetVideoFile(path) {
+	$("#targetVideo input").val(path);
+}
+function setOriginSubtitleFile(path, text) {
+	$("#originSub input").val(path);
+	
+    var separators = $("#inputSeparator").val().split("\n");
+    for (var i = 0; i < separators.length; i++) {
+        var separator = separators[i].trim();
+        if (separator.length == 0) {
+            separators.splice(i--, 1);
+        }
+    }
+    separators.push("\n\n");
 
-			var $preview = $fieldOrigin.find(".preview-body");
-			var ext = path.substring(path.length - 4);
-            if (ext == ".smi") {
-				var texts = text.split("\r\n").join("\n").split("\n<!-- Hold=");
-				var holdInfos = [{ text: texts[0] }];
-				for (var i = 1; i < texts.length; i++) {
-					var hold = texts[i];
-					var begin = hold.indexOf("\n");
-					var end = hold.indexOf("-->");
-					if (begin < 0 || end < 0) {
-						holdInfos[0].text += "\n<!-- Hold=" + hold;
-						continue;
-					}
-					// Hold 내용물 뒤에 뭐가 더 붙어있을 경우
-					if (end < hold.length - 3) {
-						holdInfos[0].text += hold.substring(end);
-					}
-					var name = hold.substring(0, begin).trim();
-					var pos = 1;
-					var index = name.indexOf("|");
-					if (index) {
-						try {
-							pos = Number(name.substring(0, index));
-						} catch (e) {
-							console.log(e);
-						}
-						name = name.substring(index + 1);
-					}
-					holdInfos.push({
-							pos: pos
-						,	name: name
-						,	text: hold.substring(begin, end).trim().split("<​").join("<").split("​>").join(">")
-					});
+	var sortedBody = [];
+	
+	var ext = path.substring(path.length - 4);
+	if (ext == ".smi") {
+		var texts = text.split("\r\n").join("\n").split("\n<!-- Hold=");
+		var holdInfos = [{ text: texts[0] }];
+		for (var i = 1; i < texts.length; i++) {
+			var hold = texts[i];
+			var begin = hold.indexOf("\n");
+			var end = hold.indexOf("-->");
+			if (begin < 0 || end < 0) {
+				holdInfos[0].text += "\n<!-- Hold=" + hold;
+				continue;
+			}
+			// Hold 내용물 뒤에 뭐가 더 붙어있을 경우
+			if (end < hold.length - 3) {
+				holdInfos[0].text += hold.substring(end);
+			}
+			var name = hold.substring(0, begin).trim();
+			var pos = 1;
+			var index = name.indexOf("|");
+			if (index) {
+				try {
+					pos = Number(name.substring(0, index));
+				} catch (e) {
+					console.log(e);
 				}
-
-				// SMI 파일 역정규화
-				var origin = operation.origin = new Subtitle.SmiFile(holdInfos[0].text);
-				operation.type = "smi";
-				for (var i = 1; i < holdInfos.length; i++) {
-					holdInfos[i].text = new Subtitle.SmiFile(holdInfos[i].text).antiNormalize()[0].toTxt().trim();
-				}
-				operation.input = holdInfos;
-
-                setPreview($preview, origin.body);
-
-				for (var i = 0; i < origin.body.length; i++) {
-					var item = origin.body[i];
-					if (range[0] <= 0) {
-						range[0] = item.start;
-						ranges.push(range);
-					}
-					range[1] = item.start;
-
-					for (var j = 0; j < separators.length; j++) {
-						if (item.text.indexOf(separators[j]) >= 0) {
-							range = [-1, 0];
-							break;
-						}
-					}
-				}
-
-            } else if (ext == ".srt") {
-                operation.type = "srt";
-                operation.origin = new Subtitle.SrtFile(text);
-
-                setPreview($preview, operation.origin.body);
-
-                for (var i = 0; i < operation.origin.body.length; i++) {
-                    var item = operation.origin.body[i];
-                    if (range[0] <= 0) {
-                        range[0] = item.start;
-                        ranges.push(range);
-                    } else if (range[1] + 20000 < item.start) {
-                        // 20초 이상 벌어지면 범위 분리
-                        ranges.push(range = [item.start, item.end]);
-                    }
-                    range[1] = item.end;
-
-                    for (var j = 0; j < separators.length; j++) {
-                        if (item.text.indexOf(separators[j]) >= 0) {
-                            range = [-1, 0];
-                            break;
-                        }
-                    }
-				}
-
-            } else if (ext == ".ass") {
-                operation.type = "ass";
-                operation.origin = new Subtitle.AssFile(text);
-
-                operation.sorted = new Subtitle.AssFile(text);
-				operation.sorted.body.sort(function (a, b) {
-					if (a.start == b.start) {
-						return a.end - b.end;
-					}
-					return a.start - b.start;
-				})
-                setPreview($preview, operation.sorted.body);
-
-                for (var i = 0; i < operation.sorted.body.length; i++) {
-                    var item = operation.sorted.body[i];
-                    if (range[0] <= 0) {
-                        range[0] = item.start;
-                        ranges.push(range);
-                    } else if (range[1] + 20000 < item.start) {
-                        // 20초 이상 벌어지면 범위 분리
-                        ranges.push(range = [item.start, item.end]);
-                    }
-                    range[1] = Math.max(range[1], item.end);
-
-                    for (var j = 0; j < separators.length; j++) {
-                        if (item.text.indexOf(separators[j]) >= 0) {
-                            range = [-1, 0];
-                            break;
-                        }
-                    }
-                }
+				name = name.substring(index + 1);
 			}
-
-            $("#rangeList .list-body").empty();
-            for (var j = 0; j < ranges.length; j++) {
-                var range = ranges[j];
-                if (range[0] == range[1]) {
-                    continue;
-                }
-                addRange(range);
-            }
-		}
-		function setPreview($preview, body) {
-			$preview.empty();
-			var $preset = $preview.data("preset");
-
-            switch (operation.type) {
-				case "smi":
-					for (var i = 0; i < body.length; i++) {
-						var item = body[i];
-						var $line = $preset.clone().data({ item: item });
-                        $line.find(".sync").text(syncText(item.start));
-
-						var text = item.text.split("\n").join("").split(/<br>/gi).join("\n").split("<!--");
-						for (var j = 1; j < text.length; j++) {
-							var index = text[j].indexOf("-->");
-							if (index >= 0) {
-								text[j] = text[j].substring(index + 3);
-							} else {
-								text[j] = "";
-							}
-						}
-						text = text.join("").split("<");
-						for (var j = 1; j < text.length; j++) {
-							var index = text[j].indexOf(">");
-							if (index >= 0) {
-								text[j] = text[j].substring(index + 1);
-							} else {
-								text[j] = "";
-							}
-						}
-						$line.find(".text").html(text.join("").split("\n").join("<br />").split("&").join("&amp;"));
-						if (item.syncType) {
-							$line.addClass("type" + item.syncType);
-						}
-						$preview.append($line);
-					}
-					break;
-
-                case "srt":
-                    for (var i = 0; i < body.length; i++) {
-                        var item = body[i];
-                        var $line = $preset.clone().data({ item: item });
-                        $line.find(".sync").text(syncText(item.start));
-                        $line.find(".text").text(item.text);
-                        $preview.append($line);
-                    }
-                    break;
-
-                case "ass":
-                    for (var i = 0; i < body.length; i++) {
-                        var item = body[i];
-                        var $line = $preset.clone().data({ item: item });
-                        $line.find(".sync").text(syncText(item.start * 10));
-                        $line.find(".text").text(item.text);
-                        $preview.append($line);
-                    }
-					break;
-			}
-		}
-
-		function init(setting) {
-			setting = JSON.parse(setting);
-			$("#chkSaveSkfOrigin").prop("checked", setting.saveSkf.origin);
-			$("#chkSaveSkfTarget").prop("checked", setting.saveSkf.target);
-			$("#inputSeparator").val(setting.separators);
-		}
-		function addRange(range = [0, 0]) {
-			var body = $("#rangeList .list-body");
-			var item = body.data("preset").clone();
-			item.find("input.start").val(range[0]);
-			item.find("input.end").val(range[1]);
-			body.append(item);
-		}
-		function addShift(start = 0, shift = 0) {
-			var body = $("#shiftList .list-body");
-			var item = body.data("preset").clone();
-			item.find("input.start").val(start);
-			item.find("input.shift").val(shift);
-			body.append(item);
-		}
-		function refreshRangeAfterReadOriginVideoFile(length) {
-			var body = $("#rangeList .list-body");
-			if (body.children().length) {
-				// smi 파일로 채워지거나 했으면 건너뛰기
-				return;
-			}
-			addRange([0, length]);
-		}
-
-		function calcShift() {
-			var ranges = [];
-			var last = -1;
-			var isCorrect = true;
-			$("#rangeList .list-body > div").each(function () {
-				var item = $(this);
-				var start = Number(item.find("input.start").val());
-				if (start < last) {
-                    return isCorrect = false;
-				}
-                var end = Number(item.find("input.end").val());
-                if (end <= start) {
-                    return isCorrect = false;
-				}
-				ranges.push(start + "~" + (last = end));
+			holdInfos.push({
+					pos: pos
+				,	name: name
+				,	text: hold.substring(begin, end).trim().split("<​").join("<").split("​>").join(">")
 			});
-			var shifts = [];
-            $("#shiftList .list-body > div").each(function () {
-                var item = $(this);
-                var start = Number(item.find("input.start").val());
-                var shift = Number(item.find("input.shift").val());
-                shifts.push(start + ":" + shift);
-            });
-			if (isCorrect) {
-				$("#shiftList .list-body").empty();
-                binder.calcShift(ranges.join("|"), shifts.join("|"));
-			} else {
-                alert("범위가 어긋난 부분이 있습니다.");
+		}
+		
+		// SMI 파일 역정규화
+		var origin = operation.origin = new Subtitle.SmiFile(holdInfos[0].text);
+		operation.type = "smi";
+		for (var i = 1; i < holdInfos.length; i++) {
+			holdInfos[i].text = new Subtitle.SmiFile(holdInfos[i].text).antiNormalize()[0].toTxt().trim();
+		}
+		operation.input = holdInfos;
+		
+		sortedBody = refreshPreview();
+
+	} else if (ext == ".srt") {
+		operation.type = "srt";
+		operation.origin = new Subtitle.SrtFile(text);
+		sortedBody = refreshPreview();
+		
+	} else if (ext == ".ass") {
+		operation.type = "ass";
+		operation.origin = new Subtitle.AssFile(text);
+		sortedBody = refreshPreview();
+	}
+	
+    var range = [0, 0]
+    var ranges = [];
+	
+	for (var i = 0; i < sortedBody.length; i++) {
+		var item = sortedBody[i];
+		if (range[0] <= 0) {
+			range[0] = item.ms;
+			ranges.push(range);
+		} else if (range[1] + MAX_EMPTY_LENGTH < item.ms) {
+			ranges.push(range = [item.ms, item.me]);
+		}
+		range[1] = Math.max(range[1], item.me);
+		
+		for (var j = 0; j < separators.length; j++) {
+			if (item.text.indexOf(separators[j]) >= 0) {
+				// 구분자에 의해 새 범위 시작
+				if (range[1] && range[1] < range[0] + 10000) {
+					// 기존 범위가 10초 미만이면 제거
+					ranges.pop();
+				}
+				range = [-1, 0];
+				break;
 			}
 		}
+	}
 
-		function apply() {
-			var shifts = [];
-			$("#shiftList .list-body > div").each(function () {
-				var item = $(this);
-				shifts.push({
-						start: Number(item.find("input.start").val())
-					,	shift: Number(item.find("input.shift").val())
+	$("#rangeList .list-body").empty();
+	for (var j = 0; j < ranges.length; j++) {
+		var range = ranges[j];
+		if (range[1] < range[0] + 10000) {
+			// 범위가 10초 미만이면 제거
+			continue;
+		}
+		addRange(range);
+	}
+}
+function refreshPreview(isTarget=false) {
+	var $preview = isTarget ? $fieldTarget.find(".preview-body") : $fieldOrigin.find(".preview-body");
+	$preview.empty();
+	var $preset = $preview.data("preset");
+	function getLine(item, sync, text) {
+		var $line = $preset.clone().data({ item: item });
+		$line.find(".sync").text(syncText(sync));
+		$line.find(".text").empty().html(text);
+		return $line;
+	}
+	
+	var body = (isTarget ? operation.target : operation.origin).body;
+	switch (operation.type) {
+		case "smi":
+			var originBody = body;
+			body = [];
+			var last = {};
+			for (var i = 0; i < originBody.length; i++) {
+				var item = originBody[i];
+				var text = item.text.split("\n").join("").split(/<br>/gi).join("\n").split("<!--");
+				for (var j = 1; j < text.length; j++) {
+					var index = text[j].indexOf("-->");
+					if (index >= 0) {
+						text[j] = text[j].substring(index + 3);
+					} else {
+						text[j] = "";
+					}
+				}
+				text = text.join("").split("<");
+				for (var j = 1; j < text.length; j++) {
+					var index = text[j].indexOf(">");
+					if (index >= 0) {
+						text[j] = text[j].substring(index + 1);
+					} else {
+						text[j] = "";
+					}
+				}
+				var $line = getLine(item, item.start, text.join("").split("\n").join("<br />").split("&").join("&amp;"));
+				if (item.syncType) {
+					$line.addClass("type" + item.syncType);
+				}
+				
+				last.me = item.ms = item.start;
+				if ($line.find(".text").text().split("&nbsp;").join(" ").trim().length) {
+					item.me = item.ms + 1000;
+					body.push(last = item);
+				} else {
+					last = {};
+				}
+				
+				$preview.append($line);
+			}
+			break;
+
+		case "srt":
+			for (var i = 0; i < body.length; i++) {
+				var item = body[i];
+				var $line = getLine(item, item.start, item.text.split("\n").join("<br />"));
+				
+				item.ms = item.start;
+				item.me = item.end;
+				
+				$preview.append($line);
+			}
+			break;
+			
+		case "ass":
+			var body = [].concat(body);
+			body.sort(function (a, b) {
+				if (a.start == b.start) {
+					return a.end - b.end;
+				}
+				return a.start - b.start;
+			})
+			for (var i = 0; i < body.length; i++) {
+				var item = body[i];
+				var items = item.text.split("{");
+				var text = items[0];
+				for (var j = 1; j < items.length; j++) {
+					var index = items[j].indexOf("}");
+					if (index > 0) {
+						text += "<!--{" + items[j].substring(0, index) + "}-->" + items[j].substring(index + 1);
+					}
+				}
+				
+				item.ms = item.start * 10;
+				item.me = item.end   * 10;
+				
+				var $line = getLine(item, item.ms, text.split("\\N").join("<br />"));
+				$preview.append($line);
+			}
+			break;
+	}
+	return body;
+}
+
+function init(setting) {
+	setting = JSON.parse(setting);
+	$("#chkSaveSkfOrigin").prop("checked", setting.saveSkf.origin);
+	$("#chkSaveSkfTarget").prop("checked", setting.saveSkf.target);
+	$("#inputSeparator").val(setting.separators);
+}
+function addRange(range=[0,0]) {
+	var body = $("#rangeList .list-body");
+	var item = body.data("preset").clone();
+	item.find("input.start").val(range[0]);
+	item.find("input.end"  ).val(range[1]);
+	body.append(item);
+}
+function addShift(start=0, shift=0) {
+	var body = $("#shiftList .list-body");
+	var item = body.data("preset").clone();
+	item.find("input.start").val(start);
+	item.find("input.shift").val(shift);
+	body.append(item);
+}
+function refreshRangeAfterReadOriginVideoFile(length) {
+	var body = $("#rangeList .list-body");
+	if (body.children().length) {
+		// smi 파일로 채워지거나 했으면 건너뛰기
+		return;
+	}
+	addRange([0, length]);
+}
+
+function calcShift() {
+	var ranges = [];
+	var last = -1;
+	var isCorrect = true;
+	$("#rangeList .list-body > div").each(function() {
+		var item = $(this);
+		var start = Number(item.find("input.start").val());
+		if (start < last) {
+			return isCorrect = false;
+		}
+		var end = Number(item.find("input.end").val());
+		if (end <= start) {
+			return isCorrect = false;
+		}
+		ranges.push(start + "~" + (last = end));
+	});
+	var shifts = [];
+	$("#shiftList .list-body > div").each(function() {
+		var item = $(this);
+		var start = Number(item.find("input.start").val());
+		var shift = Number(item.find("input.shift").val());
+		shifts.push(start + ":" + shift);
+	});
+	if (isCorrect) {
+		$("#shiftList .list-body").empty();
+		binder.calcShift(ranges.join("|"), shifts.join("|"));
+	} else {
+		alert("범위가 어긋난 부분이 있습니다.");
+	}
+}
+
+function apply() {
+	var shifts = [];
+	$("#shiftList .list-body > div").each(function() {
+		var item = $(this);
+		shifts.push({
+				start: Number(item.find("input.start").val())
+			,	shift: Number(item.find("input.shift").val())
+		});
+	});
+	if (shifts.length == 0) {
+		addShift();
+		shifts.push({ start: 0, shift: 0 });
+	}
+	
+	function shiftSync(sync) {
+		for (var i = 1; i < shifts.length; i++) {
+			if (sync < shifts[i].start) {
+				i--;
+				break;
+			}
+		}
+		return Math.min(sync + shifts[Math.min(i, shifts.length - 1)].shift, 999999999);
+	}
+	function shiftText(text) {
+		var hold = new Subtitle.SmiFile(text);
+		for (var i = 0; i < hold.body.length; i++) {
+			hold.body[i].start = shiftSync(hold.body[i].start);
+		}
+		return hold.toTxt().trim();
+	}
+	
+	switch (operation.type) {
+		case "smi": {
+			var origin = operation.origin;
+			var target = operation.target = new Subtitle.SmiFile();
+			target.header = origin.header;
+			target.footer = origin.footer;
+			for (var i = 0; i < origin.body.length; i++) {
+				var item = origin.body[i];
+				if (item.text.startsWith("<!-- End=")) {
+					var commentEnd = item.text.indexOf("-->");
+					if (commentEnd > 0) {
+						var comment = item.text.substring(9, commentEnd).trim().split("<​").join("<").split("​>").join(">");
+						afterComment = item.text.substring(commentEnd + 3).trim();
+
+						var index = comment.indexOf("\n");
+						if (index > 0) {
+							var syncEnd = Number(index < 0 ? comment : comment.substring(0, index));
+							comment = comment.substring(index + 1);
+							
+							syncEnd = shiftSync(syncEnd);
+							if (comment.length > 6 && comment.substring(0, 6).toUpperCase() == "<SYNC ") {
+								comment = shiftText(comment);
+							}
+							comment = comment.trim().split("<").join("<​").split(">").join("​>");
+							item.text = "<!-- End=" + syncEnd + "\n" + comment + "\n-->\n" + afterComment;
+						}
+					}
+				}
+				target.body.push(new Subtitle.Smi(shiftSync(item.start), item.syncType, item.text));
+			}
+			refreshPreview(true);
+			
+			operation.output = [{ text: target.toTxt() }];
+			for (var hi = 1; hi < operation.input.length; hi++) {
+				var holdInfo = operation.input[hi];
+				operation.output.push({
+						pos : holdInfo.pos
+					,	name: holdInfo.name
+					,	text: shiftText(holdInfo.text)
 				});
-			});
-			if (shifts.length == 0) {
-				addShift();
-				shifts.push({ start: 0, shift: 0 });
 			}
-
-			function shiftSync(sync) {
-				for (var i = 1; i < shifts.length; i++) {
-					if (sync < shifts[i].start) {
-						i--;
-						break;
-					}
-				}
-				return Math.min(sync + shifts[Math.min(i, shifts.length - 1)].shift, 999999999);
-			}
-			function shiftText(text) {
-				var hold = new Subtitle.SmiFile(text);
-				for (var i = 0; i < hold.body.length; i++) {
-					hold.body[i].start = shiftSync(hold.body[i].start);
-				}
-				return hold.toTxt().trim();
-			}
-
-			switch (operation.type) {
-				case "smi": {
-					var origin = operation.origin;
-					var target = operation.target = new Subtitle.SmiFile();
-					target.header = origin.header;
-					target.footer = origin.footer;
-					for (var i = 0; i < origin.body.length; i++) {
-						var item = origin.body[i];
-						if (item.text.startsWith("<!-- End=")) {
-							var commentEnd = item.text.indexOf("-->");
-							if (commentEnd > 0) {
-								var comment = item.text.substring(9, commentEnd).trim().split("<​").join("<").split("​>").join(">");
-								afterComment = item.text.substring(commentEnd + 3).trim();
-
-								var index = comment.indexOf("\n");
-								if (index > 0) {
-									var syncEnd = Number(index < 0 ? comment : comment.substring(0, index));
-									comment = comment.substring(index + 1);
-
-									syncEnd = shiftSync(syncEnd);
-									if (comment.length > 6 && comment.substring(0, 6).toUpperCase() == "<SYNC ") {
-										comment = shiftText(comment);
-									}
-                                    comment = comment.trim().split("<").join("<​").split(">").join("​>");
-									item.text = "<!-- End=" + syncEnd + "\n" + comment + "\n-->\n" + afterComment;
-								}
-							}
-						}
-						target.body.push(new Subtitle.Smi(shiftSync(item.start), item.syncType, item.text));
-					}
-					setPreview($fieldTarget.find(".preview-body"), target.body);
-
-					operation.output = [{ text: target.toTxt() }];
-					for (var hi = 1; hi < operation.input.length; hi++) {
-						var holdInfo = operation.input[hi];
-						operation.output.push({
-								pos: holdInfo.pos
-							,	name: holdInfo.name
-							,	text: shiftText(holdInfo.text)
-						});
-					}
-					break;
-				}
-				case "srt": {
-					var origin = operation.origin;
-					var target = operation.target = new Subtitle.SrtFile();
-					for (var i = 0; i < origin.body.length; i++) {
-						var item = origin.body[i];
-                        target.body.push(new Subtitle.Srt(shiftSync(item.start), shiftSync(item.end), item.text));
-                    }
-                    setPreview($fieldTarget.find(".preview-body"), target.body);
-                    operation.output = [{ text: target.toTxt() }];
-					break;
-				}
-                case "ass": {
-                    var origin = operation.origin;
-					var target = operation.target = new Subtitle.AssFile();
-					target.header = origin.header;
-                    for (var i = 0; i < origin.body.length; i++) {
-                        var item = origin.body[i];
-                        target.body.push(new Subtitle.Ass(Math.round(shiftSync(item.start * 10) / 10), Math.round(shiftSync(item.end * 10) / 10), item.style, item.text));
-                    }
-                    setPreview($fieldTarget.find(".preview-body"), target.body);
-                    operation.output = [{ text: target.toTxt() }];
-                    break;
-				}
-			}
+			break;
 		}
-		function save() {
-			if (!operation.output || operation.output.length == 0) {
-				alert("작업 결과가 없습니다.");
-				return;
+		case "srt": {
+			var origin = operation.origin;
+			var target = operation.target = new Subtitle.SrtFile();
+			for (var i = 0; i < origin.body.length; i++) {
+				var item = origin.body[i];
+				target.body.push(new Subtitle.Srt(shiftSync(item.start), shiftSync(item.end), item.text));
 			}
-			var result = [operation.output[0].text];
-			for (var hi = 1; hi < operation.output.length; hi++) {
-				var hold = operation.output[hi];
-				result[hi] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + hold.text.split("<").join("<​").split(">").join("​>") + "\n-->";
+			refreshPreview(true);
+			operation.output = [{ text: target.toTxt() }];
+			break;
+		}
+		case "ass": {
+			var origin = operation.origin;
+			var target = operation.target = new Subtitle.AssFile();
+			target.header = origin.header;
+			for (var i = 0; i < origin.body.length; i++) {
+				var item = origin.body[i];
+				target.body.push(new Subtitle.Ass(Math.round(shiftSync(item.start * 10) / 10), Math.round(shiftSync(item.end * 10) / 10), item.style, item.text));
 			}
-			result = result.join("\n");
-			binder.save(result, operation.type);
+			refreshPreview(true);
+			operation.output = [{ text: target.toTxt() }];
+			break;
 		}
-		function applySave() {
-			apply();
-			save();
-		}
-		function beforeExit() {
-            binder.exitAfterSaveSetting(JSON.stringify({
-				saveSkf: {
-						origin: $("#chkSaveSkfOrigin").prop("checked")
-					,	target: $("#chkSaveSkfTarget").prop("checked")
-				}
-			,	separators: $("#inputSeparator").val()
-			}));
-		}
+	}
+	
+	$fieldOrigin.find(".preview-body").scroll();
+}
+function save() {
+	if (!operation.output || operation.output.length == 0) {
+		alert("작업 결과가 없습니다.");
+		return;
+	}
+	var result = [operation.output[0].text];
+	for (var hi = 1; hi < operation.output.length; hi++) {
+		var hold = operation.output[hi];
+		result[hi] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + hold.text.split("<").join("<​").split(">").join("​>") + "\n-->";
+	}
+	result = result.join("\n");
+	binder.save(result, operation.type);
+}
+function applySave() {
+	apply();
+	save();
+}
+function beforeExit() {
+	binder.exitAfterSaveSetting(JSON.stringify({
+			saveSkf: {
+					origin: $("#chkSaveSkfOrigin").prop("checked")
+				,	target: $("#chkSaveSkfTarget").prop("checked")
+			}
+		,	separators: $("#inputSeparator").val()
+	}));
+}
 	</script>
 	<style>
-		html, body {
-			width: 100%;
-			height: 100%;
-		}
+html, body {
+	width: 100%;
+	height: 100%;
+}
 
-		* {
-			margin: 0;
-			padding: 0;
-			font-family: 돋움체;
-			font-size: 12px;
-			/* 	background: #f0f0f0; */
-			white-space: nowrap;
-			overflow: hidden;
-			user-select: none;
-			box-sizing: border-box;
-		}
+* {
+	margin: 0;
+	padding: 0;
+	font-family: 돋움체;
+	font-size: 12px;
+/* 	background: #f0f0f0; */
+	white-space: nowrap;
+	overflow: hidden;
+	user-select: none;
+	box-sizing: border-box;
+}
+ol, ul {
+	list-style: none;
+}
+.view {
+	width: 100%;
+	height: 100%;
+}
+.clear {
+	clear: both;
+}
 
-		ol, ul {
-			list-style: none;
-		}
+input, textarea {
+	background: #fff;
+	user-select: auto;
+	outline: 0;
+}
+input, textarea, button {
+	border: 1px solid #aaa;
+}
 
-		.view {
-			width: 100%;
-			height: 100%;
-		}
-
-		.clear {
-			clear: both;
-		}
-
-		input, textarea {
-			background: #fff;
-			user-select: auto;
-			outline: 0;
-		}
-
-		input, textarea, button {
-			border: 1px solid #aaa;
-		}
-
-		fieldset > legend {
-			margin-top: 2px;
-		}
+fieldset > legend {
+	margin-top: 2px;
+}
 	</style>
 	<style>
-		div.file {
-			width: 100%;
-			margin-bottom: 8px;
-		}
+div.file {
+	width: 100%;
+	margin-bottom: 8px;
+}
 
-			div.file > * {
-				display: block;
-				float: left;
-				height: 20px;
-			}
+div.file > * {
+	display: block;
+	float: left;
+	height: 20px;
+}
+div.file > label {
+	width: 40px;
+	line-height: 20px;
+}
 
-			div.file > label {
-				width: 40px;
-				line-height: 20px;
-			}
-
-			div.file > .input {
-				width: calc(100% - 134px);
-				background: #eee;
-			}
-
-				div.file > .input > input {
-					width: 100%;
-					height: 100%;
-					line-height: 18px;
-					border: 1px solid #aaa;
-					border-right: 0;
-					background: transparent;
-					color: #000;
-				}
-
-			div.file > button {
-				width: 90px;
-			}
+div.file > .input {
+	width: calc(100% - 134px);
+	background: #eee;
+}
+div.file > .input > input {
+	width: 100%;
+	height: 100%;
+	line-height: 18px;
+	border: 1px solid #aaa;
+	border-right: 0;
+	background: transparent;
+	color: #000;
+}
+div.file > button {
+	width: 90px;
+}
 	</style>
 	<style>
-		body {
-			background: #fff;
-		}
+body {
+	background: #fff;
+}
+button {
+	border: 1px solid #aaa;
+	background: #eee;
+}
 
-		button {
-			border: 1px solid #aaa;
-			background: #eee;
-		}
+body > * {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+}
 
-		body > * {
-			position: fixed;
-			top: 0;
-			bottom: 0;
-		}
+fieldset {
+	position: fixed;
+	bottom: 0;
+	width: calc( 50% - 82px);
+	border: 1px solid #888;
+	margin: 4px 8px 8px;
+	padding: 4px 8px 0;
+}
+fieldset.hover {
+	background: #ffe;
+}
 
-		fieldset {
-			position: fixed;
-			bottom: 0;
-			width: calc( 50% - 82px);
-			border: 1px solid #888;
-			margin: 4px 8px 8px;
-			padding: 4px 8px 0;
-		}
+#fieldOrigin { left : 0; }
+#fieldTarget { right: 0; }
 
-			fieldset.hover {
-				background: #ffe;
-			}
+.preview {
+	width: 100%;
+	height: 200px;
+}
+.preview-header {
+	width: calc(100% - 17px);
+	margin-right: 17px;
+	border: 1px solid #aaa;
+	border-right: 0;
+}
+.preview-body {
+	width: 100%;
+	height: calc(100% - 21px);
+	overflow-y: scroll;
+	border: 1px solid #aaa;
+	border-right: 0;
+	margin-top: 1px;
+}
+.preview-body * {
+	user-select: text;
+}
 
-		#fieldOrigin {
-			left: 0;
-		}
+.preview .line {
+	width: 100%;
+	background: #fff;
+	border-right: 1px solid #aaa;
+}
+.preview .line.hover {
+	background: #fee;
+}
+.preview-body .line {
+	border-top: 0;
+}
+.preview-body .line:not(:last-child) {
+	border-bottom: 1px solid #aaa;
+}
+.preview .sync,
+.preview .text {
+	float: left;
+	padding: 2px;
+	background: transparent;
+	min-height: 18px;
+}
+.preview .sync {
+	width: 72px;
+	text-align: right;
+}
+.preview .text {
+	width: calc(100% - 72px);
+	white-space: normal;
+	border-left: 1px solid #aaa;
+}
+.preview .line.type1 .sync {
+	color: #f00;
+}
+.preview .line.type2 .sync {
+	color: #888;
+}
+.preview-header .line > * {
+	text-align: center;
+}
 
-		#fieldTarget {
-			right: 0;
-		}
+#viewOrigin,
+#viewTarget {
+	height: calc(100% - 64px);
+}
+#viewTarget {
+	margin-top: 36px;
+}
 
-		.preview {
-			width: 100%;
-			height: 200px;
-		}
+#settingForm {
+	left: calc(50% - 66px);
+	width: 132px;
+	padding: 16px 0;
+	margin-bottom: -1px;
+}
 
-		.preview-header {
-			width: calc(100% - 17px);
-			margin-right: 17px;
-		}
+#settingForm > button,
+#settingForm .button {
+	float: left;
+	width: calc(50% - 4px);
+	height: 24px;
+	margin: 0 0 8px;
+	background: #eee;
+}
 
-		.preview-body {
-			width: 100%;
-			height: calc(100% - 20px);
-			overflow-y: scroll;
-		}
-		.preview-body * {
-			user-select: text;
-		}
+#settingForm > div {
+	margin-bottom: 8px;
+	padding: 2px;
+	border: 1px solid #aaa;
+	background: #fff;
+}
 
-		.preview .line {
-			width: 100%;
-			border: 1px solid #aaa;
-		}
+#settingForm > #settingSkf {
+	line-height: 24px;
+	border: 0;
+}
+#settingSkf > label {
+	display: block;
+}
 
-			.preview .line.hover {
-				background: #fee;
-			}
+h4 {
+	font-weight: normal;
+	font-size: 12px;
+	text-align: center;
+	margin-bottom: 4px;
+}
+#settingForm > #settingSeparator {
+	padding-bottom: 0;
+}
+#inputSeparator {
+	height: 60px;
+	line-height: 18px;
+}
+.list-header > span {
+	display: block;
+	float: left;
+	text-align: center;
+}
+.list-body input,
+.list-body button {
+	height: 17px;
+	border-bottom: 0;
+}
 
-		.preview-body .line {
-			border-top: 0;
-		}
+#rangeList .start,
+#rangeList .end {
+	width: calc(50% - 12px);
+	margin: 0;
+}
 
-		.preview .line:after {
-			display: block;
-			content: "";
-			clear: both;
-		}
+#rangeList .range {
+	display: inline-block;
+	width: 10px;
+	height: 12px;
+	text-align: center;
+}
 
-		.preview .sync,
-		.preview .text {
-			float: left;
-			padding: 2px;
-			background: transparent;
-		}
+#shiftList .start,
+#shiftList .shift {
+	width: calc(50% - 7px);
+	margin: 0;
+}
 
-		.preview .sync {
-			width: 72px;
-			text-align: right;
-		}
+#rangeList input.end,
+#shiftList input {
+	border-right: 0;
+}
 
-		.preview .text {
-			border-left: 1px solid #aaa;
-			width: calc(100% - 72px);
-		}
+#btnAddRangeList {
+	width: 100%;
+	height: 20px;
+}
 
-		.preview .line.type1 .sync {
-			color: #f00;
-		}
+#settingForm > #settingCalc {
+	position: relative;
+	width: 100%;
+	height: 24px;
+	border: 0;
+	padding: 0;
+	background: #eee;
+}
+#btnCalc {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: transparent;
+}
 
-		.preview .line.type2 .sync {
-			color: #888;
-		}
+#settingForm > #btnApplySave {
+	width: 100%;
+}
 
-		.preview-header .line > * {
-			text-align: center;
-		}
+#processing {
+	left: 0;
+	right: 0;
+	background: rgba(255,255,255,0.5);
+}
 
-		#viewOrigin,
-		#viewTarget {
-			height: calc(100% - 64px);
-		}
+#processing > span {
+	left: 0;
+	width: 100%;
+	bottom: 50%;
+	display: inline-block;
+	position: absolute;
+	font-size: 20px;
+	text-align: center;
+	font-weight: bold;
+	background: rgba(0,0,0,0);
+}
 
-		#viewTarget {
-			margin-top: 36px;
-		}
+#selectAudio {
+	border: 1px solid #000;
+	background: #fff;
+	width: 500px;
+	margin: 100px auto;
+	vertical-align: middle;
+	z-index: 999;
+}
 
-		#settingForm {
-			left: calc(50% - 66px);
-			width: 132px;
-			padding: 16px 0;
-			margin-bottom: -1px;
-		}
+#selectAudio * {
+	background: #fff;
+}
 
-			#settingForm > button,
-			#settingForm .button {
-				float: left;
-				width: calc(50% - 4px);
-				height: 24px;
-				margin: 0 0 8px;
-				background: #eee;
-			}
+#selectAudio .title {
+	margin: 4px;
+}
 
-			#settingForm > div {
-				margin-bottom: 8px;
-				padding: 2px;
-				border: 1px solid #aaa;
-			}
+#selectAudio .list li {
+	margin: 4px;
+	cursor: pointer;
+	border: 1px solid #aaa;
+	padding: 2px;
+}
 
-			#settingForm > #settingSkf {
-				line-height: 24px;
-				border: 0;
-			}
-
-		#settingSkf > label {
-			display: block;
-		}
-
-		h4 {
-			font-weight: normal;
-			font-size: 12px;
-			text-align: center;
-			margin-bottom: 4px;
-		}
-
-		#settingForm > #settingSeparator {
-			padding-bottom: 0;
-		}
-
-		#inputSeparator {
-			height: 60px;
-			line-height: 18px;
-		}
-
-		.list-header > span {
-			display: block;
-			float: left;
-			text-align: center;
-		}
-
-		.list-body input,
-		.list-body button {
-			height: 17px;
-			border-bottom: 0;
-		}
-
-		#rangeList .start,
-		#rangeList .end {
-			width: calc(50% - 12px);
-			margin: 0;
-		}
-
-		#rangeList .range {
-			display: inline-block;
-			width: 10px;
-			height: 12px;
-			text-align: center;
-		}
-
-		#shiftList .start,
-		#shiftList .shift {
-			width: calc(50% - 7px);
-			margin: 0;
-		}
-
-		#rangeList input.end,
-		#shiftList input {
-			border-right: 0;
-		}
-
-		#btnAddRangeList {
-			width: 100%;
-			height: 20px;
-		}
-
-		#settingForm > #settingCalc {
-			position: relative;
-			width: 100%;
-			height: 24px;
-			border: 0;
-			padding: 0;
-			background: #eee;
-		}
-
-		#btnCalc {
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background: transparent;
-		}
-
-		#settingForm > #btnApplySave {
-			width: 100%;
-		}
-
-		#processing {
-			left: 0;
-			right: 0;
-			background: rgba(255,255,255,0.5);
-		}
-
-			#processing > span {
-				left: 0;
-				width: 100%;
-				bottom: 50%;
-				display: inline-block;
-				position: absolute;
-				font-size: 20px;
-				text-align: center;
-				font-weight: bold;
-				background: rgba(0,0,0,0);
-			}
-
-		#selectAudio {
-			border: 1px solid #000;
-			background: #fff;
-			width: 500px;
-			margin: 100px auto;
-			vertical-align: middle;
-			z-index: 999;
-		}
-
-			#selectAudio * {
-				background: #fff;
-			}
-
-			#selectAudio .title {
-				margin: 4px;
-			}
-
-			#selectAudio .list li {
-				margin: 4px;
-				cursor: pointer;
-				border: 1px solid #aaa;
-				padding: 2px;
-			}
-
-				#selectAudio .list li:hover {
-					background: #ff8;
-				}
+#selectAudio .list li:hover {
+	background: #ff8;
+}
 	</style>
 </head>
-	<body>
-		<fieldset id="fieldOrigin">
-			<legend>원본</legend>
-			
-			<div class="file" id="originVideo">
-				<label>영상</label>
-				<div class="input"><input type="text" disabled /></div>
-				<button>찾아보기...</button>
-			</div>
-			
-			<div class="file" id="originSub">
-				<label>자막</label>
-				<div class="input"><input type="text" disabled /></div>
-				<button>찾아보기...</button>
-			</div>
-			
-			<div class="preview" id="viewOrigin">
-				<div class="preview-header">
-					<div class="line">
-						<div class="sync">싱크</div>
-						<div class="text">내용</div>
-					</div>
-				</div>
-				<div class="preview-body">
-					<div class="line preset">
-						<div class="sync">싱크</div>
-						<div class="text">내용</div>
-					</div>
-				</div>
-			</div>
-		</fieldset>
+<body>
+	<fieldset id="fieldOrigin">
+		<legend>원본</legend>
 		
-		<div id="settingForm">
-			<div id="settingSkf">
-				<label><input type="checkbox" id="chkSaveSkfOrigin" /> <span>원본.skf 저장</span></label>
-				<label><input type="checkbox" id="chkSaveSkfTarget" /> <span>대상.skf 저장</span></label>
-			</div>
-			<div id="settingSeparator">
-				<h4>구분자</h4>
-				<textarea id="inputSeparator" spellcheck="false"></textarea>
-			</div>
-			<div id="settingRange">
-				<div id="rangeList">
-					<div class="list-header">
-						<h4>가중치 계산 범위</h4>
-						<span class="start">시작</span>
-						<span class="range">&nbsp;</span>
-						<span class="end">끝</span>
-					</div>
-					<div class="list-body">
-						<div class="preset">
-							<input type="text" class="start" value="3600000" /><span class="range">~</span><input type="text" class="end" value="30000" /><button type="button" class="remove">×</button>
-						</div>
-					</div>
-					<button id="btnAddRangeList">추가</button>
+		<div class="file" id="originVideo">
+			<label>영상</label>
+			<div class="input"><input type="text" disabled /></div>
+			<button>찾아보기...</button>
+		</div>
+		
+		<div class="file" id="originSub">
+			<label>자막</label>
+			<div class="input"><input type="text" disabled /></div>
+			<button>찾아보기...</button>
+		</div>
+		
+		<div class="preview" id="viewOrigin">
+			<div class="preview-header">
+				<div class="line">
+					<div class="sync">싱크</div>
+					<div class="text">내용</div>
 				</div>
 			</div>
-			<div id="settingCalc">
-				<button id="btnCalc">가중치 계산</button>
+			<div class="preview-body">
+				<div class="line preset">
+					<div class="sync">싱크</div>
+					<div class="text">내용</div>
+				</div>
 			</div>
-			
-			<div id="shiftList">
+		</div>
+	</fieldset>
+	
+	<fieldset id="fieldTarget">
+		<legend>대상</legend>
+		
+		<div class="file" id="targetVideo">
+			<label>영상</label>
+			<div class="input"><input type="text" disabled /></div>
+			<button>찾아보기...</button>
+		</div>
+		
+		<div class="preview" id="viewTarget">
+			<div class="preview-header">
+				<div class="line">
+					<div class="sync">싱크</div>
+					<div class="text">내용</div>
+				</div>
+			</div>
+			<div class="preview-body">
+				<div class="line preset">
+					<div class="sync">싱크</div>
+					<div class="text">내용</div>
+				</div>
+			</div>
+		</div>
+	</fieldset>
+	
+	<div id="settingForm">
+		<div id="settingSkf">
+			<label><input type="checkbox" id="chkSaveSkfOrigin" /> <span>원본.skf 저장</span></label>
+			<label><input type="checkbox" id="chkSaveSkfTarget" /> <span>대상.skf 저장</span></label>
+		</div>
+		<div id="settingSeparator">
+			<h4>범위 구분자</h4>
+			<textarea id="inputSeparator" spellcheck="false"></textarea>
+		</div>
+		<div id="settingRange">
+			<div id="rangeList">
 				<div class="list-header">
+					<h4>가중치 계산 범위</h4>
 					<span class="start">시작</span>
-					<span class="shift">가중치</span>
+					<span class="range">&nbsp;</span>
+					<span class="end">끝</span>
 				</div>
 				<div class="list-body">
 					<div class="preset">
-						<input type="text" class="start" value="3600000" /><input type="text" class="shift" value="30000" /><button type="button" class="remove">×</button>
+						<input type="text" class="start" value="3600000" /><span class="range">~</span><input type="text" class="end" value="30000" /><button type="button" class="remove">×</button>
 					</div>
 				</div>
-				<button id="btnAddShiftList" style="width: 100%; height: 20px;">추가</button>
+				<button id="btnAddRangeList">추가</button>
 			</div>
-			<button id="btnApply" style="margin-right: 8px;">적용</button><button id="btnSave">저장</button>
-			<button id="btnApplySave">적용 & 저장</button>
+		</div>
+		<div id="settingCalc">
+			<button id="btnCalc">가중치 계산</button>
 		</div>
 		
-		<fieldset id="fieldTarget">
-			<legend>대상</legend>
-			
-			<div class="file" id="targetVideo">
-				<label>영상</label>
-				<div class="input"><input type="text" disabled /></div>
-				<button>찾아보기...</button>
+		<div id="shiftList">
+			<div class="list-header">
+				<span class="start">시작</span>
+				<span class="shift">가중치</span>
 			</div>
-			
-			<div class="preview" id="viewTarget">
-				<div class="preview-header">
-					<div class="line">
-						<div class="sync">싱크</div>
-						<div class="text">내용</div>
-					</div>
-				</div>
-				<div class="preview-body">
-					<div class="line preset">
-						<div class="sync">싱크</div>
-						<div class="text">내용</div>
-					</div>
+			<div class="list-body">
+				<div class="preset">
+					<input type="text" class="start" value="3600000" /><input type="text" class="shift" value="30000" /><button type="button" class="remove">×</button>
 				</div>
 			</div>
-		</fieldset>
-	
-		<div id="processing" style="display: none;">
-			<span>작업 중…</span>
-			<div id="selectAudio" style="display: none;">
-				<div class="title">오디오 선택</div>
-				<ol class="list">
-					<li class="preset"></li>
-				</ol>
-			</div>
+			<button id="btnAddShiftList" style="width: 100%; height: 20px;">추가</button>
 		</div>
-	</body>
+		<button id="btnApply" style="margin-right: 8px;">적용</button><button id="btnSave">저장</button>
+		<button id="btnApplySave">적용 & 저장</button>
+	</div>
+
+	<div id="processing" style="display: none;">
+		<span>작업 중…</span>
+		<div id="selectAudio" style="display: none;">
+			<div class="title">오디오 선택</div>
+			<ol class="list">
+				<li class="preset"></li>
+			</ol>
+		</div>
+	</div>
+</body>
 </html>
