@@ -99,7 +99,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="util\VideoInfo.cs" />
-    <Compile Include="util\Skf.cs" />
     <Compile Include="util\StDev.cs" />
     <Compile Include="util\SyncShift.cs" />
     <Compile Include="WebView.cs" />
