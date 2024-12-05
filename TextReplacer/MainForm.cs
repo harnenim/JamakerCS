@@ -131,8 +131,7 @@ namespace Jamaker
             StreamReader sr = null;
             try
             {
-                Encoding encoding = TextFile.BOM.DetectEncoding(file); // TODO: BOM 없으면 버그 있나...?
-                sr = new StreamReader(file, encoding);
+                sr = new StreamReader(file, DetectEncoding(file));
                 text = sr.ReadToEnd();
             }
             catch
@@ -166,9 +165,9 @@ namespace Jamaker
                 for (int i = 0; i < files.Length; i++)
                 {
                     string file = files[i];
+                    Encoding encoding = DetectEncoding(file);
                     try
                     {
-                        Encoding encoding = TextFile.BOM.DetectEncoding(file); // TODO: BOM 없으면 버그 있나...?
                         sr = new StreamReader(file, encoding);
                         text = sr.ReadToEnd();
                     }
@@ -186,7 +185,7 @@ namespace Jamaker
                     try
                     {
                         // 원본 파일의 인코딩대로 저장
-                        sw = new StreamWriter(file, false, TextFile.BOM.DetectEncoding(file));
+                        sw = new StreamWriter(file, false, encoding);
                         sw.Write(result.result);
 
                         // 성공 후 카운트

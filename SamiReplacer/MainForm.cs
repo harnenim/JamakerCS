@@ -7,7 +7,6 @@ using CefSharp;
 using System.Diagnostics;
 using System.Collections.Generic;
 using Subtitle;
-using TextFile;
 
 namespace Jamaker
 {
@@ -132,8 +131,7 @@ namespace Jamaker
             StreamReader sr = null;
             try
             {
-                Encoding encoding = TextFile.BOM.DetectEncoding(file); // TODO: BOM 없으면 버그 있나...?
-                sr = new StreamReader(file, encoding);
+                sr = new StreamReader(file, DetectEncoding(file));
                 text = sr.ReadToEnd();
             }
             catch
@@ -210,8 +208,7 @@ namespace Jamaker
                 StreamReader sr = null;
                 try
                 {
-                    encoding = BOM.DetectEncoding(file);
-                    sr = new StreamReader(file, encoding);
+                    sr = new StreamReader(file, DetectEncoding(file));
                     text = sr.ReadToEnd();
                 }
                 catch (Exception e)

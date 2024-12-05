@@ -97,8 +97,7 @@ namespace Jamaker
             StreamReader sr = null;
             try
             {
-                Encoding encoding = TextFile.BOM.DetectEncoding(path);
-                sr = new StreamReader(path, encoding);
+                sr = new StreamReader(path, DetectEncoding(path));
                 text = sr.ReadToEnd();
             }
             catch

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Windows.Forms;
 using CefSharp;
 using CefSharp.WinForms;
@@ -237,6 +239,28 @@ namespace Jamaker
             CefSharpSettings.ShutdownOnExit = true; // Release일 땐 false 해줘야 함
 
             InitializeComponent();
+        }
+        
+        public static Encoding DetectEncoding(string file)
+        {
+            Encoding encoding = Encoding.UTF8;
+            FileStream fs = null;
+            try
+            {
+                Ude.CharsetDetector cdet = new Ude.CharsetDetector();
+                cdet.Feed(fs = File.OpenRead(file));
+                cdet.DataEnd();
+                encoding = Encoding.GetEncoding(cdet.Charset);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+            finally
+            {
+                fs?.Close();
+            }
+            return encoding;
         }
     }
 }

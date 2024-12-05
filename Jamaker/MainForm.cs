@@ -845,9 +845,7 @@ namespace Jamaker
             StreamReader sr = null;
             try
             {
-                Encoding encoding = TextFile.BOM.DetectEncoding(path); // TODO: BOM 없으면 버그 있나...?
-                //Console.WriteLine("encoding: " + encoding);
-                sr = new StreamReader(path, encoding);
+                sr = new StreamReader(path, DetectEncoding(path));
                 text = sr.ReadToEnd();
             }
             catch
