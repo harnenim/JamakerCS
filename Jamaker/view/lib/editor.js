@@ -40,6 +40,7 @@ var Tab = function(text, path) {
 	this.area = $("<div class='tab'>").append(this.holdSelector).append(this.holdArea);
 	this.holds = [];
 	this.hold = 0;
+	this.lastHold = 1;
 	this.path = path;
 	
 	var texts = text.split("\r\n").join("\n").split("\n<!-- Hold=");
@@ -98,14 +99,7 @@ var Tab = function(text, path) {
 	
 	var tab = this;
 	this.holdSelector.on("click", ".selector", function() {
-		var hold = SmiEditor.selected = $(this).data("hold");
-		tab.holdSelector.find(".selector").removeClass("selected");
-		tab.holdArea.find(".hold").hide();
-		hold.selector.addClass("selected");
-		hold.area.show();
-		hold.input.focus();
-		tab.hold = tab.holds.indexOf(hold);
-		SmiEditor.Viewer.refresh();
+		tab.selectHold(SmiEditor.selected = $(this).data("hold"));
 		
 	}).on("dblclick", ".hold-name", function(e) {
 		e.stopPropagation();
@@ -314,6 +308,37 @@ Tab.prototype.updateHoldSelector = function() {
 				}
 			}
 		}
+	}
+}
+Tab.prototype.selectHold = function(hold) {
+	var index = hold;
+	if (isFinite(hold)) {
+		if (!(hold = this.holds[hold])) {
+			return;
+		}
+	} else {
+		index = this.holds.indexOf(hold);
+	}
+	this.holdSelector.find(".selector").removeClass("selected");
+	this.holdArea.find(".hold").hide();
+	hold.selector.addClass("selected");
+	hold.area.show();
+	hold.input.focus();
+	if ((this.hold = index) > 0) {
+		this.lastHold = this.hold;
+	}
+	SmiEditor.Viewer.refresh();
+}
+Tab.prototype.selectLastHold = function() {
+	if (this.holds.length == 0) {
+		return;
+	}
+	if (this.hold > 0) {
+		this.selectHold(0);
+		return;
+	}
+	if (this.lastHold && this.holds[this.lastHold]) {
+		this.selectHold(this.lastHold);
 	}
 }
 Tab.prototype.replaceBeforeSave = function() {

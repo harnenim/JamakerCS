@@ -265,8 +265,8 @@ $(function() {
 	
 		var tbody = tableCommand.find("tbody");
 		var withs = ["withCtrls", "withAlts", "withCtrlAlts", "withCtrlShifts"];
-        var keys = "pqrstuvwxyz{ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-        var keyNames = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"].concat("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split(""));
+        var keys = "pqrstuvwxyz{ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890";
+        var keyNames = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"].concat("ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890".split(""));
 		(refreshTableCommand = function() {
 			tbody.empty();
 			for (var i = 0; i < keys.length; i++) {
@@ -294,7 +294,7 @@ $(function() {
 						,	"func": func
 					});
 				}
-				var tr = $("<tr>").addClass("key-" + keyName).append(th);
+				var tr = $("<tr>").addClass("key-" + (keyName=='`' ? '~' : keyName)).append(th);
 				for (var j = 0; j < withs.length; j++) {
 					var w = withs[j];
 					var td = $("<td>");
@@ -383,13 +383,17 @@ $(function() {
 			var name = "";
 			var key = String.fromCharCode(e.keyCode);
 			var func = "";
+			if (e.keyCode == 192) {
+				key = '`';
+			}
 			
 			if (keys.indexOf(key) >= 0) {
 				var keyName = key;
-				if (e.keyCode > 111) {
+				if (111 < e.keyCode && e.keyCode < 192) {
 					keyName = "F" + (e.keyCode - 111);
 				}
 				var keyIndex = keyNames.indexOf(keyName);
+				var selector = "tr.key-" + (keyName == '`' ? '~' : keyName);
 				
 				var w = null;
 				if (e.shiftKey) {
@@ -400,7 +404,7 @@ $(function() {
 							if (SmiEditor.withCtrlShifts.reserved.indexOf(key) >= 0) {
 								keyName = "Ctrl + Shift + 예약키";
 							} else {
-								func = tableCommand.find("tr.key-" + keyName + " > td:eq(3)").data("func");
+								func = tableCommand.find(selector + " > td:eq(3)").data("func");
 								name = "setting.command.withCtrlShifts[\"" + key + "\"]";
 								keyName = "Ctrl + Shift + " + keyName;
 							}
@@ -412,7 +416,7 @@ $(function() {
 							if (SmiEditor.withCtrlAlts.reserved.indexOf(key) >= 0) {
 								keyName = "Ctrl + Alt + 예약키";
 							} else {
-								func = tableCommand.find("tr.key-" + keyName + " > td:eq(2)").data("func");
+								func = tableCommand.find(selector + " > td:eq(2)").data("func");
 								name = "setting.command.withCtrlAlts[\"" + key + "\"]";
 								keyName = "Ctrl + Alt + " + keyName;
 							}
@@ -420,7 +424,7 @@ $(function() {
 							if (SmiEditor.withCtrls.reserved.indexOf(key) >= 0) {
 								keyName = "Ctrl + 예약키";
 							} else {
-								func = tableCommand.find("tr.key-" + keyName + " > td:eq(0)").data("func");
+								func = tableCommand.find(selector + " > td:eq(0)").data("func");
 								name = "setting.command.withCtrls[\"" + key + "\"]";
 								keyName = "Ctrl + " + keyName;
 							}
@@ -430,12 +434,12 @@ $(function() {
 							if (SmiEditor.withAlts.reserved.indexOf(key) >= 0) {
 								keyName = "Alt + 예약키";
 							} else {
-								func = tableCommand.find("tr.key-" + keyName + " > td:eq(1)").data("func");
+								func = tableCommand.find(selector + " > td:eq(1)").data("func");
 								name = "setting.command.withAlts[\"" + key + "\"]";
 								keyName = "Alt + " + keyName;
 							}
 						} else {
-							func = tableCommand.find("tr.key-" + keyName + " > th:eq(0)").data("func");
+							func = tableCommand.find(selector + " > th:eq(0)").data("func");
 							name = "setting.fn[\"" + key + "\"]";
 						}
 					}

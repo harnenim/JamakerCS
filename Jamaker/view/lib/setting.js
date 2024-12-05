@@ -34,14 +34,14 @@ var checkVersion;
 		}
 		return notified;
 	}
-	var lastNotifyForCommand = "2024.11.11.v1";
+	var lastNotifyForCommand = "2024.12.05.v2";
 	var lastNotifyForAutoComplete = "";
 	var lastNotifyForStyle = "2023.04.06.v1";
 	var lastNotifyForMenu = "2024.11.19.v2";
 }
 
 var DEFAULT_SETTING =
-{	version: "2024.11.21.v2"
+{	version: "2024.12.05.v2"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -114,6 +114,7 @@ var DEFAULT_SETTING =
 		}
 	,	withCtrls:
 		{	't': '/* 일괄 싱크 찍기 */\n' + 'editor.reSync();'
+		,	'`': '/* 이전 홀드 선택 */\neditor.owner.selectLastHold();'
 		,	'1': '/* 색상태그 */\n' + 'editor.tagging("<font color=\\"#aaaaaa\\">")'
 		,	'2': '/* 한 줄씩 줄표 넣어주기 */\n'
 			   + 'var text = editor.getText();\n'
@@ -201,7 +202,18 @@ var DEFAULT_SETTING =
 		,	'F': '/* 싱크 유지 텍스트 대체 */\n' + 'openAddon("Fusion");'
 		}
 	,	withCtrlShifts:
-		{	'F': '/* 중간 싱크 생성 */\n' + 'editor.fillSync();'
+		{	'`': 'editor.owner.selectHold(0);'
+		,	'1': 'editor.owner.selectHold(1);'
+		,	'2': 'editor.owner.selectHold(2);'
+		,	'3': 'editor.owner.selectHold(3);'
+		,	'4': 'editor.owner.selectHold(4);'
+		,	'5': 'editor.owner.selectHold(5);'
+		,	'6': 'editor.owner.selectHold(6);'
+		,	'7': 'editor.owner.selectHold(7);'
+		,	'8': 'editor.owner.selectHold(8);'
+		,	'9': 'editor.owner.selectHold(9);'
+		,	'0': 'editor.owner.selectHold(10);'
+		,	'F': '/* 중간 싱크 생성 */\n' + 'editor.fillSync();'
 		,	'S': '/* 설정 */\n' + 'openSetting();'
 		}
 	}

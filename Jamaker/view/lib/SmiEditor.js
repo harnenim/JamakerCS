@@ -604,7 +604,7 @@ SmiEditor.activateKeyEvent = function() {
 			
 			{	// 단축키 설정
 				var f = null;
-				var key = String.fromCharCode(e.keyCode);
+				var key = (e.keyCode == 192) ? '`' : String.fromCharCode(e.keyCode);
 				if (e.shiftKey) {
 					if (e.ctrlKey) {
 						if (e.altKey) {
