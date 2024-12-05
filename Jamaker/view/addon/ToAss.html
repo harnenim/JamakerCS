@@ -41,7 +41,7 @@ $(function() {
 				}
 			}
 		}
-		var ass = new Subtitle.AssFile(input.toSync());
+		var ass = new Subtitle.AssFile().fromSync(input.toSync());
 		/*
 		{	// 팟플레이어 겹치는 싱크 보정
 			var syncMap = {};
