@@ -219,46 +219,9 @@ function setOriginSubtitleFile(path, text) {
 	
 	var ext = path.substring(path.length - 4);
 	if (ext == ".smi") {
-		var texts = text.split("\r\n").join("\n").split("\n<!-- Hold=");
-		var holdInfos = [{ text: texts[0] }];
-		for (var i = 1; i < texts.length; i++) {
-			var hold = texts[i];
-			var begin = hold.indexOf("\n");
-			var end = hold.indexOf("-->");
-			if (begin < 0 || end < 0) {
-				holdInfos[0].text += "\n<!-- Hold=" + hold;
-				continue;
-			}
-			// Hold 내용물 뒤에 뭐가 더 붙어있을 경우
-			if (end < hold.length - 3) {
-				holdInfos[0].text += hold.substring(end);
-			}
-			var name = hold.substring(0, begin).trim();
-			var pos = 1;
-			var index = name.indexOf("|");
-			if (index) {
-				try {
-					pos = Number(name.substring(0, index));
-				} catch (e) {
-					console.log(e);
-				}
-				name = name.substring(index + 1);
-			}
-			holdInfos.push({
-					pos: pos
-				,	name: name
-				,	text: hold.substring(begin, end).trim().split("<​").join("<").split("​>").join(">")
-			});
-		}
-		
-		// SMI 파일 역정규화
-		var origin = operation.origin = new Subtitle.SmiFile(holdInfos[0].text);
 		operation.type = "smi";
-		for (var i = 1; i < holdInfos.length; i++) {
-			holdInfos[i].text = new Subtitle.SmiFile(holdInfos[i].text).antiNormalize()[0].toTxt().trim();
-		}
-		operation.input = holdInfos;
-		
+		operation.origin = new Subtitle.SmiFile(text);
+		operation.input = Subtitle.SmiFile.textToHolds(text);
 		sortedBody = refreshPreview();
 
 	} else if (ext == ".srt") {
@@ -324,6 +287,10 @@ function refreshPreview(isTarget=false) {
 			var last = {};
 			for (var i = 0; i < originBody.length; i++) {
 				var item = originBody[i];
+				if (item.syncType == Subtitle.SyncType.inner) {
+					// 중간 싱크는 미리보기에서 생략
+					continue;
+				}
 				var text = item.text.split("\n").join("").split(/<br>/gi).join("\n").split("<!--");
 				for (var j = 1; j < text.length; j++) {
 					var index = text[j].indexOf("-->");

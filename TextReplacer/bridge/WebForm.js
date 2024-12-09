@@ -91,6 +91,10 @@ WebForm.prototype.initializeComponent = function() {
 		self.hideDragging();
 		await self.drop(e.offsetX, e.offsetY);
 	});
+	layerForDrag.addEventListener("click", async function(e) {
+        // 레이어가 클릭됨 -> 드래그 끝났는데 안 사라진 상태
+		self.hideDragging();
+	});
 }
 
 WebForm.prototype.super_initAfterLoad =
