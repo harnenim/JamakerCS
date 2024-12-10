@@ -17,6 +17,7 @@ namespace Jamaker
 
         private string strSettingJson = "불러오기 실패 예제";
         private string strBridgeList = "NoPlayer: (없음)"; // 기본값
+        private string strHighlights = "SyncOnly: 싱크 줄 구분\neclipse: 이클립스 스타일";
         private readonly Dictionary<string, string> bridgeDlls = new Dictionary<string, string>();
 
         public MainForm()
@@ -87,6 +88,7 @@ namespace Jamaker
             {
                 Script("init", strSettingJson); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
                 Script("setPlayerDlls", strBridgeList); // 플레이어 브리지 추가 가능토록
+                Script("setHighlights", strHighlights);
                 Script("setDroppable");
 
                 WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
@@ -478,6 +480,14 @@ namespace Jamaker
             {
                 sr = new StreamReader("bridge/list.txt", Encoding.UTF8);
                 strBridgeList = sr.ReadToEnd();
+            }
+            catch (Exception e) { Console.WriteLine(e); }
+            finally { sr?.Close(); }
+
+            try
+            {
+                sr = new StreamReader("view/lib/highlight/list.txt", Encoding.UTF8);
+                strHighlights = sr.ReadToEnd();
             }
             catch (Exception e) { Console.WriteLine(e); }
             finally { sr?.Close(); }

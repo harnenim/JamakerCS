@@ -105,6 +105,7 @@ Binder.prototype.runColorPicker = function() { alert("C#에서 동작합니다."
 // bridge/list.txt
 //var playerDlls = "NoPlayer: (없음)\n PotPlayer: 팟플레이어";
 var playerDlls = "NoPlayer: (없음)\n Sample: 샘플";
+var highlights = "SyncOnly: 싱크 줄 구분\neclipse: 이클립스 스타일";
 
 var editor = new WebForm(); // 에디터
 
@@ -116,6 +117,7 @@ var window_open = function(url, name, options, opener) {
 	editor.player = null;
 	editor.strSettingJson = "불러오기 실패 예제";
 	editor.strBridgeList = "NoPlayer: (없음)";
+	editor.strHighlights = "SyncOnly: 싱크 줄 구분\neclipse: 이클립스 스타일";
 
 	// override
 	editor.drop = async function(x, y) {
@@ -195,6 +197,7 @@ var window_open = function(url, name, options, opener) {
 		
 		this.script("init", [this.strSettingJson]); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
 		this.script("setPlayerDlls", [this.strBridgeList]);
+        this.script("setHighlights", [this.strHighlights]);
 
 		// 세팅 확인
 		WinAPI.GetWindowRect(this.getHwnd("editor"), this.lastOffset);
@@ -482,6 +485,7 @@ var accessHandle;
 	editor.loadSetting = function(afterSuccess) {
 		editor.strSettingJson = localStorage.getItem("setting");
 		editor.strBridgeList = playerDlls;
+        editor.strHighlights = highlights;
 		
 		if (afterSuccess) {
 			afterSuccess();

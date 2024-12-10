@@ -622,19 +622,34 @@ $(function() {
 	
 	{	// 스타일
 		saved.style = { status: true, name: "스타일 설정" };
-	
+
 		(refreshFuncs["style"] = function(setting) {
 			refresh($("#style"), setting);
 			setSaved("style", setting == opener.setting);
 		})(setting);
-		
+
+        var select = $("select[name=useHighlight]");
+        if (opener.highlights) {
+            for (var i = 0; i < opener.highlights.length; i++) {
+                var item = opener.highlights[i].split(":");
+                select.append($("<option>").val(item[0].trim()).text(item[1].trim()));
+            }
+            var value = select.data("value");
+            if (value == true) {
+                value = "eclipse";
+            }
+            if (value) {
+                select.find("option[value=" + value + "]").prop("selected", true);
+            }
+        }
+
 		$("#style").on("input propertychange", function() {
 			setSaved("style", false);
 		});
 	
 		submitFuncs["style"] = function() {
 			setting.useTab          = $("input[name=useTab]").prop("checked");
-			setting.useHighlight    = $("input[name=useHighlight]").prop("checked");
+			setting.useHighlight    = $("select[name=useHighlight]").val();
 			setting.viewer.useAlign = $("input[name=viewer_useAlign]").prop("checked");
 			setting.css             = $("textarea[name=css]"       ).val();
 			setting.viewer.css      = $("textarea[name=viewer_css]").val();
@@ -1295,7 +1310,12 @@ fieldset ol button,
 	
 	<form id="style">
 		<label><input type="checkbox" name="useTab" /> 탭 사용</label><br />
-		<label><input type="checkbox" name="useHighlight" /> 문법 하이라이트 사용 (파일이 커질 경우 성능 문제가 발생할 수 있습니다.)</label><br />
+		<label>
+			<select name="useHighlight">
+				<option value="">사용 안 함</option>
+			</select>
+			(파일이 커질 경우 성능 문제가 발생할 수 있습니다.)
+		</label><br />
 		<label><input type="checkbox" name="viewer_useAlign" /> 미리보기 줄표로 시작할 경우 왼쪽 정렬</label><br />
 		<label>새 문서
 			<textarea name="newFile" spellcheck="false" style="height: 400px;"></textarea>

@@ -882,7 +882,7 @@ SmiEditor.prototype.insertSync = function(forFrame) {
 	// 커서가 위치한 줄
 	var cursor = this.input[0].selectionEnd;
 	var lineNo = this.input.val().substring(0, cursor).split("\n").length - 1;
-
+	
 	var sync = SmiEditor.getSyncTime();
 	
 	var lineSync = this.lines[lineNo][LINE.SYNC];
@@ -1521,19 +1521,29 @@ SmiEditor.prototype.updateHighlight = function () {
 	};
 	setTimeout(thread, 1);
 }
-$(function() {
-	var style = $("#style_highlight");
-	if (style.length == 0) {
-		$("head").append(style = $("<style>").attr({ id: "style_highlight" }));
-	}
-	style.html(".highlight-textarea > div .sync  { color: #3F5FBF; }");
-});
+SmiEditor.highlightCss = { sync: { color: "#3F5FBF" } };
 SmiEditor.highlightText = function(text, state=null) {
 	var previewLine = $("<span>");
 	if (text.toUpperCase().startsWith("<SYNC ")) {
 		previewLine.addClass("sync");
 	}
 	return previewLine.text(text);
+}
+SmiEditor.refreshHighlight = function() {
+	var style = $("#style_highlight");
+	if (style.length == 0) {
+		$("head").append(style = $("<style>").attr({ id: "style_highlight" }));
+	}
+	var css = [];
+	for (var key in SmiEditor.highlightCss) {
+		var attrs = SmiEditor.highlightCss[key];
+		var items = [];
+		for (var attr in attrs) {
+			items.push(attr + ": " + attrs[attr]);
+		}
+		css.push(".highlight-textarea > div ." + key + " { " + items.join("; ") + " }");
+	}
+	style.html(css.join("\n"));
 }
 SmiEditor.prototype.moveLine = function(toNext) {
 	if (this.syncUpdating) return;
@@ -2320,3 +2330,7 @@ SmiEditor.fillSync = function (text) {
 	smi.body = input;
 	return smi.toTxt().trim();
 };
+
+$(function() {
+	SmiEditor.refreshHighlight();
+});

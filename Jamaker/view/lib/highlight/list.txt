@@ -1,0 +1,2 @@
+SyncOnly: 싱크 줄 구분
+eclipse: 이클립스 스타일

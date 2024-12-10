@@ -1,18 +1,11 @@
-$(function() {
-	var style = $("#style_highlight");
-	if (style.length == 0) {
-		$("head").append(style = $("<style>").attr({ id: "style_highlight" }));
-	}
-	style.html("\n"
-		+	".highlight-textarea > div .clamp,\n"
-		+	".highlight-textarea > div .tag   { color: #3F7F7F; }\n"
-		+	".highlight-textarea > div .attr  { color: #AB0095; }\n"
-		+	".highlight-textarea > div .value { color: #2A00FF; }\n"
-		+	".highlight-textarea > div .comment,\n"
-		+	".highlight-textarea > div .sync  { color: #3F5FBF; }\n"
-	);
-});
-
+SmiEditor.highlightCss = {
+		clamp  : { color: "#3F7F7F" }
+	,	tag    : { color: "#3F7F7F" }
+	,	attr   : { color: "#AB0095" }
+	,	value  : { color: "#2A00FF" }
+	,	comment: { color: "#3F5FBF" }
+	,	sync   : { color: "#3F5FBF" }
+};
 SmiEditor.highlightText = function(text, state=null) {
 	var previewLine = $("<span>").data({ state: state });
 	if (state == null && text.toUpperCase().startsWith("<SYNC ")) {

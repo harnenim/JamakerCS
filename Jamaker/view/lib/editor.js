@@ -42,6 +42,8 @@ var Tab = function(text, path) {
 	this.hold = 0;
 	this.lastHold = 1;
 	this.path = path;
+	this.fs = null;
+	this.kfs = null;
 	
 	var holds = Subtitle.SmiFile.textToHolds(text);
 	for (var i = 0; i < holds.length; i++) {
@@ -622,6 +624,13 @@ function init(jsonSetting) {
 		if (tabs.length == 0) return;
 		tabs[tab].holds[tabs[tab].hold].input.focus();
 	});
+	var checkTrustKeyframe = $("#checkTrustKeyframe").on("click", function() {
+		trustKeyframe = $(this).prop("checked");
+		if (tabs.length == 0) return;
+		//tabs[tab].holds[tabs[tab].hold].input.focus();
+		// TODO: ffprobe.exe 작업 필요
+		alert("키프레임 정보를 읽어옵니다. - 개발 중");
+	});
 	
 	var btnNewTab = $("#btnNewTab").on("click", function() {
 		openNewTab();
@@ -721,13 +730,35 @@ function setSetting(setting) {
 		}
 	}
 	
-	var needToUpdate = (setting.useHighlight != SmiEditor.useHighlight);
 	SmiEditor.setSetting(setting, getAppendStyle());
-	if (needToUpdate) {
-		for (var i = 0; i < tabs.length; i++) {
-			for (var j = 0; j < tabs[i].holds.length; j++) {
-				tabs[i].holds[j].updateHighlight();
+	{
+		function afterLoadHighlight() {
+			SmiEditor.refreshHighlight();
+			for (var i = 0; i < tabs.length; i++) {
+				for (var j = 0; j < tabs[i].holds.length; j++) {
+					var hold = tabs[i].holds[j];
+					hold.highlightLines = [];
+					hold.hview.empty();
+					hold.updateHighlight();
+				}
 			}
+		}
+		if (setting.useHighlight) {
+			var highlight = setting.useHighlight;
+			if (highlight == true) { // 구버전의 사용여부
+				highlight = setting.useHighlight = "eclipse"; // 현행 이클립스 스타일로 잡아줌
+			}
+			$.ajax({
+				url: "lib/highlight/" + highlight + ".js"
+				, dataType: "text"
+				, success: function (js) {
+					console.log(js);
+					eval(js);
+					afterLoadHighlight();
+				}
+			});
+		} else {
+			afterLoadHighlight();
 		}
 	}
 	
@@ -789,9 +820,13 @@ function setDpiBy(width) {
 }
 
 var playerDlls = [];
+var highlights = [];
 // C# 쪽에서 호출
 function setPlayerDlls(dlls) {
 	playerDlls = dlls.split("\n");
+}
+function setHighlights(list) {
+	highlights = list.split("\n");
 }
 
 function openSetting() {
@@ -1033,6 +1068,27 @@ function confirmLoadVideo(path) {
 			binder.loadVideoFile(path);
 		});
 	}, 1);
+}
+
+// C# 쪽에서 호출
+function setFrames(fs, kfs) {
+	var currentTab = tabs[tab];
+	if (!currentTab) {
+		return;
+	}
+	
+	fs = fs.split(",");
+	for (var i = 0; i < fs.length; i++) {
+		fs[i] = Number(fs[i]);
+	}
+	kfs = kfs.split(",");
+	for (var i = 0; i < kfs.length; i++) {
+		kfs[i] = Number(kfs[i]);
+	}
+	tab.fs = fs;
+	tab.kfs = kfs;
+	
+	// TODO: progress 닫기
 }
 
 // 종료 전 C# 쪽에서 호출

@@ -11,7 +11,6 @@
 <script src="lib/History.js"></script>
 <script src="lib/Combine.js"></script>
 <script src="lib/SmiEditor.js"></script>
-<script src="lib/SmiEditor.highlight.js"></script>
 <script src="lib/editor.js"></script>
 <link rel="stylesheet" type="text/css" href="lib/AutoCompleteTextarea.css" />
 <link rel="stylesheet" type="text/css" href="lib/SmiEditor.css" />
@@ -39,7 +38,7 @@ body:not(.drag-file) #cover {
 	display: none;
 }
 #btnAddHold { padding: 1px 4px; }
-#inputWeight { width: 50px; }
+#inputWeight { width: 40px; }
 #inputUnit { width: 50px; }
 #btnMoveToBack,
 #btnMoveToForward {
@@ -51,11 +50,12 @@ body:not(.drag-file) #cover {
 	<div style="padding: 3px; height: 24px;"><!--
 	--><button type="button" id="btnAddHold">홀드 추가</button><!--
 	--><label>가중치<input type="text" id="inputWeight" value="0" /></label><!--
-	--><label>싱크 조절<input type="text" id="inputUnit" value="0" /></label><!--
+	--><label title="선택영역 혹은 전체 싱크를 조절합니다.">싱크 조절<input type="text" id="inputUnit" value="0" /></label><!--
 	--><button type="button" id="btnMoveToBack"  title="싱크 당기기(Ctrl+Shift+↓)">－</button><!--
 	--><button type="button" id="btnMoveToForward" title="싱크 밀기(Ctrl+Shift+↑)">＋</button><!--
-	--><label><input type="checkbox" id="checkAutoFindSync" />검수모드</label><!--
-	--><span id="showFps"></span><!--
+	--><label title="현재 재생 위치로 커서가 자동으로 이동합니다."><input type="checkbox" id="checkAutoFindSync" />검수모드</label><!--
+	--><label title="화면 싱크를 가급적 키프레임에 맞춰줍니다."><input type="checkbox" id="checkTrustKeyframe" />키프레임 신뢰</label><!--
+	 -><span id="showFps"></span><!--
 --></div>
 	<div id="tabSelector"><div class="th" id="btnNewTab">＋</div></div>
 	<div id="editor"></div>
