@@ -18,10 +18,13 @@ var origin = null;
 var FL = 42;
 var tab = null;
 $(function() {
-	tab = opener ? opener.SmiEditor.selected : null;
-	if (tab) {
-		origin = tab.getText();
-		FL = opener.FL;
+	if (opener) {
+		SmiEditor = opener.SmiEditor;
+		tab = opener.SmiEditor.selected;
+		if (tab) {
+			origin = tab.getText();
+			FL = opener.FL;
+		}
 	}
 });
 var binder = {
