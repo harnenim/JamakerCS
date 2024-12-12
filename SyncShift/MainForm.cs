@@ -151,7 +151,7 @@ namespace Jamaker
         }
         public void SetProgress(string progress, double status)
         {
-            Script("setProgress", new object[] { progress, status });
+            Script("Progress.set", new object[] { progress, status });
         }
         public void HideProcessing()
         {

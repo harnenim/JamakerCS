@@ -127,8 +127,8 @@ $(function () {
 		,	background: "rgba(127,127,127,0.2)"
 		,	zIndex: "9999"
 	}));
-
-	$("[title]").each(function () {
+	
+	$("[title]").each(function() {
 		var obj = $(this);
 		var title = obj.attr("title").split("\\n");
 		if (title.length > 1) {
@@ -169,4 +169,15 @@ Progress.prototype.set = function(value, total) {
 }
 Progress.prototype.hide = function() {
 	this.div.hide();
+}
+// Progress 객체 없이 직접 다루는 경우
+Progress.bars = {};
+Progress.set = function(selector, ratio) {
+	var bar = Progress.bars[selector];
+	if (bar == null) {
+		var area = $(selector);
+		Progress.bars[selector] = bar = $("<div>").addClass("progress-bar");
+		area.addClass("progress").prepend(bar);
+	}
+	bar.width(ratio * 100 + "%");
 }

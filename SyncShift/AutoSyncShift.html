@@ -104,7 +104,7 @@ var main = new WebForm();
 		main.script("showProcessing", [message]);
 	}
 	main.setProgress = function(progress, status) {
-		main.script("setProgress", [progress, status]);
+		main.script("Progress.set", [progress, status]);
 	}
 	main.hideProcessing = function() {
 		main.script("hideProcessing");

@@ -6,6 +6,7 @@
 	<title>Auto Sync Shift</title>
 	<script src="lib/jquery-3.2.1.min.js"></script>
 	<script src="lib/SubtitleObject.js"></script>
+	<script src="lib/Combine.js"></script>
 	<script src="lib/webview.js"></script>
 	<link rel="stylesheet" type="text/css" href="lib/webview.css" />
 	<script>
@@ -17,27 +18,6 @@ function showProcessing(text) {
 function hideProcessing() {
 	$("#processing").hide();
 	isProcessing = false;
-}
-var progresses = {};
-function setProgress(name, ratio) {
-	var obj = $(name);
-	var id = obj.attr("id");
-	if (!id) {
-		obj.attr("id", (id = "id_" + Math.random()));
-	}
-
-	if (progresses[id] == null) {
-		obj.css({ position: "relative" })
-		.prepend(progresses[id] = $("<div>").css({
-				"position": "absolute"
-			,	"top": 0
-			,	"left": 0
-			,	"width": 0
-			,	"height": "100%"
-			,	"background": "rgba(0, 122, 202, 0.5)"
-		}));
-	}
-	progresses[id].width(ratio * 100 + "%");
 }
 function showAudioSelector(list, isOrigin, withSaveSkf, trustKf) {
 	var list = list.split("|");
@@ -531,12 +511,11 @@ function apply() {
 			target.header = origin.header;
 			target.footer = origin.footer;
 			
-			function shiftText(text) {
-				var hold = new Subtitle.SmiFile(text);
+			function shiftHold(hold) {
 				for (var i = 0; i < hold.body.length; i++) {
 					hold.body[i].start = shiftSync(hold.body[i].start);
 				}
-				return hold.toTxt().trim();
+				return hold;
 			}
 			
 			{
@@ -621,7 +600,7 @@ function apply() {
 			
 			for (var shiftIndex = 0; shiftIndex < shifts.length; shiftIndex++) {
 				var shift = shifts[shiftIndex];
-				if (shift.skipped == null || shift.tCount == 0 || shift.skipped.length == 0) {
+                if (shift.skipped == null || shift.fCount == 0 || shift.skipped.length == 0) {
 					continue;
 				}
 				var add = Math.round(shift.fSum / shift.fCount);
@@ -630,16 +609,18 @@ function apply() {
 				}
 			}
 			
-			operation.output = [{ text: target.toTxt() }];
-			for (var hi = 1; hi < operation.input.length; hi++) {
+			var holds = [];
+			for (var hi = 0; hi < operation.input.length; hi++) {
 				var holdInfo = operation.input[hi];
-				operation.output.push({
+				var hold = shiftHold(new Subtitle.SmiFile(holdInfo.text));
+				holds.push({
 						pos : holdInfo.pos
 					,	name: holdInfo.name
-					,	text: shiftText(holdInfo.text)
+					,	text: hold.toTxt()
+					,	start: hold.body.length ? hold.body[0].start : 999999999
 				});
 			}
-			
+			operation.output = Subtitle.SmiFile.holdsToText(holds);
 			refreshPreview(true);
 			break;
 		}
@@ -651,7 +632,7 @@ function apply() {
 				var srt = new Subtitle.Srt(shiftSync(item.start), shiftSync(item.end), item.text);
 				target.body.push(srt);
 			}
-			operation.output = [{ text: target.toTxt() }];
+			operation.output = target.toTxt();
 			refreshPreview(true);
 			break;
 		}
@@ -664,7 +645,7 @@ function apply() {
 				var ass = new Subtitle.Ass(Math.round(shiftSync(item.start * 10) / 10), Math.round(shiftSync(item.end * 10) / 10), item.style, item.text);
 				target.body.push(ass);
 			}
-			operation.output = [{ text: target.toTxt() }];
+			operation.output = target.toTxt();
 			refreshPreview(true);
 			break;
 		}
@@ -677,13 +658,15 @@ function save() {
 		alert("작업 결과가 없습니다.");
 		return;
 	}
+	/*
 	var result = [operation.output[0].text];
 	for (var hi = 1; hi < operation.output.length; hi++) {
 		var hold = operation.output[hi];
 		result[hi] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + hold.text.split("<").join("<​").split(">").join("​>") + "\n-->";
 	}
 	result = result.join("\n");
-	binder.save(result, operation.type);
+	*/
+	binder.save(operation.output, operation.type);
 }
 function applySave() {
 	apply();
