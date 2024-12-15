@@ -103,7 +103,7 @@ SmiEditor.setSetting = function(setting, appendStyle) {
 	if (setting.sync) {
 		SmiEditor.sync = setting.sync;
 	}
-	SmiEditor.useHighlight = setting.highlight.parser;
+	SmiEditor.useHighlight = setting.highlight && setting.highlight.parser;
 	
 	{	// AutoComplete
 		for (var key in SmiEditor.autoComplete) {
