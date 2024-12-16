@@ -156,12 +156,15 @@ function drop(x, y) {
 
 function setOriginVideoFile(path) {
 	$("#originVideo input").val(path);
+	$("#originVideo").attr({ title: path });
 }
 function setTargetVideoFile(path) {
 	$("#targetVideo input").val(path);
+	$("#targetVideo").attr({ title: path });
 }
 function setOriginSubtitleFile(path, text) {
 	$("#originSub input").val(path);
+	$("#originSub").attr({ title: path });
 	
     var separators = $("#inputSeparator").val().split("\n");
     for (var i = 0; i < separators.length; i++) {
@@ -274,6 +277,8 @@ function refreshPreview(isTarget=false) {
 					// 중간 싱크는 미리보기에서 생략
 					continue;
 				}
+				
+				// 줄바꿈 예외 처리 및 주석 숨기기
 				var text = item.text.split("\n").join("").split(/<br>/gi).join("\n").split("<!--");
 				for (var j = 1; j < text.length; j++) {
 					var index = text[j].indexOf("-->");
@@ -283,6 +288,8 @@ function refreshPreview(isTarget=false) {
 						text[j] = "";
 					}
 				}
+				
+				// 태그 숨기기
 				text = text.join("").split("<");
 				for (var j = 1; j < text.length; j++) {
 					var index = text[j].indexOf(">");
@@ -292,21 +299,28 @@ function refreshPreview(isTarget=false) {
 						text[j] = "";
 					}
 				}
-				var $line = getLine(item, item.start, text.join("").split("\n").join("<br />").split("&").join("&amp;"));
-				item.previewText = $line.text();
-				if (item.syncType) {
-					$line.addClass("type" + item.syncType);
-				}
-				body.push(item);
 				
+				// ms 단위 표현
 				last.me = item.ms = item.start;
 				item.me = item.ms + 1000;
+				
+				// 줄바꿈, &nbsp; 등 처리
+				var $line = getLine(item, item.start, text.join("").split("\n").join("<br />").split("&").join("&amp;"));
+				item.previewText = $line.text();
+				body.push(item);
+				
 				if ($line.find(".text").text().split("&nbsp;").join(" ").trim().length) {
 					last = item;
 				} else {
 					last = {};
 				}
 				
+				// 화면 싱크 강조
+				if (item.syncType) {
+					$line.addClass("type" + item.syncType);
+				}
+				
+				// 싱크 역전 오류
 				if (item.ms < lastSync) {
 					$line.addClass("error");
 					errCount++;
@@ -321,7 +335,8 @@ function refreshPreview(isTarget=false) {
 				var item = body[i];
 				var $line = getLine(item, item.start, item.text.split("\n").join("<br />"));
 				item.previewText = $line.text();
-				
+
+				// ms 단위 표현
 				item.ms = item.start;
 				item.me = item.end;
 				
@@ -344,21 +359,34 @@ function refreshPreview(isTarget=false) {
 			})
 			for (var i = 0; i < body.length; i++) {
 				var item = body[i];
+				
+				// 태그 숨기기
 				var items = item.text.split("{");
 				var text = items[0];
 				for (var j = 1; j < items.length; j++) {
 					var index = items[j].indexOf("}");
-					if (index > 0) {
+					if (index >= 0) {
 						text += "<!--{" + items[j].substring(0, index) + "}-->" + items[j].substring(index + 1);
 					}
 				}
-				
+
+				// ms 단위 표현
 				item.ms = item.start * 10;
 				item.me = item.end   * 10;
+				// 화면 싱크 여부
+				item.fs = item.text.startsWith("{}");
+				item.fe = item.text.endsWith  ("{}");
 				
+				// 줄바꿈 처리
 				var $line = getLine(item, item.ms, text.split("\\N").join("<br />"));
 				item.previewText = $line.text();
 				
+				// 화면 싱크 강조
+				if (item.fs) {
+					$line.addClass("type1");
+				}
+
+				// 싱크 역전 오류
 				if (item.ms < lastSync) {
 					$line.addClass("error");
 					errCount++;
@@ -467,6 +495,7 @@ function calcShift() {
 }
 
 var kfs = [];
+
 function setKfs(strKfs) {
 	kfs = JSON.parse(strKfs);
 }
@@ -545,7 +574,8 @@ function apply() {
 					var shiftIndex = getShiftIndex(item.start);
 					var smi = new Subtitle.Smi(shiftSync(item.start, shiftIndex), item.syncType, item.text);
 					target.body.push(smi);
-	
+					
+					// 화면 싱크 키프레임 대조
 	                if (withKf && (smi.syncType == Subtitle.SyncType.frame)) {
 						console.log("withKf: " + smi.start);
 	
@@ -598,9 +628,10 @@ function apply() {
 				}
 			}
 			
+			// 키프레임 찾지 못한 화면 싱크 처리 
 			for (var shiftIndex = 0; shiftIndex < shifts.length; shiftIndex++) {
 				var shift = shifts[shiftIndex];
-                if (shift.skipped == null || shift.fCount == 0 || shift.skipped.length == 0) {
+				if (shift.skipped == null || shift.fCount == 0 || shift.skipped.length == 0) {
 					continue;
 				}
 				var add = Math.round(shift.fSum / shift.fCount);
@@ -640,11 +671,104 @@ function apply() {
 			var origin = operation.origin;
 			var target = operation.target = new Subtitle.AssFile();
 			target.header = origin.header;
-			for (var i = 0; i < origin.body.length; i++) {
-				var item = origin.body[i];
-				var ass = new Subtitle.Ass(Math.round(shiftSync(item.start * 10) / 10), Math.round(shiftSync(item.end * 10) / 10), item.style, item.text);
-				target.body.push(ass);
+			
+			{
+				var ki = 0;
+				for (var i = 0; i < origin.body.length; i++) {
+					var item = origin.body[i];
+					var ms = shiftSync(item.ms);
+					var me = shiftSync(item.me);
+					var ass = new Subtitle.Ass(Math.round(ms / 10), Math.round(me / 10), item.style, item.text);
+					ass.ms = ms;
+					ass.me = me;
+					target.body.push(ass);
+
+					// 화면 싱크 키프레임 대조
+	                if (withKf) {
+	                	if (ass.fs = item.fs) {
+							console.log("withKf: " + ass.ms);
+							
+							var shift = shifts[shiftIndex];
+							if (shift.skipped == null) {
+								shift.fCount = 0;
+								shift.fSum = 0;
+								shift.skipped = [];
+							}
+							
+							while (kfs[ki] < ass.ms) {
+								if (ki == 0) break;
+								ki--;
+							}
+							while ((ki+1 < kfs.length) && (kfs[ki+1] < ass.ms)) {
+								ki++;
+							}
+							var distPrev = ass.ms - kfs[ki];
+							var distNext = (ki+1 < kfs.length) ? (kfs[ki+1] - ass.ms) : 999999999;
+							if (distPrev > 150 && distNext > 150) { // 3프레임 이상의 오차
+								shift.skipped.push([ass, 0]);
+								continue;
+							}
+							var add = (distPrev < distNext) ? -distPrev : distNext;
+							console.log("add to " + ass.ms + ": " + add);
+							shift.fSum += add;
+							shift.fCount++;
+							console.log(ass.ms + " -> " + (ass.ms + add));
+							ass.ms += add;
+	                	}
+	                	if (ass.fe = item.fe) {
+							console.log("withKf: " + ass.me);
+							
+							var shift = shifts[shiftIndex];
+							if (shift.skipped == null) {
+								shift.fCount = 0;
+								shift.fSum = 0;
+								shift.skipped = [];
+							}
+							
+							while (kfs[ki] < ass.me) {
+								if (ki == 0) break;
+								ki--;
+							}
+							while ((ki+1 < kfs.length) && (kfs[ki+1] < ass.me)) {
+								ki++;
+							}
+							var distPrev = ass.me - kfs[ki];
+							var distNext = (ki+1 < kfs.length) ? (kfs[ki+1] - ass.me) : 999999999;
+							if (distPrev > 150 && distNext > 150) { // 3프레임 이상의 오차
+								shift.skipped.push([ass, 1]);
+								continue;
+							}
+							var add = (distPrev < distNext) ? -distPrev : distNext;
+							console.log("add to " + ass.me + ": " + add);
+							shift.fSum += add;
+							shift.fCount++;
+							console.log(ass.me + " -> " + (ass.me + add));
+							ass.me += add;
+	                	}
+	                }
+				}
 			}
+
+			// 키프레임 찾지 못한 화면 싱크 처리
+			for (var shiftIndex = 0; shiftIndex < shifts.length; shiftIndex++) {
+				var shift = shifts[shiftIndex];
+				if (shift.skipped == null || shift.fCount == 0 || shift.skipped.length == 0) {
+					continue;
+				}
+				var add = Math.round(shift.fSum / shift.fCount);
+				for (var i = 0; i < shift.skipped.length; i++) {
+					var item = shift.skipped[i];
+					switch (item[1]) {
+						case 0:
+							item.start = Math.round((item.ms = item.ms + add) / 10);
+							break;
+						case 1:
+							item.end   = Math.round((item.me = item.me + add) / 10);
+							break;
+					}
+				}
+			}
+			
 			operation.output = target.toTxt();
 			refreshPreview(true);
 			break;
@@ -1072,7 +1196,7 @@ h4 {
 			<button>찾아보기...</button>
 		</div>
 		
-		<div class="file" title="화면 싱크를 가급적 키프레임에 맞춥니다.\nOTT 영상에선 맞지 않는 경우가 많습니다.\n체크할 경우 영상을 불러올 때 키프레임 분석이 함께 진행됩니다.">
+		<div class="file" title="화면 싱크가 있으면 가급적 키프레임에 맞춰줍니다.\nOTT 영상에선 맞지 않는 경우가 많습니다.\n체크할 경우 영상을 불러올 때 키프레임 분석이 함께 진행됩니다.">
 			<label style="width: auto; padding-left: 32px; "><input type="checkbox" id="chkTrustKfTarget" /> <span>키프레임 신뢰</span></label>
 		</div>
 		
@@ -1095,8 +1219,8 @@ h4 {
 	
 	<div id="settingForm">
 		<div id="settingSkf">
-			<label title="음성 분석 파일을 생성하여\n영상 파일 대신에 불러올 수 있습니다."><input type="checkbox" id="chkSaveSkfOrigin" /> <span>원본.skf 저장</span></label>
-			<label title="음성 분석 파일을 생성하여\n영상 파일 대신에 불러올 수 있습니다."><input type="checkbox" id="chkSaveSkfTarget" /> <span>대상.skf 저장</span></label>
+			<label title=".skf: Sound-KeyFrame 파일\n음성 분석 파일을 생성하여, 영상 파일 대신에 불러올 수 있습니다."><input type="checkbox" id="chkSaveSkfOrigin" /> <span>원본.skf 저장</span></label>
+			<label title=".skf: Sound-KeyFrame 파일\n음성 분석 파일을 생성하여, 영상 파일 대신에 불러올 수 있습니다.\n키프레임 신뢰를 체크한 경우 키프레임 정보를 함께 저장합니다."><input type="checkbox" id="chkSaveSkfTarget" /> <span>대상.skf 저장</span></label>
 		</div>
 		<div id="settingSeparator" title="자막 파일을 불러올 때\n가중치 계산 범위를 나눌 구분자입니다.">
 			<label>
