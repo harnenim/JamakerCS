@@ -160,6 +160,9 @@ Tab.prototype.updateHoldSelector = function() {
 	var timers = [];
 	for (var i = 0; i < this.holds.length; i++) {
 		var hold = this.holds[i];
+		if (i > 0) {
+			hold.selector.find(".hold-name span").text(i + "." + hold.name);
+		}
 		timers.push({ time: hold.start, holds: [{ index: i, type: BEGIN }] });
 		timers.push({ time: hold.end  , holds: [{ index: i, type: END   }] });
 	}

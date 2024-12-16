@@ -1461,573 +1461,318 @@ Subtitle.Smi.SetFurigana = function(attr, furigana) {
 	attr.furigana = furigana ? furigana : null;
 }
 Subtitle.Smi.toAttr = function(text) {
-	if (true) {
-		var status = new Subtitle.Smi.Status();
-		var last = new Subtitle.Attr();
-		var result = [last];
-		var ruby = null;
-		var furigana = null;
-		
-		var state = null;
-		var pos = 0;
-		
-		var tag = null;
-		var attr = null;
-		var value = null;
-		
-		function openTag() {
-			switch (tag.name.toUpperCase()) {
-				case "B":
-					if (last.text.length > 0)
-						result.push((last = new Subtitle.Attr()));
-					Subtitle.Smi.SetStyle(last, status.setB(true));
-					break;
-				case "I":
-					if (last.text.length > 0)
-						result.push((last = new Subtitle.Attr()));
-					Subtitle.Smi.SetStyle(last, status.setI(true));
-					break;
-				case "U":
-					if (last.text.length > 0)
-						result.push((last = new Subtitle.Attr()));
-					Subtitle.Smi.SetStyle(last, status.setU(true));
-					break;
-				case "FONT":
-					if (last.text.length > 0)
-						result.push((last = new Subtitle.Attr()));
-					{
-						var attrs = [];
-						for (var name in tag.attrs) {
-							attrs.push([name, tag.attrs[name]]);
-						}
-						Subtitle.Smi.SetStyle(last, status.setFont(attrs));
+	var status = new Subtitle.Smi.Status();
+	var last = new Subtitle.Attr();
+	var result = [last];
+	var ruby = null;
+	var furigana = null;
+	
+	var state = null;
+	var pos = 0;
+	
+	var tag = null;
+	var attr = null;
+	var value = null;
+	
+	function openTag() {
+		switch (tag.name.toUpperCase()) {
+			case "B":
+				if (last.text.length > 0)
+					result.push((last = new Subtitle.Attr()));
+				Subtitle.Smi.SetStyle(last, status.setB(true));
+				break;
+			case "I":
+				if (last.text.length > 0)
+					result.push((last = new Subtitle.Attr()));
+				Subtitle.Smi.SetStyle(last, status.setI(true));
+				break;
+			case "U":
+				if (last.text.length > 0)
+					result.push((last = new Subtitle.Attr()));
+				Subtitle.Smi.SetStyle(last, status.setU(true));
+				break;
+			case "FONT":
+				if (last.text.length > 0)
+					result.push((last = new Subtitle.Attr()));
+				{
+					var attrs = [];
+					for (var name in tag.attrs) {
+						attrs.push([name, tag.attrs[name]]);
 					}
-					break;
-				case "RUBY":
-					if (last.text.length > 0)
-						result.push((last = new Subtitle.Attr()));
-					ruby = last;
-					break;
-				case "RT":
-					if (last.text.length > 0)
-						last = new Subtitle.Attr();
-					furigana = last;
-					break;
-				case "RP":
-					last = new Subtitle.Attr(); // 정크 데이터
-					break;
-				case "BR":
-					last.text += "\n";
-					break;
-			}
-			tag = null;
+					Subtitle.Smi.SetStyle(last, status.setFont(attrs));
+				}
+				break;
+			case "RUBY":
+				if (last.text.length > 0)
+					result.push((last = new Subtitle.Attr()));
+				ruby = last;
+				break;
+			case "RT":
+				if (last.text.length > 0)
+					last = new Subtitle.Attr();
+				furigana = last;
+				break;
+			case "RP":
+				last = new Subtitle.Attr(); // 정크 데이터
+				break;
+			case "BR":
+				last.text += "\n";
+				break;
 		}
-		function closeTag(tagName) {
-			switch (tagName.toUpperCase()) {
-				case "B":
-					if (last.text.length > 0)
-						result.push((last = new Subtitle.Attr()));
-					Subtitle.Smi.SetStyle(last, status.setB(false));
-					break;
-				case "I":
-					if (last.text.length > 0)
-						result.push((last = new Subtitle.Attr()));
-					Subtitle.Smi.SetStyle(last, status.setI(false));
-					break;
-				case "U":
-					if (last.text.length > 0)
-						result.push((last = new Subtitle.Attr()));
-					Subtitle.Smi.SetStyle(last, status.setU(false));
-					break;
-				case "FONT":
-					if (last.text.length > 0)
-						result.push((last = new Subtitle.Attr()));
-					Subtitle.Smi.SetStyle(last, status.setFont(null));
-					break;
-				case "RUBY":
-					if (last.text.length > 0)
-						result.push((last = new Subtitle.Attr()));
-					break;
-				case "RT":
-					if (ruby) {
-						Subtitle.Smi.SetFurigana(ruby, furigana);
-						furigana = null;
-						last = ruby;
-					}
-					break;
-				case "RP":
-					if (furigana) last = furigana;
-					break;
-				default:
-					break;
-			}
-		}
-		
-		for (var pos = 0; pos < text.length; pos++) {
-			var c = text[pos];
-			switch (state) {
-				case '/': { // 태그?!
-					state = '<';
-					if (c == '/') { // 종료 태그 시작일 경우
-						var end = text.indexOf('>', pos);
-						if (end < 0) {
-							// 태그 끝이 없음
-							pos = text.length;
-							break;
-						}
-						closeTag(text.substring(pos + 1, end));
-						pos = end;
-						state = null;
-						break;
-					}
-					// 종료 태그 아닐 경우 아래로 이어서 진행
-					tag = { name: "", attrs: {} };
-				}
-				case '<': { // 태그명
-					switch (c) {
-						case '>': { // 태그 종료
-							openTag();
-							state = null;
-							break;
-						}
-						case ' ':
-						case '\t': { // 태그명 끝
-							state = '>';
-							break;
-						}
-						default: {
-							tag.name += c;
-							break;
-						}
-					}
-					break;
-				}
-				case '>': { // 태그 내
-					switch (c) {
-						case '>': { // 태그 종료
-							openTag();
-							state = null;
-							break;
-						}
-						case ' ': 
-						case '\t':
-						case '<':
-						case '&': {
-							break;
-						}
-						default: { // 속성명 시작
-							attr = c;
-							state = 'a';
-							break;
-						}
-					}
-					break;
-				}
-				case 'a': { // 속성명
-					switch (c) {
-						case '>': { // 태그 종료
-							tag.attrs[attr] = attr;
-							openTag();
-							state = null;
-							break;
-						}
-						case '=': { // 속성값 시작
-							state = '=';
-							break;
-						}
-						case ' ':
-						case '\t': { // 일단은 속성이 끝나지 않을 걸로 간주
-							state = '`';
-							break;
-						}
-						default: {
-							attr += c;
-						}
-					}
-					break;
-				}
-				case '`': { // 속성명+공백문자
-					switch (c) {
-						case '>': { // 태그 종료
-							tag.attrs[attr] = attr;
-							openTag();
-							state = null;
-							break;
-						}
-						case '=': { // 속성값 시작
-							state = '=';
-							break;
-						}
-						case ' ':
-						case '\t': { // 일단은 속성이 끝나지 않을 걸로 간주
-							break;
-						}
-						default: { // 속성값 없는 속성으로 확정, 새 속성 시작
-							tag.attrs[attr] = attr;
-							attrName = c;
-							state = 'a';
-						}
-					}
-					break;
-				}
-				case '=': { // 속성값 시작 전
-					switch (c) {
-						case '>': { // 태그 종료
-							tag.attrs[attr] = "";
-							openTag();
-							state = null;
-							break;
-						}
-						case '"': { // 속성값 따옴표 시작
-							value = "";
-							state = '"';
-							break;
-						}
-						case "'": { // 속성값 따옴표 시작
-							value = "";
-							state = "'";
-							break;
-						}
-						case ' ': { // 일단은 속성이 끝나지 않을 걸로 간주
-							break;
-						}
-						case '\t': {
-							break;
-						}
-						default: {
-							value = c;
-							state = '~';
-						}
-					}
-					break;
-				}
-				case '~': { // 따옴표 없는 속성값
-					switch (c) {
-						case '>': { // 태그 종료
-							tag.attrs[attr] = value;
-							openTag();
-							state = null;
-							break;
-						}
-						case ' ':
-						case '\t': { // 속성 종료
-							tag.attrs[attr] = value;
-							state = '>';
-							break;
-						}
-						default: {
-							value += c;
-						}
-					}
-					break;
-				}
-				case '"': {
-					switch (c) {
-						case '"': { // 속성 종료
-							tag.attrs[attr] = value;
-							state = '>';
-							break;
-						}
-						default: {
-							value += c;
-						}
-					}
-					break;
-				}
-				case "'": {
-					switch (c) {
-						case "'": { // 속성 종료
-							tag.attrs[attr] = value;
-							state = '>';
-							break;
-						}
-						default: {
-							value += c;
-						}
-					}
-					break;
-				}
-				case '!': { // 주석
-					if ((pos + 3 <= text.length) && (text.substring(pos, pos+3) == "-->")) {
-						state = null;
-						pos += 2;
-					}
-					break;
-				}
-				default: { // 텍스트
-					switch (c) {
-						case '<': { // 태그 시작
-							if ((pos + 4 <= text.length) && (text.substring(pos, pos+4) == "<!--")) {
-								state = '!';
-								pos += 3;
-							} else {
-								state = '/';
-							}
-							break;
-						}
-						default: {
-							last.text += c;
-						}
-					}
-				}
-			}
-		}
-
-		return result;
-		
-	} else {
-		var index = 0;
-		var pos = 0;
-		var status = new Subtitle.Smi.Status();
-		var last = new Subtitle.Attr();
-		var result = [last];
-		var ruby = null;
-		var furigana = null;
-		
-		while ((pos = text.indexOf('<', index)) >= 0) {
-			// 태그명
-			var tagNameLength = 0;
-			while (pos + 1 + tagNameLength < text.length
-				&& text[pos + 1 + tagNameLength] != ' '
-				&& text[pos + 1 + tagNameLength] != '>'
-				&& text[pos + 1 + tagNameLength] != '\r'
-				&& text[pos + 1 + tagNameLength] != '\n'
-				&& text[pos + 1 + tagNameLength] != '\t'
-			) tagNameLength++;
-			
-			var tagName = text.substring(pos + 1, pos + 1 + tagNameLength).toUpperCase();
-			var attrPos = pos + 1 + tagNameLength;
-			
-			// 태그 속성
-			var attrs = [];
-			if (text[attrPos] == '>') {
-				attrPos++;
-				
-			} else {
-				if (tagName[0] == ('/')) { // 종료 태그
-					attrPos = text.indexOf('>', attrPos) + 1;
-					
-				} else {
-					var mode = 0;
-					var attrNameStart = attrPos, attrValueStart = 0;
-					var name = "";
-					
-					while (mode >= 0) {
-						switch (mode) {
-							case 0: { // 속성 이름
-								for (; mode == 0 && attrPos < text.length; attrPos++) {
-									switch (text[attrPos]) {
-										case '>':
-											if (attrPos - attrNameStart > 0) {
-												// 이름만 있는 속성
-												attrs.push([text.substring(attrNameStart, attrPos).toLowerCase(), null]);
-											}
-											mode = -1;
-											break;
-										case ' ':
-										case '\t':
-										case '\r':
-										case '\n':
-											if (attrPos - attrNameStart > 0) {
-												// 이름만 있는 속성
-												attrs.push([text.substring(attrNameStart, attrPos).toLowerCase(), null]);
-											}
-											attrNameStart = attrPos + 1;
-											break;
-										case '=':
-											// 이름 끝, 값 시작
-											name = text.substring(attrNameStart, attrPos).toLowerCase();
-											mode = 1;
-											attrValueStart = attrPos + 1;
-											break;
-									}
-								}
-								break;
-							}
-							case 1: { // 속성 값
-								for (; mode == 1 && attrPos < text.length; attrPos++) {
-									switch (text[attrPos]) {
-										case '>':
-											// 값 끝
-											attrs.push([name, text.substring(attrValueStart, attrPos).toLowerCase()]);
-											mode = -1;
-											attrPos++;
-											break;
-										case ' ':
-										case '\t':
-										case '\r':
-										case '\n':
-											// 값 끝
-											attrs.push([name, text.substring(attrValueStart, attrPos).toLowerCase()]);
-											mode = 0;
-											attrNameStart = attrPos + 1;
-											break;
-										case '\'':
-											if (attrPos == attrValueStart) {
-												mode = 2;
-												attrValueStart++;
-											}
-											break;
-										case '"':
-											if (attrPos == attrValueStart) {
-												mode = 3;
-												attrValueStart++;
-											}
-											break;
-									}
-								}
-								break;
-							}
-							case 2: { // 속성 값 (작은 따옴표)
-								for (; mode == 2 && attrPos < text.length; attrPos++) {
-									switch (text[attrPos]) {
-										case '\\':
-											attrPos++;
-											break;
-										case '\'':
-											// 값 끝
-											attrs.push([name, text.substring(attrValueStart, attrPos).toLowerCase()]);
-											mode = 0;
-											attrNameStart = attrPos + 1;
-											break;
-									}
-								}
-								// 끝나는 따옴표를 찾지 못함
-								if (attrPos == text.length) {
-									attrs.push([name, text.substring(attrValueStart, attrPos).toLowerCase()]);
-									mode = -1;
-								}
-								break;
-							}
-							case 3: { // 속성 값 (큰 따옴표)
-								for (; mode == 3 && attrPos < text.length; attrPos++) {
-									switch (text[attrPos]) {
-										case '\\':
-											attrPos++;
-											break;
-										case '"':
-											// 값 끝
-											attrs.push([name, text.substring(attrValueStart, attrPos).toLowerCase()]);
-											mode = 0;
-											attrNameStart = attrPos + 1;
-											break;
-									}
-								}
-								// 끝나는 따옴표를 찾지 못함
-								if (attrPos == text.length) {
-									attrs.push([name, text.substring(attrValueStart, attrPos).toLowerCase()]);
-									mode = -1;
-								}
-								break;
-							}
-						}
-					}
-				}
-			}
-			
-			if (tagName[0] == '/') { // 종료 태그
-				tagName = tagName.substring(1);
-				switch (tagName) {
-					case "B":
-						last.text += $("<a>").html(text.substring(index, pos).split("\n").join("")).text();
-						if (last.text.length > 0)
-							result.push((last = new Subtitle.Attr()));
-						Subtitle.Smi.SetStyle(last, status.setB(false));
-						break;
-					case "I":
-						last.text += $("<a>").html(text.substring(index, pos).split("\n").join("")).text();
-						if (last.text.length > 0)
-							result.push((last = new Subtitle.Attr()));
-						Subtitle.Smi.SetStyle(last, status.setI(false));
-						break;
-					case "U":
-						last.text += $("<a>").html(text.substring(index, pos).split("\n").join("")).text();
-						if (last.text.length > 0)
-							result.push((last = new Subtitle.Attr()));
-						Subtitle.Smi.SetStyle(last, status.setU(false));
-						break;
-					case "FONT":
-						last.text += $("<a>").html(text.substring(index, pos).split("\n").join("")).text();
-						if (last.text.length > 0)
-							result.push((last = new Subtitle.Attr()));
-						Subtitle.Smi.SetStyle(last, status.setFont(null));
-						break;
-					case "RUBY":
-						last.text += $("<a>").html(text.substring(index, pos).split("\n").join("")).text();
-						if (last.text.length > 0)
-							result.push((last = new Subtitle.Attr()));
-						break;
-					case "RT":
-						if (ruby) {
-							Subtitle.Smi.SetFurigana(ruby, furigana);
-							furigana = null;
-							last = ruby;
-						}
-						break;
-					case "RP":
-						if (furigana) last = furigana;
-						break;
-					default:
-						break;
-				}
-			} else {
-				switch (tagName) {
-					case "B":
-						last.text += $("<a>").html(text.substring(index, pos).split("\n").join("")).text();
-						if (last.text.length > 0)
-							result.push((last = new Subtitle.Attr()));
-						Subtitle.Smi.SetStyle(last, status.setB(true));
-						break;
-					case "I":
-						last.text += $("<a>").html(text.substring(index, pos).split("\n").join("")).text();
-						if (last.text.length > 0)
-							result.push((last = new Subtitle.Attr()));
-						Subtitle.Smi.SetStyle(last, status.setI(true));
-						break;
-					case "U":
-						last.text += $("<a>").html(text.substring(index, pos).split("\n").join("")).text();
-						if (last.text.length > 0)
-							result.push((last = new Subtitle.Attr()));
-						Subtitle.Smi.SetStyle(last, status.setU(true));
-						break;
-					case "FONT":
-						last.text += $("<a>").html(text.substring(index, pos).split("\n").join("")).text();
-						if (last.text.length > 0)
-							result.push((last = new Subtitle.Attr()));
-						Subtitle.Smi.SetStyle(last, status.setFont(attrs));
-						break;
-					case "RUBY":
-						last.text += $("<a>").html(text.substring(index, pos).split("\n").join("")).text();
-						if (last.text.length > 0)
-							result.push((last = new Subtitle.Attr()));
-						ruby = last;
-						break;
-					case "RT":
-						last.text += $("<a>").html(text.substring(index, pos).split("\n").join("")).text();
-						if (last.text.length > 0)
-							last = new Subtitle.Attr();
-						furigana = last;
-						break;
-					case "RP":
-						last.text += $("<a>").html(text.substring(index, pos).split("\n").join("")).text();
-						if (last.text.length > 0)
-							last = new Subtitle.Attr(); // 정크 데이터
-						break;
-					case "BR":
-						last.text += $("<a>").html(text.substring(index, pos).split("\n").join("")).text() + "\n";
-						break;
-					default:
-						last.text += $("<a>").html(text.substring(index, attrPos).split("\n").join("")).text();
-					break;
-				}
-			}
-			
-			index = attrPos;
-		}
-		last.text += $("<a>").html(text.substring(index)).text();
-		
-		return result;
+		tag = null;
 	}
+	function closeTag(tagName) {
+		switch (tagName.toUpperCase()) {
+			case "B":
+				if (last.text.length > 0)
+					result.push((last = new Subtitle.Attr()));
+				Subtitle.Smi.SetStyle(last, status.setB(false));
+				break;
+			case "I":
+				if (last.text.length > 0)
+					result.push((last = new Subtitle.Attr()));
+				Subtitle.Smi.SetStyle(last, status.setI(false));
+				break;
+			case "U":
+				if (last.text.length > 0)
+					result.push((last = new Subtitle.Attr()));
+				Subtitle.Smi.SetStyle(last, status.setU(false));
+				break;
+			case "FONT":
+				if (last.text.length > 0)
+					result.push((last = new Subtitle.Attr()));
+				Subtitle.Smi.SetStyle(last, status.setFont(null));
+				break;
+			case "RUBY":
+				if (last.text.length > 0)
+					result.push((last = new Subtitle.Attr()));
+				break;
+			case "RT":
+				if (ruby) {
+					Subtitle.Smi.SetFurigana(ruby, furigana);
+					furigana = null;
+					last = ruby;
+				}
+				break;
+			case "RP":
+				if (furigana) last = furigana;
+				break;
+			default:
+				break;
+		}
+	}
+	
+	for (var pos = 0; pos < text.length; pos++) {
+		var c = text[pos];
+		switch (state) {
+			case '/': { // 태그?!
+				state = '<';
+				if (c == '/') { // 종료 태그 시작일 경우
+					var end = text.indexOf('>', pos);
+					if (end < 0) {
+						// 태그 끝이 없음
+						pos = text.length;
+						break;
+					}
+					closeTag(text.substring(pos + 1, end));
+					pos = end;
+					state = null;
+					break;
+				}
+				// 종료 태그 아닐 경우 아래로 이어서 진행
+				tag = { name: "", attrs: {} };
+			}
+			case '<': { // 태그명
+				switch (c) {
+					case '>': { // 태그 종료
+						openTag();
+						state = null;
+						break;
+					}
+					case ' ':
+					case '\t': { // 태그명 끝
+						state = '>';
+						break;
+					}
+					default: {
+						tag.name += c;
+						break;
+					}
+				}
+				break;
+			}
+			case '>': { // 태그 내
+				switch (c) {
+					case '>': { // 태그 종료
+						openTag();
+						state = null;
+						break;
+					}
+					case ' ': 
+					case '\t':
+					case '<':
+					case '&': {
+						break;
+					}
+					default: { // 속성명 시작
+						attr = c;
+						state = 'a';
+						break;
+					}
+				}
+				break;
+			}
+			case 'a': { // 속성명
+				switch (c) {
+					case '>': { // 태그 종료
+						tag.attrs[attr] = attr;
+						openTag();
+						state = null;
+						break;
+					}
+					case '=': { // 속성값 시작
+						state = '=';
+						break;
+					}
+					case ' ':
+					case '\t': { // 일단은 속성이 끝나지 않을 걸로 간주
+						state = '`';
+						break;
+					}
+					default: {
+						attr += c;
+					}
+				}
+				break;
+			}
+			case '`': { // 속성명+공백문자
+				switch (c) {
+					case '>': { // 태그 종료
+						tag.attrs[attr] = attr;
+						openTag();
+						state = null;
+						break;
+					}
+					case '=': { // 속성값 시작
+						state = '=';
+						break;
+					}
+					case ' ':
+					case '\t': { // 일단은 속성이 끝나지 않을 걸로 간주
+						break;
+					}
+					default: { // 속성값 없는 속성으로 확정, 새 속성 시작
+						tag.attrs[attr] = attr;
+						attrName = c;
+						state = 'a';
+					}
+				}
+				break;
+			}
+			case '=': { // 속성값 시작 전
+				switch (c) {
+					case '>': { // 태그 종료
+						tag.attrs[attr] = "";
+						openTag();
+						state = null;
+						break;
+					}
+					case '"': { // 속성값 따옴표 시작
+						value = "";
+						state = '"';
+						break;
+					}
+					case "'": { // 속성값 따옴표 시작
+						value = "";
+						state = "'";
+						break;
+					}
+					case ' ': { // 일단은 속성이 끝나지 않을 걸로 간주
+						break;
+					}
+					case '\t': {
+						break;
+					}
+					default: {
+						value = c;
+						state = '~';
+					}
+				}
+				break;
+			}
+			case '~': { // 따옴표 없는 속성값
+				switch (c) {
+					case '>': { // 태그 종료
+						tag.attrs[attr] = value;
+						openTag();
+						state = null;
+						break;
+					}
+					case ' ':
+					case '\t': { // 속성 종료
+						tag.attrs[attr] = value;
+						state = '>';
+						break;
+					}
+					default: {
+						value += c;
+					}
+				}
+				break;
+			}
+			case '"': {
+				switch (c) {
+					case '"': { // 속성 종료
+						tag.attrs[attr] = value;
+						state = '>';
+						break;
+					}
+					default: {
+						value += c;
+					}
+				}
+				break;
+			}
+			case "'": {
+				switch (c) {
+					case "'": { // 속성 종료
+						tag.attrs[attr] = value;
+						state = '>';
+						break;
+					}
+					default: {
+						value += c;
+					}
+				}
+				break;
+			}
+			case '!': { // 주석
+				if ((pos + 3 <= text.length) && (text.substring(pos, pos+3) == "-->")) {
+					state = null;
+					pos += 2;
+				}
+				break;
+			}
+			default: { // 텍스트
+				switch (c) {
+					case '<': { // 태그 시작
+						if ((pos + 4 <= text.length) && (text.substring(pos, pos+4) == "<!--")) {
+							state = '!';
+							pos += 3;
+						} else {
+							state = '/';
+						}
+						break;
+					}
+					default: {
+						last.text += c;
+					}
+				}
+			}
+		}
+	}
+
+	return result;
 }
 Subtitle.Smi.prototype.toAttr = function() {
 	return Subtitle.Smi.toAttr(this.text);

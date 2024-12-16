@@ -108,7 +108,7 @@ Binder.prototype.runColorPicker = function() { alert("C#에서 동작합니다."
 // bridge/list.txt
 //var playerDlls = "NoPlayer: (없음)\n PotPlayer: 팟플레이어";
 var playerDlls = "NoPlayer: (없음)\n Sample: 샘플";
-var highlights = "SyncOnly|SyncOnly: 싱크 줄 구분\n withoutSync|eclipse: 이클립스 스타일 (싱크줄 제외)\n full|eclipse: 이클립스 스타일";
+var highlights = "eclipse: Eclipse \n vs: Visual Studio";
 
 var editor = new WebForm(); // 에디터
 
@@ -120,7 +120,7 @@ var window_open = function(url, name, options, opener) {
 	editor.player = null;
 	editor.strSettingJson = "불러오기 실패 예제";
 	editor.strBridgeList = "NoPlayer: (없음)";
-	editor.strHighlights = "SyncOnly|SyncOnly: 싱크 줄 구분\n withoutSync|eclipse: 이클립스 스타일 (싱크줄 제외)\n full|eclipse: 이클립스 스타일";
+	editor.strHighlights = "eclipse: Eclipse \n vs: Visual Studio";
 
 	// override
 	editor.drop = async function(x, y) {
