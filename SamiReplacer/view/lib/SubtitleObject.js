@@ -2132,9 +2132,10 @@ Subtitle.SmiFile = function(txt) {
 }
 Subtitle.SmiFile.prototype.toTxt = function() {
 	return this.text
-	     = this.header.split("\r\n").join("\n")
+	   = ( this.header.split("\r\n").join("\n")
 	     + Subtitle.Smi.smi2txt(this.body)
-	     + this.footer.split("\r\n").join("\n");
+	     + this.footer.split("\r\n").join("\n")
+	     ).trim();
 }
 Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 	txt = (this.text = txt).split("\r\n").join("\n");

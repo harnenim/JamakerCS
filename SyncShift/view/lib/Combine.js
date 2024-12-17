@@ -1,5 +1,5 @@
 var Combine = {
-	css: { font: '100px "맑은 고딕"' }
+	css: 'font-family: 맑은 고딕;'
 };
 {
 	var LINE = {
@@ -32,22 +32,29 @@ var Combine = {
 		
 		// 태그 밖의 공백문자 치환
 		var tags = smi.split("<");
-		tags[0] = tags[0].split(" ").join("&nbsp;");
 		for (var i = 1; i < tags.length; i++) {
 			var index = tags[i].indexOf(">");
 			if (index > 0) {
-				tags[i] = tags[i].substring(0, index) + tags[i].substring(index).split(" ").join("&nbsp;");
+				tags[i] = tags[i].substring(0, index) + tags[i].substring(index);
 			}
 		}
 		smi = tags.join("<");
-
-		return checker.html(smi).width();
+		
+		var lines = smi.split(/<br>/gi);
+		for (var i = 0; i < lines.length; i++) {
+			lines[i] = checker.html(lines[i]).text();
+		}
+		return checker.text(lines.join("\n")).width();
 	}
 	function getChecker() {
 		if (!Combine.checker) {
 			$("body").append(Combine.checker = $("<span>"));
 		}
-		Combine.checker.css(Combine.css);
+		Combine.checker.attr({ style: Combine.css }).css({
+				whiteSpace: "pre"
+			,	fontSize: "144px"
+			,	fontWeight: "bold"
+		});
 		return Combine.checker.show();
 	}
 	
@@ -310,7 +317,7 @@ var Combine = {
 						do {
 							lastPad = pad;
 							lastWidth = width;
-							pad = lastPad + "&nbsp;";
+							pad = lastPad + " ";
 							var curr = "​" + pad + line + pad + "​";
 							width = getWidth(curr, checker);
 							if (LOG) console.log(curr.split("&nbsp;").join(" ") + ": " + width);
@@ -446,7 +453,7 @@ var Combine = {
 				}
 			}
 		}
-		checker.hide();
+		checker.text("").hide();
 		
 		var lines = [];
 		var lastSync = 0;
