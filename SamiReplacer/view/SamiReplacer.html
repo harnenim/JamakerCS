@@ -22,7 +22,7 @@ function init(jsonSetting) {
 		alert("설정 파일이 잘못됐습니다.");
 	}
 	$("#vFrom").val(setting.from);
-	$("#vTo").val(setting.to);
+	$("#vTo"  ).val(setting.to  );
 }
 
 function drop(x, y) {
@@ -66,15 +66,10 @@ function replace(index, text) {
 		for (; i < originSmi.body.length; i++) {
 			if (originSmi.body[i].text == originRange[0].text) {
 				shiftTime = originSmi.body[i].start - originRange[0].start;
-				console.log("check: " + originSmi.body[i].start + " - " + originRange[0].start + "\n" + i + " / " + shiftIndex + " / " + shiftTime);
 				var isCorrect = true;
 	
 				for (shiftIndex = 0; shiftIndex < originRange.length; shiftIndex++) {
 					if (!originSmi.body[i + shiftIndex].text == originRange[shiftIndex].text) {
-						console.log("originSmi.body[" + (i + shiftIndex) + "]:");
-						console.log(originSmi.body[i + shiftIndex].text);
-						console.log(originRange[shiftIndex].text);
-						console.log("failed");
 						isCorrect = false;
 						break;
 					}
@@ -140,9 +135,9 @@ function replace(index, text) {
     return;
 }
 
-$(function () {
+$(function() {
 	listFiles = new ListView($("#listFiles"));
-	listFiles.run = function (item) {
+	listFiles.run = function(item) {
 		var from = $("#vFrom").val();
 		if (from.length == 0) {
 			alert("변환할 내용이 없습니다.");
@@ -150,11 +145,11 @@ $(function () {
 		}
 		var to = $("#vTo").val();
 		originRange = new Subtitle.SmiFile(from).body;
-		targetRange = new Subtitle.SmiFile(to).body;
+		targetRange = new Subtitle.SmiFile(to  ).body;
 		binder.compare(item.value);
 	}
 
-	$("#btnReplace").on("click", function () {
+	$("#btnReplace").on("click", function() {
 		var files = [];
 		for (var i = 0; i < listFiles.list.length; i++) {
 			files.push(listFiles.list[i].value);
@@ -170,7 +165,7 @@ $(function () {
 		}
 		var to = $("#vTo").val();
 		originRange = new Subtitle.SmiFile(from).body;
-		targetRange = new Subtitle.SmiFile(to).body;
+		targetRange = new Subtitle.SmiFile(to  ).body;
 		hasNewFrameSync = false;
 		matches = [];
 		var i = 0;
@@ -199,16 +194,16 @@ $(function () {
 		}
 		binder.startReplace(files);
 	});
-
-	document.addEventListener("dragenter", function (e) {
+	
+	document.addEventListener("dragenter", function(e) {
 		e.preventDefault();
 		binder.showDragging();
 	});
-	$("#cover").on("click", function (e) {
+	$("#cover").on("click", function(e) {
 		binder.hideDragging();
 	});
-
-	$("#view1left, #view1right").on("click", function () {
+	
+	$("#view1left, #view1right").on("click", function() {
 		selectView(0);
 	});
 	selectView(0);
@@ -219,16 +214,8 @@ $(function () {
 	margin: 1px;
 	height: calc(100% - 34px);
 }
-
-#view0left {
-	float: left;
-	width: 30%;
-}
-
-#view0right {
-	float: right;
-	width: calc(70% - 20px);
-}
+#view0left  { float: left; width: 30%; }
+#view0right { float: right; width: calc(70% - 20px); }
 
 #listFiles {
 	width: 100%;
