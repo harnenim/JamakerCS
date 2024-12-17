@@ -290,6 +290,9 @@ namespace Jamaker
                 }
                 proc.Close();
 
+                vfs.Sort();
+                kfs.Sort();
+
                 setProgress(0);
             }
 
@@ -392,7 +395,7 @@ namespace Jamaker
             fs.Write(buffer, 0, buffer.Length);
             length += buffer.Length;
 
-            foreach (double vf in vfs)
+            foreach (int vf in vfs)
             {
                 buffer = BitConverter.GetBytes(vf);
                 fs.Write(buffer, 0, buffer.Length);
@@ -420,17 +423,17 @@ namespace Jamaker
             FileStream fs = new FileStream(path, FileMode.Open);
 
             int didread;
-            byte[] buffer = new byte[sizeof(double) * (1024 + 1)];
+            byte[] buffer = new byte[sizeof(int) * (1024 + 1)];
 
             int length, residual_length;
 
             fs.Read(buffer, 0, sizeof(int) * 2);
             int vfsLength = BitConverter.ToInt32(buffer, 0);
 
-            while ((didread = fs.Read(buffer, 0, sizeof(double) * 1024)) != 0)
+            while ((didread = fs.Read(buffer, 0, sizeof(int) * 1024)) != 0)
             {
                 length = didread;
-                residual_length = length % sizeof(double);
+                residual_length = length % sizeof(int);
 
                 length -= residual_length;
 
@@ -439,7 +442,7 @@ namespace Jamaker
                     if (vfs.Count < vfsLength)
                     {
                         vfs.Add(BitConverter.ToInt32(buffer, index));
-                        index += sizeof(double);
+                        index += sizeof(int);
                     }
                     else
                     {

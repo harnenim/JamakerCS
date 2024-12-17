@@ -939,6 +939,7 @@ namespace Jamaker
                         DirectoryInfo di = new DirectoryInfo("temp");
                         if (di.Exists)
                         {
+                            Script("Progress.set", new object[] { "#forFrameSync", 1 });
                             AfterReadFkf(VideoInfo.FromFkfFile("temp/" + fkfName));
                             return;
                         }
@@ -956,6 +957,7 @@ namespace Jamaker
                         }
                     }).RefreshInfo((VideoInfo videoInfo) =>
                     {
+                        Script("Progress.set", new object[] { "#forFrameSync", 1 });
                         videoInfo.ReadKfs(true);
                         if (requestFramesPath == path)
                         {   // 중간에 다른 파일 불러왔을 수도 있음
@@ -974,7 +976,8 @@ namespace Jamaker
             List<int> kfs = videoInfo.GetKfs();
             foreach (int f in fs ) { strFs  += (strFs .Length == 0) ? $"{f}" : ("," + f); }
             foreach (int f in kfs) { strKfs += (strKfs.Length == 0) ? $"{f}" : ("," + f); }
-            Script("setFrames", new object[] { videoInfo.path, strFs, strKfs });
+            Script("setFrames", new object[] { strFs, strKfs });
+            Script("Progress.set", new object[] { "#forFrameSync", 0 });
         }
 
         private int saveAfter = 0;

@@ -1088,10 +1088,7 @@ function setVideo(path) {
 	}
 }
 // C# 쪽에서 호출
-function setFrames(path, fs, kfs) {
-	// 여기서 path 맞는지 다시 확인하려고 했는데
-	// kfk 파일로 불러온 경우 path가 달라짐
-	// 어차피 C#에서 검증되므로 패스
+function setFrames(fs, kfs) {
 	fs = fs.split(",");
 	for (var i = 0; i < fs.length; i++) {
 		fs[i] = Number(fs[i]);
