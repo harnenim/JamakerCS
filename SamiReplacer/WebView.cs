@@ -106,6 +106,17 @@ namespace Jamaker
         {
             WinAPI.SetForegroundWindow(GetHwnd(target));
         }
+
+        private double dpi = 1;
+        private void SetDpi()
+        {
+            Script("setDpi", new object[] { dpi = DeviceDpi / 96 });
+        }
+
+        private void OnDpiChanged(object sender, DpiChangedEventArgs e)
+        {
+            SetDpi();
+        }
         #endregion
 
         public virtual void InitAfterLoad(string title)
@@ -117,6 +128,7 @@ namespace Jamaker
             }
             windows.Add("editor", Handle.ToInt32());
             Text = title;
+            SetDpi();
             OverrideInitAfterLoad();
         }
 
@@ -199,7 +211,7 @@ namespace Jamaker
         protected void DragOverMain(object sender, DragEventArgs e)
         {
             try { e.Effect = DragDropEffects.All; } catch { }
-            Script("dragover", new object[] { e.X - Location.X, e.Y - Location.Y });
+            Script("dragover", new object[] { (e.X - Location.X) / dpi, (e.Y - Location.Y) / dpi });
         }
         protected void DragDropMain(object sender, DragEventArgs e)
         {
@@ -210,7 +222,7 @@ namespace Jamaker
             }
             droppedFiles = (string[])e.Data.GetData(DataFormats.FileDrop);
             HideDragging();
-            Drop(e.X - Location.X, e.Y - Location.Y);
+            Drop((int) ((e.X - Location.X) / dpi), (int) ((e.Y - Location.Y) / dpi));
         }
         protected virtual void Drop(int x, int y)
         {
@@ -240,7 +252,7 @@ namespace Jamaker
 
             InitializeComponent();
         }
-
+        
         public static Encoding DetectEncoding(string file)
         {
             Encoding encoding = Encoding.UTF8;

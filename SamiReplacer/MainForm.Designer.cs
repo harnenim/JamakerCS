@@ -73,8 +73,8 @@ namespace Jamaker
             this.Controls.Add(this.layerForDrag);
             this.Controls.Add(this.mainView);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MaximizeBox = false;
             this.Name = "WebForm";
+            this.DpiChanged += new System.Windows.Forms.DpiChangedEventHandler(this.OnDpiChanged);
             this.ResumeLayout(false);
         }
 

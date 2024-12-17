@@ -1,5 +1,3 @@
-var DPI = 1;
-
 var time = 0;
 var FR = 23976;
 var FL = 1000000 / FR;

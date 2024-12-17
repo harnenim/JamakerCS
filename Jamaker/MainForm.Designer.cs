@@ -76,7 +76,9 @@ namespace Jamaker
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "MainForm";
+            this.DpiChanged += new System.Windows.Forms.DpiChangedEventHandler(this.OnDpiChanged);
             this.ResumeLayout(false);
+
         }
 
         #endregion

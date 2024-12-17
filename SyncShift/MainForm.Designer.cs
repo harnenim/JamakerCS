@@ -35,7 +35,7 @@ namespace Jamaker
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.layerForDrag = new Jamaker.TransparentPanel();
             this.timer = new System.Windows.Forms.Timer(this.components);
-            this.mainView = new CefSharp.WinForms.ChromiumWebBrowser();
+            this.mainView = new ChromiumWebBrowser();
             this.SuspendLayout();
             // 
             // layerForDrag
@@ -73,9 +73,9 @@ namespace Jamaker
             this.Controls.Add(this.layerForDrag);
             this.Controls.Add(this.mainView);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Name = "MainForm";
+            this.Name = "WebForm";
+            this.DpiChanged += new System.Windows.Forms.DpiChangedEventHandler(this.OnDpiChanged);
             this.ResumeLayout(false);
-
         }
 
         #endregion

@@ -96,6 +96,11 @@ function dragover(x, y) {}
 function drop(x, y) {}
 function beforeExit() {}
 
+var DPI = 1;
+function setDpi(dpi) {
+	DPI = dpi;
+}
+
 $(function () {
 	// 우클릭 방지
 	$(document).on("contextmenu", function() {
