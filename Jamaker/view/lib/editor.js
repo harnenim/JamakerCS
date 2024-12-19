@@ -1089,28 +1089,31 @@ function setVideo(path) {
 }
 // C# 쪽에서 호출
 function loadFkf(fkfName) {
+	// C# 파일 객체를 js 쪽에 전달할 수 없으므로, 정해진 경로의 파일을 ajax 형태로 가져옴
 	var req = new XMLHttpRequest();
 	req.open("GET", "../temp/" + fkfName);
 	req.responseType = "arraybuffer";
-	req.onload = function (e) {
+	req.onload = function(e) {
 		var buffer = req.response;
-
+		
 		var fkf = new Int32Array(buffer);
 		var vfsLength = fkf[0];
 		var kfsLength = fkf[1];
-
+		
 		var vfs = [];
 		var kfs = [];
-
-		var view = new DataView(buffer.slice(8, 8 + (vfsLength * 4)));
+		
+		var offset = 8;
+		var view = new DataView(buffer.slice(offset, offset + (vfsLength * 4)));
 		for (var i = 0; i < vfsLength; i++) {
 			vfs.push(view.getInt32(i * 4, true));
 		}
-		view = new DataView(buffer.slice(8 + (vfsLength * 4), 8 + (vfsLength * 4) + (kfsLength * 4)));
+		offset = offset + (vfsLength * 4);
+		view = new DataView(buffer.slice(offset, offset + (kfsLength * 4)));
 		for (var i = 0; i < kfsLength; i++) {
 			kfs.push(view.getInt32(i * 4, true));
 		}
-
+		
 		SmiEditor.video.fs  = vfs;
 		SmiEditor.video.kfs = kfs;
 
@@ -1119,6 +1122,7 @@ function loadFkf(fkfName) {
 		Progress.set("#forFrameSync", 0);
 	}
 	req.onerror = function(e) {
+		// 실패했어도 프로그레스바는 없애줌
 		Progress.set("#forFrameSync", 0);
 	}
 	req.send();
