@@ -11,7 +11,7 @@
 
 [웹 샘플 사용해보기](https://harnenim.github.io/Jamaker/run.html)
 
-[최신버전 다운로드](https://drive.google.com/file/d/1g0C0zJUntBfPUZj4kQWtH5y8w1fqd62v/view?usp=drive_link)
+[최신버전 다운로드](https://drive.google.com/file/d/1Mrix1hueCDc2BbLR15baPnlccau455H6/view?usp=drive_link)
 
 ***
 
