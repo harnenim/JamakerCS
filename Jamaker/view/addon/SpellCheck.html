@@ -133,9 +133,13 @@ var CheckString = function(text) {
 			case Type.TAG: {
 				part.origin.text += c;
 				if (c == '>') {
-					if (part.origin.text.toUpperCase().startsWith("<BR")) {
-						part.param.text += ' ';
+					var tag = part.origin.text.toUpperCase();
+					if (tag.match(/<br[ \t\r\n>]/gi)) {
+						part.param.text += '\n';
 						pi++;
+					} else if (tag.match(/<sync[ \t\r\n>]/gi)) {
+						part.param.text += " - ";
+						pi += 3;
 					}
 					this.parts.push(part = new Part(Type.TEXT, i, pi));
 				}
@@ -594,12 +598,12 @@ body > * {
 			<div class="sub-header-tab">교정 내용</div>
 		</div>
 		<div id="result"><ol id="olResult">
-			<li class="preset"><!--
+			<li class="preset"><dl><!--
 			--><dt>입력 내용</dt><dd class="from"></dd><!--
 			--><dt>   대치어</dt><dd class="to"  ></dd><!--
 			--><dt>직접 수정</dt><dd><input type="text" placeholder="원하는 대치어를 직접 입력하세요." /><button type="button">적용</button></dd><!--
 			--><dt>   도움말</dt><dd class="help"></dd><!--
-		--></li>
+		--></dl></li>
 		</ol></div>
 	</div>
 	
