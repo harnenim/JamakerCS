@@ -131,13 +131,13 @@ namespace Jamaker
                 }
                 else if (line.StartsWith("    Stream #"))
                 {
-                    string pattern = "Stream #([0-9]+:[0-9])+\\((.*)\\): (.*): ";
+                    string pattern = "Stream #([0-9]+:[0-9])+(\\[(.*)\\])?(\\((.*)\\))?: (.*): ";
                     System.Text.RegularExpressions.Match m = System.Text.RegularExpressions.Regex.Match(line, pattern);
                     System.Text.RegularExpressions.GroupCollection groups = m.Groups;
                     streams.Add(lastStream = new StreamAttr()
                     {   map = groups[1].Value
-                      , type = groups[3].Value.ToLower()
-                      , language = groups[2].Value
+                      , type = groups[6].Value.ToLower()
+                      , language = groups[5].Value
                     });
                 }
                 else if (lastStream != null && line.StartsWith("      title           : "))
