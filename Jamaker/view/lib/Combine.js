@@ -25,7 +25,7 @@ var Combine = {
 	var LOWER = 5;
 	
 	var LOG = false;
-	
+
 	function getWidth(smi, checker) {
 		// RUBY태그 문법이 미묘하게 달라서 가공 필요
 		smi = smi.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
@@ -54,6 +54,7 @@ var Combine = {
 				whiteSpace: "pre"
 			,	fontSize: "144px"
 			,	fontWeight: "bold"
+			,	textShadow: ""
 		});
 		return Combine.checker.show();
 	}
@@ -218,6 +219,7 @@ var Combine = {
 	}
 	
 	Combine.combine = function(inputUpper, inputLower) {
+		var hljs = $(".hljs").hide(); // 결합 로직 돌아갈 때 문법 하이라이트가 있으면 성능 저하됨
 		var checker = getChecker();
 		var upperSyncs = parse(inputUpper, checker);
 		var lowerSyncs = parse(inputLower, checker);
@@ -454,6 +456,7 @@ var Combine = {
 			}
 		}
 		checker.text("").hide();
+		hljs.show();
 		
 		var lines = [];
 		var lastSync = 0;
@@ -557,7 +560,7 @@ if (Subtitle && Subtitle.SmiFile) {
 		
 		var main = new Subtitle.SmiFile(origHolds[0].text);
 		withCombine = withCombine && origHolds.length > 1;
-		
+
 		// 정규화 등 작업
 		if (withNormalize) {
 			var normalized = Subtitle.Smi.normalize(main.body, withComment && !withCombine);
