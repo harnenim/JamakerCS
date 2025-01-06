@@ -151,7 +151,7 @@ Tab.prototype.updateHoldSelector = function() {
 	var END = -1;
 	
 	// 홀드 여부 달라질 수 있음
-	SmiEditor.refreshStyle(setting, getAppendStyle());
+	refreshAppendStyle();
 	
 	var timers = [];
 	for (var i = 0; i < this.holds.length; i++) {
@@ -652,7 +652,7 @@ function init(jsonSetting) {
 		SmiEditor.Viewer.refresh();
 		
 		// 홀드 여부 달라질 수 있음
-		SmiEditor.refreshStyle(setting, getAppendStyle());
+		refreshAppendStyle();
 		
 	}).on("click", ".btn-close-tab", function(e) {
 		e.preventDefault();
@@ -701,6 +701,7 @@ function init(jsonSetting) {
 		}
 	});
 	
+	SmiEditor.activateKeyEvent();
 	SmiEditor.Viewer.open();
 	
 	setSetting(setting);
@@ -723,7 +724,7 @@ function setSetting(setting) {
 		}
 	}
 	
-	SmiEditor.setSetting(setting, getAppendStyle());
+	SmiEditor.setSetting(setting);
 	{
 		function afterLoadHighlight() {
 			SmiEditor.refreshHighlight();
@@ -818,7 +819,7 @@ function moveWindowsToSetting() {
 
 	// 창 위치 초기화 후 호출
 	setTimeout(function() {
-		SmiEditor.refreshStyle(setting, getAppendStyle());
+		refreshAppendStyle();
 	}, 1);
 }
 
@@ -856,14 +857,14 @@ function saveSetting() {
 		binder.saveSetting(stringify(setting));
 		
 		// 창 위치/크기 조절하고 일정 시간 지나면 C#에서 여기가 호출됨
-		SmiEditor.refreshStyle(setting, getAppendStyle());
+		refreshAppendStyle();
 	}
 }
-function getAppendStyle() {
+function refreshAppendStyle() {
 	// 에디터 하단 여백 재조정
 	var holdTop = tabs.length ? Number(tabs[tab].area.find(".holds").css("top").split("px")[0]) : 0;
 	var append = "\n#editor textarea { padding-bottom: " + ($("#editor").height() - holdTop - SB - LH - 2) + "px; }";
-	return append;
+	$("#styleAppend").html(append);
 }
 
 function openHelp(name) {

@@ -99,7 +99,7 @@ var SmiEditor = function(text) {
 	}, 1);
 };
 
-SmiEditor.setSetting = function(setting, appendStyle) {
+SmiEditor.setSetting = function(setting) {
 	if (setting.sync) {
 		SmiEditor.sync = setting.sync;
 	}
@@ -175,20 +175,6 @@ SmiEditor.setSetting = function(setting, appendStyle) {
 			}
 		}
 	}
-}
-SmiEditor.refreshStyle = function(setting, appendStyle) {
-	if (!SmiEditor.style) {
-		$("head").append(SmiEditor.style = $("<style>"));
-		
-		// 최초 접근일 경우 키보드 이벤트도 활성화
-		SmiEditor.activateKeyEvent();
-	}
-	var css = setting.css;
-	if (appendStyle) {
-		css += appendStyle;
-	}
-	
-	SmiEditor.style.html(css);
 }
 
 SmiEditor.sync = {
@@ -316,7 +302,11 @@ SmiEditor.prototype.bindEvent = function() {
 };
 
 SmiEditor.selected = null;
+SmiEditor.keyEventActivated = false;
 SmiEditor.activateKeyEvent = function() {
+	if (SmiEditor.keyEventActivated) return;
+	SmiEditor.keyEventActivated = true;
+	
 	var lastKeyDown = 0;
 	$(document).on("keydown", function(e) {
 		lastKeyDown = e.keyCode;
