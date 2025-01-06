@@ -16,23 +16,21 @@
 <link rel="stylesheet" type="text/css" href="lib/SmiEditor.css" />
 <style>
 * {
-	margin: 0;
-	padding: 0;
-	box-sizing: border-box;
 	user-select: none;
+	border-width: 0;
+	border-style: solid;
+}
+button {
+	line-height: 13px;
+	border-width: 1px;
+	padding: 1px;
 }
 html, body {
 	width: 100%;
 	height: 100%;
-	background: #f0f0f0;
 }
 label, #showFps {
 	margin-left: 6px;
-}
-button {
-	line-height: 13px;
-	border: 1px solid #888;
-	padding: 1px;
 }
 body:not(.drag-file) #cover {
 	display: none;
@@ -43,6 +41,9 @@ body:not(.drag-file) #cover {
 #btnMoveToBack,
 #btnMoveToForward {
 	border-left: 0;
+}
+.disabled span {
+	opacity: 0.5;
 }
 .progress {
 	position: relative;

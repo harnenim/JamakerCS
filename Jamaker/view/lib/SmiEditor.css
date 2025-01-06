@@ -1,15 +1,18 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
 #tabSelector {
 	display: none;
-	background: #ccc;
 	height: 26px;
-	border-bottom: 1px solid #aaa;
+	border-bottom-width: 1px;
 }
 .th {
 	float: left;
 	margin-top: 2px;
 	padding: 0 2px;
-	background: #ddd;
-	border: 1px solid #888;
+	border-width: 1px;
 	border-radius: 4px 4px 0 0;
 	font-size: 14px;
 	line-height: 22px;
@@ -17,13 +20,6 @@
 }
 .th:first-child {
 	margin-left: -1px;
-}
-.th:hover {
-	background: #f0f0f0;
-}
-.th.selected {
-	background: #f0f0f0;
-	border-bottom-color: #f0f0f0;
 }
 .btn-close-tab {
 	margin: 0 4px;
@@ -51,9 +47,6 @@
 	overflow: hidden;
 	position: relative;
 }
-.tab.not-saved {
-	background: #f86;
-}
 .hold-selector {
 	display: none;
 	overflow: hidden;
@@ -62,7 +55,7 @@
 	left: 2px;
 	right: 2px;
 	height: 80px;
-	border: 1px solid #aaa;
+	border-width: 1px;
 	background: #ccc;
 }
 .hold-selector > .selector {
@@ -70,14 +63,7 @@
 	position: absolute;
 	top: 30%;
 	height: 40%;
-	border: 1px solid #aaa;
-	background: #ddd;
-}
-.hold-selector > .selector.selected {
-	background: #eee;
-}
-.hold-selector > .selector:hover {
-	background: #eee;
+	border-width: 1px;
 }
 .hold-selector > .selector:not(:first-child).selected {
 	z-index: 9999;
@@ -100,9 +86,6 @@
 	position: absolute;
 	padding: 0;
 	font-size: 12px;
-}
-.hold-selector > .selector button:hover {
-	background: #fff;
 }
 .hold-selector > .selector .btn-hold-remove {
 	top: 0;
@@ -168,11 +151,6 @@
 	line-height: 20px;
 	outline: 0;
 }
-.hold .col-sync *,
-.hold textarea {
-	color: #000;
-	caret-color: #000;
-}
 .hold > .col-sync {
 	left: 0;
 	width: 100px;
@@ -181,14 +159,12 @@
 	overflow: hidden;
 	padding-bottom: 2000px;
 	border: 1px solid transparent;
-	background: #f0f0f0;
 }
 .hold > .input {
 	left: 100px;
 	right: 0;
 }
 .highlight-textarea {
-	border: 1px solid #aaa;
 	border-width: 1px 0 0 1px;
 	overflow: hidden;
 }
@@ -196,15 +172,106 @@
 	white-space: pre;
 }
 .highlight-textarea > div,
+.highlight-textarea > div > div,
 .highlight-textarea > textarea {
 	position: absolute;
 	top: 0;
 	left: 0;
+}
+.highlight-textarea > textarea {
 	right: 0;
 	bottom: 0;
 }
+.highlight-textarea > div {
+	right: 0;
+	bottom: 17px;
+	overflow: hidden;
+    border: 0;
+    pointer-events: none;
+}
 .highlight-textarea > div * {
 	font-weight: normal; /* 굵게 하면 글자폭이 달라짐 */
+}
+.highlight-textarea > div span.enter {
+	opacity: 0.5;
+	font-style: normal;
+}
+.highlight-textarea > textarea {
+	background: transparent;
+	color: transparent;
+	overflow: scroll;
+	resize: none;
+}
+.hold > .input > textarea {
+	border: 0;
+}
+
+.sync.frame { border-top-width: 1px; line-height: 19px; }
+.sync.range + span { border-left-width: 1px; border-style: dotted; }
+input, textarea {
+	border-width: 1px;
+}
+
+.sync.range { opacity: 0.5; }
+
+
+
+
+
+
+
+
+
+html, body {
+	background: #f0f0f0;
+}
+
+#tabSelector {
+	background: #ccc;
+	border-color: #aaa;
+}
+.th {
+	background: #ddd;
+	border-color: #888;
+}
+.th:hover {
+	background: #f0f0f0;
+}
+.th.selected {
+	background: #f0f0f0;
+	border-bottom-color: #f0f0f0;
+}
+
+.tab.not-saved {
+	background: #f86;
+}
+.hold-selector {
+	border-color: #aaa;
+	background: #ccc;
+}
+.hold-selector > .selector {
+	border-color: #aaa;
+	background: #ddd;
+}
+.hold-selector > .selector.selected {
+	background: #eee;
+}
+.hold-selector > .selector:hover {
+	background: #eee;
+}
+.hold-selector > .selector button:hover {
+	background: #fff;
+}
+.hold .col-sync *,
+.hold textarea {
+	color: #000;
+	caret-color: #000;
+}
+.hold > .col-sync {
+	background: #f0f0f0;
+}
+.highlight-textarea {
+	border-color: #aaa;
 }
 .highlight-textarea > div span.enter {
 	opacity: 0.5;
@@ -220,20 +287,11 @@
 	background: #fff;
 	color: #000;
 }
-.hold > .input > textarea {
-	border: 0;
-}
-.disabled {
-	color: #888;
-}
 
-.sync { border: 0 solid #000; }
-.sync.frame { border-top-width: 1px; line-height: 19px; }
-.sync.range + span { border-left-width: 1px; border-style: dotted; }
+.sync { border-color: #000; }
 input, textarea {
 	background: #fff;
-	border: 1px solid #666;
-	user-select: text;
+	border-color: #666;
 }
 
 /* 사용자 설정 */
