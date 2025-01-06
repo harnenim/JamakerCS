@@ -99,6 +99,8 @@ var DEFAULT_SETTING =
 	,	lang: "KRCC" // 그냥 아래 preset 설정으로 퉁치는 게 나은가...?
 	,	preset: "<Sync Start={sync}><P Class={lang}{type}>" // 싱크 태그 형태
 	,	frame: true
+	,	kframe: false
+	,	kLimit: 200
 	}
 ,	command:
 	{	fn: // F1~F12: pqrstuvwxyz{

@@ -760,8 +760,13 @@ function setSetting(setting) {
 			afterLoadHighlight();
 		}
 	}
-	
-	SmiEditor.followKeyFrame = setting.sync.kframe;
+	{
+		if (setting.sync.kLimit == undefined) {
+			setting.sync.kLimit = 200;
+		}
+		SmiEditor.followKeyFrame = setting.sync.kframe;
+		SmiEditor.limitKeyFrame  = setting.sync.kLimit;
+	}
 	
 	// 기본 단축키
 	SmiEditor.withCtrls["N"] = newFile;

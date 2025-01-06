@@ -233,6 +233,7 @@ $(function() {
 			setting.sync.preset = preset;
 			setting.sync.frame  = $("input[name=sync_frame]" ).prop("checked");
 			setting.sync.kframe = $("input[name=sync_kframe]").prop("checked");
+			setting.sync.kLimit = Number($("input[name=sync_kLimit]").val());
 			opener.setSetting(setting);
 			opener.saveSetting();
 		};
@@ -1135,9 +1136,8 @@ fieldset ol button,
 			　가변 프레임 영상의 경우 문제가 생길 수 있습니다. 
 		</p>
 		<br />
-		<label><input type="checkbox" name="sync_kframe" /> 키프레임을 신뢰할 수 있는 영상에 대해 자동으로 화면 싱크 동작</label><br />
-		<p>※ 키프레임 근처에서 싱크를 찍을 경우 자동으로 키프레임의 화면 싱크로 보정해 줍니다. 
-		</p>
+		<label>키프레임을 신뢰할 수 있는 영상에 대해 <input type="number" name="sync_kLimit" />ms 범위에서 화면 싱크를 키프레임에 맞도록 보정</label><br />
+		<label><input type="checkbox" name="sync_kframe" /> 키프레임을 신뢰할 수 있는 영상에 대해 자동으로 화면 싱크 처리</label><br />
 	</form>
 	
 	<form id="cmd">

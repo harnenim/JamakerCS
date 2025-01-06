@@ -209,6 +209,7 @@ SmiEditor.PlayerAPI = {
 	,	moveTo     : function(time) { binder.moveTo(time); }
 	,	move       : function(move) { binder.moveTo(time + move); }
 };
+SmiEditor.limitKeyFrame = 200;
 SmiEditor.trustKeyFrame = false;
 SmiEditor.followKeyFrame = false;
 SmiEditor.video = {
@@ -247,7 +248,7 @@ SmiEditor.getSyncTime = function(sync, forKeyFrame=false, output={}) {
 		) {
 			adjustSync = SmiEditor.findSync(sync, SmiEditor.video.kfs);
 			var dist = Math.abs(adjustSync - sync);
-			if (dist > 200) { // 200ms 넘어가면 키프레임에 맞춘 게 아니라고 간주
+			if (dist > SmiEditor.limitKeyFrame) { // 기준치 넘어가면 키프레임에 맞춘 게 아니라고 간주
 				adjustSync = null;
 			} else {
 				output.keyframe = true;
@@ -256,7 +257,7 @@ SmiEditor.getSyncTime = function(sync, forKeyFrame=false, output={}) {
 		if (adjustSync == null && SmiEditor.video.fs.length > 2) { // 프레임 싱크
 			adjustSync = SmiEditor.findSync(sync, SmiEditor.video.fs);
 			var dist = Math.abs(adjustSync - sync);
-			if (dist > 200) { // 200ms 넘어가면 프레임 정보가 잘못된 걸로 간주
+			if (dist > SmiEditor.limitKeyFrame) { // 기준치 넘어가면 프레임 정보가 잘못된 걸로 간주
 				adjustSync = null;
 			}
 		}
