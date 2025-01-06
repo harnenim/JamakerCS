@@ -195,7 +195,7 @@
 .highlight-textarea > * {
 	white-space: pre;
 }
-.highlight-textarea > div.hljs,
+.highlight-textarea > div,
 .highlight-textarea > textarea {
 	position: absolute;
 	top: 0;
@@ -203,7 +203,7 @@
 	right: 0;
 	bottom: 0;
 }
-.highlight-textarea > div.hljs * {
+.highlight-textarea > div * {
 	font-weight: normal; /* 굵게 하면 글자폭이 달라짐 */
 }
 .highlight-textarea > div span.enter {

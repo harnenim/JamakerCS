@@ -1116,7 +1116,8 @@ function loadFkf(fkfName) {
 		
 		SmiEditor.video.fs  = vfs;
 		SmiEditor.video.kfs = kfs;
-
+		
+		// 키프레임 신뢰 기능 활성화
 		$("#forFrameSync").removeClass("disabled");
 		$("#checkTrustKeyframe").attr({ disabled: false });
 		Progress.set("#forFrameSync", 0);

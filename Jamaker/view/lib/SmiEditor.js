@@ -31,8 +31,8 @@ var SmiEditor = function(text) {
 	this.area.append($("<div class='col-sync' style='background: transparent;'>")); // 블록지정 방지 영역
 //	this.area.append(this.input = $("<textarea class='input' spellcheck='false'>"));
 	{	// 문법 하이라이트 기능 지원용
-		this.hArea = $("<div class='input highlight-textarea" + (SmiEditor.useHighlight ? "" : " nonactive") + "'>");
-		this.hArea.append(this.hview = $("<div class='hljs'>"));
+		this.hArea = $("<div class='input highlight-textarea hljs" + (SmiEditor.useHighlight ? "" : " nonactive") + "'>");
+		this.hArea.append($("<div>").append(this.hview = $("<div>")));
 		this.hArea.append(this.input = $("<textarea spellcheck='false'>"));
 		this.area.append(this.hArea);
 	}
@@ -2230,7 +2230,7 @@ SmiEditor.Addon = {
 		}
 };
 function openAddon(name, target) { SmiEditor.Addon.open(name, target); }
-function extSubmit(method, url, values) {
+function extSubmit(method, url, values, withoutTag=true) {
 	if (typeof values == "string") {
 		var name = values;
 		var editor = SmiEditor.selected;
@@ -2276,7 +2276,9 @@ function extSubmit(method, url, values) {
 			}
 
 			// string일 경우 태그 탈출 처리
-			value = $("<p>").html(value.split(/<br>/gi).join(" ")).text();
+			if (withoutTag) {
+				value = $("<p>").html(value.split(/<br>/gi).join(" ")).text();
+			}
 
 			var params = {};
 			params[name] = value;
