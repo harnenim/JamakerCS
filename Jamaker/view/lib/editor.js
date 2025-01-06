@@ -729,13 +729,30 @@ function setSetting(setting) {
 		if (setting.css) {
 			delete(setting.css);
 		}
+
+		// 스크롤바 버튼 새로 그려야 함
+		{
+			var canvas = SmiEditor.canvas;
+			if (!canvas) canvas = SmiEditor.canvas = document.createElement("canvas");
+			canvas.width = 34;
+			canvas.height = 34;
+			var c = null;
+			c = canvas.getContext("2d");
+			c.fillStyle = setting.color.tabBorder;
+			c.moveTo( 8  ,  6.5); c.lineTo(11.5, 10  ), c.lineTo( 4.5, 10  ); c.closePath();
+			c.moveTo( 8  , 26.5); c.lineTo(11.5, 23  ), c.lineTo( 4.5, 23  ); c.closePath();
+			c.moveTo(26  , 25.5); c.lineTo(23  , 28.5), c.lineTo(23  , 21.5); c.closePath();
+			c.moveTo(23.5,  8  ); c.lineTo(27  ,  4.5), c.lineTo(27  , 11.5); c.closePath();
+			c.fill();
+		}
+
 		$.ajax({url: "lib/SmiEditor.color.css"
 			,	dataType: "text"
 			,	success: function(preset) {
 					for (var name in setting.color) {
 						preset = preset.split("[" + name + "]").join(setting.color[name]);
 					}
-					$("#styleColor").html(preset);
+					$("#styleColor").html(preset.split("[button]").join(SmiEditor.canvas.toDataURL()));
 				}
 		});
 	}

@@ -313,7 +313,7 @@ var DEFAULT_SETTING =
 		}
 	,	"다크테마":
 		{	background: "#0f0f0f"
-		,	selector  : "#333333"
+		,	selector  : "#4c4c4c"
 		,	border    : "#aaaaaa"
 		,	tab       : "#222222"
 		,	tabBorder : "#888888"
