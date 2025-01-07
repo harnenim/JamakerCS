@@ -186,7 +186,6 @@
 	right: 0;
 	bottom: 17px;
 	overflow: hidden;
-    border: 0;
     pointer-events: none;
 }
 .highlight-textarea > div * {
@@ -208,8 +207,9 @@
 
 .sync.frame { border-top-width: 1px; line-height: 19px; }
 .sync.range + span { border-left-width: 1px; border-style: dotted; }
+.sync.range { opacity: 0.5; }
+
 input, textarea {
 	border-width: 1px;
+	user-select: text;
 }
-
-.sync.range { opacity: 0.5; }

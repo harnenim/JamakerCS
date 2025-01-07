@@ -72,6 +72,10 @@ input,
 ::-webkit-scrollbar-button { background-image: url('[button]'); }
 ::-webkit-scrollbar-button:end { background-position-y: 17px; }
 ::-webkit-scrollbar-button:horizontal { background-position-x: 17px; }
+.scrollTop::-webkit-scrollbar-button:vertical:start,
+.scrollBottom::-webkit-scrollbar-button:vertical:end,
+.scrollLeft::-webkit-scrollbar-button:horizontal:start,
+.scrollRight::-webkit-scrollbar-button:horizontal:end { background-image: url('[buttonDisabled]'); }
 
 /* 싱크 구분 색 */
 .sync { border-color: [syncBorder]; }

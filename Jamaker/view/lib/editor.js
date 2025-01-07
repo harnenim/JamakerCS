@@ -741,20 +741,27 @@ function setSetting(setting) {
 
 		// 스크롤바 버튼 새로 그려야 함
 		var button = "";
+		var disabled = "";
 		{
 			var canvas = SmiEditor.canvas;
 			if (!canvas) canvas = SmiEditor.canvas = document.createElement("canvas");
 			canvas.width = 34;
 			canvas.height = 34;
-			var c = null;
-			c = canvas.getContext("2d");
+			
+			var c = canvas.getContext("2d");
+			var x, y;
+			x =  8; y =  8; c.moveTo(x, y-1.5); c.lineTo(x+3.5, y+2), c.lineTo(x-3.5, y+2); c.closePath();
+			x =  8; y = 25; c.moveTo(x, y+1.5); c.lineTo(x+3.5, y-2), c.lineTo(x-3.5, y-2); c.closePath();
+			x = 25; y =  8; c.moveTo(x-1.5, y); c.lineTo(x+2, y-3.5), c.lineTo(x+2, y+3.5); c.closePath();
+			x = 25; y = 25; c.moveTo(x+1.5, y); c.lineTo(x-2, y+3.5), c.lineTo(x-2, y-3.5); c.closePath();
+			
 			c.fillStyle = setting.color.tabBorder;
-			c.moveTo( 8  ,  6.5); c.lineTo(11.5, 10  ), c.lineTo( 4.5, 10  ); c.closePath();
-			c.moveTo( 8  , 26.5); c.lineTo(11.5, 23  ), c.lineTo( 4.5, 23  ); c.closePath();
-			c.moveTo(26  , 25.5); c.lineTo(23  , 28.5), c.lineTo(23  , 21.5); c.closePath();
-			c.moveTo(23.5,  8  ); c.lineTo(27  ,  4.5), c.lineTo(27  , 11.5); c.closePath();
 			c.fill();
 			button = SmiEditor.canvas.toDataURL();
+			
+			c.fillStyle = setting.color.border;
+			c.fill();
+			disabled = SmiEditor.canvas.toDataURL();
 		}
 
 		$.ajax({url: "lib/SmiEditor.color.css"
@@ -763,7 +770,7 @@ function setSetting(setting) {
 					for (var name in setting.color) {
 						preset = preset.split("[" + name + "]").join(setting.color[name]);
 					}
-					preset = preset.split("[button]").join(button);
+					preset = preset.split("[button]").join(button).split("[buttonDisabled]").join(disabled);
 					
 					var $style = $("#styleColor");
 					if (!$style.length) {

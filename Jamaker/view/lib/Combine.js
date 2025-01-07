@@ -25,7 +25,7 @@ var Combine = {
 	var LOWER = 5;
 	
 	var LOG = false;
-
+	
 	function getWidth(smi, checker) {
 		// RUBY태그 문법이 미묘하게 달라서 가공 필요
 		smi = smi.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
@@ -560,7 +560,7 @@ if (Subtitle && Subtitle.SmiFile) {
 		
 		var main = new Subtitle.SmiFile(origHolds[0].text);
 		withCombine = withCombine && origHolds.length > 1;
-
+		
 		// 정규화 등 작업
 		if (withNormalize) {
 			var normalized = Subtitle.Smi.normalize(main.body, withComment && !withCombine);
