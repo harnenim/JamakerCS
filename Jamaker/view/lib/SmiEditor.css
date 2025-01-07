@@ -219,3 +219,15 @@ input, textarea {
 	border-width: 1px;
 	user-select: text;
 }
+
+/*
+::-webkit-scrollbar { width: 17px; height: 17px; }
+::-webkit-scrollbar-button,
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-thumb { cursor: default; }
+::-webkit-scrollbar-thumb { border: 0 solid #000; }
+::-webkit-scrollbar-thumb:vertical   { border-width: 0 2px; }
+::-webkit-scrollbar-thumb:horizontal { border-width: 2px 0; }
+::-webkit-scrollbar-button:end { background-position-y: 17px; }
+::-webkit-scrollbar-button:horizontal { background-position-x: 17px; }
+*/
