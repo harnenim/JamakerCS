@@ -43,6 +43,7 @@ var Tab = function(text, path) {
 	for (var i = 0; i < holds.length; i++) {
 		this.addHold(holds[i], i == 0, i == 0);
 	}
+	this.savedHolds = this.holds.slice(0);
 	
 	var tab = this;
 	this.holdSelector.on("click", ".selector", function() {
@@ -69,15 +70,21 @@ var Tab = function(text, path) {
 		var hold = $(this).parents(".selector").data("hold");
 		confirm("삭제하시겠습니까?", function() {
 			var index = tab.holds.indexOf(hold);
+			
+			if (tab.hold == index) {
+				// 선택된 걸 삭제하는 경우 메인 홀드로 먼저 이동
+				//tab.holds[0].selector.click();
+				tab.selectHold(tab.holds[0]);
+			} else if (tab.hold > index) {
+				// 선택된 게 삭제 대상보다 뒤에 있을 경우 번호 당김
+				tab.hold--;
+			}
+			
 			tab.holds.splice(index, 1);
 			hold.selector.remove();
 			hold.area.remove();
 			delete hold;
 			
-			// 선택된 걸 삭제했을 경우 메인 홀드로
-			if (tab.hold == index) {
-				tab.holds[0].selector.click();
-			}
 			tab.holdEdited = true;
 			tab.updateHoldSelector();
 			tab.onChangeSaved();
@@ -137,21 +144,21 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	this.holdArea.append(hold.area);
 	this.updateHoldSelector();
 	if (asActive) {
-		hold.selector.click();
+		this.selectHold(hold);
 	}
+	this.onChangeSaved();
 }
 Tab.prototype.updateHoldSelector = function() {
 	if (this.holds.length <= 1) {
 		this.area.removeClass("with-hold");
+		refreshPaddingBottom();
 		return;
 	}
 	this.area.addClass("with-hold");
-
+	refreshPaddingBottom();
+	
 	var BEGIN = 1;
 	var END = -1;
-	
-	// 홀드 여부 달라질 수 있음
-	refreshAppendStyle();
 	
 	var timers = [];
 	for (var i = 0; i < this.holds.length; i++) {
@@ -371,18 +378,20 @@ Tab.prototype.onChangeSaved = function(hold) {
 	}
 }
 Tab.prototype.isSaved = function() {
-	var saved = true;
-	if (this.holdEdited) {
-		saved = false;
-	} else {
-		for (var i = 0; i < this.holds.length; i++) {
-			if (!this.holds[i].isSaved()) {
-				saved = false;
-				break;
-			}
+	if (this.savedHolds && (this.savedHolds.length != this.holds.length)) {
+		return false;
+	}
+	
+	for (var i = 0; i < this.holds.length; i++) {
+		if (this.savedHolds && (this.savedHolds[i] != this.holds[i])) {
+			return false;
+		}
+		if (!this.holds[i].isSaved()) {
+			return false;
 		}
 	}
-	return saved;
+	
+	return true;
 }
 
 SmiEditor.prototype.isSaved = function() {
@@ -651,8 +660,8 @@ function init(jsonSetting) {
 		SmiEditor.selected = currentTab.holds[currentTab.hold];
 		SmiEditor.Viewer.refresh();
 		
-		// 홀드 여부 달라질 수 있음
-		refreshAppendStyle();
+		// 탭에 따라 홀드 여부 다를 수 있음
+		refreshPaddingBottom();
 		
 	}).on("click", ".btn-close-tab", function(e) {
 		e.preventDefault();
@@ -850,7 +859,7 @@ function moveWindowsToSetting() {
 
 	// 창 위치 초기화 후 호출
 	setTimeout(function() {
-		refreshAppendStyle();
+		refreshPaddingBottom();
 	}, 1);
 }
 
@@ -888,10 +897,10 @@ function saveSetting() {
 		binder.saveSetting(stringify(setting));
 		
 		// 창 위치/크기 조절하고 일정 시간 지나면 C#에서 여기가 호출됨
-		refreshAppendStyle();
+		refreshPaddingBottom();
 	}
 }
-function refreshAppendStyle() {
+function refreshPaddingBottom() {
 	// 에디터 하단 여백 재조정
 	var holdTop = tabs.length ? Number(tabs[tab].area.find(".holds").css("top").split("px")[0]) : 0;
 	var append = "\n#editor textarea { padding-bottom: " + ($("#editor").height() - holdTop - SB - LH - 2) + "px; }";
@@ -1030,6 +1039,7 @@ function afterSaveFile(path) {
 	var title = path ? ((path.length > 14) ? ("..." + path.substring(path.length - 14, path.length - 4)) : path.substring(0, path.length - 4)) : "새 문서";
 	$("#tabSelector .th:eq(" + tab + ") span").text(title);
 	currentTab.holdEdited = false;
+	currentTab.savedHolds = currentTab.holds.slice(0);
 }
 SmiEditor.prototype._afterSave = SmiEditor.prototype.afterSave;
 SmiEditor.prototype.afterSave = function() {
