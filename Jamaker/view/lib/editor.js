@@ -740,6 +740,7 @@ function setSetting(setting) {
 		}
 
 		// 스크롤바 버튼 새로 그려야 함
+		var button = "";
 		{
 			var canvas = SmiEditor.canvas;
 			if (!canvas) canvas = SmiEditor.canvas = document.createElement("canvas");
@@ -753,6 +754,7 @@ function setSetting(setting) {
 			c.moveTo(26  , 25.5); c.lineTo(23  , 28.5), c.lineTo(23  , 21.5); c.closePath();
 			c.moveTo(23.5,  8  ); c.lineTo(27  ,  4.5), c.lineTo(27  , 11.5); c.closePath();
 			c.fill();
+			button = SmiEditor.canvas.toDataURL();
 		}
 
 		$.ajax({url: "lib/SmiEditor.color.css"
@@ -761,7 +763,13 @@ function setSetting(setting) {
 					for (var name in setting.color) {
 						preset = preset.split("[" + name + "]").join(setting.color[name]);
 					}
-					$("#styleColor").html(preset.split("[button]").join(SmiEditor.canvas.toDataURL()));
+					preset = preset.split("[button]").join(button);
+					
+					var $style = $("#styleColor");
+					if (!$style.length) {
+						$("head").append($style = $("<style id='styleColor'>"));
+					}
+					$style.html(preset);
 				}
 		});
 	}
@@ -904,7 +912,11 @@ function refreshPaddingBottom() {
 	// 에디터 하단 여백 재조정
 	var holdTop = tabs.length ? Number(tabs[tab].area.find(".holds").css("top").split("px")[0]) : 0;
 	var append = "\n#editor textarea { padding-bottom: " + ($("#editor").height() - holdTop - SB - LH - 2) + "px; }";
-	$("#styleAppend").html(append);
+	var $style = $("#stylePaddingBottom");
+	if (!$style.length) {
+		$("head").append($style = $("<style id='stylePaddingBottom'>"));
+	}
+	$style.html(append);
 }
 
 function openHelp(name) {
