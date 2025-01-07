@@ -36,12 +36,12 @@ var checkVersion;
 	}
 	var lastNotifyForCommand = "2024.12.07.v1";
 	var lastNotifyForAutoComplete = "";
-	var lastNotifyForStyle = "2025.01.06.v1";
+	var lastNotifyForStyle = "2025.01.07.v1";
 	var lastNotifyForMenu = "2024.11.19.v2";
 }
 
 var DEFAULT_SETTING =
-{	version: "2025.01.06.v1"
+{	version: "2025.01.07.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -280,50 +280,51 @@ var DEFAULT_SETTING =
 	{ parser: "withoutSync"
 	, style : "eclipse"
 	, enter : false
+	, color : true
 	}
 ,	color:
-	{	background: "#f0f0f0"
-	,	selector  : "#c1c1c1"
-	,	border    : "#aaaaaa"
-	,	tab       : "#dddddd"
-	,	tabBorder : "#888888"
-	,	editor    : "#ffffff"
-	,	text      : "#000000"
-	,	hover     : "#ffffff"
-	,	notSaved  : "#ff8866"
-	,	syncBorder: "#000000"
-	,	syncError : "#ff8888"
-	,	syncEqual : "#88ff88"
+	{ background: "#f0f0f0"
+	, selector  : "#c1c1c1"
+	, border    : "#aaaaaa"
+	, tab       : "#dddddd"
+	, tabBorder : "#888888"
+	, editor    : "#ffffff"
+	, text      : "#000000"
+	, hover     : "#ffffff"
+	, notSaved  : "#ff8866"
+	, syncBorder: "#000000"
+	, syncError : "#ff8888"
+	, syncEqual : "#88ff88"
 	}
 ,	colorPreset:
 	{
 		"기본":
-		{	background: "#f0f0f0"
-		,	selector  : "#c1c1c1"
-		,	border    : "#aaaaaa"
-		,	tab       : "#dddddd"
-		,	tabBorder : "#888888"
-		,	editor    : "#ffffff"
-		,	text      : "#000000"
-		,	hover     : "#ffffff"
-		,	notSaved  : "#ff8866"
-		,	syncBorder: "#000000"
-		,	syncError : "#ff8888"
-		,	syncEqual : "#88ff88"
+		{ background: "#f0f0f0"
+		, selector  : "#c1c1c1"
+		, border    : "#aaaaaa"
+		, tab       : "#dddddd"
+		, tabBorder : "#888888"
+		, editor    : "#ffffff"
+		, text      : "#000000"
+		, hover     : "#ffffff"
+		, notSaved  : "#ff8866"
+		, syncBorder: "#000000"
+		, syncError : "#ff8888"
+		, syncEqual : "#88ff88"
 		}
 	,	"다크테마":
-		{	background: "#0f0f0f"
-		,	selector  : "#4c4c4c"
-		,	border    : "#aaaaaa"
-		,	tab       : "#222222"
-		,	tabBorder : "#888888"
-		,	editor    : "#000000"
-		,	text      : "#ffffff"
-		,	hover     : "#000000"
-		,	notSaved  : "#ff8866"
-		,	syncBorder: "#ffffff"
-		,	syncError : "#880088"
-		,	syncEqual : "#008888"
+		{ background: "#0f0f0f"
+		, selector  : "#4c4c4c"
+		, border    : "#aaaaaa"
+		, tab       : "#222222"
+		, tabBorder : "#888888"
+		, editor    : "#000000"
+		, text      : "#ffffff"
+		, hover     : "#000000"
+		, notSaved  : "#ff8866"
+		, syncBorder: "#ffffff"
+		, syncError : "#880088"
+		, syncEqual : "#008888"
 		}
 	}
 ,	newFile:"<SAMI>\n"

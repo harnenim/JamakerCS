@@ -691,9 +691,9 @@ $(function() {
         }
         selectParser.on("change", function() {
         	if (selectParser.val()) {
-        		selectStyle.parent().show();
+        		$("#optionsForHighlight").removeClass("disabled").find("input, select").attr({ disabled: false });
         	} else {
-        		selectStyle.parent().hide();
+        		$("#optionsForHighlight").addClass   ("disabled").find("input, select").attr({ disabled: true  });
         	}
         }).change();
 		
@@ -706,6 +706,7 @@ $(function() {
 			setting.highlight.parser = $("select[name=highlight_parser]").val();
 			setting.highlight.style  = $("select[name=highlight_style]").val();
 			setting.highlight.enter  = $("input[name=highlight_enter]").prop("checked");
+			setting.highlight.color  = $("input[name=highlight_color]").prop("checked");
 			setting.viewer.useAlign  = $("input[name=viewer_useAlign]").prop("checked");
 			setting.viewer.css       = $("textarea[name=viewer_css]").val();
 			setting.newFile          = $("textarea[name=newFile]"   ).val();
@@ -1128,6 +1129,15 @@ fieldset ol button,
 #replace input + button { border-left-width: 1px; }
 
 /* 스타일 */
+#optionsForHighlight > span {
+	margin-left: 215px;
+}
+#optionsForHighlight label {
+	margin-right: 8px;
+}
+#optionsForHighlight.disabled label > span {
+	opacity: 0.5;
+}
 #style_color_preset {
 	float: left;
 	width: 200px;
@@ -1441,9 +1451,12 @@ fieldset ol button,
 				<option value="full">전체</option>
 			</select>
 		</label>
-		<span>
-			<select name="highlight_style"></select>
-			<label><input type="checkbox" name="highlight_enter" /> 줄바꿈 표시</label>
+		<span id="optionsForHighlight">
+			<select name="highlight_style"></select><br />
+			<span>
+				<label><input type="checkbox" name="highlight_enter" /> <span>줄바꿈 표시</span></label>
+				<label><input type="checkbox" name="highlight_color" /> <span>색상 미리보기</span></label>
+			</span>
 		</span>
 		<br />
 		※ 자막 내용이 많아질 경우 성능 문제가 발생할 수 있습니다.

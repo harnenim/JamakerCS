@@ -209,6 +209,12 @@
 .sync.range + span { border-left-width: 1px; border-style: dotted; }
 .sync.range { opacity: 0.5; }
 
+.hljs-color {
+	display: inline-block;
+	height: 20px;
+	border-bottom-width: 3px;
+}
+
 input, textarea {
 	border-width: 1px;
 	user-select: text;

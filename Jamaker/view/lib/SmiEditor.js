@@ -104,6 +104,7 @@ SmiEditor.setSetting = function(setting) {
 		SmiEditor.sync = setting.sync;
 	}
 	SmiEditor.useHighlight = setting.highlight && setting.highlight.parser;
+	SmiEditor.showColor = setting.highlight.color;
 	SmiEditor.showEnter = setting.highlight.enter;
 	
 	{	// AutoComplete
@@ -1557,6 +1558,32 @@ SmiEditor.prototype.updateHighlight = function () {
 		var i = changeBegin;
 		for (; i < changeEnd + add; i++) {
 			var highlightLine = SmiEditor.highlightText(lines[i], state);
+			if (SmiEditor.showColor) {
+				highlightLine.find(".hljs-attr").each(function() {
+					var $attr = $(this);
+					if ($attr.text().trim() == "color") {
+						var $value = $attr.next();
+						if ($value.hasClass("hljs-value")) {
+							var color = $value.text();
+							if (color.startsWith('"') || color.startsWith("'")) {
+								color = color.substring(1, color.length - 1);
+							}
+							color = color.trim();
+							if (!(color.length == 7 && color.startsWith("#"))) {
+								var hex = sToAttrColor(color);
+								if (hex == color) {
+									return;
+								}
+								color = "#" + hex;
+							}
+							var r = parseInt(color.substring(1, 3), 16);
+							var g = parseInt(color.substring(3, 5), 16);
+							var b = parseInt(color.substring(5, 7), 16);
+							$value.addClass("hljs-color").css({ borderColor: color });
+						}
+					}
+				});
+			}
 			if (SmiEditor.showEnter) {
 				highlightLine.append($("<span class='hljs-comment enter'>").text("↵"));
 			}
