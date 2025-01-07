@@ -29,11 +29,11 @@ var SmiEditor = function(text) {
 	this.area = $("<div class='hold'>");
 	this.area.append(this.colSync = $("<div class='col-sync'>"));
 	this.area.append($("<div class='col-sync' style='background: transparent;'>")); // 블록지정 방지 영역
-//	this.area.append(this.input = $("<textarea class='input' spellcheck='false'>"));
 	{	// 문법 하이라이트 기능 지원용
 		this.hArea = $("<div class='input highlight-textarea hljs" + (SmiEditor.useHighlight ? "" : " nonactive") + "'>");
 		this.hArea.append($("<div>").append(this.hview = $("<div>")));
 		this.hArea.append(this.input = $("<textarea spellcheck='false'>"));
+//		this.hArea.append(this.input = $("<textarea spellcheck='false' class='scrollTop scrollLeft'>"));
 		this.area.append(this.hArea);
 	}
 	this.colSync.html('<span class="sync"><br /></span>');
@@ -284,11 +284,33 @@ SmiEditor.prototype.bindEvent = function() {
 	
 	// 싱크 스크롤 동기화
 	this.input.on("scroll", function(e) {
-		editor.colSync.scrollTop(editor.input.scrollTop());
+		var scrollTop  = editor.input.scrollTop ();
+		var scrollLeft = editor.input.scrollLeft();
+		editor.colSync.scrollTop(scrollTop);
 		editor.hview.css({
-			marginTop : -editor.input.scrollTop ()
-		,	marginLeft: -editor.input.scrollLeft()
+			marginTop : -scrollTop 
+		,	marginLeft: -scrollLeft
 		});
+		
+		/*
+		// 스크롤바 직접 구현하면서 사라진 효과... 오버 엔지니어링인 듯
+		if (scrollTop == 0) {
+			editor.input.addClass("scrollTop");
+		} else {
+			editor.input.removeClass("scrollTop");
+		}
+		if (scrollTop >= ((editor.lines.length - 1) * LH)) {
+			editor.input.addClass("scrollBottom");
+		} else {
+			editor.input.removeClass("scrollBottom");
+		}
+		if (scrollLeft == 0) {
+			editor.input.addClass("scrollLeft");
+		} else {
+			editor.input.removeClass("scrollLeft");
+		}
+		scrollRight는??
+		*/
 	});
 	
 	// 개발용 임시
@@ -1581,11 +1603,11 @@ SmiEditor.highlightText = function(text, state=null) {
 	return previewLine.text(text);
 }
 SmiEditor.refreshHighlight = function() {
-	var style = $("#style_highlight");
-	if (style.length == 0) {
-		$("head").append(style = $("<style>").attr({ id: "style_highlight" }));
+	var $style = $("#styleHighlight");
+	if (!$style.length) {
+		$("head").append($style = $("<style id='#styleHighlight'>"));
 	}
-	style.html(SmiEditor.highlightCss);
+	$style.html(SmiEditor.highlightCss);
 }
 SmiEditor.prototype.moveLine = function(toNext) {
 	if (this.syncUpdating) return;

@@ -1935,7 +1935,7 @@ Subtitle.Smi.Color.prototype.get = function(value, total) {
 	     + Subtitle.Smi.Color.hex(((this.g * (total - value)) + (this.tg * value)) / total)
 	     + Subtitle.Smi.Color.hex(((this.b * (total - value)) + (this.tb * value)) / total);
 }
-Subtitle.Smi.normalize = function (smis, withComment = false) {
+Subtitle.Smi.normalize = function(smis, withComment=false) {
 	var origin = new Subtitle.SmiFile();
 	origin.body = smis;
 	origin.fromTxt(origin.toTxt());
