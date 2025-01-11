@@ -1049,18 +1049,17 @@ SmiEditor.prototype.toggleSyncType = function() {
 			var line = this.lines[i];
 			var newLine = {}; newLine[LINE.SYNC] = line[LINE.SYNC];
 			if (line[LINE.TYPE] == TYPE.BASIC) { // 화면 싱크 할당
-				var index = line[LINE.TEXT].lastIndexOf(">");
-				newLine[LINE.TEXT] = line[LINE.TEXT].substring(0, index) + " " + line[LINE.TEXT].substring(index);
 				newLine[LINE.TYPE] = TYPE.FRAME;
-				if (i < lineNo) cursor++;
+				if (SmiEditor.trustKeyFrame) { // 키프레임 신뢰할 경우 자동으로 키프레임에 맞추기
+					newLine[LINE.SYNC] = SmiEditor.getSyncTime(line[LINE.SYNC], true);
+				}
 			} else if (line[LINE.TYPE] == TYPE.FRAME) { // 화면 싱크 해제
-				var index = line[LINE.TEXT].lastIndexOf(" >");
-				newLine[LINE.TEXT] = line[LINE.TEXT].substring(0, index) + line[LINE.TEXT].substring(index + 1);
 				newLine[LINE.TYPE] = TYPE.BASIC;
-				if (i < lineNo) cursor--;
 			} else {
 				return;
 			}
+			newLine[LINE.TEXT] = SmiEditor.makeSyncLine(newLine[LINE.SYNC], newLine[LINE.TYPE]);
+			cursor += (newLine[LINE.TEXT].length - line[LINE.TEXT].length);
 			this.input.val(text = linesToText(this.lines.slice(0, i).concat(newLine, this.lines.slice(i + 1))));
 			this.updateSync();
 			this.setCursor(cursor);
