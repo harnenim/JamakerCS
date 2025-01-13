@@ -1377,7 +1377,7 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 					break;
 					
 				case "shake": {
-					var shake = { ms: 125, size: 2 };
+					var shake = { ms: 125, size: 1 };
 					var attr = attrs[i][1];
 					if (attr) {
 						attr = attr.split(",");
