@@ -2022,49 +2022,7 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 			}
 		}
 		
-		if (hasFade) {
-			var fadeColors = [];
-			var origin = smi.text;
-			for (var j = 0; j < attrs.length; j++) {
-				if (attrs[j].fade != 0) {
-					fadeColors.push(new Subtitle.Smi.Color(j, attrs[j].fade, ((attrs[j].fc.length == 6) ? attrs[j].fc : "ffffff")));
-					attrs[j].fade = 0;
-				}
-			}
-			if (fadeColors.length == 0) {
-				continue;
-			}
-
-			var start = smi.start, end = smis[i + 1].start;
-			var frames = Math.round((end - start) * 24 / 1001.0);
-
-			for (var j = 0; j < fadeColors.length; j++) {
-				var color = fadeColors[j];
-				attrs[color.index].fc = color.get(1, 2 * frames);
-			}
-			smi.fromAttr(attrs);
-			for (var j = 1; j < frames; j++) {
-				for (var k = 0; k < fadeColors.length; k++) {
-					var color = fadeColors[k];
-					attrs[color.index].fc = color.get(1 + 2 * j, 2 * frames);
-				}
-				smis.splice(i + j, 0, new Subtitle.Smi((start * (frames - j) + end * j) / frames, Subtitle.SyncType.inner).fromAttr(attrs));
-			}
-			smi.comment = "<!-- End=" + end + "\n" + origin.split("<").join("<​").split(">").join("​>") + "\n-->";
-			if (withComment) {
-				smi.text = smi.comment + "\n" + smi.text;
-			}
-			result.logs.push({
-					from: [i - added, i - added + 1]
-				,	to  : [i, i + frames]
-				,	start: start
-				,	end: end
-			});
-			var add = frames - 1;
-			i += add;
-			added += add;
-			
-		} else if (hasShake) {
+		if (hasShake) {
 			// 흔들기는 한 싱크에 하나만 가능
 			var attrIndex = -1;
 			var attr = null;
@@ -2094,8 +2052,11 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 			var shake = attr.shake;
 			attr.shake = null;
 			attr.text = "{SL}" + attr.text + "{SR}";
-			var start = smi.start, end = smis[i + 1].start;
+			
+			var start = smi.start;
+			var end = smis[i + 1].start;
 			var count = Math.floor(((end - start) / shake.ms) + 0.5);
+			
 			var j = attrIndex - 1;
 			for (; j >= 0; j--) {
 				var text = attrs[j].text;
@@ -2221,8 +2182,10 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 			var types = Typing.toType(attr.text, attr.typing.mode, attr.typing.cursor);
 			var width = Subtitle.Smi.getLineWidth(attr.text);
 
-			var start = smi.start, end = smis[i + 1].start;
+			var start = smi.start;
+			var end = smis[i + 1].start;
 			var count = types.length - attr.typing.end - attr.typing.start;
+			
 			if (count < 1) {
 				continue;
 			}
@@ -2261,6 +2224,48 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 			var add = count - 1;
 			i += add;
 			added += add;
+			
+		} else if (hasFade) {
+			var start = smi.start;
+			var end = smis[i + 1].start;
+			var count = Math.round((end - start) * 24 / 1001.0); // 23.976fps로 가정
+			
+			var fadeColors = [];
+			for (var j = 0; j < attrs.length; j++) {
+				if (attrs[j].fade != 0) {
+					fadeColors.push(new Subtitle.Smi.Color(j, attrs[j].fade, ((attrs[j].fc.length == 6) ? attrs[j].fc : "ffffff")));
+					attrs[j].fade = 0;
+				}
+			}
+			if (fadeColors.length == 0) {
+				continue;
+			}
+			
+			for (var j = 0; j < fadeColors.length; j++) {
+				var color = fadeColors[j];
+				attrs[color.index].fc = color.get(1, 2 * count);
+			}
+			smi.fromAttr(attrs);
+			for (var j = 1; j < count; j++) {
+				for (var k = 0; k < fadeColors.length; k++) {
+					var color = fadeColors[k];
+					attrs[color.index].fc = color.get(1 + 2 * j, 2 * count);
+				}
+				smis.splice(i + j, 0, new Subtitle.Smi((start * (count - j) + end * j) / count, Subtitle.SyncType.inner).fromAttr(attrs));
+			}
+			if (withComment) {
+				smis[i].text = "<!-- End=" + end + "\n" + smi.text.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[i].text;
+			}
+			result.logs.push({
+					from: [i - added, i - added + 1]
+				,	to  : [i, i + count]
+				,	start: start
+				,	end: end
+			});
+			var add = count - 1;
+			i += add;
+			added += add;
+			
 		}
 	}
 	
