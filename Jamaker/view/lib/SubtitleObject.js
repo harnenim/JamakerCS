@@ -2004,8 +2004,6 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 		
 		var attrs = smi.toAttr();
 		
-		// 여러 가지가 동시에 돌아갈 순 없음 - 싱크 배분 방식부터 다름...
-		// TODO: 흔들기/타이핑 싱크에 페이드를 억지로 끼워맞출 순 있나...?
 		var hasFade = false;
 		var hasShake = false;
 		var hasTyping = false;
@@ -2080,10 +2078,20 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 			if (j >= attrs.length) {
 				attrs[attrs.length - 1].text = attrs[attrs.length - 1].text + "{SB}";
 			}
-			
-			// TODO: 페이드 효과를 동시 지원하려면 프리셋 못 쓰고 매 싱크마다 생성해야 할 듯?
-			var preset = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
 
+			var fadeColors = [];
+			if (hasFade) {
+				for (var j = 0; j < attrs.length; j++) {
+					if (attrs[j].fade != 0) {
+						fadeColors.push(new Subtitle.Smi.Color(j, attrs[j].fade, ((attrs[j].fc.length == 6) ? attrs[j].fc : "ffffff")));
+						attrs[j].fade = 0;
+					}
+				}
+				if (fadeColors.length == 0) {
+					continue;
+				}
+			}
+			
 			smis.splice(i, 1);
 			for (var j = 0; j < count; j++) {
 				/*
@@ -2092,7 +2100,13 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 				 * ７４１
 				 */
 				var step = j % 8;
-				var text = preset;
+				
+				// 페이드 효과 추가 처리
+				for (var k = 0; k < fadeColors.length; k++) {
+					var color = fadeColors[k];
+					attrs[color.index].fc = color.get(1 + 2 * j, 2 * count);
+				}
+				var text = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
 				
 				{	// 좌우로 흔들기
 					// 플레이어에서 사이즈 미지원해도 좌우로는 흔들리도록
@@ -2192,6 +2206,20 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 
 			var typingStart = attr.typing.start;
 			attr.typing = null;
+			
+			var fadeColors = [];
+			if (hasFade) {
+				for (var j = 0; j < attrs.length; j++) {
+					if (attrs[j].fade != 0) {
+						fadeColors.push(new Subtitle.Smi.Color(j, attrs[j].fade, ((attrs[j].fc.length == 6) ? attrs[j].fc : "ffffff")));
+						attrs[j].fade = 0;
+					}
+				}
+				if (fadeColors.length == 0) {
+					continue;
+				}
+			}
+			
 			smis.splice(i, 1);
 			for (var j = 0; j < count; j++) {
 				var text = types[j + typingStart];
@@ -2203,6 +2231,12 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 					newAttrs[k].fc = attr.fc;
 					newAttrs[k].fn = attr.fn;
 					newAttrs[k].fs = attr.fs;
+				}
+				
+				// 페이드 효과 추가 처리
+				for (var k = 0; k < fadeColors.length; k++) {
+					var color = fadeColors[k];
+					attrs[color.index].fc = color.get(1 + 2 * j, 2 * count);
 				}
 				
 				var tAttrs = attrs.slice(0, attrIndex);
