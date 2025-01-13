@@ -1563,7 +1563,8 @@ SmiEditor.prototype.updateHighlight = function () {
 			if (SmiEditor.showColor) {
 				highlightLine.find(".hljs-attr").each(function() {
 					var $attr = $(this);
-					if ($attr.text().trim() == "color") {
+					var attrName = $attr.text().trim()
+					if (attrName == "color" || attrName == "fade") {
 						var $value = $attr.next();
 						if ($value.hasClass("hljs-value")) {
 							var color = $value.text();
