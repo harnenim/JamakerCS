@@ -664,6 +664,7 @@ Subtitle.Attr = function(old) {
 		this.fn   = old.fn;
 		this.fc   = old.fc;
 		this.fade = old.fade;
+		this.shake = old.shake;
 		this.typing = old.typing;
 	} else {
 		this.text = "";
@@ -674,6 +675,7 @@ Subtitle.Attr = function(old) {
 		this.fn   = ""; // FontName
 		this.fc   = ""; // Fontcolor
 		this.fade = 0;
+		this.shake = null;
 		this.typing = null;
 	}
 }
@@ -1316,6 +1318,7 @@ Subtitle.Smi.Status = function() {
 	this.fn = [];
 	this.fc = [];
 	this.fade = [];
+	this.shake = [];
 	this.typing = [];
 	this.fontAttrs = [];
 }
@@ -1372,6 +1375,18 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 					}
 					this.fade.push(fade);
 					break;
+					
+				case "shake": {
+					var shake = { ms: 125, size: 2 };
+					var attr = attrs[i][1];
+					if (attr) {
+						attr = attr.split(",");
+						if (isFinite(attr[0])) shake.ms   = Number(attr[0]);
+						if (isFinite(attr[1])) shake.size = Number(attr[1]);
+					}
+					this.shake.push(shake);
+					break;
+				}
 					
 				case "typing": {
 					var attr = attrs[i][1].split(' ');
@@ -1438,6 +1453,9 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 				case "fade":
 					this.fade.pop();
 					break;
+				case "shake":
+					this.shake.pop();
+					break;
 				case "typing":
 					this.typing.pop();
 					break;
@@ -1455,6 +1473,7 @@ Subtitle.Smi.SetStyle = function(attr, status) {
 	attr.fn = (status.fn.length > 0) ? status.fn[status.fn.length - 1] : "";
 	attr.fc = (status.fc.length > 0) ? status.fc[status.fc.length - 1] : "";
 	attr.fade = (status.fade.length > 0) ? status.fade[status.fade.length - 1] : 0;
+	attr.shake = (status.shake.length > 0) ? status.shake[status.shake.length - 1] : null;
 	attr.typing = (status.typing.length > 0) ? status.typing[status.typing.length - 1] : null;
 }
 Subtitle.Smi.SetFurigana = function(attr, furigana) {
@@ -1800,7 +1819,7 @@ Subtitle.Smi.fromAttr = function(attrs) {
 			if (last.u) text += "</U>";
 			
 			// 기존에 속성이 있었을 때 닫는 태그
-			if (last.fs > 0 || !last.fn == ("") || !last.fc == ("") || last.fade != 0 || last.typing != null)
+			if (last.fs > 0 || !last.fn == ("") || !last.fc == ("") || last.fade != 0 || last.shake != null || last.typing != null)
 				text += "</FONT>";
 			
 			if (attr.furigana) {
@@ -1812,12 +1831,13 @@ Subtitle.Smi.fromAttr = function(attrs) {
 			if (attr.u) text += "<U>";
 			
 			// 신규 속성이 있을 때 여는 태그
-			if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.typing != null) {
+			if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.shake != null || attr.typing != null) {
 				text += "<FONT";
 				if (attr.fs   >  0 ) text += " size=\"" + attr.fs + "\"";
 				if (attr.fn   != "") text += " face=\"" + attr.fn + "\"";
 				if (attr.fc   != "") text += " color=\""+ Subtitle.Smi.colorFromAttr(attr.fc) + "\"";
 				if (attr.fade != 0 ) text += " fade=\"" + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\"";
+				if (attr.shake != null) text += " shake=\"" + attr.shake.ms + "," + attr.shake.size + "\"";
 				if (attr.typing != null) text += " typing=\"" + Typing.Mode.toString(attr.typing.mode) + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString(attr.typing.cursor) + "\"";
 				text += ">";
 			}
@@ -1842,20 +1862,23 @@ Subtitle.Smi.fromAttr = function(attrs) {
 					||  last.fn   != attr.fn
 					||  last.fc   != attr.fc
 					||  last.fade != attr.fade
+					|| (last.shake == null && attr.shake != null)
+					|| (last.shake != null && attr.shake == null)
 					|| (last.typing == null && attr.typing != null)
 					|| (last.typing != null && attr.typing == null)
 			) {
 				// 기존에 속성이 있었을 때만 닫는 태그
-				if (last.fs > 0 || !last.fn == ("") || !last.fc == ("") || last.fade != 0 || last.typing != null)
+				if (last.fs > 0 || !last.fn == ("") || !last.fc == ("") || last.fade != 0 || last.shake != null || last.typing != null)
 					text += "</FONT>";
 				
 				// 신규 속성이 있을 때만 여는 태그
-				if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.typing != null) {
+				if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.shake != null || attr.typing != null) {
 					text += "<FONT";
 					if (attr.fs   >  0 ) text += " size=\"" + attr.fs + "\"";
 					if (attr.fn   != "") text += " face=\"" + attr.fn + "\"";
 					if (attr.fc   != "") text += " color=\""+ Subtitle.Smi.colorFromAttr(attr.fc) + "\"";
 					if (attr.fade != 0 ) text += " fade=\"" + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\"";
+					if (attr.shake != null) text += " shake=\"" + attr.shake.ms + "," + attr.shake.size + "\"";
 					if (attr.typing != null) text += " typing=\"" + Typing.Mode.toString(attr.typing.mode) + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString(attr.typing.cursor) + "\"";
 					text += ">";
 				}
@@ -1979,10 +2002,28 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 		}
 		*/
 		
-		var lower = smi.text.toLowerCase();
-		if (lower.indexOf(" fade=") > 0) {
+		var attrs = smi.toAttr();
+		
+		// 여러 가지가 동시에 돌아갈 순 없음 - 싱크 배분 방식부터 다름...
+		// TODO: 흔들기/타이핑 싱크에 페이드를 억지로 끼워맞출 순 있나...?
+		var hasFade = false;
+		var hasShake = false;
+		var hasTyping = false;
+		var type = null;
+		for (var j = 0; j < attrs.length; j++) {
+			if (attrs[j].fade != 0) {
+				hasFade = true;
+			}
+			if (attrs[j].shake) {
+				hasShake = true;
+			}
+			if (attrs[j].typing) {
+				hasTyping = true;
+			}
+		}
+		
+		if (hasFade) {
 			var fadeColors = [];
-			var attrs = smi.toAttr();
 			var origin = smi.text;
 			for (var j = 0; j < attrs.length; j++) {
 				if (attrs[j].fade != 0) {
@@ -2023,15 +2064,140 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 			i += add;
 			added += add;
 			
-		} else if (lower.indexOf(" typing=") > 0) {
+		} else if (hasShake) {
+			// 흔들기는 한 싱크에 하나만 가능
+			var attrIndex = -1;
+			var attr = null;
+			var isLastAttr = false;
+			for (var j = 0; j < attrs.length; j++) {
+				if (attrs[j].shake != null) {
+					attr = attrs[(attrIndex = j)];
+					var remains = "";
+					for (var k = j + 1; k < attrs.length; k++) {
+						remains += attrs[k].text;
+					}
+					isLastAttr = (remains.length == 0) || (remains[0] == "\n");
+					if (!isLastAttr) {
+						var length = 0;
+						for (var k = j + 1; k < attrs.length; k++) {
+							length += attrs[k].text.length;
+						}
+						isLastAttr = (length == 0);
+					}
+					break;
+				}
+			}
+			if (attr == null) {
+				continue;
+			}
+			
+			var shake = attr.shake;
+			attr.shake = null;
+			attr.text = "{SL}" + attr.text + "{SR}";
+			var start = smi.start, end = smis[i + 1].start;
+			var count = Math.floor(((end - start) / shake.ms) + 0.5);
+			var j = attrIndex - 1;
+			for (; j >= 0; j--) {
+				var text = attrs[j].text;
+				var brIndex = text.lastIndexOf("\n");
+				if (brIndex >= 0) {
+					attrs[j].text = text.substring(0, brIndex + 1) + "{ST}" + text.substring(brIndex + 1);
+					break;
+				}
+			}
+			if (j < 0) {
+				attrs[0].text = "{ST}" + attrs[0].text;
+			}
+			for (j = attrIndex + 1; j < attrs.length; j++) {
+				var text = attrs[j].text;
+				var brIndex = text.indexOf("\n");
+				if (brIndex >= 0) {
+					attrs[j].text = text.substring(0, brIndex) + "{SB}" + text.substring(brIndex);
+					break;
+				}
+			}
+			if (j >= attrs.length) {
+				attrs[attrs.length - 1].text = attrs[attrs.length - 1].text + "{SB}";
+			}
+			
+			// TODO: 페이드 효과를 동시 지원하려면 프리셋 못 쓰고 매 싱크마다 생성해야 할 듯?
+			var preset = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
+
+			smis.splice(i, 1);
+			for (var j = 0; j < count; j++) {
+				/*
+				 * ５０３
+				 * ２※６
+				 * ７４１
+				 */
+				var step = j % 8;
+				var text = preset;
+				
+				{	// 좌우로 흔들기
+					// 플레이어에서 사이즈 미지원해도 좌우로는 흔들리도록
+					var tag = "<font size=\"" + (3 * shake.size) + "\">";
+					var min = "";
+					var mid = tag + " </font>";
+					var max = tag + "  </font>";
+					
+					switch (step) {
+						case 2:
+						case 5:
+						case 7:
+							text = text.split("{SL}").join(min).split("{SR}").join(max);
+							break;
+						case 0:
+						case 4:
+							text = text.split("{SL}").join(mid).split("{SR}").join(mid);
+							break;
+						default:
+							text = text.split("{SL}").join(max).split("{SR}").join(min);
+					}
+				}
+
+				{	// 상하로 흔들기
+					// 플레이어에서 사이즈 미지원하면 상하로 흔들리지 않도록
+					var min = "<font size=\"" + (0 * shake.size) + "\">　</font>";
+					var mid = "<font size=\"" + (1 * shake.size) + "\">　</font>";
+					var max = "<font size=\"" + (2 * shake.size) + "\">　</font>";
+					
+					switch (step) {
+						case 0:
+						case 3:
+						case 5:
+							text = text.split("{ST}").join(min + "<br>").split("{SB}").join("<br>" + max);
+							break;
+						case 2:
+						case 6:
+							text = text.split("{ST}").join(mid + "<br>").split("{SB}").join("<br>" + mid);
+							break;
+						default:
+							text = text.split("{ST}").join(max + "<br>").split("{SB}").join("<br>" + min);
+					}
+				}
+				
+				smis.splice(i + j, 0, new Subtitle.Smi((start * (count - j) + end * (j)) / count, (j == 0 ? smi.syncType : Subtitle.SyncType.inner), text));
+			}
+			if (withComment) {
+				smis[i].text = "<!-- End=" + end + "\n" + smi.text.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[i].text;
+			}
+			result.logs.push({
+					from: [i - added, i - added + 1]
+				,	to  : [i, i + count]
+				,	start: start
+				,	end: end
+			});
+			var add = count - 1;
+			i += add;
+			added += add;
+
+		} else if (hasTyping) {
 			// 타이핑은 한 싱크에 하나만 가능
 			var attrIndex = -1;
 			var attr = null;
-			var attrs = smi.toAttr();
 			var isLastAttr = false;
 			for (var j = 0; j < attrs.length; j++) {
 				if (attrs[j].typing != null) {
-					var color = (attrs[j].fc.length == 6) ? attrs[j].fc : "ffffff";
 					attr = attrs[(attrIndex = j)];
 					var remains = "";
 					for (var k = j + 1; k < attrs.length; k++) {
@@ -2081,7 +2247,7 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 				tAttrs.push(attr);
 				tAttrs = tAttrs.concat(attrs.slice(attrIndex + 1));
 				
-				smis.splice(i + j, 0, new Subtitle.Smi((start * (count - j) + end * (j)) / count,j == 0 ? smi.syncType : Subtitle.SyncType.inner).fromAttr(tAttrs));
+				smis.splice(i + j, 0, new Subtitle.Smi((start * (count - j) + end * (j)) / count, (j == 0 ? smi.syncType : Subtitle.SyncType.inner)).fromAttr(tAttrs));
 			}
 			if (withComment) {
 				smis[i].text = "<!-- End=" + end + "\n" + smi.text.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[i].text;
