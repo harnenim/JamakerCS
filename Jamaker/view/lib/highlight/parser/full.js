@@ -11,7 +11,6 @@ SmiEditor.highlightText = function(text, state=null) {
 	 * 속성값: =, ', "
 	 * 주석  : !
 	 */
-	var pos = 0;
 	var html = "";
 	switch (state) {
 		case '/': html = "<span class='hljs-tag'>"; break;

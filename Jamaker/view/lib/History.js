@@ -10,7 +10,7 @@
 
 // 입력에서 삭제로 전환 시 기록 
 
-var History = function(input, limit, doAfter) {
+window.History = function(input, limit, doAfter) {
 	this.input = input;
 	this.limit = (limit ? limit : 32);
 	this.doAfter = doAfter;

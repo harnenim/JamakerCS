@@ -8,6 +8,7 @@
 	<script src="../lib/popup.js"></script>
 	<script src="../lib/setting.js"></script>
 	<script src="../lib/AutoCompleteTextarea.js"></script>
+	<script src="../lib/SubtitleObject.js"></script>
 	<script src="../lib/Combine.js"></script>
 	<script src="../lib/History.js"></script>
 	<script src="../lib/SmiEditor.js"></script>
@@ -54,7 +55,7 @@ $(function() {
 	});
 
 	if (setting) {
-		SmiEditor.setSetting({ autoComplete: setting.autoComplete });
+		SmiEditor.setSetting(setting);
 	}
 	var inputUpper = $("#inputUpper");
 	var inputLower = $("#inputLower");

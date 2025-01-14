@@ -1,4 +1,4 @@
-var Combine = {
+window.Combine = {
 	css: 'font-family: 맑은 고딕;'
 };
 {
@@ -356,7 +356,8 @@ var Combine = {
 							if ($("<span>").html(line).text().split("　").join("").split(" ").join("").length) {
 								// 공백 줄인 경우는 별도 처리 하지 않음
 								// 태그로 감싼 줄은 태그 안에 공백문자 넣기
-								var prev = "", next = "";
+								var prev = "";
+								var next = "";
 								while (line.startsWith("\n")) {
 									prev += "\n";
 									line = line.substring(1);
@@ -728,13 +729,12 @@ if (Subtitle && Subtitle.SmiFile) {
 					}
 					// 메인 홀드에 없는 내용만 남음
 					if (ni < main.body.length) {
-						var newLog = {
+						logs.push({
 								from: [oi, oi]
 							,	to  : [ni, main.body.length]
 							,	start: main.body[ni].start
 							,	end  : main.body[main.body.length - 1].start + 1
-						};
-						logs.push(newLog);
+						});
 					}
 				}
 				

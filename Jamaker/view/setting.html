@@ -13,8 +13,7 @@ function show(index) {
 	$("#settingNav > a.selected").removeClass("selected");
 	$("#settingNav > a:eq(" + index + ")").addClass("selected");
 	$("#settingArea > form.selected").removeClass("selected");
-	var id = $("#settingArea > form:eq(" + index + ")").addClass("selected").attr("id");
-	opened = id;
+	opened = $("#settingArea > form:eq(" + index + ")").addClass("selected").attr("id");
 }
 var opened = null;
 var submitFuncs = {};
@@ -674,15 +673,15 @@ $(function() {
 			setSaved("style", setting == opener.setting);
 		})(setting);
 
-        var selectParser = $("select[name=highlight_parser]");
-        var selectStyle  = $("select[name=highlight_style]" );
-        if (opener.highlights) {
-            for (var i = 0; i < opener.highlights.length; i++) {
-                var item = opener.highlights[i].trim();
-                if (item.length) {
-	                item = item.split(":");
-	                var value = item[0].trim();
-	                var name = (item.length > 1) ? item[1].trim() : value;
+		var selectParser = $("select[name=highlight_parser]");
+		var selectStyle  = $("select[name=highlight_style]" );
+		if (opener.highlights) {
+			for (var i = 0; i < opener.highlights.length; i++) {
+				var item = opener.highlights[i].trim();
+				if (item.length) {
+					var split = item.split(":");
+					var value = split[0].trim();
+					var name = (split.length > 1) ? split[1].trim() : value;
 	                selectStyle.append($("<option>").val(value).text(name));
                 }
             }

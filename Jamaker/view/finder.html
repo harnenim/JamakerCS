@@ -42,9 +42,6 @@ function getParams() {
 }
 
 $(function () {
-	var target; 
-	var values = {};
-	
 	$(".button-find"       ).on("click", function() { binder.runFind      (getParams()); });
 	$(".button-replace"    ).on("click", function() { binder.runReplace   (getParams()); });
 	$(".button-replace-all").on("click", function() { binder.runReplaceAll(getParams()); });

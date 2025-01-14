@@ -1,4 +1,4 @@
-var AutoCompleteTextarea = function(ta, sets, onSelect) {
+window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 	this.ta = ta;
 	this.sets = sets ? sets : [];
 	this.onSelect = onSelect;

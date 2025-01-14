@@ -30,7 +30,7 @@ function refreshTime(now, fr) {
 }
 var showFps = null;
 
-var Tab = function(text, path) {
+window.Tab = function(text, path) {
 	this.holdSelector = $("<div class='hold-selector'>");
 	this.holdArea = $("<div class='holds'>");
 	this.area = $("<div class='tab'>").append(this.holdSelector).append(this.holdArea);
@@ -670,7 +670,6 @@ function init(jsonSetting) {
 		}, 1);
 		
 		var currentTab = th.data("tab");
-		var saved = (currentTab.holds[currentTab.hold].input.val() != currentTab.holds[currentTab.hold].saved);
 		var saved = true;
 		for (var i = 0; i < currentTab.holds.length; i++) {
 			if (currentTab.holds[i].input.val() != currentTab.holds[i].saved) {
@@ -693,8 +692,7 @@ function init(jsonSetting) {
 						tab--;
 					}
 				}
-				var selector = "#tabSelector .th:eq(" + tab + ")";
-				$(selector).click();
+				$("#tabSelector .th:eq(" + tab + ")").click();
 			}, 1);
 		});
 	});
@@ -746,7 +744,8 @@ function setSetting(setting) {
 			canvas.height = 34;
 			
 			var c = canvas.getContext("2d");
-			var x, y;
+			var x;
+			var y;
 			x =  8; y =  8; c.moveTo(x, y-1.5); c.lineTo(x+3.5, y+2), c.lineTo(x-3.5, y+2); c.closePath();
 			x =  8; y = 25; c.moveTo(x, y+1.5); c.lineTo(x+3.5, y-2), c.lineTo(x-3.5, y-2); c.closePath();
 			x = 25; y =  8; c.moveTo(x-1.5, y); c.lineTo(x+2, y-3.5), c.lineTo(x+2, y+3.5); c.closePath();
@@ -835,11 +834,14 @@ function setSetting(setting) {
 	} else {
 		$(".for-frame-sync").hide();
 	}
-	var dll = setting.player.control.dll;
-	if (dll) {
-		var playerSetting = setting.player.control[dll];
-		if (playerSetting) {
-			binder.setPlayer(dll, playerSetting.path, playerSetting.withRun);
+	
+	{
+		var dll = setting.player.control.dll;
+		if (dll) {
+			var playerSetting = setting.player.control[dll];
+			if (playerSetting) {
+				binder.setPlayer(dll, playerSetting.path, playerSetting.withRun);
+			}
 		}
 	}
 	
@@ -1004,7 +1006,6 @@ function saveFile(asNew, isExport) {
 		asNew = true;
 	}
 	
-	var texts = [];
 	// 저장 전 일괄치환
 	if (setting.replace.length > 0) {
 		currentTab.replaceBeforeSave();
@@ -1086,11 +1087,7 @@ function saveTemp() {
 	}
 	
 	if (isChanged) {
-		var path = currentTab.path;
-		if (!path) {
-			path = "\\new.smi";
-		}
-		//binder.saveTemp(texts.join("\n\n\n<!-- 홀드 -->\n\n\n"), path);
+		var path = currentTab.path ? currentTab.path : "\\new.smi";
 		binder.saveTemp(currentTab.getSaveText(false), path);
 		for (var i = 0; i < currentTab.holds.length; i++) {
 			currentTab.holds[i].tempSavedText = texts[i];

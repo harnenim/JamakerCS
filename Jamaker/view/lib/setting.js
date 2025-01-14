@@ -390,4 +390,4 @@ var DEFAULT_SETTING =
 		}
 	}
 };
-var setting = DEFAULT_SETTING;
+window.setting = DEFAULT_SETTING;

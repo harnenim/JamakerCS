@@ -22,7 +22,7 @@ function linesToText(lines) {
 	return textLines.join("\n");
 }
 
-var SmiEditor = function(text) {
+window.SmiEditor = function(text) {
 	var editor = this;
 
 	this.initialize = false;
@@ -606,10 +606,9 @@ SmiEditor.activateKeyEvent = function() {
 								}
 								if (delLen) {
 									e.preventDefault();
-									editor.input.val(text.substring(0, cursor[0] - delLen) + text.substring(cursor[0]));
-									
-									cursor = cursor[0]-delLen;
-									editor.setCursor(cursor);
+									var pos = cursor[0] - delLen;
+									editor.input.val(text.substring(0, pos) + text.substring(cursor[0]));
+									editor.setCursor(pos);
 									editor.updateSync();
 									editor.scrollToCursor();
 								}
@@ -658,7 +657,6 @@ SmiEditor.activateKeyEvent = function() {
 								if (delLen) {
 									e.preventDefault();
 									editor.input.val(text.substring(0, cursor[0]) + text.substring(cursor[0] + delLen));
-									
 									editor.setCursor(cursor[0]);
 									editor.updateSync();
 									editor.scrollToCursor();
@@ -818,8 +816,7 @@ SmiEditor.prototype.setText = function(text, selection) {
 		this.setCursor(selection[0], selection[1]);
 		this.scrollToCursor();
 	} else {
-		var cursor = this.input[0].selectionStart;
-		this.setCursor(cursor);
+		this.setCursor(this.input[0].selectionStart);
 	}
 	
 	this.history.log();
@@ -929,6 +926,7 @@ SmiEditor.prototype.reSync = function(sync, limitRange) {
 		if (i < limitLine && line[LINE.SYNC]) {
 			var sync = line[LINE.SYNC];
 			var newSync = sync + add;
+			// 싱크 줄에는 다른 숫자가 없다고 가정
 			lines.push([line[LINE.TEXT].split(sync).join(newSync), newSync, line[LINE.TYPE]]);
 		} else {
 			lines.push(line);
@@ -1335,8 +1333,7 @@ SmiEditor.prototype.updateSync = function (range=null) {
 		self.colSync.find("span.sync").each(function(i) {
 			if (i < range[0]) return;
 			if (i >= range[1]) return;
-			var span = $(this);
-			span.remove();
+			$(this).remove();
 		});
 		
 		var toUpdate = textLines.length - (self.lines.length - range[1]) - range[0];
@@ -1383,7 +1380,6 @@ SmiEditor.prototype.updateSync = function (range=null) {
 								if (('0'<=c&&c<='9') || ('a'<=c&&c<='z') || ('A'<=c&&c<='Z')) {
 									break;
 								}
-								//html += c;
 							}
 							for (k = j; k < closeIndex; k++) {
 								var c = line[k];
@@ -1521,8 +1517,10 @@ SmiEditor.prototype.updateHighlight = function () {
 			return;
 		}
 		var lines = self.input.val().split("\n");
-
-		var changeBegin = 0; changeEnd = Math.min(lines.length, self.highlightLines.length);
+		
+		var add = 0;
+		var changeBegin = 0;
+		var changeEnd = Math.min(lines.length, self.highlightLines.length);
 		if (self.highlightLines.length) {
 			{	// 수정된 범위 찾기
 				var i;
@@ -1533,14 +1531,13 @@ SmiEditor.prototype.updateHighlight = function () {
 				}
 				changeBegin = i;
 				
-				var add = lines.length - self.highlightLines.length;
+				add = lines.length - self.highlightLines.length;
 				for (i = self.highlightLines.length - 1; i > (add > 0 ? changeBegin : changeBegin - add); i--) {
 					if (self.highlightLines[i] != lines[i + add]) {
 						break;
 					}
 				}
 				changeEnd = i + 1;
-				
 			}
 			
 			{	// 기존 결과물 삭제
@@ -1563,7 +1560,7 @@ SmiEditor.prototype.updateHighlight = function () {
 			if (SmiEditor.showColor) {
 				highlightLine.find(".hljs-attr").each(function() {
 					var $attr = $(this);
-					var attrName = $attr.text().trim()
+					var attrName = $attr.text().trim().toLowerCase();
 					if (attrName == "color" || attrName == "fade") {
 						var $value = $attr.next();
 						if ($value.hasClass("hljs-value")) {
@@ -1579,9 +1576,6 @@ SmiEditor.prototype.updateHighlight = function () {
 								}
 								color = "#" + hex;
 							}
-							var r = parseInt(color.substring(1, 3), 16);
-							var g = parseInt(color.substring(3, 5), 16);
-							var b = parseInt(color.substring(5, 7), 16);
 							$value.addClass("hljs-color").css({ borderColor: color });
 						}
 					}
@@ -1754,8 +1748,6 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 	this.needToUpdateSync = false;
 	this.syncUpdating = true;
 	
-	var start = new Date().getTime();
-	
 	var text = this.input.val();
 	
 	// 프로세스 분리할 필요가 있나?
@@ -1787,8 +1779,7 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 		self.colSync.find("span.sync").each(function(i) {
 			if (i < range[0]) return;
 			if (i >= range[1]) return;
-			var span = $(this);
-			span.remove();
+			$(this).remove();
 		});
 		
 		// 새로 그리기
@@ -1847,8 +1838,6 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 }
 SmiEditor.prototype.moveToSide = function(direction) {
 	if (direction == 0) return;
-	
-	var rate = SmiEditor.sync.unit;
 	
 	var text = this.input.val();
 	var range = this.getCursor();
@@ -2091,7 +2080,6 @@ SmiEditor.Finder = {
 		}
 	,	doReplace: function(selection) {
 			if (!selection) selection = [this.finding.input.selectionStart, this.finding.input.selectionEnd];
-			var index = -1;
 			var text = this.finding.text;
 			var find = this.finding.find;
 			if (!this.finding.withCase) {
@@ -2256,7 +2244,7 @@ SmiEditor.Addon = {
 			var margin = 40 * DPI;
 			var targets = [];
 			if (target) {
-				targets = [target];
+				targets.push(target);
 			} else {
 				for (var key in this.windows) {
 					targets.push(key);

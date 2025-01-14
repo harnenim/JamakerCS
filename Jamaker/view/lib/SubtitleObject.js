@@ -1,6 +1,6 @@
 // from Johap.cs
 
-var Johap = {
+window.Johap = {
 	cho_ : "ᄀᄁᄂᄃᄄᄅᄆᄇᄈᄉᄊᄋᄌᄍᄎᄏᄐᄑᄒ"
 ,	jung : "ᅡᅢᅣᅤᅥᅦᅧᅨᅩᅪᅫᅬᅭᅮᅯᅰᅱᅲᅳᅴᅵ"
 ,	jong : "　ᆨᆩᆪᆫᆬᆭᆮᆯᆰᆱᆲᆳᆴᆵᆶᆷᆸᆹᆺᆻᆼᆽᆾᆿᇀᇁᇂ"
@@ -34,7 +34,6 @@ var Johap = {
 	}
 }
 
-var Typing = {};
 setTimeout(function() { // 생성자 선언보다 나중에 돌아야 함
 	Typing.Mode =
 	{	typewriter: 0
@@ -245,7 +244,7 @@ setTimeout(function() { // 생성자 선언보다 나중에 돌아야 함
 	}
 });
 
-Typing = function(mode, cursor) {
+window.Typing = function(mode, cursor) {
 	this.typed = "";
 	this.typing = " ";
 	this.type = null;
@@ -539,7 +538,7 @@ Typing.prototype.outputWithCursorOnlyHangeul = function() {
 // from SubtitleObject.cs
 
 
-Subtitle = {
+window.Subtitle = {
 	SyncType:
 	{	comment: -1
 	,	normal: 0
@@ -616,7 +615,8 @@ Subtitle.Width =
 		if (isBoth) targetWidth /= 2;
 		
 		var whiteSpace = "";
-		var lastWidth = 0, thisWidth = 0;
+		var lastWidth = 0;
+		var thisWidth = 0;
 		if (thisWidth >= targetWidth) {
 			return whiteSpace;
 		}
@@ -931,7 +931,7 @@ Subtitle.Ass.prototype.toAttr = function() {
 }
 Subtitle.Ass.prototype.fromAttr = function(attrs) {
 	var text = "";
-
+	
 	var last = new Subtitle.Attr();
 	for (var i = 0; i < attrs.length; i++) {
 		var attr = attrs[i];
@@ -961,7 +961,7 @@ Subtitle.Ass.prototype.fromAttr = function(attrs) {
 	for (var i = 0; i < lines.length; i++) {
 		var line = lines[i];
 		var rubyList = [];
-
+		
 		var pos = 0;
 		var rStart = 0;
 		do {
@@ -1378,9 +1378,8 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 					
 				case "shake": {
 					var shake = { ms: 125, size: 1 };
-					var attr = attrs[i][1];
-					if (attr) {
-						attr = attr.split(",");
+					if (attrs[i][1]) {
+						var attr = attrs[i][1].split(",");
 						if (isFinite(attr[0])) shake.ms   = Number(attr[0]);
 						if (isFinite(attr[1])) shake.size = Number(attr[1]);
 					}
@@ -1391,7 +1390,7 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 				case "typing": {
 					var attr = attrs[i][1].split(' ');
 					var mode = attr[0];
-					var match;
+					var match = null;
 					var tAttr = null;
 
 					if (mode == "typewriter") {
@@ -1682,7 +1681,7 @@ Subtitle.Smi.toAttr = function(text) {
 					}
 					default: { // 속성값 없는 속성으로 확정, 새 속성 시작
 						tag.attrs[attr] = attr;
-						attrName = c;
+						attr = c;
 						state = 'a';
 					}
 				}
@@ -1793,7 +1792,7 @@ Subtitle.Smi.toAttr = function(text) {
 			}
 		}
 	}
-
+	
 	return result;
 }
 Subtitle.Smi.prototype.toAttr = function() {
@@ -2078,7 +2077,8 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 			if (j >= attrs.length) {
 				attrs[attrs.length - 1].text = attrs[attrs.length - 1].text + "{SB}";
 			}
-
+			
+			// 페이드 효과 추가 처리
 			var fadeColors = [];
 			if (hasFade) {
 				for (var j = 0; j < attrs.length; j++) {
@@ -2091,6 +2091,18 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 					continue;
 				}
 			}
+			
+			// 좌우로 흔들기
+			// 플레이어에서 사이즈 미지원해도 좌우로는 흔들리도록
+			var LRmin = "<font size=\"" + (3 * shake.size) + "\"></font>";
+			var LRmid = "<font size=\"" + (3 * shake.size) + "\"> </font>";
+			var LRmax = "<font size=\"" + (3 * shake.size) + "\">  </font>";
+			
+			// 상하로 흔들기
+			// 플레이어에서 사이즈 미지원하면 상하로 흔들리지 않음
+			var TBmin = "<font size=\"" + (0 * shake.size) + "\">　</font>";
+			var TBmid = "<font size=\"" + (1 * shake.size) + "\">　</font>";
+			var TBmax = "<font size=\"" + (2 * shake.size) + "\">　</font>";
 			
 			smis.splice(i, 1);
 			for (var j = 0; j < count; j++) {
@@ -2108,47 +2120,34 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 				}
 				var text = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
 				
-				{	// 좌우로 흔들기
-					// 플레이어에서 사이즈 미지원해도 좌우로는 흔들리도록
-					var tag = "<font size=\"" + (3 * shake.size) + "\">";
-					var min = "";
-					var mid = tag + " </font>";
-					var max = tag + "  </font>";
-					
-					switch (step) {
-						case 2:
-						case 5:
-						case 7:
-							text = text.split("{SL}").join(min).split("{SR}").join(max);
-							break;
-						case 0:
-						case 4:
-							text = text.split("{SL}").join(mid).split("{SR}").join(mid);
-							break;
-						default:
-							text = text.split("{SL}").join(max).split("{SR}").join(min);
-					}
+				// 좌우로 흔들기
+				switch (step) {
+					case 2:
+					case 5:
+					case 7:
+						text = text.split("{SL}").join(LRmin).split("{SR}").join(LRmax);
+						break;
+					case 0:
+					case 4:
+						text = text.split("{SL}").join(LRmid).split("{SR}").join(LRmid);
+						break;
+					default:
+						text = text.split("{SL}").join(LRmax).split("{SR}").join(LRmin);
 				}
-
-				{	// 상하로 흔들기
-					// 플레이어에서 사이즈 미지원하면 상하로 흔들리지 않도록
-					var min = "<font size=\"" + (0 * shake.size) + "\">　</font>";
-					var mid = "<font size=\"" + (1 * shake.size) + "\">　</font>";
-					var max = "<font size=\"" + (2 * shake.size) + "\">　</font>";
-					
-					switch (step) {
-						case 0:
-						case 3:
-						case 5:
-							text = text.split("{ST}").join(min + "<br>").split("{SB}").join("<br>" + max);
-							break;
-						case 2:
-						case 6:
-							text = text.split("{ST}").join(mid + "<br>").split("{SB}").join("<br>" + mid);
-							break;
-						default:
-							text = text.split("{ST}").join(max + "<br>").split("{SB}").join("<br>" + min);
-					}
+				
+				// 상하로 흔들기
+				switch (step) {
+					case 0:
+					case 3:
+					case 5:
+						text = text.split("{ST}").join(TBmin + "<br>").split("{SB}").join("<br>" + TBmax);
+						break;
+					case 2:
+					case 6:
+						text = text.split("{ST}").join(TBmid + "<br>").split("{SB}").join("<br>" + TBmid);
+						break;
+					default:
+						text = text.split("{ST}").join(TBmax + "<br>").split("{SB}").join("<br>" + TBmin);
 				}
 				
 				smis.splice(i + j, 0, new Subtitle.Smi((start * (count - j) + end * (j)) / count, (j == 0 ? smi.syncType : Subtitle.SyncType.inner), text));
@@ -2207,6 +2206,7 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 			var typingStart = attr.typing.start;
 			attr.typing = null;
 			
+			// 페이드 효과 추가 처리
 			var fadeColors = [];
 			if (hasFade) {
 				for (var j = 0; j < attrs.length; j++) {
@@ -2308,12 +2308,6 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 Subtitle.Smi.fillEmptySync = function(smis) {
 	for (var i = 0; i < smis.length - 1; i++) {
 		var smi = smis[i];
-		/*
-		if (smi.syncType != smis[i + 1].syncType) {
-			// 전후 싱크 타입이 맞을 때만 안전함
-			continue;
-		}
-		*/
 		
 		var lines = smi.text.split("\r\n").join("\n").split('\n');
 		if (lines.length < 2) {
@@ -2470,12 +2464,10 @@ Subtitle.SmiFile.prototype.fromSync = function(syncs) {
 
 	if (syncs.length > 0) {
 		var i = 0;
-
-		var last;
+		var last = null;
 		smis.push(new Subtitle.Smi().fromSync(syncs[i]));
-
 		smis.push(last = new Subtitle.Smi(syncs[i].end, syncs[i].endType, "&nbsp;"));
-
+		
 		for (i = 1; i < syncs.length; i++) {
 			if (last.start == syncs[i].start) {
 				last.fromAttr(syncs[i].text);
@@ -2552,14 +2544,14 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 				
 				hold.name = comment = comment.substring(5);
 				hold.pos = 1;
-				var index = comment.indexOf("|");
-				if (index) {
+				var nameIndex = comment.indexOf("|");
+				if (nameIndex) {
 					try {
-						hold.pos = Number(comment.substring(0, index));
+						hold.pos = Number(comment.substring(0, nameIndex));
 					} catch (e) {
 						console.log(e);
 					}
-					hold.name = comment.substring(index + 1);
+					hold.name = comment.substring(nameIndex + 1);
 				}
 				result.push(hold);
 				i--;
