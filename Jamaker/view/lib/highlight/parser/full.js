@@ -1,5 +1,5 @@
 SmiEditor.highlightText = function(text, state=null) {
-	var previewLine = $("<span>").data({ state: state });
+	const previewLine = $("<span>").data({ state: state });
 	
 	/*
 	 * 상태값
@@ -11,7 +11,7 @@ SmiEditor.highlightText = function(text, state=null) {
 	 * 속성값: =, ', "
 	 * 주석  : !
 	 */
-	var html = "";
+	let html = "";
 	switch (state) {
 		case '/': html = "<span class='hljs-tag'>"; break;
 		case '>': html = "<span class='hljs-name'>"; break;
@@ -20,8 +20,8 @@ SmiEditor.highlightText = function(text, state=null) {
 		case '!': html = "<span class='hljs-comment'>"; break;
 	}
 
-	for (var pos = 0; pos < text.length; pos++) {
-		var c = text[pos];
+	for (let pos = 0; pos < text.length; pos++) {
+		const c = text[pos];
 		switch (state) {
 			case '/': { // 태그?!
 				state = '<';

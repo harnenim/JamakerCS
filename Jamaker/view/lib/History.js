@@ -17,12 +17,12 @@ window.History = function(input, limit, doAfter) {
 	this.data = new Array(limit);
 	this.range = [0, 0];
 	
-	var text = this.lastText = input.val();
+	let text = this.lastText = input.val();
 	this.last = this.data[this.cnt = 0] = [this.lastText = text, [this.lastCursor = 0, -1]]; // [텍스트, [현재값 됐을 때 커서, 값 변경 직전 커서]]
 	this.isInserting = false;
 	
 	this.lastLogged = this.lastChanged = new Date().getTime();
-	var history = this;
+	let history = this;
 	input.on("input propertychange", function() {
 		history.passiveLog();
 		history.updateCursor();
@@ -37,8 +37,8 @@ window.History = function(input, limit, doAfter) {
 	*/
 };
 History.prototype.test = function() {
-	for (var i = this.range[0]; i < this.range[1]; i++) {
-		var data = this.data[i % this.limit];
+	for (let i = this.range[0]; i < this.range[1]; i++) {
+		let data = this.data[i % this.limit];
 		console.log(data[1]);
 	}
 }
@@ -80,7 +80,7 @@ History.prototype.passiveLog = function() {
 		this.last[1][1] = this.lastCursor;
 	}
 	
-	var text = this.input.val();
+	let text = this.input.val();
 	
 	if (this.isInserting && text.length < this.lastText.length) {
 		// 입력에서 삭제로 전환 시 기록
@@ -91,14 +91,14 @@ History.prototype.passiveLog = function() {
 		this.lastText = text;
 		this.isInserting = true;
 		
-		var now = new Date().getTime();
+		let now = new Date().getTime();
 		
 		// 마지막 로그 이후 후 5초 이상 경과한 상태에서
 		if (now - this.lastLogged < 5000) return;
 		
 		// 1초 동안 입력 없었으면 기록
 		this.lastChanged = now;
-		var history = this;
+		let history = this;
 		setTimeout(function() {
 			if (history.lastChanged == now) {
 				history.log();
@@ -138,7 +138,7 @@ History.prototype.updateCursor = function() {
 	return this.lastCursor = this.input[0].selectionEnd;
 };
 History.prototype.logIfCursorMoved = function() {
-	var cursor = this.input[0].selectionEnd;
+	let cursor = this.input[0].selectionEnd;
 	if (cursor != this.lastCursor) {
 		this.log();
 	}

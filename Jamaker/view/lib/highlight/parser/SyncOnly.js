@@ -1,5 +1,5 @@
 SmiEditor.highlightText = function(text, state=null) {
-	var previewLine = $("<span>");
+	const previewLine = $("<span>");
 	if (text.toUpperCase().startsWith("<SYNC ")) {
 		previewLine.addClass("hljs-comment");
 	}

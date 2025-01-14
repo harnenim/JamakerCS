@@ -72,7 +72,7 @@ confirm = function(msg, yes, no) {
 			}
 		}
 	} else {
-		var result = _confirm(msg);
+		let result = _confirm(msg);
 		if (result) {
 			if (yes) yes();
 		} else {
@@ -83,8 +83,8 @@ confirm = function(msg, yes, no) {
 }
 
 // opener가 있는 addon에서만 쓰임
-var loadAddonSetting;
-var saveAddonSetting;
+let loadAddonSetting;
+let saveAddonSetting;
 if (opener) {
 	opener.afterLoadAddonSetting = function(){};
 	loadAddonSetting = function(name, afterLoad) {

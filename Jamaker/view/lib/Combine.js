@@ -2,46 +2,46 @@ window.Combine = {
 	css: 'font-family: 맑은 고딕;'
 };
 {
-	var LINE = {
+	let LINE = {
 			TEXT: 0
 		,	SYNC: 1
 		,	TYPE: 2
 	};
-	var TYPE = {
+	let TYPE = {
 			TEXT: null
 		,	BASIC: 1
 		,	FRAME: 2
 		,	RANGE: 3
 	};
 	
-	var STIME = 0;
-	var STYPE = 1;
-	var ETIME = 2;
-	var ETYPE = 3;
-	var TEXT  = 4;
-	var LINES = 5;
-	var WIDTH = 6;
-	var UPPER = 4;
-	var LOWER = 5;
+	let STIME = 0;
+	let STYPE = 1;
+	let ETIME = 2;
+	let ETYPE = 3;
+	let TEXT  = 4;
+	let LINES = 5;
+	let WIDTH = 6;
+	let UPPER = 4;
+	let LOWER = 5;
 	
-	var LOG = false;
+	let LOG = false;
 	
 	function getWidth(smi, checker) {
 		// RUBY태그 문법이 미묘하게 달라서 가공 필요
 		smi = smi.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
 		
 		// 태그 밖의 공백문자 치환
-		var tags = smi.split("<");
-		for (var i = 1; i < tags.length; i++) {
-			var index = tags[i].indexOf(">");
+		let tags = smi.split("<");
+		for (let i = 1; i < tags.length; i++) {
+			let index = tags[i].indexOf(">");
 			if (index > 0) {
 				tags[i] = tags[i].substring(0, index) + tags[i].substring(index);
 			}
 		}
 		smi = tags.join("<");
 		
-		var lines = smi.split(/<br>/gi);
-		for (var i = 0; i < lines.length; i++) {
+		let lines = smi.split(/<br>/gi);
+		for (let i = 0; i < lines.length; i++) {
 			lines[i] = checker.html(lines[i]).text();
 		}
 		return checker.text(lines.join("\n")).width();
@@ -59,9 +59,9 @@ window.Combine = {
 		return Combine.checker.show();
 	}
 	
-	var syncLines = { basic: {}, frame: {}, range: {} };
+	let syncLines = { basic: {}, frame: {}, range: {} };
 	function getSyncLine(sync, type) {
-		var line = null;
+		let line = null;
 		switch (type) {
 			case TYPE.FRAME:
 				line = syncLines.frame[sync];
@@ -82,36 +82,36 @@ window.Combine = {
 	}
 	
 	function parse(text, checker) {
-		var lines = text.split("\n");
-		var parseds = [];
+		let lines = text.split("\n");
+		let parseds = [];
 		
 		// 싱크값을 제외하면 별도의 값을 취하지 않는 간이 파싱
 		// SMI는 태그 꺽쇠 내에서 줄바꿈을 하는 경우는 일반적으로 없다고 가정
-		for (var i = 0; i < lines.length; i++) {
-			var line = lines[i];
-			var parsed = [line, null, null];
+		for (let i = 0; i < lines.length; i++) {
+			let line = lines[i];
+			let parsed = [line, null, null];
 			parseds.push(parsed);
 			
-			var j = 0;
-			var k = 0;
-			var hasSync = false;
-			var sync = 0;
+			let j = 0;
+			let k = 0;
+			let hasSync = false;
+			let sync = 0;
 			
 			while ((k = line.indexOf("<", j)) >= 0) {
 				// 태그 열기
 				j = k + 1;
 
 				// 태그 닫힌 곳까지 탐색
-				var closePos = line.indexOf(">", j);
+				let closePos = line.indexOf(">", j);
 				if (j < closePos) {
 					// 태그명 찾기
 					for (k = j; k < closePos; k++) {
-						var c = line[k];
+						let c = line[k];
 						if (c == ' ' || c == '\t' || c == '"' || c == "'" || c == '\n') {
 							break;
 						}
 					}
-					var tagName = line.substring(j, k);
+					let tagName = line.substring(j, k);
 					j = k;
 					
 					hasSync = (tagName.toUpperCase() == "SYNC");
@@ -120,26 +120,26 @@ window.Combine = {
 						while (j < closePos) {
 							// 속성 찾기
 							for (; j < closePos; j++) {
-								var c = line[j];
+								let c = line[j];
 								if (('0'<=c&&c<='9') || ('a'<=c&&c<='z') || ('A'<=c&&c<='Z')) {
 									break;
 								}
 								//html += c;
 							}
 							for (k = j; k < closePos; k++) {
-								var c = line[k];
+								let c = line[k];
 								if ((c<'0'||'9'<c) && (c<'a'||'z'<c) && (c<'A'||'Z'<c)) {
 									break;
 								}
 							}
-							var attrName = line.substring(j, k);
+							let attrName = line.substring(j, k);
 							j = k;
 							
 							// 속성 값 찾기
 							if (line[j] == "=") {
 								j++;
 								
-								var q = line[j];
+								let q = line[j];
 								if (q == "'" || q == '"') { // 따옴표로 묶인 경우
 									k = line.indexOf(q, j + 1);
 									k = (0 <= k && k < closePos) ? k : closePos;
@@ -150,7 +150,7 @@ window.Combine = {
 									k = line.indexOf("\t");
 									k = (0 <= k && k < closePos) ? k : closePos;
 								}
-								var value = line.substring(j + q.length, k);
+								let value = line.substring(j + q.length, k);
 								
 								if (q.length && k < closePos) { // 닫는 따옴표가 있을 경우
 									j += q.length + value.length + q.length;
@@ -176,7 +176,7 @@ window.Combine = {
 			if (parsed[LINE.SYNC] = sync) { // 어차피 0이면 플레이어에서도 씹힘
 				// 화면 싱크 체크
 				parsed[LINE.TYPE] = TYPE.BASIC;
-				var typeCss = "";
+				let typeCss = "";
 				if (line.indexOf(" >") > 0) {
 					parsed[LINE.TYPE] = TYPE.FRAME;
 					typeCss = " frame";
@@ -194,19 +194,19 @@ window.Combine = {
 		}
 		parseds.push(["&nbsp;", 99999999, TYPE.BASIC]);
 		
-		var syncs = [];
-		var last = null;
-		for (var i = 0; i < parseds.length; i++) {
-			var parsed = parseds[i];
+		let syncs = [];
+		let last = null;
+		for (let i = 0; i < parseds.length; i++) {
+			let parsed = parseds[i];
 			if (parsed[LINE.TYPE]) {
 				if (last) {
-					var text = [];
-					for (var j = last[0] + 1; j < i; j++) {
+					let text = [];
+					for (let j = last[0] + 1; j < i; j++) {
 						text.push(parseds[j][LINE.TEXT]);
 					}
 					text = text.join("\n");
 					if (text.split("&nbsp;").join("").trim()) {
-						var lineCount = text.split(/<br>/gi).length;
+						let lineCount = text.split(/<br>/gi).length;
 						//[STIME, STYPE, ETIME, ETYPE, TEXT, LINES, WIDTH];
 						syncs.push([last[LINE.SYNC], last[LINE.TYPE], parsed[LINE.SYNC], parsed[LINE.TYPE], text, lineCount, getWidth(text, checker)]);
 					}
@@ -219,21 +219,21 @@ window.Combine = {
 	}
 	
 	Combine.combine = function(inputUpper, inputLower) {
-		var hljs = $(".hljs").hide(); // 결합 로직 돌아갈 때 문법 하이라이트가 있으면 성능 저하됨
-		var checker = getChecker();
-		var upperSyncs = parse(inputUpper, checker);
-		var lowerSyncs = parse(inputLower, checker);
+		let hljs = $(".hljs").hide(); // 결합 로직 돌아갈 때 문법 하이라이트가 있으면 성능 저하됨
+		let checker = getChecker();
+		let upperSyncs = parse(inputUpper, checker);
+		let lowerSyncs = parse(inputLower, checker);
 		
-		var ui = 0;
-		var li = 0;
-		var groups = [];
-		var group = null;
+		let ui = 0;
+		let li = 0;
+		let groups = [];
+		let group = null;
 		while  ((ui <= upperSyncs.length) && (li <= lowerSyncs.length)) {
 			if ((ui == upperSyncs.length) && (li == lowerSyncs.length)) {
 				break;
 			}
-			var us = (ui < upperSyncs.length) ? upperSyncs[ui] : [99999999, 99999999, null, 0];
-			var ls = (li < lowerSyncs.length) ? lowerSyncs[li] : [99999999, 99999999, null, 0];
+			let us = (ui < upperSyncs.length) ? upperSyncs[ui] : [99999999, 99999999, null, 0];
+			let ls = (li < lowerSyncs.length) ? lowerSyncs[li] : [99999999, 99999999, null, 0];
 			if (us[STIME] < ls[STIME]) { // 위가 바뀜
 				if ((us[STYPE] == TYPE.RANGE) // 중간 싱크
 				 || (group && group.lower.length && (group.lower[group.lower.length - 1][ETIME] > us[STIME]))
@@ -294,31 +294,31 @@ window.Combine = {
 			}
 		}
 
-		for (var gi = 0; gi < groups.length; gi++) {
-			var group = groups[gi];
+		for (let gi = 0; gi < groups.length; gi++) {
+			let group = groups[gi];
 			group.lines = [];
-			var last = null;
+			let last = null;
 			
 			if (LOG) console.log("group width: " + group.maxWidth);
 			
 			// 팟플레이어 왼쪽 정렬에서 좌우로 흔들리지 않도록 잡아줌
 			// ... 사실 폰트에 따라 흔들리긴 함...
-			var lists = [group.upper, group.lower];
-			for (var i = 0; i < lists.length; i++) {
-				var list = lists[i];
+			let lists = [group.upper, group.lower];
+			for (let i = 0; i < lists.length; i++) {
+				let list = lists[i];
 				
-				for (var j = 0; j < list.length; j++) {
+				for (let j = 0; j < list.length; j++) {
 					// 줄 길이 채워주기
-					var sync = list[j];
+					let sync = list[j];
 					if (sync[WIDTH] < group.maxWidth) {
-						var line = sync[TEXT];
-						var lines = line.split(/<br>/gi);
+						let line = sync[TEXT];
+						let lines = line.split(/<br>/gi);
 						
 						// 여러 줄일 경우 제일 긴 줄 찾기
 						if (lines.length > 1) {
-							var maxWidth = 0;
-							for (var k = 0; k < lines.length; k++) {
-								var width = getWidth(lines[k], checker);
+							let maxWidth = 0;
+							for (let k = 0; k < lines.length; k++) {
+								let width = getWidth(lines[k], checker);
 								if (width > maxWidth) {
 									maxWidth = width;
 									line = lines[k];
@@ -327,16 +327,16 @@ window.Combine = {
 						}
 						
 						// 여백을 붙여서 제일 적절한 값 찾기
-						var pad = "";
-						var width = getWidth(line, checker);
-						var lastPad;
-						var lastWidth;
+						let pad = "";
+						let width = getWidth(line, checker);
+						let lastPad;
+						let lastWidth;
 						if (LOG) console.log(line.split("&nbsp;").join(" ") + ": " + width);
 						do {
 							lastPad = pad;
 							lastWidth = width;
 							pad = lastPad + " ";
-							var curr = "​" + pad + line + pad + "​";
+							let curr = "​" + pad + line + pad + "​";
 							width = getWidth(curr, checker);
 							if (LOG) console.log(curr.split("&nbsp;").join(" ") + ": " + width);
 							
@@ -345,25 +345,25 @@ window.Combine = {
 						if ((width - group.maxWidth) > (group.maxWidth - lastWidth)) {
 							pad = lastPad;
 							if (LOG) {
-								var curr = "​" + pad + line + pad + "​";
+								let curr = "​" + pad + line + pad + "​";
 								width = getWidth(curr, checker);
 							}
 						}
 						pad = pad.split("&nbsp;").join(" ");
-						for (var k = 0; k < lines.length; k++) {
-							var line = lines[k].split("​").join(""); // Zero-Width-Space 중복으로 들어가지 않도록
+						for (let k = 0; k < lines.length; k++) {
+							let line = lines[k].split("​").join(""); // Zero-Width-Space 중복으로 들어가지 않도록
 							
 							if ($("<span>").html(line).text().split("　").join("").split(" ").join("").length) {
 								// 공백 줄인 경우는 별도 처리 하지 않음
 								// 태그로 감싼 줄은 태그 안에 공백문자 넣기
-								var prev = "";
-								var next = "";
+								let prev = "";
+								let next = "";
 								while (line.startsWith("\n")) {
 									prev += "\n";
 									line = line.substring(1);
 								}
 								while (line.startsWith("<")) {
-									var tagEnd = line.indexOf(">") + 1;
+									let tagEnd = line.indexOf(">") + 1;
 									if (tagEnd == 0) {
 										break;
 									}
@@ -375,7 +375,7 @@ window.Combine = {
 									line = line.substring(tagEnd);
 								}
 								while (line.endsWith(">")) {
-									var tagStart = line.lastIndexOf("<");
+									let tagStart = line.lastIndexOf("<");
 									if (tagStart < 0) {
 										break;
 									}
@@ -390,7 +390,7 @@ window.Combine = {
 					}
 					
 					// 줄 높이 맞춰주기
-					for (var k = sync[LINES]; k < group.maxLines[i]; k++) {
+					for (let k = sync[LINES]; k < group.maxLines[i]; k++) {
 						sync[TEXT] = "<b>　</b><br>" + sync[TEXT];
 					}
 				}
@@ -401,8 +401,8 @@ window.Combine = {
 				if ((ui == group.upper.length) && (li == group.lower.length)) {
 					break;
 				}
-				var us = (ui < group.upper.length) ? group.upper[ui] : [99999999, 99999999, null, 0];
-				var ls = (li < group.lower.length) ? group.lower[li] : [99999999, 99999999, null, 0];
+				let us = (ui < group.upper.length) ? group.upper[ui] : [99999999, 99999999, null, 0];
+				let ls = (li < group.lower.length) ? group.lower[li] : [99999999, 99999999, null, 0];
 				
 				if (us[STIME] < ls[STIME]) { // 위가 바뀜
 					if (!last) { // 첫 싱크
@@ -413,14 +413,14 @@ window.Combine = {
 						if (last[STIME] == us[STIME]) {
 							last[UPPER] = us;
 						} else {
-							var curr = [us[STIME], us[STYPE], last[2], last[3], us, last[LOWER]];
+							let curr = [us[STIME], us[STYPE], last[2], last[3], us, last[LOWER]];
 							last[ETIME] = us[STIME];
 							last[ETYPE] = us[STYPE];
 							group.lines.push(last = curr);
 						}
 						
 						if (us[ETIME] < last[ETIME]) { // 위가 먼저 끝남
-							var curr = [us[ETIME], us[ETYPE], last[ETIME], last[ETYPE], null, last[LOWER]];
+							let curr = [us[ETIME], us[ETYPE], last[ETIME], last[ETYPE], null, last[LOWER]];
 							last[ETIME] = us[ETIME];
 							last[ETYPE] = us[ETYPE];
 							group.lines.push(last = curr);
@@ -441,14 +441,14 @@ window.Combine = {
 						if (last[STIME] == ls[STIME]) {
 							last[LOWER] = ls;
 						} else {
-							var curr = [ls[STIME], ls[STYPE], last[ETIME], last[ETYPE], last[UPPER], ls];
+							let curr = [ls[STIME], ls[STYPE], last[ETIME], last[ETYPE], last[UPPER], ls];
 							last[ETIME] = ls[STIME];
 							last[ETYPE] = ls[STYPE];
 							group.lines.push(last = curr);
 						}
 						
 						if (ls[ETIME] < last[ETIME]) { // 아래가 먼저 끝남
-							var curr = [ls[ETIME], ls[ETYPE], last[ETIME], last[ETYPE], last[TEXT], null];
+							let curr = [ls[ETIME], ls[ETYPE], last[ETIME], last[ETYPE], last[TEXT], null];
 							last[ETIME] = ls[ETIME];
 							last[ETYPE] = ls[ETYPE];
 							group.lines.push(last = curr);
@@ -461,7 +461,7 @@ window.Combine = {
 					li++;
 					
 				} else { // 둘이 같이 바뀜(그룹 첫 싱크에서만 가능)
-					var ss = us;
+					let ss = us;
 					if (ls[ETIME] < us[ETIME]) {
 						ss = ls;
 						li++;
@@ -475,20 +475,20 @@ window.Combine = {
 		checker.text("").hide();
 		hljs.show();
 		
-		var lines = [];
-		var lastSync = 0;
-		for (var gi = 0; gi < groups.length; gi++) {
-			var group = groups[gi];
-			var forEmpty = [[], []];
-			for (var i = 0; i < 2; i++) {
-				for (var j = 0; j < group.maxLines[i]; j++) {
+		let lines = [];
+		let lastSync = 0;
+		for (let gi = 0; gi < groups.length; gi++) {
+			let group = groups[gi];
+			let forEmpty = [[], []];
+			for (let i = 0; i < 2; i++) {
+				for (let j = 0; j < group.maxLines[i]; j++) {
 					forEmpty[i].push("<b>　</b>");
 				}
 				forEmpty[i] = forEmpty[i].join("<br>");
 			}
 			
-			for (var i = 0; i < group.lines.length; i++) {
-				var line = group.lines[i];
+			for (let i = 0; i < group.lines.length; i++) {
+				let line = group.lines[i];
 				
 				if (lastSync < line[STIME]) {
 					if (gi > 0) { // 처음일 땐 제외
@@ -519,12 +519,12 @@ window.Combine = {
 
 if (Subtitle && Subtitle.SmiFile) {
 	Subtitle.SmiFile.textToHolds = function(text) {
-		var texts = text.split("\r\n").join("\n").split("\n<!-- Hold=");
-		var holds = [{ text: texts[0] }];
-		for (var i = 1; i < texts.length; i++) {
-			var hold = texts[i];
-			var begin = hold.indexOf("\n");
-			var end = hold.indexOf("-->");
+		let texts = text.split("\r\n").join("\n").split("\n<!-- Hold=");
+		let holds = [{ text: texts[0] }];
+		for (let i = 1; i < texts.length; i++) {
+			let hold = texts[i];
+			let begin = hold.indexOf("\n");
+			let end = hold.indexOf("-->");
 			if (begin < 0 || end < 0) {
 				holds[0].text += "\n<!-- Hold=" + hold;
 				continue;
@@ -533,9 +533,9 @@ if (Subtitle && Subtitle.SmiFile) {
 			if (end < hold.length - 3) {
 				holds[0].text += hold.substring(end);
 			}
-			var name = hold.substring(0, begin).trim();
-			var pos = 1;
-			var index = name.indexOf("|");
+			let name = hold.substring(0, begin).trim();
+			let pos = 1;
+			let index = name.indexOf("|");
 			if (index) {
 				try {
 					pos = Number(name.substring(0, index));
@@ -552,35 +552,35 @@ if (Subtitle && Subtitle.SmiFile) {
 		}
 		
 		// SMI 파일 역정규화
-		var normalized = new Subtitle.SmiFile(holds[0].text).antiNormalize();
+		let normalized = new Subtitle.SmiFile(holds[0].text).antiNormalize();
 		normalized[0].pos = 0;
 		normalized[0].name = "메인";
 		holds = normalized.concat(holds.slice(1));
 		holds[0].text = holds[0].toTxt().trim();
-		for (var i = 1; i < normalized.length; i++) {
+		for (let i = 1; i < normalized.length; i++) {
 			// 내포된 홀드는 종료싱크가 빠졌을 수 있음
-			var hold = holds[i];
+			let hold = holds[i];
 			if (hold.next && hold.body[hold.body.length - 1].text.split("&nbsp;").join("").trim().length > 0) {
 				hold.body.push(new Subtitle.Smi(hold.next.start, hold.next.syncType, "&nbsp;"));
 			}
 			holds[i].text = hold.toTxt().trim();
 		}
-		for (var i = normalized.length; i < holds.length; i++) {
+		for (let i = normalized.length; i < holds.length; i++) {
 			holds[i].text = new Subtitle.SmiFile(holds[i].text).antiNormalize()[0].toTxt().trim();
 		}
 		return holds;
 	}
 	Subtitle.SmiFile.holdsToText = function(origHolds, withNormalize=true, withCombine=true, withComment=true) {
-		var result = [];
-		var logs = [];
-		var originBody = [];
+		let result = [];
+		let logs = [];
+		let originBody = [];
 		
-		var main = new Subtitle.SmiFile(origHolds[0].text);
+		let main = new Subtitle.SmiFile(origHolds[0].text);
 		withCombine = withCombine && origHolds.length > 1;
 		
 		// 정규화 등 작업
 		if (withNormalize) {
-			var normalized = Subtitle.Smi.normalize(main.body, withComment && !withCombine);
+			let normalized = Subtitle.Smi.normalize(main.body, withComment && !withCombine);
 			originBody = normalized.origin;
 			logs = normalized.logs;
 		} else {
@@ -591,12 +591,12 @@ if (Subtitle && Subtitle.SmiFile) {
 		
 		if (withCombine) {
 			// 시작 시간 순으로 저장
-			var holds = origHolds.slice(1);
+			let holds = origHolds.slice(1);
 			holds.sort(function(a, b) {
 				return a.start - b.start;
 			});
-			for (var hi = 0; hi < holds.length; hi++) {
-				var hold = holds[hi];
+			for (let hi = 0; hi < holds.length; hi++) {
+				let hold = holds[hi];
 				result[hold.resultIndex = (hi + 1)] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + hold.text.split("<").join("<​").split(">").join("​>") + "\n-->";
 			}
 			
@@ -604,8 +604,8 @@ if (Subtitle && Subtitle.SmiFile) {
 			// 단, 아래쪽부터 쌓아야 함
 			holds = origHolds.slice(0);
 			holds.sort(function(a, b) {
-				var aPos = a.viewPos;
-				var bPos = b.viewPos;
+				let aPos = a.viewPos;
+				let bPos = b.viewPos;
 				if (aPos < 0) {
 					if (bPos > 0) {
 						return -1;
@@ -622,10 +622,10 @@ if (Subtitle && Subtitle.SmiFile) {
 				return 0;
 			});
 			
-			var holdSmis = [];
-			for (var hi = 1; hi < holds.length; hi++) {
-				var hold = holds[hi];
-				var smi = holdSmis[hi] = new Subtitle.SmiFile(hold.text);
+			let holdSmis = [];
+			for (let hi = 1; hi < holds.length; hi++) {
+				let hold = holds[hi];
+				let smi = holdSmis[hi] = new Subtitle.SmiFile(hold.text);
 				smi.header = smi.footer = "";
 				if (withNormalize) {
 					Subtitle.Smi.normalize(smi.body, false);
@@ -635,12 +635,12 @@ if (Subtitle && Subtitle.SmiFile) {
 					continue;
 				}
 				
-				var start = smi.body[0].start;
-				var end = smi.body[smi.body.length - 1].start;
+				let start = smi.body[0].start;
+				let end = smi.body[smi.body.length - 1].start;
 				
 				// 메인에서 홀드와 겹치는 영역 찾기
-				var mainBegin = 0;
-				for (var i = 0; i <= main.body.length; i++) {
+				let mainBegin = 0;
+				for (let i = 0; i <= main.body.length; i++) {
 					if (i == main.body.length) {
 						mainBegin = i;
 						break;
@@ -659,7 +659,7 @@ if (Subtitle && Subtitle.SmiFile) {
 					mainBegin++;
 				}
 				
-				var mainEnd = mainBegin;
+				let mainEnd = mainBegin;
 				for (; mainEnd < main.body.length; mainEnd++) {
 					if (main.body[mainEnd].start > end) {
 						break;
@@ -672,12 +672,12 @@ if (Subtitle && Subtitle.SmiFile) {
 				}
 				
 				// 홀드 결합
-				var sliced = new Subtitle.SmiFile();
+				let sliced = new Subtitle.SmiFile();
 				sliced.body = main.body.slice(mainBegin, mainEnd);
 				
-				var slicedText = sliced.toTxt().trim();
-				var combineText = smi.toTxt().trim();
-				var combined = new Subtitle.SmiFile(((hold.pos < 0) ? Combine.combine(slicedText, combineText) : Combine.combine(combineText, slicedText)).join("\n"));
+				let slicedText = sliced.toTxt().trim();
+				let combineText = smi.toTxt().trim();
+				let combined = new Subtitle.SmiFile(((hold.pos < 0) ? Combine.combine(slicedText, combineText) : Combine.combine(combineText, slicedText)).join("\n"));
 				// 원칙상 normalized.result를 다뤄야 맞을 것 같지만...
 				end = (mainEnd < main.body.length) ? main.body[mainEnd].start : 999999999;
 				main.body = main.body.slice(0, mainBegin).concat(combined.body).concat(main.body.slice(mainEnd));
@@ -687,8 +687,8 @@ if (Subtitle && Subtitle.SmiFile) {
 				if (withCombine) {
 					// 홀드 결합 있을 경우 주석처리 재계산
 					logs = [];
-					var oi = 0;
-					var ni = 0;
+					let oi = 0;
+					let ni = 0;
 					
 					while ((oi < originBody.length) && (ni < main.body.length)) {
 						if ((originBody[oi].start == main.body[ni].start)
@@ -699,7 +699,7 @@ if (Subtitle && Subtitle.SmiFile) {
 						}
 						
 						// 변환결과가 원본과 동일하지 않은 범위 찾기
-						var newLog = {
+						let newLog = {
 								from: [oi, originBody.length]
 							,	to  : [ni, main.body.length]
 							,	start: main.body[ni].start
@@ -738,9 +738,9 @@ if (Subtitle && Subtitle.SmiFile) {
 					}
 				}
 				
-				var origin = new Subtitle.SmiFile();
-				for (var i = 0; i < logs.length; i++) {
-					var log = logs[i];
+				let origin = new Subtitle.SmiFile();
+				for (let i = 0; i < logs.length; i++) {
+					let log = logs[i];
 					if (!log.end) {
 						if (log.from[1] < originBody.length - 1) {
 							log.end = originBody[log.from[1]].start;
@@ -749,15 +749,15 @@ if (Subtitle && Subtitle.SmiFile) {
 						}
 					}
 					origin.body = originBody.slice(log.from[0], log.from[1]);
-					var comment = origin.toTxt().trim();
+					let comment = origin.toTxt().trim();
 					
 					// 메인 홀드 내용이 없으면 다른 홀드가 통째로 들어왔는지 확인
 					if (comment.length == 0) {
-						var start = log.to[0];
-						for (var hi = 1; hi < holds.length; hi++) {
-							var smi = holdSmis[hi];
-							var isImported = true;
-							for (var j = 0; j < smi.body.length; j++) {
+						let start = log.to[0];
+						for (let hi = 1; hi < holds.length; hi++) {
+							let smi = holdSmis[hi];
+							let isImported = true;
+							for (let j = 0; j < smi.body.length; j++) {
 								if (smi.body[j].start != main.body[start+j].start) {
 									isImported = false;
 									break;
@@ -774,12 +774,12 @@ if (Subtitle && Subtitle.SmiFile) {
 								}
 							}
 							if (isImported) {
-								var hold = holds[hi];
+								let hold = holds[hi];
 								comment = "Hold=" + hold.pos + "|" + hold.name;
 								result[hold.resultIndex] = "";
 								if (smi.body.length < (log.to[1] - log.to[0])) {
 									// 현재 홀드가 내포 홀드의 일부일 경우 나머지 구간 분할
-									var nextLog = {
+									let nextLog = {
 											from: log.from
 										,	to  : [log.to[0] + smi.body.length, log.to[1]]
 										,	end : log.end
@@ -789,8 +789,8 @@ if (Subtitle && Subtitle.SmiFile) {
 								}
 								
 								if (withComment) {
-									for (var j = 0; j < smi.body.length; j++) {
-										var sync = smi.body[j];
+									for (let j = 0; j < smi.body.length; j++) {
+										let sync = smi.body[j];
 										if (sync.comment) {
 											main.body[start + j].text = sync.comment + "\n" + sync.text;
 										}
@@ -805,7 +805,7 @@ if (Subtitle && Subtitle.SmiFile) {
 			}
 		}
 		result[0] = main.toTxt();
-		for (var i = 1; i < result.length; i++) {
+		for (let i = 1; i < result.length; i++) {
 			if (result[i].length == 0) {
 				result.splice(i--, 1);
 			}

@@ -7,17 +7,17 @@
 <script src="lib/SmiEditor.js"></script>
 <script src="lib/SubtitleObject.js"></script>
 <script>
-var title = document.getElementsByTagName("title")[0];
-var lastTab = null;
-var time = 0;
-var showText = [];
-var hasLine = [];
-var indexes = [];
-var normalizedLines = [];
-var normalizedIndex = [];
+let title = document.getElementsByTagName("title")[0];
+let lastTab = null;
+let time = 0;
+let showText = [];
+let hasLine = [];
+let indexes = [];
+let normalizedLines = [];
+let normalizedIndex = [];
 
-var style = null;
-var setting = {}
+let style = null;
+let setting = {}
 function setSetting(jsonSetting) {
 	setting = JSON.parse(jsonSetting);
 	if (style == null) {
@@ -25,9 +25,9 @@ function setSetting(jsonSetting) {
 	}
 	style.html("#viewer {\n" + setting.viewer.css + "}");
 }
-var lines = [[],[],[]];
-var viewer = null;
-var viewers = [];
+let lines = [[],[],[]];
+let viewer = null;
+let viewers = [];
 function setLines(newLines) {
 	lines = JSON.parse(newLines);
 	if (lines.length == 0) {
@@ -35,12 +35,12 @@ function setLines(newLines) {
 	}
 	normalizedLines = [];
 	
-	var receiveTime = time;
+	let receiveTime = time;
 	time = -1;
 	if (viewer) {
 		viewer.empty();
 		viewers = [];
-		for (var i = 0; i < lines.length; i++) {
+		for (let i = 0; i < lines.length; i++) {
 			viewer.append(viewers[i] = $("<div>"));
 		}
 	}
@@ -49,28 +49,28 @@ function setLines(newLines) {
 function setTitle(text) {
 	title.innerText = text;
 }
-var titleTime = -1;
+let titleTime = -1;
 function refreshTime(receiveTime, withoutTitle) {
 	if (receiveTime != titleTime) {
 		if (!withoutTitle) {
-			var h = receiveTime;
-			var ms = h % 1000; h = (h - ms) / 1000;
-			var s  = h %   60; h = (h -  s) /   60;
-			var m  = h %   60; h = (h -  m) /   60;
+			let h = receiveTime;
+			let ms = h % 1000; h = (h - ms) / 1000;
+			let s  = h %   60; h = (h -  s) /   60;
+			let m  = h %   60; h = (h -  m) /   60;
 			setTitle("미리보기 - " + h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms);
 		}
 		titleTime = receiveTime;
 	}
 	
-	for (var hold = 0; hold < lines.length; hold++) {
+	for (let hold = 0; hold < lines.length; hold++) {
 		if (receiveTime < time || time < 0) {
 			// 역방향 탐색일 경우 초기화
 			indexes[hold] = -1;
 			viewers[hold].empty();
 		}
 		// 현재 시간 이전의 가장 마지막 싱크 찾기
-		var index = indexes[hold];
-		for (var j = (indexes[hold] < 0 ? 0 : indexes[hold]); j < lines[hold].length; j++) {
+		let index = indexes[hold];
+		for (let j = (indexes[hold] < 0 ? 0 : indexes[hold]); j < lines[hold].length; j++) {
 			if (lines[hold][j][LINE.SYNC]) {
 				if (lines[hold][j][LINE.SYNC] > receiveTime) {
 					break;
@@ -82,8 +82,8 @@ function refreshTime(receiveTime, withoutTitle) {
 			// 변화 없음
 			if (normalizedLines[hold]) {
 				// 현재 시간 이전의 가장 마지막 싱크 찾기
-				var index = normalizedIndex[hold];
-				for (var j = 0; j < normalizedLines[hold].length; j++) {
+				let index = normalizedIndex[hold];
+				for (let j = 0; j < normalizedLines[hold].length; j++) {
 					if (normalizedLines[hold][j].start > receiveTime) {
 						break;
 					}
@@ -107,15 +107,15 @@ function refreshTime(receiveTime, withoutTitle) {
 		
 		normalizedLines[hold] = null;
 		hasLine[hold] = false;
-		var showLines = [];
-		var nextSyncLine = null;
-		for (var j = indexes[hold] + 1; j < lines[hold].length; j++) {
+		let showLines = [];
+		let nextSyncLine = null;
+		for (let j = indexes[hold] + 1; j < lines[hold].length; j++) {
 			if (lines[hold][j][LINE.SYNC]) {
 				nextSyncLine = lines[hold][j];
 				break;
 			}
-			var line = lines[hold][j][LINE.TEXT].split(/<br>/gi);
-			for (var k = 0; k < line.length; k++) {
+			let line = lines[hold][j][LINE.TEXT].split(/<br>/gi);
+			for (let k = 0; k < line.length; k++) {
 				if (k == 0 || k < line.length - 1 || line[k].length) {
 					showLines.push(line[k]);
 				}
@@ -123,7 +123,7 @@ function refreshTime(receiveTime, withoutTitle) {
 		}
 		// 줄표 있을 때 왼쪽 정렬
 		if (setting.viewer.useAlign && showLines.length < 4) { // 줄 개수 제한 없으면 싱크 안 찍은 전체 내용에 대해 동작해버림
-			for (var k = 0; k < showLines.length; k++) {
+			for (let k = 0; k < showLines.length; k++) {
 				if ($("<span>").html(showLines[k][0]).text()[0] == '-') {
 					hasLine[hold] = true;
 					break;
@@ -131,8 +131,8 @@ function refreshTime(receiveTime, withoutTitle) {
 			}
 		}
 		if (hasLine[hold]) {
-			for (var j = 0; j < showLines.length; j++) {
-				var line = showLines[j];
+			for (let j = 0; j < showLines.length; j++) {
+				let line = showLines[j];
 				if ($("<span>").html(line).text()[0] != '-') {
 					line = "<span style='opacity: 0;'>-</span>" + line;
 				}
@@ -146,7 +146,7 @@ function refreshTime(receiveTime, withoutTitle) {
 		 && nextSyncLine
 		 && setting.saveWithNormalize
 		) {
-			var toNormalize = new Subtitle.SmiFile(lines[hold][indexes[hold]][LINE.TEXT] + "\n" + showText[hold] + "\n" + nextSyncLine[LINE.TEXT]);
+			let toNormalize = new Subtitle.SmiFile(lines[hold][indexes[hold]][LINE.TEXT] + "\n" + showText[hold] + "\n" + nextSyncLine[LINE.TEXT]);
 			Subtitle.Smi.normalize(toNormalize.body);
 			if (toNormalize.body.length > 2) {
 				normalizedLines[hold] = toNormalize.body.slice(0, toNormalize.body.length - 1);
@@ -163,21 +163,21 @@ function setTextToView(text, hold) {
 	text = text.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
 	
 	{	// font size도 추가 작업
-		var j = 0;
-		var begin = 0;
+		let j = 0;
+		let begin = 0;
 		while ((begin = text.toUpperCase().indexOf("<FONT", j)) >= 0) {
 			if (begin > text.length) {
 				break;
 			}
-			var end = text.indexOf(">", begin);
+			let end = text.indexOf(">", begin);
 			if (end < 0) break;
 			
-			var tag = text.substring(begin, end);
-			var index = tag.toUpperCase().indexOf("SIZE=");
+			let tag = text.substring(begin, end);
+			let index = tag.toUpperCase().indexOf("SIZE=");
 			if (index > 0) {
-				var q = tag[index + 5];
-				var size = 0;
-				var qEnd = 0;
+				let q = tag[index + 5];
+				let size = 0;
+				let qEnd = 0;
 				if (q == '"' || q == "'") {
 					qEnd = tag.indexOf(q, index + 7);
 					if (qEnd > 0) {
@@ -190,9 +190,9 @@ function setTextToView(text, hold) {
 					q = "";
 				}
 				if (size == 0) {
-					var tmp = tag.substring(index + 5 + q.length);
+					let tmp = tag.substring(index + 5 + q.length);
 					for (qEnd = index + 5 + q.length; qEnd < tag.length; qEnd++) {
-						var c = tag[qEnd];
+						let c = tag[qEnd];
 						if (isFinite(c)) {
 							size = size * 10 + Number(c);
 						} else {
@@ -202,13 +202,13 @@ function setTextToView(text, hold) {
 				}
 				if (size) {
 					// 팟플레이어 기준 계산 
-					var potSize = (window.innerWidth / 586) * size;
+					let potSize = (window.innerWidth / 586) * size;
 					
 					// 크로뮴에서 10보다 작으면 제대로 안 보임
 					// 이런 크기는 사실상 흔들기 기능 공백으로만 쓰임
 					//if (potSize < 10) potSize += 50;
 					
-					var style = 'style="font-size: ' + potSize + 'px;"';
+					let style = 'style="font-size: ' + potSize + 'px;"';
 					text = text.substring(0, begin + index) + style + text.substring(begin + qEnd);
 					end = end - qEnd + index + style.length;
 				}
@@ -218,9 +218,9 @@ function setTextToView(text, hold) {
 	}
 	
 	{	// 흔들기 효과 상하 공백줄 처리 -> 맨 윗줄만
-		var showLines = text.split(/<br>/gi);
+		let showLines = text.split(/<br>/gi);
 		if (lines[hold].length > 2) {
-			var line = showLines;
+			let line = showLines;
 			if ($("<span>").html(line).text() == "　") {
 				if (line.indexOf("font-size:") > 0) {
 					showlines[hold] = line.split("<font style=\"font-size:").join("<div style=\"height:").split("</font>").join("</div>");
@@ -235,7 +235,7 @@ function setTextToView(text, hold) {
 		text = "";
 	}
 	
-	var viewer = viewers[hold].html(text);
+	let viewer = viewers[hold].html(text);
 	if (hasLine[hold]) {
 		viewer.addClass("has-line");
 	} else {

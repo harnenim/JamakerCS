@@ -6,16 +6,16 @@ window.Johap = {
 ,	jong : "　ᆨᆩᆪᆫᆬᆭᆮᆯᆰᆱᆲᆳᆴᆵᆶᆷᆸᆹᆺᆻᆼᆽᆾᆿᇀᇁᇂ"
 	
 ,	toJohap: function(origin) {
-		var result = [];
+		let result = [];
 		
-		for (var i = 0; i < origin.length; i++) {
-			var c = origin[i];
+		for (let i = 0; i < origin.length; i++) {
+			let c = origin[i];
 
 			if (c >= '가' && c <= '힣')
 			{
-				var cCho_ = Math.floor((c.charCodeAt() - 44032) / 588);
-				var cJung = Math.floor((c.charCodeAt() - 44032) / 28) % 21;
-				var cJong = ((c.charCodeAt() - 44032) % 28);
+				let cCho_ = Math.floor((c.charCodeAt() - 44032) / 588);
+				let cJung = Math.floor((c.charCodeAt() - 44032) / 28) % 21;
+				let cJong = ((c.charCodeAt() - 44032) % 28);
 
 				if (cJong > 0) {
 					result.push(Johap.cho_[cCho_]);
@@ -50,7 +50,7 @@ setTimeout(function() { // 생성자 선언보다 나중에 돌아야 함
 		if (cursor != null) {
 			return Typing.toTypeWithCursor(johap/*origin*/, mode, cursor);
 		}
-		var result = null;
+		let result = null;
 		switch (mode) {
 			case Typing.Mode.typewriter:
 				result = Typing.toTypeTypewriter(johap);
@@ -62,9 +62,9 @@ setTimeout(function() { // 생성자 선언보다 나중에 돌아야 함
 		return result;
 	}
 	Typing.toTypeTypewriter = function(johap) {
-		var result = [];
-		for (var i = 0; i < johap.length; i++) {
-			var c = johap[i];
+		let result = [];
+		for (let i = 0; i < johap.length; i++) {
+			let c = johap[i];
 			switch (c) {
 				case 'ᅪ': result.push('ᅩ'); result.push('ᅡ'); break;
 				case 'ᅫ': result.push('ᅩ'); result.push('ᅢ'); break;
@@ -79,9 +79,9 @@ setTimeout(function() { // 생성자 선언보다 나중에 돌아야 함
 		return result;
 	}
 	Typing.toTypeKeyboard = function(johap) {
-		var result = [];
-		for (var i = 0; i < johap.length; i++) {
-			var c = johap[i];
+		let result = [];
+		for (let i = 0; i < johap.length; i++) {
+			let c = johap[i];
 			switch (c) {
 				case 'ᄀ': result.push('ㄱ'); break;
 				case 'ᄁ': result.push('ㄲ'); break;
@@ -168,16 +168,16 @@ setTimeout(function() { // 생성자 선언보다 나중에 돌아야 함
 	}
 	
 	Typing.toTypeWithCursor = function(origin, mode, cursor) {
-		var result = [];
-		var type = Johap.toJohap(origin);
+		let result = [];
+		let type = Johap.toJohap(origin);
 		if (mode == Typing.Mode.keyboard) {
 			type = Typing.toType(type, mode);
 		}
 		
-		var typing = new Typing(mode, cursor);
-		var t = typing.out();
+		let typing = new Typing(mode, cursor);
+		let t = typing.out();
 		result.push(t);
-		for (var i = 0; i < type.length; i++) {
+		for (let i = 0; i < type.length; i++) {
 			typing.type(type[i]);
 			result.push(t = typing.out());
 		}
@@ -594,17 +594,17 @@ Subtitle.Width =
 			this.div.css(font).text(input);
 			return this.div.width();
 		} else {
-			var width = 0;
-			for (var i = 0; i < input.length; i++) {
-				var attr = input[i];
+			let width = 0;
+			for (let i = 0; i < input.length; i++) {
+				let attr = input[i];
 				width += attr.getWidth();
 			}
 			return width;
 		}
 	}
 ,	getWidths: function(lines) {
-		var widths = [];
-		for (var i = 0; i < lines.length; i++) {
+		let widths = [];
+		for (let i = 0; i < lines.length; i++) {
 			widths.push(this.getWidth(line));
 		}
 		return widths;
@@ -614,9 +614,9 @@ Subtitle.Width =
 	
 		if (isBoth) targetWidth /= 2;
 		
-		var whiteSpace = "";
-		var lastWidth = 0;
-		var thisWidth = 0;
+		let whiteSpace = "";
+		let lastWidth = 0;
+		let thisWidth = 0;
 		if (thisWidth >= targetWidth) {
 			return whiteSpace;
 		}
@@ -646,7 +646,7 @@ Subtitle.Width =
 		return this.getAppend(targetWidth - width, false, this.DEFAULT_FONT);
 	}
 ,	appendToRight: function(append) {
-		var index = append.indexOf(' ');
+		let index = append.indexOf(' ');
 		if (index > 0) {
 			return append.substring(index) + append.substring(0, index);
 		}
@@ -686,19 +686,19 @@ Subtitle.Attr.TypingAttr = function(mode, start, end) {
 	this.end	= end   ? end   : 0;
 }
 Subtitle.Attr.prototype.getWidth = function() {
-	var css = Subtitle.Width.DEFAULT_FONT;
+	let css = Subtitle.Width.DEFAULT_FONT;
 	if (this.fs) css.fontSize   = this.fs;
 	if (this.fn) css.fontFamily = this.fn;
 	return Subtitle.Width.getWidth(this.text, css);
 }
 Subtitle.Attr.getWidths = function(attrs) {
-	var widths = [];
-	var width = 0;
-	var index = 0;
-	for (var i = 0; i < attrs.length; i++) {
-		var attr = attrs[i];
+	let widths = [];
+	let width = 0;
+	let index = 0;
+	for (let i = 0; i < attrs.length; i++) {
+		let attr = attrs[i];
 		if ((index = attr.text.indexOf('\n')) >= 0) {
-			var sAttr = new Subtitle.Attr(attr);
+			let sAttr = new Subtitle.Attr(attr);
 			
 			sAttr.text = attr.text.substring(0, index);
 			width += sAttr.getWidth();
@@ -719,16 +719,16 @@ Subtitle.Attr.fromSubtitle = function(subtitle) {
 	return subtitle.toAttr();
 }
 Subtitle.Attr.linesFromSubtitle = function(subtitle) {
-	var attrs = Subtitle.Attr.fromSubtitle(subtitle);
+	let attrs = Subtitle.Attr.fromSubtitle(subtitle);
 	
-	var line = [];
-	var lines = [line];
-	var index = 0;
-	for (var i = 0; i < attrs.length; i++) {
-		var attr = attrs[i];
+	let line = [];
+	let lines = [line];
+	let index = 0;
+	for (let i = 0; i < attrs.length; i++) {
+		let attr = attrs[i];
 		
 		if ((index = attr.text.indexOf('\n')) >= 0) {
-			var sAttr = new Subtitle.Attr(attr);
+			let sAttr = new Subtitle.Attr(attr);
 			sAttr.text = attr.text.substring(0, index);
 			line.push(sAttr);
 			lines.push(line = []);
@@ -752,7 +752,7 @@ Subtitle.Attr.prototype.toHtml = function() {
 		return "";
 	}
 	
-	var css = "";
+	let css = "";
 	if (this.b) css += "font-weight: bold;";
 	if (this.i) css += "font-style: italic;";
 	if (this.u) css += "font-decoration: underline;";
@@ -764,8 +764,8 @@ Subtitle.Attr.prototype.toHtml = function() {
 		+ "</span>";
 }
 Subtitle.Attr.toHtml = function(attrs) {
-	var result = "";
-	for (var i = 0; i < attrs.length; i++) {
+	let result = "";
+	for (let i = 0; i < attrs.length; i++) {
 		result += attrs[i].toHtml();
 	}
 	return result;
@@ -787,10 +787,10 @@ Subtitle.Ass.cols = [ "Layer", "Start", "End", "Style", "Name", "MarginL", "Marg
 
 Subtitle.Ass.int2Time = function(time) {
 	time = Math.round(time);
-	var h = Math.floor(time / 360000);
-	var m = Math.floor(time / 6000) % 60;
-	var s = Math.floor(time / 100) % 60;
-	var ds= Math.floor(time % 100);
+	let h = Math.floor(time / 360000);
+	let m = Math.floor(time / 6000) % 60;
+	let s = Math.floor(time / 100) % 60;
+	let ds= Math.floor(time % 100);
 	return h + ":" + intPadding(m) + ":" + intPadding(s) + "." + intPadding(ds);
 }
 function intPadding(value, length = 2) {
@@ -801,7 +801,7 @@ function intPadding(value, length = 2) {
 	return value;
 }
 Subtitle.Ass.time2Int = function(time) {
-	var vs = time.split(':');
+	let vs = time.split(':');
 	return (Number(vs[0]) * 360000) + (Number(vs[1]) * 6000) + (Number(vs[2].split(".").join("")));
 }
 
@@ -809,8 +809,8 @@ Subtitle.Ass.prototype.toTxt = function() {
 	return "Dialogue: 0," + Subtitle.Ass.int2Time(this.start) + "," + Subtitle.Ass.int2Time(this.end) + "," + this.style + ",,0,0,0,," + this.text;
 }
 Subtitle.Ass.ss2txt = function(asss) {
-	var result = "";
-	for (var i = 0; i < asss.length; i++) {
+	let result = "";
+	for (let i = 0; i < asss.length; i++) {
 		result += asss[i].toTxt() + "\r\n";
 	}
 	return result;
@@ -827,22 +827,22 @@ Subtitle.Ass.colorFromAttr = function(attrColor) {
 }
 
 Subtitle.Ass.prototype.toAttr = function() {
-	var result = [];
+	let result = [];
 
-	var index = 0;
-	var pos = 0;
-	var last = new Subtitle.Attr();
+	let index = 0;
+	let pos = 0;
+	let last = new Subtitle.Attr();
 	result.push(last);
 
 	while ((pos = this.text.indexOf('{', index)) >= 0) {
 		last.text += this.text.substring(index, pos).split("\\N").join("\n");
 
-		var endPos = text.indexOf('}', pos);
-		var attrString = this.text.substring(pos + 1, endPos);
+		let endPos = text.indexOf('}', pos);
+		let attrString = this.text.substring(pos + 1, endPos);
 
-		var mode = -1;
-		var tagStart = 0, tagEnd = 0;
-		var tag = null;
+		let mode = -1;
+		let tagStart = 0, tagEnd = 0;
+		let tag = null;
 		for (pos = 0; pos < attrString.length; pos++) {
 			switch (mode) {
 				case -1: { // 태그 시작 전
@@ -930,11 +930,11 @@ Subtitle.Ass.prototype.toAttr = function() {
 	return result;
 }
 Subtitle.Ass.prototype.fromAttr = function(attrs) {
-	var text = "";
+	let text = "";
 	
-	var last = new Subtitle.Attr();
-	for (var i = 0; i < attrs.length; i++) {
-		var attr = attrs[i];
+	let last = new Subtitle.Attr();
+	for (let i = 0; i < attrs.length; i++) {
+		let attr = attrs[i];
 		
 		if (!last.b && attr.b) text += "{\\b1}";
 		else if (last.b && !attr.b) text += "{\\b}";
@@ -957,24 +957,24 @@ Subtitle.Ass.prototype.fromAttr = function(attrs) {
 		last = attr;
 	}
 	
-	var lines = text.split("\n");
-	for (var i = 0; i < lines.length; i++) {
-		var line = lines[i];
-		var rubyList = [];
+	let lines = text.split("\n");
+	for (let i = 0; i < lines.length; i++) {
+		let line = lines[i];
+		let rubyList = [];
 		
-		var pos = 0;
-		var rStart = 0;
+		let pos = 0;
+		let rStart = 0;
 		do {
 			rStart = line.indexOf("[", pos);
 			if (rStart < 0) {
 				break;
 			}
-			var fStart = line.indexOf("|", rStart);
+			let fStart = line.indexOf("|", rStart);
 			if (fStart < 0) {
 				pos = rStart + 1;
 				continue;
 			}
-			var rEnd = fStart;
+			let rEnd = fStart;
 			do {
 				rEnd = line.indexOf("]", rEnd);
 				if (rEnd < 0) {
@@ -994,11 +994,11 @@ Subtitle.Ass.prototype.fromAttr = function(attrs) {
 		} while (true);
 
 		if (rubyList.length) {
-			var newLine = "";
-			for (var j = 0; j < rubyList.length; j++) {
+			let newLine = "";
+			for (let j = 0; j < rubyList.length; j++) {
 				newLine += "{\\fscy50\\bord0\\1a&HFF&}";
-				var pos = 0;
-				for (var k = 0; k < j; k++) {
+				let pos = 0;
+				for (let k = 0; k < j; k++) {
 					newLine += line.substring(pos, rubyList[k][0]);
 					newLine += line.substring(rubyList[k][0] + 1, rubyList[k][1]);
 					pos = rubyList[k][2] + 1;
@@ -1006,7 +1006,7 @@ Subtitle.Ass.prototype.fromAttr = function(attrs) {
 				newLine += line.substring(pos, rubyList[j][0]);
 				newLine += "{\\1a\\bord\\fscx50}" + line.substring(rubyList[j][1] + 1, rubyList[j][2]).split("\\]").join("]") + "{\\fscx\\bord0\\1a&HFF&}";
 				pos = rubyList[j][2] + 1;
-				for (var k = j + 1; k < rubyList.length; k++) {
+				for (let k = j + 1; k < rubyList.length; k++) {
 					newLine += line.substring(pos, rubyList[k][0]);
 					newLine += line.substring(rubyList[k][0] + 1, rubyList[k][1]);
 					pos = rubyList[k][2] + 1;
@@ -1015,8 +1015,8 @@ Subtitle.Ass.prototype.fromAttr = function(attrs) {
 				newLine += "{\\1a\\bord\\fscy}\\N";
 			}
 			{
-				var pos = 0;
-				for (var k = 0; k < rubyList.length; k++) {
+				let pos = 0;
+				for (let k = 0; k < rubyList.length; k++) {
 					newLine += line.substring(pos, rubyList[k][0]);
 					newLine += line.substring(rubyList[k][0] + 1, rubyList[k][1]);
 					pos = rubyList[k][2] + 1;
@@ -1062,8 +1062,8 @@ Subtitle.AssFile = function(txt) {
 	}
 }
 Subtitle.AssFile.prototype.toTxt = function() {
-	var result = this.header.split("\r\n").join("\n");
-	for (var i = 0; i < this.body.length; i++) {
+	let result = this.header.split("\r\n").join("\n");
+	for (let i = 0; i < this.body.length; i++) {
 		result += this.body[i].toTxt() + "\n";
 	}
 	return result;
@@ -1072,23 +1072,23 @@ Subtitle.AssFile.prototype.fromTxt = function(txt) {
 	this.header = "";
 	this.body = [];
 	
-	var lines = txt.split("\r\n").join("\n").split('\n');
+	let lines = txt.split("\r\n").join("\n").split('\n');
 	
-	var header = [];
-	var canBeHeader = true;
-	for (var i = 0; i < lines.length; i++) {
-		var l = lines[i];
+	let header = [];
+	let canBeHeader = true;
+	for (let i = 0; i < lines.length; i++) {
+		let l = lines[i];
 		
 		if (l.substring(0,9) == ("Dialogue:")) {
 			canBeHeader = false;
-			var line = l.trim().split(',');
-			var ass = new Subtitle.Ass(
+			let line = l.trim().split(',');
+			let ass = new Subtitle.Ass(
 				Subtitle.Ass.time2Int(line[1])
 			,	Subtitle.Ass.time2Int(line[2])
 			,	line[3]
 			,	line[9]
 			);
-			for (var j = 10; j < line.length; j++) {
+			for (let j = 10; j < line.length; j++) {
 				ass.text += "," + line[j];
 			}
 			this.body.push(ass);
@@ -1096,9 +1096,9 @@ Subtitle.AssFile.prototype.fromTxt = function(txt) {
 		} else if (canBeHeader) {
 			if (l.substring(0,7) == ("Format:")) {
 				//canBeHeader = false;
-				var line = l.trim().split(',');
+				let line = l.trim().split(',');
 				Subtitle.Ass.cols = [];
-				for (var j = 0; j < line.length; j++) {
+				for (let j = 0; j < line.length; j++) {
 					Subtitle.Ass.cols.push(line[j].trim());
 				}
 				
@@ -1111,8 +1111,8 @@ Subtitle.AssFile.prototype.fromTxt = function(txt) {
 	return this;
 }
 Subtitle.AssFile.prototype.toSync = function() {
-	var result = [];
-	for (var i = 0; i < this.body.length; i++) {
+	let result = [];
+	for (let i = 0; i < this.body.length; i++) {
 		result.push(this.body[i].toSync());
 	}
 	return result;
@@ -1120,7 +1120,7 @@ Subtitle.AssFile.prototype.toSync = function() {
 
 Subtitle.AssFile.prototype.fromSync = function(syncs) {
 	this.body = [];
-	for (var i = 0; i < syncs.length; i++) {
+	for (let i = 0; i < syncs.length; i++) {
 		this.body.push(new Subtitle.Ass().fromSync(syncs[i]));
 	}
 	return this;
@@ -1145,8 +1145,8 @@ Subtitle.Smi.prototype.toTxt = function() {
 	return "<Sync Start=" + this.start + "><P Class=KRCC" + (this.syncType == Subtitle.SyncType.inner ? "\t" : (this.syncType == Subtitle.SyncType.frame ? " " : "")) + ">\n" + this.text;
 }
 Subtitle.Smi.smi2txt = function(smis) {
-	var result = "";
-	for (var i = 0; i < smis.length; i++) {
+	let result = "";
+	for (let i = 0; i < smis.length; i++) {
 		result += smis[i].toTxt() + "\n";
 	}
 	return result;
@@ -1339,8 +1339,8 @@ Subtitle.Smi.Status.prototype.setU = function(isOpen) {
 }
 Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 	if (attrs != null) {
-		var thisAttrs = [];
-		for (var i = 0; i < attrs.length; i++) {
+		let thisAttrs = [];
+		for (let i = 0; i < attrs.length; i++) {
 			thisAttrs[i] = attrs[i][0];
 			switch (attrs[i][0]) {
 				case "size":
@@ -1358,7 +1358,7 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 					break;
 					
 				case "fade":
-					var fade = attrs[i][1];
+					let fade = attrs[i][1];
 					if (fade == "in") {
 						fade = 1;
 					} else if (fade == "out") {
@@ -1377,9 +1377,9 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 					break;
 					
 				case "shake": {
-					var shake = { ms: 125, size: 1 };
+					let shake = { ms: 125, size: 1 };
 					if (attrs[i][1]) {
-						var attr = attrs[i][1].split(",");
+						let attr = attrs[i][1].split(",");
 						if (isFinite(attr[0])) shake.ms   = Number(attr[0]);
 						if (isFinite(attr[1])) shake.size = Number(attr[1]);
 					}
@@ -1388,10 +1388,10 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 				}
 					
 				case "typing": {
-					var attr = attrs[i][1].split(' ');
-					var mode = attr[0];
-					var match = null;
-					var tAttr = null;
+					let attr = attrs[i][1].split(' ');
+					let mode = attr[0];
+					let match = null;
+					let tAttr = null;
 
 					if (mode == "typewriter") {
 						tAttr = new Subtitle.Attr.TypingAttr(Typing.Mode.typewriter);
@@ -1404,8 +1404,8 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 							tAttr = new Subtitle.Attr.TypingAttr(Typing.Mode.keyboard);
 							
 						} else if (mode.length == 10) {
-							var s = ((mode[8] == '(') ? 1 : ((mode[8] == '[') ? 0 : -1));
-							var e = ((mode[9] == ')') ? 1 : ((mode[9] == ']') ? 0 : -1));
+							let s = ((mode[8] == '(') ? 1 : ((mode[8] == '[') ? 0 : -1));
+							let e = ((mode[9] == ')') ? 1 : ((mode[9] == ']') ? 0 : -1));
 							if (s > -1 && e > -1) {
 								tAttr = new Subtitle.Attr.TypingAttr(Typing.Mode.keyboard, s, e);
 							}
@@ -1437,8 +1437,8 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 		this.fontAttrs.push(thisAttrs);
 		
 	} else if (this.fontAttrs != null && this.fontAttrs.length) {
-		var lastAttrs = this.fontAttrs[this.fontAttrs.length - 1];
-		for (var i = 0; i < lastAttrs.length; i++) {
+		let lastAttrs = this.fontAttrs[this.fontAttrs.length - 1];
+		for (let i = 0; i < lastAttrs.length; i++) {
 			switch (lastAttrs[i]) {
 				case "size":
 					this.fs.pop()
@@ -1479,18 +1479,18 @@ Subtitle.Smi.SetFurigana = function(attr, furigana) {
 	attr.furigana = furigana ? furigana : null;
 }
 Subtitle.Smi.toAttr = function(text) {
-	var status = new Subtitle.Smi.Status();
-	var last = new Subtitle.Attr();
-	var result = [last];
-	var ruby = null;
-	var furigana = null;
+	let status = new Subtitle.Smi.Status();
+	let last = new Subtitle.Attr();
+	let result = [last];
+	let ruby = null;
+	let furigana = null;
 	
-	var state = null;
-	var pos = 0;
+	let state = null;
+	let pos = 0;
 	
-	var tag = null;
-	var attr = null;
-	var value = null;
+	let tag = null;
+	let attr = null;
+	let value = null;
 	
 	function openTag() {
 		switch (tag.name.toUpperCase()) {
@@ -1513,8 +1513,8 @@ Subtitle.Smi.toAttr = function(text) {
 				if (last.text.length > 0)
 					result.push((last = new Subtitle.Attr()));
 				{
-					var attrs = [];
-					for (var name in tag.attrs) {
+					let attrs = [];
+					for (let name in tag.attrs) {
 						attrs.push([name, tag.attrs[name]]);
 					}
 					Subtitle.Smi.SetStyle(last, status.setFont(attrs));
@@ -1580,13 +1580,13 @@ Subtitle.Smi.toAttr = function(text) {
 		}
 	}
 	
-	for (var pos = 0; pos < text.length; pos++) {
-		var c = text[pos];
+	for (let pos = 0; pos < text.length; pos++) {
+		let c = text[pos];
 		switch (state) {
 			case '/': { // 태그?!
 				state = '<';
 				if (c == '/') { // 종료 태그 시작일 경우
-					var end = text.indexOf('>', pos);
+					let end = text.indexOf('>', pos);
 					if (end < 0) {
 						// 태그 끝이 없음
 						pos = text.length;
@@ -1803,12 +1803,12 @@ Subtitle.Smi.prototype.fromAttr = function(attrs) {
 	return this;
 }
 Subtitle.Smi.fromAttr = function(attrs) {
-	var text = "";
-	var lastAttrs = [];
+	let text = "";
+	let lastAttrs = [];
 	
-	var last = new Subtitle.Attr();
-	for (var i = 0; i < attrs.length; i++) {
-		var attr = attrs[i];
+	let last = new Subtitle.Attr();
+	for (let i = 0; i < attrs.length; i++) {
+		let attr = attrs[i];
 		
 		if (last.furigana || attr.furigana) {
 			// <RUBY> 태그 적용 시 무조건 태그 닫고 열기
@@ -1939,8 +1939,8 @@ Subtitle.Smi.Color.v = function(c) {
 		return 0;
 		
 	} else {
-		var v = 0;
-		for (var i = 0; i < c.length; i++) {
+		let v = 0;
+		for (let i = 0; i < c.length; i++) {
 			v = v * 16 + Subtitle.Smi.Color.v(c[i]);
 		}
 		return v;
@@ -1958,32 +1958,32 @@ Subtitle.Smi.Color.prototype.get = function(value, total) {
 	     + Subtitle.Smi.Color.hex(((this.b * (total - value)) + (this.tb * value)) / total);
 }
 Subtitle.Smi.normalize = function(smis, withComment=false) {
-	var origin = new Subtitle.SmiFile();
+	let origin = new Subtitle.SmiFile();
 	origin.body = smis;
 	origin.fromTxt(origin.toTxt());
-	var result = {
+	let result = {
 			origin: origin.body
 		,	result: smis
 		,	logs: []
 	};
-	var added = 0;
+	let added = 0;
 
 	// 중간 싱크 재계산
-	var startIndex = -1;
-	for (var i = 1; i < smis.length; i++) {
+	let startIndex = -1;
+	for (let i = 1; i < smis.length; i++) {
 		if (smis[i].syncType == Subtitle.SyncType.inner) {
 			if (startIndex < 0) {
 				startIndex = i - 1;
 			}
 		} else {
 			if (startIndex >= 0) {
-				var endIndex = i;
+				let endIndex = i;
 				if (smis[startIndex].syncType == smis[endIndex].syncType) {
-					var startSync = smis[startIndex].start;
-					var endSync = smis[endIndex].start;
-					var count = endIndex - startIndex;
+					let startSync = smis[startIndex].start;
+					let endSync = smis[endIndex].start;
+					let count = endIndex - startIndex;
 
-					for (var j = 1; j < count; j++) {
+					for (let j = 1; j < count; j++) {
 						smis[startIndex + j].start = Math.round(((count - j) * startSync + j * endSync) / count);
 					}
 				}
@@ -1992,8 +1992,8 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 		}
 	}
 
-	for (var i = 0; i < smis.length - 1; i++) {
-		var smi = smis[i];
+	for (let i = 0; i < smis.length - 1; i++) {
+		let smi = smis[i];
 		/*
 		if (smi.syncType != smis[i + 1].syncType) {
 			// 전후 싱크 타입이 맞을 때만 안전함
@@ -2001,13 +2001,13 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 		}
 		*/
 		
-		var attrs = smi.toAttr();
+		let attrs = smi.toAttr();
 		
-		var hasFade = false;
-		var hasShake = false;
-		var hasTyping = false;
-		var type = null;
-		for (var j = 0; j < attrs.length; j++) {
+		let hasFade = false;
+		let hasShake = false;
+		let hasTyping = false;
+		let type = null;
+		for (let j = 0; j < attrs.length; j++) {
 			if (attrs[j].fade != 0) {
 				hasFade = true;
 			}
@@ -2021,20 +2021,20 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 		
 		if (hasShake) {
 			// 흔들기는 한 싱크에 하나만 가능
-			var attrIndex = -1;
-			var attr = null;
-			var isLastAttr = false;
-			for (var j = 0; j < attrs.length; j++) {
+			let attrIndex = -1;
+			let attr = null;
+			let isLastAttr = false;
+			for (let j = 0; j < attrs.length; j++) {
 				if (attrs[j].shake != null) {
 					attr = attrs[(attrIndex = j)];
-					var remains = "";
-					for (var k = j + 1; k < attrs.length; k++) {
+					let remains = "";
+					for (let k = j + 1; k < attrs.length; k++) {
 						remains += attrs[k].text;
 					}
 					isLastAttr = (remains.length == 0) || (remains[0] == "\n");
 					if (!isLastAttr) {
-						var length = 0;
-						for (var k = j + 1; k < attrs.length; k++) {
+						let length = 0;
+						for (let k = j + 1; k < attrs.length; k++) {
 							length += attrs[k].text.length;
 						}
 						isLastAttr = (length == 0);
@@ -2046,18 +2046,18 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 				continue;
 			}
 			
-			var shake = attr.shake;
+			let shake = attr.shake;
 			attr.shake = null;
 			attr.text = "{SL}" + attr.text + "{SR}";
 			
-			var start = smi.start;
-			var end = smis[i + 1].start;
-			var count = Math.floor(((end - start) / shake.ms) + 0.5);
+			let start = smi.start;
+			let end = smis[i + 1].start;
+			let count = Math.floor(((end - start) / shake.ms) + 0.5);
 			
-			var j = attrIndex - 1;
+			let j = attrIndex - 1;
 			for (; j >= 0; j--) {
-				var text = attrs[j].text;
-				var brIndex = text.lastIndexOf("\n");
+				let text = attrs[j].text;
+				let brIndex = text.lastIndexOf("\n");
 				if (brIndex >= 0) {
 					attrs[j].text = text.substring(0, brIndex + 1) + "{ST}" + text.substring(brIndex + 1);
 					break;
@@ -2067,8 +2067,8 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 				attrs[0].text = "{ST}" + attrs[0].text;
 			}
 			for (j = attrIndex + 1; j < attrs.length; j++) {
-				var text = attrs[j].text;
-				var brIndex = text.indexOf("\n");
+				let text = attrs[j].text;
+				let brIndex = text.indexOf("\n");
 				if (brIndex >= 0) {
 					attrs[j].text = text.substring(0, brIndex) + "{SB}" + text.substring(brIndex);
 					break;
@@ -2079,9 +2079,9 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 			}
 			
 			// 페이드 효과 추가 처리
-			var fadeColors = [];
+			let fadeColors = [];
 			if (hasFade) {
-				for (var j = 0; j < attrs.length; j++) {
+				for (let j = 0; j < attrs.length; j++) {
 					if (attrs[j].fade != 0) {
 						fadeColors.push(new Subtitle.Smi.Color(j, attrs[j].fade, ((attrs[j].fc.length == 6) ? attrs[j].fc : "ffffff")));
 						attrs[j].fade = 0;
@@ -2094,31 +2094,31 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 			
 			// 좌우로 흔들기
 			// 플레이어에서 사이즈 미지원해도 좌우로는 흔들리도록
-			var LRmin = "<font size=\"" + (3 * shake.size) + "\"></font>";
-			var LRmid = "<font size=\"" + (3 * shake.size) + "\"> </font>";
-			var LRmax = "<font size=\"" + (3 * shake.size) + "\">  </font>";
+			let LRmin = "<font size=\"" + (3 * shake.size) + "\"></font>";
+			let LRmid = "<font size=\"" + (3 * shake.size) + "\"> </font>";
+			let LRmax = "<font size=\"" + (3 * shake.size) + "\">  </font>";
 			
 			// 상하로 흔들기
 			// 플레이어에서 사이즈 미지원하면 상하로 흔들리지 않음
-			var TBmin = "<font size=\"" + (0 * shake.size) + "\">　</font>";
-			var TBmid = "<font size=\"" + (1 * shake.size) + "\">　</font>";
-			var TBmax = "<font size=\"" + (2 * shake.size) + "\">　</font>";
+			let TBmin = "<font size=\"" + (0 * shake.size) + "\">　</font>";
+			let TBmid = "<font size=\"" + (1 * shake.size) + "\">　</font>";
+			let TBmax = "<font size=\"" + (2 * shake.size) + "\">　</font>";
 			
 			smis.splice(i, 1);
-			for (var j = 0; j < count; j++) {
+			for (let j = 0; j < count; j++) {
 				/*
 				 * ５０３
 				 * ２※６
 				 * ７４１
 				 */
-				var step = j % 8;
+				let step = j % 8;
 				
 				// 페이드 효과 추가 처리
-				for (var k = 0; k < fadeColors.length; k++) {
-					var color = fadeColors[k];
+				for (let k = 0; k < fadeColors.length; k++) {
+					let color = fadeColors[k];
 					attrs[color.index].fc = color.get(1 + 2 * j, 2 * count);
 				}
-				var text = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
+				let text = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
 				
 				// 좌우로 흔들기
 				switch (step) {
@@ -2161,26 +2161,26 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 				,	start: start
 				,	end: end
 			});
-			var add = count - 1;
+			let add = count - 1;
 			i += add;
 			added += add;
 
 		} else if (hasTyping) {
 			// 타이핑은 한 싱크에 하나만 가능
-			var attrIndex = -1;
-			var attr = null;
-			var isLastAttr = false;
-			for (var j = 0; j < attrs.length; j++) {
+			let attrIndex = -1;
+			let attr = null;
+			let isLastAttr = false;
+			for (let j = 0; j < attrs.length; j++) {
 				if (attrs[j].typing != null) {
 					attr = attrs[(attrIndex = j)];
-					var remains = "";
-					for (var k = j + 1; k < attrs.length; k++) {
+					let remains = "";
+					for (let k = j + 1; k < attrs.length; k++) {
 						remains += attrs[k].text;
 					}
 					isLastAttr = (remains.length == 0) || (remains[0] == "\n");
 					if (!isLastAttr) {
-						var length = 0;
-						for (var k = j + 1; k < attrs.length; k++) {
+						let length = 0;
+						for (let k = j + 1; k < attrs.length; k++) {
 							length += attrs[k].text.length;
 						}
 						isLastAttr = (length == 0);
@@ -2192,24 +2192,24 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 				continue;
 			}
 			
-			var types = Typing.toType(attr.text, attr.typing.mode, attr.typing.cursor);
-			var width = Subtitle.Smi.getLineWidth(attr.text);
+			let types = Typing.toType(attr.text, attr.typing.mode, attr.typing.cursor);
+			let width = Subtitle.Smi.getLineWidth(attr.text);
 
-			var start = smi.start;
-			var end = smis[i + 1].start;
-			var count = types.length - attr.typing.end - attr.typing.start;
+			let start = smi.start;
+			let end = smis[i + 1].start;
+			let count = types.length - attr.typing.end - attr.typing.start;
 			
 			if (count < 1) {
 				continue;
 			}
 
-			var typingStart = attr.typing.start;
+			let typingStart = attr.typing.start;
 			attr.typing = null;
 			
 			// 페이드 효과 추가 처리
-			var fadeColors = [];
+			let fadeColors = [];
 			if (hasFade) {
-				for (var j = 0; j < attrs.length; j++) {
+				for (let j = 0; j < attrs.length; j++) {
 					if (attrs[j].fade != 0) {
 						fadeColors.push(new Subtitle.Smi.Color(j, attrs[j].fade, ((attrs[j].fc.length == 6) ? attrs[j].fc : "ffffff")));
 						attrs[j].fade = 0;
@@ -2221,11 +2221,11 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 			}
 			
 			smis.splice(i, 1);
-			for (var j = 0; j < count; j++) {
-				var text = types[j + typingStart];
+			for (let j = 0; j < count; j++) {
+				let text = types[j + typingStart];
 				attr.text = Subtitle.Width.getAppendToTarget(Subtitle.Smi.getLineWidth(text), width) + (isLastAttr ? "​" : "");
-				var newAttrs = new Subtitle.Smi(null, null, text).toAttr();
-				for (var k = 0; k < newAttrs.length; k++) {
+				let newAttrs = new Subtitle.Smi(null, null, text).toAttr();
+				for (let k = 0; k < newAttrs.length; k++) {
 					newAttrs[k].b = attr.b;
 					newAttrs[k].i = attr.i;
 					newAttrs[k].fc = attr.fc;
@@ -2234,12 +2234,12 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 				}
 				
 				// 페이드 효과 추가 처리
-				for (var k = 0; k < fadeColors.length; k++) {
-					var color = fadeColors[k];
+				for (let k = 0; k < fadeColors.length; k++) {
+					let color = fadeColors[k];
 					attrs[color.index].fc = color.get(1 + 2 * j, 2 * count);
 				}
 				
-				var tAttrs = attrs.slice(0, attrIndex);
+				let tAttrs = attrs.slice(0, attrIndex);
 				tAttrs = tAttrs.concat(newAttrs);
 				tAttrs.push(attr);
 				tAttrs = tAttrs.concat(attrs.slice(attrIndex + 1));
@@ -2255,17 +2255,17 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 				,	start: start
 				,	end: end
 			});
-			var add = count - 1;
+			let add = count - 1;
 			i += add;
 			added += add;
 			
 		} else if (hasFade) {
-			var start = smi.start;
-			var end = smis[i + 1].start;
-			var count = Math.round((end - start) * 24 / 1001.0); // 23.976fps로 가정
+			let start = smi.start;
+			let end = smis[i + 1].start;
+			let count = Math.round((end - start) * 24 / 1001.0); // 23.976fps로 가정
 			
-			var fadeColors = [];
-			for (var j = 0; j < attrs.length; j++) {
+			let fadeColors = [];
+			for (let j = 0; j < attrs.length; j++) {
 				if (attrs[j].fade != 0) {
 					fadeColors.push(new Subtitle.Smi.Color(j, attrs[j].fade, ((attrs[j].fc.length == 6) ? attrs[j].fc : "ffffff")));
 					attrs[j].fade = 0;
@@ -2275,14 +2275,14 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 				continue;
 			}
 			
-			for (var j = 0; j < fadeColors.length; j++) {
-				var color = fadeColors[j];
+			for (let j = 0; j < fadeColors.length; j++) {
+				let color = fadeColors[j];
 				attrs[color.index].fc = color.get(1, 2 * count);
 			}
 			smi.fromAttr(attrs);
-			for (var j = 1; j < count; j++) {
-				for (var k = 0; k < fadeColors.length; k++) {
-					var color = fadeColors[k];
+			for (let j = 1; j < count; j++) {
+				for (let k = 0; k < fadeColors.length; k++) {
+					let color = fadeColors[k];
 					attrs[color.index].fc = color.get(1 + 2 * j, 2 * count);
 				}
 				smis.splice(i + j, 0, new Subtitle.Smi((start * (count - j) + end * j) / count, Subtitle.SyncType.inner).fromAttr(attrs));
@@ -2296,7 +2296,7 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 				,	start: start
 				,	end: end
 			});
-			var add = count - 1;
+			let add = count - 1;
 			i += add;
 			added += add;
 			
@@ -2306,20 +2306,20 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 	return result;
 }
 Subtitle.Smi.fillEmptySync = function(smis) {
-	for (var i = 0; i < smis.length - 1; i++) {
-		var smi = smis[i];
+	for (let i = 0; i < smis.length - 1; i++) {
+		let smi = smis[i];
 		
-		var lines = smi.text.split("\r\n").join("\n").split('\n');
+		let lines = smi.text.split("\r\n").join("\n").split('\n');
 		if (lines.length < 2) {
 			// 한 줄이면 필요 없음
 			continue;
 		}
 		
-		var start = smi.start, end = smis[i + 1].start;
-		var length = lines.length;
+		let start = smi.start, end = smis[i + 1].start;
+		let length = lines.length;
 		
 		smi.text = lines[0];
-		for (var j = 1; j < length; j++) {
+		for (let j = 1; j < length; j++) {
 			smis.splice(i + j, 0, new Subtitle.Smi((start * (length - j) + end * j) / length, Subtitle.SyncType.inner, lines[j]));
 		}
 	}
@@ -2345,9 +2345,9 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 	this.footer = "";
 	this.body = [];
 	
-	var index = 0;
-	var pos = 0;
-	var last = null;
+	let index = 0;
+	let pos = 0;
+	let last = null;
 	
 	while ((pos = txt.indexOf('<', index)) >= 0) {
 		if (txt.length > pos + 6 && txt.substring(pos, pos + 6).toUpperCase() == ("<SYNC ")) {
@@ -2357,15 +2357,15 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 				last.text += txt.substring(index, pos);
 			}
 
-			var start = 0;
+			let start = 0;
 			index = txt.indexOf('>', pos + 6) + 1;
 			if (index == 0) {
 				index = txt.length;
 				break;
 			}
-			var attrs = txt.substring(pos + 6, index - 1).toLowerCase().split(' ');
-			for (var i = 0; i < attrs.length; i++) {
-				var attr = attrs[i];
+			let attrs = txt.substring(pos + 6, index - 1).toLowerCase().split(' ');
+			for (let i = 0; i < attrs.length; i++) {
+				let attr = attrs[i];
 				if (attr.substring(0, 6) == ("start=")) {
 					start = Number(attr.substring(6));
 					break;
@@ -2375,7 +2375,7 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 			this.body.push(last = new Subtitle.Smi(start));
 			
 		} else if (txt.length > pos + 4 && txt.substring(pos, pos + 3).toUpperCase() == ("<P ")) {
-			var endOfP = txt.indexOf('>', pos + 3) + 1;
+			let endOfP = txt.indexOf('>', pos + 3) + 1;
 			if (last == null) {
 				this.header = txt.substring(0, pos);
 			} else {
@@ -2423,8 +2423,8 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 		last.text += txt.substring(index);
 	}
 
-	for (var i = 0; i < this.body.length; i++) {
-		var smi = this.body[i];
+	for (let i = 0; i < this.body.length; i++) {
+		let smi = this.body[i];
 		if (smi.text.length > 0) {
 			if (smi.text[0] == '\n') {
 				smi.text = smi.text.substring(1);
@@ -2439,11 +2439,11 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 }
 
 Subtitle.SmiFile.prototype.toSync = function() {
-	var result = [];
+	let result = [];
 
 	if (this.body.length > 0) {
-		var i = 0;
-		var last = null;
+		let i = 0;
+		let last = null;
 		for (; i + 1 < this.body.length; i++) {
 			if (this.body[i].text.split("&nbsp;").join("").length == 0) {
 				continue;
@@ -2460,11 +2460,11 @@ Subtitle.SmiFile.prototype.toSync = function() {
 	return result;
 }
 Subtitle.SmiFile.prototype.fromSync = function(syncs) {
-	var smis = [];
+	let smis = [];
 
 	if (syncs.length > 0) {
-		var i = 0;
-		var last = null;
+		let i = 0;
+		let last = null;
 		smis.push(new Subtitle.Smi().fromSync(syncs[i]));
 		smis.push(last = new Subtitle.Smi(syncs[i].end, syncs[i].endType, "&nbsp;"));
 		
@@ -2484,11 +2484,11 @@ Subtitle.SmiFile.prototype.fromSync = function(syncs) {
 }
 
 Subtitle.SmiFile.prototype.antiNormalize = function () {
-	var result = [this];
+	let result = [this];
 	
-	for (var i = 0; i < this.body.length; i++) {
-		var smi = this.body[i];
-		var afterComment = null;
+	for (let i = 0; i < this.body.length; i++) {
+		let smi = this.body[i];
+		let afterComment = null;
 		
 		// 주석 시작점 찾기
 		if (!smi.text.startsWith("<!-- End=")) {
@@ -2496,33 +2496,33 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 		}
 		
 		// 주석 끝 찾기
-		var commentEnd = smi.text.indexOf("-->");
+		let commentEnd = smi.text.indexOf("-->");
 		if (commentEnd < 0) {
 			continue;
 		}
 		
 		// 주석이 여기에서 온전히 끝났을 경우
-		var comment = smi.text.substring(9, commentEnd).trim();
+		let comment = smi.text.substring(9, commentEnd).trim();
 		afterComment = smi.text.substring(commentEnd + 3).trim();
 		
 		comment = comment.split("<​").join("<").split("​>").join(">");
 		try {
-			var index = comment.indexOf("\n");
-			var syncEnd = Number(index < 0 ? comment : comment.substring(0, index));
+			let index = comment.indexOf("\n");
+			let syncEnd = Number(index < 0 ? comment : comment.substring(0, index));
 			
 			// 자동 생성 내용물 삭제하고 주석 내용물 복원
 			if (index > 0) {
 				comment = comment.substring(index + 1);
 			}
-			var removeStart = i + (index < 0 ? 0 : 1);
-			var removeEnd = removeStart;
+			let removeStart = i + (index < 0 ? 0 : 1);
+			let removeEnd = removeStart;
 			for(; removeEnd < this.body.length; removeEnd++) {
 				if (this.body[removeEnd].start >= syncEnd) {
 					break;
 				}
 			}
 			if (comment.length > 6 && comment.substring(0, 6).toUpperCase() == "<SYNC ") {
-				var newBody = new Subtitle.SmiFile(comment).body;
+				let newBody = new Subtitle.SmiFile(comment).body;
 				if (i > 0) {
 					newBody = this.body.slice(0, i).concat(newBody);
 				}
@@ -2536,7 +2536,7 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 				
 			} else if (comment.startsWith("Hold=")) {
 				removeStart = i;
-				var hold = new Subtitle.SmiFile();
+				let hold = new Subtitle.SmiFile();
 				hold.body = this.body.splice(removeStart, removeEnd - removeStart);
 				hold.body[0].text = afterComment;
 				hold.antiNormalize();
@@ -2544,7 +2544,7 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 				
 				hold.name = comment = comment.substring(5);
 				hold.pos = 1;
-				var nameIndex = comment.indexOf("|");
+				let nameIndex = comment.indexOf("|");
 				if (nameIndex) {
 					try {
 						hold.pos = Number(comment.substring(0, nameIndex));
@@ -2584,8 +2584,8 @@ Subtitle.Srt.prototype.toTxt = function() {
 	return Subtitle.Srt.int2Time(this.start) + "-->" + Subtitle.Srt.int2Time(this.end) + "\n" + this.text + "\n";
 }
 Subtitle.Srt.srt2txt = function(srts) {
-	var result = "";
-	for (var i = 0; i < srts.length; i++) {
+	let result = "";
+	for (let i = 0; i < srts.length; i++) {
 		result += srts[i].toTxt() + "\n";
 	}
 	return result;
@@ -2606,10 +2606,10 @@ Subtitle.Srt.prototype.fromSync = function(sync) {
 }
 
 Subtitle.Srt.int2Time = function(time) {
-	var h = Math.floor(time / 3600000);
-	var m = Math.floor(time / 60000) % 60;
-	var s = Math.floor(time / 1000) % 60;
-	var ms= Math.floor(time % 1000);
+	let h = Math.floor(time / 3600000);
+	let m = Math.floor(time / 60000) % 60;
+	let s = Math.floor(time / 1000) % 60;
+	let ms= Math.floor(time % 1000);
 	return intPadding(h) + ":" + intPadding(m) + ":" + intPadding(s) + "," + intPadding(ms, 3);
 }
 
@@ -2620,21 +2620,21 @@ Subtitle.SrtFile = function(txt) {
 	}
 }
 Subtitle.SrtFile.prototype.toTxt = function() {
-	var items = [];
-	for (var i = 0; i < this.body.length; i++) {
+	let items = [];
+	for (let i = 0; i < this.body.length; i++) {
 		items.push((i + 1) + "\n" + this.body[i].toTxt());
 	}
 	return items.join("\n");
 }
 Subtitle.SrtFile.REG_SRT_SYNC = /^([0-9]{2}:){1,2}[0-9]{2}[,.][0-9]{2,3}( )*-->( )*([0-9]{2}:){1,2}[0-9]{2}[,.][0-9]{2,3}$/;
 Subtitle.SrtFile.prototype.fromTxt = function(txt) {
-	var lines = txt.split("\r\n").join("\n").split("\n");
-	var items = [];
-	var last = { start: 0, end: 0, lines: [], length: 0 };
-	var lastLength = 0;
+	let lines = txt.split("\r\n").join("\n").split("\n");
+	let items = [];
+	let last = { start: 0, end: 0, lines: [], length: 0 };
+	let lastLength = 0;
 	
-	for (var i = 0; i < lines.length; i++) {
-		var line = lines[i];
+	for (let i = 0; i < lines.length; i++) {
+		let line = lines[i];
 		if (line) {
 			if (isFinite(line)) {
 				// 숫자뿐인 대사줄 or 싱크 시작 불분명
@@ -2647,18 +2647,18 @@ Subtitle.SrtFile.prototype.fromTxt = function(txt) {
 					// 새 싱크 시작
 					last.lines.length = last.length;
 					items.push(last = { start: 0, end: 0, lines: [], length: 0 });
-					var syncs = line.split("-->");
+					let syncs = line.split("-->");
 					{	// 시작 싱크
-						var times = syncs[0].trim().split(",").join(".").split(":");
-						var start = Number(times[0]) * 60 + Number(times[1]);
+						let times = syncs[0].trim().split(",").join(".").split(":");
+						let start = Number(times[0]) * 60 + Number(times[1]);
 						if (times.length > 2) {
 							start = start * 60 + Number(times[2]);
 						}
 						last.start = Math.round(start * 1000);
 					}
 					{	// 종료 싱크
-						var times = syncs[1].trim().split(",").join(".").split(":");
-						var end = Number(times[0]) * 60 + Number(times[1]);
+						let times = syncs[1].trim().split(",").join(".").split(":");
+						let end = Number(times[0]) * 60 + Number(times[1]);
 						if (times.length > 2) {
 							end = end * 60 + Number(times[2]);
 						}
@@ -2680,8 +2680,8 @@ Subtitle.SrtFile.prototype.fromTxt = function(txt) {
 	last.lines.length = last.length;
 	
 	this.body = [];
-	for (var i = 0; i < items.length; i++) {
-		var item = items[i];
+	for (let i = 0; i < items.length; i++) {
+		let item = items[i];
 		this.body.push(new Subtitle.Srt(item.start, item.end, item.lines.join("\n")));
 	}
 	maruta = this;
@@ -2690,8 +2690,8 @@ Subtitle.SrtFile.prototype.fromTxt = function(txt) {
 }
 
 Subtitle.SrtFile.prototype.toSync = function() {
-	var result = [];
-	for (var i = 0; i < this.body.length; i++) {
+	let result = [];
+	for (let i = 0; i < this.body.length; i++) {
 		result.push(this.body[i].toSync());
 	}
 	return result;
@@ -2699,7 +2699,7 @@ Subtitle.SrtFile.prototype.toSync = function() {
 
 Subtitle.SrtFile.prototype.fromSync = function(syncs) {
 	this.body = [];
-	for (var i = 0; i < syncs.length; i++) {
+	for (let i = 0; i < syncs.length; i++) {
 		this.body.push(new Subtitle.Srt().fromSync(syncs[i]));
 	}
 	return this;

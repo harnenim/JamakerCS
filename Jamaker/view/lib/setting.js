@@ -1,10 +1,10 @@
 // 업데이트 메시지
-var checkVersion;
+let checkVersion;
 {	checkVersion = function(version) {
 		if (!version) version = "";
 
-		var notify = [];
-		var notified = {};
+		let notify = [];
+		let notified = {};
 		if (version < lastNotifyForCommand) {
 			notify.push("단축키");
 			notified.command = true;
@@ -34,13 +34,13 @@ var checkVersion;
 		}
 		return notified;
 	}
-	var lastNotifyForCommand = "2024.12.07.v1";
-	var lastNotifyForAutoComplete = "";
-	var lastNotifyForStyle = "2025.01.07.v1";
-	var lastNotifyForMenu = "2024.11.19.v2";
+	let lastNotifyForCommand = "2024.12.07.v1";
+	let lastNotifyForAutoComplete = "";
+	let lastNotifyForStyle = "2025.01.07.v1";
+	let lastNotifyForMenu = "2024.11.19.v2";
 }
 
-var DEFAULT_SETTING =
+let DEFAULT_SETTING =
 {	version: "2025.01.07.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
@@ -121,11 +121,11 @@ var DEFAULT_SETTING =
 		,	'`': '/* 이전 홀드 선택 */\neditor.owner.selectLastHold();'
 		,	'1': '/* 색상태그 */\n' + 'editor.tagging("<font color=\\"#aaaaaa\\">")'
 		,	'2': '/* 한 줄씩 줄표 넣어주기 */\n'
-			   + 'var text = editor.getText();\n'
-			   + 'var lines = text.text.split("\\n");\n'
-			   + 'var lineNo = text.text.substring(0, text.selection[0]).split("\\n").length - 1;\n'
+			   + 'let text = editor.getText();\n'
+			   + 'let lines = text.text.split("\\n");\n'
+			   + 'let lineNo = text.text.substring(0, text.selection[0]).split("\\n").length - 1;\n'
 			   + '// 현재 싱크 맨 윗줄 찾기\n'
-			   + 'var syncLineNo = lineNo;\n'
+			   + 'let syncLineNo = lineNo;\n'
 			   + 'while (syncLineNo >= 0) {\n'
 			   + '	if (lines[syncLineNo].substring(0, 6).toUpperCase() == "<SYNC ") {\n'
 			   + '		break;\n'
@@ -145,32 +145,32 @@ var DEFAULT_SETTING =
 			   + 'if (lines[syncLineNo + 2][0] != "-") {\n'
 			   + '	lines[syncLineNo + 2] = "- " + lines[syncLineNo + 2];\n'
 			   + '}\n'
-			   + 'var cursor = lines.slice(0, syncLineNo + 1).join("\\n").length + 1;\n'
+			   + 'let cursor = lines.slice(0, syncLineNo + 1).join("\\n").length + 1;\n'
 			   + 'lines.splice(syncLineNo + 1, 2, (lines[syncLineNo + 1] + "<br>" + lines[syncLineNo + 2]));\n'
 			   + 'editor.setText(lines.join("\\n"), [cursor, cursor]);'
 		,	'3': '/* 공백줄 */\n' + 'editor.inputText("<br><b>　</b>")'
 		,	'4': '/* 기울임 */\n' + 'editor.taggingRange("<i>")'
 		,	'5': '/* 밑줄 */\n'   + 'editor.taggingRange("<u>")'
 		,	'6': '/* RUBY 태그 생성([쓰기|읽기]) */\n'
-			   + 'var text = editor.getText();\n'
+			   + 'let text = editor.getText();\n'
 			   + 'if (text.selection[0] == text.selection[1]) {\n'
 			   + '	return;\n'
 			   + '}\n'
 			   + '\n'
-			   + 'var prev = text.text.substring(0, text.selection[0]);\n'
-			   + 'var next = text.text.substring(text.selection[1]);\n'
-			   + 'var blocks = text.text.substring(text.selection[0], text.selection[1]).split("[");\n'
+			   + 'let prev = text.text.substring(0, text.selection[0]);\n'
+			   + 'let next = text.text.substring(text.selection[1]);\n'
+			   + 'let blocks = text.text.substring(text.selection[0], text.selection[1]).split("[");\n'
 			   + '\n'
-			   + 'for (var i = 1; i < blocks.length; i++) {\n'
-			   + '	var block = blocks[i];\n'
-			   + '	var endIndex = block.indexOf("]");\n'
+			   + 'for (let i = 1; i < blocks.length; i++) {\n'
+			   + '	let block = blocks[i];\n'
+			   + '	let endIndex = block.indexOf("]");\n'
 			   + '	if (endIndex > 0) {\n'
-			   + '		var toRuby = block.substring(0, endIndex);\n'
-			   + '		var divIndex = toRuby.indexOf("|");\n'
+			   + '		let toRuby = block.substring(0, endIndex);\n'
+			   + '		let divIndex = toRuby.indexOf("|");\n'
 			   + '		if (divIndex > 0) {\n'
-			   + '			var ruby = block.substring(0, divIndex);\n'
-			   + '			var rt   = block.substring(divIndex + 1, endIndex);\n'
-			   + '			var left = block.substring(endIndex + 1);\n'
+			   + '			let ruby = block.substring(0, divIndex);\n'
+			   + '			let rt   = block.substring(divIndex + 1, endIndex);\n'
+			   + '			let left = block.substring(endIndex + 1);\n'
 			   + '			blocks[i] = "<RUBY>" + ruby + "<RT><RP>(</RP>" + rt + "<RP>)</RP></RT></RUBY>" + left;\n'
 			   + '		} else {\n'
 			   + '			blocks[i] = "[" + blocks[i];\n'
@@ -178,7 +178,7 @@ var DEFAULT_SETTING =
 			   + '	} else {\n'
 			   + '		blocks[i] = "[" + blocks[i];\n'
 			   + '	}\n'
-			   + '}\nvar result = blocks.join("");\n'
+			   + '}\nlet result = blocks.join("");\n'
 			   + '\n'
 			   + 'editor.setText(prev + result + next, [text.selection[0], text.selection[0] + result.length]);'
 		,	'7': '/* Zero-width */\neditor.inputText("​")'
@@ -192,10 +192,10 @@ var DEFAULT_SETTING =
 	,	withAlts:
 		{	't': '/* 일괄 싱크 입력 */\n' + 'editor.reSyncPrompt();'
 		,	'1': '/* 맞춤법 검사기 */\n'
-			   + 'var text = editor.getText();\n'
+			   + 'let text = editor.getText();\n'
 			   + 'extSubmit("post", "https://nara-speller.co.kr/speller/results", "text1");'
 		,	'2': '/* 국어사전 */\n'
-			   + 'var text = editor.getText();\n'
+			   + 'let text = editor.getText();\n'
 			   + 'extSubmit("get", "https://ko.dict.naver.com/%23/search", "query");'
 		,	'N': '/* 홀드 추가 */\n' + 'tabs.length && tabs[tab].addHold();'
 		,	'Q': '/* 재생 위치 찾기 */\n' + 'editor.findSync();'

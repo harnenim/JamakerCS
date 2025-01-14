@@ -15,12 +15,12 @@ function show(index) {
 	$("#settingArea > form.selected").removeClass("selected");
 	opened = $("#settingArea > form:eq(" + index + ")").addClass("selected").attr("id");
 }
-var opened = null;
-var submitFuncs = {};
-var refreshFuncs = {};
-var refreshTableCommand;
+let opened = null;
+let submitFuncs = {};
+let refreshFuncs = {};
+let refreshTableCommand;
 
-var saved = {};
+let saved = {};
 function checkSaved(key, ok, no) {
 	if (saved[key].status) {
 		if (ok) ok();
@@ -29,7 +29,7 @@ function checkSaved(key, ok, no) {
 	confirm(saved[key].name + " 변경사항이 사라집니다.", ok, no);
 }
 function setSaved(key, status) {
-	var item = saved[key];
+	let item = saved[key];
 	if (item) {
 		item.status = status;
 	}
@@ -37,13 +37,13 @@ function setSaved(key, status) {
 function requestClose(keys) {
 	if (!keys) {
 		keys = [];
-		for (var key in saved) {
+		for (let key in saved) {
 			keys.push(key);
 		}
 	}
 	if (keys.length) {
-		for (var i = 0; i < keys.length; i++) {
-			var key = keys[i];
+		for (let i = 0; i < keys.length; i++) {
+			let key = keys[i];
 			checkSaved(key, function() {
 				requestClose(keys.slice(i + 1));
 			});
@@ -56,17 +56,17 @@ function requestClose(keys) {
 }
 
 $(function() {
-	var SmiEditor = opener.SmiEditor;
-	var setting = opener.setting;
+	let SmiEditor = opener.SmiEditor;
+	let setting = opener.setting;
 	
 	function refresh(form, setting) {
 		form.find("input[type=text][name],input[type=number][name],input[type=color][name],textarea[name]").each(function() {
-			var input = $(this);
-			var name = input.attr("name");
+			let input = $(this);
+			let name = input.attr("name");
 			if (name.indexOf("what") > 0) {
 				name = name.split("what").join(setting.player.control.dll);
 			}
-			var value = eval("setting['" + name.split("_").join("']['") + "']");
+			let value = eval("setting['" + name.split("_").join("']['") + "']");
 			if (typeof value == "number" || typeof value == "string") {
 				input.val(value);
 			} else if (value && value.join) {
@@ -74,42 +74,42 @@ $(function() {
 			}
 		});
 		form.find("input[type=checkbox][name]").each(function() {
-			var input = $(this);
-			var name = input.attr("name");
+			let input = $(this);
+			let name = input.attr("name");
 			if (name.indexOf("what")) {
 				name = name.split("what").join(setting.player.control.dll);
 			}
 			input.prop("checked", eval("setting['" + name.split("_").join("']['") + "']"));
 		});
 		form.find("select[name]").each(function() {
-			var select = $(this);
-			var name = select.attr("name");
-			var value = eval("setting." + name.split("_").join("."));
+			let select = $(this);
+			let name = select.attr("name");
+			let value = eval("setting." + name.split("_").join("."));
 			select.data({value: value});
 		});
 	}
 	
-	var fieldEditor = $("#fieldEditor");
-	var fieldViewer = $("#fieldViewer");
-	var fieldPlayer = $("#fieldPlayer");
+	let fieldEditor = $("#fieldEditor");
+	let fieldViewer = $("#fieldViewer");
+	let fieldPlayer = $("#fieldPlayer");
 
-	var tableCommand = $("#tableCommand");
-	var inputCommandName = $("#inputCommandName");
-	var inputCommandKey  = $("#inputCommandKey" );
-	var inputCommandFunc = $("#inputCommandFunc");
+	let tableCommand = $("#tableCommand");
+	let inputCommandName = $("#inputCommandName");
+	let inputCommandKey  = $("#inputCommandKey" );
+	let inputCommandFunc = $("#inputCommandFunc");
 
 	{	// 창
 		(refreshFuncs["window"] = function(setting) {
 			refresh($("#window"), setting);
 			
 			// 값에 맞춰 fieldset 이동
-			var editor = [setting.window       , fieldEditor];
-			var viewer = [setting.viewer.window, fieldViewer];
-			var player = [setting.player.window, fieldPlayer];
+			let editor = [setting.window       , fieldEditor];
+			let viewer = [setting.viewer.window, fieldViewer];
+			let player = [setting.player.window, fieldPlayer];
 			
-			var ecss = {};
-			var vcss = {};
-			var pcss = {};
+			let ecss = {};
+			let vcss = {};
+			let pcss = {};
 			
 			function setLeft(css, x) {
 				css.left = x + 1;
@@ -126,7 +126,7 @@ $(function() {
 				css.top = css.top + "%";
 			}
 
-			var targetXY = [
+			let targetXY = [
 				[	[ editor[0].x, function(x) { setLeft(ecss, x); } ]
 				,	[ editor[0].x + editor[0].width, function(x) { setRight(ecss, x); } ]
 				,	[ viewer[0].x, function(x) { setLeft(vcss, x); } ]
@@ -142,14 +142,14 @@ $(function() {
 				,	[ player[0].y + player[0].height, function(y) { setBottom(pcss, y); } ]
 				]
 			];
-			for (var xy = 0; xy < 2; xy++) {
-				var targets = targetXY[xy];
+			for (let xy = 0; xy < 2; xy++) {
+				let targets = targetXY[xy];
 				targets.sort(function(a, b) { return a[0] - b[0]; });
 				
-				var last = [targets[0]];
-				var ps = [last];
-				for (var i = 1; i < targets.length; i++) {
-					var curr = targets[i];
+				let last = [targets[0]];
+				let ps = [last];
+				for (let i = 1; i < targets.length; i++) {
+					let curr = targets[i];
 					if (curr[0] == last[0][0]) {
 						last.push(curr);
 					} else {
@@ -160,9 +160,9 @@ $(function() {
 				function getPos(i) {
 					return 1 + ((98 / (ps.length - 1)) * i);
 				}
-				for (var i = 0; i < ps.length; i++) {
-					var curr = ps[i];
-					for (var j = 0; j < curr.length; j++) {
+				for (let i = 0; i < ps.length; i++) {
+					let curr = ps[i];
+					for (let j = 0; j < curr.length; j++) {
 						curr[j][1](getPos(i));
 					}
 				}
@@ -200,7 +200,7 @@ $(function() {
 		});
 		// C#에서 Script("afterGetWindow", object[] { "editor", x, y, w, h });
 		opener.afterGetWindow = function(id, x, y, w, h) {
-			var name = "window";
+			let name = "window";
 			if (id != "editor") {
 				name = id + "_window";
 			}
@@ -218,7 +218,7 @@ $(function() {
 		})(setting);
 		
 		submitFuncs["sync"] = function() {
-			var preset = $("input[name=sync_preset]").val();
+			let preset = $("input[name=sync_preset]").val();
 			
 			// TODO: 프리셋 양식 오류 확인 필요
 			//<Sync Start={sync}><P Class={lang}{type}>
@@ -264,26 +264,26 @@ $(function() {
 			}
 		})(setting);
 	
-		var tbody = tableCommand.find("tbody");
-		var withs = ["withCtrls", "withAlts", "withCtrlAlts", "withCtrlShifts"];
-        var keys = "pqrstuvwxyz{ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890";
-        var keyNames = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"].concat("ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890".split(""));
+		let tbody = tableCommand.find("tbody");
+		let withs = ["withCtrls", "withAlts", "withCtrlAlts", "withCtrlShifts"];
+        let keys = "pqrstuvwxyz{ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890";
+        let keyNames = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"].concat("ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890".split(""));
 		(refreshTableCommand = function() {
 			tbody.empty();
-			for (var i = 0; i < keys.length; i++) {
-				var key = keys[i];
-				var keyName = key;
+			for (let i = 0; i < keys.length; i++) {
+				let key = keys[i];
+				let keyName = key;
 				if (i < 12) {
 					keyName = "F" + (i + 1);
 				}
-				var th = $("<th>").text(keyName);
+				let th = $("<th>").text(keyName);
 				if (i < 12) {
-					var func = setting.command.fn[key];
+					let func = setting.command.fn[key];
 					if (!func || !func.trim()) {
 						func = "";
 						th.addClass("not-used");
 					} else {
-						var label = func.trim();
+						let label = func.trim();
 						if (label.substring(0, 2) == "/*") {
 							label = label.substring(2).split("*/")[0].trim();
 						}
@@ -295,15 +295,15 @@ $(function() {
 						,	"func": func
 					});
 				}
-				var tr = $("<tr>").addClass("key-" + (keyName=='`' ? '~' : keyName)).append(th);
-				for (var j = 0; j < withs.length; j++) {
-					var w = withs[j];
-					var td = $("<td>");
+				let tr = $("<tr>").addClass("key-" + (keyName=='`' ? '~' : keyName)).append(th);
+				for (let j = 0; j < withs.length; j++) {
+					let w = withs[j];
+					let td = $("<td>");
 					if (SmiEditor[w].reserved.indexOf(key) >= 0) {
-						var func = SmiEditor[w][key];
-						var label = func;
+						let func = SmiEditor[w][key];
+						let label = func;
 						if (label) {
-							var type = typeof label;
+							let type = typeof label;
 							if (type == "string") {
 								label = label.trim();
 								if (label.substring(0, 2) == "/*") {
@@ -318,11 +318,11 @@ $(function() {
 						label = "예약: " + label;
 						td.addClass("fixed").text(label);
 					} else {
-						var func = setting.command[w][key];
+						let func = setting.command[w][key];
 						if (!func || !func.trim()) {
 							func = "";
 						} else {
-							var label = func.trim();
+							let label = func.trim();
 							if (label.substring(0, 2) == "/*") {
 								label = label.substring(2).split("*/")[0].trim();
 							}
@@ -342,8 +342,8 @@ $(function() {
 		})();
 		
 		tableCommand.on("click", "th.used, th.not-used, td:not(.fixed)", function() {
-			var data = $(this).data();
-			var keyName = data.key;
+			let data = $(this).data();
+			let keyName = data.key;
 			if (data.key.charCodeAt() > 111) {
 				keyName = "F" + (data.key.charCodeAt() - 111);
 			}
@@ -381,22 +381,22 @@ $(function() {
 		inputCommandKey.on("keydown", function(e) {
 			e.preventDefault();
 			
-			var name = "";
-			var key = String.fromCharCode(e.keyCode);
-			var func = "";
+			let name = "";
+			let key = String.fromCharCode(e.keyCode);
+			let func = "";
 			if (e.keyCode == 192) {
 				key = '`';
 			}
 			
 			if (keys.indexOf(key) >= 0) {
-				var keyName = key;
+				let keyName = key;
 				if (111 < e.keyCode && e.keyCode < 192) {
 					keyName = "F" + (e.keyCode - 111);
 				}
-				var keyIndex = keyNames.indexOf(keyName);
-				var selector = "tr.key-" + (keyName == '`' ? '~' : keyName);
+				let keyIndex = keyNames.indexOf(keyName);
+				let selector = "tr.key-" + (keyName == '`' ? '~' : keyName);
 				
-				var w = null;
+				let w = null;
 				if (e.shiftKey) {
 					if (e.ctrlKey) {
 						if (e.altKey) {
@@ -494,7 +494,7 @@ $(function() {
 		});
 
 		$("#areaFunctions").on("click", "li", function() {
-			var func = inputCommandFunc.val();
+			let func = inputCommandFunc.val();
 			inputCommandFunc.val((func ? func + "\n" : "") + $(this).data("input"));
 			if (inputCommandName.val()) {
 				setSaved("cmd", false);
@@ -502,9 +502,9 @@ $(function() {
 		});
 
 		submitFuncs["cmd"] = function() {
-			var name = inputCommandName.val();
+			let name = inputCommandName.val();
 			if (name) {
-				var func = inputCommandFunc.val();
+				let func = inputCommandFunc.val();
 				if (func.trim().length == 0) {
 					func = " ";
 				}
@@ -525,9 +525,9 @@ $(function() {
 	
 		submitFuncs["ac"] = function() {
 			$("#ac").find("textarea").each(function() {
-				var textarea = $(this);
-				var name = "setting['" + textarea.attr("name").split("_").join("']['") + "']";
-				var value = textarea.val();
+				let textarea = $(this);
+				let name = "setting['" + textarea.attr("name").split("_").join("']['") + "']";
+				let value = textarea.val();
 				if (value) {
 					value = value.split("\n");
 				} else {
@@ -543,7 +543,7 @@ $(function() {
 	{	// 자동치환
 		saved.replace = { status: true, name: "자동치환 설정" };
 	
-		var replaceList = $("#replaceList");
+		let replaceList = $("#replaceList");
 	
 		function appendReplace(item) {
 			if (!item) {
@@ -563,7 +563,7 @@ $(function() {
 		(refreshFuncs["replace"] = function(setting) {
 			refresh($("#replace"), setting);
 			replaceList.empty();
-			for (var i = 0; i < setting.replace.length; i++) {
+			for (let i = 0; i < setting.replace.length; i++) {
 				appendReplace(setting.replace[i]);
 			}
 			setSaved("replace", setting == opener.setting);
@@ -575,23 +575,23 @@ $(function() {
 		});
 
 		replaceList.on("click", "li > button.prev", function() {
-			var li = $(this).parent();
-			var prev = li.prev();
+			let li = $(this).parent();
+			let prev = li.prev();
 			if (prev.length) {
 				prev.before(li);
 				setSaved("replace", false);
 			}
 		});
 		replaceList.on("click", "li > button.next", function() {
-			var li = $(this).parent();
-			var next = li.next();
+			let li = $(this).parent();
+			let next = li.next();
 			if (next.length) {
 				next.after(li);
 				setSaved("replace", false);
 			}
 		});
 		replaceList.on("click", "li > button.remove", function() {
-			var li = $(this).parent();
+			let li = $(this).parent();
 			confirm("삭제하시겠습니까?", function() {
 				li.remove();
 				setSaved("replace", false);
@@ -599,11 +599,11 @@ $(function() {
 		});
 		
 		submitFuncs["replace"] = function() {
-			var replaces = [];
+			let replaces = [];
 			
 			replaceList.find("li").each(function() {
-				var li = $(this);
-				var item = {
+				let li = $(this);
+				let item = {
 						from: li.find("input[name=from]").val()
 					,	to  : li.find("input[name=to]").val()
 					,	use : li.find("input[name=use]").prop("checked")
@@ -624,25 +624,25 @@ $(function() {
 	{	// 스타일
 		saved.style = { status: true, name: "스타일 설정" };
 		
-		var presetUl = $("#style_color_preset ul");
+		let presetUl = $("#style_color_preset ul");
 		presetUl.on("click", "li span", function() {
-			var color = setting.colorPreset[$(this).parent().data("key")];
-			for (var name in color) {
+			let color = setting.colorPreset[$(this).parent().data("key")];
+			for (let name in color) {
 				$("input[name=color_" + name + "]").val(color[name]);
 			}
 		}).on("click", "li button", function() {
-			var key = $(this).parent().data("key");
+			let key = $(this).parent().data("key");
 			confirm("삭제하시겠습니까?", function() {
 				delete(setting.colorPreset[key]);
 				refreshPreset(setting);
 			});
 		});
 		$("#btnAddPreset").on("click", function() {
-			var name = prompt("프리셋 이름을 입력하세요.");
+			let name = prompt("프리셋 이름을 입력하세요.");
 			if (!name) {
 				alert("이름이 입력되지 않았습니다.");
 			}
-			var color = {};
+			let color = {};
 			color.background = $("input[name=color_background]").val();
 			color.selector   = $("input[name=color_selector]"  ).val();
 			color.border     = $("input[name=color_border]"    ).val();
@@ -660,8 +660,8 @@ $(function() {
 		});
 		function refreshPreset(setting) {
 			presetUl.empty();
-			for (var key in setting.colorPreset) {
-				var li = $("<li>").data({ key: key });
+			for (let key in setting.colorPreset) {
+				let li = $("<li>").data({ key: key });
 				li.append($("<span>").text(key)).append($("<button>").attr({ type: "button" }).text("×"));
 				presetUl.append(li);
 			}
@@ -673,15 +673,15 @@ $(function() {
 			setSaved("style", setting == opener.setting);
 		})(setting);
 
-		var selectParser = $("select[name=highlight_parser]");
-		var selectStyle  = $("select[name=highlight_style]" );
+		let selectParser = $("select[name=highlight_parser]");
+		let selectStyle  = $("select[name=highlight_style]" );
 		if (opener.highlights) {
-			for (var i = 0; i < opener.highlights.length; i++) {
-				var item = opener.highlights[i].trim();
+			for (let i = 0; i < opener.highlights.length; i++) {
+				let item = opener.highlights[i].trim();
 				if (item.length) {
-					var split = item.split(":");
-					var value = split[0].trim();
-					var name = (split.length > 1) ? split[1].trim() : value;
+					let split = item.split(":");
+					let value = split[0].trim();
+					let name = (split.length > 1) ? split[1].trim() : value;
 	                selectStyle.append($("<option>").val(value).text(name));
                 }
             }
@@ -733,17 +733,17 @@ $(function() {
 			setSaved("player", setting == opener.setting);
 		})(setting);
 	
-		var select = $("select[name=player_control_dll]");
+		let select = $("select[name=player_control_dll]");
 		if (opener.playerDlls) {
-			for (var i = 0; i < opener.playerDlls.length; i++) {
-				var dll = opener.playerDlls[i].split(":");
+			for (let i = 0; i < opener.playerDlls.length; i++) {
+				let dll = opener.playerDlls[i].split(":");
 				select.append($("<option>").val(dll[0].trim()).text(dll[1].trim()));
 			}
 			select.find("option[value='" + select.data("value") + "']").prop("selected", true);
 		}
 		select.on("change", function() {
-			var dll = select.val();
-			var dllSetting = setting.player.control[dll];
+			let dll = select.val();
+			let dllSetting = setting.player.control[dll];
 			if (!dllSetting) {
 				dllSetting = {
 						path: ""
@@ -765,8 +765,8 @@ $(function() {
 
 		submitFuncs["player"] = function() {
 			setting.player.exts = $("input[name=player_exts]").val();
-			var dll = setting.player.control.dll = select.val();
-			var dllSetting = setting.player.control[dll];
+			let dll = setting.player.control.dll = select.val();
+			let dllSetting = setting.player.control[dll];
 			if (!dllSetting) {
 				dllSetting = setting.player.control[dll] = {};
 			}
@@ -783,27 +783,27 @@ $(function() {
 	{	// 메뉴
 		saved.menu = { status: true, name: "메뉴 설정" };
 	
-		var menuList = $("#menuList");
+		let menuList = $("#menuList");
 	
 		function appendMenu(menus) {
 			if (!menus) menus = [""];
 			
-			var fieldset = $("<fieldset>");
-			var legend = $("<legend>")
+			let fieldset = $("<fieldset>");
+			let legend = $("<legend>")
 				.append($("<input type='text'>").val(menus[0]))
 				.append($("<button type='button' class='prev'>").text("∧"))
 				.append($("<button type='button' class='next'>").text("∨"))
 				.append($("<button type='button' class='remove'>").text("✕"));
 			fieldset.append(legend);
 			
-			var ol = $("<ol>");
+			let ol = $("<ol>");
 			fieldset.append(ol);
 			
-			for (var j = 1; j < menus.length; j++) {
-				var menu = menus[j];
-				var div = menu.indexOf("|");
-				var name = (div > 0) ? menu.substring(0, div) : menu;
-				var func = (div > 0) ? menu.substring(div + 1) : "";
+			for (let j = 1; j < menus.length; j++) {
+				let menu = menus[j];
+				let div = menu.indexOf("|");
+				let name = (div > 0) ? menu.substring(0, div) : menu;
+				let func = (div > 0) ? menu.substring(div + 1) : "";
 				appendSubMenu(ol, name, func);
 			}
 			
@@ -826,7 +826,7 @@ $(function() {
 		}
 		(refreshFuncs["menu"] = function(setting) {
 			menuList.empty();
-			for (var i = 0; i < setting.menu.length; i++) {
+			for (let i = 0; i < setting.menu.length; i++) {
 				appendMenu(setting.menu[i]);
 			}
 			setSaved("menu", setting == opener.setting);
@@ -843,23 +843,23 @@ $(function() {
 		});
 
 		menuList.on("click", "legend > button.prev", function() {
-			var menu = $(this).parents("li");
-			var prev = menu.prev();
+			let menu = $(this).parents("li");
+			let prev = menu.prev();
 			if (prev.length) {
 				prev.before(menu);
 				setSaved("menu", false);
 			}
 		});
 		menuList.on("click", "legend > button.next", function() {
-			var menu = $(this).parents("li");
-			var next = menu.next();
+			let menu = $(this).parents("li");
+			let next = menu.next();
 			if (next.length) {
 				next.after(menu);
 				setSaved("menu", false);
 			}
 		});
 		menuList.on("click", "legend > button.remove", function() {
-			var menu = $(this).parents("li");
+			let menu = $(this).parents("li");
 			confirm("삭제하시겠습니까?", function() {
 				menu.remove();
 				setSaved("menu", false);
@@ -867,23 +867,23 @@ $(function() {
 		});
 		
 		menuList.on("click", "ol > li > button.prev", function() {
-			var subMenu = $(this).parent();
-			var prev = subMenu.prev();
+			let subMenu = $(this).parent();
+			let prev = subMenu.prev();
 			if (prev.length) {
 				prev.before(subMenu);
 				setSaved("menu", false);
 			}
 		});
 		menuList.on("click", "ol > li > button.next", function() {
-			var subMenu = $(this).parent();
-			var next = subMenu.next();
+			let subMenu = $(this).parent();
+			let next = subMenu.next();
 			if (next.length) {
 				next.after(subMenu);
 				setSaved("menu", false);
 			}
 		});
 		menuList.on("click", "ol > li > button.remove", function() {
-			var subMenu = $(this).parent();
+			let subMenu = $(this).parent();
 			confirm("삭제하시겠습니까?", function() {
 				subMenu.remove();
 				setSaved("menu", false);
@@ -891,14 +891,14 @@ $(function() {
 		});
 		
 		submitFuncs["menu"] = function() {
-			var menus = [];
+			let menus = [];
 			
 			menuList.find("fieldset").each(function() {
-				var fieldset = $(this);
-				var menu = [fieldset.find("legend > input").val()];
+				let fieldset = $(this);
+				let menu = [fieldset.find("legend > input").val()];
 				
 				fieldset.find("li").each(function() {
-					var inputs = $(this).find("input");
+					let inputs = $(this).find("input");
 					menu.push(inputs[0].value + "|" + inputs[1].value);
 				});
 				menus.push(menu);
@@ -915,26 +915,26 @@ $(function() {
 	}
 	
 	$("#btnLoadSetting").on("click", function() {
-		var refreshFunc = refreshFuncs[opened];
+		let refreshFunc = refreshFuncs[opened];
 		if (refreshFunc) {
 			refreshFunc(setting);
 		}
 	});
 	
 	$("#btnLoadDefault").on("click", function() {
-		var refreshFunc = refreshFuncs[opened];
+		let refreshFunc = refreshFuncs[opened];
 		if (refreshFunc) {
 			refreshFunc(opener.DEFAULT_SETTING);
 		}
 	});
 	
 	$("#btnSubmit").on("click", function() {
-		var submitFunc = submitFuncs[opened];
+		let submitFunc = submitFuncs[opened];
 		if (submitFunc) submitFunc();
 	});
 
 	$("form").each(function() {
-		var form = $(this);
+		let form = $(this);
 		form.attr("onsubmit", "submitFuncs['" + form.attr("id") + "'](); return false;");
 		form.append($("<button type='submit'>").hide());
 	});
