@@ -636,7 +636,7 @@ if (Subtitle && Subtitle.SmiFile) {
 				}
 				
 				const start = smi.body[0].start;
-				let end = smi.body[smi.body.length - 1].start;
+				const end = smi.body[smi.body.length - 1].start;
 				
 				// 메인에서 홀드와 겹치는 영역 찾기
 				let mainBegin = 0;
