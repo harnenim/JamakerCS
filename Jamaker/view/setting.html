@@ -263,11 +263,11 @@ $(function() {
 				});
 			}
 		})(setting);
-	
+		
 		let tbody = tableCommand.find("tbody");
 		let withs = ["withCtrls", "withAlts", "withCtrlAlts", "withCtrlShifts"];
-        let keys = "pqrstuvwxyz{ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890";
-        let keyNames = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"].concat("ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890".split(""));
+		let keys = "pqrstuvwxyz{ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890";
+		let keyNames = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"].concat("ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890".split(""));
 		(refreshTableCommand = function() {
 			tbody.empty();
 			for (let i = 0; i < keys.length; i++) {
@@ -682,19 +682,19 @@ $(function() {
 					let split = item.split(":");
 					let value = split[0].trim();
 					let name = (split.length > 1) ? split[1].trim() : value;
-	                selectStyle.append($("<option>").val(value).text(name));
-                }
-            }
-           	selectParser.find("option[value='" + setting.highlight.parser + "']").prop("selected", true);
-           	selectStyle .find("option[value='" + setting.highlight.style  + "']").prop("selected", true);
-        }
-        selectParser.on("change", function() {
-        	if (selectParser.val()) {
-        		$("#optionsForHighlight").removeClass("disabled").find("input, select").attr({ disabled: false });
-        	} else {
-        		$("#optionsForHighlight").addClass   ("disabled").find("input, select").attr({ disabled: true  });
-        	}
-        }).change();
+					selectStyle.append($("<option>").val(value).text(name));
+				}
+			}
+			selectParser.find("option[value='" + setting.highlight.parser + "']").prop("selected", true);
+			selectStyle .find("option[value='" + setting.highlight.style  + "']").prop("selected", true);
+		}
+		selectParser.on("change", function() {
+			if (selectParser.val()) {
+				$("#optionsForHighlight").removeClass("disabled").find("input, select").attr({ disabled: false });
+			} else {
+				$("#optionsForHighlight").addClass   ("disabled").find("input, select").attr({ disabled: true  });
+			}
+		}).change();
 		
 		$("#style").on("input propertychange", function() {
 			setSaved("style", false);

@@ -498,21 +498,21 @@ function apply() {
 	
 	// 싱크 겹치는 범위 이후 남은 것들
 	for (; fi < frameLines.length; fi++) {
-        var fLines = frameLines[fi].split("<~>");
-        lines.push(fLines[0]);
-        for (var i = 1; i < fLines.length; i++) {
-            lines.push("<~>");
-            lines.push(fLines[i]);
-        }
-    }
-    for (; bi < basicLines.length; bi++) {
-        var bLines = basicLines[bi].split("<~>");
-        lines.push(bLines[0]);
-        for (var i = 1; i < bLines.length; i++) {
-            lines.push("<~>");
-            lines.push(bLines[i]);
-        }
-    }
+		var fLines = frameLines[fi].split("<~>");
+		lines.push(fLines[0]);
+		for (var i = 1; i < fLines.length; i++) {
+			lines.push("<~>");
+			lines.push(fLines[i]);
+		}
+	}
+	for (; bi < basicLines.length; bi++) {
+		var bLines = basicLines[bi].split("<~>");
+		lines.push(bLines[0]);
+		for (var i = 1; i < bLines.length; i++) {
+			lines.push("<~>");
+			lines.push(bLines[i]);
+		}
+	}
 	
 	// 해당 줄 앞뒤 전체 선택되도록 조정
 	var origLines = origin.text.split("\n");
