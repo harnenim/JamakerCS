@@ -425,7 +425,9 @@ window.Combine = {
 							last[ETYPE] = us[ETYPE];
 							group.lines.push(last = curr);
 						} else if (us[ETIME] > last[ETIME]) { // 아래가 먼저 끝남
-							group.lines.push(last = [last[ETIME], last[ETYPE], us[ETIME], us[ETYPE], us, null]);
+							if (last[ETIME] > last[STIME]) {
+								group.lines.push(last = [last[ETIME], last[ETYPE], us[ETIME], us[ETYPE], us, null]);
+							}
 						} else {
 							// 둘 다 끝남 -> 그룹 끝
 						}
@@ -453,7 +455,9 @@ window.Combine = {
 							last[ETYPE] = ls[ETYPE];
 							group.lines.push(last = curr);
 						} else if (ls[ETIME] > last[ETIME]) { // 위가 먼저 끝남
-							group.lines.push(last = [last[ETIME], last[ETYPE], ls[ETIME], ls[ETYPE], null, ls]);
+							if (last[ETIME] > last[STIME]) {
+								group.lines.push(last = [last[ETIME], last[ETYPE], ls[ETIME], ls[ETYPE], null, ls]);
+							}
 						} else {
 							// 둘 다 끝남 -> 그룹 끝
 						}
