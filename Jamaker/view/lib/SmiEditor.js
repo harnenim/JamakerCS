@@ -1283,7 +1283,7 @@ SmiEditor.prototype.updateSync = function (range=null) {
 			}
 		}
 		
-		let newLines = range[0]>0 ? self.lines.slice(0, range[0]) : [];
+		const newLines = range[0]>0 ? self.lines.slice(0, range[0]) : [];
 		let beforeSync = 0;
 		for (let i = range[0] - 1; i >= 0; i--) {
 			if (self.lines[i][LINE.SYNC]) {
@@ -1311,7 +1311,7 @@ SmiEditor.prototype.updateSync = function (range=null) {
 		for (let i = 0; i < toUpdate; i++) {
 			newLines.push(["", 0, null]);
 		}
-		newLines = newLines.concat(self.lines.slice(range[1]));
+		newLines.push(...self.lines.slice(range[1]));
 		
 		// 새로 그릴 범위 파싱
 		// 싱크값을 제외하면 별도의 값을 취하지 않는 간이 파싱
@@ -2357,7 +2357,7 @@ SmiEditor.prototype.normalize = function() {
 	if (text) {
 		const smi = new Subtitle.SmiFile();
 		const input = smi.fromTxt(text).body;
-		Subtitle.Smi.normalize(input);
+		Subtitle.Smi.normalize(input, false, SmiEditor.video.FR / 1000);
 		smi.body = input;
 		SmiEditor.afterTransform(smi.toTxt().trim());
 	}

@@ -39,7 +39,7 @@ Part.prototype.doReplace = function() {
 	
 	switch (this.type) {
 		case Part.Type.TEXT: {
-			for (var i = 0; i < this.replacers.length; i++) {
+			for (let i = 0; i < this.replacers.length; i++) {
 				var replacer = this.replacers[i];
 				if (replacer.parent.selected < 0) {
 					var text = this.origin.text.substring(pos, replacer.start);
@@ -113,7 +113,7 @@ var CheckString = function(text) {
 	this.replacers = [];
 	
 	var pi = 0;
-	for (var i = 0; i < text.length; i++) {
+	for (let i = 0; i < text.length; i++) {
 		var c = text[i];
 		switch (part.type) {
 			case Type.TEXT: {
@@ -172,14 +172,14 @@ var CheckString = function(text) {
 }
 CheckString.prototype.getOrigin = function() {
 	var text = "";
-	for (var i = 0; i < this.parts.length; i++) {
+	for (let i = 0; i < this.parts.length; i++) {
 		text += this.parts[i].origin.text;
 	}
 	return text;
 }
 CheckString.prototype.getParam = function() {
 	var text = "";
-	for (var i = 0; i < this.parts.length; i++) {
+	for (let i = 0; i < this.parts.length; i++) {
 		text += this.parts[i].param.text;
 	}
 	return text.split("\n").join("\r\n");
@@ -187,21 +187,21 @@ CheckString.prototype.getParam = function() {
 CheckString.prototype.setReplacers = function(replacers) {
 	this.replacers = replacers;
 	
-	for (var i = 0; i < replacers.length; i++) {
+	for (let i = 0; i < replacers.length; i++) {
 		var replacer = replacers[i];
 		replacer.selected = -1;
 		replacer.to = replacer.candWord.split("|");
 		replacer.parts = [];
 
 		var si = 0;
-		for (var j = 0; j < this.parts.length; j++) {
+		for (let j = 0; j < this.parts.length; j++) {
 			if (replacer.start < this.parts[j].param.pos) {
 				break;
 			}
 			si = j;
 		}
 		var ei = si;
-		for (var j = si; j < this.parts.length; j++) {
+		for (let j = si; j < this.parts.length; j++) {
 			if (replacer.end <= this.parts[j].param.pos) {
 				break;
 			}
@@ -225,7 +225,7 @@ CheckString.prototype.setReplacers = function(replacers) {
 				,	parent: replacer
 				,	isFirst: true
 			});
-			for (var j = si+1; j < ei; j++) {
+			for (let j = si+1; j < ei; j++) {
 				var part = this.parts[j];
 				part.replacers.push({
 						start: 0
@@ -247,7 +247,7 @@ CheckString.prototype.setReplacers = function(replacers) {
 CheckString.prototype.doReplace = function() {
 	this.replaced = "";
 	this.preview = "";
-	for (var i = 0; i < this.parts.length; i++) {
+	for (let i = 0; i < this.parts.length; i++) {
 		var part = this.parts[i];
 		this.replaced += part.doReplace();
 		this.preview += part.preview;
@@ -339,7 +339,7 @@ function checkSpell(text, data=null) {
 		,	dataType: "text"
 		,	success: function (result) {
 				var lines = result.split("\n");
-				for (var i = 0; i < lines.length; i++) {
+				for (let i = 0; i < lines.length; i++) {
 					if (lines[i].startsWith("\tdata = ")) {
 						parseResultData(eval(lines[i])[0]);
 						break;
@@ -359,12 +359,12 @@ function parseResultData(data) {
 	var olResult = $("#olResult").empty();
 	var preset = olResult.data("preset");
 	
-	for (var i = 0; i < replacers.length; i++) {
+	for (let i = 0; i < replacers.length; i++) {
 		var replacer = replacers[i];
 		var li = preset.clone().data({ info: replacer });
 		var to = li.find(".to");
 		if (replacer.candWord.length) {
-			for (var j = 0; j < replacer.to.length; j++) {
+			for (let j = 0; j < replacer.to.length; j++) {
 				to.append($("<a href='javascript:setChecker(" + i + ", " + j + ")'>").text(replacer.to[j]));
 			}
 		} else {

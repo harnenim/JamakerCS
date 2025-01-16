@@ -570,7 +570,7 @@ if (Subtitle && Subtitle.SmiFile) {
 		}
 		return holds;
 	}
-	Subtitle.SmiFile.holdsToText = function(origHolds, withNormalize=true, withCombine=true, withComment=true) {
+	Subtitle.SmiFile.holdsToText = function(origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) {
 		const result = [];
 		let logs = [];
 		let originBody = [];
@@ -580,7 +580,7 @@ if (Subtitle && Subtitle.SmiFile) {
 		
 		// 정규화 등 작업
 		if (withNormalize) {
-			const normalized = Subtitle.Smi.normalize(main.body, withComment && !withCombine);
+			const normalized = Subtitle.Smi.normalize(main.body, withComment && !withCombine, fps);
 			originBody = normalized.origin;
 			logs = normalized.logs;
 		} else {

@@ -361,7 +361,7 @@ Tab.prototype.replaceBeforeSave = function() {
 	}
 }
 Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
-	return Subtitle.SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment);
+	return Subtitle.SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment, SmiEditor.video.FR / 1000);
 }
 Tab.prototype.onChangeSaved = function(hold) {
 	if (this.isSaved()) {

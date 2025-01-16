@@ -1957,7 +1957,7 @@ Subtitle.Smi.Color.prototype.get = function(value, total) {
 	     + Subtitle.Smi.Color.hex(((this.g * (total - value)) + (this.tg * value)) / total)
 	     + Subtitle.Smi.Color.hex(((this.b * (total - value)) + (this.tb * value)) / total);
 }
-Subtitle.Smi.normalize = function(smis, withComment=false) {
+Subtitle.Smi.normalize = function(smis, withComment=false, fps=23.976) {
 	const origin = new Subtitle.SmiFile();
 	origin.body = smis;
 	origin.fromTxt(origin.toTxt());
@@ -2239,10 +2239,10 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 					attrs[color.index].fc = color.get(1 + 2 * j, 2 * count);
 				}
 				
-				let tAttrs = attrs.slice(0, attrIndex);
-				tAttrs = tAttrs.concat(newAttrs);
+				const tAttrs = attrs.slice(0, attrIndex);
+				tAttrs.push(...newAttrs);
 				tAttrs.push(attr);
-				tAttrs = tAttrs.concat(attrs.slice(attrIndex + 1));
+				tAttrs.push(...attrs.slice(attrIndex + 1));
 				
 				smis.splice(i + j, 0, new Subtitle.Smi((start * (count - j) + end * (j)) / count, (j == 0 ? smi.syncType : Subtitle.SyncType.inner)).fromAttr(tAttrs));
 			}
@@ -2262,7 +2262,7 @@ Subtitle.Smi.normalize = function(smis, withComment=false) {
 		} else if (hasFade) {
 			const start = smi.start;
 			const end = smis[i + 1].start;
-			const count = Math.round((end - start) * 24 / 1001.0); // 23.976fps로 가정
+			const count = Math.round((end - start) * fps / 1000);
 			
 			const fadeColors = [];
 			for (let j = 0; j < attrs.length; j++) {
@@ -2315,7 +2315,8 @@ Subtitle.Smi.fillEmptySync = function(smis) {
 			continue;
 		}
 		
-		const start = smi.start, end = smis[i + 1].start;
+		const start = smi.start;
+		const end = smis[i + 1].start;
 		const length = lines.length;
 		
 		smi.text = lines[0];
@@ -2488,7 +2489,6 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 	
 	for (let i = 0; i < this.body.length; i++) {
 		const smi = this.body[i];
-		let afterComment = null;
 		
 		// 주석 시작점 찾기
 		if (!smi.text.startsWith("<!-- End=")) {
@@ -2503,7 +2503,7 @@ Subtitle.SmiFile.prototype.antiNormalize = function () {
 		
 		// 주석이 여기에서 온전히 끝났을 경우
 		let comment = smi.text.substring(9, commentEnd).trim();
-		afterComment = smi.text.substring(commentEnd + 3).trim();
+		const afterComment = smi.text.substring(commentEnd + 3).trim();
 		
 		comment = comment.split("<​").join("<").split("​>").join(">");
 		try {
@@ -2684,7 +2684,6 @@ Subtitle.SrtFile.prototype.fromTxt = function(txt) {
 		const item = items[i];
 		this.body.push(new Subtitle.Srt(item.start, item.end, item.lines.join("\n")));
 	}
-	maruta = this;
 	
 	return this;
 }

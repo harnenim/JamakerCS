@@ -16,7 +16,7 @@
 	<link rel="stylesheet" type="text/css" href="../lib/AutoCompleteTextarea.css" />
 	<script>
 windowName = "addon";
-var LOG = false;
+let LOG = false;
 
 $(function() {
 	if (opener) {
@@ -24,7 +24,7 @@ $(function() {
 	}
 });
 
-var style = null;
+let style = null;
 function setSetting(setting) {
 	if (style == null) {
 		$("head").append(style = $("<style>"));
@@ -41,12 +41,12 @@ $(function() {
 		// [[시작,종료,대사,줄수], ...]
 		// {lines:[시작,종료,위,아래], maxLines:[1,1]}//, maxWidth: 100
 		
-		var lines = Combine.combine($("#inputUpper").val(), $("#inputLower").val());
+		const lines = Combine.combine($("#inputUpper").val(), $("#inputLower").val());
 		$("#output").val(lines.join("\n"));
 		
 		// preview 돌리기
-		var list = [];
-		for (var i = 0; i < lines.length; i++) {
+		const list = [];
+		for (let i = 0; i < lines.length; i++) {
 			if (i % 2) { // 짝수: 싱크 / 홀수: 대사
 				list.push(lines[i].split("\n").join(""));
 			}
@@ -57,10 +57,10 @@ $(function() {
 	if (setting) {
 		SmiEditor.setSetting(setting);
 	}
-	var inputUpper = $("#inputUpper");
-	var inputLower = $("#inputLower");
-	var upper = new SmiEditor(inputUpper.val());
-	var lower = new SmiEditor(inputLower.val());
+	const inputUpper = $("#inputUpper");
+	const inputLower = $("#inputLower");
+	const upper = new SmiEditor(inputUpper.val());
+	const lower = new SmiEditor(inputLower.val());
 	inputUpper.remove();
 	inputLower.remove();
 	
@@ -72,14 +72,14 @@ $(function() {
 	
 	LH = Number(upper.input.css("line-height").split("px")[0]);
 });
-var refreshPreview = 0;
+let refreshPreview = 0;
 function setPreview(list) {
 	if (refreshPreview) {
 		clearInterval(refreshPreview);
 	}
 	
-	var preview = $("#preview");
-	var i = 0;
+	const preview = $("#preview");
+	let i = 0;
 	refreshPreview = setInterval(function() {
 		while (i >= list.length) {
 			i -= list.length;
@@ -213,6 +213,9 @@ textarea {
 &amp;nbsp;</textarea>
 	<button id="btnCombine">＞</button>
 	<div id="preview"></div>
-	<textarea id="output" spellcheck="false"></textarea>
+	<textarea id="output" spellcheck="false">
+현재 홀드 기능을 활용하면 자동으로 결합 작업이 이뤄지지만
+변칙적인 효과를 만들 경우를 위해 보조용으로 남겨둔 기능입니다.
+	</textarea>
 </body>
 </html>

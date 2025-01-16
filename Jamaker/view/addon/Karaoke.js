@@ -1,4 +1,4 @@
-var DEFAULT_LIST = ("2023.03.27"
+const DEFAULT_LIST = ("2023.03.27"
 	+ "\n五里霧中1112\n混凝土006\n春夏冬004\n真っ赤111\n夜明け111\n真実22\n往来22\n並行22\n曖昧22\n頂戴22\n血管22\n抑制22\n運命22\n衝動22\n逃亡22\n毎日22"
 	+ "\n窮屈22\n条件22\n後悔22\n稲妻22\n朝食22\n東京22\n体温22\n彩り31\n着信22\n完成22\n自覚12\n自分12\n無情12\n期待12\n未来12\n脳裏21\n深紅21\n笑顔12"
 	+ "\n記憶12\n刹那21\n時計12\n形見21\n季節12\n言葉21\n降下21\n間違12\n無力12\n子供12\n時代12\n彷徨03\n欠片03\n剥離21\n剝離21\n明日03\n二人03\n一人03"
@@ -18,24 +18,19 @@ var DEFAULT_LIST = ("2023.03.27"
 	+ "\n覗2\n拭2\n正2\n悪2\n瓶2\n壁2\n直2\n嫌2\n話2\n塩2\n盾2\n黒2\n選2\n勝2\n12\n憎2\n妬2\n認2\n為2\n弱2\n虫2\n許2\n雨2\n酷2\n煽2\n砕2\n堪2\n針2"
 );
 
-var kanjiList = [];
+const kanjiList = [];
 function refreshKanji() {
-	kanjiList = [];
-	var list = savedKanjiList.split("\n");
-	for (var i = 1; i < list.length; i++) { // 첫 줄은 기본값 버전이므로 제외
-		var item = list[i];
-		var word = "", mora = 0;
-		if (item.length % 2 == 0) {
-			var div = item.length / 2;
-			mora = item.substring(div);
+	kanjiList.length = 0;
+	const list = savedKanjiList.split("\n");
+	for (let i = 1; i < list.length; i++) { // 첫 줄은 기본값 버전이므로 제외
+		const item = list[i];
+		if (item.length && (item.length % 2 == 0)) {
+			const div = item.length / 2;
+			const mora = item.substring(div);
 			if (isFinite(mora)) {
-				word = item.substring(0, div);
-			} else {
-				mora = "";
+				const word = item.substring(0, div);
+				kanjiList.push([word, mora]);
 			}
-		}
-		if (word) {
-			kanjiList.push([word, mora]);
 		}
 	}
 	$("#inputKanji").val(savedKanjiList.substring(savedKanjiList.indexOf("\n") + 1)); // 첫 줄은 기본값 버전이므로 제외
@@ -51,31 +46,31 @@ function sortFunc(a, b) {
 
 windowName = "addon";
 
-//var savedKanjiList = localStorage.getItem("kanjiList");
-var KANJI_FILE = "Karaoke.txt";
-var savedKanjiList = "";
+//let savedKanjiList = localStorage.getItem("kanjiList");
+const KANJI_FILE = "Karaoke.txt";
+let savedKanjiList = "";
 
 function afterLoadKanji(text) {
 	if (!text) {
 		// 최초 실행
-		saveKanjiList(savedKanjiList = DEFAULT_LIST);
+		saveKanjiList(DEFAULT_LIST);
 		refreshKanji();
 		
 	} else {
 		// 버전 체크
-		var curr = savedKanjiList.split("\n");
-		var dflt = DEFAULT_LIST  .split("\n");
+		const curr = savedKanjiList.split("\n");
+		const dflt = DEFAULT_LIST  .split("\n");
 		if (curr[0] != dflt[0]) { // 버전이 다를 경우
-			var version = dflt[0];
+			const version = dflt[0];
 			curr = curr.slice(1);
 			dflt = dflt.slice(1);
 
-			var exists = {}; // 현재 설정에 있는 것 체크
-			for (var i = 0; i < curr.length; i++) {
+			const exists = {}; // 현재 설정에 있는 것 체크
+			for (let i = 0; i < curr.length; i++) {
 				exists[curr[i].substring(0, curr[i].length/2)] = i;
 			}
-			for (var i = 0; i < dflt.length; i++) {
-				var item = exists[dflt[i].substring(0, dflt[i].length/2)];
+			for (let i = 0; i < dflt.length; i++) {
+				const item = exists[dflt[i].substring(0, dflt[i].length/2)];
 				if (item) {
 					// 이미 존재하면 기본값으로 덮어쓰려고 했는데
 					// 현재 설정 유지하는 게 나을 듯
@@ -83,7 +78,7 @@ function afterLoadKanji(text) {
 					curr.push(dflt[i]); // 현재 설정에 기본값 추가
 				}
 			}
-			curr = curr.sort(function sortFunc(a, b) {
+			curr.sort(function sortFunc(a, b) {
 				if (a.length < b.length) {
 					return 1;
 				} else if (a.length > b.length) {
@@ -91,20 +86,19 @@ function afterLoadKanji(text) {
 				}
 				return (a.substring(a.length/2) < b.substring(b.length/2)) ? 1 : -1;
 			});
-			savedKanjiList = version + "\n" + curr.join("\n");
-			saveKanjiList();
+			saveKanjiList(version + "\n" + curr.join("\n"));
 		}
 		refreshKanji();
 	}
 }
 //afterReadSetting(savedKanjiList);
 
-function saveKanjiList() {
+function saveKanjiList(txtKanjiList) {
 	//localStorage.setItem("kanjiList", savedKanjiList);
-	saveAddonSetting(KANJI_FILE, savedKanjiList);
+	saveAddonSetting(KANJI_FILE, savedKanjiList = txtKanjiList);
 }
 
-var gana
+let gana
 	= "あいうえお" + "アイウエオ"
 	+ "かきくけこ" + "カキクケコ"
 	+ "がぎぐげご" + "ガギグゲゴ"
@@ -125,9 +119,9 @@ var gana
 	+ "ゃ　ゅ　ょ" + "ャ　ュ　ョ"
 	+ "ゎ　　　　" + "ヮ　　　　"
 ;
-var vws = {};
-for (var i = 0; i < gana.length; i++) {
-	var vw = [];
+const vws = {};
+for (let i = 0; i < gana.length; i++) {
+	const vw = [];
 	switch (Math.floor(i / 10)) {
 		case  0: vw[0] = '';   break;
 		case  1: vw[0] = 'k';  break;
@@ -167,51 +161,51 @@ $(function() {
 		});
 	}
 
-	var inputLyrics = $("#inputLyrics");
-	var inputDivider = $("#inputDivider");
+	const inputLyrics = $("#inputLyrics");
+	const inputDivider = $("#inputDivider");
 	
-	var inputOrig = $("#inputOrig");
-	var inputRead = $("#inputRead");
-	var inputTran = $("#inputTran");
+	const inputOrig = $("#inputOrig");
+	const inputRead = $("#inputRead");
+	const inputTran = $("#inputTran");
 
-	var formEditLine = $("#formEditLine");
-	var inputLineO = $("#inputLineO");
-	var inputLineR = $("#inputLineR");
-	var inputLineT = $("#inputLineT");
+	const formEditLine = $("#formEditLine");
+	const inputLineO = $("#inputLineO");
+	const inputLineR = $("#inputLineR");
+	const inputLineT = $("#inputLineT");
 	
-	var preview    = $("#preview");
-	var formDesign = $("#formDesign");
-	var output     = $("#output");
-	var result = [];
+	const preview    = $("#preview");
+	const formDesign = $("#formDesign");
+	const output     = $("#output");
+	const result = [];
 	
-	var inputOColorFrom = $("#inputOColorFrom");
-	var inputOColorTo   = $("#inputOColorTo"  );
-	var inputRColorFrom = $("#inputRColorFrom");
-	var inputRColorTo   = $("#inputRColorTo"  );
-	var inputTColor     = $("#inputTColor"    );
+	const inputOColorFrom = $("#inputOColorFrom");
+	const inputOColorTo   = $("#inputOColorTo"  );
+	const inputRColorFrom = $("#inputRColorFrom");
+	const inputRColorTo   = $("#inputRColorTo"  );
+	const inputTColor     = $("#inputTColor"    );
 
-	var btnOpenKanji = $("#btnOpenKanji");
-	var formKanji = $("#formKanji");
-	var inputKanji = $("#inputKanji"); // 첫 줄은 기본값 버전이므로 제외
-	var btnApplyKanji = $("#btnApplyKanji");
+	const btnOpenKanji = $("#btnOpenKanji");
+	const formKanji = $("#formKanji");
+	const inputKanji = $("#inputKanji"); // 첫 줄은 기본값 버전이므로 제외
+	const btnApplyKanji = $("#btnApplyKanji");
 
-	var lefts = [	null
+	const lefts = [	null
 		,	"  30%"
 		,	" -30%"
 		,	" -90%"
 		,	"-140%"
 	];
-	var validates = [ null
+	const validates = [ null
 		,	function() { return true; }
 		,	function() { return true; }
 		,	function() { return true; }
 		,	function() { return true; }
 	];
-	var runs = [ null ];
+	const runs = [ null ];
 	
-	var step = 1;
+	let step = 1;
 	$("#total").on("click", ".button.active", function() {
-		var newStep = $(this).data("step");
+		const newStep = $(this).data("step");
 		if (newStep > step && !validates[step]()) {
 			alert("입력값이 불완전합니다.");
 			return;
@@ -224,51 +218,52 @@ $(function() {
 		$("#page" + step).find("input, textarea, button").attr("tabindex", "");
 		$("#page" + (step - 1)).find(".button").addClass("active");
 		$("#page" + (step + 1)).find(".button").addClass("active");
-		var run = runs[step];
-		if (run) run();
+		if (runs[step]) runs[step]();
 	});
 	
 	{	// Step 1
 		function run() {
-			var lines = inputLyrics.val().trim().split("\n");
-			var divider = Number(inputDivider.val());
+			const lines = inputLyrics.val().trim().split("\n");
+			const divider = Number(inputDivider.val());
 			
-			var lineGroups = [];
-			var lineGroup = [];
-			var emptyCount = 0;
-			
-			for (var i in lines) {
-				var line = lines[i];
-				if (line = line.trim()) {
-					// 내용이 있는 줄
-					if (emptyCount) {
-						// 누적된 빈 라인 수에 따라 공백 라인 추가
-						var emptyLines = Math.floor((emptyCount - 1) / divider);
-						for (var j = 0; j < emptyLines; j++) {
-							lineGroups.push([""]);
+			const lineGroups = [];
+			{
+				let lineGroup = [];
+				let emptyCount = 0;
+				
+				for (let i in lines) {
+					const line = lines[i].trim();
+					if (line) {
+						// 내용이 있는 줄
+						if (emptyCount) {
+							// 누적된 빈 라인 수에 따라 공백 라인 추가
+							const emptyLines = Math.floor((emptyCount - 1) / divider);
+							for (let j = 0; j < emptyLines; j++) {
+								lineGroups.push([""]);
+							}
+						}
+						lineGroup.push(line);
+						emptyCount = 0;
+						
+					} else {
+						// 내용이 없는 줄
+						if (emptyCount++ && lineGroup.length) {
+							// 빈 라인 카운트
+							lineGroups.push(lineGroup);
+							lineGroup = [];
 						}
 					}
-					lineGroup.push(line);
-					emptyCount = 0;
-					
-				} else {
-					// 내용이 없는 줄
-					if (emptyCount++ && lineGroup.length) {
-						// 빈 라인 카운트
-						lineGroups.push(lineGroup);
-						lineGroup = [];
-					}
+				}
+				if (lineGroup.length) {
+					lineGroups.push(lineGroup);
 				}
 			}
-			if (lineGroup.length) {
-				lineGroups.push(lineGroup);
-			}
 			
-			var orig = [];
-			var read = [];
-			var tran = [];
+			const orig = [];
+			const read = [];
+			const tran = [];
 			for (i in lineGroups) {
-				var lineGroup = lineGroups[i];
+				const lineGroup = lineGroups[i];
 				if (lineGroup.length >= 3) {
 					// 3줄 이상: 원문/독음/번역
 					orig.push(lineGroup[0]);
@@ -291,10 +286,14 @@ $(function() {
 			inputTran.val(tran.join("\n"));
 		}
 		runs[1] = run;
-		
+
+		let checker = null;
 		function runAfterCheck() {
-			var c = checker = new Date();
+			const c = checker = new Date();
+			
+			// 키 입력 멈추고 1초 후에 동작
 			setTimeout(function() {
+				// 그동안 새로 키 입력 있었으면 취소
 				if (c != checker) {
 					return;
 				}
@@ -302,7 +301,6 @@ $(function() {
 			}, 1000);
 		}
 		
-		var checker = null;
 		inputLyrics.on("keyup", function() {
 			runAfterCheck();
 		});
@@ -311,9 +309,9 @@ $(function() {
 	{	// Step 2
 		validates[2] = function() {
 			// 원문/독음/번역 줄 개수가 같아야 진행 가능
-			var o = inputOrig.val().trim().split("\n").length;
-			var r = inputRead.val().trim().split("\n").length;
-			var t = inputTran.val().trim().split("\n").length;
+			const o = inputOrig.val().trim().split("\n").length;
+			const r = inputRead.val().trim().split("\n").length;
+			const t = inputTran.val().trim().split("\n").length;
 			return o == r && r == t;
 		};
 		
@@ -322,18 +320,18 @@ $(function() {
 				return;
 			}
 			
-			var orig = inputOrig.val().trim().split("\n");
-			var read = inputRead.val().trim().split("\n");
-			var tran = inputTran.val().trim().split("\n");
+			const orig = inputOrig.val().trim().split("\n");
+			const read = inputRead.val().trim().split("\n");
+			const tran = inputTran.val().trim().split("\n");
 			
 			{	// Step 1 역방향 적용
-				var lines = [];
-				for (var i = 0; i < orig.length; i++) {
-					var o = orig[i];
-					var r = read[i];
-					var t = tran[i];
+				const lines = [];
+				for (let i = 0; i < orig.length; i++) {
+					const o = orig[i];
+					const r = read[i];
+					const t = tran[i];
 					
-					var line = o;
+					let line = o;
 					if (o) {
 						if (o != r) {
 							line += "\n" + r;
@@ -345,31 +343,35 @@ $(function() {
 					}
 					lines.push(line);
 				}
-				var divider = Number(inputDivider.val());
-				var n = "";
-				for (var i = 0; i < divider; i++) {
+				const divider = Number(inputDivider.val());
+				let n = "";
+				for (let i = 0; i < divider; i++) {
 					n += "\n";
 				}
 				inputLyrics.val(lines.join(n));
 			}
 			
 			{	// Step 3 비우고 재생성
-				var area = $("#page3 > div:first-child").empty();
-				for (var i = 0; i < orig.length; i++) {
-					var o = orig[i];
-					var r = read[i];
-					var t = tran[i];
-					var line = $("<div>").addClass("line").addClass("line-"+i).data("line", i);
+				const area = $("#page3 > div:first-child").empty();
+				for (let i = 0; i < orig.length; i++) {
+					const o = orig[i];
+					const r = read[i];
+					const t = tran[i];
+					const line = $("<div>").addClass("line").addClass("line-"+i).data("line", i);
 					refreshLine(line, o, r, t);
 					area.append(line);
 				}
 			}
 		}
 		runs[2] = run;
-		
+
+		let checker = null;
 		function runAfterCheck() {
-			var c = checker = new Date();
+			const c = checker = new Date();
+			
+			// 키 입력 멈추고 1초 후에 동작
 			setTimeout(function() {
+				// 그동안 새로 키 입력 있었으면 취소
 				if (c != checker) {
 					return;
 				}
@@ -377,14 +379,14 @@ $(function() {
 			}, 1000);
 		}
 		
-		var checker = null;
 		$("#inputOrig, #inputRead, #inputTran").on("keyup", function() {
 			runAfterCheck();
 		});
 	}
 	
 	function refreshLine(line, o, r, t) {
-		var sumO = 0, sumR = 0;
+		let sumO = 0;
+		let sumR = 0;
 		line.empty();
 		
 		// 최종 결과물: [[문자,모라(,입력란)],[문자,모라(,입력란)], ...]
@@ -392,10 +394,10 @@ $(function() {
 		
 		if (o == r) {
 			// 원문=독음 → 음절 입력 필요 없음
-			var oc = [];
+			const oc = [];
 			
-			var oLine = $("<p>").text(o);
-			for (var j = 0; j < o.length; j++) {
+			const oLine = $("<p>").text(o);
+			for (let j = 0; j < o.length; j++) {
 				if (o[j] == " " || o[j] == "　" || o[j] == "\t") {
 					oc.push([o[j], 0]);
 				} else {
@@ -414,40 +416,43 @@ $(function() {
 			
 		} else {
 			{	// 원문
-				var oc = [], begin, end;
+				let oc = [];
 				
 				// 후리가나 음절 고정
-				var nokori = o;
-				while ((begin = nokori.indexOf('[')) >= 0) {
-					end = nokori.indexOf(']', begin);
-					if (end > 0) {
-						var d = nokori.indexOf('|');
-						if (d > 0) {
-							// [..., ['[生命|いのち]',3,false], ...]
-							oc.push(nokori.substring(0, begin));
-							oc.push([[nokori.substring(begin+1, d), nokori.substring(d+1, end)], (end - d - 1), false]);
-							nokori = nokori.substring(end + 1);
+				let nokori = o;
+				{
+					let begin;
+					while ((begin = nokori.indexOf('[')) >= 0) {
+						const end = nokori.indexOf(']', begin);
+						if (end > 0) {
+							const d = nokori.indexOf('|');
+							if (d > 0) {
+								// [..., ['[生命|いのち]',3,false], ...]
+								oc.push(nokori.substring(0, begin));
+								oc.push([[nokori.substring(begin+1, d), nokori.substring(d+1, end)], (end - d - 1), false]);
+								nokori = nokori.substring(end + 1);
+							}
 						}
 					}
-				}
-				if (nokori) {
-					oc.push(nokori);
+					if (nokori) {
+						oc.push(nokori);
+					}
 				}
 				
 				// 한자 음절 프리셋 적용
-				for (var j = 0; j < oc.length; j++) {
+				for (let j = 0; j < oc.length; j++) {
 					// string: 후리가나 처리 안 되고 남은 것들
 					if (typeof(nokori = oc[j]) == "string") {
 						// 한자 음절 프리셋에서 검색
-						for (var k = 0; k < kanjiList.length; k++) {
-							var word = kanjiList[k][0];
-							var index = nokori.indexOf(word);
+						for (let k = 0; k < kanjiList.length; k++) {
+							const word = kanjiList[k][0];
+							const index = nokori.indexOf(word);
 							if (index >= 0) {
 								// 春夏冬004 → [..., ['春',0,true],['夏',0,true],['冬',4,true], ...]
-								var mora = kanjiList[k][1];
-								var ock = [];
+								const mora = kanjiList[k][1];
+								const ock = [];
 								ock.push(nokori.substring(0, index));
-								for (var l = 0; l < word.length; l++) {
+								for (let l = 0; l < word.length; l++) {
 									ock.push([word[l], Number(mora[l]), true]);
 								}
 								ock.push(nokori.substring(index + word.length));
@@ -460,12 +465,12 @@ $(function() {
 				}
 				
 				// 나머지 음절 처리
-				for (var j = 0; j < oc.length; j++) {
+				for (let j = 0; j < oc.length; j++) {
 					// string: 위에서 처리 안 되고 남은 것들
 					if (typeof(nokori = oc[j]) == "string") {
-						var ocj = [];
-						for (var k = 0; k < nokori.length; k++) {
-							var c = nokori[k];
+						const ocj = [];
+						for (let k = 0; k < nokori.length; k++) {
+							let c = nokori[k];
 							if (c == ' ' || c == '　' || c == '\t') {
 								// 공백 문자 0 고정
 								ocj.push([c, 0, false]);
@@ -476,15 +481,15 @@ $(function() {
 								
 							} else {
 								// 가나 문자가 아닐 경우 음절 입력 지원
-								var isGana = (
+								const isGana = (
 										('ぁ'<=c && c<='ん')
 									||	('ァ'<=c && c<='ヶ')
 								);
 								if (isGana) {
 									// 요음 처리
 									if (k + 1 < nokori.length) {
-										var n = nokori[k + 1];
-										var vw = vws[n];
+										const n = nokori[k + 1];
+										const vw = vws[n];
 										if (vw) {
 											if (vw[0] == 'ly') {
 												if (vws[c][1] == 'i' && vw[1] != 'i') {
@@ -517,9 +522,9 @@ $(function() {
 					}
 				}
 				
-				var tr0 = $("<tr>"), tr1 = $("<tr>");
-				for (var j = 0; j < oc.length; j++) {
-					var c = oc[j][0];
+				const tr0 = $("<tr>"), tr1 = $("<tr>");
+				for (let j = 0; j < oc.length; j++) {
+					let c = oc[j][0];
 					if (typeof(c) != "string") {
 						c = "<ruby>"+c[0]+"<rt>"+c[1]+"</rt></ruby>";
 					}
@@ -527,7 +532,7 @@ $(function() {
 					if (oc[j][2]) { // 음절 입력
 						tr1.append($("<td>").append($("<input type='text'>").val(oc[j][1])));
 					} else {
-						var len = oc[j][1];
+						const len = oc[j][1];
 						tr1.append($("<td>").text(len>1 ? len : len==1 ? "-" : " ").append($("<input type='hidden'>").val(len)));
 					}
 					sumO += oc[j][1];
@@ -538,29 +543,30 @@ $(function() {
 			}
 			
 			{	// 읽기
-				var rc = [];
+				const rc = [];
 			
-				var tr0 = $("<tr>"), tr1 = $("<tr>");
+				const tr0 = $("<tr>"), tr1 = $("<tr>");
 				
-				var last = -1;
-				var 가 = '가'.charCodeAt();
-				var 아 = '아'.charCodeAt();
-				var 잏 = '잏'.charCodeAt();
-				var 힣 = '힣'.charCodeAt();
-				for (var j = 0; j < r.length; j++) {
-					var c = r[j];
-					var cc = c.charCodeAt();
+				const 가 = '가'.charCodeAt();
+				const 아 = '아'.charCodeAt();
+				const 잏 = '잏'.charCodeAt();
+				const 힣 = '힣'.charCodeAt();
+				
+				let last = -1;
+				for (let j = 0; j < r.length; j++) {
+					let c = r[j];
+					let cc = c.charCodeAt();
 					tr0.append($("<td>").text(c));
 					if (가<=cc && cc<=힣) {
-						var batchim = (cc-가) % 28;
+						const batchim = (cc-가) % 28;
 						if (아<=cc && cc<=잏) {
 							// 초성 ㅇ
 							if (batchim) {
 								// 받침 존재: 1~2 입력 가능
-								var cm = Math.floor(((cc-가) % 588) / 28);
-								var len = (cm == 18) ? 1 : 2; // 모음 ㅡ일 경우: 거의 확실하게 1
+								const cm = Math.floor(((cc-가) % 588) / 28);
+								let len = (cm == 18) ? 1 : 2; // 모음 ㅡ일 경우: 거의 확실하게 1
 								if (len == 2) {
-									var lm = Math.floor(((last-가) % 588) / 28);
+									const lm = Math.floor(((last-가) % 588) / 28);
 									len = (lm == cm) ? 1 : 2; // 앞 글자와 모음 같을 경우: 1일 가능성이 큼
 								}
 								rc.push([c, len]);
@@ -634,10 +640,10 @@ $(function() {
 		formEditLine.show().data("line", i);
 	}
 	function saveEditLine() {
-		var i = formEditLine.hide().data("line");
-		var orig = inputOrig.val().trim().split("\n");
-		var read = inputRead.val().trim().split("\n");
-		var tran = inputTran.val().trim().split("\n");
+		const i = formEditLine.hide().data("line");
+		const orig = inputOrig.val().trim().split("\n");
+		const read = inputRead.val().trim().split("\n");
+		const tran = inputTran.val().trim().split("\n");
 		
 		// Step 3 해당 줄 갱신
 		refreshLine($("#page3 .line-"+i)
@@ -660,7 +666,7 @@ $(function() {
 		};
 		
 		function nokori(c, i) {
-			var result = "";
+			let result = "";
 			for (; i < c.length; i++) {
 				if (typeof(c[i][0]) == "string") {
 					result += c[i][0];
@@ -675,23 +681,23 @@ $(function() {
 			if (!validates[3]()) {
 				return;
 			}
-			var orig = inputOrig.val().trim().split("\n");
-			var read = inputRead.val().trim().split("\n");
-			var tran = inputTran.val().trim().split("\n");
+			const orig = inputOrig.val().trim().split("\n");
+			const read = inputRead.val().trim().split("\n");
+			const tran = inputTran.val().trim().split("\n");
 			
-			result = [];
+			result.length = 0;
 			
 			$("#page3 .line").each(function() {
-				var line = $(this);
-				var ort = line.data("ort");
-				var oc = line.data("oc");
-				var rc = line.data("rc");
-				var tc = line.data("tc");
+				const line = $(this);
+				let ort = line.data("ort");
+				let oc = line.data("oc");
+				let rc = line.data("rc");
+				let tc = line.data("tc");
 				
-				var length = 0;
+				let length = 0;
 				
 				if (line.children().length == 1) {
-					for (var i = 0; i < oc.length; i++) {
+					for (let i = 0; i < oc.length; i++) {
 						length += oc[i][1];
 					}
 				} else {
@@ -706,103 +712,114 @@ $(function() {
 				
 				// 음절 입력값 0일 때 묶음 처리
 				// 예: [..., ['春',0,true],['夏',0,true],['冬',4,true], ...] → [..., ['春夏冬',4], ...]
-				var noc = [], tmp = "";
-				for (var i = 0; i < oc.length; i++) {
-					var oci = oc[i];
-					if (typeof(oci[0]) != "string") {
-						if (tmp) {
-							noc.push([tmp, 0]);
-							tmp = "";
-						}
-						noc.push(oci);
-						
-					} else if (oci[1] || (oci[0]==' ' || oci[0]=='　' || oci[0]=='\t')) {
-						noc.push([tmp+oci[0], oci[1]]);
-						tmp = "";
-						
-					} else {
-						tmp += oci[0];
-					}
-				}
-				oc = noc;
-				
-				var or = [];
-				var oi = 0, oCmp = "", oSum = 0, ri = 0, rCmp = "", rSum = 0;
-				for (var i = 1; i <= length; i++) {
-					var orio = [], orir = [];
-					or.push([orio, orir]);
-					
-					{	// 원문
-						// 활성색으로 넘어간 문자열
-						if (oSum < i) {
-							while ((oi < oc.length) && oSum + oc[oi][1] <= i) {
-								if (typeof(oc[oi][0]) == "string") {
-									oCmp += oc[oi][0];
-								} else {
-									oCmp += "["+oc[oi][0][0]+"|"+oc[oi][0][1]+"]";
-								}
-								oSum += oc[oi++][1];
+				{
+					const noc = [];
+					let tmp = "";
+					for (let i = 0; i < oc.length; i++) {
+						const oci = oc[i];
+						if (typeof(oci[0]) != "string") {
+							if (tmp) {
+								noc.push([tmp, 0]);
+								tmp = "";
 							}
-						}
-						orio[0] = oCmp;
-						
-						if (oSum == i) {
-							// 딱 맞을 경우 중간 단계 문자 없음
-							orio[1] = null;
-							orio[2] = nokori(oc, oi);
+							noc.push(oci);
+							
+						} else if (oci[1] || (oci[0]==' ' || oci[0]=='　' || oci[0]=='\t')) {
+							noc.push([tmp+oci[0], oci[1]]);
+							tmp = "";
 							
 						} else {
-							// 현재 문자열 색상 변화 진행도
-							var gi = (i - oSum);
-							var gc = oc[oi][0];
-							var gl = oc[oi][1];
+							tmp += oci[0];
+						}
+					}
+					oc = noc;
+				}
+				
+				const or = [];
+				{
+					let oi = 0;
+					let oCmp = "";
+					let oSum = 0;
+					let ri = 0;
+					let rCmp = "";
+					let rSum = 0;
+					for (let i = 1; i <= length; i++) {
+						const orio = [];
+						const orir = [];
+						or.push([orio, orir]);
+						
+						{	// 원문
+							// 활성색으로 넘어간 문자열
+							if (oSum < i) {
+								while ((oi < oc.length) && oSum + oc[oi][1] <= i) {
+									if (typeof(oc[oi][0]) == "string") {
+										oCmp += oc[oi][0];
+									} else {
+										oCmp += "["+oc[oi][0][0]+"|"+oc[oi][0][1]+"]";
+									}
+									oSum += oc[oi++][1];
+								}
+							}
+							orio[0] = oCmp;
 							
-							orio[2] = "";
-							
-							if (gc.length == 1 || typeof(gc) != "string") {
-								// 한 글자면 그대로 반영
-								orio[1] = [gc, gi, gl]; // [문자(열), 진행도, 전체]
+							if (oSum == i) {
+								// 딱 맞을 경우 중간 단계 문자 없음
+								orio[1] = null;
+								orio[2] = nokori(oc, oi);
 								
 							} else {
-								// 여러 글자 묶음이면 다시 문자별로 계산
-								var r = gc.length * gi / gl;
-								var r1 = r % 1;
-								if (r1 == 0) {
-									orio[0]+= gc.substring(0, r);
-									orio[1] = null;
-									orio[2] = gc.substring(r);
+								// 현재 문자열 색상 변화 진행도
+								const gi = (i - oSum);
+								const gc = oc[oi][0];
+								const gl = oc[oi][1];
+								
+								orio[2] = "";
+								
+								if (gc.length == 1 || typeof(gc) != "string") {
+									// 한 글자면 그대로 반영
+									orio[1] = [gc, gi, gl]; // [문자(열), 진행도, 전체]
+									
 								} else {
-									var j = Math.floor(r);
-									orio[0]+= gc.substring(0, j);
-									orio[1] = [gc.substring(j, j+1), r1, 1]; // [문자(열), 진행도, 전체]
-									orio[2] = gc.substring(j+1);
+									// 여러 글자 묶음이면 다시 문자별로 계산
+									const r = gc.length * gi / gl;
+									const r1 = r % 1;
+									if (r1 == 0) {
+										orio[0]+= gc.substring(0, r);
+										orio[1] = null;
+										orio[2] = gc.substring(r);
+									} else {
+										const j = Math.floor(r);
+										orio[0]+= gc.substring(0, j);
+										orio[1] = [gc.substring(j, j+1), r1, 1]; // [문자(열), 진행도, 전체]
+										orio[2] = gc.substring(j+1);
+									}
+								}
+								
+								// 나머지 비활성색 문자열
+								orio[2] += nokori(oc, oi+1);
+							}
+						}
+						
+						{	// 읽기
+							// 활성색 문자열
+							if (rSum < i) {
+								while ((ri < rc.length) && rSum + rc[ri][1] <= i) {
+									rCmp += rc[ri][0];
+									rSum += rc[ri++][1];
 								}
 							}
-							
-							// 나머지 비활성색 문자열
-							orio[2] += nokori(oc, oi+1);
-						}
-					}
-					
-					{	// 읽기
-						// 활성색 문자열
-						if (rSum < i) {
-							while ((ri < rc.length) && rSum + rc[ri][1] <= i) {
-								rCmp += rc[ri][0];
-								rSum += rc[ri++][1];
+							orir[0] = rCmp;
+	
+							if (rSum == i) {
+								// 딱 맞을 경우 나머지 비활성색
+								orir[1] = null;
+								orir[2] = nokori(rc, ri);
+								
+							} else {
+								// 현재 문자 색상 변화 진행도 및 나머지 비활성색
+								orir[1] = [rc[ri][0], i-rSum, rc[ri][1]]; // [문자(열), 진행도, 전체]
+								orir[2] = nokori(rc, ri+1);
 							}
-						}
-						orir[0] = rCmp;
-
-						if (rSum == i) {
-							// 딱 맞을 경우 나머지 비활성색
-							orir[1] = null;
-							orir[2] = nokori(rc, ri);
-							
-						} else {
-							// 현재 문자 색상 변화 진행도 및 나머지 비활성색
-							orir[1] = [rc[ri][0], i-rSum, rc[ri][1]]; // [문자(열), 진행도, 전체]
-							orir[2] = nokori(rc, ri+1);
 						}
 					}
 				}
@@ -813,9 +830,13 @@ $(function() {
 		}
 		runs[3] = run;
 		
+		let checker = null;
 		function runAfterCheck() {
-			var c = checker = new Date();
+			const c = checker = new Date();
+			
+			// 키 입력 멈추고 1초 후에 동작
 			setTimeout(function() {
+				// 그동안 새로 키 입력 있었으면 취소
 				if (c != checker) {
 					return;
 				}
@@ -823,20 +844,19 @@ $(function() {
 			}, 1000);
 		}
 		
-		var checker = null;
 		$("#page3").on("keyup", "input", function() {
 			// 입력 있을 경우 음절 수 재계산
-			var input = $(this);
-			var table = input.parents("table");
-			var sum = 0;
+			const input = $(this);
+			const table = input.parents("table");
+			let sum = 0;
 			table.find("input").each(function() {
 				sum += Number($(this).val());
 			});
 			table.find(".sum").text(sum);
 			
 			// 원문/독음 따로일 경우 음절 수 맞는지 확인
-			var line = input.parents(".line");
-			var tables = line.find("table");
+			const line = input.parents(".line");
+			const tables = line.find("table");
 			if (tables.length == 2) {
 				if ($(tables[0]).find(".sum").text() == $(tables[1]).find(".sum").text()) {
 					line.removeClass("error");
@@ -874,35 +894,37 @@ $(function() {
 	 * to  : 활성색
 	 */
 	function coloring(line, from, to) {
-		var result = ["","",""];
+		const result = ["","",""];
 		
 		// 활성, 비활성
-		for (var i = 0; i <= 2; i += 2) {
+		for (let i = 0; i <= 2; i += 2) {
 			if (line[i]) {
-				var lineI = [], nokori = line[i];
-				var begin, end;
+				const lineI = [];
 
 				// 후리가나 그룹으로 배열 분리
-				while ((begin = nokori.indexOf('[')) >= 0) {
-					end = nokori.indexOf(']', begin);
-					if (end) {
-						var d = nokori.indexOf('|');
-						if (d) {
-							if (begin > 0) {
-								lineI.push(nokori.substring(0, begin));
+				{	let nokori = line[i];
+					let begin;
+					while ((begin = nokori.indexOf('[')) >= 0) {
+						const end = nokori.indexOf(']', begin);
+						if (end) {
+							const d = nokori.indexOf('|');
+							if (d) {
+								if (begin > 0) {
+									lineI.push(nokori.substring(0, begin));
+								}
+								lineI.push([nokori.substring(begin+1, d), nokori.substring(d+1, end)]);
+								nokori = nokori.substring(end + 1);
 							}
-							lineI.push([nokori.substring(begin+1, d), nokori.substring(d+1, end)]);
-							nokori = nokori.substring(end + 1);
 						}
 					}
-				}
-				if (nokori) {
-					lineI.push(nokori);
+					if (nokori) {
+						lineI.push(nokori);
+					}
 				}
 				
 				// 색상태그 입히기
-				var color = colorCode(i==0 ? to : from);
-				for (var j = 0; j < lineI.length; j++) {
+				const color = colorCode(i==0 ? to : from);
+				for (let j = 0; j < lineI.length; j++) {
 					if (typeof(lineI[j]) == "string") {
 						result[i] += "<FONT color=\""+color+"\">" + lineI[j] + "</FONT>";
 					} else {
@@ -914,12 +936,12 @@ $(function() {
 		
 		// 중간 단계
 		if (line[1]) {
-			var gc = line[1][0];
-			var gi = line[1][1];
-			var gl = line[1][2];
+			const gc = line[1][0];
+			const gi = line[1][1];
+			const gl = line[1][2];
 			if (typeof(gc) == "string") {
 				// 한 글자 문자면 바로 색상 처리
-				var color = [
+				const color = [
 						Math.floor((from[0]*(gl-gi) + to[0]*gi) / gl)
 					,	Math.floor((from[1]*(gl-gi) + to[1]*gi) / gl)
 					,	Math.floor((from[2]*(gl-gi) + to[2]*gi) / gl)
@@ -928,11 +950,11 @@ $(function() {
 				
 			} else {
 				// RUBY 태그 처리
-				var ruby = [];
+				const ruby = [];
 				
-				for (var i = 0; i < 2; i++) {
-					var r = gc[i].length * gi / gl;
-					var r1 = r % 1;
+				for (let i = 0; i < 2; i++) {
+					const r = gc[i].length * gi / gl;
+					const r1 = r % 1;
 					if (r1 == 0) {
 						//글자 수 딱 떨어질 때
 						ruby[i] = "<FONT color=\""+colorCode(to  )+"\">" + gc[i].substring(0, r) + "</FONT>"
@@ -940,12 +962,12 @@ $(function() {
 						
 					} else {
 						// 중간 색이 필요할 때
-						var color = [
+						const color = [
 								Math.floor(from[0] + (to[0] - from[0]) * r1)
 							,	Math.floor(from[1] + (to[1] - from[1]) * r1)
 							,	Math.floor(from[2] + (to[2] - from[2]) * r1)
 						];
-						var j = Math.floor(r);
+						const j = Math.floor(r);
 						ruby[i] = "";
 						if (j > 0) {
 							ruby[i] += "<FONT color=\""+colorCode(to   )+"\">" + gc[i].substring(0, j  ) + "</FONT>";
@@ -967,11 +989,11 @@ $(function() {
 	
 	{	// Step 4
 		function run() {
-			var oColorFrom = inputOColorFrom.val();
-			var oColorTo   = inputOColorTo  .val();
-			var rColorFrom = inputRColorFrom.val();
-			var rColorTo   = inputRColorTo  .val();
-			var tColor     = inputTColor    .val();
+			let oColorFrom = inputOColorFrom.val();
+			let oColorTo   = inputOColorTo  .val();
+			let rColorFrom = inputRColorFrom.val();
+			let rColorTo   = inputRColorTo  .val();
+			let tColor     = inputTColor    .val();
 			
 			if (oColorFrom.length == 7) oColorFrom = oColorFrom.substring(1);
 			if (oColorTo  .length == 7) oColorTo   = oColorTo  .substring(1);
@@ -989,23 +1011,22 @@ $(function() {
 			rColorTo   = [hexToNumber(rColorTo  .substring(0,2)), hexToNumber(rColorTo  .substring(2,4)), hexToNumber(rColorTo  .substring(4,6))];
 			tColor     = [hexToNumber(tColor    .substring(0,2)), hexToNumber(tColor    .substring(2,4)), hexToNumber(tColor    .substring(4,6))];
 			
-			var preset = "";
+			let preset = "";
 			formDesign.find("input[name=preset]").each(function() {
-				var input = $(this);
+				const input = $(this);
 				if (input.prop("checked")) {
 					preset = input.val();
 				}
 			});
-
-			var html = [];
 			
-			for (var i = 0; i < result.length; i++) {
-				var line = result[i];
-				var syncs = [];
+			const html = [];
+			
+			for (let i = 0; i < result.length; i++) {
+				const line = result[i];
 				
-				for (var j = 0; j < line[1].length; j++) {
-					var sync = [];
-					for (var k = 0; k < preset.length; k++) {
+				for (let j = 0; j < line[1].length; j++) {
+					let sync = [];
+					for (let k = 0; k < preset.length; k++) {
 						switch (preset[k]) {
 							case "O":
 								sync.push(coloring(line[1][j][0], oColorFrom, oColorTo));
@@ -1040,10 +1061,15 @@ $(function() {
 			output.val(html.join("\n").split("<RT>").join("<RP>(</RP><RT>").split("</RT>").join("</RT><RP>)</RP>"));
 		}
 		runs[4] = run;
-		
+
+
+		let checker = null;
 		function runAfterCheck() {
-			var c = checker = new Date();
+			const c = checker = new Date();
+			
+			// 키 입력 멈추고 1초 후에 동작
 			setTimeout(function() {
+				// 그동안 새로 키 입력 있었으면 취소
 				if (c != checker) {
 					return;
 				}
@@ -1076,35 +1102,35 @@ $(function() {
 		}
 	});
 	btnApplyKanji.on("click", function() {
-		var lines = inputKanji.val().split("\n");
-		var list = [];
-		var checker = {};
-		for (var i = 0; i < lines.length; i++) {
-			var item = lines[i];
+		const lines = inputKanji.val().split("\n");
+		const list = [];
+		const checker = {};
+		for (let i = 0; i < lines.length; i++) {
+			const item = lines[i];
 			
 			// 중복 제외
 			if (checker[item]) continue;
 			checker[item] = true;
 			
-			var mora = "", sum = 0;
+			let sum = 0;
 			if (item.length % 2 == 0) {
-				var div = item.length / 2;
-				mora = item.substring(div);
+				const div = item.length / 2;
+				const mora = item.substring(div);
 				if (!isFinite(mora)) {
 					alert("오류가 있습니다.\n" + item);
 					return;
 				} else {
-					for (var j = 0; j < mora.length; j++) {
+					for (let j = 0; j < mora.length; j++) {
 						sum += Number(mora[j]);
 					}
+					list.push([item, mora, sum]);
 				}
 			} else {
 				alert("오류가 있습니다.\n" + item);
 				return;
 			}
-			list.push([item, mora, sum]);
 		}
-		list = list.sort(function(a, b) {
+		list.sort(function(a, b) {
 			if (a[1].length < b[1].length) {
 				return 1;
 			} else if (a[1].length > b[1].length) {
@@ -1113,13 +1139,12 @@ $(function() {
 			return (a[2] < b[2]) ? 1 : -1;
 		});
 		
-		for (var i = 0; i < list.length; i++) {
+		for (let i = 0; i < list.length; i++) {
 			list[i] = list[i][0];
 		}
 		
-		var result = list.join("\n");
-		savedKanjiList = savedKanjiList.substring(0, savedKanjiList.indexOf("\n") + 1) + result;
-		saveKanjiList();
+		const result = list.join("\n");
+		saveKanjiList(savedKanjiList.substring(0, savedKanjiList.indexOf("\n") + 1) + result);
 		refreshKanji();
 		inputKanji.val(result);
 		inputKanji.scrollTop(0);

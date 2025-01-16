@@ -18,7 +18,7 @@ $(function() {
 	}
 });
 
-var style = null;
+let style = null;
 function setSetting(setting) {
 	if (style == null) {
 		$("head").append(style = $("<style>"));
@@ -26,7 +26,7 @@ function setSetting(setting) {
 	style.html("#preview {\n" + setting.viewer.css + "}");
 }
 
-var editor = null;
+const editor = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
 
 function shakeSync(lines, index, size) {
 	/*
@@ -34,65 +34,72 @@ function shakeSync(lines, index, size) {
 	 * ２※６
 	 * ７４１
 	 */
-	var step = index % 8;
+	const step = index % 8;
 	
-	var text = [];
+	const text = [];
+	
+	// 좌우로 흔들기
+	// 플레이어에서 사이즈 미지원해도 좌우로는 흔들리도록
+	const LRmin = "<font size=\"" + (3 * size) + "\"></font>";
+	const LRmid = "<font size=\"" + (3 * size) + "\"> </font>";
+	const LRmax = "<font size=\"" + (3 * size) + "\">  </font>";
+	
+	// 상하로 흔들기
+	// 플레이어에서 사이즈 미지원하면 상하로 흔들리지 않음
+	const TBmin = "<font size=\"" + (0 * size) + "\">　</font>";
+	const TBmid = "<font size=\"" + (1 * size) + "\">　</font>";
+	const TBmax = "<font size=\"" + (2 * size) + "\">　</font>";
 	
 	{	// 좌우로 흔들기
 		// 플레이어에서 사이즈 미지원해도 좌우로는 흔들리도록
-		var tag = "<font size=\"" + (3 * size) + "\">";
-		var min = "";
-		var mid = tag + " </font>";
-		var max = tag + "  </font>";
-		
 		if (step == 2 || step == 5 || step == 7) {
-			for (var i = 0; i < lines.length; i++) {
-				text.push("​" + min + lines[i] + max + "​");
+			for (let i = 0; i < lines.length; i++) {
+				text.push("​" + LRmin + lines[i] + LRmax + "​");
 			}
 		} else if (step == 0 || step == 4) {
-			for (var i = 0; i < lines.length; i++) {
-				text.push("​" + mid + lines[i] + mid + "​");
+			for (let i = 0; i < lines.length; i++) {
+				text.push("​" + LRmid + lines[i] + LRmid + "​");
 			}
 		} else {
-			for (var i = 0; i < lines.length; i++) {
-				text.push("​" + max + lines[i] + min + "​");
+			for (let i = 0; i < lines.length; i++) {
+				text.push("​" + LRmax + lines[i] + LRmin + "​");
 			}
 		}
 	}
 
 	{	// 상하로 흔들기
-		// 플레이어에서 사이즈 미지원하면 상하로 흔들리지 않도록
+		// 플레이어에서 사이즈 미지원하면 상하로 흔들리지 않음
 		if (step == 0 || step == 3 || step == 5) {
-			text.unshift("<font size=\"" + (0 * size) + "\">　</font>");
-			text.push   ("<font size=\"" + (2 * size) + "\">　</font>");
+			text.unshift(TBmin);
+			text.push   (TBmax);
 		} else if (step == 2 || step == 6) {
-			text.unshift("<font size=\"" + (1 * size) + "\">　</font>");
-			text.push   ("<font size=\"" + (1 * size) + "\">　</font>");
+			text.unshift(TBmid);
+			text.push   (TBmid);
 		} else {
-			text.unshift("<font size=\"" + (2 * size) + "\">　</font>");
-			text.push   ("<font size=\"" + (0 * size) + "\">　</font>");
+			text.unshift(TBmax);
+			text.push   (TBmin);
 		}
 	}
 	
 	return text.join("<br>");
 }
 
-var start = 0;
-var end = 0;
+let start = 0;
+let end = 0;
 
 function shake() {
-	var speed = $("#inputSpeed").val();
-	var size  = $("#inputSize" ).val();
+	const speed = $("#inputSpeed").val();
+	const size  = $("#inputSize" ).val();
 
-	var previewList = [];
-	var result = [];
-	var groups = [];
-	var group = {}; // {start:0,end:10,lines:[]}
-	var lastSyncIndex = -1;
+	const previewList = [];
+	const result = [];
+	const groups = [];
+	let group = {}; // {start:0,end:10,lines:[]}
+	let lastSyncIndex = -1;
 	
-	var i = start;
+	let i = start;
 	for (; i < end; i++) {
-		var line = editor.lines[i];
+		const line = editor.lines[i];
 		if (line[LINE.TYPE]) {
 			break;
 		} else {
@@ -100,7 +107,7 @@ function shake() {
 		}
 	}
 	for (; i < end; i++) {
-		var line = editor.lines[i];
+		const line = editor.lines[i];
 		if (line[LINE.TYPE]) {
 			group.end = line[LINE.SYNC];
 			groups.push(group = { start: line[LINE.SYNC], type: line[LINE.TYPE], end: 0, text: [] });
@@ -115,34 +122,36 @@ function shake() {
 		
 	} else {
 		// 마지막에 추가한 건 종료싱크 없음
-		var footer = [editor.lines[lastSyncIndex][LINE.TEXT]].concat(group.text);
+		const footer = [editor.lines[lastSyncIndex][LINE.TEXT]].concat(group.text);
 		
-		var shaked = [];
-		var index = 0;
-		for (var i = 0; i < groups.length - 1; i++) {
-			group = groups[i];
-			var text = group.text.join(" ");
-			if (text.split("&nbsp;").join("").trim().length == 0) {
-				shaked.push({ time: group.start, type: group.type, text: "&nbsp;" });
-				
-			} else {
-				var count = Math.floor(((group.end - group.start) / speed) + 0.5);
-				var lines = text.split(/<br>/gi);
-				shaked.push({ time: group.start, type: group.type, text: shakeSync(lines, index++, size) });
-				for (var j = 1; j < count; j++) {
-					var time = Math.floor((group.start * (count - j) + group.end * j) / count);
-					shaked.push({ time: time, type: TYPE.RANGE, text: shakeSync(lines, index++, size) });
+		const shaked = [];
+		{
+			let index = 0;
+			for (let i = 0; i < groups.length - 1; i++) {
+				group = groups[i];
+				const text = group.text.join(" ");
+				if (text.split("&nbsp;").join("").trim().length == 0) {
+					shaked.push({ time: group.start, type: group.type, text: "&nbsp;" });
+					
+				} else {
+					const count = Math.floor(((group.end - group.start) / speed) + 0.5);
+					const lines = text.split(/<br>/gi);
+					shaked.push({ time: group.start, type: group.type, text: shakeSync(lines, index++, size) });
+					for (let j = 1; j < count; j++) {
+						const time = Math.floor((group.start * (count - j) + group.end * j) / count);
+						shaked.push({ time: time, type: TYPE.RANGE, text: shakeSync(lines, index++, size) });
+					}
 				}
 			}
 		}
 		
-		for (var i = 0; i < shaked.length; i++) {
-			var item = shaked[i];
+		for (let i = 0; i < shaked.length; i++) {
+			const item = shaked[i];
 			result.push(SmiEditor.makeSyncLine(item.time, item.type));
 			result.push(item.text);
 			previewList.push(item.text);
 		}
-		result = result.concat(footer);
+		result.concat(...footer);
 	}
 	
 	$("#output").val(result.join("\n"));
@@ -150,19 +159,19 @@ function shake() {
 	setPreview(previewList, speed);
 };
 
-var refreshPreview = 0;
+let refreshPreview = 0;
 function setPreview(list, speed) {
 	if (refreshPreview) {
 		clearInterval(refreshPreview);
 	}
 
-	var preview = $("#preview");
+	const preview = $("#preview");
 	if (!list || !list.length) {
 		preview.html("");
 		return;
 	}
 	
-	var i = 0;
+	let i = 0;
 	refreshPreview = setInterval(function() {
 		while (i >= list.length) {
 			i -= list.length;
@@ -174,21 +183,21 @@ function toShowText(showText) {
 	// RUBY태그 문법이 미묘하게 달라서 가공 필요
 	showText = showText.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
 	// font size도 추가 작업
-	{	var j = 0;
-		var begin = 0;
+	{	let j = 0;
+		let begin = 0;
 		while ((begin = showText.toUpperCase().indexOf("<FONT", j)) >= 0) {
 			if (begin > showText.length) {
 				break;
 			}
-			var end = showText.indexOf(">", begin);
+			let end = showText.indexOf(">", begin);
 			if (end < 0) break;
 			
-			var tag = showText.substring(begin, end);
-			var index = tag.toUpperCase().indexOf("SIZE=");
+			const tag = showText.substring(begin, end);
+			const index = tag.toUpperCase().indexOf("SIZE=");
 			if (index > 0) {
-				var q = tag[index + 5];
-				var size = 0;
-				var qEnd = 0;
+				let q = tag[index + 5];
+				let size = 0;
+				let qEnd = 0;
 				if (q == '"' || q == "'") {
 					qEnd = tag.indexOf(q, index + 7);
 					if (qEnd > 0) {
@@ -201,9 +210,8 @@ function toShowText(showText) {
 					q = "";
 				}
 				if (size == 0) {
-					var tmp = tag.substring(index + 5 + q.length);
 					for (qEnd = index + 5 + q.length; qEnd < tag.length; qEnd++) {
-						var c = tag[qEnd];
+						const c = tag[qEnd];
 						if (isFinite(c)) {
 							size = size * 10 + Number(c);
 						} else {
@@ -212,13 +220,13 @@ function toShowText(showText) {
 					}
 				}
 				if (size) {
-					var potSize = (window.innerWidth / 586) * size; // 팟플레이어 기준 계산 
+					let potSize = (window.innerWidth / 586) * size; // 팟플레이어 기준 계산 
 					
 					// 크로뮴에서 10보다 작으면 제대로 안 보임
 					// 이런 크기는 사실상 흔들기 기능 공백으로만 쓰임
 					//if (potSize < 10) potSize += 50;
 					
-					var style = 'style="font-size: ' + potSize + 'px;"';
+					const style = 'style="font-size: ' + potSize + 'px;"';
 					showText = showText.substring(0, begin + index) + style + showText.substring(begin + qEnd);
 					end = end - qEnd + index + style.length;
 				}
@@ -227,10 +235,10 @@ function toShowText(showText) {
 		}
 	}
 	{	// 팟플레이어에선 공백문자 그대로 표시됨
-		var a = showText.split("<");
+		const a = showText.split("<");
 		a[0] = a[0].split(" ").join("&nbsp;");
-		for (var j = 1; j < a.length; j++) {
-			var b = a[j].indexOf(">");
+		for (let j = 1; j < a.length; j++) {
+			const b = a[j].indexOf(">");
 			if (b >= 0) {
 				a[j] = a[j].substring(0, b) + ">" + a[j].substring(b+1).split(" ").join("&nbsp;");
 			}
@@ -238,9 +246,9 @@ function toShowText(showText) {
 		showText = a.join("<");
 	}
 	{	// 흔들기 효과 상하 공백줄 처리 -> 맨 윗줄만
-		var showLines = showText.split(/<br>/gi);
+		const showLines = showText.split(/<br>/gi);
 		if (showLines.length > 2) {
-			var line = showLines[0];
+			const line = showLines[0];
 			if ($("<span>").html(line).text() == "　") {
 				if (line.indexOf("font-size:") > 0) {
 					showLines[0] = line.split("<font style=\"font-size:").join("<div style=\"height:").split("</font>").join("</div>");
@@ -253,12 +261,12 @@ function toShowText(showText) {
 }
 
 function apply() {
-	var text = $("#output").val();
+	const text = $("#output").val();
 	
 	// 해당 줄 앞뒤 전체 선택되도록 조정
-	var origLines = editor.text.split("\n");
-	var front = origLines.slice(0, start);
-	var range = [(start > 0) ? (front.join("\n").length + 1) : 0];
+	const origLines = editor.text.split("\n");
+	const front = origLines.slice(0, start);
+	const range = [(start > 0) ? (front.join("\n").length + 1) : 0];
 	range.push(range[0] + text.length);
 	
 	// 교체 및 종료
@@ -268,7 +276,6 @@ function apply() {
 }
 
 $(function() {
-	editor = opener.SmiEditor.selected;
 	if (!editor) {
 		alert("작업 대상이 없습니다.");
 	}
@@ -278,7 +285,7 @@ $(function() {
 	start = 0;
 	end = editor.lines.length;
 	
-	var range = editor.getCursor();
+	const range = editor.getCursor();
 	if (range[0] != range[1]) {
 		start = editor.text.substring(0, range[0]).split("\n").length - 1;
 		end   = editor.text.substring(0, range[1]).split("\n").length;
@@ -347,11 +354,14 @@ $(function() {
 <body>
 	<div id="areaInput">
 		<textarea id="input" spellcheck="false" readonly></textarea>
-		<label>속도: <input type="number" id="inputSpeed" value="100" />ms</label>
+		<label>속도: <input type="number" id="inputSpeed" value="125" />ms</label>
 		<label>흔들림 크기: <input type="number" id="inputSize" value="1" /></label>
 	</div>
 	<button id="btnShake">＞</button>
-	<textarea id="output"></textarea>
+	<textarea id="output">
+현재 특수 태그로 흔들기 효과를 지원하고 있으나
+여러 싱크에 적용할 경우의 편의를 위해 남겨둔 기능입니다.
+	</textarea>
 	<button id="btnApply">적용</button>
 	<div id="preview"></div>
 </body>

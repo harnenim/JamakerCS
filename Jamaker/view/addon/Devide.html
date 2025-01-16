@@ -16,13 +16,7 @@ windowName = "addon";
 
 // 초기 상태 기억
 // TODO: 경우에 따라 opener 분리 필요
-var origin = null;
-var tab = null;
-$(function() {
-	if (tab = opener.SmiEditor.selected) {
-		origin = tab.getText();
-	}
-});
+const origin = opener && opener.SmiEditor.selected ? opener.SmiEditor.selected.getText() : null;
 
 function init() {
 	if (!origin) {
@@ -30,8 +24,8 @@ function init() {
 		window.close();
 		return false;
 	}
-	var start = 0;
-	var end = 0;
+	let start = 0;
+	let end = 0;
 
 	// 선택 범위만 작업
 	if (origin.selection[0] != origin.selection[1]) {
@@ -46,10 +40,10 @@ function init() {
 
 function smiTrim(text, prev="", next="") {
 	text = text.trim();
-	var valid = true;
+	let valid = true;
 
 	while (text.startsWith("<")) {
-		var tagEnd = text.indexOf(">") + 1;
+		const tagEnd = text.indexOf(">") + 1;
 		if (tagEnd <= 0) {
 			break;
 		}
@@ -66,7 +60,7 @@ function smiTrim(text, prev="", next="") {
 		valid = false;
 	}
 	while (text.endsWith(">")) {
-		var tagStart = text.lastIndexOf("<");
+		const tagStart = text.lastIndexOf("<");
 		if (tagStart < 0) {
 			break;
 		}
@@ -78,74 +72,65 @@ function smiTrim(text, prev="", next="") {
 }
 
 function devide() {
-	var lines = $("#input").val().split("\n");
+	const syncs = [];
 	
-	var syncs = [];
-	var lastSync = null;
-	
-	for (var i = 0; i < lines.length; i++) {
-		var line = lines[i];
-		if (line.substring(0, 6).toUpperCase() == "<SYNC ") {
-			// 싱크 줄이면 새 객체
-			syncs.push(lastSync = {
-					sync: line
-				,	text: []
-			});
-			
-		} else if (line.substring(0, 7).toUpperCase() == "</BODY>") {
-			// 문서 끝
-			break;
-			
-		} else {
-			if (lastSync) {
-				// 현재 싱크에 추가
-				lastSync.text.push(line);
+	{	const lines = $("#input").val().split("\n");
+		let lastSync = null;
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			if (line.substring(0, 6).toUpperCase() == "<SYNC ") {
+				// 싱크 줄이면 새 객체
+				syncs.push(lastSync = {
+						sync: line
+					,	text: []
+				});
+				
+			} else if (line.substring(0, 7).toUpperCase() == "</BODY>") {
+				// 문서 끝
+				break;
+				
+			} else {
+				if (lastSync) {
+					// 현재 싱크에 추가
+					lastSync.text.push(line);
+				}
+				// lastSync가 없었으면 첫 싱크 줄보다 위 -> 버림
 			}
-			// lastSync가 없었으면 첫 싱크 줄보다 위 -> 버림
 		}
 	}
 	
-	for (var i = 0; i < syncs.length; i++) {
+	for (let i = 0; i < syncs.length; i++) {
 		// 개행문자는 공백문자 처리 후 <br> 줄 단위로 나누기
-		var lines = syncs[i].text.join(" ").split(/<br>/gi);
-		for (var j = 0; j < lines.length; j++) {
-			var line = lines[j];
-			
-			var text = smiTrim($("<span>").html(line).text());
-			if (text == "" || text == "　") {
-				line = null;
-			} else {
-				line = smiTrim(line);
-			}
-			
-			lines[j] = line;
+		const lines = syncs[i].text.join(" ").split(/<br>/gi);
+		for (let j = 0; j < lines.length; j++) {
+			const line = lines[j];
+			const text = smiTrim($("<span>").html(line).text());
+			lines[j] = (text == "" || text == "　") ? null : smiTrim(line);
 		}
 		syncs[i].text = lines;
 	}
 	
-	var upper = [];
-	var lower = [];
+	const upper = [];
+	const lower = [];
+	let keeps = null;
 	
-	var keeps = null;
 	function devideKeeps() {
-		var last = keeps[0];
-		
 		if (keeps.length == 1) {
-			lower.push(last);
+			lower.push(keeps[0]);
 			
 		} else {
-			var lineCount = last.text.length;
+			const lineCount = keeps[0].text.length;
 
 			// 맨 아랫줄 기준으로 함께 바뀌는 줄을 찾음
-			var devider = lineCount - 1;
-			for (var cut = 0; cut < lineCount; cut++) { // 자르는 기준선 늘려가며 테스트
-				last = keeps[0];
-				var clear = true;
-				for (var i = 1; i < keeps.length; i++) {
-					var sync = keeps[i];
+			let devider = lineCount - 1;
+			for (let cut = 0; cut < lineCount; cut++) { // 자르는 기준선 늘려가며 테스트
+				let last = keeps[0];
+				let clear = true;
+				for (let i = 1; i < keeps.length; i++) {
+					const sync = keeps[i];
 					if (last.text[lineCount-1] == sync.text[lineCount-1]) { // 마지막 줄이 같음
 						// 자르는 기준선보다 아래가 모두 일치해야 함
-						for (var j = lineCount-2; j >= cut; j--) {
+						for (let j = lineCount-2; j >= cut; j--) {
 							if (last.text[j] != sync.text[j]) { // 다른 게 있으면 끝내기
 								clear = false;
 								break;
@@ -166,14 +151,14 @@ function devide() {
 			
 			if (devider == 0) {
 				// 맨 윗줄 기준으로 함께 바뀌는 줄을 찾음
-				for (var cut = lineCount - 1; cut >= 0; cut--) { // 자르는 기준선 줄여가며 테스트
-					last = keeps[0];
-					var clear = true;
-					for (var i = 1; i < keeps.length; i++) {
-						var sync = keeps[i];
+				for (let cut = lineCount - 1; cut >= 0; cut--) { // 자르는 기준선 줄여가며 테스트
+					let last = keeps[0];
+					let clear = true;
+					for (let i = 1; i < keeps.length; i++) {
+						const sync = keeps[i];
 						if (last.text[0] == sync.text[0]) { // 첫 줄이 같음
 							// 자르는 기준선보다 위가 모두 일치해야 함
-							for (var j = 1; j < cut; j++) {
+							for (let j = 1; j < cut; j++) {
 								if (last.text[j] != sync.text[j]) { // 다른 게 있으면 끝내기
 									clear = false;
 									break;
@@ -195,30 +180,30 @@ function devide() {
 			
 			if (devider > 0) {
 				// 분리 성공
-				for (var i= 0; i < keeps.length; i++) {
+				for (let i= 0; i < keeps.length; i++) {
 					// 한 대사가 여러 싱크로 나뉜 건 아래에서 텍스트로 변환 후 조치
-					var keep = keeps[i];
+					const keep = keeps[i];
 					upper.push({sync: keep.sync, text: keep.text.slice(0, devider)});
 					lower.push({sync: keep.sync, text: keep.text.slice(devider)});
 				}
 				
 			} else {
 				// 분리 실패
-				lower = lower.concat(keeps);
+				lower.concat(...keeps);
 			}
 		}
 		keeps = null;
 	}
 	
-	for (var i = 0; i < syncs.length; i++) {
-		var sync = syncs[i];
+	for (let i = 0; i < syncs.length; i++) {
+		const sync = syncs[i];
 		if (sync.text.length > 1) {
 			if (keeps) {
-				var hasEqual = false;
-				var last = keeps[keeps.length - 1];
+				const last = keeps[keeps.length - 1];
+				let hasEqual = false;
 				if (last.text.length == sync.text.length) {
 					// 줄 개수가 같을 때
-					for (var j = 0; j < sync.text.length; j++) {
+					for (let j = 0; j < sync.text.length; j++) {
 						if ((last.text[j] != null) && (last.text[j] == sync.text[j])) {
 							// 문자열이 그대로인 줄이 있음
 							hasEqual = true;
@@ -253,29 +238,30 @@ function devide() {
 		devideKeeps();
 	}
 	
-	var lists = [upper, lower];
-	for (var _ = 0; _ < 2; _++) {
-		var list = lists[_];
-		var last = "&nbsp;";
-		for (var i = 0; i < list.length; i++) {
-			var lines = list[i].text;
-			var text = [];
-			var j = 0;
+	// 위-아래 두 번만 돌리기 위한 유사 루프
+	const lists = [upper, lower];
+	for (let _ = 0; _ < 2; _++) {
+		const list = lists[_];
+		let last = "&nbsp;";
+		for (let i = 0; i < list.length; i++) {
+			const lines = list[i].text;
+			const newLines = [];
+			let j = 0;
 			// 위쪽의 공백은 걷어냄
 			for (; j < lines.length; j++) {
 				if (lines[j] != null) {
-					text.push(lines[j++]);
+					newLines.push(lines[j++]);
 					break;
 				}
 			}
 			for (; j < lines.length; j++) {
 				if (lines[j] == null) {
-					text.push("<b>　</b>");
+					newLines.push("<b>　</b>");
 				} else {
-					text.push(lines[j]);
+					newLines.push(lines[j]);
 				}
 			}
-			text = text.length ? text.join("<br>") : "&nbsp;";
+			const text = newLines.length ? newLines.join("<br>") : "&nbsp;";
 			
 			if (text == last) {
 				// 중복 걷어내기
@@ -285,7 +271,7 @@ function devide() {
 			}
 		}
 
-		for (var i = 0; i < list.length; i++) {
+		for (let i = 0; i < list.length; i++) {
 			list[i] = list[i].sync + "\n" + list[i].text;
 		}
 	}
@@ -298,10 +284,10 @@ $(function() {
 	init();
 	
 	SmiEditor.setSetting(opener ? opener.setting : { autoComplete: {}, hlghlight: {} });
-	var editor = new SmiEditor($("#input").val());
+	const editor = new SmiEditor($("#input").val());
 	$("#input").remove();
 	
-	$("body").prepend(editor.input.attr("id", "input"));
+	$("body").prepend(editor.input.attr({ id: "input" }));
 	SmiEditor.selected = editor;
 	SmiEditor.activateKeyEvent();
 	

@@ -12,65 +12,64 @@
 	<script>
 windowName = "addon";
 
-var editor = null;
+const editor = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
 
 $(function() {
-	editor = opener.SmiEditor.selected;
 	if (!editor) {
 		alert("작업 대상이 없습니다.");
 	}
 	
-	var start = 0;
-	var end = editor.lines.length;
-	
-	var range = editor.getCursor();
-	if (range[0] != range[1]) {
-		start = editor.text.substring(0, range[0]).split("\n").length - 1;
-		end   = editor.text.substring(0, range[1]).split("\n").length;
+	{
+		let start = 0;
+		let end = editor.lines.length;
+		const range = editor.getCursor();
+		if (range[0] != range[1]) {
+			start = editor.text.substring(0, range[0]).split("\n").length - 1;
+			end   = editor.text.substring(0, range[1]).split("\n").length;
+		}
+		$("#input").val(linesToText(editor.lines.slice(start, end)));
 	}
-	$("#input").val(linesToText(editor.lines.slice(start, end)));
 	
 	$("#btnExport").on("click", function() {
-		var input  = new Subtitle.SmiFile($("#input").val());
+		const input = new Subtitle.SmiFile($("#input").val());
 		{	// 프레임 단위 싱크 역보정... 필요한가?
 			if (opener && opener.SmiEditor && opener.SmiEditor.sync && opener.SmiEditor.sync.frame) {
-				var FL = opener.SmiEditor.video.FL;
-				for (var i = 0; i < input.body.length; i++) {
-					var item = input.body[i];
+				const FL = opener.SmiEditor.video.FL;
+				for (let i = 0; i < input.body.length; i++) {
+					const item = input.body[i];
 					item.start = Math.max(1, ((Math.round(item.start / FL) - 0.5) * FL));
 				}
 			}
 		}
-		var ass = new Subtitle.AssFile().fromSync(input.toSync());
+		const ass = new Subtitle.AssFile().fromSync(input.toSync());
 		/*
 		{	// 팟플레이어 겹치는 싱크 보정
-			var syncMap = {};
-			for (var i = 0; i < ass.body.length; i++) {
-				var item = ass.body[i];
+			const syncMap = {};
+			for (let i = 0; i < ass.body.length; i++) {
+				const item = ass.body[i];
 				if (syncMap[item.start]) { syncMap[item.start]++; } else { syncMap[item.start] = 1; }
 				if (syncMap[item.end  ]) { syncMap[item.end  ]++; } else { syncMap[item.end  ] = 1; }
 			}
-			for (var i = 0; i < ass.body.length; i++) {
-				var item = ass.body[i];
+			for (let i = 0; i < ass.body.length; i++) {
+				const item = ass.body[i];
 				if (syncMap[item.start] > 1) item.start += 1;
 				if (syncMap[item.end  ] > 1) item.end   += 1;
 			}
 		}
 		*/
-		var output = ass.toTxt();
 		
-		var lines = output.split("\n");
-		for (var i = 0; i < lines.length; i++) {
-			var line = lines[i].split("\r")[0].split(",");
+		const lines = ass.toTxt().split("\n");
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i].split("\r")[0].split(",");
 			if (line.length > 9) {
-				var text = line[9];
+				const text = line[9];
 				
 				// RUBY 태그 다중일 경우 처리
-				var sLines = text.split("\\N");
-				var rubyRanges = [];
-				var lastRange = null;
-				var overlapCount = 0;
-				for (var j = 0; j < sLines.length; j++) {
+				const sLines = text.split("\\N");
+				const rubyRanges = [];
+				let lastRange = null;
+				let overlapCount = 0;
+				for (let j = 0; j < sLines.length; j++) {
 					if (sLines[j].startsWith("{\\fscy50")) {
 						if (lastRange) {
 							lastRange[1] = j;
@@ -80,16 +79,15 @@ $(function() {
 						}
 					}
 				}
+				
+				const type = line[3];
 				if (overlapCount) {
-					var type = line[3];
-					var front = (type[0] == "［" ? "{}" : "") + "{" + $("#pos").val() + "}";
-					var end = (type[1] == "］" ? "{}" : "");
-					
+					// RUBY 태그 둘 이상 존재
 					function lineWithRuby(rangeIndex, on) {
-						var result = [];
-						var pos = 0;
-						for (var j = 0; j < rubyRanges.length; j++) {
-							var rubyRange = rubyRanges[j];
+						const result = [];
+						let pos = 0;
+						for (let j = 0; j < rubyRanges.length; j++) {
+							const rubyRange = rubyRanges[j];
 							for (; pos < rubyRange[0]; pos++) {
 								result.push(sLines[pos]);
 							}
@@ -106,10 +104,13 @@ $(function() {
 						line[9] = front + result.join("\\N") + end;
 						return line.join(",");
 					}
-					var newLines = [lineWithRuby(0, 0)];
-					for (var j = 0; j < rubyRanges.length; j++) {
-						var rubyRange = rubyRanges[j];
-						for (var k = 1; k <= rubyRange[1]; k++) {
+					
+					const front = (type[0] == "［" ? "{}" : "") + "{" + $("#pos").val() + "}";
+					const end   = (type[1] == "］" ? "{}" : "");
+					const newLines = [lineWithRuby(0, 0)];
+					for (let j = 0; j < rubyRanges.length; j++) {
+						const rubyRange = rubyRanges[j];
+						for (let k = 1; k <= rubyRange[1]; k++) {
 							newLines.push(lineWithRuby(j, k));
 						}
 					}
@@ -117,15 +118,9 @@ $(function() {
 					
 				} else {
 					// 완성 후에도 화면 싱크 체크용으로 {} 표시
-					var type = line[3];
-					if (type[0] == "［") {
-						line[9] = "{}" + text;
-					}
-					line = line.join(",");
-					if (type[1] == "］") {
-						line = line + "{}";
-					}
-					lines[i] = line;
+					if (type[0] == "［") { line[9] = "{}" + text; }
+					if (type[1] == "］") { line[9] = line[9] + "{}"; }
+					lines[i] = line.join(",");
 				}
 			}
 		}

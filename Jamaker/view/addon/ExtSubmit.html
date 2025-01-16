@@ -10,18 +10,16 @@
 	<script>
 windowName = "addon";
 
-var editor = null;
-
 $(function() {
 	opener.SmiEditor.Addon.onloadExtSubmit();
 });
 function submit(method, url, values) {
-	var form = $("form");
+	const form = $("form");
 	form.attr({
 			action: url
 		,	method: method
 	});
-	for (var key in values) {
+	for (let key in values) {
 		form.append($("<input>").attr({"type": "hidden", "name": key, "value": values[key]}));
 	}
 	form[0].submit();

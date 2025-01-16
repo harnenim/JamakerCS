@@ -7,13 +7,13 @@
 	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script>
 $(function() {
-	var ul = $("ul");
-	var iframe = $("iframe")[0];
+	const ul = $("ul");
+	const iframe = $("iframe")[0];
 	
 	ul.on("click", "li", function() {
-		var li = $(this);
-		var text = li.find("p").text();
-		var data = li.find("span.data").text();
+		const li = $(this);
+		const text = li.find("p").text();
+		const data = li.find("span.data").text();
 		iframe.contentWindow.checkSpell(text, data);
 	});
 });
@@ -60,7 +60,7 @@ ul li span { display: none; }
 	<iframe src="SpellCheck.html"></iframe>
 	<ul>
 		<li>
-			<p>
+			<p contenteditable="true">
 home
 이 검사기는 &lt;b&gt;비상업적 용도&lt;/b&gt;로만 사용할 수 있습니다.
 온라인 검사기 사용법  |  의견 보내기
@@ -77,7 +77,7 @@ Copyrightⓒ2001 AI Lab & Narainfotech. All Rights Reserved
 			<span class="data">[{"str":"\rhome\r이 검사기는 비상업적 용도로만 사용할 수 있습니다.\r온라인 검사기 사용법  |  의견 보내기\r 검사: ctrl+enter 입력 내용 지우기  강한 규칙 적용하기[총 글자 수]\r검사할 문장을 입력하세요.\t마지막 깁고 더함 : 24/12/16\rCopyrightⓒ2001 AI Lab & Narainfotech. All Rights Reserved\r맞춤법/문법 검사기 구매 문의\r(MS Word/아래아 한글용)\r\r한국어 맞춤법/문법 검사기는 부산대학교 인공지능연구실과 (주)나라인포테크가 함께 만들고 있습니다.\r이 검사기는 개인이나 학생만 무료로 사용할 수 있습니다.\r\r","errInfo":[{"help":"공백이나 기호를 중복해서 썼거나 잘못 사용하였습니다.","errorIdx":0,"correctMethod":5,"start":43,"errMsg":"","end":53,"orgStr":"사용법  |  의견","candWord":"사용법 | 의견"},{"help":"영어 단어를 잘못 표기하셨습니다.<br/><br/>고유명사의 첫 글자나 문장을 시작할 때는 대문자로 써야 하고, 다른 글자나 일반 명사는 소문자로 적습니다. 첫 글자만 따서 만든 단어일 때는 모두 대문자로 씁니다.<br/><br/>(예) Seoul<br/>appletiME -&gt; time<br/><br/>로마자를 입력할 때도 한글처럼 알파벳을 잘못 입력하여 오류를 범할 수 있으므로 주의해야 합니다.<br/><br/>(1) 알파벳의 순서를 바꿔 쓰거나 다른 글자를 입력한 오류<br/>adn -&gt; and<br/>theone -&gt; throne<br/><br/>(2) 필요한 글자가 빠지거나 불필요한 글자를 더 입력한 오류<br/>comitment -&gt; commitment<br/>wellcome -&gt; welcome","errorIdx":1,"correctMethod":2,"start":63,"errMsg":"","end":67,"orgStr":"ctrl","candWord":"Ctrl"},{"help":"공백이나 기호를 중복해서 썼거나 잘못 사용하였습니다.","errorIdx":2,"correctMethod":5,"start":80,"errMsg":"","end":87,"orgStr":"지우기  강한","candWord":"지우기 강한"},{"help":"&apos;총&apos;의 띄어쓰기는 생각보다 어렵습니다. &apos;모두 합하여 몇임을 나타내는 말&apos;은 관형사로 봅니다. 그러나 &apos;전체를 아우르는&apos; 또는 &apos;전체를 합한&apos;의 뜻을 나타내는 &apos;총-&apos;은 접두사로 봅니다. 따라서 &apos;총연습&apos;이나 &apos;총인원&apos;은 붙여 쓰지만, &apos;총 백 명&apos; 따위는 띄어 씁니다. 하지만 &apos;총 어린이 수&apos;처럼 쓸 때는 &apos;어린이 총수(전체의 수량이나 분량을 나타낸 수)&apos;로 쓰는 것이 바람직합니다.","errorIdx":3,"correctMethod":3,"start":96,"errMsg":"","end":102,"orgStr":"총 글자 수","candWord":"글자 총수"},{"help":"철자 검사를 해 보니 이 어절은 분석할 수 없으므로 틀린 말로 판단하였습니다.<br/><br/>후보 어절은 이 철자검사/교정기에서 띄어쓰기, 붙여 쓰기, 음절대치와 같은 교정방법에 따라 수정한 결과입니다.<br/><br/>후보 어절 중 선택하시거나 오류 어절을 수정하여 주십시오.<br/><br/>* 단, 사전에 없는 단어이거나 사용자가 올바르다고 판단한 어절에 대해서는 통과하세요!!","errorIdx":4,"correctMethod":7,"start":164,"errMsg":"","end":176,"orgStr":"Narainfotech","candWord":""}],"idx":0}]</span>
 		</li>
 		<li>
-			<p>&lt;Sync Start=115907>&lt;P Class=KRCC>
+			<p contenteditable="true">&lt;Sync Start=115907>&lt;P Class=KRCC>
 관둘까...
 &lt;Sync Start=117534>&lt;P Class=KRCC>
 &amp;nbsp;

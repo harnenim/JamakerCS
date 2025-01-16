@@ -12,21 +12,21 @@ windowName = "help";
 $(function() {
 	$("#version").text(opener.setting.version);
 	
-	var url = (opener && opener.binder && !opener.binder._)
+	const url = (opener && opener.binder && !opener.binder._)
 		? /* C# 프로그램에서 서버 호출 */ "https://harnenim.github.io/Jamaker/updates.json"
 		: /* 웹버전 내부에서 로컬 호출 */ "../../updates.json"
 		;
 	$.ajax({url : url
 		,	success: function(updates) {
-				var isLatest = true;
-				var log = [];
-				var files = [];
-				for (var i = 0; i < updates.length; i++) {
-					var update = updates[i];
+				let isLatest = true;
+				const log = [];
+				const files = [];
+				for (let i = 0; i < updates.length; i++) {
+					const update = updates[i];
 					if (update.version > opener.setting.version) {
 						isLatest = false;
-						for (var j = 0; j < update.files.length; j++) {
-							var file = update.files[j];
+						for (let j = 0; j < update.files.length; j++) {
+							const file = update.files[j];
 							if (files.indexOf(file) < 0) {
 								files.push(file);
 							}
@@ -38,7 +38,7 @@ $(function() {
 					log.push("");
 					log.push("　" + update.version);
 					log.push("");
-					for (var j = 0; j < update.comment.length; j++) {
+					for (let j = 0; j < update.comment.length; j++) {
 						log.push("　" + update.comment[j]);
 					}
 					log.push("");

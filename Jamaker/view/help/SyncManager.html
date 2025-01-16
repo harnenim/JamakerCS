@@ -13,12 +13,12 @@ windowName = "help";
 $(function() {
 	$("#comment").on("mouseover", "li", function() {
 		$(".area.select").removeClass("select");
-		var area = (""+$(this).data("area")).split("-");
-		for (var i = 0; i < area[0].length; i++) {
+		const area = (""+$(this).data("area")).split("-");
+		for (let i = 0; i < area[0].length; i++) {
 			$("#preview_" + area[0][i]).addClass("input");
 		}
 		if (area.length < 2) return;
-		for (var i = 0; i < area[1].length; i++) {
+		for (let i = 0; i < area[1].length; i++) {
 			$("#preview_" + area[1][i]).addClass("output");
 		}
 	}).on("mouseout", function() {
