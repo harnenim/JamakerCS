@@ -412,8 +412,8 @@ window.Combine = {
 						// 아래는 유지하고 위는 바뀐 걸 추가
 						if (last[STIME] == us[STIME]) {
 							last[UPPER] = us;
-						} else {
-							const curr = [us[STIME], us[STYPE], last[2], last[3], us, last[LOWER]];
+						} else if (us[STIME] < last[ETIME]) {
+							const curr = [us[STIME], us[STYPE], last[ETIME], last[ETYPE], us, last[LOWER]];
 							last[ETIME] = us[STIME];
 							last[ETYPE] = us[STYPE];
 							group.lines.push(last = curr);
@@ -425,9 +425,7 @@ window.Combine = {
 							last[ETYPE] = us[ETYPE];
 							group.lines.push(last = curr);
 						} else if (us[ETIME] > last[ETIME]) { // 아래가 먼저 끝남
-							if (last[ETIME] > last[STIME]) {
-								group.lines.push(last = [last[ETIME], last[ETYPE], us[ETIME], us[ETYPE], us, null]);
-							}
+							group.lines.push(last = [last[ETIME], last[ETYPE], us[ETIME], us[ETYPE], us, null]);
 						} else {
 							// 둘 다 끝남 -> 그룹 끝
 						}
@@ -442,7 +440,7 @@ window.Combine = {
 						// 위는 유지하고 아래는 바뀐 걸 추가
 						if (last[STIME] == ls[STIME]) {
 							last[LOWER] = ls;
-						} else {
+						} else if (ls[STIME] < last[ETIME]) {
 							const curr = [ls[STIME], ls[STYPE], last[ETIME], last[ETYPE], last[UPPER], ls];
 							last[ETIME] = ls[STIME];
 							last[ETYPE] = ls[STYPE];
@@ -455,9 +453,7 @@ window.Combine = {
 							last[ETYPE] = ls[ETYPE];
 							group.lines.push(last = curr);
 						} else if (ls[ETIME] > last[ETIME]) { // 위가 먼저 끝남
-							if (last[ETIME] > last[STIME]) {
-								group.lines.push(last = [last[ETIME], last[ETYPE], ls[ETIME], ls[ETYPE], null, ls]);
-							}
+							group.lines.push(last = [last[ETIME], last[ETYPE], ls[ETIME], ls[ETYPE], null, ls]);
 						} else {
 							// 둘 다 끝남 -> 그룹 끝
 						}
