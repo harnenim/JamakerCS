@@ -869,7 +869,7 @@ SmiEditor.prototype.reSync = function(sync, limitRange) {
 	
 	// 커서가 위치한 줄
 	const cursor = this.input[0].selectionStart;
-	const lineNo = this.input.val().substring(0, cursor).split("\n").length - 1;
+	let lineNo = this.input.val().substring(0, cursor).split("\n").length - 1;
 
 	if (!sync) {
 		sync = SmiEditor.getSyncTime();
