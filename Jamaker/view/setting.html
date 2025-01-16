@@ -171,8 +171,12 @@ $(function() {
 			fieldEditor.css(ecss);
 			fieldViewer.css(vcss);
 			fieldPlayer.css(pcss);
-			
-			setSaved("window", setting == opener.setting);
+
+			setSaved("window"
+				,  (JSON.stringify(setting.window) == JSON.stringify(opener.setting.window))
+				&& (JSON.stringify(setting.viewer.window) == JSON.stringify(opener.setting.viewer.window))
+                && (JSON.stringify(setting.player.window) == JSON.stringify(opener.setting.player.window))
+			);
 		})(setting);
 	
 		submitFuncs["window"] = function() {
@@ -214,7 +218,7 @@ $(function() {
 	{	// 싱크
 		(refreshFuncs["sync"] = function(setting) {
 			refresh($("#sync"), setting);
-			setSaved("sync", setting == opener.setting);
+            setSaved("sync", (JSON.stringify(setting.sync) == JSON.stringify(opener.setting.sync)));
 		})(setting);
 		
 		submitFuncs["sync"] = function() {
@@ -518,7 +522,7 @@ $(function() {
 	{	// 자동완성
 		(refreshFuncs["ac"] = function(setting) {
 			refresh($("#ac"), setting);
-			setSaved("ac", setting == opener.setting);
+            setSaved("ac", (JSON.stringify(setting.autoComplete) == JSON.stringify(opener.setting.autoComplete)));
 		})(setting);
 	
 		submitFuncs["ac"] = function() {
@@ -564,7 +568,10 @@ $(function() {
 			for (let i = 0; i < setting.replace.length; i++) {
 				appendReplace(setting.replace[i]);
 			}
-			setSaved("replace", setting == opener.setting);
+			setSaved("replace"
+				, (setting.saveWithNormalize == opener.setting.saveWithNormalize)
+				&& (JSON.stringify(setting.command) == JSON.stringify(opener.setting.command))
+			);
 		})(setting);
 		
 		$("#replace > .add-replace").on("click", function() {
@@ -668,7 +675,15 @@ $(function() {
 		(refreshFuncs["style"] = function(setting) {
 			refresh($("#style"), setting);
 			refreshPreset(setting);
-			setSaved("style", setting == opener.setting);
+			setSaved("style"
+				,  (setting.useTab == opener.setting.useTab)
+                && (setting.viewer.useAlign == opener.setting.viewer.useAlign)
+                && (JSON.stringify(setting.highlight  ) == JSON.stringify(opener.setting.highlight  ))
+                && (JSON.stringify(setting.color      ) == JSON.stringify(opener.setting.color      ))
+				&& (JSON.stringify(setting.colorPreset) == JSON.stringify(opener.setting.colorPreset))
+				&& (JSON.stringify(setting.newFile    ) == JSON.stringify(opener.setting.newFile    ))
+				&& (JSON.stringify(setting.viewer.css ) == JSON.stringify(opener.setting.viewer.css ))
+			);
 		})(setting);
 
 		let selectParser = $("select[name=highlight_parser]");
@@ -728,7 +743,10 @@ $(function() {
 	{	// 플레이어
 		(refreshFuncs["player"] = function(setting) {
 			refresh($("#player"), setting);
-			setSaved("player", setting == opener.setting);
+			setSaved("player"
+				,  (setting.exts == opener.setting.exts)
+                && (JSON.stringify(setting.player.control) == JSON.stringify(opener.setting.player.control))
+			);
 		})(setting);
 	
 		const select = $("select[name=player_control_dll]");
@@ -827,7 +845,7 @@ $(function() {
 			for (let i = 0; i < setting.menu.length; i++) {
 				appendMenu(setting.menu[i]);
 			}
-			setSaved("menu", setting == opener.setting);
+            setSaved("menu", (JSON.stringify(setting.menu) == JSON.stringify(opener.setting.menu)));
 		})(setting);
 		
 		$("#menu > .add-menu").on("click", function() {

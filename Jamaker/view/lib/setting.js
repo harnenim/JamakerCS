@@ -40,7 +40,7 @@ let checkVersion;
 	const lastNotifyForMenu = "2024.11.19.v2";
 }
 
-const DEFAULT_SETTING =
+window.DEFAULT_SETTING =
 {	version: "2025.01.14.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
