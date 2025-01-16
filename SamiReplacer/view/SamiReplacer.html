@@ -12,17 +12,16 @@
 	<link rel="stylesheet" type="text/css" href="lib/webview.css" />
 	<link rel="stylesheet" type="text/css" href="lib/ListView.css" />
 	<script>
-var listFiles;
+let listFiles;
 
 function init(jsonSetting) {
-	var setting = {};
 	try {
-		setting = JSON.parse(jsonSetting);
+		const setting = JSON.parse(jsonSetting);
+		$("#vFrom").val(setting.from);
+		$("#vTo"  ).val(setting.to  );
 	} catch (e) {
 		alert("설정 파일이 잘못됐습니다.");
 	}
-	$("#vFrom").val(setting.from);
-	$("#vTo"  ).val(setting.to  );
 }
 
 function drop(x, y) {
@@ -49,24 +48,27 @@ function beforeExit() {
 }
 
 // 원래 C#에서 돌렸었는데, SubtitleObject.js 수정내역이 많아져서 이쪽에서 돌림
-var originRange = null, targetRange = null;
-var hasNewFrameSync = false;
-var matches = [];
+let originRange = null;
+let targetRange = null;
+let hasNewFrameSync = false;
+const matches = [];
 
 function replace(index, text) {
-	var holds = Subtitle.SmiFile.textToHolds(text);
+	const holds = Subtitle.SmiFile.textToHolds(text);
 	
-	var changed = 0;
-    for (var hi = 0; hi < holds.length; hi++) {
-        var isChanged = false;
-		var hold = holds[hi];
-		var originSmi = new Subtitle.SmiFile(hold.text);
+	let changed = 0;
+    for (let hi = 0; hi < holds.length; hi++) {
+		const hold = holds[hi];
+		const originSmi = new Subtitle.SmiFile(hold.text);
+        let isChanged = false;
 	
-		var i = 0, shiftIndex = 0, shiftTime = 0;
+		let i = 0;
+		let shiftIndex = 0;
+		let shiftTime = 0;
 		for (; i < originSmi.body.length; i++) {
 			if (originSmi.body[i].text == originRange[0].text) {
 				shiftTime = originSmi.body[i].start - originRange[0].start;
-				var isCorrect = true;
+				let isCorrect = true;
 	
 				for (shiftIndex = 0; shiftIndex < originRange.length; shiftIndex++) {
 					if (!originSmi.body[i + shiftIndex].text == originRange[shiftIndex].text) {
@@ -92,14 +94,14 @@ function replace(index, text) {
 		if (isChanged) {
 			changed++;
 			
-			var targetSmi = new Subtitle.SmiFile();
+			const targetSmi = new Subtitle.SmiFile();
 			targetSmi.header = originSmi.header;
 			targetSmi.footer = originSmi.footer;
 	
-			for (var k = 0; k < i; k++) {
+			for (let k = 0; k < i; k++) {
 				targetSmi.body.push(originSmi.body[k]);
 			}
-			for (var k = 0; k < targetRange.length; k++) {
+			for (let k = 0; k < targetRange.length; k++) {
 				if (targetRange[k].syncType == Subtitle.SyncType.frame && matches[k] >= 0) {
 					console.log([i, k, matches[k]].join(","));
                     console.log((i + matches[k]) + " / " + originSmi.body.length)
@@ -117,7 +119,7 @@ function replace(index, text) {
 				}
 			}
 	
-			for (var k = i + shiftIndex; k < originSmi.body.length; k++) {
+			for (let k = i + shiftIndex; k < originSmi.body.length; k++) {
 				targetSmi.body.push(originSmi.body[k]);
 			}
 	
@@ -126,7 +128,7 @@ function replace(index, text) {
 	}
 	
 	if (changed) {
-		text = Subtitle.SmiFile.holdsToText(holds);
+		text = Subtitle.SmiFile.holdsToText(holds); // 여기서 fps 값 가져오긴 어렵나...
 	} else {
 		text = null;
 	}
@@ -138,38 +140,38 @@ function replace(index, text) {
 $(function() {
 	listFiles = new ListView($("#listFiles"));
 	listFiles.run = function(item) {
-		var from = $("#vFrom").val();
+		const from = $("#vFrom").val();
 		if (from.length == 0) {
 			alert("변환할 내용이 없습니다.");
 			return;
 		}
-		var to = $("#vTo").val();
+		const to = $("#vTo").val();
 		originRange = new Subtitle.SmiFile(from).body;
 		targetRange = new Subtitle.SmiFile(to  ).body;
 		binder.compare(item.value);
 	}
 	
 	$("#btnReplace").on("click", function() {
-		var files = [];
-		for (var i = 0; i < listFiles.list.length; i++) {
+		const files = [];
+		for (let i = 0; i < listFiles.list.length; i++) {
 			files.push(listFiles.list[i].value);
 		}
 		if (files.length == 0) {
 			alert("변환할 파일이 없습니다.");
 			return;
 		}
-		var from = $("#vFrom").val();
+		const from = $("#vFrom").val();
 		if (from.length == 0) {
 			alert("변환할 내용이 없습니다.");
 			return;
 		}
-		var to = $("#vTo").val();
+		const to = $("#vTo").val();
 		originRange = new Subtitle.SmiFile(from).body;
 		targetRange = new Subtitle.SmiFile(to  ).body;
 		hasNewFrameSync = false;
-		matches = [];
-		var i = 0;
-		for (var j = 0; j < targetRange.length; j++) {
+		matches.length = 0;
+		let i = 0;
+		for (let j = 0; j < targetRange.length; j++) {
 			if (targetRange[j].syncType != Subtitle.SyncType.frame) continue;
 
 			while (i < originRange.length && originRange[i].start < targetRange[j].start) i++;
