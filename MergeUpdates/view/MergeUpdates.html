@@ -14,7 +14,7 @@
 	<link rel="stylesheet" type="text/css" href="lib/webview.css" />
 	<script>
 var FL = 1000000 / 23976;
-var DPI = 1;
+DPI = 1;
 
 function findDragArea(x, y) {
 	var area = $("body>div>div:eq(1)");
@@ -95,6 +95,7 @@ $(function() {
 	SmiEditor.setSetting({
 			command: { withCtrls: { 'M': 'openSyncManager();' }, fn: {} }
 		,	autoComplete: {}
+		,	highlight: {}
 	});
 	var tmp = $("#targetAftFrames");
 
