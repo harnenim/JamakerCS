@@ -35,10 +35,10 @@ function sendMsg(msg) {
 	alert(msg);
 }
 
-var windowName = null;
+window.windowName = null;
 
 // alert 재정의
-_alert = alert;
+window._alert = alert;
 alert = function(msg) {
 	if (windowName && opener && opener.binder) {
 		opener.binder.alert(windowName, msg);
@@ -49,9 +49,9 @@ alert = function(msg) {
 	}
 }
 // confirm 재정의
-_confirm = confirm;
-var afterConfirmYes = function() {};
-var afterConfirmNo  = function() {};
+window._confirm = confirm;
+window.afterConfirmYes = function() {};
+window.afterConfirmNo  = function() {};
 confirm = function(msg, yes, no) {
 	if (windowName) {
 		if (opener) {
@@ -72,7 +72,7 @@ confirm = function(msg, yes, no) {
 			}
 		}
 	} else {
-		var result = _confirm(msg);
+		const result = _confirm(msg);
 		if (result) {
 			if (yes) yes();
 		} else {
@@ -83,8 +83,8 @@ confirm = function(msg, yes, no) {
 }
 
 // opener가 있는 addon에서만 쓰임
-var loadAddonSetting;
-var saveAddonSetting;
+let loadAddonSetting;
+let saveAddonSetting;
 if (opener) {
 	opener.afterLoadAddonSetting = function(){};
 	loadAddonSetting = function(name, afterLoad) {
@@ -98,3 +98,7 @@ if (opener) {
 		opener.binder.saveAddonSetting(name, text);
 	}
 }
+
+$(function () {
+	$("textarea").attr({ spellcheck: false });
+});

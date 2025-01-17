@@ -39,9 +39,10 @@ window.Tab = function(text, path) {
 	this.lastHold = 1;
 	this.path = path;
 	
-	const holds = Subtitle.SmiFile.textToHolds(text);
-	for (let i = 0; i < holds.length; i++) {
-		this.addHold(holds[i], i == 0, i == 0);
+	{	const holds = Subtitle.SmiFile.textToHolds(text);
+		for (let i = 0; i < holds.length; i++) {
+			this.addHold(holds[i], i == 0, i == 0);
+		}
 	}
 	this.savedHolds = this.holds.slice(0);
 	
@@ -127,8 +128,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	const hold = new SmiEditor(info.text);
 	this.holds.push(hold);
 	this.holdSelector.append(hold.selector = $("<div class='selector'>").data({ hold: hold }));
-	const divName = $("<div class='hold-name'>");
-	hold.selector.append(divName.append($("<span>").text(hold.name = hold.savedName = info.name)));
+	hold.selector.append($("<div class='hold-name'>").append($("<span>").text(hold.name = hold.savedName = info.name)));
 	hold.owner = this;
 	hold.pos = hold.savedPos = info.pos;
 	hold.tempSavedText = info.text;
@@ -669,15 +669,15 @@ function init(jsonSetting) {
 			closingTab == null;
 		}, 1);
 		
-		const currentTab = th.data("tab");
 		let saved = true;
-		for (let i = 0; i < currentTab.holds.length; i++) {
-			if (currentTab.holds[i].input.val() != currentTab.holds[i].saved) {
-				saved = false;
-				break;
+		{	const currentTab = th.data("tab");
+			for (let i = 0; i < currentTab.holds.length; i++) {
+				if (currentTab.holds[i].input.val() != currentTab.holds[i].saved) {
+					saved = false;
+					break;
+				}
 			}
 		}
-		
 		confirm((saved ? "저장되지 않았습니다.\n" : "") + "탭을 닫으시겠습니까?", function() {
 			const index = closeTab(th);
 
@@ -1004,7 +1004,7 @@ function saveFile(asNew, isExport) {
 		currentTab.holds[i].history.log();
 	}
 
-	const path = currentTab.path;
+	let path = currentTab.path;
 	if (!path) {
 		// 파일 경로가 없으면 다른 이름으로 저장 대화상자 필요
 		asNew = true;
@@ -1054,8 +1054,13 @@ function afterSaveFile(path) {
 		return;
 	}
 	for (let i = 0; i < currentTab.holds.length; i++) {
-		// currentTab.holds[i].afterSave(); // 최종 저장 여부는 탭 단위로 다뤄져야 해서 군더더기 작업이 됨
-		currentTab.holds[i].saved = currentTab.holds[i].input.val();
+		// 최종 저장 여부는 탭 단위로 다뤄져야 해서 군더더기 작업이 됨
+		// afterSave 재정의도 삭제
+		// currentTab.holds[i].afterSave();
+		const hold = currentTab.holds[i];
+		hold.saved = hold.input.val();
+		hold.savedPos = hold.pos;
+		hold.savedName = hold.name;
 	}
 	currentTab.path = path;
 	const title = path ? ((path.length > 14) ? ("..." + path.substring(path.length - 14, path.length - 4)) : path.substring(0, path.length - 4)) : "새 문서";
@@ -1065,12 +1070,6 @@ function afterSaveFile(path) {
 	
 	// savedHolds가 교체된 후에 저장 여부 체크
 	currentTab.onChangeSaved();
-}
-SmiEditor.prototype._afterSave = SmiEditor.prototype.afterSave;
-SmiEditor.prototype.afterSave = function() {
-	this.savedName = this.name;
-	this.savedPos = this.pos;
-	this._afterSave();
 }
 
 function saveTemp() {

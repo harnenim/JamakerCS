@@ -17,7 +17,7 @@ Binder.prototype.save = function(dir, suggestedName, text) {
 </script>
 <script src="bridge/WebForm.js"></script>
 <script>
-var main = new WebForm();
+window.main = new WebForm();
 {	// main
 	main.run = function() {
 		this.initializeComponent();
@@ -35,7 +35,7 @@ var main = new WebForm();
 			
 			main.mainView.contentWindow.binder = main.binder = new Binder(main);
 
-			var cd = main.mainView.contentDocument;
+			const cd = main.mainView.contentDocument;
 			cd.addEventListener("dragenter", function(e) {
 				e.preventDefault();
 				main.showDragging();
@@ -51,19 +51,19 @@ var main = new WebForm();
 			this.droppedFiles = null;
 			return;
 		}
-		var file = this.droppedFiles[0];
+		const file = this.droppedFiles[0];
 		main.script("setFile", [ index, await file.text(), file.name ])
 		this.droppedFiles = null;
 	}
 	main.save = async function(dir, suggestedName, text) {
-		var fileBuffer = await window.showSaveFilePicker({
+		const fileBuffer = await window.showSaveFilePicker({
 			suggestedName: suggestedName
 		,	types: [
 				{ description: "SAMI", accept: { "text/sami": [".smi"] } }
 			]
 		});
 		if (fileBuffer) {
-			var stream = await fileBuffer.createWritable();
+			const stream = await fileBuffer.createWritable();
 			await stream.write("\ufeff" + text); // BOM 넣어줌
 			await stream.close();
 		}
@@ -71,21 +71,21 @@ var main = new WebForm();
 }
 {
 	main.importSetting = async function() {
-		var fileBuffer = await window.showOpenFilePicker({ types: [ { description: "JSON 파일", accept:{ "text/json": [".json"] } } ] });
+		const fileBuffer = await window.showOpenFilePicker({ types: [ { description: "JSON 파일", accept:{ "text/json": [".json"] } } ] });
 		if (fileBuffer && fileBuffer[0]) {
-			var file = await fileBuffer[0].getFile();
-			var text = await file.text();
+			const file = await fileBuffer[0].getFile();
+			const text = await file.text();
 			main.script("init", [text]);
 		}
 	};
 	main.exportSetting = async function(setting) {
-		var fileBuffer = await window.showSaveFilePicker({
+		const fileBuffer = await window.showSaveFilePicker({
 			types: [
 				{ description: "JSON 파일", accept:{ "text/json": [".json"] } }
 			]
 		});
 		if (fileBuffer) {
-			var stream = await fileBuffer.createWritable();
+			const stream = await fileBuffer.createWritable();
 			await stream.write("\ufeff" + setting); // BOM 넣어줌
 			await stream.close();
 		}

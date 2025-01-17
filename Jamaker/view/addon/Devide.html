@@ -284,14 +284,16 @@ $(function() {
 	init();
 	
 	SmiEditor.setSetting(opener ? opener.setting : { autoComplete: {}, hlghlight: {} });
-	const editor = new SmiEditor($("#input").val());
-	$("#input").remove();
-	
-	$("body").prepend(editor.input.attr({ id: "input" }));
-	SmiEditor.selected = editor;
+	{	const tmp = $("#input");
+		const editor = new SmiEditor(tmp.val());
+		tmp.remove();
+		
+		$("body").prepend(editor.input.attr({ id: "input" }));
+		SmiEditor.selected = editor;
+	}
 	SmiEditor.activateKeyEvent();
 	
-	LH = Number(editor.input.css("line-height").split("px")[0]);
+	LH = Number(SmiEditor.selected.input.css("line-height").split("px")[0]);
 	
 	$("#btnDevide").on("click", devide);
 	devide();

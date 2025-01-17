@@ -17,8 +17,7 @@ windowName = "addon";
 const tab = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
 const origin = tab ? tab.getText() : null;
 if (tab) {
-	SmiEditor.video.fs = opener.SmiEditor.video.fs;
-	SmiEditor.video.FL = opener.SmiEditor.video.FL;
+	SmiEditor.video = opener.SmiEditor.video;
 }
 
 function smi2assTime(ms) {

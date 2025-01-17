@@ -31,15 +31,15 @@ window.Combine = {
 		smi = smi.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
 		
 		// 태그 밖의 공백문자 치환
-		const tags = smi.split("<");
-		for (let i = 1; i < tags.length; i++) {
-			const index = tags[i].indexOf(">");
-			if (index > 0) {
-				tags[i] = tags[i].substring(0, index) + tags[i].substring(index);
+		{	const tags = smi.split("<");
+			for (let i = 1; i < tags.length; i++) {
+				const index = tags[i].indexOf(">");
+				if (index > 0) {
+					tags[i] = tags[i].substring(0, index) + tags[i].substring(index);
+				}
 			}
+			smi = tags.join("<");
 		}
-		smi = tags.join("<");
-		
 		const lines = smi.split(/<br>/gi);
 		for (let i = 0; i < lines.length; i++) {
 			lines[i] = checker.html(lines[i]).text();
@@ -72,12 +72,6 @@ window.Combine = {
 			default:
 				line = syncLines.basic[sync];
 		}
-		/*
-		if (line == null) {
-			// 여기 올 일은 없어야 함
-			line = SmiEditor.makeSyncLine(sync, type);
-		}
-		*/
 		return line;
 	}
 	
@@ -124,7 +118,6 @@ window.Combine = {
 								if (('0'<=c&&c<='9') || ('a'<=c&&c<='z') || ('A'<=c&&c<='Z')) {
 									break;
 								}
-								//html += c;
 							}
 							for (k = j; k < closePos; k++) {
 								const c = line[k];
@@ -197,14 +190,14 @@ window.Combine = {
 		const syncs = [];
 		let last = null;
 		for (let i = 0; i < parseds.length; i++) {
-			let parsed = parseds[i];
+			const parsed = parseds[i];
 			if (parsed[LINE.TYPE]) {
 				if (last) {
-					let text = [];
+					const lines = [];
 					for (let j = last[0] + 1; j < i; j++) {
-						text.push(parseds[j][LINE.TEXT]);
+						lines.push(parseds[j][LINE.TEXT]);
 					}
-					text = text.join("\n");
+					const text = lines.join("\n");
 					if (text.split("&nbsp;").join("").trim()) {
 						const lineCount = text.split(/<br>/gi).length;
 						//[STIME, STYPE, ETIME, ETYPE, TEXT, LINES, WIDTH];
@@ -224,76 +217,76 @@ window.Combine = {
 		const upperSyncs = parse(inputUpper, checker);
 		const lowerSyncs = parse(inputLower, checker);
 		
-		let ui = 0;
-		let li = 0;
 		const groups = [];
-		let group = null;
-		while  ((ui <= upperSyncs.length) && (li <= lowerSyncs.length)) {
-			if ((ui == upperSyncs.length) && (li == lowerSyncs.length)) {
-				break;
-			}
-			const us = (ui < upperSyncs.length) ? upperSyncs[ui] : [99999999, 99999999, null, 0];
-			const ls = (li < lowerSyncs.length) ? lowerSyncs[li] : [99999999, 99999999, null, 0];
-			if (us[STIME] < ls[STIME]) { // 위가 바뀜
-				if ((us[STYPE] == TYPE.RANGE) // 중간 싱크
-				 || (group && group.lower.length && (group.lower[group.lower.length - 1][ETIME] > us[STIME]))
-				){ // 그룹 유지
-					group.upper.push(us);
-					group.maxLines[0] = Math.max(group.maxLines[0], us[LINES]);
-					group.maxWidth = Math.max(group.maxWidth, us[WIDTH]);
-					
-				} else { // 아래가 없거나 끝남 -> 그룹 끊김
-					groups.push(group = {
-							upper: [us]
-						,	lower: []
-						,	maxLines: [us[LINES], 0]
-						,	maxWidth: us[WIDTH]
-					});
+		{	let group = null;
+			let ui = 0;
+			let li = 0;
+			while  ((ui <= upperSyncs.length) && (li <= lowerSyncs.length)) {
+				if ((ui == upperSyncs.length) && (li == lowerSyncs.length)) {
+					break;
 				}
-				ui++;
-				
-			} else if (ls[STIME] < us[STIME]) { // 아래가 바뀜
-				if ((ls[STYPE] == TYPE.RANGE) // 중간 싱크
-				 || (group && group.upper.length && (group.upper[group.upper.length - 1][ETIME] > ls[STIME]))
-				) { // 그룹 유지
-					group.lower.push(ls);
-					group.maxLines[1] = Math.max(group.maxLines[1], ls[LINES]);
-					group.maxWidth = Math.max(group.maxWidth, ls[WIDTH]);
+				const us = (ui < upperSyncs.length) ? upperSyncs[ui] : [99999999, 99999999, null, 0];
+				const ls = (li < lowerSyncs.length) ? lowerSyncs[li] : [99999999, 99999999, null, 0];
+				if (us[STIME] < ls[STIME]) { // 위가 바뀜
+					if ((us[STYPE] == TYPE.RANGE) // 중간 싱크
+					 || (group && group.lower.length && (group.lower[group.lower.length - 1][ETIME] > us[STIME]))
+					){ // 그룹 유지
+						group.upper.push(us);
+						group.maxLines[0] = Math.max(group.maxLines[0], us[LINES]);
+						group.maxWidth = Math.max(group.maxWidth, us[WIDTH]);
+						
+					} else { // 아래가 없거나 끝남 -> 그룹 끊김
+						groups.push(group = {
+								upper: [us]
+							,	lower: []
+							,	maxLines: [us[LINES], 0]
+							,	maxWidth: us[WIDTH]
+						});
+					}
+					ui++;
 					
-				} else { // 위가 없거나 끝남 -> 그룹 끊김
-					groups.push(group = {
-							upper: []
-						,	lower: [ls]
-						,	maxLines: [0, ls[LINES]]
-						,	maxWidth: ls[WIDTH]
-					});
-				}
-				li++;
-				
-			} else { // 둘이 같이 바뀜
-				if ((us[STYPE] == TYPE.RANGE) || (ls[STYPE] == TYPE.RANGE)) {
-					// 하나라도 중간 싱크 - 그룹 유지
-					group.upper.push(us);
-					group.lower.push(ls);
-					group.maxLines[0] = Math.max(group.maxLines[0], us[LINES]);
-					group.maxLines[1] = Math.max(group.maxLines[1], ls[LINES]);
-					group.maxWidth = Math.max(group.maxWidth, us[WIDTH]);
-					group.maxWidth = Math.max(group.maxWidth, ls[WIDTH]);
+				} else if (ls[STIME] < us[STIME]) { // 아래가 바뀜
+					if ((ls[STYPE] == TYPE.RANGE) // 중간 싱크
+					 || (group && group.upper.length && (group.upper[group.upper.length - 1][ETIME] > ls[STIME]))
+					) { // 그룹 유지
+						group.lower.push(ls);
+						group.maxLines[1] = Math.max(group.maxLines[1], ls[LINES]);
+						group.maxWidth = Math.max(group.maxWidth, ls[WIDTH]);
+						
+					} else { // 위가 없거나 끝남 -> 그룹 끊김
+						groups.push(group = {
+								upper: []
+							,	lower: [ls]
+							,	maxLines: [0, ls[LINES]]
+							,	maxWidth: ls[WIDTH]
+						});
+					}
+					li++;
 					
-				} else {
-					// 새 그룹
-					groups.push(group = {
-							upper: [us]
-						,	lower: [ls]
-						,	maxLines: [us[LINES], ls[LINES]]
-						,	maxWidth: Math.max(us[WIDTH], ls[WIDTH])
-					});
+				} else { // 둘이 같이 바뀜
+					if ((us[STYPE] == TYPE.RANGE) || (ls[STYPE] == TYPE.RANGE)) {
+						// 하나라도 중간 싱크 - 그룹 유지
+						group.upper.push(us);
+						group.lower.push(ls);
+						group.maxLines[0] = Math.max(group.maxLines[0], us[LINES]);
+						group.maxLines[1] = Math.max(group.maxLines[1], ls[LINES]);
+						group.maxWidth = Math.max(group.maxWidth, us[WIDTH]);
+						group.maxWidth = Math.max(group.maxWidth, ls[WIDTH]);
+						
+					} else {
+						// 새 그룹
+						groups.push(group = {
+								upper: [us]
+							,	lower: [ls]
+							,	maxLines: [us[LINES], ls[LINES]]
+							,	maxWidth: Math.max(us[WIDTH], ls[WIDTH])
+						});
+					}
+					ui++;
+					li++;
 				}
-				ui++;
-				li++;
 			}
 		}
-
 		for (let gi = 0; gi < groups.length; gi++) {
 			const group = groups[gi];
 			group.lines = [];
@@ -395,80 +388,81 @@ window.Combine = {
 					}
 				}
 			}
-			
-			ui = li = 0;
-			while  ((ui <= group.upper.length) && (li <= group.lower.length)) {
-				if ((ui == group.upper.length) && (li == group.lower.length)) {
-					break;
-				}
-				const us = (ui < group.upper.length) ? group.upper[ui] : [99999999, 99999999, null, 0];
-				const ls = (li < group.lower.length) ? group.lower[li] : [99999999, 99999999, null, 0];
-				
-				if (us[STIME] < ls[STIME]) { // 위가 바뀜
-					if (!last) { // 첫 싱크
-						group.lines.push(last = [us[STIME], us[STYPE], us[ETIME], us[ETYPE], us, null]);
-						
-					} else {
-						// 아래는 유지하고 위는 바뀐 걸 추가
-						if (last[STIME] == us[STIME]) {
-							last[UPPER] = us;
-						} else if (us[STIME] < last[ETIME]) {
-							const curr = [us[STIME], us[STYPE], last[ETIME], last[ETYPE], us, last[LOWER]];
-							last[ETIME] = us[STIME];
-							last[ETYPE] = us[STYPE];
-							group.lines.push(last = curr);
-						}
-						
-						if (us[ETIME] < last[ETIME]) { // 위가 먼저 끝남
-							const curr = [us[ETIME], us[ETYPE], last[ETIME], last[ETYPE], null, last[LOWER]];
-							last[ETIME] = us[ETIME];
-							last[ETYPE] = us[ETYPE];
-							group.lines.push(last = curr);
-						} else if (us[ETIME] > last[ETIME]) { // 아래가 먼저 끝남
-							group.lines.push(last = [last[ETIME], last[ETYPE], us[ETIME], us[ETYPE], us, null]);
-						} else {
-							// 둘 다 끝남 -> 그룹 끝
-						}
+			{	let ui = 0;
+				let li = 0;
+				while  ((ui <= group.upper.length) && (li <= group.lower.length)) {
+					if ((ui == group.upper.length) && (li == group.lower.length)) {
+						break;
 					}
-					ui++;
+					const us = (ui < group.upper.length) ? group.upper[ui] : [99999999, 99999999, null, 0];
+					const ls = (li < group.lower.length) ? group.lower[li] : [99999999, 99999999, null, 0];
 					
-				} else if (ls[STIME] < us[STIME]) { // 아래가 바뀜
-					if (!last) { // 첫 싱크
-						group.lines.push(last = [ls[STIME], ls[STYPE], ls[ETIME], ls[ETYPE], null, ls]);
-						
-					} else {
-						// 위는 유지하고 아래는 바뀐 걸 추가
-						if (last[STIME] == ls[STIME]) {
-							last[LOWER] = ls;
-						} else if (ls[STIME] < last[ETIME]) {
-							const curr = [ls[STIME], ls[STYPE], last[ETIME], last[ETYPE], last[UPPER], ls];
-							last[ETIME] = ls[STIME];
-							last[ETYPE] = ls[STYPE];
-							group.lines.push(last = curr);
-						}
-						
-						if (ls[ETIME] < last[ETIME]) { // 아래가 먼저 끝남
-							const curr = [ls[ETIME], ls[ETYPE], last[ETIME], last[ETYPE], last[TEXT], null];
-							last[ETIME] = ls[ETIME];
-							last[ETYPE] = ls[ETYPE];
-							group.lines.push(last = curr);
-						} else if (ls[ETIME] > last[ETIME]) { // 위가 먼저 끝남
-							group.lines.push(last = [last[ETIME], last[ETYPE], ls[ETIME], ls[ETYPE], null, ls]);
+					if (us[STIME] < ls[STIME]) { // 위가 바뀜
+						if (!last) { // 첫 싱크
+							group.lines.push(last = [us[STIME], us[STYPE], us[ETIME], us[ETYPE], us, null]);
+							
 						} else {
-							// 둘 다 끝남 -> 그룹 끝
+							// 아래는 유지하고 위는 바뀐 걸 추가
+							if (last[STIME] == us[STIME]) {
+								last[UPPER] = us;
+							} else if (us[STIME] < last[ETIME]) {
+								const curr = [us[STIME], us[STYPE], last[ETIME], last[ETYPE], us, last[LOWER]];
+								last[ETIME] = us[STIME];
+								last[ETYPE] = us[STYPE];
+								group.lines.push(last = curr);
+							}
+							
+							if (us[ETIME] < last[ETIME]) { // 위가 먼저 끝남
+								const curr = [us[ETIME], us[ETYPE], last[ETIME], last[ETYPE], null, last[LOWER]];
+								last[ETIME] = us[ETIME];
+								last[ETYPE] = us[ETYPE];
+								group.lines.push(last = curr);
+							} else if (us[ETIME] > last[ETIME]) { // 아래가 먼저 끝남
+								group.lines.push(last = [last[ETIME], last[ETYPE], us[ETIME], us[ETYPE], us, null]);
+							} else {
+								// 둘 다 끝남 -> 그룹 끝
+							}
 						}
-					}
-					li++;
-					
-				} else { // 둘이 같이 바뀜(그룹 첫 싱크에서만 가능)
-					let ss = us;
-					if (ls[ETIME] < us[ETIME]) {
-						ss = ls;
-						li++;
-					} else {
 						ui++;
+						
+					} else if (ls[STIME] < us[STIME]) { // 아래가 바뀜
+						if (!last) { // 첫 싱크
+							group.lines.push(last = [ls[STIME], ls[STYPE], ls[ETIME], ls[ETYPE], null, ls]);
+							
+						} else {
+							// 위는 유지하고 아래는 바뀐 걸 추가
+							if (last[STIME] == ls[STIME]) {
+								last[LOWER] = ls;
+							} else if (ls[STIME] < last[ETIME]) {
+								const curr = [ls[STIME], ls[STYPE], last[ETIME], last[ETYPE], last[UPPER], ls];
+								last[ETIME] = ls[STIME];
+								last[ETYPE] = ls[STYPE];
+								group.lines.push(last = curr);
+							}
+							
+							if (ls[ETIME] < last[ETIME]) { // 아래가 먼저 끝남
+								const curr = [ls[ETIME], ls[ETYPE], last[ETIME], last[ETYPE], last[TEXT], null];
+								last[ETIME] = ls[ETIME];
+								last[ETYPE] = ls[ETYPE];
+								group.lines.push(last = curr);
+							} else if (ls[ETIME] > last[ETIME]) { // 위가 먼저 끝남
+								group.lines.push(last = [last[ETIME], last[ETYPE], ls[ETIME], ls[ETYPE], null, ls]);
+							} else {
+								// 둘 다 끝남 -> 그룹 끝
+							}
+						}
+						li++;
+						
+					} else { // 둘이 같이 바뀜(그룹 첫 싱크에서만 가능)
+						let ss = us;
+						if (ls[ETIME] < us[ETIME]) {
+							ss = ls;
+							li++;
+						} else {
+							ui++;
+						}
+						group.lines.push(last = [us[STIME], us[STYPE], ss[ETIME], ss[ETYPE], us, ls]);
 					}
-					group.lines.push(last = [us[STIME], us[STYPE], ss[ETIME], ss[ETYPE], us, ls]);
 				}
 			}
 		}
@@ -591,18 +585,18 @@ if (Subtitle && Subtitle.SmiFile) {
 		
 		if (withCombine) {
 			// 시작 시간 순으로 저장
-			let holds = origHolds.slice(1);
-			holds.sort(function(a, b) {
-				return a.start - b.start;
-			});
-			for (let hi = 0; hi < holds.length; hi++) {
-				const hold = holds[hi];
-				result[hold.resultIndex = (hi + 1)] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + hold.text.split("<").join("<​").split(">").join("​>") + "\n-->";
+			{	const holdsWithoutMain = origHolds.slice(1);
+				holdsWithoutMain.sort(function(a, b) {
+					return a.start - b.start;
+				});
+				for (let hi = 0; hi < holdsWithoutMain.length; hi++) {
+					const hold = holdsWithoutMain[hi];
+					result[hold.resultIndex = (hi + 1)] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + hold.text.split("<").join("<​").split(">").join("​>") + "\n-->";
+				}
 			}
-			
 			// 메인에 가까운 걸 먼저 작업해야 함
 			// 단, 아래쪽부터 쌓아야 함
-			holds = origHolds.slice(0);
+			const holds = origHolds.slice(0);
 			holds.sort(function(a, b) {
 				let aPos = a.viewPos;
 				let bPos = b.viewPos;
@@ -635,40 +629,42 @@ if (Subtitle && Subtitle.SmiFile) {
 					continue;
 				}
 				
-				const start = smi.body[0].start;
-				const end = smi.body[smi.body.length - 1].start;
-				
 				// 메인에서 홀드와 겹치는 영역 찾기
 				let mainBegin = 0;
-				for (let i = 0; i <= main.body.length; i++) {
-					if (i == main.body.length) {
+				let mainEnd = 0;
+				{
+					const start = smi.body[0].start;
+					for (let i = 0; i <= main.body.length; i++) {
+						if (i == main.body.length) {
+							mainBegin = i;
+							break;
+						}
+						if (main.body[i].start >= start) {
+							break;
+						}
 						mainBegin = i;
-						break;
 					}
-					if (main.body[i].start >= start) {
-						break;
+					if (mainBegin == main.body.length) {
+						// 홀드 전체가 메인보다 뒤에 있음
+						main.body = main.body.concat(smi.body);
+						continue;
 					}
-					mainBegin = i;
-				}
-				if (mainBegin == main.body.length) {
-					// 홀드 전체가 메인보다 뒤에 있음
-					main.body = main.body.concat(smi.body);
-					continue;
-				}
-				if (main.body[mainBegin].text.split("&nbsp;").join("").trim().length == 0) {
-					mainBegin++;
-				}
-				
-				let mainEnd = mainBegin;
-				for (; mainEnd < main.body.length; mainEnd++) {
-					if (main.body[mainEnd].start > end) {
-						break;
+					if (main.body[mainBegin].text.split("&nbsp;").join("").trim().length == 0) {
+						mainBegin++;
 					}
-				}
-				if (mainEnd == 0) {
-					// 홀드 전체가 메인보다 앞에 있음
-					main.body = smi.body.concat(main.body);
-					continue;
+					
+					mainEnd = mainBegin;
+					const end = smi.body[smi.body.length - 1].start;
+					for (; mainEnd < main.body.length; mainEnd++) {
+						if (main.body[mainEnd].start > end) {
+							break;
+						}
+					}
+					if (mainEnd == 0) {
+						// 홀드 전체가 메인보다 앞에 있음
+						main.body = smi.body.concat(main.body);
+						continue;
+					}
 				}
 				
 				// 홀드 결합

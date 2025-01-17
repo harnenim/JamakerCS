@@ -225,7 +225,7 @@ SmiEditor.findSync = function(sync, fs=[], from=0, to=-1) {
 		return SmiEditor.findSync(sync, fs, from, mid);
 	}
 }
-SmiEditor.getSyncTime = function(sync, forKeyFrame=false, output={}) {
+SmiEditor.getSyncTime = function(sync, forKeyFrame=false, output={}/* 리턴값은 숫자여야 하는데, 키프레임 상태값 반환이 필요해짐 */) {
 	if (!sync) sync = (time + SmiEditor.sync.weight);
 	if (SmiEditor.sync.frame) { // 프레임 단위 싱크 보정
 		let adjustSync = null;
@@ -603,7 +603,7 @@ SmiEditor.activateKeyEvent = function() {
 							if (cursor[0] == cursor[1]) {
 								let delLen = 0;
 								if (cursor[0] + 12 <= text.length) {
-									if (text.substring(cursor[0], cursor[0]+12) == "<br><b>　</b>") {
+									if (text.substring(cursor[0], cursor[0]+12) == "<b>　</b><br>") {
 										delLen = 12;
 									}
 								}
@@ -726,26 +726,27 @@ SmiEditor.prototype.scrollToCursor = function(lineNo) {
 		left = this.getWidth(linesBeforeCursor[lineNo = (linesBeforeCursor.length - 1)]);
 	}
 	let top = lineNo * LH;
-	const scrollTop = this.input.scrollTop();
-	if (top < scrollTop) { // 커서가 보이는 영역보다 위
-		this.input.scrollTop(top);
-	} else {
-		top += LH + SB - this.input.css("height").split("px")[0] + 2; // .height()는 padding을 빼고 반환함
-		if (top > scrollTop) { // 커서가 보이는 영역보다 아래
+	
+	{	const scrollTop = this.input.scrollTop();
+		if (top < scrollTop) { // 커서가 보이는 영역보다 위
 			this.input.scrollTop(top);
+		} else {
+			top += LH + SB - this.input.css("height").split("px")[0] + 2; // .height()는 padding을 빼고 반환함
+			if (top > scrollTop) { // 커서가 보이는 영역보다 아래
+				this.input.scrollTop(top);
+			}
 		}
 	}
-	
-	const scrollLeft = this.input.scrollLeft();
-	if (left < scrollLeft) { // 커서가 보이는 영역보다 왼쪽
-		this.input.scrollLeft(left);
-	} else {
-		left += SB - this.input.width() + 2;
-		if (left > scrollLeft) { // 커서가 보이는 영역보다 오른쪽
+	{	const scrollLeft = this.input.scrollLeft();
+		if (left < scrollLeft) { // 커서가 보이는 영역보다 왼쪽
 			this.input.scrollLeft(left);
+		} else {
+			left += SB - this.input.width() + 2;
+			if (left > scrollLeft) { // 커서가 보이는 영역보다 오른쪽
+				this.input.scrollLeft(left);
+			}
 		}
 	}
-	
 	// 간헐적 에디터 외부 스크롤 버그 교정
 	this.area.scrollTop(0);
 }
@@ -964,17 +965,14 @@ SmiEditor.prototype.insertSync = function(forFrame) {
 		
 		// 윗줄 내용이 없으면 공백 싱크 채워주기
 		// TODO: 설정이 필요한가...?
-		const autoNbsp = true;
-		if (autoNbsp) {
-			if (lineNo > 0) {
-				const prevLine = this.lines[lineNo-1];
-				if (prevLine[LINE.SYNC]) {
-					inputLines.push(["&nbsp;", 0, TYPE.TEXT]);
-					cursor += 7;
-				} else if (prevLine[LINE.TEXT].trim() == "") {
-					cursor += 7 - prevLine[LINE.TEXT].length;
-					prevLine[LINE.TEXT] = "&nbsp;";
-				}
+		if (lineNo > 0) {
+			const prevLine = this.lines[lineNo-1];
+			if (prevLine[LINE.SYNC]) {
+				inputLines.push(["&nbsp;", 0, TYPE.TEXT]);
+				cursor += 7;
+			} else if (prevLine[LINE.TEXT].trim() == "") {
+				cursor += 7 - prevLine[LINE.TEXT].length;
+				prevLine[LINE.TEXT] = "&nbsp;";
 			}
 		}
 		
@@ -984,14 +982,11 @@ SmiEditor.prototype.insertSync = function(forFrame) {
 				cursor += this.lines[i][LINE.TEXT].length + 1;
 			}
 			// 아랫줄 내용이 없으면 공백 싱크 채워주기
-			// TODO: 설정이 필요한가...?
-			if (autoNbsp) {
-				if (this.lines[lineNo][LINE.TEXT].length == 0) {
-					const nextLine = this.lines[lineNo + SmiEditor.sync.insert];
-					if (nextLine && nextLine[LINE.TEXT].length) {
-						this.lines[lineNo][LINE.TEXT] = "&nbsp;";
-						cursor += 6;
-					}
+			if (this.lines[lineNo][LINE.TEXT].length == 0) {
+				const nextLine = this.lines[lineNo + SmiEditor.sync.insert];
+				if (nextLine && nextLine[LINE.TEXT].length) {
+					this.lines[lineNo][LINE.TEXT] = "&nbsp;";
+					cursor += 6;
 				}
 			}
 		}
@@ -1228,10 +1223,7 @@ SmiEditor.prototype.updateSync = function (range=null) {
 		
 		// 줄 수 변동량
 		const add = textLines.length - self.lines.length;
-
-		// 커서가 위치한 줄
-		const lineNo = text.substring(0, self.input[0].selectionEnd).split("\n").length - 1;
-
+		
 		if (range) {
 			// 바뀌지 않은 범위 제외
 			for (; range[0] < range[1]; range[0]++) {
@@ -1246,6 +1238,9 @@ SmiEditor.prototype.updateSync = function (range=null) {
 			}
 			
 		} else {
+			// 커서가 위치한 줄
+			const lineNo = text.substring(0, self.input[0].selectionEnd).split("\n").length - 1;
+			
 			// 커서 전후로 수정된 범위를 찾을 범위 지정
 			range = [Math.max(0, (add < 0 ? lineNo+add : lineNo-add) - 1), Math.min(self.lines.length, (add < 0 ? lineNo-add : lineNo+add) + 1)];
 			

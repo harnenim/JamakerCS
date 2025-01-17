@@ -5,31 +5,29 @@
 <title>임시 저장 파일</title>
 <script>
 function newEl(html) {
-	var tmp = document.createElement("div");
+	const tmp = document.createElement("div");
 	tmp.innerHTML = html.trim();
 	return tmp.children[0];
 }
 
-var keys = localStorage.getItem("tmpKeys").split(":");
 document.addEventListener("DOMContentLoaded", function () {
-	for (var i = 0; i < keys.length; i++) {
-		var key = keys[i];
+	const keys = localStorage.getItem("tmpKeys").split(":");
+	for (let i = 0; i < keys.length; i++) {
+		const key = keys[i];
 		document.body.append(newEl("<a href='javascript:loadTmp(\""+key.split("\\").join("\\\\")+"\")'>" + key + "</a>"));
 	}
 });
 function loadTmp(key) {
-	console.log(key);
-	var text = localStorage.getItem(key);
-	console.log(text);
+	const text = localStorage.getItem(key);
 	if (opener) {
 		opener.editor.script("openFile", [key.substring(18), text, false]);
 	}
 }
 function clearTmp() {
 	if (confirm("비우시겠습니까?")) {
-		var keys = localStorage.getItem("tmpKeys").split(":");
-		for (var i = 0; i < keys.length; i++) {
-			var key = keys[i];
+		const keys = localStorage.getItem("tmpKeys").split(":");
+		for (let i = 0; i < keys.length; i++) {
+			const key = keys[i];
 			localStorage.removeItem(key);
 		}
 		localStorage.removeItem("tmpKeys");

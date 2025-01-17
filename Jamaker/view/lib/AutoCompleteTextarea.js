@@ -3,13 +3,14 @@ window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 	this.sets = sets ? sets : [];
 	this.onSelect = onSelect;
 	
-	const font = getComputedStyle(ta[0]);
-	this.font = {
-			"font-family": font.fontFamily
-		,	"font-size"  : font.fontSize
-		,	"font-weight": font.fontWeight
-		,	"line-height": font.lineHeight
-	};
+	{	const font = getComputedStyle(ta[0]);
+		this.font = {
+				"font-family": font.fontFamily
+			,	"font-size"  : font.fontSize
+			,	"font-weight": font.fontWeight
+			,	"line-height": font.lineHeight
+		};
+	}
 	if (!AutoCompleteTextarea.view) {
 		$("body").append(AutoCompleteTextarea.view = $("<ol class='act-select'>").css(this.font).hide());
 	}

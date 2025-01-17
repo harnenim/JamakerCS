@@ -32,14 +32,14 @@ Binder.prototype.exitAfterSaveSetting = function(setting) {
 </script>
 <script src="bridge/WebForm.js"></script>
 <script>
-var main = new WebForm();
+window.main = new WebForm();
 {	// main
 	main.settingJson = '{"filters":"*.txt, *.smi, *.ass","replacers":[{"use":true,"from":"다시 한번","to":"다시 한 번"},{"use":true,"from":"그리고 보니","to":"그러고 보니"},{"use":true,"from":"뒤쳐","to":"뒤처"},{"use":true,"from":"제 정신","to":"제정신"},{"use":true,"from":"스탠드 얼론","to":"스탠드얼론"},{"use":true,"from":"멘테넌스","to":"메인터넌스"},{"use":true,"from":"뒷처리","to":"뒤처리"},{"use":true,"from":"스탭도","to":"스태프도"},{"use":true,"from":"등 져선","to":"등져선"},{"use":true,"from":"타코이즈","to":"터쿼이즈"},{"use":true,"from":"쓰레드","to":"스레드"},{"use":true,"from":"져버리지","to":"저버리지"},{"use":true,"from":"글러먹","to":"글러 먹"}]}';
 	
 	main.run = function() {
 		this.initializeComponent();
 		
-		var settingJson = localStorage.getItem("setting.TextReplacer");
+		const settingJson = localStorage.getItem("setting.TextReplacer");
 		if (settingJson) {
 			main.settingJson = settingJson;
 		}
@@ -63,7 +63,7 @@ var main = new WebForm();
 			}, 1000);
 			*/
 
-			var cd = main.mainView.contentDocument;
+			const cd = main.mainView.contentDocument;
 			cd.addEventListener("dragenter", function(e) {
 				e.preventDefault();
 				main.showDragging();
@@ -96,9 +96,9 @@ var main = new WebForm();
 			this.droppedFiles = null;
 			return;
 		}
-		for (var i = 0; i < this.droppedFiles.length; i++) {
+		for (let i = 0; i < this.droppedFiles.length; i++) {
 			try {
-				var file = this.droppedFiles[i];
+				const file = this.droppedFiles[i];
 				main.script("addFile", [ file.name ]);
 				main.files[file.name] = file;
 			} catch (e) {}
@@ -115,7 +115,7 @@ var main = new WebForm();
 		this.droppedFiles = null;
 	}
 	main.compare = async function(file, froms, tos) {
-		var replaced = new Replaced(await main.files[file].text(), froms, tos);
+		const replaced = new Replaced(await main.files[file].text(), froms, tos);
 		main.script("showPreview", [ replaced.previewOrigin(), replaced.previewResult() ]);
 		if (replaced.count == 0) {
 			setTimeout(function() {
@@ -130,24 +130,25 @@ var main = new WebForm();
 	}
 }
 function Replaced(text, froms, tos) {
-	var origin         = text;
-	var originReplaced = [];
-	var result         = text;
-	var resultReplaced = [];
-	var count          = 0;
+	const origin         = text;
+	const originReplaced = [];
+	const resultReplaced = [];
+	let result = text;
+	let count = 0;
 	
-	for (var i = 0; i < froms.length; i++) {
-		var checked = 0, rPos;
+	for (let i = 0; i < froms.length; i++) {
+		let checked = 0;
+		let rPos;
 		while ((rPos = result.indexOf(froms[i], checked)) >= 0) {
-			var rIndex = 0;
+			let rIndex = 0;
 			for (; rIndex < resultReplaced.length; rIndex++) {
 				if (rPos <= resultReplaced[rIndex][0]) {
 					break;
 				}
 			}
-			var before = rIndex - 1;
+			const before = rIndex - 1;
 			if (before >= 0 && rPos <= resultReplaced[before][1]) { // 앞이랑 겹칠 때
-				var oEnd = rPos - resultReplaced[before][1] + originReplaced[before][1] + froms[i].length;
+				const oEnd = rPos - resultReplaced[before][1] + originReplaced[before][1] + froms[i].length;
 				if (oEnd < originReplaced[before][1]) {
 					resultReplaced[before][1] += tos[i].length - froms[i].length;
 				} else {
@@ -156,12 +157,12 @@ function Replaced(text, froms, tos) {
 				}
 				rIndex--;
 			} else {
-				var addLength = (before >= 0) ? originReplaced[before][1] - resultReplaced[before][1] : 0;
+				const addLength = (before >= 0) ? originReplaced[before][1] - resultReplaced[before][1] : 0;
 				originReplaced.splice(rIndex, 0, [rPos + addLength, rPos + froms[i].length + addLength]);
 				resultReplaced.splice(rIndex, 0, [rPos, rPos + tos[i].length]);
 			}
-			var addLength = tos[i].length - froms[i].length;
-			for (var j = rIndex + 1; j < resultReplaced.length; j++) {
+			const addLength = tos[i].length - froms[i].length;
+			for (let j = rIndex + 1; j < resultReplaced.length; j++) {
 				resultReplaced[j][0] += addLength;
 				resultReplaced[j][1] += addLength;
 			}
@@ -190,10 +191,10 @@ Replaced.prototype.previewResult = function() {
 	return this.preview(this.result, this.resultReplaced);
 }
 Replaced.prototype.preview = function(text, replacedList) {
-	var preview = [];
-	var last = 0;
-	for (var i = 0; i < replacedList.length; i++) {
-		var replaced = replacedList[i];
+	const preview = [];
+	let last = 0;
+	for (let i = 0; i < replacedList.length; i++) {
+		const replaced = replacedList[i];
 		if (last < replaced[0]) {
 			preview.push(text.substring(last, replaced[0]).split("<").join("&lt;").split(">").join("&gt;"));
 		}
@@ -205,151 +206,23 @@ Replaced.prototype.preview = function(text, replacedList) {
 	}
 	return preview.join("");
 }
-/*
-public class Replaced {
-	private String origin;
-	private List<int[]> originReplaced = new ArrayList<>();
-	private String result;
-	private List<int[]> resultReplaced = new ArrayList<>();
-	private int count = 0;
-	
-	public Replaced(String text, String[] froms, String[] tos) {
-		origin = result = text;
-
-		for (int i = 0; i < froms.length; i++) {
-			int checked = 0, rPos;
-			while ((rPos = result.indexOf(froms[i], checked)) >= 0) {
-				int rIndex = 0;
-				for (; rIndex < resultReplaced.size(); rIndex++) {
-					if (rPos <= resultReplaced.get(rIndex)[0]) {
-						break;
-					}
-				}
-				int before = rIndex - 1;
-				if (before >= 0 && rPos <= resultReplaced.get(before)[1]) { // 앞이랑 겹칠 때
-					int oEnd = rPos - resultReplaced.get(before)[1] + originReplaced.get(before)[1] + froms[i].length();
-					if (oEnd < originReplaced.get(before)[1]) {
-						resultReplaced.get(before)[1] += tos[i].length() - froms[i].length();
-					} else {
-						resultReplaced.get(before)[1] = rPos + tos[i].length();
-						originReplaced.get(before)[1] = oEnd;
-					}
-					rIndex--;
-				} else {
-					int addLength = (before >= 0) ? originReplaced.get(before)[1] - resultReplaced.get(before)[1] : 0;
-					originReplaced.add(rIndex, new int[] { rPos + addLength, rPos + froms[i].length() + addLength });
-					resultReplaced.add(rIndex, new int[] { rPos, rPos + tos[i].length() });
-				}
-				int addLength = tos[i].length() - froms[i].length();
-				for (int j = rIndex + 1; j < resultReplaced.size(); j++) {
-					resultReplaced.get(j)[0] += addLength;
-					resultReplaced.get(j)[1] += addLength;
-				}
-				if (rIndex + 1 < resultReplaced.size()) {
-					if (originReplaced.get(rIndex)[1] >= originReplaced.get(rIndex + 1)[0]) { // 뒤랑 겹칠 때
-						originReplaced.get(rIndex + 1)[0] = originReplaced.get(rIndex)[0];
-						resultReplaced.get(rIndex + 1)[0] = resultReplaced.get(rIndex)[0];
-						originReplaced.remove(rIndex);
-						resultReplaced.remove(rIndex);
-					}
-				}
-				result = result.substring(0, rPos) + tos[i] + result.substring(rPos + froms[i].length());
-				checked = rPos + tos[i].length();
-				count++;
-			}
-		}
-	}
-
-	public String getOrigin() {
-		return origin;
-	}
-	public String getResult() {
-		return result;
-	}
-	public int getCount() {
-		return count;
-	}
-	public String previewOrigin() {
-		return preview(origin, originReplaced);
-	}
-	public String previewResult() {
-		return preview(result, resultReplaced);
-	}
-	private String preview(String text, List<int[]> replacedList) {
-		StringBuilder preview = new StringBuilder();
-		int last = 0;
-		for (int i = 0; i < replacedList.size(); i++) {
-			int[] replaced = replacedList.get(i);
-			if (last < replaced[0]) {
-				preview.append(text.substring(last, replaced[0]).replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
-			}
-			preview.append("<span class='highlight'>" + text.substring(replaced[0], replaced[1]).replaceAll("<", "&lt;").replaceAll(">", "&gt;") + "</span>");
-			last = replaced[1];
-		}
-		if (last < text.length()) {
-			preview.append(text.substring(last).replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
-		}
-		return preview.toString();
-	}
-	
-	public static void main(String[] args) {
-		String text = "test_text<test>asdf</test>";
-		
-		String[] froms = { "es"   };
-		String[] tos   = { "asdf" };
-		Replaced replaced = new Replaced(text, froms, tos);
-		System.out.println(replaced.count);
-		System.out.println(replaced.previewOrigin());
-		System.out.println(replaced.previewResult());
-		
-		froms = new String[] { "es"  , "ex" };
-		tos   = new String[] { "asdf", "es" };
-		replaced = new Replaced(text, froms, tos);
-		System.out.println(replaced.count);
-		System.out.println(replaced.previewOrigin());
-		System.out.println(replaced.previewResult());
-		
-		froms = new String[] { "es"  , "ex", "_" };
-		tos   = new String[] { "asdf", "es", "/" };
-		replaced = new Replaced(text, froms, tos);
-		System.out.println(replaced.count);
-		System.out.println(replaced.previewOrigin());
-		System.out.println(replaced.previewResult());
-		
-		froms = new String[] { "es"  , "ex", "_", "ft" };
-		tos   = new String[] { "asdf", "es", "/", "!"  };
-		replaced = new Replaced(text, froms, tos);
-		System.out.println(replaced.count);
-		System.out.println(replaced.previewOrigin());
-		System.out.println(replaced.previewResult());
-		
-		text = "내일 정오<br>극장 뒤편에서 기다리겠다삐";
-		froms = new String[] { "<br>"  , "오<"  };
-		tos   = new String[] { "<BR />", "오!<" };
-		replaced = new Replaced(text, froms, tos);
-		System.out.println(replaced.count);
-		System.out.println(replaced.previewOrigin());
-		System.out.println(replaced.previewResult());
-	}
-}
-*/
 {
 	main.importSetting = async function() {
-		var fileBuffer = await window.showOpenFilePicker({ types: [ { description: "JSON 파일", accept:{ "text/json": [".json"] } } ] });
+		const fileBuffer = await window.showOpenFilePicker({ types: [ { description: "JSON 파일", accept:{ "text/json": [".json"] } } ] });
 		if (fileBuffer && fileBuffer[0]) {
-			var file = await fileBuffer[0].getFile();
-			var text = await file.text();
+			const file = await fileBuffer[0].getFile();
+			const text = await file.text();
 			main.script("init", [text]);
 		}
 	};
 	main.exportSetting = async function(setting) {
-		var fileBuffer = await window.showSaveFilePicker({
+		const fileBuffer = await window.showSaveFilePicker({
 			types: [
 				{ description: "JSON 파일", accept:{ "text/json": [".json"] } }
 			]
 		});
 		if (fileBuffer) {
-			var stream = await fileBuffer.createWritable();
+			const stream = await fileBuffer.createWritable();
 			await stream.write(setting);
 			await stream.close();
 		}

@@ -1,16 +1,16 @@
 // 팟플레이어 SDK 값 가져옴
-var WM_USER = 0x0400;
-var POT_COMMAND = WM_USER;
+const WM_USER = 0x0400;
+const POT_COMMAND = WM_USER;
 
-var POT_GET_CURRENT_TIME = 0x5004;
-var POT_SET_CURRENT_TIME = 0x5005;
-var POT_SET_PLAY_STATUS  = 0x5007;
-var POT_SET_PLAY_CLOSE   = 0x5009;
+const POT_GET_CURRENT_TIME = 0x5004;
+const POT_SET_CURRENT_TIME = 0x5005;
+const POT_SET_PLAY_STATUS  = 0x5007;
+const POT_SET_PLAY_CLOSE   = 0x5009;
 
-var POT_GET_VIDEO_FPS    = 0x6032;
+const POT_GET_VIDEO_FPS    = 0x6032;
 
-var POT_GET_PLAYFILE_NAME= 0x6020;
-var POT_SET_PLAYFILE     =   1000;
+const POT_GET_PLAYFILE_NAME= 0x6020;
+const POT_SET_PLAYFILE     =   1000;
 
 function WebPlayerBridge() {
 	this.hwnd = this.findPotPlayer();
@@ -120,130 +120,3 @@ function WebPlayerBridge() {
 	WebPlayerBridge.prototype.getTime     = function() { return this.sendMessage(POT_COMMAND, POT_GET_CURRENT_TIME, 1); }
 	WebPlayerBridge.prototype.moveTo  = function(time) { return this.sendMessage(POT_COMMAND, POT_SET_CURRENT_TIME, time); }
 }
-
-/*
-var player = {}; // 가상 플레이어
-{
-	player.wndProc = function(m) {
-		switch (m.wParam) {
-			case POT_SET_PLAY_STATUS : {
-				return this.setStatus(m.lParam);
-			}
-			case POT_SET_PLAY_CLOSE : {
-				return this.stop();
-			}
-			case POT_SET_PLAY_ORDER  : {
-				return this.move(m.lParam);
-			}
-			case POT_GET_CURRENT_TIME: {
-				return this.getTime();
-			}
-			case POT_SET_CURRENT_TIME: {
-				return this.moveTo(m.lParam);
-			}
-			case POT_GET_VIDEO_FPS   : {
-				return this.getFps();
-			}
-			case 0x0010: {
-				this.window.close();
-				break;
-			}
-		}
-	};
-	
-	//base: 재생 시간 계산 기준점
-	//paused: 일시정지된 위치
-	player.base = new Date().getTime();
-	player.paused = player.base;
-	player.setStatus = function(stat) {
-		switch (stat) {
-		case 0: return this.playOrPause();
-		case 1: return this.pause();
-		case 2: return this.play();
-		}
-	}
-	player.getStatus = function() {
-		if (this.paused == 0) {
-			return 2; // 재생
-		}
-		if (this.paused <= this.base) {
-			return 0; // 정지
-		}
-		return 1; // 일시정지
-	}
-	player.playOrPause = function() {
-		// toggle은 있더라도 쓰면 안 됨
-		if (this.paused) {
-			this.play();
-		} else {
-			this.pause();
-		}
-	}
-	player.play = function() {
-		if (this.paused == 0) return; // 재생 중
-		
-		if (this.paused <= this.base) {
-			// 정지 상태
-			this.base = new Date().getTime();
-		} else {
-			// 일시정지 상태
-			this.base += new Date().getTime() - this.paused;
-		}
-		this.paused = 0;
-	}
-	player.pause = function() {
-		if (this.paused) return;
-		this.paused = new Date().getTime();
-	}
-	player.stop = function() {
-		this.base = this.paused = new Date().getTime();
-	}
-	player.getTime = function() {
-		return (this.paused ? this.paused : new Date().getTime()) - this.base;
-	}
-	player.moveTo = function(time) {
-		var time = Math.max(0, time);
-		var now = new Date().getTime();
-		this.base = now - time;
-		if (this.paused) {
-			this.paused = now;
-		}
-	}
-	player.getFps = function() {
-		return 23976;
-	}
-	player.run = function() {
-		this.window = window.open("about:blank", "player", "scrollbars=no,location=no");
-		if (this.window) {
-			this.window.document.title = "플레이어";
-			setInterval(function() {
-				player.refresh();
-			}, 10);
-		}
-	}
-	player.refresh = function() {
-		var h = this.getTime();
-		if (h == this.time) return;
-		this.time = h;
-		
-		var ms = h % 1000; h = (h - ms) / 1000;
-		var s  = h %   60; h = (h -  s) /   60;
-		var m  = h %   60; h = (h -  m) /   60;
-		this.window.document.body.innerHTML = ("player: " + h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + "." + Math.floor(ms / 100));
-	};
-}
-{
-	player.wndProc = function(m) {
-		return (this.window && this.window.wndProc) ? this.window.wndProc(m) : null;
-	};
-	player.run = function() {
-		if (this.window && this.window.name) {
-			return;
-		}
-		this.window = window.open(location.href.split("index.html")[0] + "view/player.html", "player", "scrollbars=no,location=no");
-		if (this.window) {
-			this.window.document.title = "플레이어";
-		}
-	}
-}
-*/

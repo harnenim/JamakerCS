@@ -10,13 +10,7 @@
 	<script>
 windowName = "addon";
 
-var binder = {
-	setText: function(text, range) {
-		origin.tab.setText(text, range);
-	}
-};
-
-var Part = function(type, i=0, pi=0, origin="", param="") {
+const Part = function(type, i=0, pi=0, origin="", param="") {
 	this.type = type;
 	this.origin = { pos: i, text: origin }
 	this.param = { pos: pi, text: param }
@@ -33,35 +27,36 @@ Part.htmlToText = function(html) {
 	return Part.SPAN.html(html).text();
 }
 Part.prototype.doReplace = function() {
-	var replaced = "";
-	var preview = "";
-	var pos = 0;
+	let replaced = "";
+	let preview = "";
+	let pos = 0;
 	
 	switch (this.type) {
 		case Part.Type.TEXT: {
 			for (let i = 0; i < this.replacers.length; i++) {
-				var replacer = this.replacers[i];
+				const replacer = this.replacers[i];
 				if (replacer.parent.selected < 0) {
-					var text = this.origin.text.substring(pos, replacer.start);
-					replaced += text;
-					preview += Part.htmlToText(text);
-					
-					text = this.origin.text.substring(replacer.start, replacer.end);
-					replaced += text;
-					preview += "<span class='original'>" + text + "</span>";
+					{	const text = this.origin.text.substring(pos, replacer.start);
+						replaced += text;
+						preview += Part.htmlToText(text);
+					}
+					{	const text = this.origin.text.substring(replacer.start, replacer.end);
+						replaced += text;
+						preview += "<span class='original'>" + text + "</span>";
+					}
 					
 				} else {
-					var text = this.origin.text.substring(pos, replacer.start);
-					replaced += text;
-					preview += Part.htmlToText(text);
-					
+					{	const text = this.origin.text.substring(pos, replacer.start);
+						replaced += text;
+						preview += Part.htmlToText(text);
+					}
 					if (replacer.isFirst) {
 						if (typeof replacer.parent.selected == "string") {
-							text = replacer.parent.selected;
+							const text = replacer.parent.selected;
 							replaced += text;
 							preview += "<span class='replaced'>" + text + "</span>";
 						} else {
-							text = replacer.parent.to[replacer.parent.selected];
+							const text = replacer.parent.to[replacer.parent.selected];
 							replaced += text;
 							preview += "<span class='replaced'>" + text + "</span>";
 						}
@@ -69,15 +64,14 @@ Part.prototype.doReplace = function() {
 				}
 				pos = replacer.end;
 			}
-			{
-				var text = this.origin.text.substring(pos);
+			{	const text = this.origin.text.substring(pos);
 				replaced += text;
 				preview += Part.htmlToText(text);
 			}
 			break;
 		}
 		case Part.Type.TAG: {
-			var replacer = this.replacers.length ? this.replacers[0] : null;
+			const replacer = this.replacers.length ? this.replacers[0] : null;
 			if (replacer == null) {
 				replaced += this.origin.text;
 				preview += "&lt;" + this.origin.text.substring(1);
@@ -91,7 +85,7 @@ Part.prototype.doReplace = function() {
 			break;
 		}
 		case Part.Type.AMP: {
-			var replacer = this.replacers.length ? this.replacers[0] : null;
+			const replacer = this.replacers.length ? this.replacers[0] : null;
 			if (replacer == null) {
 				replaced += this.origin.text;
 				preview += "&amp;" + this.origin.text.substring(1);
@@ -106,15 +100,15 @@ Part.prototype.doReplace = function() {
 	this.preview = preview;
 	return this.replaced = replaced;
 }
-var CheckString = function(text) {
-	var Type = Part.Type;
-	var part = new Part(Type.TEXT);
+const CheckString = function(text) {
+	const Type = Part.Type;
+	let part = new Part(Type.TEXT);
 	this.parts = [part];
 	this.replacers = [];
 	
-	var pi = 0;
+	let pi = 0;
 	for (let i = 0; i < text.length; i++) {
-		var c = text[i];
+		const c = text[i];
 		switch (part.type) {
 			case Type.TEXT: {
 				if (c == '<') {
@@ -133,7 +127,7 @@ var CheckString = function(text) {
 			case Type.TAG: {
 				part.origin.text += c;
 				if (c == '>') {
-					var tag = part.origin.text.toUpperCase();
+					const tag = part.origin.text.toUpperCase();
 					if (tag.match(/<br[ \t\r\n>]/gi)) {
 						part.param.text += '\n';
 						pi++;
@@ -171,14 +165,14 @@ var CheckString = function(text) {
 	}
 }
 CheckString.prototype.getOrigin = function() {
-	var text = "";
+	let text = "";
 	for (let i = 0; i < this.parts.length; i++) {
 		text += this.parts[i].origin.text;
 	}
 	return text;
 }
 CheckString.prototype.getParam = function() {
-	var text = "";
+	let text = "";
 	for (let i = 0; i < this.parts.length; i++) {
 		text += this.parts[i].param.text;
 	}
@@ -188,19 +182,19 @@ CheckString.prototype.setReplacers = function(replacers) {
 	this.replacers = replacers;
 	
 	for (let i = 0; i < replacers.length; i++) {
-		var replacer = replacers[i];
+		const replacer = replacers[i];
 		replacer.selected = -1;
 		replacer.to = replacer.candWord.split("|");
 		replacer.parts = [];
 
-		var si = 0;
+		let si = 0;
 		for (let j = 0; j < this.parts.length; j++) {
 			if (replacer.start < this.parts[j].param.pos) {
 				break;
 			}
 			si = j;
 		}
-		var ei = si;
+		let ei = si;
 		for (let j = si; j < this.parts.length; j++) {
 			if (replacer.end <= this.parts[j].param.pos) {
 				break;
@@ -209,7 +203,7 @@ CheckString.prototype.setReplacers = function(replacers) {
 		}
 		
 		if (si == ei) {
-			var part = this.parts[si];
+			const part = this.parts[si];
 			part.replacers.push({
 					start: replacer.start - part.param.pos
 				,	end  : replacer.end   - part.param.pos
@@ -218,15 +212,16 @@ CheckString.prototype.setReplacers = function(replacers) {
 			});
 			
 		} else {
-			var part = this.parts[si];
-			part.replacers.push({
-					start: replacer.start - part.param.pos
-				,	end  : part.param.text.length
-				,	parent: replacer
-				,	isFirst: true
-			});
+			{	const part = this.parts[si];
+				part.replacers.push({
+						start: replacer.start - part.param.pos
+					,	end  : part.param.text.length
+					,	parent: replacer
+					,	isFirst: true
+				});
+			}
 			for (let j = si+1; j < ei; j++) {
-				var part = this.parts[j];
+				const part = this.parts[j];
 				part.replacers.push({
 						start: 0
 					,	end  : part.param.text.length
@@ -234,13 +229,14 @@ CheckString.prototype.setReplacers = function(replacers) {
 					,	isFirst: false
 				});
 			}
-			part = this.parts[ei];
-			part.replacers.push({
-					start: 0
-				,	end  : replacer.end - part.param.pos
-				,	parent: replacer
-				,	isFirst: false
-			});
+			{	const part = this.parts[ei];
+				part.replacers.push({
+						start: 0
+					,	end  : replacer.end - part.param.pos
+					,	parent: replacer
+					,	isFirst: false
+				});
+			}
 		}
 	}
 }
@@ -248,7 +244,7 @@ CheckString.prototype.doReplace = function() {
 	this.replaced = "";
 	this.preview = "";
 	for (let i = 0; i < this.parts.length; i++) {
-		var part = this.parts[i];
+		const part = this.parts[i];
 		this.replaced += part.doReplace();
 		this.preview += part.preview;
 	}
@@ -256,71 +252,68 @@ CheckString.prototype.doReplace = function() {
 }
 
 //초기 상태 기억
-var origin = null;
-var operation = null;
+const origin = (opener && opener.SmiEditor && opener.SmiEditor.selected) ? opener.SmiEditor.selected.getText() : null;
+let operation = null;
 $(function() {
-	if (opener && opener.SmiEditor && opener.SmiEditor.selected) {
-		origin = opener.SmiEditor.selected.getText();
-		origin.tab = opener.SmiEditor.selected;
+	if (!origin) {
+		alert("작업 대상이 없습니다.");
+		window.close();
+		return false;
+	}
+	
+	origin.tab = opener.SmiEditor.selected;
+	origin.start = 0;
+	origin.end = 0;
+
+	// 선택 범위만 작업
+	if (origin.selection[0] != origin.selection[1]) {
+		origin.start = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
+		origin.end   = origin.text.substring(0, origin.selection[1]).split("\n").length;
+	} else {
+		//end = origin.text.split("\n").length;
 		
-		if (!origin) {
-			alert("작업 대상이 없습니다.");
-			window.close();
-			return false;
+		// 선택된 게 없으면
+		const lines = origin.text.split("\n");
+		const lineNo = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
+
+		// 현재 싱크 맨 윗줄 찾기
+		let syncLineNo = lineNo;
+		while (syncLineNo >= 0) {
+			if (lines[syncLineNo].substring(0, 6).toUpperCase() == "<SYNC ") {
+				break;
+			}
+			syncLineNo--;
 		}
-		origin.start = 0;
-		origin.end = 0;
+		origin.start = syncLineNo;
 
-		// 선택 범위만 작업
-		if (origin.selection[0] != origin.selection[1]) {
-			origin.start = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
-			origin.end   = origin.text.substring(0, origin.selection[1]).split("\n").length;
-		} else {
-			//end = origin.text.split("\n").length;
-			
-			// 선택된 게 없으면
-			var lines = origin.text.split("\n");
-			var lineNo = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
-
-			// 현재 싱크 맨 윗줄 찾기
-			var syncLineNo = lineNo;
-			while (syncLineNo >= 0) {
-				if (lines[syncLineNo].substring(0, 6).toUpperCase() == "<SYNC ") {
+		if (syncLineNo >= 0) {
+			// 다음 싱크 라인 찾기
+			let nextSyncLineNo = syncLineNo + 1;
+			while (nextSyncLineNo < lines.length) {
+				if (lines[nextSyncLineNo].substring(0, 6).toUpperCase() == "<SYNC ") {
 					break;
 				}
-				syncLineNo--;
+				nextSyncLineNo++;
 			}
-			origin.start = syncLineNo;
 
-			if (syncLineNo >= 0) {
-				// 다음 싱크 라인 찾기
-				var nextSyncLineNo = syncLineNo + 1;
-				while (nextSyncLineNo < lines.length) {
-					if (lines[nextSyncLineNo].substring(0, 6).toUpperCase() == "<SYNC ") {
-						break;
-					}
-					nextSyncLineNo++;
+			if (nextSyncLineNo < lines.length) {
+				// 현재 싱크 내용물 선택
+				if (nextSyncLineNo > syncLineNo + 20) {
+					// 20줄이 넘어가면 아직 싱크를 찍지 않은 것으로 간주
+					nextSyncLineNo = syncLineNo + 20;
 				}
+				value = lines.slice(syncLineNo + 1, nextSyncLineNo).join("\n");
 
-				if (nextSyncLineNo < lines.length) {
-					// 현재 싱크 내용물 선택
-					if (nextSyncLineNo > syncLineNo + 20) {
-						// 20줄이 넘어가면 아직 싱크를 찍지 않은 것으로 간주
-						nextSyncLineNo = syncLineNo + 20;
-					}
-					value = lines.slice(syncLineNo + 1, nextSyncLineNo).join("\n");
-
-				} else {
-					// 현재 줄 선택
-					value = lines[lineNo];
-				}
-				origin.end = nextSyncLineNo;
+			} else {
+				// 현재 줄 선택
+				value = lines[lineNo];
 			}
+			origin.end = nextSyncLineNo;
 		}
-		
-		if (origin.start >= 0) {
-			checkSpell(origin.text.split("\n").slice(origin.start, origin.end).join("\n"));
-		}
+	}
+	
+	if (origin.start >= 0) {
+		checkSpell(origin.text.split("\n").slice(origin.start, origin.end).join("\n"));
 	}
 });
 
@@ -338,7 +331,7 @@ function checkSpell(text, data=null) {
 		,	data: { text1: operation.getParam() }
 		,	dataType: "text"
 		,	success: function (result) {
-				var lines = result.split("\n");
+				const lines = result.split("\n");
 				for (let i = 0; i < lines.length; i++) {
 					if (lines[i].startsWith("\tdata = ")) {
 						parseResultData(eval(lines[i])[0]);
@@ -356,13 +349,13 @@ function parseResultData(data) {
 	replacers = data.errInfo;
 	operation.setReplacers(replacers);
 	
-	var olResult = $("#olResult").empty();
-	var preset = olResult.data("preset");
+	const olResult = $("#olResult").empty();
+	const preset = olResult.data("preset");
 	
 	for (let i = 0; i < replacers.length; i++) {
-		var replacer = replacers[i];
-		var li = preset.clone().data({ info: replacer });
-		var to = li.find(".to");
+		const replacer = replacers[i];
+		const li = preset.clone().data({ info: replacer });
+		const to = li.find(".to");
 		if (replacer.candWord.length) {
 			for (let j = 0; j < replacer.to.length; j++) {
 				to.append($("<a href='javascript:setChecker(" + i + ", " + j + ")'>").text(replacer.to[j]));
@@ -379,16 +372,17 @@ function parseResultData(data) {
 }
 
 $(function() {
-	var olResult = $("#olResult");
-	var preset = olResult.find(".preset").removeClass("preset");
-	olResult.data({ preset: preset.clone() });
-	preset.remove();
+	const olResult = $("#olResult");
+	{	const preset = olResult.find(".preset").removeClass("preset");
+		olResult.data({ preset: preset.clone() });
+		preset.remove();
+	}
 	
 	olResult.on("click", "button", function() {
-		var li = $(this).parents("li");
-		var to = li.find("input").val();
+		const li = $(this).parents("li");
+		const to = li.find("input").val();
 		if (to) {
-			var errInfo = li.data("info");
+			const errInfo = li.data("info");
 			errInfo.replace = to;
 			errInfo.selected = to;
 			refreshOutput();
@@ -404,13 +398,13 @@ $(function() {
 	$("#btnApply").on("click", function() {
 		if (origin) {
 			// 해당 줄 앞뒤 전체 선택되도록 조정
-			var origLines = origin.text.split("\n");
-			var front = origLines.slice(0, origin.start);
-			var range = [(origin.start > 0) ? (front.join("\n").length + 1) : 0];
+			const origLines = origin.text.split("\n");
+			const front = origLines.slice(0, origin.start);
+			const range = [(origin.start > 0) ? (front.join("\n").length + 1) : 0];
 			range.push(range[0] + operation.replaced.length);
 			
 			// 교체 및 종료
-			binder.setText(front.concat(operation.replaced).concat(origLines.slice(origin.end)).join("\n"), range);
+			origin.tab.setText(front.concat(operation.replaced).concat(origLines.slice(origin.end)).join("\n"), range);
 			window.close();
 			
 		} else {

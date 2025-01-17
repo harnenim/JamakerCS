@@ -1,11 +1,11 @@
 function Binder(editor) {
-	var _ = this._ = editor;
+	const _ = this._ = editor;
 	
 	this.focus = function(target) {
 		_.focusWindow(target);
 	}
 	
-	var init = false;
+	this.init = false;
 	this.initAfterLoad = function() {
 		if (this.init) return;
 		this.init = true;

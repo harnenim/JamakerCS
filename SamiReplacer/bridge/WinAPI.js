@@ -6,7 +6,7 @@ function RECT() {
 }
 
 //윈도우 메시지 가상으로 구현
-var WinAPI = {};
+const WinAPI = {};
 WinAPI.SendMessage = function(process, msg, wParam, lParam) {
 	if (process && process.wndProc) {
 		return process.wndProc({
@@ -17,7 +17,9 @@ WinAPI.SendMessage = function(process, msg, wParam, lParam) {
 	}
 };
 WinAPI.PostMessage = WinAPI.SendMessage;
-WinAPI.SetForegroundWindow = function() {}
+WinAPI.SetForegroundWindow = function(hwnd) {
+	hwnd.focus();
+}
 WinAPI.GetWindowRect = function(hwnd, offset) {
 	if (!hwnd) return;
 	if (hwnd.getOffset) {
@@ -49,7 +51,7 @@ WinAPI.MoveWindow = function(hwnd, x, y, w, h) {
 			}
 		}
 	} else {
-		var offset = w ? w : new RECT();
+		const offset = w ? w : new RECT();
 		WinAPI.GetWindowRect(hwnd, offset);
 		offset.left += x;
 		offset.top += y;

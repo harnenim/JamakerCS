@@ -15,7 +15,7 @@ WebForm.prototype.focusWindow = function(target) {
 }
 
 WebForm.prototype.script = function(names, p) {
-	var func = eval("this.mainView.contentWindow." + names);
+	const func = eval("this.mainView.contentWindow." + names);
 	if (p) {
 		return func(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9]);
 	} else {
@@ -69,12 +69,12 @@ WebForm.prototype.initializeComponent = function() {
 		,	background: "rgba(127,127,127,0)"
 	}).hide());
 
-	var self = this;
+	const self = this;
 	document.addEventListener("dragenter", function(e) {
 		e.preventDefault();
 		self.showDragging();
 	});
-	var layerForDrag = self.layerForDrag[0];
+	const layerForDrag = self.layerForDrag[0];
 	layerForDrag.addEventListener("dragleave", function(e) {
 		e.preventDefault();
 		self.hideDragging();
@@ -104,7 +104,7 @@ WebForm.prototype.initAfterLoad = function() {
 WebForm.prototype.beforeExit = function(e) {}
 
 function MenuStrip() {
-	var self = this;
+	const self = this;
 	this.view = $("<ol>").addClass("menustrip").css({
 			position: "absolute"
 		,	top: 0
@@ -112,8 +112,8 @@ function MenuStrip() {
 		,	width: "100%"
 	}).on("click", "li", function(e) {
 		e.preventDefault();
-		var menu = $(this);
-		var submenu = menu.data("submenu");
+		const menu = $(this);
+		const submenu = menu.data("submenu");
 		if (submenu.hasClass("open")) {
 			submenu.removeClass("open");
 		} else {
