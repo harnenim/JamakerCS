@@ -20,7 +20,7 @@ function hideProcessing() {
 	isProcessing = false;
 }
 function showAudioSelector(list, isOrigin, withSaveSkf, trustKf) {
-	const list = list.split("|");
+	list = list.split("|");
 	const sa = $("#selectAudio").show();
 	const ol = sa.find(".list").empty();
 	for (let i = 0; i < list.length; i++) {
@@ -265,17 +265,17 @@ function refreshPreview(isTarget=false) {
 	let lastSync = 0;
 	let errCount = 0;
 	switch (operation.type) {
-		case "smi":
+		case "smi": {
 			const originBody = body;
 			body = [];
 			let last = {};
-			for (let i = 0; i < originBody.length; i++) {
-				const item = originBody[i];
+            for (let i = 0; i < originBody.length; i++) {
+                const item = originBody[i];
 				if (item.syncType == Subtitle.SyncType.inner) {
 					// 중간 싱크는 미리보기에서 생략
 					continue;
 				}
-				
+
 				// 줄바꿈 예외 처리 및 주석 숨기기
 				let text = item.text.split("\n").join("").split(/<br>/gi).join("\n").split("<!--");
 				for (let j = 1; j < text.length; j++) {
@@ -286,7 +286,7 @@ function refreshPreview(isTarget=false) {
 						text[j] = "";
 					}
 				}
-				
+
 				// 태그 숨기기
 				text = text.join("").split("<");
 				for (let j = 1; j < text.length; j++) {
@@ -297,27 +297,27 @@ function refreshPreview(isTarget=false) {
 						text[j] = "";
 					}
 				}
-				
+
 				// ms 단위 표현
 				last.me = item.ms = item.start;
 				item.me = item.ms + 1000;
-				
+
 				// 줄바꿈, &nbsp; 등 처리
 				const $line = getLine(item, item.start, text.join("").split("\n").join("<br />").split("&").join("&amp;"));
 				item.previewText = $line.text();
 				body.push(item);
-				
+
 				if ($line.find(".text").text().split("&nbsp;").join(" ").trim().length) {
 					last = item;
 				} else {
 					last = {};
 				}
-				
+
 				// 화면 싱크 강조
 				if (item.syncType) {
 					$line.addClass("type" + item.syncType);
 				}
-				
+
 				// 싱크 역전 오류
 				if (item.ms < lastSync) {
 					$line.addClass("error");
@@ -327,8 +327,8 @@ function refreshPreview(isTarget=false) {
 				$preview.append($line);
 			}
 			break;
-
-		case "srt":
+		}
+		case "srt": {
 			for (let i = 0; i < body.length; i++) {
 				const item = body[i];
 				const $line = getLine(item, item.start, item.text.split("\n").join("<br />"));
@@ -337,7 +337,7 @@ function refreshPreview(isTarget=false) {
 				// ms 단위 표현
 				item.ms = item.start;
 				item.me = item.end;
-				
+
 				if (item.ms < lastSync) {
 					$line.addClass("error");
 					errCount++;
@@ -346,8 +346,8 @@ function refreshPreview(isTarget=false) {
 				$preview.append($line);
 			}
 			break;
-			
-		case "ass":
+		}
+		case "ass": {
 			const body = body.slice(0);
 			body.sort(function (a, b) {
 				if (a.start == b.start) {
@@ -357,7 +357,7 @@ function refreshPreview(isTarget=false) {
 			})
 			for (let i = 0; i < body.length; i++) {
 				const item = body[i];
-				
+
 				// 태그 숨기기
 				const items = item.text.split("{");
 				let text = items[0];
@@ -374,11 +374,11 @@ function refreshPreview(isTarget=false) {
 				// 화면 싱크 여부
 				item.fs = item.text.startsWith("{}");
 				item.fe = item.text.endsWith  ("{}");
-				
+
 				// 줄바꿈 처리
 				const $line = getLine(item, item.ms, text.split("\\N").join("<br />"));
 				item.previewText = $line.text();
-				
+
 				// 화면 싱크 강조
 				if (item.fs) {
 					$line.addClass("type1");
@@ -393,6 +393,7 @@ function refreshPreview(isTarget=false) {
 				$preview.append($line);
 			}
 			break;
+		}
 	}
 	if (errCount) {
 		setTimeout(function() {
@@ -435,42 +436,43 @@ function refreshRangeAfterReadOriginVideoFile(length) {
 
 function calcShift() {
 	const ranges = [];
-	let last = -1;
-	let isCorrect = true;
-	let alertNumber = false;
-	$("#rangeList .list-body > div").each(function() {
-		const item = $(this);
-		let start = item.find("input.start").val();
-		if (isFinite(start)) {
-			start = Number(start);
-		} else {
-			alertNumber = true;
-			return isCorrect = false;
+	{
+		let last = -1;
+		let isCorrect = true;
+		let alertNumber = false;
+		$("#rangeList .list-body > div").each(function() {
+			const item = $(this);
+			let start = item.find("input.start").val();
+			if (isFinite(start)) {
+				start = Number(start);
+			} else {
+				alertNumber = true;
+				return isCorrect = false;
+			}
+			if (start < last) {
+				return isCorrect = false;
+			}
+			let end = item.find("input.end").val();
+			if (isFinite(end)) {
+				end = Number(end);
+			} else {
+				alertNumber = true;
+				return isCorrect = false;
+			}
+			if (end <= start) {
+				return isCorrect = false;
+			}
+			ranges.push(start + "~" + (last = end));
+		});
+		if (!isCorrect) {
+			if (alertNumber) {
+				alert("범위에는 숫자만 입력하시기 바랍니다.");
+			} else {
+				alert("범위가 어긋난 부분이 있습니다.");
+			}
+			return;
 		}
-		if (start < last) {
-			return isCorrect = false;
-		}
-		let end = item.find("input.end").val();
-		if (isFinite(end)) {
-			end = Number(end);
-		} else {
-			alertNumber = true;
-			return isCorrect = false;
-		}
-		if (end <= start) {
-			return isCorrect = false;
-		}
-		ranges.push(start + "~" + (last = end));
-	});
-	if (!isCorrect) {
-		if (alertNumber) {
-			alert("범위에는 숫자만 입력하시기 바랍니다.");
-		} else {
-			alert("범위가 어긋난 부분이 있습니다.");
-		}
-		return;
 	}
-	
 	const shifts = [];
 	let last = -1;
 	$("#shiftList .list-body > div").each(function() {
