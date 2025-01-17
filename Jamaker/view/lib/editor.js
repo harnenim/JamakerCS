@@ -706,9 +706,9 @@ function init(jsonSetting) {
 	});
 	
 	SmiEditor.activateKeyEvent();
-	SmiEditor.Viewer.open();
 	
 	setSetting(setting, true);
+	SmiEditor.Viewer.open(); // 스타일 세팅 설정 완료 후에 실행
 	moveWindowsToSetting();
 
 	autoSaveTemp = setInterval(function () {
@@ -718,17 +718,6 @@ function init(jsonSetting) {
 
 function setSetting(setting, initial=false) {
 	const oldSetting = window.setting;
-	
-	// 탭 on/off 먼저 해야 height값 계산 가능
-	if (setting.useTab) {
-		$("body").addClass("use-tab");
-	} else {
-		$("body").removeClass("use-tab");
-		if (tabs.length == 0) {
-			// 탭 기능 껐을 땐 에디터 하나 열린 상태
-			newFile();
-		}
-	}
 	
 	SmiEditor.setSetting(setting);
 	if (initial || (JSON.stringify(oldSetting.color) != JSON.stringify(setting.color))) {
@@ -854,6 +843,17 @@ function setSetting(setting, initial=false) {
 	binder.setMenus(setting.menu);
 	
 	window.setting = JSON.parse(JSON.stringify(setting));
+
+	// 탭 on/off 먼저 해야 height값 계산 가능
+	if (setting.useTab) {
+		$("body").addClass("use-tab");
+	} else {
+		$("body").removeClass("use-tab");
+		if (tabs.length == 0) {
+			// 탭 기능 껐을 땐 에디터 하나 열린 상태
+			newFile(); // 새 파일 양식은 세팅 로딩이 완료된 후에 갖춰짐
+		}
+	}
 }
 function moveWindowsToSetting() {
 	binder.moveWindow("editor"
