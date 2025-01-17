@@ -34,14 +34,14 @@ Binder.prototype.save = function(result, operation) {
 <script src="ffmpeg/SyncShift.js"></script>
 <script src="ffmpeg/VideoInfo.js"></script>
 <script>
-var main = new WebForm();
+window.main = new WebForm();
 {	// main
 	main.settingJson = '{"saveSkf":{"origin":true,"target":true},"separators":"&nbsp;&nbsp;\\n@harne_","maxBlank":30}';
 	
 	main.run = function() {
 		this.initializeComponent();
 		
-		var settingJson = localStorage.getItem("setting.AutoSyncShift");
+		const settingJson = localStorage.getItem("setting.AutoSyncShift");
 		if (settingJson) {
 			main.settingJson = settingJson;
 		}
@@ -65,7 +65,7 @@ var main = new WebForm();
 			}, 1000);
 			*/
 
-			var cd = main.mainView.contentDocument;
+			const cd = main.mainView.contentDocument;
 			cd.addEventListener("dragenter", function(e) {
 				e.preventDefault();
 				main.showDragging();
@@ -114,7 +114,7 @@ var main = new WebForm();
 	main.readVideoFile = function(file, isOrigin, withSaveSkf, withKf) {
 		console.log("ReadVideoFile: {0}".split("{0}").join(path));
 		main.showProcessing("불러오는 중");
-		var progress = isOrigin ? "#originVideo > .input" : "#targetVideo > .input";
+		const progress = isOrigin ? "#originVideo > .input" : "#targetVideo > .input";
 		main.readingVideoFile = new VideoInfo(file, new WebProgress(main, progress));
 		setTimeout(function() {
 			main.readingVideoFile.RefreshInfo(function(video) {
@@ -133,8 +133,8 @@ var main = new WebForm();
 	}
 	main.selectAudio = function(map, isOrigin, withSaveSkf, withKf) {
 		console.log("SelectAudio: {0}".split("{0}").join(map));
-		var video = main.originVideoFile;
-		var progress = "#originVideo > .input";
+		let video = main.originVideoFile;
+		let progress = "#originVideo > .input";
 		if (isOrigin) {
 			main.script("refreshRangeAfterReadOriginVideoFile", [video.length]);
 		} else {
@@ -153,7 +153,7 @@ var main = new WebForm();
 		});
 	}
 	main.readSkfFile = function(file, isOrigin) {
-		var path = file.name;
+		const path = file.name;
 		console.log("ReadSkfFile: {0}".split("{0}").join(path));
 		main.showProcessing("불러오는 중");
 		if (isOrigin) {
@@ -170,19 +170,19 @@ var main = new WebForm();
 				main.targetVideoFile.RefreshSkf();
 				main.hideProcessing();
 				setTimeout(function() {
-					var kfs = main.targetVideoFile.GetKfs();
+					const kfs = main.targetVideoFile.GetKfs();
 					main.script("setKfs", ["[" + kfs.join(",") + "]"]);
 				}, 1000);
 			});
 		}
 	}
 	main.readSubtitleFile = async function(file) {
-		var path = file.name;
+		const path = file.name;
 		console.log("ReadSubtitleFile: {0}".split("{0}").join(path));
 		this.script("setOriginSubtitleFile", [path, await file.text()]);
 	}
 	main.openFileDialog = async function(type, withSaveSkf, withKf) {
-		var setting = {types:[{description:'자막 파일',accept:{'text/*':['.smi', '.srt', '.ass']}}]};
+		let setting = {types:[{description:'자막 파일',accept:{'text/*':['.smi', '.srt', '.ass']}}]};
 		if (type % 10 == 0) {
 			// 동영상 혹은 skf 파일
 			setting = { types: [{ description: '동영상 혹은 skf 파일', accept: { 'video/*': ['.avi', '.mkv', '.mp4', '.ts', '.m2ts', '.skf'] } }] };
@@ -195,7 +195,7 @@ var main = new WebForm();
 			})
 			return;
 		}
-		var fb = await window.showOpenFilePicker(setting);
+		const fb = await window.showOpenFilePicker(setting);
 		if (fb && fb[0]) {
 			this.droppedFiles = [await fb[0].getFile()];
 			switch (Math.floor(type / 10)) {
@@ -218,13 +218,13 @@ var main = new WebForm();
 			this.droppedFiles = null;
 			return;
 		}
-		var hasVideo = false;
-		var hasSubtitle = false;
-		for (var i = 0; i < this.droppedFiles.length; i++) {
+		let hasVideo = false;
+		let hasSubtitle = false;
+		for (let i = 0; i < this.droppedFiles.length; i++) {
 			try {
-				var file = this.droppedFiles[i];
-				var path = file.name;
-				var ext = path.substring(path.length - 4);
+				const file = this.droppedFiles[i];
+				const path = file.name;
+				const ext = path.substring(path.length - 4);
 				switch (ext) {
 					case ".avi":
 					case ".mkv":
@@ -272,12 +272,12 @@ var main = new WebForm();
 			this.droppedFiles = null;
 			return;
 		}
-		var hasVideo = false;
-		for (var i = 0; i < this.droppedFiles.length; i++) {
+		let hasVideo = false;
+		for (let i = 0; i < this.droppedFiles.length; i++) {
 			try {
-				var file = this.droppedFiles[i];
-				var path = file.name;
-				var ext = path.substring(path.length - 4);
+				const file = this.droppedFiles[i];
+				const path = file.name;
+				const ext = path.substring(path.length - 4);
 				switch (ext) {
 					case ".avi":
 					case ".mkv":
@@ -317,31 +317,31 @@ var main = new WebForm();
 		main.showProcessing("작업 중");
 		
 		setTimeout(function() {
-			var sRanges = strRanges.length ? strRanges.split('|') : [];
-			var sShifts = strShifts.length ? strShifts.split('|') : [];
-			var ranges = [];
+			let sRanges = strRanges.length ? strRanges.split('|') : [];
+			let sShifts = strShifts.length ? strShifts.split('|') : [];
+			let ranges = [];
 
 			if (sRanges.length == 0) {
 				main.script("addRange", [0, main.originVideoFile.GetSfs().Count * 10]);
 				ranges.push(new Range(0, main.originVideoFile.GetSfs().length));
 			} else {
-				var shifts = [];
-				for (var i = 0; i < sShifts.length; i++) {
-					var split = sShifts[i].split(':');
-					var start = Math.floor(Number(split[0]) / 10);
-					var shift = Math.floor(Number(split[1]) / 10);
+				let shifts = [];
+				for (let i = 0; i < sShifts.length; i++) {
+					let split = sShifts[i].split(':');
+					let start = Math.floor(Number(split[0]) / 10);
+					let shift = Math.floor(Number(split[1]) / 10);
 					shifts.push(new Range(start, shift));
 				}
 				
-				var last = null;
-				for (var i = 0; i < sRanges.length; i++) {
-					var split = sRanges[i].split('~');
-					var start = Math.floor(Number(split[0]) / 10);
-					var end   = Math.floor(Number(split[1]) / 10);
+				let last = null;
+				for (let i = 0; i < sRanges.length; i++) {
+					let split = sRanges[i].split('~');
+					let start = Math.floor(Number(split[0]) / 10);
+					let end   = Math.floor(Number(split[1]) / 10);
 					ranges.push(last = new Range(start, end, last == null ? 0 : last.shift));
 					
-					for (var j = 0; j < shifts.length; j++) {
-						var shift = shifts[j];
+					for (let j = 0; j < shifts.length; j++) {
+						let shift = shifts[j];
 						if (shift.start < start) continue;
 						if (shift.start >= end) break;
 
@@ -355,15 +355,15 @@ var main = new WebForm();
 				}
 			}
 
-			var result = SyncShift.GetShiftsForRanges(
+			let result = SyncShift.GetShiftsForRanges(
 					main.originVideoFile.GetSfs()
 				,	main.targetVideoFile.GetSfs()
 				,	ranges
 				,	new WebProgress(main, "#settingCalc")
 			);
 			
-			for (var i = 0; i < result.length; i++) {
-				var shift = result[i];
+			for (let i = 0; i < result.length; i++) {
+				let shift = result[i];
 				main.script("addShift", [shift.start * 10, shift.shift * 10]);
 			}
 
@@ -378,7 +378,7 @@ var main = new WebForm();
 			main.script("alert", ["목표 영상 파일을 선택해주세요."]);
 			return;
 		}
-		var path = targetVideoFile.path.Substring(0, targetVideoFile.path.Length - new FileInfo(targetVideoFile.path).Extension.Length) + "." + operation;
+		let path = targetVideoFile.path.Substring(0, targetVideoFile.path.Length - new FileInfo(targetVideoFile.path).Extension.Length) + "." + operation;
 
 		StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8);
 		sw.Write(text);
@@ -387,7 +387,7 @@ var main = new WebForm();
 		main.script("alert", ["저장했습니다."]);
 		*/
 		// 무조건 대화상자 열어야 함
-		var types = [];
+		let types = [];
 		switch (operation) {
 			case "smi": {
 				types.push({ description: "SAMI", accept: { "text/sami": [".smi"] } });
@@ -402,9 +402,9 @@ var main = new WebForm();
 				break;
 			}
 		}
-		var fileBuffer = await window.showSaveFilePicker({ types: types });
+		let fileBuffer = await window.showSaveFilePicker({ types: types });
 		if (fileBuffer) {
-			var stream = await fileBuffer.createWritable();
+			let stream = await fileBuffer.createWritable();
 			await stream.write("\ufeff" + text); // BOM 넣어줌
 			await stream.close();
  		   main.script("alert", ["저장했습니다."]);
