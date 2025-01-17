@@ -1,5 +1,5 @@
-﻿var ListView = function(div) {
-	var self = this;
+﻿window.ListView = function(div) {
+	const self = this;
 	this.area = div.empty().addClass("list-selectable");
 	div.append(this.view = $("<ol>"));
 	this.width = 0;
@@ -53,8 +53,8 @@
 			}
 			case 65: { // A
 				if (e.ctrlKey) { // Ctrl+A
-					for (var i = 0; i < self.list.length; i++) {
-						var item = self.list[i];
+					for (let i = 0; i < self.list.length; i++) {
+						const item = self.list[i];
 						item.li.addClass("selected");
 						item.selected = true;
 					}
@@ -69,11 +69,11 @@
 		}
 	});
 	
-	var draggableArea = [0,0,0,0];
-	var dragLayer = null;
-	var dragFrom = [0,0];
+	let draggableArea = [0,0,0,0];
+	let dragLayer = null;
+	let dragFrom = [0,0];
 	div.on("mousedown", function(e) {
-		var offset = self.area.offset();
+		const offset = self.area.offset();
 		draggableArea = [ offset.left, offset.top, self.area.outerWidth(), self.area.outerHeight() ];
 		
 		if (ListView.dragLayer) {
@@ -84,10 +84,10 @@
 		dragFrom = [ e.clientX, e.clientY, (e.originalEvent.ctrlKey || e.originalEvent.shiftKey) ];
 	});
 	function showDragLayer(clientX, clientY) {
-		var x = Math.min(clientX, dragFrom[0]);
-		var y = Math.min(clientY, dragFrom[1]);
-		var w = (clientX < dragFrom[0] ? dragFrom[0] - clientX : clientX - dragFrom[0]);
-		var h = (clientY < dragFrom[1] ? dragFrom[1] - clientY : clientY - dragFrom[1]);
+		let x = Math.min(clientX, dragFrom[0]);
+		let y = Math.min(clientY, dragFrom[1]);
+		let w = (clientX < dragFrom[0] ? dragFrom[0] - clientX : clientX - dragFrom[0]);
+		let h = (clientY < dragFrom[1] ? dragFrom[1] - clientY : clientY - dragFrom[1]);
 		
 		if (x < draggableArea[0]) {
 			w -= (draggableArea[0] - x);
@@ -112,8 +112,8 @@
 		});
 		if (dragLayer.css("display") == "none") {
 			if (!dragFrom[2]) { // Ctrl/Shift 안 눌렀으면 선택 해제
-				for (var i = 0; i < self.list.length; i++) {
-					var item = self.list[i];
+				for (let i = 0; i < self.list.length; i++) {
+					const item = self.list[i];
 					if (item.selected) {
 						item.li.removeClass("selected");
 						item.selected = false;
@@ -123,10 +123,10 @@
 			dragLayer.show();
 		}
 		
-		for (var i = 0; i < self.list.length; i++) {
-			var li = self.list[i].li;
-			var top = li.offset().top;
-			var bottom = top + li.outerHeight();
+		for (let i = 0; i < self.list.length; i++) {
+			const li = self.list[i].li;
+			const top = li.offset().top;
+			const bottom = top + li.outerHeight();
 			if (bottom >= y && top <= y + h) {
 				li.addClass("dragging");
 			} else {
@@ -143,8 +143,8 @@
 		e.stopPropagation();
 		e.preventDefault();
 		
-		for (var i = 0; i < self.list.length; i++) {
-			var item = self.list[i];
+		for (let i = 0; i < self.list.length; i++) {
+			const item = self.list[i];
    			if (item.li.hasClass("dragging")) {
    				item.li.removeClass("dragging");
    				if (!item.selected) {
@@ -165,19 +165,19 @@
 }
 ListView.prototype.add = function(value, checkDuplication) {
 	if (checkDuplication) {
-		for (var i = 0; i < this.list.length; i++) {
+		for (let i = 0; i < this.list.length; i++) {
 			if (this.list[i].value == value) {
 				return;
 			}
 		}
 	}
-	var span = $("<span>").text(value);
-	var li = $("<li>").append(span);
-	var item = { li: li, value: value, selected: false };
+	const span = $("<span>").text(value);
+	const li = $("<li>").append(span);
+	const item = { li: li, value: value, selected: false };
 	this.view.append(li);
 	this.list.push(item);
 	this.clearSelection();
-	var lv = this;
+	const lv = this;
 	setTimeout(function() {
 		if ((item.width = span.width()) > lv.width) {
 			lv.view.css({ minWidth: (lv.width = item.width) + "px" });
@@ -185,9 +185,9 @@ ListView.prototype.add = function(value, checkDuplication) {
 	}, 1);
 }
 ListView.prototype.remove = function() {
-	var list = [];
-	var cursor = this.cursor;
-	for (var i = 0; i < this.list.length; i++) {
+	const list = [];
+	let cursor = this.cursor;
+	for (let i = 0; i < this.list.length; i++) {
 		if (this.list[i].selected) {
 			this.list[i].li.remove();
 			if (i == cursor) {
@@ -199,7 +199,7 @@ ListView.prototype.remove = function() {
 	}
 	if (cursor >= this.list.length) {
 		cursor = this.cursor;
-		for (var i = this.list.length - 1; i >= 0; i--) {
+		for (let i = this.list.length - 1; i >= 0; i--) {
 			if (this.list[i].selected && i == cursor) {
 				cursor--;
 			}
@@ -209,9 +209,9 @@ ListView.prototype.remove = function() {
 		cursor = this.list[cursor];
 	}
 	this.list = list;
-	var width = 0;
-	for (var i = 0; i < list.length; i++) {
-		var item = list[i];
+	let width = 0;
+	for (let i = 0; i < list.length; i++) {
+		const item = list[i];
 		item.li.data("index", i);
 		if (item == cursor) {
 			cursor = i;
@@ -229,7 +229,7 @@ ListView.prototype.onCursorMove = function(direction, e) {
 	if (this.view[0].children.length == 0) {
 		return;
 	}
-	var index = this.cursor + direction;
+	let index = this.cursor + direction;
 	if (index < 0) index = 0;
 	if (index >= this.view[0].children.length) {
 		index = this.view[0].children.length - 1;
@@ -241,28 +241,28 @@ ListView.prototype.onSelect = function(index, e) {
 		if (this.shiftFrom < 0) {
 			this.shiftFrom = index;
 		}
-		var from = Math.min(this.shiftFrom, index);
-		var to   = Math.max(this.shiftFrom, index);
+		const from = Math.min(this.shiftFrom, index);
+		const to   = Math.max(this.shiftFrom, index);
 		
 		if (!e.ctrlKey) {
 			// 선택 영역만 잡힘
-			for (var i = 0; i < from; i++) {
-				var item = this.list[i];
+			for (let i = 0; i < from; i++) {
+				const item = this.list[i];
 				if (item.selected) {
 					item.li.removeClass("selected");
 					item.selected = false;
 				}
 			}
-			for (var i = to + 1; i < this.list.length; i++) {
-				var item = this.list[i];
+			for (let i = to + 1; i < this.list.length; i++) {
+				const item = this.list[i];
 				if (item.selected) {
 					item.li.removeClass("selected");
 					item.selected = false;
 				}
 			}
 		}
-		for (var i = from; i <= to; i++) {
-			var item = this.list[i];
+		for (let i = from; i <= to; i++) {
+			const item = this.list[i];
 			item.li.addClass("selected");
 			item.selected = true;
 		}
@@ -281,7 +281,7 @@ ListView.prototype.onSelect = function(index, e) {
 	this.setCursor(index);
 }
 ListView.prototype.select = function(index, toggle) {
-	var item = this.list[index];
+	const item = this.list[index];
 	if (item.selected) {
 		if (toggle) {
 			item.li.removeClass("selected");
@@ -304,8 +304,8 @@ ListView.prototype.setCursor = function(index) {
 	this.list[this.cursor = index].li.addClass("cursor");
 }
 ListView.prototype.clearSelection = function(withCursor) {
-	for (var i = 0; i < this.list.length; i++) {
-		var item = this.list[i];
+	for (let i = 0; i < this.list.length; i++) {
+		const item = this.list[i];
 		if (item.selected) {
 			item.li.removeClass("selected");
 			item.selected = false;

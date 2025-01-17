@@ -386,3 +386,7 @@ healthchecksdb
 /TextReplacer/view/lib/SmiEditor.css
 /TextReplacer/view/lib/SmiEditor.js
 /TextReplacer/view/lib/SubtitleObject.js
+/MergeUpdates/view/lib/ListView.css
+/MergeUpdates/view/lib/ListView.js
+/SyncShift/view/lib/ListView.css
+/SyncShift/view/lib/ListView.js
