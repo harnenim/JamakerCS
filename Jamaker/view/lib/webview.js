@@ -111,7 +111,7 @@ $(() => {
 			case 116: return false; // F5 새로고침 방지
 		}
 	};
-	window.addEventListener("mousewheel", function(e) {
+	window.addEventListener("mousewheel", (e) => {
 		// 확대/축소 방지
 		if (e.ctrlKey) {
 			e.preventDefault();

@@ -2389,7 +2389,7 @@ $(() => {
 	SmiEditor.refreshHighlight();
 	
 	// 찾기/바꾸기 창 항상 위에
-	window.addEventListener("focus", function() {
+	window.addEventListener("focus", () => {
 		if (SmiEditor.Finder.window) {
 			binder.focus("finder");
 		}

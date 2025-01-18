@@ -34,7 +34,7 @@ window.Johap = {
 	}
 }
 
-setTimeout(function() { // 생성자 선언보다 나중에 돌아야 함
+setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 	Typing.Mode =
 	{	typewriter: 0
 	,	keyboard: 1

@@ -13,7 +13,7 @@
 		div.attr("id", "id_" + Math.random());
 	}
 	
-	div.on("click", function() {
+	div.on("click", () => {
 		//self.clearSelection();
 	});
 	div.on("click", "li", function(e) {
@@ -157,7 +157,7 @@
 		dragLayer = null;
 	});
 	
-	div.on("dblclick", "li", function() {
+	div.on("dblclick", "li", () => {
 		if (self.run) {
 			self.run(self.list[$(this).data("index")]);
 		}
@@ -178,7 +178,7 @@ ListView.prototype.add = function(value, checkDuplication) {
 	this.list.push(item);
 	this.clearSelection();
 	const lv = this;
-	setTimeout(function() {
+	setTimeout(() => {
 		if ((item.width = span.width()) > lv.width) {
 			lv.view.css({ minWidth: (lv.width = item.width) + "px" });
 		}

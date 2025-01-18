@@ -101,7 +101,7 @@ function setDpi(dpi) {
 	DPI = dpi;
 }
 
-$(function() {
+$(() => {
 	// 우클릭 방지
 	$(document).on("contextmenu", function() {
 		return false;
@@ -119,7 +119,7 @@ $(function() {
 	}, { passive: false });
 	
 	if (window.binder) {
-		setTimeout(function() {
+		setTimeout(() => {
 			binder.initAfterLoad($("title").text());
 		}, 1);
 	}
@@ -133,8 +133,8 @@ $(function() {
 		,	zIndex: "9999"
 	}));
 	
-	$("[title]").each(function() {
-		const obj = $(this);
+	$("[title]").each((_, el) => {
+		const obj = $(el);
 		const title = obj.attr("title").split("\\n");
 		if (title.length > 1) {
 			obj.attr("title", title.join("\n"));

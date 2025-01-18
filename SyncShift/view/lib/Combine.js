@@ -586,7 +586,7 @@ if (Subtitle && Subtitle.SmiFile) {
 		if (withCombine) {
 			// 시작 시간 순으로 저장
 			{	const holdsWithoutMain = origHolds.slice(1);
-				holdsWithoutMain.sort(function(a, b) {
+				holdsWithoutMain.sort((a, b) => {
 					return a.start - b.start;
 				});
 				for (let hi = 0; hi < holdsWithoutMain.length; hi++) {
@@ -597,7 +597,7 @@ if (Subtitle && Subtitle.SmiFile) {
 			// 메인에 가까운 걸 먼저 작업해야 함
 			// 단, 아래쪽부터 쌓아야 함
 			const holds = origHolds.slice(0);
-			holds.sort(function(a, b) {
+			holds.sort((a, b) => {
 				let aPos = a.viewPos;
 				let bPos = b.viewPos;
 				if (aPos < 0) {

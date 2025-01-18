@@ -99,6 +99,6 @@ if (opener) {
 	}
 }
 
-$(function() {
+$(() => {
 	$("textarea").attr({ spellcheck: false });
 });
