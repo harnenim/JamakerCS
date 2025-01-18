@@ -665,7 +665,7 @@ function init(jsonSetting) {
 		
 		const th = $(this).parent();
 		closingTab = th[0];
-		setTimeout(function() { // 탭 선택 이벤트 방지... e.preventDefault()로 안 되네...
+		setTimeout(() => { // 탭 선택 이벤트 방지... e.preventDefault()로 안 되네...
 			closingTab == null;
 		}, 1);
 		
@@ -681,7 +681,7 @@ function init(jsonSetting) {
 		confirm((saved ? "저장되지 않았습니다.\n" : "") + "탭을 닫으시겠습니까?", function() {
 			const index = closeTab(th);
 
-			setTimeout(function() {
+			setTimeout(() => {
 				if (tabs.length && $("#tabSelector .th.selected").length == 0) {
 					// 선택돼있던 탭을 닫았을 경우 다른 탭 선택
 					tab = Math.min(index, tabs.length - 1);
@@ -711,7 +711,7 @@ function init(jsonSetting) {
 	SmiEditor.Viewer.open(); // 스타일 세팅 설정 완료 후에 실행
 	moveWindowsToSetting();
 
-	autoSaveTemp = setInterval(function() {
+	autoSaveTemp = setInterval(() => {
 		saveTemp();
 	}, setting.tempSave * 1000);
 }
@@ -876,7 +876,7 @@ function moveWindowsToSetting() {
 	binder.setFollowWindow(setting.window.follow);
 
 	// 창 위치 초기화 후 호출
-	setTimeout(function() {
+	setTimeout(() => {
 		refreshPaddingBottom();
 	}, 1);
 }
@@ -884,7 +884,7 @@ function moveWindowsToSetting() {
 // C# 쪽에서 호출
 function setDpiBy(width) {
 	// C#에서 보내준 창 크기와 js에서 구한 브라우저 크기의 불일치를 이용해 DPI 배율을 구함
-	setTimeout(function() {
+	setTimeout(() => {
 		DPI = (width + 8) / (window.outerWidth + 10);
 	}, 1000); // 로딩 덜 됐을 수가 있어서 딜레이 줌
 }
@@ -980,7 +980,7 @@ function newFile() {
 
 function openFile(path, text, forVideo) {
 	// C#에서 파일 열 동안 canOpenNewTab 결과가 달라질 리는 없겠지만, 일단은 바깥에서 감싸주기
-	runIfCanOpenNewTab(function() {
+	runIfCanOpenNewTab(() => {
 		if (path) {
 			// 새 탭 열기
 			openNewTab(text, path, forVideo);
@@ -991,7 +991,7 @@ function openFile(path, text, forVideo) {
 	});
 }
 function openFileForVideo(path, text) {
-	runIfCanOpenNewTab(function() {
+	runIfCanOpenNewTab(() => {
 		// C#에서 동영상의 자막 파일 탐색
 		binder.openFileForVideo();
 	});
@@ -1136,7 +1136,7 @@ function openNewTab(text, path, forVideo) {
 }
 // C# 쪽에서 호출
 function confirmLoadVideo(path) {
-	setTimeout(function() {
+	setTimeout(() => {
 		confirm("동영상 파일을 같이 열까요?\n" + path, function() {
 			binder.loadVideoFile(path);
 		});

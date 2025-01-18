@@ -41,7 +41,7 @@ function getParams() {
 	return JSON.stringify(params);
 }
 
-$(function() {
+$(() => {
 	$(".button-find"       ).on("click", function() { binder.runFind      (getParams()); });
 	$(".button-replace"    ).on("click", function() { binder.runReplace   (getParams()); });
 	$(".button-replace-all").on("click", function() { binder.runReplaceAll(getParams()); });

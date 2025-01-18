@@ -24,7 +24,7 @@ windowName = "addon";
 let FR = 23976;
 let FL = 1000000 / FR;
 
-$(function() {
+$(() => {
 	if (opener) {
 		setting = opener.setting;
 		FR = opener.SmiEditor.video.FR;
@@ -158,7 +158,7 @@ input[type=number] {
 }
 	</style>
 	<script>
-$(function() {
+$(() => {
 	const list = $("#list");
 	$("#addLine").on("click", function() {
 		list.append(
@@ -554,7 +554,7 @@ function setPreview(list) {
 	
 	const preview = $("#preview");
 	let i = 0;
-	refreshPreview = setInterval(function() {
+	refreshPreview = setInterval(() => {
 		while (i >= list.length) {
 			i -= list.length;
 		}

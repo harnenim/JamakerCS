@@ -11,7 +11,7 @@
 windowName = "addon";
 
 var SmiEditor = {};
-$(function() {
+$(() => {
 	SmiEditor = opener.SmiEditor;
 });
 
@@ -75,7 +75,7 @@ function apply() {
 	window.close();
 }
 
-$(function() {
+$(() => {
 	init();
 	normalize();
 });

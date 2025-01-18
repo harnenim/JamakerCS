@@ -517,7 +517,7 @@ function apply() {
 	window.close();
 }
 
-$(function() {
+$(() => {
 	if (splitOrigin()) {
 		$("#btnFrameAssToSmi").on("click", frameAssToSmi);
 		
@@ -526,7 +526,7 @@ $(function() {
 		// 마지막 입력 1초 후 체크
 		let checkOnChange = null;
 		$("#originFrameSmi, #targetFrameSmi").on("input propertychange", function() {
-			const current = checkOnChange = setTimeout(function() {
+			const current = checkOnChange = setTimeout(() => {
 				if (checkOnChange == current) {
 					checkDiff();
 				}
@@ -538,7 +538,7 @@ $(function() {
 		
 		const originFrameAss = $("#originFrameAss");
 		const text = originFrameAss.val();
-		setTimeout(function() { // textarea 렌더링 후 confirm 보여주기 위한 딜레이
+		setTimeout(() => { // textarea 렌더링 후 confirm 보여주기 위한 딜레이
 			originFrameAss[0].select();
 			originFrameAss.focus().scrollTop(0).scrollLeft(0);
 			confirm("작업할 내역을 복사하시겠습니까?\nAegisub에서 작업이 필요합니다.", function() {

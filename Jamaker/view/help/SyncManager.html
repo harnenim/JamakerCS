@@ -10,7 +10,7 @@
 	<script>
 windowName = "help";
 
-$(function() {
+$(() => {
 	$("#comment").on("mouseover", "li", function() {
 		$(".area.select").removeClass("select");
 		const area = (""+$(this).data("area")).split("-");

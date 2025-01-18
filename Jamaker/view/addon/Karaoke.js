@@ -154,7 +154,7 @@ for (let i = 0; i < gana.length; i++) {
 	vws[gana[i]] = vw;
 }
 
-$(function() {
+$(() => {
 	if (loadAddonSetting) {
 		loadAddonSetting(KANJI_FILE, function(text) {
 			afterLoadKanji(savedKanjiList = text);
@@ -292,7 +292,7 @@ $(function() {
 			const c = checker = new Date();
 			
 			// 키 입력 멈추고 1초 후에 동작
-			setTimeout(function() {
+			setTimeout(() => {
 				// 그동안 새로 키 입력 있었으면 취소
 				if (c != checker) {
 					return;
@@ -370,7 +370,7 @@ $(function() {
 			const c = checker = new Date();
 			
 			// 키 입력 멈추고 1초 후에 동작
-			setTimeout(function() {
+			setTimeout(() => {
 				// 그동안 새로 키 입력 있었으면 취소
 				if (c != checker) {
 					return;
@@ -835,7 +835,7 @@ $(function() {
 			const c = checker = new Date();
 			
 			// 키 입력 멈추고 1초 후에 동작
-			setTimeout(function() {
+			setTimeout(() => {
 				// 그동안 새로 키 입력 있었으면 취소
 				if (c != checker) {
 					return;
@@ -1068,7 +1068,7 @@ $(function() {
 			const c = checker = new Date();
 			
 			// 키 입력 멈추고 1초 후에 동작
-			setTimeout(function() {
+			setTimeout(() => {
 				// 그동안 새로 키 입력 있었으면 취소
 				if (c != checker) {
 					return;

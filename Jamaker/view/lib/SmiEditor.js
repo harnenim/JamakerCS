@@ -89,7 +89,7 @@ window.SmiEditor = function(text) {
 		editor.scrollToCursor();
 		editor.updateSync([0, editor.lines.length]); // 실행취소일 땐 전체 갱신하도록
 	});
-	setTimeout(function() {
+	setTimeout(() => {
 		if (SmiEditor.autoComplete.length) {
 			editor.act = new AutoCompleteTextarea(editor.input, SmiEditor.autoComplete, function() {
 				editor.history.log();
@@ -769,7 +769,7 @@ SmiEditor.prototype.fixScrollAroundEvent = function(scrollLeft) {
 		scrollLeft = this.input.scrollLeft()
 	}
 	const editor = this;
-	setTimeout(function() {
+	setTimeout(() => {
 		// 이벤트 진행 후 원래 스크롤 복원
 		editor.input.scrollTop (scrollTop );
 		editor.input.scrollLeft(scrollLeft);
@@ -1253,7 +1253,7 @@ SmiEditor.prototype.updateSync = function(range=null) {
 			if (range[0] == range[1] && add == 0) {
 				// 변동 없음
 				self.syncUpdating = false;
-				setTimeout(function() {
+				setTimeout(() => {
 					if (self.needToUpdateSync) {
 						// 렌더링 대기열 있으면 재실행
 						self.updateSync();
@@ -1445,7 +1445,7 @@ SmiEditor.prototype.updateSync = function(range=null) {
 		
 		self.afterChangeSaved(self.isSaved());
 		
-		setTimeout(function() {
+		setTimeout(() => {
 			if (self.needToUpdateSync) {
 				// 렌더링 대기열 있으면 재실행
 				self.updateSync();
@@ -1578,7 +1578,7 @@ SmiEditor.prototype.updateHighlight = function() {
 		self.highlightLines = lines;
 		
 		self.highlightUpdating = false;
-		setTimeout(function() {
+		setTimeout(() => {
 			if (self.needToUpdateHighlight) {
 				// 렌더링 대기열 있으면 재실행
 				self.updateSync();
@@ -1719,7 +1719,7 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 	
 	// 프로세스 분리할 필요가 있나?
 	const self = this;
-	setTimeout(function() {
+	setTimeout(() => {
 		const lines = text.split("\n");
 		const syncLines = [];
 		
@@ -1795,7 +1795,7 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 		self.syncUpdating = false;
 		self.afterChangeSaved(self.isSaved());
 		
-		setTimeout(function() {
+		setTimeout(() => {
 			if (self.needToUpdateSync) {
 				// 렌더링 대기열 있으면 재실행
 				self.updateSync();
@@ -2125,7 +2125,7 @@ SmiEditor.Finder = {
 			}
 		}
 	,	sendMsgAfterRun: function(msg) {
-			setTimeout(function() {
+			setTimeout(() => {
 				binder.sendMsg("finder", msg);
 			}, 1);
 		}
@@ -2137,7 +2137,7 @@ SmiEditor.Viewer = {
 			this.window = window.open("viewer.html", "viewer", "scrollbars=no,location=no,width=1,height=1");
 			this.moveWindowToSetting();
 			binder.focus("viewer");
-			setTimeout(function() {
+			setTimeout(() => {
 				binder.focus("editor");
 			}, 100);
 			return this.window;
@@ -2152,7 +2152,7 @@ SmiEditor.Viewer = {
 					, true);
 		}
 	,	refresh: function() {
-			setTimeout(function() {
+			setTimeout(() => {
 				const lines = [];
 				if (SmiEditor.selected) { // 홀드
 					if (SmiEditor.selected.owner) { // 탭
@@ -2186,7 +2186,7 @@ SmiEditor.Addon = {
 	,	open: function(name, target="addon") {
 			const url = (name.substring(0, 4) == "http") ? name : "addon/" + name.split("..").join("").split(":").join("") + ".html";
 			this.windows[target] = window.open(url, target, "scrollbars=no,location=no,width=1,height=1");
-			setTimeout(function() { // 웹버전에서 딜레이 안 주면 위치를 못 잡는 경우가 있음
+			setTimeout(() => { // 웹버전에서 딜레이 안 주면 위치를 못 잡는 경우가 있음
 				SmiEditor.Addon.moveWindowToSetting(target);
 			}, 1);
 			binder.focus(target);
@@ -2198,7 +2198,7 @@ SmiEditor.Addon = {
 				,	values: values
 			}
 			this.windows.addon = window.open("addon/ExtSubmit.html", "addon", "scrollbars=no,location=no,width=1,height=1");
-			setTimeout(function() {
+			setTimeout(() => {
 				SmiEditor.Addon.moveWindowToSetting("addon");
 			}, 1);
 			binder.focus("addon");
@@ -2385,7 +2385,7 @@ SmiEditor.fillSync = function(text) {
 	return smi.toTxt().trim();
 };
 
-$(function() {
+$(() => {
 	SmiEditor.refreshHighlight();
 	
 	// 찾기/바꾸기 창 항상 위에

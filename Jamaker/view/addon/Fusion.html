@@ -12,7 +12,7 @@ windowName = "addon";
 
 // 초기 상태 기억
 let origin = null;
-$(function() {
+$(() => {
 	if (opener && opener.SmiEditor && opener.SmiEditor.selected) {
 		origin = opener.SmiEditor.selected.getText();
 		origin.tab = opener.SmiEditor.selected;
@@ -109,7 +109,7 @@ function resizeTextarea() {
 	$("textarea").height(height);
 }
 
-$(function() {
+$(() => {
 	init();
 	$("#btnFusion").on("click", fusion);
 	$("#btnApply" ).on("click", apply );

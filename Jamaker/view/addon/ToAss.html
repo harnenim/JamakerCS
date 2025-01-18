@@ -14,7 +14,7 @@ windowName = "addon";
 
 const editor = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
 
-$(function() {
+$(() => {
 	if (!editor) {
 		alert("작업 대상이 없습니다.");
 	}

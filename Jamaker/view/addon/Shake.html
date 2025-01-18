@@ -12,7 +12,7 @@
 	<script>
 windowName = "addon";
 
-$(function() {
+$(() => {
 	if (opener) {
 		setting = opener.setting;
 	}
@@ -172,7 +172,7 @@ function setPreview(list, speed) {
 	}
 	
 	let i = 0;
-	refreshPreview = setInterval(function() {
+	refreshPreview = setInterval(() => {
 		while (i >= list.length) {
 			i -= list.length;
 		}
@@ -275,7 +275,7 @@ function apply() {
 	window.close();
 }
 
-$(function() {
+$(() => {
 	if (!editor) {
 		alert("작업 대상이 없습니다.");
 	}

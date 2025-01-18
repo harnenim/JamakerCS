@@ -28,7 +28,7 @@ let checkVersion;
 			 * 설정값 불러오는 과정에서의 버전 확인은 창 구성 이전일 수밖에 없고
 			 * 창 구성 이후 콜백을 추가하기엔 지나치게 복잡도가 높아짐
 			 */
-			setTimeout(function() {
+			setTimeout(() => {
 				alert(notify.join(", ") + " 기본값이 변경되었습니다.\n설정에서 검토하시기 바랍니다.");
 			}, 1);
 		}

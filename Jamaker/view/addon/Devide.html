@@ -280,7 +280,7 @@ function devide() {
 	$("#outputLower").val(lower.join("\n"));
 }
 
-$(function() {
+$(() => {
 	init();
 	
 	SmiEditor.setSetting(opener ? opener.setting : { autoComplete: {}, hlghlight: {} });

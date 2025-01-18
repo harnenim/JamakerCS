@@ -18,7 +18,7 @@
 windowName = "addon";
 let LOG = false;
 
-$(function() {
+$(() => {
 	if (opener) {
 		setting = opener.setting;
 	}
@@ -33,7 +33,7 @@ function setSetting(setting) {
 	Combine.css = { font: $("#preview").css("font") };
 }
 
-$(function() {
+$(() => {
 	//$("#preview").css(defaultCss);
 	setSetting(setting);
 	
@@ -80,7 +80,7 @@ function setPreview(list) {
 	
 	const preview = $("#preview");
 	let i = 0;
-	refreshPreview = setInterval(function() {
+	refreshPreview = setInterval(() => {
 		while (i >= list.length) {
 			i -= list.length;
 		}

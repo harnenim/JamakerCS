@@ -101,7 +101,7 @@ function setDpi(dpi) {
 	DPI = dpi;
 }
 
-$(function() {
+$(() => {
 	// 우클릭 방지
 	$(document).on("contextmenu", function() {
 		return false;
@@ -119,7 +119,7 @@ $(function() {
 	}, { passive: false });
 	
 	if (window.binder) {
-		setTimeout(function() {
+		setTimeout(() => {
 			binder.initAfterLoad($("title").text());
 		}, 1);
 	}
