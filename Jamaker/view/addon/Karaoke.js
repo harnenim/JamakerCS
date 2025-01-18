@@ -35,14 +35,6 @@ function refreshKanji() {
 	}
 	$("#inputKanji").val(savedKanjiList.substring(savedKanjiList.indexOf("\n") + 1)); // 첫 줄은 기본값 버전이므로 제외
 }
-function sortFunc(a, b) {
-	if (a[1].length < b[1].length) {
-		return 1;
-	} else if (a[1].length > b[1].length) {
-		return -1;
-	}
-	return (a[2] < b[2]) ? 1 : -1;
-}
 
 windowName = "addon";
 
@@ -78,7 +70,7 @@ function afterLoadKanji(text) {
 					curr.push(dflt[i]); // 현재 설정에 기본값 추가
 				}
 			}
-			curr.sort(function sortFunc(a, b) {
+			curr.sort((a, b) => {
 				if (a.length < b.length) {
 					return 1;
 				} else if (a.length > b.length) {
@@ -1130,7 +1122,7 @@ $(() => {
 				return;
 			}
 		}
-		list.sort(function(a, b) {
+		list.sort((a, b) => {
 			if (a[1].length < b[1].length) {
 				return 1;
 			} else if (a[1].length > b[1].length) {

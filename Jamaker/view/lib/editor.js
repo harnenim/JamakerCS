@@ -170,7 +170,7 @@ Tab.prototype.updateHoldSelector = function() {
 		timers.push({ time: hold.end  , holds: [{ index: i, type: END   }] });
 	}
 	timers[0].time = timers[0].rate = 0; // 메인 홀드는 시작 시간 0으로 출력
-	timers.sort(function(a, b) {
+	timers.sort((a, b) => {
 		if (a.time < b.time)
 			return -1;
 		if (a.time > b.time)

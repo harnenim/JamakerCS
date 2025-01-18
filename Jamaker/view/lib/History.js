@@ -99,7 +99,7 @@ History.prototype.passiveLog = function() {
 		// 1초 동안 입력 없었으면 기록
 		this.lastChanged = now;
 		const history = this;
-		setTimeout(function() {
+		setTimeout(() => {
 			if (history.lastChanged == now) {
 				history.log();
 			}

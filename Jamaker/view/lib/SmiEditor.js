@@ -692,7 +692,7 @@ SmiEditor.activateKeyEvent = function() {
 					if (type == "function") {
 						f();
 					} else if (type == "string") {
-						eval("(function(){ " + f + "// */\n})()"); // 내용물이 주석으로 끝날 수도 있음
+						eval("(() => { " + f + "// */\n})()"); // 내용물이 주석으로 끝날 수도 있음
 					}
 				}
 			}
@@ -2158,7 +2158,7 @@ SmiEditor.Viewer = {
 					if (SmiEditor.selected.owner) { // 탭
 						// 탭의 모든 홀드 가져오기
 						let holds = SmiEditor.selected.owner.holds.slice(0);
-						holds.sort(function(a, b) {
+						holds.sort((a, b) => {
 							let aPos = a.pos;
 							let bPos = b.pos;
 							if (aPos < bPos) return 1;

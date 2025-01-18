@@ -199,7 +199,7 @@ function splitOrigin() {
 	}
 	
 	// Aegisub에서 작업 편의성을 위해 스타일 순 정렬
-	forFrameAss.sort(function(a, b) {
+	forFrameAss.sort((a, b) => {
 		const styleA = a.split(",")[3];
 		const styleB = b.split(",")[3];
 		if (styleA < styleB) {

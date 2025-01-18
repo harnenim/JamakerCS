@@ -144,7 +144,7 @@ $(() => {
 			];
 			for (let xy = 0; xy < 2; xy++) {
 				const targets = targetXY[xy];
-				targets.sort(function(a, b) { return a[0] - b[0]; });
+				targets.sort((a, b) => { return a[0] - b[0]; });
 				
 				let last = [targets[0]];
 				const ps = [last];
