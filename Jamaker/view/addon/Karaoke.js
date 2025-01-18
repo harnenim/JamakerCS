@@ -687,8 +687,8 @@ $(function() {
 			
 			result.length = 0;
 			
-			$("#page3 .line").each(function() {
-				const line = $(this);
+			$("#page3 .line").each((_, el) => {
+				const line = $(el);
 				let ort = line.data("ort");
 				let oc = line.data("oc");
 				let rc = line.data("rc");
@@ -702,11 +702,11 @@ $(function() {
 					}
 				} else {
 					// oc, rc의 음절 값을 입력된 값으로 대체
-					line.find("table:eq(0) input").each(function(i) {
-						length += (oc[i][1] = Number($(this).val()));
+					line.find("table:eq(0) input").each((i, el) => {
+						length += (oc[i][1] = Number($(el).val()));
 					});
-					line.find("table:eq(1) input").each(function(i) {
-						rc[i][1] = Number($(this).val());
+					line.find("table:eq(1) input").each((i, el) => {
+						rc[i][1] = Number($(el).val());
 					});
 				}
 				
@@ -849,8 +849,8 @@ $(function() {
 			const input = $(this);
 			const table = input.parents("table");
 			let sum = 0;
-			table.find("input").each(function() {
-				sum += Number($(this).val());
+			table.find("input").each((_, el) => {
+				sum += Number($(el).val());
 			});
 			table.find(".sum").text(sum);
 			
@@ -1012,8 +1012,8 @@ $(function() {
 			tColor     = [hexToNumber(tColor    .substring(0,2)), hexToNumber(tColor    .substring(2,4)), hexToNumber(tColor    .substring(4,6))];
 			
 			let preset = "";
-			formDesign.find("input[name=preset]").each(function() {
-				const input = $(this);
+			formDesign.find("input[name=preset]").each((_, el) => {
+				const input = $(el);
 				if (input.prop("checked")) {
 					preset = input.val();
 				}

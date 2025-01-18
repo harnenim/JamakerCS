@@ -133,8 +133,8 @@ $(function() {
 		,	zIndex: "9999"
 	}));
 	
-	$("[title]").each(function() {
-		const obj = $(this);
+	$("[title]").each((_, el) => {
+		const obj = $(el);
 		const title = obj.attr("title").split("\\n");
 		if (title.length > 1) {
 			obj.attr("title", title.join("\n"));

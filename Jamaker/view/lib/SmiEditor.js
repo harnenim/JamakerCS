@@ -1296,10 +1296,10 @@ SmiEditor.prototype.updateSync = function(range=null) {
 		}
 		
 		// 수정된 부분 삭제
-		self.colSync.find("span.sync").each(function(i) {
+		self.colSync.find("span.sync").each((i, el) => {
 			if (i < range[0]) return;
 			if (i >= range[1]) return;
-			$(this).remove();
+			$(el).remove();
 		});
 		
 		const toUpdate = textLines.length - (self.lines.length - range[1]) - range[0];
@@ -1524,8 +1524,8 @@ SmiEditor.prototype.updateHighlight = function() {
 			
 			// 색상 미리보기
 			if (SmiEditor.showColor) {
-				highlightLine.find(".hljs-attr").each(function() {
-					const $attr = $(this);
+				highlightLine.find(".hljs-attr").each((_, el) => {
+					const $attr = $(el);
 					const attrName = $attr.text().trim().toLowerCase();
 					if (attrName == "color" || attrName == "fade") {
 						const $value = $attr.next();
@@ -1743,10 +1743,10 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 		}
 		
 		// 수정된 부분 삭제
-		self.colSync.find("span.sync").each(function(i) {
+		self.colSync.find("span.sync").each((i, el) => {
 			if (i < range[0]) return;
 			if (i >= range[1]) return;
-			$(this).remove();
+			$(el).remove();
 		});
 		
 		// 새로 그리기

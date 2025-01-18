@@ -187,8 +187,8 @@ $(function() {
 		const requiredSyncs = {};
 		let lineCount = 0;
 		const items = [];
-		list.children().each(function() {
-			const line = $(this);
+		list.children().each((_, el) => {
+			const line = $(el);
 			const item = {
 					line : Number(line.find(".line" ).val()) - 1
 				,	start: Number(line.find(".start").val())
