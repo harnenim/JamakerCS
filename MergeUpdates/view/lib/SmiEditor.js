@@ -2389,9 +2389,15 @@ $(() => {
 	SmiEditor.refreshHighlight();
 	
 	// 찾기/바꾸기 창 항상 위에
-	window.addEventListener("focus", function() {
+	let last = 0;
+	window.addEventListener("focus", () => {
 		if (SmiEditor.Finder.window) {
-			binder.focus("finder");
+			now = new Date().getTime();
+			if ((now - last) < 100) return; // 중복 실행 방지
+			last = now;
+			setTimeout(() => {
+				binder.focus("finder");
+			}, 100); // 딜레이 안 주면 순서 꼬임
 		}
 	});
 });
