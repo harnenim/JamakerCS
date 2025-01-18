@@ -278,7 +278,7 @@ SmiEditor.prototype.bindEvent = function() {
 	const editor = this;
 	
 	// 내용에 따라 싱크 표시 동기화
-	this.input.on("input propertychange", function () {
+	this.input.on("input propertychange", function() {
 		editor.updateSync();
 	});
 	this.updateSync();
@@ -1195,7 +1195,7 @@ SmiEditor.prototype.taggingRange = function(tag) {
 	this.tagging(tag, true);
 }
 
-SmiEditor.prototype.updateSync = function (range=null) {
+SmiEditor.prototype.updateSync = function(range=null) {
 	this.updateHighlight();
 
 	if (this.syncUpdating) {
@@ -1459,7 +1459,7 @@ SmiEditor.prototype.updateSync = function (range=null) {
 		this.initialized = true;
 	}
 }
-SmiEditor.prototype.updateHighlight = function () {
+SmiEditor.prototype.updateHighlight = function() {
 	if (this.highlightUpdating) {
 		// 이미 렌더링 중이면 대기열 활성화
 		this.needToUpdateHighlight = true;
@@ -1578,7 +1578,7 @@ SmiEditor.prototype.updateHighlight = function () {
 		self.highlightLines = lines;
 		
 		self.highlightUpdating = false;
-		setTimeout(function () {
+		setTimeout(function() {
 			if (self.needToUpdateHighlight) {
 				// 렌더링 대기열 있으면 재실행
 				self.updateSync();
@@ -2363,7 +2363,7 @@ SmiEditor.prototype.fillSync = function() {
 		SmiEditor.afterTransform(SmiEditor.fillSync(text));
 	}
 };
-SmiEditor.fillSync = function (text) {
+SmiEditor.fillSync = function(text) {
 	// 기존 중간싱크 제거 후 진행
 	const textLines = text.split("\n");
 	const lines = [];

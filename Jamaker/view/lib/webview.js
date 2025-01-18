@@ -4,10 +4,10 @@ function setShowDrag(dragging) {
 }
 function setDroppable() {
 	const doc = $(document);
-	doc.on("dragleave", function () {
+	doc.on("dragleave", function() {
 		return false;
 	});
-	doc.on("dragover", function () {
+	doc.on("dragover", function() {
 		if (!showDrag) {
 			binder.showDragging();
 		}
@@ -101,7 +101,7 @@ function setDpi(dpi) {
 	DPI = dpi;
 }
 
-$(function () {
+$(function() {
 	// 우클릭 방지
 	$(document).on("contextmenu", function() {
 		return false;

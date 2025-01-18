@@ -189,7 +189,7 @@ window.main = new WebForm();
 		} else {
 			$.ajax({url: "view/LookBack.ass"
 				, dataType: "text"
-				, success: function (text) {
+				, success: function(text) {
 					main.script("setOriginSubtitleFile", ["LookBack.ass", text]);
 				}
 			})

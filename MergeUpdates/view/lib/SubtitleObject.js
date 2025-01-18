@@ -2484,7 +2484,7 @@ Subtitle.SmiFile.prototype.fromSync = function(syncs) {
 	return this;
 }
 
-Subtitle.SmiFile.prototype.antiNormalize = function () {
+Subtitle.SmiFile.prototype.antiNormalize = function() {
 	const result = [this];
 	
 	for (let i = 0; i < this.body.length; i++) {

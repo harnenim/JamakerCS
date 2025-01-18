@@ -711,7 +711,7 @@ function init(jsonSetting) {
 	SmiEditor.Viewer.open(); // 스타일 세팅 설정 완료 후에 실행
 	moveWindowsToSetting();
 
-	autoSaveTemp = setInterval(function () {
+	autoSaveTemp = setInterval(function() {
 		saveTemp();
 	}, setting.tempSave * 1000);
 }
@@ -949,7 +949,7 @@ function runIfCanOpenNewTab(func) {
 			const currentTab = tabs[0];
 			for (let i = 0; i < currentTab.holds.length; i++) {
 				if (!currentTab.isSaved()) {
-					confirm("현재 파일을 닫을까요?", function () {
+					confirm("현재 파일을 닫을까요?", function() {
 						tabToCloseAfterRun = $("#tabSelector > .th:not(#btnNewTab)");
 						func();
 					});
@@ -1136,8 +1136,8 @@ function openNewTab(text, path, forVideo) {
 }
 // C# 쪽에서 호출
 function confirmLoadVideo(path) {
-	setTimeout(function () {
-		confirm("동영상 파일을 같이 열까요?\n" + path, function () {
+	setTimeout(function() {
+		confirm("동영상 파일을 같이 열까요?\n" + path, function() {
 			binder.loadVideoFile(path);
 		});
 	}, 1);
