@@ -36,7 +36,7 @@ window.main = new WebForm();
 			main.mainView.contentWindow.binder = main.binder = new Binder(main);
 
 			const cd = main.mainView.contentDocument;
-			cd.addEventListener("dragenter", function(e) {
+			cd.addEventListener("dragenter", (e) => {
 				e.preventDefault();
 				main.showDragging();
 			});
@@ -94,9 +94,9 @@ window.main = new WebForm();
 		localStorage.setItem("setting.TextReplacer", setting);
 	}
 }
-$(function() {
+$(() => {
 	main.run();
-	window.addEventListener("beforeunload", function(e) {
+	window.addEventListener("beforeunload", (e) => {
 		main.beforeExit(e);
 		return false;
 	});

@@ -85,13 +85,13 @@ window.SmiEditor = function(text) {
 	
 	this.bindEvent();
 	
-	this.history = new History(this.input, 32, function() {
+	this.history = new History(this.input, 32, () => {
 		editor.scrollToCursor();
 		editor.updateSync([0, editor.lines.length]); // 실행취소일 땐 전체 갱신하도록
 	});
 	setTimeout(() => {
 		if (SmiEditor.autoComplete.length) {
-			editor.act = new AutoCompleteTextarea(editor.input, SmiEditor.autoComplete, function() {
+			editor.act = new AutoCompleteTextarea(editor.input, SmiEditor.autoComplete, () => {
 				editor.history.log();
 				editor.updateSync(null, 1);
 			});
@@ -99,7 +99,7 @@ window.SmiEditor = function(text) {
 	}, 1);
 };
 
-SmiEditor.setSetting = function(setting) {
+SmiEditor.setSetting = (setting) => {
 	if (setting.sync) {
 		SmiEditor.sync = setting.sync;
 	}
@@ -190,11 +190,11 @@ SmiEditor.sync = {
 };
 SmiEditor.autoComplete = [];
 SmiEditor.PlayerAPI = {
-		playOrPause: function(    ) { binder.playOrPause(); }
-	,	play       : function(    ) { binder.play(); }
-	,	stop       : function(    ) { binder.stop(); }
-	,	moveTo     : function(time) { binder.moveTo(time); }
-	,	move       : function(move) { binder.moveTo(time + move); }
+		playOrPause: (    ) => { binder.playOrPause(); }
+	,	play       : (    ) => { binder.play(); }
+	,	stop       : (    ) => { binder.stop(); }
+	,	moveTo     : (time) => { binder.moveTo(time); }
+	,	move       : (move) => { binder.moveTo(time + move); }
 };
 SmiEditor.limitKeyFrame = 200;
 SmiEditor.trustKeyFrame = false;
@@ -206,7 +206,7 @@ SmiEditor.video = {
 	,	fs: []
 	,	kfs: []
 }
-SmiEditor.findSync = function(sync, fs=[], from=0, to=-1) {
+SmiEditor.findSync = (sync, fs=[], from=0, to=-1) => {
 	if (fs.length == 0) return null;
 	if (to < 0) to = fs.length;
 	if (from + 1 == to) {
@@ -225,7 +225,7 @@ SmiEditor.findSync = function(sync, fs=[], from=0, to=-1) {
 		return SmiEditor.findSync(sync, fs, from, mid);
 	}
 }
-SmiEditor.getSyncTime = function(sync, forKeyFrame=false, output={}/* 리턴값은 숫자여야 하는데, 키프레임 상태값 반환이 필요해짐 */) {
+SmiEditor.getSyncTime = (sync, forKeyFrame=false, output={}/* 리턴값은 숫자여야 하는데, 키프레임 상태값 반환이 필요해짐 */) => {
 	if (!sync) sync = (time + SmiEditor.sync.weight);
 	if (SmiEditor.sync.frame) { // 프레임 단위 싱크 보정
 		let adjustSync = null;
@@ -257,7 +257,7 @@ SmiEditor.getSyncTime = function(sync, forKeyFrame=false, output={}/* 리턴값�
 	}
 	return output.sync = sync;
 }
-SmiEditor.makeSyncLine = function(time, type) {
+SmiEditor.makeSyncLine = (time, type) => {
 	return SmiEditor.sync.preset.split("{sync}").join(Math.floor(time)).split("{lang}").join(SmiEditor.sync.lang).split("{type}").join(TIDs[type ? type : 1]);
 }
 
@@ -827,7 +827,7 @@ SmiEditor.prototype.setLine = function(text, selection) {
 	this.history.log();
 	this.updateSync();
 }
-SmiEditor.inputText = function(text) {
+SmiEditor.inputText = (text) => {
 	if (SmiEditor.selected) {
 		SmiEditor.selected.inputText(text);
 	}
@@ -854,7 +854,7 @@ SmiEditor.prototype.inputTextLikeNative = function(input) {
 
 SmiEditor.prototype.reSyncPrompt = function() {
 	const editor = this;
-	prompt("싱크 시작 시간을 입력하세요.", function(value) {
+	prompt("싱크 시작 시간을 입력하세요.", (value) => {
 		if (!value || !isFinite(value)) {
 			alert("잘못된 값입니다.");
 			return;
@@ -1588,14 +1588,14 @@ SmiEditor.prototype.updateHighlight = function() {
 	setTimeout(thread, 1);
 }
 SmiEditor.highlightCss = ".hljs-sync: { color: #3F5FBF; }";
-SmiEditor.highlightText = function(text, state=null) {
+SmiEditor.highlightText = (text, state=null) => {
 	const previewLine = $("<span>");
 	if (text.toUpperCase().startsWith("<SYNC ")) {
 		previewLine.addClass("hljs-sync");
 	}
 	return previewLine.text(text);
 }
-SmiEditor.refreshHighlight = function() {
+SmiEditor.refreshHighlight = () => {
 	let $style = $("#styleHighlight");
 	if (!$style.length) {
 		$("head").append($style = $("<style id='#styleHighlight'>"));
@@ -2335,7 +2335,7 @@ SmiEditor.prototype.getTransformText = function() {
 	
 	return origin.text.split("\n").slice(start, end).join("\n");
 };
-SmiEditor.afterTransform = function(result) { // 주로 C#에서 호출
+SmiEditor.afterTransform = (result) => { // 주로 C#에서 호출
 	// 해당 줄 앞뒤 전체 선택되도록 조정
 	result = result.split("\r\n").join("\n");
 	const origin = SmiEditor.transforming;
@@ -2363,7 +2363,7 @@ SmiEditor.prototype.fillSync = function() {
 		SmiEditor.afterTransform(SmiEditor.fillSync(text));
 	}
 };
-SmiEditor.fillSync = function(text) {
+SmiEditor.fillSync = (text) => {
 	// 기존 중간싱크 제거 후 진행
 	const textLines = text.split("\n");
 	const lines = [];

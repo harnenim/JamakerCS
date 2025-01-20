@@ -17,7 +17,7 @@ $(() => {
 		: /* 웹버전 내부에서 로컬 호출 */ "../../updates.json"
 		;
 	$.ajax({url : url
-		,	success: function(updates) {
+		,	success: (updates) => {
 				let isLatest = true;
 				const log = [];
 				const files = [];
@@ -51,7 +51,7 @@ $(() => {
 					$("#btnUpdate").text(updates[0].version + "으로 업데이트").attr({ disabled: false });
 				}
 			}
-		,	error: function(e) {
+		,	error: (e) => {
 				alert("업데이트 확인 실패");
 				console.log(e);
 			}

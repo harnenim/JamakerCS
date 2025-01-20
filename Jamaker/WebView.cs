@@ -251,14 +251,14 @@ namespace Jamaker
             }
         }
 
-        public void Prompt(string target, string msg)
+        public void Prompt(string target, string msg, string def)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() => { Prompt(target, msg); }));
+                Invoke(new Action(() => { Prompt(target, msg, def); }));
                 return;
             }
-            Prompt prompt = new Prompt(GetHwnd(target), msg, Text);
+            Prompt prompt = new Prompt(GetHwnd(target), msg, Text, def);
             DialogResult result = prompt.ShowDialog();
             if (result == DialogResult.OK)
             {

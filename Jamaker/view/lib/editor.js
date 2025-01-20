@@ -57,19 +57,19 @@ window.Tab = function(text, path) {
 			// 메인 홀드는 이름 변경 X
 			return;
 		}
-		prompt("홀드 이름 변경", function(input) {
+		prompt("홀드 이름 변경", (input) => {
 			if (!input) {
 				alert("잘못된 입력입니다.");
 				return;
 			}
 			hold.selector.find(".hold-name > span").text(tab.holds.indexOf(hold) + "." + (hold.name = input));
 			tab.onChangeSaved();
-		});
+		}, hold.name);
 		
 	}).on("click", ".btn-hold-remove", function(e) {
 		e.stopPropagation();
 		const hold = $(this).parents(".selector").data("hold");
-		confirm("삭제하시겠습니까?", function() {
+		confirm("삭제하시겠습니까?", () => {
 			const index = tab.holds.indexOf(hold);
 			
 			if (tab.hold == index) {
@@ -719,6 +719,13 @@ function init(jsonSetting) {
 function setSetting(setting, initial=false) {
 	const oldSetting = window.setting;
 	
+	// 탭 on/off 먼저 해야 height값 계산 가능
+	if (setting.useTab) {
+		$("body").addClass("use-tab");
+	} else {
+		$("body").removeClass("use-tab");
+	}
+	
 	SmiEditor.setSetting(setting);
 	if (initial || (JSON.stringify(oldSetting.color) != JSON.stringify(setting.color))) {
 		// 스타일 바뀌었을 때만 재생성
@@ -754,7 +761,7 @@ function setSetting(setting, initial=false) {
 		
 		$.ajax({url: "lib/SmiEditor.color.css"
 			,	dataType: "text"
-			,	success: function(preset) {
+			,	success: (preset) => {
 					for (let name in setting.color) {
 						preset = preset.split("[" + name + "]").join(setting.color[name]);
 					}
@@ -790,11 +797,11 @@ function setSetting(setting, initial=false) {
 		if (setting.highlight.parser && setting.highlight.style) {
 			$.ajax({url: "lib/highlight/parser/" + setting.highlight.parser + ".js"
 				,	dataType: "text"
-				,	success: function(parser) {
+				,	success: (parser) => {
 						eval(parser);
 						$.ajax({url: "lib/highlight/styles/" + setting.highlight.style + ".css"
 							,	dataType: "text"
-							,	success: function(style) {
+							,	success: (style) => {
 									SmiEditor.highlightCss = style;
 									afterLoadHighlight();
 								}
@@ -843,16 +850,11 @@ function setSetting(setting, initial=false) {
 	binder.setMenus(setting.menu);
 	
 	window.setting = JSON.parse(JSON.stringify(setting));
-
-	// 탭 on/off 먼저 해야 height값 계산 가능
-	if (setting.useTab) {
-		$("body").addClass("use-tab");
-	} else {
-		$("body").removeClass("use-tab");
-		if (tabs.length == 0) {
-			// 탭 기능 껐을 땐 에디터 하나 열린 상태
-			newFile(); // 새 파일 양식은 세팅 로딩이 완료된 후에 갖춰짐
-		}
+	
+	// 새 파일 양식은 세팅 로딩이 완료된 후에 갖춰짐
+	if (!setting.useTab && !tabs.length) {
+		// 탭 기능 껐을 땐 에디터 하나 열린 상태
+		newFile();
 	}
 }
 function moveWindowsToSetting() {
@@ -949,7 +951,7 @@ function runIfCanOpenNewTab(func) {
 			const currentTab = tabs[0];
 			for (let i = 0; i < currentTab.holds.length; i++) {
 				if (!currentTab.isSaved()) {
-					confirm("현재 파일을 닫을까요?", function() {
+					confirm("현재 파일을 닫을까요?", () => {
 						tabToCloseAfterRun = $("#tabSelector > .th:not(#btnNewTab)");
 						func();
 					});
@@ -981,7 +983,7 @@ function newFile() {
 function openFile(path, text, forVideo) {
 	// C#에서 파일 열 동안 canOpenNewTab 결과가 달라질 리는 없겠지만, 일단은 바깥에서 감싸주기
 	runIfCanOpenNewTab(() => {
-		if (path) {
+		if (text) {
 			// 새 탭 열기
 			openNewTab(text, path, forVideo);
 		} else {
@@ -1160,7 +1162,7 @@ function loadFkf(fkfName) {
 	const req = new XMLHttpRequest();
 	req.open("GET", "../temp/" + fkfName);
 	req.responseType = "arraybuffer";
-	req.onload = function(e) {
+	req.onload = (e) => {
 		const buffer = req.response;
 		
 		const fkf = new Int32Array(buffer);
@@ -1189,7 +1191,7 @@ function loadFkf(fkfName) {
 		$("#checkTrustKeyframe").attr({ disabled: false });
 		Progress.set("#forFrameSync", 0);
 	}
-	req.onerror = function(e) {
+	req.onerror = (e) => {
 		// 실패했어도 프로그레스바는 없애줌
 		Progress.set("#forFrameSync", 0);
 	}

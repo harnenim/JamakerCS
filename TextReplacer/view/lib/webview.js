@@ -19,24 +19,24 @@ window.windowName = "editor";
 
 // alert 재정의
 window._alert = alert;
-alert = function(msg) {
+alert = (msg) => {
 	binder.alert(windowName, msg);
 }
 // confirm 재정의
 window._confirm = confirm;
-window.afterConfirmYes = function() {};
-window.afterConfirmNo  = function() {};
-confirm = function(msg, yes, no) {
-	afterConfirmYes = yes ? yes : function() {};
-	afterConfirmNo  = no  ? no  : function() {};
+window.afterConfirmYes = () => {};
+window.afterConfirmNo  = () => {};
+confirm = (msg, yes, no) => {
+	afterConfirmYes = yes ? yes : () => {};
+	afterConfirmNo  = no  ? no  : () => {};
 	binder.confirm(windowName, msg);
 }
 // prompt 재정의
 window._prompt = prompt;
-window.afterPrompt  = function(value) {};
-prompt = function(msg, after) {
-	afterPrompt = after ? after : function() {};
-	binder.prompt(windowName, msg);
+window.afterPrompt  = (value) => {};
+prompt = (msg, after, def) => {
+	afterPrompt = after ? after : () => {};
+	binder.prompt(windowName, msg, def);
 }
 
 // JSON.stringify 보기 좋게 커스터마이징
@@ -106,7 +106,7 @@ $(() => {
 	$(document).on("contextmenu", function() {
 		return false;
 	});
-	window.onkeydown = function(e) {
+	window.onkeydown = (e) => {
 		switch(e.keyCode) {
 			case 116: return false; // F5 새로고침 방지
 		}
@@ -177,7 +177,7 @@ Progress.prototype.hide = function() {
 }
 // Progress 객체 없이 직접 다루는 경우
 Progress.bars = {};
-Progress.set = function(selector, ratio) {
+Progress.set = (selector, ratio) => {
 	let bar = Progress.bars[selector];
 	if (bar == null) {
 		const area = $(selector);

@@ -1,4 +1,4 @@
-SmiEditor.highlightText = function(text, state=null) {
+SmiEditor.highlightText = (text, state=null) =>{
 	const previewLine = $("<span>").data({ state: state });
 	
 	/*

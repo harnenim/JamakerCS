@@ -58,15 +58,9 @@ window.main = new WebForm();
 			}
 			
 			main.mainView.contentWindow.binder = main.binder = new Binder(main);
-			// 브라우저 샘플에선 이게 안 도는 경우가 있나?
-			/*
-			setTimeout(function() {
-				main.mainView.contentWindow.binder.initAfterLoad();
-			}, 1000);
-			*/
 
 			const cd = main.mainView.contentDocument;
-			cd.addEventListener("dragenter", function(e) {
+			cd.addEventListener("dragenter", (e) => {
 				e.preventDefault();
 				main.showDragging();
 			});
@@ -84,11 +78,6 @@ window.main = new WebForm();
 	main.beforeExit = function(e) {
 		this.script("beforeExit");
 	}
-	/*
-	public void DoExit(bool resetPlayer, bool exitPlayer)
-
-	public void WebFormClosed(object sender, FormClosedEventArgs e)
-	*/
 }
 {
 	main.saveSetting = async function(setting) {

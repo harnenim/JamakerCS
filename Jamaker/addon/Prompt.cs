@@ -6,7 +6,7 @@ namespace Jamaker.addon
 {
     public partial class Prompt : Form
     {
-        public Prompt(int hwnd, string msg, string title)
+        public Prompt(int hwnd, string msg, string title, string def)
         {
             InitializeComponent();
 
@@ -17,6 +17,7 @@ namespace Jamaker.addon
             Location = new Point((offset.left + offset.right) / 2 - (Width / 2), (offset.top + offset.bottom) / 2 - (Height / 2));
 
             labelMsg.Text = msg;
+            textBoxValue.Text = def;
 
             Text = title;
         }

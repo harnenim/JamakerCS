@@ -211,7 +211,7 @@ window.Combine = {
 		return syncs;
 	}
 	
-	Combine.combine = function(inputUpper, inputLower) {
+	Combine.combine = (inputUpper, inputLower) => {
 		const hljs = $(".hljs").hide(); // 결합 로직 돌아갈 때 문법 하이라이트가 있으면 성능 저하됨
 		const checker = getChecker();
 		const upperSyncs = parse(inputUpper, checker);
@@ -512,7 +512,7 @@ window.Combine = {
 }
 
 if (Subtitle && Subtitle.SmiFile) {
-	Subtitle.SmiFile.textToHolds = function(text) {
+	Subtitle.SmiFile.textToHolds = (text) => {
 		const texts = text.split("\r\n").join("\n").split("\n<!-- Hold=");
 		let holds = [{ text: texts[0] }];
 		for (let i = 1; i < texts.length; i++) {
@@ -564,7 +564,7 @@ if (Subtitle && Subtitle.SmiFile) {
 		}
 		return holds;
 	}
-	Subtitle.SmiFile.holdsToText = function(origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) {
+	Subtitle.SmiFile.holdsToText = (origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) => {
 		const result = [];
 		let logs = [];
 		let originBody = [];

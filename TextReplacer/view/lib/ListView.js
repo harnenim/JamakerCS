@@ -13,7 +13,7 @@
 		div.attr("id", "id_" + Math.random());
 	}
 	
-	div.on("click", () => {
+	div.on("click", function() {
 		//self.clearSelection();
 	});
 	div.on("click", "li", function(e) {
@@ -157,7 +157,7 @@
 		dragLayer = null;
 	});
 	
-	div.on("dblclick", "li", () => {
+	div.on("dblclick", "li", function() {
 		if (self.run) {
 			self.run(self.list[$(this).data("index")]);
 		}

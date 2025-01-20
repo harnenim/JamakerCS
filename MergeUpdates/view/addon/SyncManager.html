@@ -14,41 +14,48 @@ windowName = "addon";
 
 // 초기 상태 기억
 // TODO: 경우에 따라 opener 분리 필요
-var origin = null;
-var tab = null;
-$(function() {
-	if (opener) {
-		tab = opener.SmiEditor.selected;
-		if (tab) {
-			origin = tab.getText();
-			SmiEditor.video.fs = opener.SmiEditor.video.fs;
-			SmiEditor.video.FL = opener.SmiEditor.video.FL;
-		}
-	}
-});
-var binder = {
-	setText: function(text, range) {
-		origin.tab.setText(text, range);
-	}
-,	alert: function(windowName, msg) {
-		_alert(msg);
-	}
-};
+const tab = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
+const origin = tab ? tab.getText() : null;
+if (tab) {
+	SmiEditor.video = opener.SmiEditor.video;
+}
 
 function smi2assTime(ms) {
 	ms = Math.max(0, ms);
-	var h = Math.floor(ms / 3600000);
-	var m = Math.floor(ms / 60000) % 60;
-	var s = Math.floor(ms / 1000) % 60;
-	var ds= Math.floor(ms / 10) % 100;
+	const h = Math.floor(ms / 3600000);
+	const m = Math.floor(ms / 60000) % 60;
+	const s = Math.floor(ms / 1000) % 60;
+	const ds= Math.floor(ms / 10) % 100;
 	return h + ":" + (m<10?"0":"")+m + ":" + (s<10?"0":"")+s + "." + (ds<10?"0":"")+ds;
 }
 function ass2smiTime(time) {
-	var vs = time.split(":");
+	const vs = time.split(":");
 	return (Number(vs[0]) * 3600000) + (Number(vs[1]) * 60000) + (Number(vs[2].split(".").join("")) * 10);
 }
 
 requestClose = confirmCancel;
+
+function getSync(line) {
+	line = line.toUpperCase();
+	if (line.substring(0, 6) == "<SYNC ") {
+		let sync = 0;
+		let index = line.indexOf(" START=") + 7;
+		if (index > 7) {
+			if (line[index] == '"' || line[index] == "'") {
+				index++;
+			}
+			for (let j = index; j < line.length; j++) {
+				const c = line[j];
+				if (!isFinite(c)) {
+					break;
+				}
+				sync = sync * 10 + Number(c);
+			}
+		}
+		return sync;
+	}
+	return null;
+}
 
 function splitOrigin() {
 	if (!origin) {
@@ -68,35 +75,36 @@ function splitOrigin() {
 	} else {
 		origin.end = origin.text.split("\n").length;
 	}
-
-	var syncs = [];
-	var last = {
+	
+	const syncs = [];
+	let last = {
 			start: 0
 		,	end: 0
 		,	startType: 0
 		,	endType: 0
 		,	lines: []
 	};
-	var header = [], footer = [];
-
-	var i = origin.start;
+	const header = [];
+	const footer = [];
+	
+	let i = origin.start;
 	for (; i < origin.end; i++) {
-		var line = origin.lines[i];
+		const line = origin.lines[i];
 		if (line[LINE.TYPE] != null) {
 			break;
 		}
 		header.push(line[LINE.TEXT]);
 	}
-	var frameCount = 0;
+	let frameCount = 0;
 	for (; i < origin.end; i++) {
-		var line = origin.lines[i];
+		const line = origin.lines[i];
 		if (line[LINE.TEXT].toUpperCase() == "</BODY>") {
 			break;
 		}
 		if (line[LINE.TYPE]) { // 싱크
 			if (line[LINE.TYPE] == TYPE.RANGE) { // 중간 싱크
 				last.lines.push("<~>");
-
+				
 			} else {
 				last.end     = line[LINE.SYNC];
 				last.endType = line[LINE.TYPE];
@@ -111,7 +119,7 @@ function splitOrigin() {
 					frameCount++;
 				}
 			}
-
+			
 		} else { // 텍스트
 			last.lines.push(line[LINE.TEXT].split("\r")[0]);
 		}
@@ -122,14 +130,16 @@ function splitOrigin() {
 		return false;
 	}
 	for (; i < origin.end; i++) {
-		var line = origin.lines[i];
+		const line = origin.lines[i];
 		footer.push(line[LINE.TEXT]);
 	}
 
-	var forBasic = header, forFrameAss = [], forFrameSmi = [];
-
-	for (var i = 0; i < syncs.length; i++) {
-		var sync = syncs[i];
+	let forBasic = header;
+	const forFrameAss = [];
+	const forFrameSmi = [];
+	
+	for (let i = 0; i < syncs.length; i++) {
+		const sync = syncs[i];
 		if (sync.startType == 1) {
 			forBasic.push(sync.start);
 			forBasic.push(sync.lines.join("\n").split("\n<~>\n").join("<~>"));
@@ -140,10 +150,10 @@ function splitOrigin() {
 		}
 	}
 	{	// forBasic
-		forBasic = forBasic.concat(footer);
-		var lines = [];
-		for (var i = 0; i < forBasic.length; i++) {
-			var thisSync = forBasic[i];
+		forBasic.push(...footer);
+		const lines = [];
+		for (let i = 0; i < forBasic.length; i++) {
+			const thisSync = forBasic[i];
 			if (typeof thisSync == "number") {
 				lines.push(SmiEditor.makeSyncLine(thisSync, TYPE.BASIC));
 			} else if (typeof thisSync == "string") {
@@ -152,48 +162,46 @@ function splitOrigin() {
 		}
 		forBasic = lines.join("\n");
 	}
-
-	forFrameSmi = forFrameSmi.join("\n");
-
+	
 	// Aegisub용으로 반프레임 보정
-	var add = Math.floor((FL / 2) + 0.5);
-
-	var requiredEnd = false;
+	const add = Math.floor((SmiEditor.video.FL / 2) + 0.5);
+	
+	let requiredEnd = false;
 	// 역순으로 탐색: 종료싱크보단 시작싱크가 화면싱크인 걸 먼저 탐색
-	for (var i = syncs.length - 1; i >= 0; i--) {
-		var sync = syncs[i];
+	for (let i = syncs.length - 1; i >= 0; i--) {
+		const sync = syncs[i];
 		if (sync.end == 0) sync.end = 35999999; // 마지막 싱크는 종료 시간이 없을 수 있음
 		if (sync.startType == 2) {
-			var text = $("<span>").html(sync.lines.join("\\N").split(/<br>/gi).join("\\N")).text().trim();
+			let text = $("<span>").html(sync.lines.join("\\N").split(/<br>/gi).join("\\N")).text().trim();
 			if (requiredEnd) { // []
 				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.start - add) + "," + smi2assTime(sync.end - add) + ",［］,,0000,0000,0000,,{\\c&H00FFFF&}" + text);
 				requiredEnd = false;
-
+				
 			} else { // [)
 				if (i == 0 && text.length == 0) { // 첫 싱크는 무시되지 않도록
 					text = "&nbsp;";
 				}
 				if (text.length) {
 					forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.start - add) + "," + smi2assTime(sync.end - add) + ",［）,,0000,0000,0000,,{\\c&HFFFF00&}" + text);
-
+					
 				} else { // 공백 싱크: 앞 싱크의 종료싱크 처리 필요
 					requiredEnd = true;
 				}
 			}
-
+			
 		} else {
 			if (requiredEnd) { // (]
-				var text = $("<span>").html(sync.lines.join("\\N").split(/<br>/gi).join("\\N")).text().trim();
+				let text = $("<span>").html(sync.lines.join("\\N").split(/<br>/gi).join("\\N")).text().trim();
 				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.start - add) + "," + smi2assTime(sync.end - add) + ",（］,,0000,0000,0000,," + text);
 				requiredEnd = false;
 			}
 		}
 	}
-
+	
 	// Aegisub에서 작업 편의성을 위해 스타일 순 정렬
-	forFrameAss.sort(function(a, b) {
-		var styleA = a.split(",")[3];
-		var styleB = b.split(",")[3];
+	forFrameAss.sort((a, b) => {
+		const styleA = a.split(",")[3];
+		const styleB = b.split(",")[3];
 		if (styleA < styleB) {
 			return -1;
 		} else if (styleA > styleB) {
@@ -206,35 +214,34 @@ function splitOrigin() {
 			}
 		}
 	});
-	forFrameAss = forFrameAss.join("\n");
-
+	
 	$("#originBasicSmi").val(forBasic);
-	$("#originFrameAss").val(forFrameAss);
-	$("#originFrameSmi").val(forFrameSmi);
-
+	$("#originFrameAss").val(forFrameAss.join("\n"));
+	$("#originFrameSmi").val(forFrameSmi.join("\n"));
+	
 	return true;
 }
 
 function frameAssToSmi() {
 	// Aegisub용으로 반프레임 보정
-	var add = Math.floor((FL / 2) + 0.5);
-
-	var origLines = $("#originFrameAss").val().split("\n").sort(); // 순서 섞어서 작업한 것 시간 순 정렬
-	var last = 0;
-	var lines = [];
-	for (var i = 0; i < origLines.length; i++) {
-		var line = origLines[i].split(",");
+	const add = Math.floor((SmiEditor.video.FL / 2) + 0.5);
+	
+	const origLines = $("#originFrameAss").val().split("\n").sort(); // 순서 섞어서 작업한 것 시간 순 정렬
+	let last = 0;
+	const lines = [];
+	for (let i = 0; i < origLines.length; i++) {
+		const line = origLines[i].split(",");
 		if (line.length > 9) {
-			var start = line[1];
-			var end   = line[2];
-			var type  = line[3];
-			var text  = line.slice(9).join(",");
+			const start = line[1];
+			const end   = line[2];
+			const type  = line[3];
+			const text  = line.slice(9).join(",");
 			if (type[0] == '［') {
 				if (last && last != start) {
 					lines.push("&nbsp;");
 				}
 				lines.push(SmiEditor.makeSyncLine(SmiEditor.getSyncTime(start == "0:00:00.00" ? 1 : (ass2smiTime(start) + add))));
-				var splitTag = text.split("}");
+				let splitTag = text.split("}");
 				splitTag = splitTag[splitTag.length == 1 ? 0 : 1]
 				lines.push(splitTag.split("\\N").join("<br>"));
 			} else if (last) {
@@ -251,118 +258,89 @@ function frameAssToSmi() {
 		lines.push("&nbsp;");
 	}
 	$("#targetFrameSmi").val(lines.join("\n"));
-
+	
 	checkDiff();
 }
 
 function joinFrame() {
-	var resultFrameSmi = $("#resultFrameSmi");
-	var checked = checkDiff();
+	const resultFrameSmi = $("#resultFrameSmi");
+	const checked = checkDiff();
 	if (!checked) {
 		alert("오차가 큽니다");
 		resultFrameSmi.val("");
 		return;
 	}
 
-	var originLines = checked[0];
-	var targetLines = checked[1];
-
-	var lines = [];
-	var lastSync = 0;
-	for (var i = 0; i < originLines.length; i++) {
+	const originLines = checked[0];
+	const targetLines = checked[1];
+	
+	const lines = [];
+	let lastSync = 0;
+	for (let i = 0; i < originLines.length; i++) {
 		if (typeof originLines[i] == "number") {
-			var thisSync = targetLines[i];
+			const thisSync = targetLines[i];
 			lines.push(SmiEditor.makeSyncLine(lastSync = thisSync, TYPE.FRAME));
 		} else {
-			var lastLine = originLines[i].split("<~>");
+			const lastLine = originLines[i].split("<~>");
 			lines.push(lastLine[0]);
-			for (var j = 1; j < lastLine.length; j++) {
+			for (let j = 1; j < lastLine.length; j++) {
 				lines.push("<~>");
 				lines.push(lastLine[j]);
 			}
 		}
 	}
-
+	
 	resultFrameSmi.val(lines.join("\n"));
 }
 
 function checkDiff() {
-	var originFrameSmi = $("#originFrameSmi");
-	var targetFrameSmi = $("#targetFrameSmi");
-
-	var originLines = originFrameSmi.val().split("\n");
-	var targetLines = targetFrameSmi.val().split("\n");
-
-	var height = Math.max(originLines.length, targetLines.length) * 14 + 4;
+	const originFrameSmi = $("#originFrameSmi");
+	const targetFrameSmi = $("#targetFrameSmi");
+	
+	const originLines = originFrameSmi.val().split("\n");
+	const targetLines = targetFrameSmi.val().split("\n");
+	
+	const height = Math.max(originLines.length, targetLines.length) * 14 + 4;
 	originFrameSmi.css({ height: height });
 	targetFrameSmi.css({ height: height });
 
-	var joinnable = (originLines.length == targetLines.length);
-	if (!joinnable) {
+	if (originLines.length != targetLines.length) {
 		if (targetLines[0].length > 0) {
 			alert("줄 수가 안 맞습니다.");
 		}
 		return false;
 	}
-
-	for (var i = 0; i < originLines.length; i++) {
-		var line = originLines[i];
-		var upper = line.toUpperCase();
-		if (upper.substring(0, 6) == "<SYNC ") {
-			var sync = 0;
-			var index = upper.indexOf(" START=") + 7;
-			if (index > 7) {
-				if (line[index] == '"' || line[index] == "'") {
-					index++;
-				}
-				for (var j = index; j < line.length; j++) {
-					if (isFinite(line[j])) {
-						sync = sync * 10 + Number(line[j]);
-					} else {
-						break;
-					}
-				}
-			}
+	
+	for (let i = 0; i < originLines.length; i++) {
+		const line = originLines[i];
+		const sync = getSync(line);
+		if (sync) {
 			originLines[i] = sync;
 		}
 	}
-	for (var i = 0; i < targetLines.length; i++) {
-		var line = targetLines[i];
-		var upper = line.toUpperCase();
-		if (upper.substring(0, 6) == "<SYNC ") {
-			var sync = 0;
-			var index = upper.indexOf(" START=") + 7;
-			if (index > 7) {
-				if (line[index] == '"' || line[index] == "'") {
-					index++;
-				}
-				for (var j = index; j < line.length; j++) {
-					if (isFinite(line[j])) {
-						sync = sync * 10 + Number(line[j]);
-					} else {
-						break;
-					}
-				}
-			}
+	for (let i = 0; i < targetLines.length; i++) {
+		const line = targetLines[i];
+		const sync = getSync(line);
+		if (sync) {
 			targetLines[i] = sync;
-
 		} else {
 			targetLines[i] = $("<span>").html(line).text().trim();
 		}
 	}
-
-	var areaChecker = $("#checker").empty();
+	
+	let joinnable = true;
+	const areaChecker = $("#checker").empty();
 	if (targetLines.length > 1) {
-		for (var i = 0; i < Math.min(originLines.length, targetLines.length); i++) {
+		for (let i = 0; i < Math.min(originLines.length, targetLines.length); i++) {
 			if (isFinite(originLines[i]) && isFinite(targetLines[i])) {
 				// 과도한 싱크 이동 검사
-				var dist = Math.abs(originLines[i] - targetLines[i]);
+				const dist = Math.abs(originLines[i] - targetLines[i]);
 				if (dist > 200) {
 					if (dist > 500) {
 						joinnable = false;
 					}
 					// 싱크 오차 과다 경고
-					var alpha = Math.min(0.5, ((dist - 100) / 1000));
+					const alpha = Math.min(0.5, ((dist - 100) / 1000));
 					areaChecker.append($("<div>").css({
 							position: "absolute"
 						,	top: i * 14
@@ -373,9 +351,9 @@ function checkDiff() {
 					}));
 				}
 				// 일반 싱크와 충돌 검사
-				var count = 0;
-				for (var j = 0; j < origin.lines.length; j++) {
-					var line = origin.lines[j];
+				let count = 0;
+				for (let j = 0; j < origin.lines.length; j++) {
+					const line = origin.lines[j];
 					if (line[LINE.TYPE] == TYPE.BASIC) {
 						if ((originLines[i] < line[LINE.SYNC] && line[LINE.SYNC] < targetLines[i])
 						 || (targetLines[i] < line[LINE.SYNC] && line[LINE.SYNC] < originLines[i])) {
@@ -397,7 +375,7 @@ function checkDiff() {
 						}
 					}
 				}
-
+				
 			} else {
 				if ($("<span>").html(originLines[i]).text().trim() != targetLines[i]) {
 					// 텍스트 오차 경고
@@ -413,47 +391,31 @@ function checkDiff() {
 			}
 		}
 	}
-
+	
 	return joinnable ? [originLines, targetLines] : false;
 }
 
-function getSync(line) {
-	var sync = 0;
-	var upper = line.toUpperCase();
-	if (upper.substring(0, 6) == "<SYNC ") {
-		var str = upper.split("START=")[1];
-		if (!isFinite(str[0])) str = str.substring(1);
-		for (var i = 0; i < str.length; i++) {
-			var c = str[i];
-			if (!isFinite(c)) {
-				break;
-			}
-			sync = sync * 10 + Number(c);
-		}
-	}
-	return sync;
-}
 function apply() {
-	var basicLines = $("#originBasicSmi").val();
-	var frameLines = $("#resultFrameSmi").val();
-	var lines = [];
-
-	if (frameLines.length == 0) {
+	const basicText = $("#originBasicSmi").val();
+	const frameText = $("#resultFrameSmi").val();
+	let lines = [];
+	
+	if (frameText.length == 0) {
 		alert("작업이 이뤄지지 않았습니다.");
 		return;
 	}
-	basicLines = basicLines.length
-	           ? basicLines.split("\n") : [];
-	frameLines = frameLines.split("\n");
-
-	var bi = 0;
-	var fi = 0;
-	var bLast = -1;
-	var fLast = -1;
-
+	const basicLines = basicText.length
+	                 ? basicText.split("\n") : [];
+	const frameLines = frameText.split("\n");
+	
+	let bi = 0;
+	let fi = 0;
+	let bLast = -1;
+	let fLast = -1;
+	
 	// 싱크보다 앞에 있는 것들
 	for (; bi < basicLines.length; bi++) {
-		var sync = getSync(basicLines[bi]);
+		const sync = getSync(basicLines[bi]);
 		if (sync) {
 			bLast = sync;
 			break;
@@ -461,28 +423,28 @@ function apply() {
 		lines.push(basicLines[bi]);
 	}
 	for (; fi < frameLines.length; bi++) {
-		var sync = getSync(frameLines[fi]);
+		const sync = getSync(frameLines[fi]);
 		if (sync) {
 			fLast = sync;
 			break;
 		}
 		lines.push(frameLines[fi]);
 	}
-
+	
 	// 싱크 순서대로 정렬
 	while (bi < basicLines.length && fi < frameLines.length) {
-		var bLine = basicLines[bi];
-		var fLine = frameLines[fi];
-
+		const bLine = basicLines[bi];
+		const fLine = frameLines[fi];
+		
 		if (bLast <= fLast) {
-			var bLines = bLine.split("<~>");
+			const bLines = bLine.split("<~>");
 			lines.push(bLines[0]);
-			for (var i = 1; i < bLines.length; i++) {
+			for (let i = 1; i < bLines.length; i++) {
 				lines.push("<~>");
 				lines.push(bLines[i]);
 			}
 			if (++bi >= basicLines.length) break;
-			var sync = getSync(basicLines[bi]);
+			const sync = getSync(basicLines[bi]);
 			if (sync) {
 				bLast = sync;
 			} else if (basicLines[bi].toUpperCase() == "</BODY>") {
@@ -491,96 +453,95 @@ function apply() {
 		} else {
 			lines.push(fLine);
 			if (++fi >= frameLines.length) break;
-			var sync = getSync(frameLines[fi]);
+			const sync = getSync(frameLines[fi]);
 			if (sync) fLast = sync;
 		}
 	}
-
+	
 	// 싱크 겹치는 범위 이후 남은 것들
 	for (; fi < frameLines.length; fi++) {
-        var fLines = frameLines[fi].split("<~>");
-        lines.push(fLines[0]);
-        for (var i = 1; i < fLines.length; i++) {
-            lines.push("<~>");
-            lines.push(fLines[i]);
-        }
-    }
-    for (; bi < basicLines.length; bi++) {
-        var bLines = basicLines[bi].split("<~>");
-        lines.push(bLines[0]);
-        for (var i = 1; i < bLines.length; i++) {
-            lines.push("<~>");
-            lines.push(bLines[i]);
-        }
-    }
-
+		const fLines = frameLines[fi].split("<~>");
+		lines.push(fLines[0]);
+		for (let i = 1; i < fLines.length; i++) {
+			lines.push("<~>");
+			lines.push(fLines[i]);
+		}
+	}
+	for (; bi < basicLines.length; bi++) {
+		const bLines = basicLines[bi].split("<~>");
+		lines.push(bLines[0]);
+		for (let i = 1; i < bLines.length; i++) {
+			lines.push("<~>");
+			lines.push(bLines[i]);
+		}
+	}
+	
 	// 해당 줄 앞뒤 전체 선택되도록 조정
-	var origLines = origin.text.split("\n");
-	var front = origLines.slice(0, origin.start);
-	var range = [(origin.start > 0) ? (front.join("\n").length + 1) : 0];
-
+	const origLines = origin.text.split("\n");
+	const front = origLines.slice(0, origin.start);
+	const range = [(origin.start > 0) ? (front.join("\n").length + 1) : 0];
+	
 	// 중간 싱크 재생성
-	var lastSyncLine = -1;
-	for (var i = 0; i < lines.length; i++) {
-		var line = lines[i];
+	let lastSyncLine = -1;
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i];
 		if (line == "<~>") { // 중간 싱크 시작
-			for (var j = i+1; j < lines.length; j++) {
+			for (let j = i+1; j < lines.length; j++) {
 				if (lines[j].substring(0, 6).toUpperCase() == "<SYNC ") { // 중간 싱크 끝나는 곳 찾기
-					var text = lines.slice(lastSyncLine, j+1).join("\n");
-					text = SmiEditor.fillSync(text);
+					const text = SmiEditor.fillSync(lines.slice(lastSyncLine, j+1).join("\n"));
 					lines = lines.slice(0, lastSyncLine).concat(text.split("\n").slice(0, j - lastSyncLine)).concat(lines.slice(j));
 					lastSyncLine = j;
 					i = j + 1;
 					break;
 				}
 			}
-
+			
 		} else if (line.substring(0, 6).toUpperCase() == "<SYNC ") {
 			lastSyncLine = i;
 		}
 	}
-
+	
 	// 한 싱크에 여러 줄이었던 것 복원
-	for (var i = 0; i < lines.length; i++) {
-		var line = lines[i].split("</>");
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i].split("</>");
 		if (line.length > 1) {
 			lines = lines.slice(0, i).concat(line).concat(lines.slice(i+1));
 			i += line.length - 1;
 		}
 	}
 	range.push(range[0] + lines.join("\n").length);
-
+	
 	// 교체 및 종료
-	binder.setText(front.concat(lines).concat(origLines.slice(origin.end)).join("\n"), range);
-
+	origin.tab.setText(front.concat(lines).concat(origLines.slice(origin.end)).join("\n"), range);
+	
 	window.close();
 }
 
-$(function() {
+$(() => {
 	if (splitOrigin()) {
 		$("#btnFrameAssToSmi").on("click", frameAssToSmi);
-
+		
 		$("#btnJoinFrame").on("click", joinFrame);
-
+		
 		// 마지막 입력 1초 후 체크
-		var checkOnChange = null;
+		let checkOnChange = null;
 		$("#originFrameSmi, #targetFrameSmi").on("input propertychange", function() {
-			var current = checkOnChange = setTimeout(function() {
+			const current = checkOnChange = setTimeout(() => {
 				if (checkOnChange == current) {
 					checkDiff();
 				}
 			}, 1000);
 		});
 		checkDiff();
-
+		
 		$("#btnApply").on("click", apply);
-
-		var originFrameAss = $("#originFrameAss");
-		var text = originFrameAss.val();
-		setTimeout(function() { // textarea 렌더링 후 confirm 보여주기 위한 딜레이
+		
+		const originFrameAss = $("#originFrameAss");
+		const text = originFrameAss.val();
+		setTimeout(() => { // textarea 렌더링 후 confirm 보여주기 위한 딜레이
 			originFrameAss[0].select();
 			originFrameAss.focus().scrollTop(0).scrollLeft(0);
-			confirm("작업할 내역을 복사하시겠습니까?\nAegisub에서 작업이 필요합니다.", function() {
+			confirm("작업할 내역을 복사하시겠습니까?\nAegisub에서 작업이 필요합니다.", () => {
 				if (opener && opener.binder && !opener.binder._) {
 					// C# 프로그램에서 호출
 					document.execCommand("copy");
@@ -589,73 +550,73 @@ $(function() {
 					navigator.clipboard.writeText(text);
 				}
 			});
-		}, 100);
+		}, 100); // 너무 빨리 키보드 누르면 confirm 뜨기 전에 textarea의 블록지정된 내용을 날려버림...
 	}
 });
 	</script>
 	<style>
-		body > * {
-			position: absolute;
-		}
-		#originBasicSmi {
-			top: 0;
-			left: 0;
-			width: 30%;
-			height: 50%;
-			background: #eff;
-		}
-		#originFrameAss {
-			top: 0;
-			left: 30%;
-			width: 70%;
-			height: calc(50% - 20px);
-		}
-		#btnFrameAssToSmi {
-			top: calc(50% - 20px);
-			left: 30%;
-			width: calc(30% + 16px);
-			height: 20px;
-		}
-		#areaFrameSmi {
-			top: 50%;
-			left: 0;
-			width: calc(60% + 16px);
-			height: 50%;
-			overflow-y: scroll;
-			background: #fff;
-		}
-		#btnJoinFrame {
-			top: calc(50% - 20px);
-			left: calc(60% + 16px);
-			width: 20px;
-			height: calc(50% + 20px);
-		}
-		#resultFrameSmi {
-			top: calc(50% - 20px);
-			left: calc(60% + 36px);
-			width: calc(40% - 36px);
-			height: 50%;
-			background: #eff;
-		}
-		#btnApply {
-			top: calc(100% - 20px);
-			left: calc(60% + 36px);
-			width: calc(40% - 36px);
-			height: 20px;
-		}
+body > * {
+	position: absolute;
+}
+#originBasicSmi {
+	top: 0;
+	left: 0;
+	width: 30%;
+	height: 50%;
+	background: #eff;
+}
+#originFrameAss {
+	top: 0;
+	left: 30%;
+	width: 70%;
+	height: calc(50% - 20px);
+}
+#btnFrameAssToSmi {
+	top: calc(50% - 20px);
+	left: 30%;
+	width: calc(30% + 16px);
+	height: 20px;
+}
+#areaFrameSmi {
+	top: 50%;
+	left: 0;
+	width: calc(60% + 16px);
+	height: 50%;
+	overflow-y: scroll;
+	background: #fff;
+}
+#btnJoinFrame {
+	top: calc(50% - 20px);
+	left: calc(60% + 16px);
+	width: 20px;
+	height: calc(50% + 20px);
+}
+#resultFrameSmi {
+	top: calc(50% - 20px);
+	left: calc(60% + 36px);
+	width: calc(40% - 36px);
+	height: 50%;
+	background: #eff;
+}
+#btnApply {
+	top: calc(100% - 20px);
+	left: calc(60% + 36px);
+	width: calc(40% - 36px);
+	height: 20px;
+}
 
-		#originFrameSmi,
-		#targetFrameSmi {
-			position: absolute;
-			width: 50%;
-			min-height: 100%;
-			overflow-x: hidden;
-			overflow-y: hidden;
-			background: transparent;
-		}
-		#targetFrameSmi {
-			left: 50%;
-		}
+#originFrameSmi,
+#targetFrameSmi {
+	position: absolute;
+	width: 50%;
+	min-height: 100%;
+	overflow-x: hidden;
+	overflow-y: hidden;
+	background: transparent;
+}
+#targetFrameSmi {
+	left: 50%;
+}
 	</style>
 </head>
 <body>

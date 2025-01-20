@@ -541,7 +541,7 @@ $(() => {
 		setTimeout(() => { // textarea 렌더링 후 confirm 보여주기 위한 딜레이
 			originFrameAss[0].select();
 			originFrameAss.focus().scrollTop(0).scrollLeft(0);
-			confirm("작업할 내역을 복사하시겠습니까?\nAegisub에서 작업이 필요합니다.", function() {
+			confirm("작업할 내역을 복사하시겠습니까?\nAegisub에서 작업이 필요합니다.", () => {
 				if (opener && opener.binder && !opener.binder._) {
 					// C# 프로그램에서 호출
 					document.execCommand("copy");

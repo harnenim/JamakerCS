@@ -30,7 +30,7 @@
 
         public void Alert(string target, string msg) { _.Alert(target, msg); }
         public void Confirm(string target, string msg) { _.Confirm(target, msg); }
-        public void Prompt(string target, string msg) { _.Prompt(target, msg); }
+        public void Prompt(string target, string msg, string def) { _.Prompt(target, msg, def); }
     }
 
     class Binder : BaseBinder

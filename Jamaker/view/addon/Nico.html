@@ -147,6 +147,7 @@ input[type=number] {
 	background: #000;
 	font-family: 'Malgun Gothic';
 	font-size: 20px;
+	white-space: pre;
 }
 
 #output {
@@ -173,7 +174,7 @@ $(() => {
 	});
 	list.on("click", ".removeLine", function() {
 		const line = $(this).parent();
-		confirm("삭제하시겠습니까?", function() {
+		confirm("삭제하시겠습니까?", () => {
 			line.remove();
 		});
 	});

@@ -58,13 +58,13 @@ window.main = new WebForm();
 			main.mainView.contentWindow.binder = main.binder = new Binder(main);
 			// 브라우저 샘플에선 이게 안 도는 경우가 있나?
 			/*
-			setTimeout(function() {
+			setTimeout(() => {
 				main.mainView.contentWindow.binder.initAfterLoad();
 			}, 1000);
 			*/
 
 			const cd = main.mainView.contentDocument;
-			cd.addEventListener("dragenter", function(e) {
+			cd.addEventListener("dragenter", (e) => {
 				e.preventDefault();
 				main.showDragging();
 			});
@@ -118,7 +118,7 @@ window.main = new WebForm();
 		const replaced = new Replaced(await main.files[file].text(), froms, tos);
 		main.script("showPreview", [ replaced.previewOrigin(), replaced.previewResult() ]);
 		if (replaced.count == 0) {
-			setTimeout(function() {
+			setTimeout(() => {
 				alert("치환한 문자열이 없습니다.");
 			}, 1);
 		}
@@ -231,9 +231,9 @@ Replaced.prototype.preview = function(text, replacedList) {
 		localStorage.setItem("setting.TextReplacer", setting);
 	}
 }
-$(function() {
+$(() => {
 	main.run();
-	window.addEventListener("beforeunload", function(e) {
+	window.addEventListener("beforeunload", (e) => {
 		main.beforeExit(e);
 		return false;
 	});

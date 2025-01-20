@@ -46,7 +46,7 @@ setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 	,	hangeul: 2
 	,	toString: ["invisible", "visible", "hangeul"]
 	}
-	Typing.toType = function(johap, mode, cursor) {
+	Typing.toType = (johap, mode, cursor) => {
 		if (cursor != null) {
 			return Typing.toTypeWithCursor(johap/*origin*/, mode, cursor);
 		}
@@ -61,7 +61,7 @@ setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 		}
 		return result;
 	}
-	Typing.toTypeTypewriter = function(johap) {
+	Typing.toTypeTypewriter = (johap) => {
 		const result = [];
 		for (let i = 0; i < johap.length; i++) {
 			const c = johap[i];
@@ -78,7 +78,7 @@ setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 		}
 		return result;
 	}
-	Typing.toTypeKeyboard = function(johap) {
+	Typing.toTypeKeyboard = (johap) => {
 		const result = [];
 		for (let i = 0; i < johap.length; i++) {
 			const c = johap[i];
@@ -167,7 +167,7 @@ setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 		return result;
 	}
 	
-	Typing.toTypeWithCursor = function(origin, mode, cursor) {
+	Typing.toTypeWithCursor = (origin, mode, cursor) => {
 		const result = [];
 		let type = Johap.toJohap(origin);
 		if (mode == Typing.Mode.keyboard) {
@@ -184,7 +184,7 @@ setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 	}
 	
 	Typing.cho = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
-	Typing.nCho = function(c) {
+	Typing.nCho = (c) => {
 		switch (c) {
 			case 'ㄱ': return 0;
 			case 'ㄲ': return 1;
@@ -208,7 +208,7 @@ setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 		}
 		return 0;
 	}
-	Typing.nJong = function(c) {
+	Typing.nJong = (c) => {
 		switch (c) {
 //			case '　' : return 0;
 			case 'ㄱ': return 1;
@@ -268,7 +268,7 @@ window.Typing = function(mode, cursor) {
 			break;
 	}
 }
-Typing.prototype.typeFunc = function() {}; // delegate
+Typing.prototype.typeFunc = () => {}; // delegate
 Typing.prototype.typeTypewriter = function(c) {
 	if (c >= 'ᄀ' && c <= 'ᄒ') {
 		// 초성
@@ -689,7 +689,7 @@ Subtitle.Attr.prototype.getWidth = function() {
 	if (this.fn) css.fontFamily = this.fn;
 	return Subtitle.Width.getWidth(this.text, css);
 }
-Subtitle.Attr.getWidths = function(attrs) {
+Subtitle.Attr.getWidths = (attrs) => {
 	const widths = [];
 	let width = 0;
 	let index = 0;
@@ -713,10 +713,10 @@ Subtitle.Attr.getWidths = function(attrs) {
 	return widths;
 }
 
-Subtitle.Attr.fromSubtitle = function(subtitle) {
+Subtitle.Attr.fromSubtitle = (subtitle) => {
 	return subtitle.toAttr();
 }
-Subtitle.Attr.linesFromSubtitle = function(subtitle) {
+Subtitle.Attr.linesFromSubtitle = (subtitle) => {
 	const attrs = Subtitle.Attr.fromSubtitle(subtitle);
 	
 	let line = [];
@@ -743,7 +743,7 @@ Subtitle.Attr.linesFromSubtitle = function(subtitle) {
 	}
 	return lines;
 }
-Subtitle.Attr.toSubtitle = function(attrs, subtitle) {
+Subtitle.Attr.toSubtitle = (attrs, subtitle) => {
 	subtitle.fromAttr(attrs);
 }
 
@@ -763,7 +763,7 @@ Subtitle.Attr.prototype.toHtml = function() {
 		+ $("<a>").text(text).html().split(" ").join("&nbsp;").split("\n").join("​<br>​")
 		+ "</span>";
 }
-Subtitle.Attr.toHtml = function(attrs) {
+Subtitle.Attr.toHtml = (attrs) => {
 	let result = "";
 	for (let i = 0; i < attrs.length; i++) {
 		result += attrs[i].toHtml();
@@ -785,7 +785,7 @@ Subtitle.Ass = function(start, end, style, text) {
 }
 Subtitle.Ass.cols = [ "Layer", "Start", "End", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text" ];
 
-Subtitle.Ass.int2Time = function(time) {
+Subtitle.Ass.int2Time = (time) => {
 	time = Math.round(time);
 	const h = Math.floor(time / 360000);
 	const m = Math.floor(time / 6000) % 60;
@@ -800,7 +800,7 @@ function intPadding(value, length = 2) {
 	}
 	return value;
 }
-Subtitle.Ass.time2Int = function(time) {
+Subtitle.Ass.time2Int = (time) => {
 	const vs = time.split(':');
 	return (Number(vs[0]) * 360000) + (Number(vs[1]) * 6000) + (Number(vs[2].split(".").join("")));
 }
@@ -808,7 +808,7 @@ Subtitle.Ass.time2Int = function(time) {
 Subtitle.Ass.prototype.toTxt = function() {
 	return "Dialogue: 0," + Subtitle.Ass.int2Time(this.start) + "," + Subtitle.Ass.int2Time(this.end) + "," + this.style + ",,0,0,0,," + this.text;
 }
-Subtitle.Ass.ss2txt = function(asss) {
+Subtitle.Ass.ss2txt = (asss) => {
 	let result = "";
 	for (let i = 0; i < asss.length; i++) {
 		result += asss[i].toTxt() + "\r\n";
@@ -816,14 +816,14 @@ Subtitle.Ass.ss2txt = function(asss) {
 	return result;
 }
 
-Subtitle.Ass.sColorFromAttr = function(soColor) {
+Subtitle.Ass.sColorFromAttr = (soColor) => {
 	return soColor.length == 6 ? "&H" + soColor.substring(4, 6) + soColor.substring(2, 4) + soColor.substring(0, 2) + "&" : "";
 }
-Subtitle.Ass.colorToAttr = function(soColor) {
+Subtitle.Ass.colorToAttr = (soColor) => {
 	return "" + soColor.substring(6, 8) + soColor.substring(4, 6) + soColor.substring(2, 4);
 }
-Subtitle.Ass.colorFromAttr = function(attrColor) {
-	return this.sColorFromAttr(attrColor);
+Subtitle.Ass.colorFromAttr = (attrColor) => {
+	return Subtitle.Ass.sColorFromAttr(attrColor);
 }
 
 Subtitle.Ass.prototype.toAttr = function() {
@@ -1144,7 +1144,7 @@ Subtitle.Smi.prototype.toTxt = function() {
 	}
 	return "<Sync Start=" + this.start + "><P Class=KRCC" + (this.syncType == Subtitle.SyncType.inner ? "\t" : (this.syncType == Subtitle.SyncType.frame ? " " : "")) + ">\n" + this.text;
 }
-Subtitle.Smi.smi2txt = function(smis) {
+Subtitle.Smi.smi2txt = (smis) => {
 	let result = "";
 	for (let i = 0; i < smis.length; i++) {
 		result += smis[i].toTxt() + "\n";
@@ -1303,10 +1303,10 @@ function sToAttrColor(soColor) {
 	}
 	return soColor;
 }
-Subtitle.Smi.colorToAttr = function(soColor) {
+Subtitle.Smi.colorToAttr = (soColor) => {
 	return sToAttrColor(soColor);
 }
-Subtitle.Smi.colorFromAttr = function(attrColor) {
+Subtitle.Smi.colorFromAttr = (attrColor) => {
 	return "#" + attrColor;
 }
 
@@ -1423,6 +1423,9 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 								case "invisible":
 									tAttr.cursor = Typing.Cursor.invisible;
 									break;
+								case "visible":
+									tAttr.cursor = Typing.Cursor.visible;
+									break;
 								case "hangeul":
 									tAttr.cursor = Typing.Cursor.hangeul;
 									break;
@@ -1464,7 +1467,7 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 	}
 	return this;
 }
-Subtitle.Smi.SetStyle = function(attr, status) {
+Subtitle.Smi.setStyle = (attr, status) => {
 	attr.b = status.b > 0;
 	attr.i = status.i > 0;
 	attr.u = status.u > 0;
@@ -1475,10 +1478,10 @@ Subtitle.Smi.SetStyle = function(attr, status) {
 	attr.shake = (status.shake.length > 0) ? status.shake[status.shake.length - 1] : null;
 	attr.typing = (status.typing.length > 0) ? status.typing[status.typing.length - 1] : null;
 }
-Subtitle.Smi.SetFurigana = function(attr, furigana) {
+Subtitle.Smi.setFurigana = (attr, furigana) => {
 	attr.furigana = furigana ? furigana : null;
 }
-Subtitle.Smi.toAttr = function(text) {
+Subtitle.Smi.toAttr = (text) => {
 	const status = new Subtitle.Smi.Status();
 	let last = new Subtitle.Attr();
 	const result = [last];
@@ -1497,17 +1500,17 @@ Subtitle.Smi.toAttr = function(text) {
 			case "B":
 				if (last.text.length > 0)
 					result.push((last = new Subtitle.Attr()));
-				Subtitle.Smi.SetStyle(last, status.setB(true));
+				Subtitle.Smi.setStyle(last, status.setB(true));
 				break;
 			case "I":
 				if (last.text.length > 0)
 					result.push((last = new Subtitle.Attr()));
-				Subtitle.Smi.SetStyle(last, status.setI(true));
+				Subtitle.Smi.setStyle(last, status.setI(true));
 				break;
 			case "U":
 				if (last.text.length > 0)
 					result.push((last = new Subtitle.Attr()));
-				Subtitle.Smi.SetStyle(last, status.setU(true));
+				Subtitle.Smi.setStyle(last, status.setU(true));
 				break;
 			case "FONT":
 				if (last.text.length > 0)
@@ -1517,7 +1520,7 @@ Subtitle.Smi.toAttr = function(text) {
 					for (let name in tag.attrs) {
 						attrs.push([name, tag.attrs[name]]);
 					}
-					Subtitle.Smi.SetStyle(last, status.setFont(attrs));
+					Subtitle.Smi.setStyle(last, status.setFont(attrs));
 				}
 				break;
 			case "RUBY":
@@ -1544,22 +1547,22 @@ Subtitle.Smi.toAttr = function(text) {
 			case "B":
 				if (last.text.length > 0)
 					result.push((last = new Subtitle.Attr()));
-				Subtitle.Smi.SetStyle(last, status.setB(false));
+				Subtitle.Smi.setStyle(last, status.setB(false));
 				break;
 			case "I":
 				if (last.text.length > 0)
 					result.push((last = new Subtitle.Attr()));
-				Subtitle.Smi.SetStyle(last, status.setI(false));
+				Subtitle.Smi.setStyle(last, status.setI(false));
 				break;
 			case "U":
 				if (last.text.length > 0)
 					result.push((last = new Subtitle.Attr()));
-				Subtitle.Smi.SetStyle(last, status.setU(false));
+				Subtitle.Smi.setStyle(last, status.setU(false));
 				break;
 			case "FONT":
 				if (last.text.length > 0)
 					result.push((last = new Subtitle.Attr()));
-				Subtitle.Smi.SetStyle(last, status.setFont(null));
+				Subtitle.Smi.setStyle(last, status.setFont(null));
 				break;
 			case "RUBY":
 				if (last.text.length > 0)
@@ -1567,7 +1570,7 @@ Subtitle.Smi.toAttr = function(text) {
 				break;
 			case "RT":
 				if (ruby) {
-					Subtitle.Smi.SetFurigana(ruby, furigana);
+					Subtitle.Smi.setFurigana(ruby, furigana);
 					furigana = null;
 					last = ruby;
 				}
@@ -1802,7 +1805,7 @@ Subtitle.Smi.prototype.fromAttr = function(attrs) {
 	this.text = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
 	return this;
 }
-Subtitle.Smi.fromAttr = function(attrs) {
+Subtitle.Smi.fromAttr = (attrs) => {
 	let text = "";
 	const lastAttrs = [];
 	
@@ -1901,7 +1904,7 @@ Subtitle.Smi.prototype.fromSync = function(sync) {
 	return this;
 }
 
-Subtitle.Smi.getLineWidth = function(text) {
+Subtitle.Smi.getLineWidth = (text) => {
 	return Subtitle.Width.getWidth(Subtitle.Smi.toAttr(text));
 }
 
@@ -1928,7 +1931,7 @@ Subtitle.Smi.Color = function(index, target, color) {
 		}
 	}
 }
-Subtitle.Smi.Color.v = function(c) {
+Subtitle.Smi.Color.v = (c) => {
 	if (c.length == 1) {
 		if (c >= '0' && c <= '9')
 			return c.charCodeAt() - 48
@@ -1946,10 +1949,10 @@ Subtitle.Smi.Color.v = function(c) {
 		return v;
 	}
 }
-Subtitle.Smi.Color.c = function(v) {
+Subtitle.Smi.Color.c = (v) => {
 	return v < 10 ? String.fromCharCode(v + 48) : String.fromCharCode(v + 55);
 }
-Subtitle.Smi.Color.hex = function(v) {
+Subtitle.Smi.Color.hex = (v) => {
 	return "" + Subtitle.Smi.Color.c(v / 16) + Subtitle.Smi.Color.c(v % 16);
 }
 Subtitle.Smi.Color.prototype.get = function(value, total) {
@@ -1957,7 +1960,7 @@ Subtitle.Smi.Color.prototype.get = function(value, total) {
 	     + Subtitle.Smi.Color.hex(((this.g * (total - value)) + (this.tg * value)) / total)
 	     + Subtitle.Smi.Color.hex(((this.b * (total - value)) + (this.tb * value)) / total);
 }
-Subtitle.Smi.normalize = function(smis, withComment=false, fps=23.976) {
+Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 	const origin = new Subtitle.SmiFile();
 	origin.body = smis;
 	origin.fromTxt(origin.toTxt());
@@ -2305,7 +2308,7 @@ Subtitle.Smi.normalize = function(smis, withComment=false, fps=23.976) {
 	
 	return result;
 }
-Subtitle.Smi.fillEmptySync = function(smis) {
+Subtitle.Smi.fillEmptySync = (smis) => {
 	for (let i = 0; i < smis.length - 1; i++) {
 		const smi = smis[i];
 		
@@ -2583,7 +2586,7 @@ Subtitle.Srt = function(start, end, text) {
 Subtitle.Srt.prototype.toTxt = function() {
 	return Subtitle.Srt.int2Time(this.start) + "-->" + Subtitle.Srt.int2Time(this.end) + "\n" + this.text + "\n";
 }
-Subtitle.Srt.srt2txt = function(srts) {
+Subtitle.Srt.srt2txt = (srts) => {
 	let result = "";
 	for (let i = 0; i < srts.length; i++) {
 		result += srts[i].toTxt() + "\n";
@@ -2605,7 +2608,7 @@ Subtitle.Srt.prototype.fromSync = function(sync) {
 	return this;
 }
 
-Subtitle.Srt.int2Time = function(time) {
+Subtitle.Srt.int2Time = (time) => {
 	const h = Math.floor(time / 3600000);
 	const m = Math.floor(time / 60000) % 60;
 	const s = Math.floor(time / 1000) % 60;

@@ -23,7 +23,7 @@ Part.Type = {
 	,	AMP: 2
 };
 Part.SPAN = $("<span>");
-Part.htmlToText = function(html) {
+Part.htmlToText = (html) => {
 	return Part.SPAN.html(html).text();
 }
 Part.prototype.doReplace = function() {
@@ -330,7 +330,7 @@ function checkSpell(text, data=null) {
 		,	type: "post"
 		,	data: { text1: operation.getParam() }
 		,	dataType: "text"
-		,	success: function(result) {
+		,	success: (result) => {
 				const lines = result.split("\n");
 				for (let i = 0; i < lines.length; i++) {
 					if (lines[i].startsWith("\tdata = ")) {
@@ -339,7 +339,7 @@ function checkSpell(text, data=null) {
 					}
 				}
 			}
-		,	error: function(e) {
+		,	error: (e) => {
 				console.log(e);
 			}
 	});

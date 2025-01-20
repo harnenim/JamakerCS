@@ -18,7 +18,7 @@ function show(index) {
 let opened = null;
 const submitFuncs = {};
 const refreshFuncs = {};
-let refreshTableCommand = function() {};
+let refreshTableCommand = () => {};
 
 const saved = {};
 function checkSaved(key, ok, no) {
@@ -44,7 +44,7 @@ function requestClose(keys) {
 	if (keys.length) {
 		for (let i = 0; i < keys.length; i++) {
 			const key = keys[i];
-			checkSaved(key, function() {
+			checkSaved(key, () => {
 				requestClose(keys.slice(i + 1));
 			});
 			success = false;
@@ -99,7 +99,7 @@ $(() => {
 	const inputCommandFunc = $("#inputCommandFunc");
 
 	{	// 창
-		(refreshFuncs["window"] = function(setting) {
+		(refreshFuncs["window"] = (setting) => {
 			refresh($("#window"), setting);
 			
 			// 값에 맞춰 fieldset 이동
@@ -107,79 +107,80 @@ $(() => {
 			const viewer = [setting.viewer.window, fieldViewer];
 			const player = [setting.player.window, fieldPlayer];
 			
-			const ecss = {};
-			const vcss = {};
-			const pcss = {};
-			
-			function setLeft(css, x) {
-				css.left = x + 1;
-			}
-			function setRight(css, x) {
-				css.width = (x - css.left - 2) + "%";
-				css.left = css.left + "%";
-			}
-			function setTop(css, y) {
-				css.top = y + 1;
-			}
-			function setBottom(css, y) {
-				css.height = (y - css.top - 2) + "%";
-				css.top = css.top + "%";
-			}
-
-			const targetXY = [
-				[	[ editor[0].x, function(x) { setLeft(ecss, x); } ]
-				,	[ editor[0].x + editor[0].width, function(x) { setRight(ecss, x); } ]
-				,	[ viewer[0].x, function(x) { setLeft(vcss, x); } ]
-				,	[ viewer[0].x + viewer[0].width, function(x) { setRight(vcss, x); } ]
-				,	[ player[0].x, function(x) { setLeft(pcss, x); } ]
-				,	[ player[0].x + player[0].width, function(x) { setRight(pcss, x); } ]
-				]
-			,	[	[ editor[0].y, function(y) { setTop(ecss, y); } ]
-				,	[ editor[0].y + editor[0].height, function(y) { setBottom(ecss, y); } ]
-				,	[ viewer[0].y, function(y) { setTop(vcss, y); } ]
-				,	[ viewer[0].y + viewer[0].height, function(y) { setBottom(vcss, y); } ]
-				,	[ player[0].y, function(y) { setTop(pcss, y); } ]
-				,	[ player[0].y + player[0].height, function(y) { setBottom(pcss, y); } ]
-				]
-			];
-			for (let xy = 0; xy < 2; xy++) {
-				const targets = targetXY[xy];
-				targets.sort((a, b) => { return a[0] - b[0]; });
+			{
+				const ecss = {};
+				const vcss = {};
+				const pcss = {};
 				
-				let last = [targets[0]];
-				const ps = [last];
-				for (let i = 1; i < targets.length; i++) {
-					const curr = targets[i];
-					if (curr[0] == last[0][0]) {
-						last.push(curr);
-					} else {
-						last = [curr];
-						ps.push(last);
+				function setLeft(css, x) {
+					css.left = x + 1;
+				}
+				function setRight(css, x) {
+					css.width = (x - css.left - 2) + "%";
+					css.left = css.left + "%";
+				}
+				function setTop(css, y) {
+					css.top = y + 1;
+				}
+				function setBottom(css, y) {
+					css.height = (y - css.top - 2) + "%";
+					css.top = css.top + "%";
+				}
+				
+				const targetXY = [
+					[	[ editor[0].x, (x) => { setLeft(ecss, x); } ]
+					,	[ editor[0].x + editor[0].width, (x) => { setRight(ecss, x); } ]
+					,	[ viewer[0].x, (x) => { setLeft(vcss, x); } ]
+					,	[ viewer[0].x + viewer[0].width, (x) => { setRight(vcss, x); } ]
+					,	[ player[0].x, (x) => { setLeft(pcss, x); } ]
+					,	[ player[0].x + player[0].width, (x) => { setRight(pcss, x); } ]
+					]
+				,	[	[ editor[0].y, (y) => { setTop(ecss, y); } ]
+					,	[ editor[0].y + editor[0].height, (y) => { setBottom(ecss, y); } ]
+					,	[ viewer[0].y, (y) => { setTop(vcss, y); } ]
+					,	[ viewer[0].y + viewer[0].height, (y) => { setBottom(vcss, y); } ]
+					,	[ player[0].y, (y) => { setTop(pcss, y); } ]
+					,	[ player[0].y + player[0].height, (y) => { setBottom(pcss, y); } ]
+					]
+				];
+				for (let xy = 0; xy < 2; xy++) {
+					const targets = targetXY[xy];
+					targets.sort((a, b) => { return a[0] - b[0]; });
+					
+					let last = [targets[0]];
+					const ps = [last];
+					for (let i = 1; i < targets.length; i++) {
+						const curr = targets[i];
+						if (curr[0] == last[0][0]) {
+							last.push(curr);
+						} else {
+							last = [curr];
+							ps.push(last);
+						}
+					}
+					function getPos(i) {
+						return 1 + ((98 / (ps.length - 1)) * i);
+					}
+					for (let i = 0; i < ps.length; i++) {
+						const curr = ps[i];
+						for (let j = 0; j < curr.length; j++) {
+							curr[j][1](getPos(i));
+						}
 					}
 				}
-				function getPos(i) {
-					return 1 + ((98 / (ps.length - 1)) * i);
-				}
-				for (let i = 0; i < ps.length; i++) {
-					const curr = ps[i];
-					for (let j = 0; j < curr.length; j++) {
-						curr[j][1](getPos(i));
-					}
-				}
+				fieldEditor.css(ecss);
+				fieldViewer.css(vcss);
+				fieldPlayer.css(pcss);
 			}
 			
-			fieldEditor.css(ecss);
-			fieldViewer.css(vcss);
-			fieldPlayer.css(pcss);
-
 			setSaved("window"
 				,  (JSON.stringify(setting.window) == JSON.stringify(opener.setting.window))
 				&& (JSON.stringify(setting.viewer.window) == JSON.stringify(opener.setting.viewer.window))
-                && (JSON.stringify(setting.player.window) == JSON.stringify(opener.setting.player.window))
+				&& (JSON.stringify(setting.player.window) == JSON.stringify(opener.setting.player.window))
 			);
 		})(setting);
 	
-		submitFuncs["window"] = function() {
+		submitFuncs["window"] = () => {
 			setting.window.x             = Number($("input[name=window_x]"            ).val());
 			setting.window.y             = Number($("input[name=window_y]"            ).val());
 			setting.window.width         = Number($("input[name=window_width]"        ).val());
@@ -204,7 +205,7 @@ $(() => {
 			opener.binder.getWindows(["editor", "viewer", "player"]);
 		});
 		// C#에서 Script("afterGetWindow", object[] { "editor", x, y, w, h });
-		opener.afterGetWindow = function(id, x, y, w, h) {
+		opener.afterGetWindow = (id, x, y, w, h) => {
 			const name = (id == "editor")
 			           ? "window"
 			           : (id + "_window");
@@ -216,12 +217,12 @@ $(() => {
 	}
 	
 	{	// 싱크
-		(refreshFuncs["sync"] = function(setting) {
+		(refreshFuncs["sync"] = (setting) => {
 			refresh($("#sync"), setting);
-            setSaved("sync", (JSON.stringify(setting.sync) == JSON.stringify(opener.setting.sync)));
+			setSaved("sync", (JSON.stringify(setting.sync) == JSON.stringify(opener.setting.sync)));
 		})(setting);
 		
-		submitFuncs["sync"] = function() {
+		submitFuncs["sync"] = () => {
 			const preset = $("input[name=sync_preset]").val();
 			
 			// TODO: 프리셋 양식 오류 검증 필요?
@@ -245,9 +246,9 @@ $(() => {
 	{	// 단축키
 		saved.cmd = { status: true, name: "단축키 설정" };
 		
-		refreshFuncs["cmd"] = function(setting) {
+		refreshFuncs["cmd"] = (setting) => {
 			if (setting == opener.setting) {
-				checkSaved("cmd", function() {
+				checkSaved("cmd", () => {
 					setSaved("cmd", true);
 					inputCommandName.val("");
 					inputCommandKey .val("");
@@ -255,7 +256,7 @@ $(() => {
 				});
 				
 			} else {
-				confirm("현재 값은 복원할 수 없습니다.", function() {
+				confirm("현재 값은 복원할 수 없습니다.", () => {
 					opener.setting.command = opener.deepCopyObj(setting.command);
 					setSaved("cmd", true);
 					inputCommandName.val("");
@@ -272,7 +273,7 @@ $(() => {
 		const withs = ["withCtrls", "withAlts", "withCtrlAlts", "withCtrlShifts"];
 		const keys = "pqrstuvwxyz{ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890";
 		const keyNames = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"].concat("ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890".split(""));
-		(refreshTableCommand = function() {
+		(refreshTableCommand = () => {
 			tbody.empty();
 			for (let i = 0; i < keys.length; i++) {
 				const key = keys[i];
@@ -373,7 +374,7 @@ $(() => {
 				// 현재 작업 중인 것
 				return;
 			}
-			checkSaved("cmd", function() {
+			checkSaved("cmd", () => {
 				setSaved("cmd", true);
 				inputCommandName.val(data.name);
 				inputCommandKey .val(keyName);
@@ -453,7 +454,7 @@ $(() => {
 					return;
 				}
 				$("#areaTableCommand").scrollTop(keyIndex * 20);
-				checkSaved("cmd", function() {
+				checkSaved("cmd", () => {
 					inputCommandName.val(name);
 					inputCommandKey .val(keyName);
 					inputCommandFunc.val(func);
@@ -503,7 +504,7 @@ $(() => {
 			}
 		});
 
-		submitFuncs["cmd"] = function() {
+		submitFuncs["cmd"] = () => {
 			const name = inputCommandName.val();
 			if (name) {
 				let func = inputCommandFunc.val();
@@ -520,12 +521,12 @@ $(() => {
 	}
 	
 	{	// 자동완성
-		(refreshFuncs["ac"] = function(setting) {
+		(refreshFuncs["ac"] = (setting) => {
 			refresh($("#ac"), setting);
-            setSaved("ac", (JSON.stringify(setting.autoComplete) == JSON.stringify(opener.setting.autoComplete)));
+			setSaved("ac", (JSON.stringify(setting.autoComplete) == JSON.stringify(opener.setting.autoComplete)));
 		})(setting);
 	
-		submitFuncs["ac"] = function() {
+		submitFuncs["ac"] = () => {
 			$("#ac").find("textarea").each((_, el) => {
 				const textarea = $(el);
 				const name = "setting['" + textarea.attr("name").split("_").join("']['") + "']";
@@ -562,14 +563,14 @@ $(() => {
 					.append($("<button type='button' class='remove'>").text("✕"))
 			);
 		}
-		(refreshFuncs["replace"] = function(setting) {
+		(refreshFuncs["replace"] = (setting) => {
 			refresh($("#replace"), setting);
 			replaceList.empty();
 			for (let i = 0; i < setting.replace.length; i++) {
 				appendReplace(setting.replace[i]);
 			}
 			setSaved("replace"
-				, (setting.saveWithNormalize == opener.setting.saveWithNormalize)
+				,  (setting.saveWithNormalize == opener.setting.saveWithNormalize)
 				&& (JSON.stringify(setting.command) == JSON.stringify(opener.setting.command))
 			);
 		})(setting);
@@ -603,7 +604,7 @@ $(() => {
 			});
 		});
 		
-		submitFuncs["replace"] = function() {
+		submitFuncs["replace"] = () => {
 			const replaces = [];
 			
 			replaceList.find("li").each((_, el) => {
@@ -637,12 +638,12 @@ $(() => {
 			}
 		}).on("click", "li button", function() {
 			const key = $(this).parent().data("key");
-			confirm("삭제하시겠습니까?", function() {
+			confirm("삭제하시겠습니까?", () => {
 				delete(setting.colorPreset[key]);
 				refreshPreset(setting);
 			});
 		});
-		$("#btnAddPreset").on("click", function() {
+		$("#btnAddPreset").on("click", () => {
 			const name = prompt("프리셋 이름을 입력하세요.");
 			if (!name) {
 				alert("이름이 입력되지 않았습니다.");
@@ -672,14 +673,14 @@ $(() => {
 			}
 		}
 
-		(refreshFuncs["style"] = function(setting) {
+		(refreshFuncs["style"] = () => {
 			refresh($("#style"), setting);
 			refreshPreset(setting);
 			setSaved("style"
 				,  (setting.useTab == opener.setting.useTab)
-                && (setting.viewer.useAlign == opener.setting.viewer.useAlign)
-                && (JSON.stringify(setting.highlight  ) == JSON.stringify(opener.setting.highlight  ))
-                && (JSON.stringify(setting.color      ) == JSON.stringify(opener.setting.color      ))
+				&& (setting.viewer.useAlign == opener.setting.viewer.useAlign)
+				&& (JSON.stringify(setting.highlight  ) == JSON.stringify(opener.setting.highlight  ))
+				&& (JSON.stringify(setting.color      ) == JSON.stringify(opener.setting.color      ))
 				&& (JSON.stringify(setting.colorPreset) == JSON.stringify(opener.setting.colorPreset))
 				&& (JSON.stringify(setting.newFile    ) == JSON.stringify(opener.setting.newFile    ))
 				&& (JSON.stringify(setting.viewer.css ) == JSON.stringify(opener.setting.viewer.css ))
@@ -713,7 +714,7 @@ $(() => {
 			setSaved("style", false);
 		});
 	
-		submitFuncs["style"] = function() {
+		submitFuncs["style"] = () => {
 			setting.useTab           = $("input[name=useTab]").prop("checked");
 			setting.highlight.parser = $("select[name=highlight_parser]").val();
 			setting.highlight.style  = $("select[name=highlight_style]").val();
@@ -741,11 +742,11 @@ $(() => {
 	}
 	
 	{	// 플레이어
-		(refreshFuncs["player"] = function(setting) {
+		(refreshFuncs["player"] = (setting) => {
 			refresh($("#player"), setting);
 			setSaved("player"
 				,  (setting.exts == opener.setting.exts)
-                && (JSON.stringify(setting.player.control) == JSON.stringify(opener.setting.player.control))
+				&& (JSON.stringify(setting.player.control) == JSON.stringify(opener.setting.player.control))
 			);
 		})(setting);
 	
@@ -775,11 +776,11 @@ $(() => {
 		$("#btnPlayerPath").on("click", function() {
 			opener.binder.selectPlayerPath();
 		});
-		opener.afterSelectPlayerPath = function(path) {
+		opener.afterSelectPlayerPath = (path) => {
 			$("input[name=player_control_what_path]").val(path);
 		};
 
-		submitFuncs["player"] = function() {
+		submitFuncs["player"] = () => {
 			setting.player.exts = $("input[name=player_exts]").val();
 			const dll = setting.player.control.dll = select.val();
 			let dllSetting = setting.player.control[dll];
@@ -840,12 +841,12 @@ $(() => {
 					.append($("<button type='button' class='remove'>").text("✕"))
 			);
 		}
-		(refreshFuncs["menu"] = function(setting) {
+		(refreshFuncs["menu"] = (setting) => {
 			menuList.empty();
 			for (let i = 0; i < setting.menu.length; i++) {
 				appendMenu(setting.menu[i]);
 			}
-            setSaved("menu", (JSON.stringify(setting.menu) == JSON.stringify(opener.setting.menu)));
+			setSaved("menu", (JSON.stringify(setting.menu) == JSON.stringify(opener.setting.menu)));
 		})(setting);
 		
 		$("#menu > .add-menu").on("click", function() {
@@ -876,7 +877,7 @@ $(() => {
 		});
 		menuList.on("click", "legend > button.remove", function() {
 			const menu = $(this).parents("li");
-			confirm("삭제하시겠습니까?", function() {
+			confirm("삭제하시겠습니까?", () => {
 				menu.remove();
 				setSaved("menu", false);
 			});
@@ -900,13 +901,13 @@ $(() => {
 		});
 		menuList.on("click", "ol > li > button.remove", function() {
 			const subMenu = $(this).parent();
-			confirm("삭제하시겠습니까?", function() {
+			confirm("삭제하시겠습니까?", () => {
 				subMenu.remove();
 				setSaved("menu", false);
 			});
 		});
 		
-		submitFuncs["menu"] = function() {
+		submitFuncs["menu"] = () => {
 			const menus = [];
 			
 			menuList.find("fieldset").each((_, el) => {
@@ -1052,16 +1053,25 @@ fieldset li { margin-bottom: 2px; }
 }
 
 /* 창 */
-#fieldEditor,
-#fieldViewer,
-#fieldPlayer {
+#btnGetWindows {
+	padding: 4px;
+}
+#fieldWindow {
+	width: 100%;
+	height: calc(100% - 50px);
+	position: relative;
+}
+#fieldWindow > fieldset {
 	position: absolute;
 }
-#fieldEditor:hover,
-#fieldViewer:hover,
-#fieldPlayer:hover {
+#fieldWindow > fieldset:hover {
 	z-index: 9999;
 	background: #f8f8f8;
+}
+#fieldWindow > fieldset span {
+	display: inline-block;
+	width: 16px;
+	text-align: center;
 }
 
 /* 단축키 */
@@ -1223,33 +1233,33 @@ fieldset ol button,
 <div id="settingArea">
 	<form id="window" style="height: 100%;">
 		<div>
-			<button type="button" id="btnGetWindows" style="padding: 4px;">현재 위치 가져오기</button>
+			<button type="button" id="btnGetWindows">현재 위치 가져오기</button>
 			<label><input type="checkbox" name="window_follow" /> 창 함께 이동</label>
 		</div>
-		<div style="width: 100%; height: calc(100% - 50px); position: relative;">
+		<div id="fieldWindow">
 			<fieldset id="fieldEditor">
 				<legend>에디터</legend>
-				<label>↦: <input type="number" name="window_x" /></label>
-				<label>↧: <input type="number" name="window_y" /></label>
+				<label><span>↦</span>: <input type="number" name="window_x" /></label>
+				<label><span>↧</span>: <input type="number" name="window_y" /></label>
 				<br />
-				<label>↔: <input type="number" name="window_width" /></label>
-				<label>↕: <input type="number" name="window_height" /></label>
+				<label><span>↔</span>: <input type="number" name="window_width" /></label>
+				<label><span>↕</span>: <input type="number" name="window_height" /></label>
 			</fieldset>
 			<fieldset id="fieldViewer">
 				<legend>미리보기</legend>
-				<label>↦: <input type="number" name="viewer_window_x" /></label>
-				<label>↧: <input type="number" name="viewer_window_y" /></label>
+				<label><span>↦</span>: <input type="number" name="viewer_window_x" /></label>
+				<label><span>↧</span>: <input type="number" name="viewer_window_y" /></label>
 				<br />
-				<label>↔: <input type="number" name="viewer_window_width" /></label>
-				<label>↕: <input type="number" name="viewer_window_height" /></label>
+				<label><span>↔</span>: <input type="number" name="viewer_window_width" /></label>
+				<label><span>↕</span>: <input type="number" name="viewer_window_height" /></label>
 			</fieldset>
 			<fieldset id="fieldPlayer">
 				<legend>플레이어</legend>
-				<label>↦: <input type="number" name="player_window_x" /></label>
-				<label>↧: <input type="number" name="player_window_y" /></label>
+				<label><span>↦</span>: <input type="number" name="player_window_x" /></label>
+				<label><span>↧</span>: <input type="number" name="player_window_y" /></label>
 				<br />
-				<label>↔: <input type="number" name="player_window_width" /></label>
-				<label>↕: <input type="number" name="player_window_height" /></label>
+				<label><span>↔</span>: <input type="number" name="player_window_width" /></label>
+				<label><span>↕</span>: <input type="number" name="player_window_height" /></label>
 				<br />
 				<label><input type="checkbox" name="player_window_use" /> 위치 고정 사용</label>
 			</fieldset>

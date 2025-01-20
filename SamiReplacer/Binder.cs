@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace Jamaker
+﻿namespace Jamaker
 {
     class BaseBinder
     {

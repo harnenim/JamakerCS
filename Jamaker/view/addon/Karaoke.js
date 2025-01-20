@@ -36,7 +36,7 @@ function refreshKanji() {
 	$("#inputKanji").val(savedKanjiList.substring(savedKanjiList.indexOf("\n") + 1)); // 첫 줄은 기본값 버전이므로 제외
 }
 
-windowName = "addon";
+window.windowName = "karaoke";
 
 //let savedKanjiList = localStorage.getItem("kanjiList");
 const KANJI_FILE = "Karaoke.txt";
@@ -148,7 +148,7 @@ for (let i = 0; i < gana.length; i++) {
 
 $(() => {
 	if (loadAddonSetting) {
-		loadAddonSetting(KANJI_FILE, function(text) {
+		loadAddonSetting(KANJI_FILE, (text) => {
 			afterLoadKanji(savedKanjiList = text);
 		});
 	}
@@ -188,10 +188,10 @@ $(() => {
 		,	"-140%"
 	];
 	const validates = [ null
-		,	function() { return true; }
-		,	function() { return true; }
-		,	function() { return true; }
-		,	function() { return true; }
+		,	() => { return true; }
+		,	() => { return true; }
+		,	() => { return true; }
+		,	() => { return true; }
 	];
 	const runs = [ null ];
 	
@@ -214,7 +214,7 @@ $(() => {
 	});
 	
 	{	// Step 1
-		function run() {
+		let run = runs[1] = () => {
 			const lines = inputLyrics.val().trim().split("\n");
 			const divider = Number(inputDivider.val());
 			
@@ -277,8 +277,7 @@ $(() => {
 			inputRead.val(read.join("\n"));
 			inputTran.val(tran.join("\n"));
 		}
-		runs[1] = run;
-
+		
 		let checker = null;
 		function runAfterCheck() {
 			const c = checker = new Date();
@@ -299,7 +298,7 @@ $(() => {
 	}
 	
 	{	// Step 2
-		validates[2] = function() {
+		validates[2] = () => {
 			// 원문/독음/번역 줄 개수가 같아야 진행 가능
 			const o = inputOrig.val().trim().split("\n").length;
 			const r = inputRead.val().trim().split("\n").length;
@@ -652,7 +651,7 @@ $(() => {
 	}
 	
 	{	// Step 3
-		validates[3] = function() {
+		validates[3] = () => {
 			// 음절 수 맞춰졌어야 진행 가능
 			return $("#page3 .line.error").length == 0;
 		};
