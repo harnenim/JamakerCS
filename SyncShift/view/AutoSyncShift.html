@@ -32,7 +32,7 @@ function showAudioSelector(list, isOrigin, withSaveSkf, trustKf) {
 		,	trustKf: trustKf
 	});
 }
-$(function() {
+$(() => {
 	const sa = $("#selectAudio");
 	sa.find(".list").on("click", "li", function() {
 		binder.selectAudio($(this).text().split("ː")[0], sa.data("isOrigin"), sa.data("withSaveSkf"), sa.data("trustKf"));
@@ -53,28 +53,28 @@ function syncText(sync) {
 	return h + ":" + (m > 9 ? "" : "0") + m + ":" + (s > 9 ? "" : "0") + s + ":" + (ms > 99 ? "" : "0") + (ms > 9 ? "" : "0") + ms;
 }
 
-$(function() {
-	$(".preset").each(function() {
-		const preset = $(this);
+$(() => {
+	$(".preset").each((_, el) => {
+		const preset = $(el);
 		preset.parent().data("preset", preset.clone().removeClass("preset"));
 		preset.remove();
 	});
 	$fieldOrigin = $("#fieldOrigin");
 	$fieldTarget = $("#fieldTarget");
 	
-	$("#btnAddRangeList").on("click", function() { addRange (); });
-	$("#btnAddShiftList").on("click", function() { addShift (); });
+	$("#btnAddRangeList").on("click", () => { addRange (); });
+	$("#btnAddShiftList").on("click", () => { addShift (); });
 	
-	$("#btnCalc"        ).on("click", function() { calcShift(); });
-	$("#btnApply"       ).on("click", function() { apply    (); });
-	$("#btnSave"        ).on("click", function() { save     (); });
-	$("#btnApplySave"   ).on("click", function() { applySave(); });
+	$("#btnCalc"        ).on("click", () => { calcShift(); });
+	$("#btnApply"       ).on("click", () => { apply    (); });
+	$("#btnSave"        ).on("click", () => { save     (); });
+	$("#btnApplySave"   ).on("click", () => { applySave(); });
 	
 	function findSyncLine(sync) {
 		let result = null;
-		$fieldOrigin.find(".preview-body").children().each(function() {
-			if (sync <= $(this).data("item").ms) {
-				result = $(this);
+		$fieldOrigin.find(".preview-body").children().each((_, el) => {
+			if (sync <= $(el).data("item").ms) {
+				result = $(el);
 				return false;
 			}
 		});
@@ -189,7 +189,7 @@ function setOriginSubtitleFile(path, text) {
 	    maxBlank = Number(maxBlank) * 1000;
     } else {
     	maxBlank = 999999999;
-    	setTimeout(function() {
+    	setTimeout(() => {
 	    	alert("공백 시간은 숫자여야 합니다.");
 	    	$("#inputMaxBlank").val(maxBlank = 30);
     	}, 1);
@@ -201,12 +201,12 @@ function setOriginSubtitleFile(path, text) {
 			operation.origin = new Subtitle.SmiFile(text);
 			operation.input = Subtitle.SmiFile.textToHolds(text);
 			operation.target = new Subtitle.SmiFile();
-
+			
 		} else if (ext == ".srt") {
 			operation.type = "srt";
 			operation.origin = new Subtitle.SrtFile(text);
 			operation.target = new Subtitle.SrtFile();
-		
+			
 		} else if (ext == ".ass") {
 			operation.type = "ass";
 			operation.origin = new Subtitle.AssFile(text);
@@ -269,13 +269,13 @@ function refreshPreview(isTarget=false) {
 			const originBody = body;
 			body = [];
 			let last = {};
-            for (let i = 0; i < originBody.length; i++) {
-                const item = originBody[i];
+			for (let i = 0; i < originBody.length; i++) {
+				const item = originBody[i];
 				if (item.syncType == Subtitle.SyncType.inner) {
 					// 중간 싱크는 미리보기에서 생략
 					continue;
 				}
-
+				
 				// 줄바꿈 예외 처리 및 주석 숨기기
 				let text = item.text.split("\n").join("").split(/<br>/gi).join("\n").split("<!--");
 				for (let j = 1; j < text.length; j++) {
@@ -286,7 +286,7 @@ function refreshPreview(isTarget=false) {
 						text[j] = "";
 					}
 				}
-
+				
 				// 태그 숨기기
 				text = text.join("").split("<");
 				for (let j = 1; j < text.length; j++) {
@@ -297,27 +297,27 @@ function refreshPreview(isTarget=false) {
 						text[j] = "";
 					}
 				}
-
+				
 				// ms 단위 표현
 				last.me = item.ms = item.start;
 				item.me = item.ms + 1000;
-
+				
 				// 줄바꿈, &nbsp; 등 처리
 				const $line = getLine(item, item.start, text.join("").split("\n").join("<br />").split("&").join("&amp;"));
 				item.previewText = $line.text();
 				body.push(item);
-
+				
 				if ($line.find(".text").text().split("&nbsp;").join(" ").trim().length) {
 					last = item;
 				} else {
 					last = {};
 				}
-
+				
 				// 화면 싱크 강조
 				if (item.syncType) {
 					$line.addClass("type" + item.syncType);
 				}
-
+				
 				// 싱크 역전 오류
 				if (item.ms < lastSync) {
 					$line.addClass("error");
@@ -337,7 +337,7 @@ function refreshPreview(isTarget=false) {
 				// ms 단위 표현
 				item.ms = item.start;
 				item.me = item.end;
-
+				
 				if (item.ms < lastSync) {
 					$line.addClass("error");
 					errCount++;
@@ -357,7 +357,7 @@ function refreshPreview(isTarget=false) {
 			})
 			for (let i = 0; i < body.length; i++) {
 				const item = body[i];
-
+				
 				// 태그 숨기기
 				const items = item.text.split("{");
 				let text = items[0];
@@ -374,11 +374,11 @@ function refreshPreview(isTarget=false) {
 				// 화면 싱크 여부
 				item.fs = item.text.startsWith("{}");
 				item.fe = item.text.endsWith  ("{}");
-
+				
 				// 줄바꿈 처리
 				const $line = getLine(item, item.ms, text.split("\\N").join("<br />"));
 				item.previewText = $line.text();
-
+				
 				// 화면 싱크 강조
 				if (item.fs) {
 					$line.addClass("type1");
@@ -396,7 +396,7 @@ function refreshPreview(isTarget=false) {
 		}
 	}
 	if (errCount) {
-		setTimeout(function() {
+		setTimeout(() => {
 			alert("역전된 싱크가 " + errCount + "개 있습니다.");
 		}, 1);
 	}
@@ -440,8 +440,8 @@ function calcShift() {
 		let last = -1;
 		let isCorrect = true;
 		let alertNumber = false;
-		$("#rangeList .list-body > div").each(function() {
-			const item = $(this);
+		$("#rangeList .list-body > div").each((_, el) => {
+			const item = $(el);
 			let start = item.find("input.start").val();
 			if (isFinite(start)) {
 				start = Number(start);
@@ -475,8 +475,8 @@ function calcShift() {
 	}
 	const shifts = [];
 	let last = -1;
-	$("#shiftList .list-body > div").each(function() {
-		const item = $(this);
+	$("#shiftList .list-body > div").each((_, el) => {
+		const item = $(el);
 		const start = item.find("input.start").val();
 		if (!isFinite(start)) {
 			return;
@@ -501,8 +501,8 @@ function setKfs(strKfs) {
 
 function apply() {
 	const shifts = [];
-	$("#shiftList .list-body > div").each(function() {
-		const item = $(this);
+	$("#shiftList .list-body > div").each((_, el) => {
+		const item = $(el);
 		shifts.push({
 				start: Number(item.find("input.start").val())
 			,	shift: Number(item.find("input.shift").val())
@@ -802,14 +802,6 @@ function save() {
 		alert("작업 결과가 없습니다.");
 		return;
 	}
-	/*
-	let result = [operation.output[0].text];
-	for (let hi = 1; hi < operation.output.length; hi++) {
-		let hold = operation.output[hi];
-		result[hi] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + hold.text.split("<").join("<​").split(">").join("​>") + "\n-->";
-	}
-	result = result.join("\n");
-	*/
 	binder.save(operation.output, operation.type);
 }
 function applySave() {

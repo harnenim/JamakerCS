@@ -36,9 +36,10 @@ window.Johap = {
 
 setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 	Typing.Mode =
-	{	typewriter: 0
-	,	keyboard: 1
-	,	toString: ["typewriter", "keyboard"]
+	{	character: 0
+	,	typewriter: 1
+	,	keyboard: 2
+	,	toString: ["character", "typewriter", "keyboard"]
 	}
 	Typing.Cursor =
 	{	invisible: 0
@@ -46,18 +47,88 @@ setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 	,	hangeul: 2
 	,	toString: ["invisible", "visible", "hangeul"]
 	}
-	Typing.toType = (johap, mode, cursor) => {
-		if (cursor != null) {
-			return Typing.toTypeWithCursor(johap/*origin*/, mode, cursor);
-		}
-		let result = null;
-		switch (mode) {
-			case Typing.Mode.typewriter:
-				result = Typing.toTypeTypewriter(johap);
-				break;
-			case Typing.Mode.keyboard:
-				result = Typing.toTypeKeyboard(johap);
-				break;
+	Typing.toType = (origin, mode, cursor) => {
+		return Typing.toTypeWithCursor(origin, mode, cursor);
+	}
+	Typing.toTypeCharacter = (johap) => {
+		const result = [];
+		let mode = null; // TODO: 여기에 &, < 구분이 필요하던가...?
+		let cs = "";
+		for (let i = 0; i < johap.length; i++) {
+			const c = johap[i];
+			switch (mode) {
+				case ' ': {
+					if (c == ' ' || c == '\t' || c == '\n' || c == '​') {
+						cs += c;
+					} else if (c == '&') {
+						cs += c;
+						mode = '&';
+					} else if (c == '<') {
+						cs += c;
+						mode = '<';
+					} else {
+						// 공백문자는 프레임 차지하지 않는 방향으로
+						/*
+						result.push(cs);
+						cs = "";
+						mode = null;
+						result.push(c);
+						*/
+						result.push(cs + c);
+						cs = "";
+					}
+					break;
+				}
+				case '&' : {
+					if (c == ' ' || c == '\t' || c == '\n' || c == '​') {
+						cs += c;
+						mode = ' ';
+					} else if (c == '&') {
+						result.push(cs);
+						cs = c;
+						mode = '&';
+					} else if (c == '<') {
+						result.push(cs);
+						cs = c;
+						mode = '<';
+					} else if (c == ';') {
+						cs += c;
+						// 공백문자는 프레임 차지하지 않는 방향으로
+						if (cs != "&nbsp;") {
+							result.push(cs);
+							cs = "";
+						}
+						mode = null;
+					} else {
+						cs += c;
+					}
+					break;
+				}
+				case '<' : {
+					if (c == '>') {
+						result.push(cs);
+						cs = "";
+						mode = null;
+					} else {
+						cs += c;
+					}
+					break;
+				}
+				default: {
+					if (c == ' ' || c == '\t' || c == '\n' || c == '​') {
+						cs = c;
+						mode = ' ';
+					} else if (c == '&') {
+						cs = c;
+						mode = '&';
+					} else if (c == '<') {
+						cs = c;
+						mode = '<';
+					} else {
+						result.push(c);
+					}
+				}
+			}
 		}
 		return result;
 	}
@@ -169,13 +240,26 @@ setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 	
 	Typing.toTypeWithCursor = (origin, mode, cursor) => {
 		const result = [];
-		let type = Johap.toJohap(origin);
-		if (mode == Typing.Mode.keyboard) {
-			type = Typing.toType(type, mode);
+		let type = origin;
+		switch (mode) {
+			case Typing.Mode.character: {
+				type = Typing.toTypeCharacter(origin);
+				break;
+			}
+			case Typing.Mode.typewriter: {
+				type = Johap.toJohap(origin);
+				break;
+			}
+			case Typing.Mode.keyboard: {
+				type = Typing.toTypeKeyboard(Johap.toJohap(origin));
+				break;
+			}
 		}
 		
 		const typing = new Typing(mode, cursor);
-		result.push(typing.out());
+		if ((cursor != Typing.Cursor.invisible) || (mode == Typing.Mode.keyboard)) {
+			result.push(typing.out());
+		}
 		for (let i = 0; i < type.length; i++) {
 			typing.type(type[i]);
 			result.push(typing.out());
@@ -249,6 +333,9 @@ window.Typing = function(mode, cursor) {
 	this.type = null;
 	this.out = null;
 	switch (mode) {
+		case Typing.Mode.character:
+			this.type = this.typeCharacter;
+			break;
 		case Typing.Mode.typewriter:
 			this.type = this.typeTypewriter;
 			break;
@@ -269,6 +356,9 @@ window.Typing = function(mode, cursor) {
 	}
 }
 Typing.prototype.typeFunc = () => {}; // delegate
+Typing.prototype.typeCharacter = function(c) {
+	this.typed += c;
+}
 Typing.prototype.typeTypewriter = function(c) {
 	if (c >= 'ᄀ' && c <= 'ᄒ') {
 		// 초성
@@ -678,7 +768,7 @@ Subtitle.Attr = function(old) {
 	}
 }
 Subtitle.Attr.TypingAttr = function(mode, start, end) {
-	this.cursor = Typing.Cursor.visible;
+	this.cursor = (mode == Typing.Mode.keyboard) ? Typing.Cursor.visible : Typing.Cursor.invisible;
 	this.mode   = mode;
 	this.start  = start ? start : 0;
 	this.end	= end   ? end   : 0;
@@ -1393,7 +1483,10 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 					let match = null;
 					let tAttr = null;
 
-					if (mode == "typewriter") {
+					if (mode == "character") {
+						tAttr = new Subtitle.Attr.TypingAttr(Typing.Mode.character);
+						
+					} else if (mode == "typewriter") {
 						tAttr = new Subtitle.Attr.TypingAttr(Typing.Mode.typewriter);
 						
 					} else if (match = /typewriter\(([0-9]+),([0-9]+)\)/.exec(mode)) {
@@ -2196,7 +2289,12 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			}
 			
 			const types = Typing.toType(attr.text, attr.typing.mode, attr.typing.cursor);
-			const width = Subtitle.Smi.getLineWidth(attr.text);
+			const widths = [];
+			{	const attrTexts = attr.text.split("\n");
+				for (let j = 0; j < attrTexts.length; j++) {
+					widths.push(Subtitle.Smi.getLineWidth(attrTexts[j]));
+				}
+			}
 
 			const start = smi.start;
 			const end = smis[i + 1].start;
@@ -2225,8 +2323,24 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			
 			smis.splice(i, 1);
 			for (let j = 0; j < count; j++) {
-				const text = types[j + typingStart];
-				attr.text = Subtitle.Width.getAppendToTarget(Subtitle.Smi.getLineWidth(text), width) + (isLastAttr ? "​" : "");
+				const textLines = types[j + typingStart].split("\n");
+				const text = textLines.join("<br>");
+				{
+					const attrTextLines = [];
+					for (let k = 0; k < widths.length; k++) {
+						if (k < textLines.length - 1) {
+							// 건너뛰기
+						} else if (k == textLines.length - 1) {
+							attrTextLines.push(Subtitle.Width.getAppendToTarget(Subtitle.Smi.getLineWidth(textLines[k]), widths[k]));
+						} else {
+							attrTextLines.push(Subtitle.Width.getAppendToTarget(0, widths[k]));
+						}
+					}
+					attr.text = attrTextLines.join("​\n​");
+					if (isLastAttr) {
+						attr.text += "​";
+					}
+				}
 				const newAttrs = new Subtitle.Smi(null, null, text).toAttr();
 				for (let k = 0; k < newAttrs.length; k++) {
 					newAttrs[k].b = attr.b;

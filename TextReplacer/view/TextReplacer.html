@@ -11,32 +11,34 @@
 	<link rel="stylesheet" type="text/css" href="lib/ListView.css" />
 	<script>
 function setTextareaHeight(obj) {
-	var lineCount = obj.val().split("\n").length;
+	const lineCount = obj.val().split("\n").length;
 	obj.css("height", 4 + 14 * lineCount);
 }
 
-var listFiles;
-var inputFilters;
-var listReplacer;
-var progress;
+let listFiles;
+let inputFilters;
+let listReplacer;
+let progress;
 
 //C# 쪽에서 호출
 function init(jsonSetting) {
-	var setting = {};
+	let tmp = {};
 	try {
-		setting = JSON.parse(jsonSetting);
+		tmp = JSON.parse(jsonSetting);
 	} catch (e) {
 		alert("설정 파일이 잘못됐습니다.");
 	}
+	const setting = tmp;
+	
 	if (!setting.filters) setting.filters = "*.txt, *.smi, *.ass";
 	if (!setting.replacers) setting.replacers = [];
 	
 	inputFilters.val(setting.filters ? setting.filters : "*.txt, *.smi, *.ass");
 	if (setting.replacers && setting.replacers.length) {
 		listReplacer.empty();
-		for (var i = 0; i < setting.replacers.length; i++) {
-			var item = setting.replacers[i];
-			var li = listReplacer.data("preset").clone();
+		for (let i = 0; i < setting.replacers.length; i++) {
+			const item = setting.replacers[i];
+			const li = listReplacer.data("preset").clone();
 			li.find("[name=use]").prop("checked", item.use);
 			setTextareaHeight(li.find("[name=from]").val(item.from));
 			setTextareaHeight(li.find("[name=to]"  ).val(item.to));
@@ -48,9 +50,9 @@ function init(jsonSetting) {
 }
 
 function addFile(file) {
-	var filters = inputFilters.val().split(",").join(";").split(";");
-	for (var i = 0; i < filters.length; i++) {
-		var regex = new RegExp("^" + filters[i].trim().split(".").join("\\.").split("*").join(".*") + "$");
+	const filters = inputFilters.val().split(",").join(";").split(";");
+	for (let i = 0; i < filters.length; i++) {
+		const regex = new RegExp("^" + filters[i].trim().split(".").join("\\.").split("*").join(".*") + "$");
 		if (regex.test(file)) {
 			listFiles.add(file, true);
 			return;
@@ -59,18 +61,18 @@ function addFile(file) {
 }
 
 function findDragArea(x, y) {
-	var area = $("#listFiles");
-	if (x >= area.offset().left && y >= area.offset().top && x <= area.offset().left + area.outerWidth() && y <= area.offset().top + area.outerHeight()) {
-		return "#listFiles";
-	}
-	area = $("#areaRight");
-	if (x >= area.offset().left && y >= area.offset().top && x <= area.offset().left + area.outerWidth() && y <= area.offset().top + area.outerHeight()) {
-		return "#areaRight";
+	const ids = ["#listfiles", "#areaRight"];
+	for (let i = 0; i < ids.length; i++) {
+		const id = ids[i];
+		const area = $(id);
+		if (x >= area.offset().left && y >= area.offset().top && x <= area.offset().left + area.outerWidth() && y <= area.offset().top + area.outerHeight()) {
+			return id;
+		}
 	}
 	return "#none";
 }
 function dragover(x, y) {
-	var area = findDragArea(x, y);
+	const area = findDragArea(x, y);
 	$(".hover").removeClass("hover");
 	$(area).addClass("hover");
 }
@@ -89,20 +91,20 @@ function drop(x, y) {
 }
 
 function addReplacer(replacer) {
-	var li = listReplacer.data("preset").clone();
+	const li = listReplacer.data("preset").clone();
 	li.find("[name=use]").prop("checked", replacer.use);
 	setTextareaHeight(li.find("[name=from]").val(replacer.from));
 	setTextareaHeight(li.find("[name=to]"  ).val(replacer.to  ));
 	listReplacer.append(li);
 }
 function getSetting() {
-	var replacers = [];
-	listReplacer.find("li").each(function() {
-		var li = $(this);
-		var from = li.find("[name=from]").val();
+	const replacers = [];
+	listReplacer.find("li").each((_, el) => {
+		const li = $(el);
+		const from = li.find("[name=from]").val();
 		if (from == "") return;
-		var to = li.find("[name=to]").val();
-		var use = li.find("[name=use]").prop("checked");
+		const to = li.find("[name=to]").val();
+		const use = li.find("[name=use]").prop("checked");
 		replacers.push({ use: use, from: from, to: to });
 	});
 	return stringify({ filters: inputFilters.val(), replacers: replacers });
@@ -122,24 +124,24 @@ function beforeExit() {
 }
 
 function getReplacers() {
-	var froms = [];
-	var tos = [];
-	listReplacer.find("li").each(function() {
-		var li = $(this);
+	const froms = [];
+	const tos = [];
+	listReplacer.find("li").each((_, el) => {
+		const li = $(el);
 		if (!li.find("[name=use]").prop("checked")) return;
-		var from = li.find("[name=from]").val();
+		const from = li.find("[name=from]").val();
 		if (from == "") return;
-		var to = li.find("[name=to]").val();
+		const to = li.find("[name=to]").val();
 		froms.push(from);
 		tos.push(to);
 	});
 	return { froms: froms, tos: tos };
 }
 
-$(function() {
+$(() => {
 	listFiles = new ListView($("#listFiles"));
-	listFiles.run = function(item) {
-		var replacers = getReplacers();
+	listFiles.run = (item) => {
+		const replacers = getReplacers();
 		if (replacers.froms.length == 0) {
 			alert("변환할 문자열이 없습니다.");
 			return;
@@ -149,10 +151,12 @@ $(function() {
 	
 	inputFilters = $("#inputFilters");
 	listReplacer = $("#listReplacer");
-	var preset = listReplacer.find("li.preset");
-	listReplacer.data("preset", preset.clone(true));
-	preset.remove();
-
+	{
+		const preset = listReplacer.find("li.preset");
+		listReplacer.data("preset", preset.clone(true));
+		preset.remove();
+	}
+	
 	listReplacer.on("keyup", "textarea", function () {
 		setTextareaHeight($(this));
 	});
@@ -165,15 +169,15 @@ $(function() {
 	});
 	
 	$("#btnReplace").on("click", function() {
-		var files = [];
-		for (var i = 0; i < listFiles.list.length; i++) {
+		const files = [];
+		for (let i = 0; i < listFiles.list.length; i++) {
 			files.push(listFiles.list[i].value);
 		}
 		if (files.length == 0) {
 			alert("변환할 파일이 없습니다.");
 			return;
 		}
-		var replacers = getReplacers();
+		const replacers = getReplacers();
 		if (replacers.froms.length == 0) {
 			alert("변환할 문자열이 없습니다.");
 			return;
@@ -187,7 +191,7 @@ $(function() {
 		binder.exportSetting(getSetting());
 	});
 	
-	document.addEventListener("dragenter", function(e) {
+	document.addEventListener("dragenter", (e) => {
 		e.preventDefault();
 		binder.showDragging();
 	});

@@ -52,7 +52,7 @@ setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 	}
 	Typing.toTypeCharacter = (johap) => {
 		const result = [];
-		let mode = null;
+		let mode = null; // TODO: 여기에 &, < 구분이 필요하던가...?
 		let cs = "";
 		for (let i = 0; i < johap.length; i++) {
 			const c = johap[i];
@@ -67,10 +67,15 @@ setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 						cs += c;
 						mode = '<';
 					} else {
+						// 공백문자는 프레임 차지하지 않는 방향으로
+						/*
 						result.push(cs);
 						cs = "";
 						mode = null;
 						result.push(c);
+						*/
+						result.push(cs + c);
+						cs = "";
 					}
 					break;
 				}
@@ -87,8 +92,12 @@ setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 						cs = c;
 						mode = '<';
 					} else if (c == ';') {
-						result.push(cs);
-						cs = "";
+						cs += c;
+						// 공백문자는 프레임 차지하지 않는 방향으로
+						if (cs != "&nbsp;") {
+							result.push(cs);
+							cs = "";
+						}
 						mode = null;
 					} else {
 						cs += c;
@@ -2317,16 +2326,17 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				const textLines = types[j + typingStart].split("\n");
 				const text = textLines.join("<br>");
 				{
-					attr.text = "";
+					const attrTextLines = [];
 					for (let k = 0; k < widths.length; k++) {
-						if (k < textLines.length) {
-							attr.text += Subtitle.Width.getAppendToTarget(Subtitle.Smi.getLineWidth(textLines[k]), widths[k]);
+						if (k < textLines.length - 1) {
+							// 건너뛰기
 						} else if (k == textLines.length - 1) {
-							attr.text += Subtitle.Width.getAppendToTarget(0, widths[k]);
+							attrTextLines.push(Subtitle.Width.getAppendToTarget(Subtitle.Smi.getLineWidth(textLines[k]), widths[k]));
 						} else {
-							attr.text += "\n　"; // TODO: 폰트 없을 때 안정성이...?
+							attrTextLines.push(Subtitle.Width.getAppendToTarget(0, widths[k]));
 						}
 					}
+					attr.text = attrTextLines.join("​\n​");
 					if (isLastAttr) {
 						attr.text += "​";
 					}

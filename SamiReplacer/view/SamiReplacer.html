@@ -137,7 +137,7 @@ function replace(index, text) {
     return;
 }
 
-$(function() {
+$(() => {
 	listFiles = new ListView($("#listFiles"));
 	listFiles.run = function(item) {
 		const from = $("#vFrom").val();
