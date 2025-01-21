@@ -44,7 +44,9 @@ window.Combine = {
 		for (let i = 0; i < lines.length; i++) {
 			lines[i] = checker.html(lines[i]).text();
 		}
-		return checker.text(lines.join("\n")).width();
+		const width = checker.text(lines.join("\n")).width();
+		//console.log(width, lines)
+		return width;
 	}
 	function getChecker() {
 		if (!Combine.checker) {
@@ -325,11 +327,12 @@ window.Combine = {
 						let lastPad;
 						let lastWidth;
 						if (LOG) console.log(line.split("&nbsp;").join(" ") + ": " + width);
+						const realLines = line.split("\n"); // 실제론 여러 줄일 수 있음
 						do {
 							lastPad = pad;
 							lastWidth = width;
 							pad = lastPad + " ";
-							const curr = "​" + pad + line + pad + "​";
+							const curr = "​" + pad + realLines.join(pad + "​\n​" + pad) + pad + "​";
 							width = getWidth(curr, checker);
 							if (LOG) console.log(curr.split("&nbsp;").join(" ") + ": " + width);
 							
@@ -338,7 +341,7 @@ window.Combine = {
 						if ((width - group.maxWidth) > (group.maxWidth - lastWidth)) {
 							pad = lastPad;
 							if (LOG) {
-								const curr = "​" + pad + line + pad + "​";
+								const curr = "​" + pad + realLines.join(pad + "​\n​" + pad) + pad + "​";
 								width = getWidth(curr, checker);
 							}
 						}
