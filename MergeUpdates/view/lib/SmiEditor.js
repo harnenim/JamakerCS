@@ -104,8 +104,10 @@ SmiEditor.setSetting = (setting) => {
 		SmiEditor.sync = setting.sync;
 	}
 	SmiEditor.useHighlight = setting.highlight && setting.highlight.parser;
-	SmiEditor.showColor = setting.highlight.color;
-	SmiEditor.showEnter = setting.highlight.enter;
+	if (setting.highlight) {
+		SmiEditor.showColor = setting.highlight.color;
+		SmiEditor.showEnter = setting.highlight.enter;
+	}
 	
 	{	// AutoComplete
 		for (let key in SmiEditor.autoComplete) {
