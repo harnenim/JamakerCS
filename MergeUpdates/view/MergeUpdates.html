@@ -45,7 +45,7 @@ function setFile(dropArea, text, name, path) {
 		const newLines = [];
 		let cnt = 0;
 		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
+			let line = lines[i];
 			if (line.substring(0, 6).toUpperCase() == "<SYNC ") {
 				const blocks = line.split(">");
 				for (let j = 1; j < blocks.length; j++) {
@@ -292,7 +292,7 @@ $(() => {
 					if (!bSync.text.startsWith(tSync.text) && !tSync.text.startsWith(bSync.text)) {
 						continue;
 					}
-					const dist = (tSync.syncType == Subtitle.SyncType.normal) ? bSync.start - tSync.start : null;
+					let dist = (tSync.syncType == Subtitle.SyncType.normal) ? bSync.start - tSync.start : null;
 
 					let point = 1;
 					const max = Math.min(targetBfrUpdate.body.length, originBfrUpdate.body.length - cShift);
