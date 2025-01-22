@@ -45,7 +45,7 @@ window.Combine = {
 			lines[i] = checker.html(lines[i]).text();
 		}
 		const width = checker.text(lines.join("\n")).width();
-		//console.log(width, lines)
+		//console.log(width, lines);
 		return width;
 	}
 	function getChecker() {
@@ -754,6 +754,8 @@ if (Subtitle && Subtitle.SmiFile) {
 						const start = log.to[0];
 						for (let hi = 1; hi < holds.length; hi++) {
 							const smi = holdSmis[hi];
+							if (!smi.body.length) continue;
+
 							let isImported = true;
 							for (let j = 0; j < smi.body.length; j++) {
 								if (smi.body[j].start != main.body[start+j].start) {

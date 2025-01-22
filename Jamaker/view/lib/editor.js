@@ -410,8 +410,8 @@ SmiEditor.prototype.updateTimeRange = function() {
 			end   = Math.max(end  , line[LINE.SYNC]);
 		}
 	}
+	this.start = start;
 	if (end) {
-		this.start = start;
 		this.end   = (start == end) ? 999999999 : end;
 	} else {
 		this.end = 999999999;
