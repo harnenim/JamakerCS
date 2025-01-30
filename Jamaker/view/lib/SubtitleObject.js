@@ -676,7 +676,8 @@ Subtitle.Width =
 			if (!this.div) {
 				$("body").append(this.div = $("<div>").css({
 						position: "absolute"
-					,	top: -1000
+					,	top: -100
+					,	height: 100
 					,	whiteSpace: "pre"
 				}));
 			}
