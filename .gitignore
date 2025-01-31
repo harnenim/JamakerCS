@@ -390,3 +390,7 @@ healthchecksdb
 /MergeUpdates/view/lib/ListView.js
 /SyncShift/view/lib/ListView.css
 /SyncShift/view/lib/ListView.js
+/MergeUpdates/view/lib/SmiEditor.size.css
+/SamiReplacer/view/lib/SmiEditor.size.css
+/SyncShift/view/lib/SmiEditor.size.css
+/TextReplacer/view/lib/SmiEditor.size.css

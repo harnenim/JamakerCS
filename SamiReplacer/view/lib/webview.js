@@ -166,8 +166,17 @@ window.Progress = function() {
 		}).append(this.bar)
 	).append(this.text);
 	$("body").append(this.div.hide());
+	this.last = 0;
 };
-Progress.prototype.set = function(value, total) {
+Progress.prototype.set = function (value, total) {
+	if (ratio) { // 0일 땐 무조건 실행
+		// 과도한 UI 갱신 방지
+		const now = new Date().getTime();
+		if (now - this.last < 100) {
+			return;
+		}
+		this.last = now;
+	}
 	this.bar.css({ width: "calc(" + (value / total * 100) + "%)"});
 	this.text.text(value + "/" + total);
 	this.div.show();
@@ -177,7 +186,16 @@ Progress.prototype.hide = function() {
 }
 // Progress 객체 없이 직접 다루는 경우
 Progress.bars = {};
+Progress.last = 0;
 Progress.set = (selector, ratio) => {
+	if (ratio) { // 0일 땐 무조건 실행
+		// 과도한 UI 갱신 방지
+		const now = new Date().getTime();
+		if (now - Progress.last < 100) {
+			return;
+		}
+		Progress.last = now;
+	}
 	let bar = Progress.bars[selector];
 	if (bar == null) {
 		const area = $(selector);
