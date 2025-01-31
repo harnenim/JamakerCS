@@ -775,6 +775,29 @@ function setSetting(setting, initial=false) {
 				}
 		});
 	}
+	if (initial || (oldSetting.size != setting.size)) {
+		$.ajax({url: "lib/SmiEditor.size.css"
+			,	dataType: "text"
+				,	success: (preset) => {
+					preset = preset.split("20px").join((20 * setting.size) + "px");
+					
+					let $style = $("#styleSize");
+					if (!$style.length) {
+						$("head").append($style = $("<style id='styleSize'>"));
+					}
+					$style.html(preset);
+					
+					for (let i = 0; i < tabs.length; i++) {
+						const holds = tabs[i].holds;
+						for (let j = 0; j < holds.length; j++) {
+							if (holds[j].act) {
+								holds[j].act.resize();
+							}
+						}
+					}
+				}
+		});
+	}
 	if (initial || (JSON.stringify(oldSetting.highlight) != JSON.stringify(setting.highlight))) {
 		// 문법 하이라이트 양식 바뀌었을 때만 재생성
 		function afterLoadHighlight() {

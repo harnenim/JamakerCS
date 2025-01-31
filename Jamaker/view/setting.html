@@ -715,6 +715,7 @@ $(() => {
 		});
 	
 		submitFuncs["style"] = () => {
+			setting.size             = $("input[name=size]").val();
 			setting.useTab           = $("input[name=useTab]").prop("checked");
 			setting.highlight.parser = $("select[name=highlight_parser]").val();
 			setting.highlight.style  = $("select[name=highlight_style]").val();
@@ -1487,6 +1488,10 @@ fieldset ol button,
 		※ 자막 내용이 많아질 경우 성능 문제가 발생할 수 있습니다.
 		<br />
 		<br />
+		<label>UI 배율
+			<input type="text" name="size" />
+		</label>
+		<br />
 		<label><input type="checkbox" name="useTab" /> 탭 사용</label><br />
 		<label><input type="checkbox" name="viewer_useAlign" /> 미리보기 줄표로 시작할 경우 왼쪽 정렬</label><br />
 		<fieldset id="style_color">
@@ -1494,7 +1499,7 @@ fieldset ol button,
 			<fieldset id="style_color_preset">
 				<legend>프리셋</legend>
 				<ul></ul>
-				<button id="btnAddPreset">현재값 프리셋에 추가</button>
+				<button type="button" id="btnAddPreset">현재값 프리셋에 추가</button>
 			</fieldset>
 			<div id="style_color_setting">
 				<label><span>기본 배경 색      </span><input type="color" name="color_background" /></label><label><span>저장되지 않음 표시</span><input type="color" name="color_notSaved"   /></label><br />

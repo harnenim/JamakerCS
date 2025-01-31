@@ -2,15 +2,8 @@ window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 	this.ta = ta;
 	this.sets = sets ? sets : [];
 	this.onSelect = onSelect;
+	this.resize();
 	
-	{	const font = getComputedStyle(ta[0]);
-		this.font = {
-				"font-family": font.fontFamily
-			,	"font-size"  : font.fontSize
-			,	"font-weight": font.fontWeight
-			,	"line-height": font.lineHeight
-		};
-	}
 	if (!AutoCompleteTextarea.view) {
 		$("body").append(AutoCompleteTextarea.view = $("<ol class='act-select'>").css(this.font).hide());
 	}
@@ -48,6 +41,15 @@ window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 			ta.ac.onCheck(e);
 		}
 	});
+}
+AutoCompleteTextarea.prototype.resize = function() {
+	const font = getComputedStyle(this.ta[0]);
+	this.font = {
+			"font-family": font.fontFamily
+		,	"font-size"  : font.fontSize
+		,	"font-weight": font.fontWeight
+		,	"line-height": font.lineHeight
+	};
 }
 // 선택
 AutoCompleteTextarea.prototype.select = function(index) {

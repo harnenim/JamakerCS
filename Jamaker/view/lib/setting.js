@@ -282,6 +282,7 @@ window.DEFAULT_SETTING =
 	, enter : false
 	, color : true
 	}
+,	size: 1
 ,	color:
 	{ background: "#f0f0f0"
 	, selector  : "#c1c1c1"
