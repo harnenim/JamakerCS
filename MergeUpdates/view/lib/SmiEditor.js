@@ -474,6 +474,7 @@ SmiEditor.activateKeyEvent = function() {
 							if (e.altKey) {
 								
 							} else {
+								// TODO: Ctrl+방향키 커서 이동 단위 커스터마이징 필요
 							}
 						} else {
 							if (e.altKey) {
@@ -510,6 +511,7 @@ SmiEditor.activateKeyEvent = function() {
 							if (e.altKey) {
 								
 							} else {
+								// TODO: Ctrl+방향키 커서 이동 단위 커스터마이징 필요
 							}
 						} else {
 							if (e.altKey) {
