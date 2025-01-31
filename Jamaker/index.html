@@ -13,8 +13,8 @@ C# 껍데기를 거치지 않고 웹브라우저에서 돌아가도록 만든 �
 -->
 <script src="view/lib/jquery-3.2.1.min.js"></script>
 <script>
-var Frame = function(url, name, options, onload) {
-	var frame = this.frame = Frame.preset.clone().data("obj", this);
+window.Frame = function(url, name, options, onload) {
+	const frame = this.frame = Frame.preset.clone().data("obj", this);
 	$("body").append(frame);
 	
 	this.resizable = true;
@@ -34,13 +34,16 @@ var Frame = function(url, name, options, onload) {
 		offset.right  = Number(frame.css("width" ).split("px")[0]) + offset.left;
 		offset.bottom = Number(frame.css("height").split("px")[0]) + offset.top ;
 	}
+	this.focus = function() {
+		this.iframe.focus();
+	}
 	
 	this.go(url ? url : "about:blank");
 	if (options) {
 		this.set(options);
 	}
 	
-	var self = this;
+	const self = this;
 	this.iframe.onload = function() {
 		self.iframe.contentWindow.opener = window;
 		self.iframe.contentWindow.close = function() {
@@ -59,8 +62,8 @@ var Frame = function(url, name, options, onload) {
 		$(self.iframe.contentDocument).on("mousedown", function() {
 			Frame.refreshOrder(self);
 		});
-		$(self.iframe.contentDocument).find("iframe").each(function() {
-			subIframe = this;
+		$(self.iframe.contentDocument).find("iframe").each((_, el) => {
+			subIframe = el;
 			/*
 			subIframe.contentWindow.onload = function() {
 				console.log("이게 안 잡히나...?");
@@ -69,7 +72,7 @@ var Frame = function(url, name, options, onload) {
 				});
 			}
 			*/
-			setTimeout(function() {
+			setTimeout(() => {
 				$(subIframe.contentDocument).on("mousedown", function() {
 					Frame.refreshOrder(self);
 				});
@@ -86,8 +89,8 @@ Frame.prototype.go = function(url) {
 }
 Frame.prototype.set = function(options) {
 	options = options.split(",");
-	for (var i = 0; i < options.length; i++) {
-		var option = options[i].trim().split("=");
+	for (let i = 0; i < options.length; i++) {
+		const option = options[i].trim().split("=");
 		switch (option[0]) {
 			case "resizable": {
 				if (this.resizable = option[1] != "no") {
@@ -107,45 +110,46 @@ Frame.prototype.close = function() {
 }
 Frame.names = {};
 Frame.order = [];
-Frame.add = function(frame, name) {
+Frame.add = function (frame, name) {
 	frame.name = name;
 	Frame.names[name] = frame;
 	Frame.order.push(frame);
 	Frame.refreshOrder();
 }
-Frame.refreshOrder = function(frame) {
+Frame.refreshOrder = (frame) => {
 	if (frame) {
-		var index = Frame.order.indexOf(frame);
+		const index = Frame.order.indexOf(frame);
 		if (index >= 0) {
 			Frame.order.splice(index, 1);
 		}
 		Frame.order.push(frame);
 	}
-	for (var i = 0; i < Frame.order.length; i++) {
+	for (let i = 0; i < Frame.order.length; i++) {
 		Frame.order[i].frame.css({ zIndex: i + 1 });
 	}
 	$("#cover").css({ zIndex: Frame.order.length });
 }
-Frame.open = function(url, name, options, opener) {
-	var popup = Frame.names[name];
+Frame.open = (url, name, options, opener) => {
+	let popup = Frame.names[name];
 	if (popup) {
 		popup.go(url);
 		popup.set(options);
 		Frame.refreshOrder(popup);
 	} else {
-		popup = new Frame(url, name, options, function() {
+		popup = new Frame(url, name, options, () => {
 			popup.iframe.contentWindow.opener = opener;
 		});
 	}
 	return popup;
 };
 
-$(function() {
-	var frame = $(".frame");
-	Frame.preset = frame.clone();
-	frame.remove();
+$(() => {
+	{	const frame = $(".frame");
+		Frame.preset = frame.clone();
+		frame.remove();
+	}
 	
-	var dragging = {
+	const dragging = {
 			frame: null
 		,	type: null
 		,	top: 0
@@ -156,10 +160,10 @@ $(function() {
 		,	y: 0
 	}
 	$(document).on("mousedown", ".fhead h3, .border", function(e) {
-		var obj = $(this);
-		var frame = obj.parents(".frame");
+		const obj = $(this);
+		const frame = obj.parents(".frame");
 		if (obj.hasClass("border")) {
-			var frameObj = frame.data("obj");
+			const frameObj = frame.data("obj");
 			if (frameObj && frameObj.resizable) {
 				switch (obj.attr("class").substring(7).trim()) {
 					case "t" : dragging.type = 0b1000; break;
@@ -191,10 +195,10 @@ $(function() {
 		if (dragging.frame == null) {
 			return;
 		}
-		var x = e.clientX - dragging.x;
-		var y = e.clientY - dragging.y;
+		const x = e.clientX - dragging.x;
+		const y = e.clientY - dragging.y;
 		
-		var css = {};
+		const css = {};
 		if (dragging.type == 0) {
 			css.top  = Math.max(dragging.top  + y, -20);
 			css.left = Math.max(dragging.left + x, 50 - dragging.width);
@@ -237,17 +241,33 @@ $(function() {
 		$(this).parents(".frame").data("obj").close();
 	});
 	
-	var fEditor = new Frame("Jamaker.html", "editor", "", function() {
+	const fEditor = new Frame("Jamaker.html", "editor", "", () => {
 		fEditor.frame.find(".button").remove();
 		fEditor.frame.find("h3").css({ width: "100%" });
 		
-		var w = fEditor.iframe.contentWindow;
+		const w = fEditor.iframe.contentWindow;
 		w.window_open = function(url, name, options, opener) {
 			return w.open(url, name, options, opener);
 		}
-		w.MT = 0; w.ML = 0; w.MR = 0; w.MB = 0;
 		w.editor.hwnd = fEditor;
-		w.editor.windows["editor"] = fEditor;
+		w.MT = 0; w.ML = 0; w.MR = 0; w.MB = 0;
+		
+		w.editor.__initAfterLoad = w.editor.initAfterLoad;
+		w.editor.initAfterLoad = function() {
+			w.editor.mainView.contentWindow.window.open = function(url, name, options) {
+				if (url.substring(0, 4) != "http") {
+					url = location.href.substring(0, location.href.lastIndexOf("/")) + "/view/" + url;
+				}
+				return w.editor.windows[name] = Frame.open(url, name, options, w.editor.mainView.contentWindow);
+			};
+			w.editor.__initAfterLoad();
+		}
+		
+		w.editor._initAfterLoad = w.editor.initAfterLoad;
+		w.editor.initAfterLoad = function() {
+			this._initAfterLoad();
+			this.windows["editor"] = fEditor;
+		}
 	});
 });
 </script>

@@ -138,7 +138,7 @@ const window_open = function(url, name, options, opener) {
 	editor.run = function() {
 		this.initializeComponent();
 		
-		this.loadSetting(function() {
+		this.loadSetting(() => {
 			editor.mainView.src = "view/editor.html";
 			editor.mainView.onload = function() {
 				// 브라우저 샘플에선 url 변형 필요
@@ -159,7 +159,7 @@ const window_open = function(url, name, options, opener) {
 				*/
 
 				const cd = editor.mainView.contentDocument;
-				cd.addEventListener("dragenter", function(e) {
+				cd.addEventListener("dragenter", (e) => {
 					e.preventDefault();
 					editor.showDragging();
 				});
@@ -168,21 +168,21 @@ const window_open = function(url, name, options, opener) {
 				}).on("keydown", editor.keyDownForMenu);
 			};
 			
-			setTimeout(function() {
+			setTimeout(() => {
 				// 로딩 전에 돌아가면 문제 생김
-				editor.timer = setInterval(function() {
+				editor.timer = setInterval(() => {
 					for (let i = 0; i < editor.timerFuncs.length; i++) {
 						editor.timerFuncs[i]();
 					}
 				}, 50);
 			}, 1000);
 			editor.timerFuncs = [
-					function() { editor.followWindow(); }
-				,	function() { editor.refreshPlayer(); }
+					() => { editor.followWindow(); }
+				,	() => { editor.refreshPlayer(); }
 			];
 			
 			// 브라우저 초기화 후 다시 돌림... 왜지?
-			setTimeout(function() {
+			setTimeout(() => {
 				editor.mainView.contentWindow.moveWindowsToSetting();
 			}, 1000);
 		});
@@ -244,10 +244,11 @@ const window_open = function(url, name, options, opener) {
 }
 	
 // 윈도우 그림자 여백 보정
-const MT = 0;
-const ML = 7;
-const MR = 7;
-const MB = 9;
+// iframe 버전에서 호출할 경우 값 바뀔 수 있음
+window.MT = 0;
+window.ML = 7;
+window.MR = 7;
+window.MB = 9;
 
 {	// 창 조작
 	editor.hwnd = window;
@@ -436,7 +437,7 @@ const MB = 9;
 		this.getHwnd(target).sendMsg(msg);
 	}
 	editor.onloadFinder = function(last) {
-		const finder = this.getHwnd("finder");
+		let finder = this.getHwnd("finder");
 		if (finder.iframe && finder.iframe.contentWindow) {
 			finder = finder.iframe.contentWindow;
 		}
@@ -450,7 +451,7 @@ const MB = 9;
 	editor.runReplaceAll = function(params) { editor.mainView.contentWindow.SmiEditor.Finder.runReplaceAll(params); };
 
 	editor.updateViewerSetting = function() {
-		const viewer = this.getHwnd("viewer");
+		let viewer = this.getHwnd("viewer");
 		if (viewer) {
 			if (viewer.iframe && viewer.iframe.contentWindow) {
 				viewer = viewer.iframe.contentWindow;
@@ -462,7 +463,7 @@ const MB = 9;
 		}
 	};
 	editor.updateViewerTime = function(time) {
-		const viewer = this.getHwnd("viewer");
+		let viewer = this.getHwnd("viewer");
 		if (viewer) {
 			if (viewer.iframe && viewer.iframe.contentWindow) {
 				viewer = viewer.iframe.contentWindow;
@@ -475,7 +476,7 @@ const MB = 9;
 	editor.viewerLines = "[]";
 	editor.updateViewerLines = function(lines) {
 		this.viewerLines = lines;
-		const viewer = this.getHwnd("viewer");
+		let viewer = this.getHwnd("viewer");
 		if (viewer) {
 			if (viewer.iframe && viewer.iframe.contentWindow) {
 				viewer = viewer.iframe.contentWindow;
@@ -493,7 +494,7 @@ const MB = 9;
 		editor.strBridgeList = playerDlls;
 		$.ajax({url: "view/lib/highlight/list.txt"
 			,	dataType: "text"
-			,	success: function(highlights) {
+			,	success: (highlights) => {
 					editor.strHighlights = highlights;
 					if (afterSuccess) {
 						afterSuccess();
@@ -531,10 +532,10 @@ const MB = 9;
 	editor.loadAddonSetting = function(path) {
 		$.ajax({"url" : "view/addon/" + path
 			,	"dataType": "text"
-			,	"success": function(setting) {
+			,	"success": (setting) => {
 					editor.mainView.contentWindow.afterLoadAddonSetting(setting.split("\r\n").join("\n"));
 				}
-			,	"error": function() {
+			,	"error": () => {
 					editor.mainView.contentWindow.afterLoadAddonSetting("");
 				}
 		});
@@ -603,7 +604,7 @@ const MB = 9;
 			this.script("init", [this.strSettingJson]);
 		}
 	};
-	$(function() {
+	$(() => {
 		$(document).on("keydown", ".submenu.open li", function(e) {
 			const li = $(this);
 			switch (e.keyCode) {
@@ -645,7 +646,7 @@ const MB = 9;
 }
 {	// 파일
 	const fileBuffers = [];
-	let afterGetString = function() {};
+	let afterGetString = () => {};
 	
 	editor.openFile = async function() {
 		const fileBuffer = await window.showOpenFilePicker({ types: [ { description: "지원되는 자막 파일", accept:{ "text/sami": [".smi"], "text/srt" : [".srt"] } } ] });
@@ -734,9 +735,9 @@ const MB = 9;
 		this.mainView.style.height = "calc(100% - 20px)";
 	}
 }
-$(function() {
+$(() => {
 	editor.run();
-	window.addEventListener("beforeunload", function(e) {
+	window.addEventListener("beforeunload", (e) => {
 		editor.beforeExit(e);
 	});
 });
