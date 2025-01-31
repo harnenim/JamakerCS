@@ -1153,7 +1153,7 @@ SmiEditor.prototype.findSync = function(target) {
 				lineNo = i + 1;
 			} else {
 				if (!lineNo) {
-					lineNo = i - 1;
+					lineNo = (i > 0) ? (i - 1) : 0;
 				}
 				break;
 			}
@@ -1162,7 +1162,7 @@ SmiEditor.prototype.findSync = function(target) {
 	if (!hasSync) {
 		return;
 	}
-	const cursor = this.text.split("\n").slice(0, lineNo).join("\n").length + 1;
+	const cursor = (lineNo ? this.text.split("\n").slice(0, lineNo).join("\n").length + 1 : 0);
 	this.setCursor(cursor);
 	this.scrollToCursor(lineNo);
 }
