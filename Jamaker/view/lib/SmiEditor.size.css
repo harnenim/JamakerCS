@@ -11,12 +11,16 @@ label, #showFps {
 }
 #body > div:first-child * {
 	font-size: calc(20px - 6px);
+	line-height: calc(20px - 6px);
 }
 #body > div:first-child button,
 #body > div:first-child input {
 	font-size: calc(20px - 7px);
 	line-height: calc(20px - 7px);
 	height: calc(20px - 3px);
+}
+#body > div:first-child input {
+	padding: 0 calc(20px / 10);
 }
 #body > div:first-child input[type=checkbox] {
 	height: calc(20px - 7px);
