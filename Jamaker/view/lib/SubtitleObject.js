@@ -1583,7 +1583,6 @@ Subtitle.Smi.toAttr = (text) => {
 	let furigana = null;
 	
 	let state = null;
-	let pos = 0;
 	
 	let tag = null;
 	let attr = null;
@@ -2708,9 +2707,10 @@ Subtitle.Srt.srt2txt = (srts) => {
 	}
 	return result;
 }
+// 팟플레이어에서 SRT 자막에서 태그 읽힌다고 SMI 태그 쓰는 경우가 있음
 Subtitle.Srt.colorToAttr   = Subtitle.Smi.colorToAttr;
 Subtitle.Srt.colorFromAttr = Subtitle.Smi.colorFromAttr
-Subtitle.Srt.prototype.toAttr = function() { return Subtitle.Smi.toAttr(this.text.split("\n").join("<br />")); };
+Subtitle.Srt.prototype.toAttr = function() { return Subtitle.Smi.toAttr(this.text.split("\n").join("<br>")); };
 Subtitle.Srt.prototype.fromAttr = Subtitle.Smi.prototype.fromAttr
 
 Subtitle.Srt.prototype.toSync = function() {
