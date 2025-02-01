@@ -2710,7 +2710,7 @@ Subtitle.Srt.srt2txt = (srts) => {
 }
 Subtitle.Srt.colorToAttr   = Subtitle.Smi.colorToAttr;
 Subtitle.Srt.colorFromAttr = Subtitle.Smi.colorFromAttr
-Subtitle.Srt.prototype.toAttr   = Subtitle.Smi.prototype.toAttr
+Subtitle.Srt.prototype.toAttr = function() { return Subtitle.Smi.toAttr(this.text.split("\n").join("<br />")); };
 Subtitle.Srt.prototype.fromAttr = Subtitle.Smi.prototype.fromAttr
 
 Subtitle.Srt.prototype.toSync = function() {
