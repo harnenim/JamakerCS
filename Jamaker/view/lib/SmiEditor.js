@@ -1867,6 +1867,20 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 		}, 100);
 	}, 1);
 }
+SmiEditor.prototype.fitSyncsToFrame = function() {
+	if (!SmiEditor.video.fs.length) {
+		return;
+	}
+	for (let i = 0; i < this.lines.length; i++) {
+		const line = this.lines[i];
+		if (line[LINE.TYPE] == TYPE.BASIC || line[LINE.TYPE] == TYPE.FRAME) {
+			line[LINE.TEXT] = SmiEditor.makeSyncLine((line[LINE.SYNC] = SmiEditor.findSync(line[LINE.SYNC], SmiEditor.video.fs)), line[LINE.TYPE]);
+		}
+	}
+	// TODO: 중간 싱크 재계산을 여기서 해야 하나?
+	this.input.val(this.text = linesToText(this.lines));
+	this.afterChangeSaved(this.isSaved());
+}
 SmiEditor.prototype.moveToSide = function(direction) {
 	if (direction == 0) return;
 	
