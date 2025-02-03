@@ -482,8 +482,19 @@ SmiEditor.activateKeyEvent = function() {
 										const prev = text.substring(0, cursor[0]);
 										const index = prev.lastIndexOf('<');
 										if (index >= 0) {
-											const tag = prev.substring(index);
-											if (tag.indexOf("\n") < 0) {
+											const tag = prev.substring(index, prev.length - 1);
+											if ((tag.indexOf('\n') < 0) && (tag.indexOf('>') < 0)) {
+												editor.setCursor(index);
+												editor.scrollToCursor();
+												e.preventDefault();
+											}
+										}
+									} else if (text[cursor[0] - 1] == ';') {
+										const prev = text.substring(0, cursor[0]);
+										const index = prev.lastIndexOf('&');
+										if (index >= 0) {
+											const tag = prev.substring(index, prev.length - 1);
+											if ((tag.indexOf('\n') < 0) && (tag.indexOf(';') < 0)) {
 												editor.setCursor(index);
 												editor.scrollToCursor();
 												e.preventDefault();
@@ -531,15 +542,28 @@ SmiEditor.activateKeyEvent = function() {
 								const cursor = editor.getCursor();
 								if (cursor[0] == cursor[1]) {
 									const text = editor.input.val();
-									if (text.length > cursor[0] && text[cursor[0]] == '<') {
-										const next = text.substring(cursor[0]);
-										const index = next.indexOf('>') + 1;
-										if (index > 0) {
-											const tag = next.substring(0, index);
-											if (tag.indexOf("\n") < 0) {
-												editor.setCursor(cursor[0] + index);
-												editor.scrollToCursor();
-												e.preventDefault();
+									if (text.length > cursor[0]) {
+										if (text[cursor[0]] == '<') {
+											const next = text.substring(cursor[0]);
+											const index = next.indexOf('>') + 1;
+											if (index > 0) {
+												const tag = next.substring(1, index);
+												if ((tag.indexOf('\n') < 0)) {
+													editor.setCursor(cursor[0] + index);
+													editor.scrollToCursor();
+													e.preventDefault();
+												}
+											}
+										} else if (text[cursor[0]] == '&') {
+											const next = text.substring(cursor[0]);
+											const index = next.indexOf(';') + 1;
+											if (index > 0) {
+												const tag = next.substring(1, index);
+												if ((tag.indexOf('\n') < 0) && (tag.indexOf('&') < 0)) {
+													editor.setCursor(cursor[0] + index);
+													editor.scrollToCursor();
+													e.preventDefault();
+												}
 											}
 										}
 									}
