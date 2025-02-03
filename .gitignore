@@ -394,3 +394,4 @@ healthchecksdb
 /SamiReplacer/view/lib/SmiEditor.size.css
 /SyncShift/view/lib/SmiEditor.size.css
 /TextReplacer/view/lib/SmiEditor.size.css
+*.bak

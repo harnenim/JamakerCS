@@ -627,7 +627,11 @@ function init(jsonSetting) {
 		tabs[tab].holds[tabs[tab].hold].input.focus();
 	});
 	const checkTrustKeyframe = $("#checkTrustKeyframe").on("click", function() {
-		SmiEditor.trustKeyFrame = $(this).prop("checked");
+		if (SmiEditor.trustKeyFrame = $(this).prop("checked")) {
+			$("#editor").addClass("trust-keyframe");
+		} else {
+			$("#editor").removeClass("trust-keyframe");
+		}
 		if (tabs.length == 0) return;
 	});
 	
@@ -1213,6 +1217,13 @@ function loadFkf(fkfName) {
 		$("#forFrameSync").removeClass("disabled");
 		$("#checkTrustKeyframe").attr({ disabled: false });
 		Progress.set("#forFrameSync", 0);
+		
+		for (let i = 0; i < tabs.length; i++) {
+			const holds = tabs[i].holds;
+			for (let j = 0; j < holds.length; j++) {
+				holds[j].refreshKeyframe();
+			}
+		}
 	}
 	req.onerror = (e) => {
 		// 실패했어도 프로그레스바는 없애줌

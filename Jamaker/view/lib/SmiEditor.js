@@ -208,23 +208,23 @@ SmiEditor.video = {
 	,	fs: []
 	,	kfs: []
 }
-SmiEditor.findSync = (sync, fs=[], from=0, to=-1) => {
+SmiEditor.findSync = (sync, fs=[], findNear=true, from=0, to=-1) => {
 	if (fs.length == 0) return null;
 	if (to < 0) to = fs.length;
 	if (from + 1 == to) {
 		const dist0 = sync - fs[from];
 		const dist1 = fs[to] - sync;
 		if (dist0 <= dist1) {
-			return fs[from];
+			return (findNear || (dist0 == 0)) ? fs[from] : null;
 		} else {
-			return fs[to];
+			return (findNear || (dist1 == 0)) ? fs[to] : null;
 		}
 	}
 	const mid = from + Math.floor((to - from) / 2);
 	if (fs[mid] < sync) {
-		return SmiEditor.findSync(sync, fs, mid, to);
+		return SmiEditor.findSync(sync, fs, findNear, mid, to);
 	} else {
-		return SmiEditor.findSync(sync, fs, from, mid);
+		return SmiEditor.findSync(sync, fs, findNear, from, mid);
 	}
 }
 SmiEditor.getSyncTime = (sync, forKeyFrame=false, output={}) => { /* output: 리턴값은 숫자여야 하는데, 키프레임 상태값 반환이 필요해져서 C# out처럼 만듦 */
@@ -1459,12 +1459,17 @@ SmiEditor.prototype.updateSync = function(range=null) {
 				// 화면 싱크 체크
 				newLines[i][LINE.TYPE] = TYPE.BASIC;
 				let typeCss = "";
-				if (line.indexOf(" >") > 0) {
-					newLines[i][LINE.TYPE] = TYPE.FRAME;
-					typeCss = " frame";
-				} else if (line.indexOf("\t>") > 0) {
+				if (line.indexOf("\t>") > 0) {
 					newLines[i][LINE.TYPE] = TYPE.RANGE;
 					typeCss = " range";
+				} else {
+					if (line.indexOf(" >") > 0) {
+						newLines[i][LINE.TYPE] = TYPE.FRAME;
+						typeCss = " frame";
+					}
+					if (SmiEditor.findSync(sync, SmiEditor.video.kfs, false)) {
+						typeCss += " keyframe";
+					}
 				}
 				let h = sync;
 				const ms = h % 1000; h = (h - ms) / 1000;
@@ -1818,10 +1823,15 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 			const sync = self.lines[i][LINE.SYNC];
 			if (sync) { // 어차피 0이면 플레이어에서도 씹힘
 				let typeCss = "";
-				if (self.lines[i][LINE.TYPE] == TYPE.FRAME) {
-					typeCss = " frame";
-				} else if (self.lines[i][LINE.TYPE] == TYPE.RANGE) {
+				if (self.lines[i][LINE.TYPE] == TYPE.RANGE) {
 					typeCss = " range";
+				} else {
+					if (self.lines[i][LINE.TYPE] == TYPE.FRAME) {
+						typeCss = " frame";
+					}
+					if (SmiEditor.findSync(sync, SmiEditor.video.kfs, false)) {
+						typeCss += " keyframe";
+					}
 				}
 				let h = sync;
 				let ms = h % 1000; h = (h - ms) / 1000;
@@ -1870,6 +1880,27 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 SmiEditor.prototype.fitSyncsToFrame = function() {
 	if (!SmiEditor.video.fs.length) {
 		return;
+		/*
+		// 테스트용 코드
+		for (let s = 0; s < 2000000; s += 50) {
+			SmiEditor.video.fs.push(s);
+			if (s % 1000 == 0) {
+				SmiEditor.video.kfs.push(s);
+			}
+		}
+		
+		// 키프레임 신뢰 기능 활성화
+		$("#forFrameSync").removeClass("disabled");
+		$("#checkTrustKeyframe").attr({ disabled: false });
+		Progress.set("#forFrameSync", 0);
+		
+		for (let i = 0; i < tabs.length; i++) {
+			const holds = tabs[i].holds;
+			for (let j = 0; j < holds.length; j++) {
+				holds[j].refreshKeyframe();
+			}
+		}
+		*/
 	}
 	for (let i = 0; i < this.lines.length; i++) {
 		const line = this.lines[i];
@@ -1880,6 +1911,19 @@ SmiEditor.prototype.fitSyncsToFrame = function() {
 	// TODO: 중간 싱크 재계산을 여기서 해야 하나?
 	this.input.val(this.text = linesToText(this.lines));
 	this.afterChangeSaved(this.isSaved());
+}
+SmiEditor.prototype.refreshKeyframe = function() {
+	const colSyncs = this.colSync.children();
+	for (let i = 0; i < this.lines.length; i++) {
+		const line = this.lines[i];
+		if (line[LINE.TYPE] == TYPE.BASIC || line[LINE.TYPE] == TYPE.FRAME) {
+			if (SmiEditor.findSync(line[LINE.SYNC], SmiEditor.video.kfs, false)) {
+				$(colSyncs[i]).addClass("keyframe");
+			} else {
+				$(colSyncs[i]).removeClass("keyframe");
+			}
+		}
+	}
 }
 SmiEditor.prototype.moveToSide = function(direction) {
 	if (direction == 0) return;

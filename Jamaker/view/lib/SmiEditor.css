@@ -221,6 +221,7 @@ button {
 	border: 0;
 }
 
+#editor.trust-keyframe .sync.keyframe { font-weight: bold; }
 .sync.frame { border-top-width: 1px; }
 .sync.range + span { border-left-width: 1px; border-style: dotted; }
 .sync.range { opacity: 0.5; }
