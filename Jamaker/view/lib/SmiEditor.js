@@ -1900,16 +1900,24 @@ SmiEditor.prototype.fitSyncsToFrame = function() {
 				holds[j].refreshKeyframe();
 			}
 		}
-		*/
+		//*/
 	}
+	const colSyncs = this.colSync.children();
 	for (let i = 0; i < this.lines.length; i++) {
 		const line = this.lines[i];
 		if (line[LINE.TYPE] == TYPE.BASIC || line[LINE.TYPE] == TYPE.FRAME) {
 			line[LINE.TEXT] = SmiEditor.makeSyncLine((line[LINE.SYNC] = SmiEditor.findSync(line[LINE.SYNC], SmiEditor.video.fs)), line[LINE.TYPE]);
+
+			let h = line[LINE.SYNC];
+			let ms = h % 1000; h = (h - ms) / 1000;
+			let s = h % 60; h = (h - s) / 60;
+			let m = h % 60; h = (h - m) / 60;
+			$(colSyncs[i]).html(h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms + "<br />");
 		}
 	}
 	// TODO: 중간 싱크 재계산을 여기서 해야 하나?
 	this.input.val(this.text = linesToText(this.lines));
+	this.updateHighlight();
 	this.afterChangeSaved(this.isSaved());
 }
 SmiEditor.prototype.refreshKeyframe = function() {
