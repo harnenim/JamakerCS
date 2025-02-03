@@ -60,6 +60,9 @@ function refreshTime(receiveTime, withoutTitle) {
 			setTitle("미리보기 - " + h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms);
 		}
 		titleTime = receiveTime;
+		
+		// UI 갱신 딜레이 고려해서 10ms 일찍 출력함
+		receiveTime += 10;
 	}
 	
 	for (let hold = 0; hold < lines.length; hold++) {
