@@ -297,6 +297,8 @@ Tab.prototype.selectLastHold = function() {
 	}
 	if (this.lastHold && this.holds[this.lastHold]) {
 		this.selectHold(this.lastHold);
+	} else {
+		this.selectHold(1);
 	}
 }
 Tab.prototype.replaceBeforeSave = function() {
@@ -668,10 +670,7 @@ function init(jsonSetting) {
 		e.preventDefault();
 		
 		const th = $(this).parent();
-		closingTab = th[0];
-		setTimeout(() => { // 탭 선택 이벤트 방지... e.preventDefault()로 안 되네...
-			closingTab == null;
-		}, 1);
+		closingTab = th[0]; // 탭 선택 이벤트 방지... e.preventDefault()로 안 되네...
 		
 		let saved = true;
 		{	const currentTab = th.data("tab");
@@ -682,7 +681,7 @@ function init(jsonSetting) {
 				}
 			}
 		}
-		confirm((saved ? "저장되지 않았습니다.\n" : "") + "탭을 닫으시겠습니까?", function() {
+		confirm((!saved ? "저장되지 않았습니다.\n" : "") + "탭을 닫으시겠습니까?", () => {
 			const index = closeTab(th);
 
 			setTimeout(() => {
@@ -697,6 +696,13 @@ function init(jsonSetting) {
 					}
 				}
 				$("#tabSelector .th:eq(" + tab + ")").click();
+				
+				closingTab = null;
+			}, 1);
+			
+		}, () => {
+			setTimeout(() => {
+				closingTab = null;
 			}, 1);
 		});
 	});
