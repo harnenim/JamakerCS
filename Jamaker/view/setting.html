@@ -299,7 +299,7 @@ $(() => {
 						,	"func": func
 					});
 				}
-				const tr = $("<tr>").addClass("key-" + (keyName=='`' ? '~' : keyName)).append(th);
+				const tr = $("<tr>").addClass("key-" + (keyName=='`' ? '-' : keyName)).append(th);
 				for (let j = 0; j < withs.length; j++) {
 					const w = withs[j];
 					const td = $("<td>");
@@ -397,7 +397,7 @@ $(() => {
 				            ? ("F" + (e.keyCode - 111))
 				            : key;
 				const keyIndex = keyNames.indexOf(keyName);
-				const selector = "tr.key-" + (keyName == '`' ? '~' : keyName);
+				const selector = "tr.key-" + (keyName == '`' ? '-' : keyName);
 				
 				let w = null;
 				if (e.shiftKey) {
@@ -689,6 +689,7 @@ $(() => {
 
 		let selectParser = $("select[name=highlight_parser]");
 		let selectStyle  = $("select[name=highlight_style]" );
+		let selectSize   = $("select[name=size]");
 		if (opener.highlights) {
 			for (let i = 0; i < opener.highlights.length; i++) {
 				const item = opener.highlights[i].trim();
@@ -709,11 +710,13 @@ $(() => {
 				$("#optionsForHighlight").addClass   ("disabled").find("input, select").attr({ disabled: true  });
 			}
 		}).change();
+
+		selectSize.find("option[value='" + selectSize.data("value") + "']").prop("selected", true);
 		
 		$("#style").on("input propertychange", function() {
 			setSaved("style", false);
 		});
-	
+		
 		submitFuncs["style"] = () => {
 			setting.size             = $("select[name=size]").val();
 			setting.useTab           = $("input[name=useTab]").prop("checked");
