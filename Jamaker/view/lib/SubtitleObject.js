@@ -2650,6 +2650,8 @@ Subtitle.SmiFile.prototype.antiNormalize = function() {
 				} else {
 					this.body = newBody.concat(this.body.slice(removeEnd));
 				}
+				// 이중변환 재해석 필요할 수 있음
+				i--;
 				
 			} else if (comment.startsWith("Hold=")) {
 				removeStart = i;
@@ -2671,6 +2673,15 @@ Subtitle.SmiFile.prototype.antiNormalize = function() {
 					hold.name = comment.substring(nameIndex + 1);
 				}
 				result.push(hold);
+				
+				if (removeStart > 0
+						&& this.body[removeStart - 1].text.split("&nbsp;").join("").trim()) {
+					// 내포 홀드 분리 후 메인 홀드에 종료싱크 넣어줘야 하는 경우
+					const newBody = this.body.slice(0, removeStart);
+					newBody.push(new Subtitle.Smi(hold.body[0].start, hold.body[0].syncType, "&nbsp;"));
+					newBody.push(...this.body.slice(removeStart));
+					this.body = newBody;
+				}
 				i--;
 				
 			} else {
