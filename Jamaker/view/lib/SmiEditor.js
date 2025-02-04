@@ -1879,8 +1879,9 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 }
 SmiEditor.prototype.fitSyncsToFrame = function() {
 	if (!SmiEditor.video.fs.length) {
+		//*
 		return;
-		/*
+		/*/
 		// 테스트용 코드
 		for (let s = 0; s < 2000000; s += 50) {
 			SmiEditor.video.fs.push(s);
@@ -1902,8 +1903,16 @@ SmiEditor.prototype.fitSyncsToFrame = function() {
 		}
 		//*/
 	}
+	const cursor = this.getCursor();
+	const range = [0, this.lines.length];
+	const cursorLine = this.text.substring(0, cursor[0]).split("\n").length - 1;
+	if (cursor[0] < cursor[1]) {
+		range[0] = cursorLine;
+		range[1] = this.text.substring(0, cursor[1]).split("\n").length;
+	}
+	
 	const colSyncs = this.colSync.children();
-	for (let i = 0; i < this.lines.length; i++) {
+	for (let i = range[0]; i < range[1]; i++) {
 		const line = this.lines[i];
 		if (line[LINE.TYPE] == TYPE.BASIC || line[LINE.TYPE] == TYPE.FRAME) {
 			const sync = SmiEditor.findSync(line[LINE.SYNC], SmiEditor.video.fs);
@@ -1913,10 +1922,10 @@ SmiEditor.prototype.fitSyncsToFrame = function() {
 				const colSync = $(colSyncs[i]);
 				let h = sync;
 				let ms = h % 1000; h = (h - ms) / 1000;
-				let s = h % 60; h = (h - s) / 60;
-				let m = h % 60; h = (h - m) / 60;
-				colSync.html(h + ":" + (m > 9 ? "" : "0") + m + ":" + (s > 9 ? "" : "0") + s + ":" + (ms > 99 ? "" : "0") + (ms > 9 ? "" : "0") + ms + "<br />");
-
+				let s  = h %   60; h = (h -  s) /   60;
+				let m  = h %   60; h = (h -  m) /   60;
+				colSync.html(h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms + "<br />");
+				
 				// 키프레임 됐을 때 업데이트
 				const kSync = SmiEditor.findSync(line[LINE.SYNC], SmiEditor.video.kfs);
 				if (kSync == sync) {
@@ -1925,8 +1934,10 @@ SmiEditor.prototype.fitSyncsToFrame = function() {
 			}
 		}
 	}
-	// TODO: 중간 싱크 재계산을 여기서 해야 하나?
+	// TODO: 중간 싱크 재계산도 여기서 해줘야 하나?
+	// 그냥 저장 자동치환에 맡기는 게 나은가? 사용 빈도 자체가 드문데
 	this.input.val(this.text = linesToText(this.lines));
+	this.setCursor(cursorLine == 0 ? 0 : (this.text.split("\n").slice(0, cursorLine).join("\n").length + 1));
 	this.updateHighlight();
 	this.afterChangeSaved(this.isSaved());
 }
