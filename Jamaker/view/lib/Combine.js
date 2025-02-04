@@ -653,9 +653,8 @@ if (Subtitle && Subtitle.SmiFile) {
 				const hold = imports[i][1];
 				const importBody = imports[i][2];
 				const removePrev = (index > 0 && main.body[index - 1].start == hold.start);
-				let holdEnd = hold.end + 1;
+				let holdEnd = hold.end;
 				if (index < main.body.length) {
-					holdEnd = main.body[index].start;
 					if (hold.end == main.body[index].start) {
 						importBody.pop();
 					}
