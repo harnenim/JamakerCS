@@ -78,6 +78,16 @@ window.Combine = {
 	}
 	
 	function parse(text, checker) {
+		{	// 주석 제거 후 결합
+			const comments = text.split("\n<!--");
+			text = comments[0];
+			for (let i = 1; i < comments.length; i++) {
+				const index = comments[i].indexOf("-->");
+				if (index > 0) {
+					text += comments[i].substring(index + 3);
+				}
+			}
+		}
 		const lines = text.split("\n");
 		const parseds = [];
 		
