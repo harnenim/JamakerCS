@@ -193,7 +193,6 @@ function setTextToView(text, hold) {
 					q = "";
 				}
 				if (size == 0) {
-					let tmp = tag.substring(index + 5 + q.length);
 					for (qEnd = index + 5 + q.length; qEnd < tag.length; qEnd++) {
 						let c = tag[qEnd];
 						if (isFinite(c)) {
@@ -204,6 +203,7 @@ function setTextToView(text, hold) {
 					}
 				}
 				if (size) {
+					/*
 					// 팟플레이어 기준 계산 
 					let potSize = (window.innerWidth / 586) * size;
 					
@@ -212,6 +212,9 @@ function setTextToView(text, hold) {
 					//if (potSize < 10) potSize += 50;
 					
 					let style = 'style="font-size: ' + potSize + 'px;"';
+					*/
+					// 18은 팟플레이어 설정에 따라 달라지는데...
+					let style = 'style="font-size: ' + (size / 18 * 100) + '%;"';
 					text = text.substring(0, begin + index) + style + text.substring(begin + qEnd);
 					end = end - qEnd + index + style.length;
 				}
