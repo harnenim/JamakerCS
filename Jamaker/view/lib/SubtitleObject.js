@@ -1898,10 +1898,10 @@ Subtitle.Smi.prototype.fromAttr = function(attrs) {
 	this.text = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
 	return this;
 }
-Subtitle.Smi.fromAttr = (attrs) => {
+Subtitle.Smi.fromAttr = (attrs, forWeb=false) => {
 	let text = "";
-	const lastAttrs = [];
 	
+	const a = $("<a>");
 	let last = new Subtitle.Attr();
 	for (let i = 0; i < attrs.length; i++) {
 		const attr = attrs[i];
@@ -1928,7 +1928,11 @@ Subtitle.Smi.fromAttr = (attrs) => {
 			// 신규 속성이 있을 때 여는 태그
 			if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.shake != null || attr.typing != null) {
 				text += "<FONT";
-				if (attr.fs   >  0 ) text += " size=\"" + attr.fs + "\"";
+				if (attr.fs > 0) {
+					// TODO: 18은 팟플레이어 설정을 따른 건데...
+					if (forWeb)      text += " style=\"font-size: " + (attr.fs / 18 * 100) + "%;\"";
+					else             text += " size=\"" + attr.fs + "\"";
+				}
 				if (attr.fn   != "") text += " face=\"" + attr.fn + "\"";
 				if (attr.fc   != "") text += " color=\""+ Subtitle.Smi.colorFromAttr(attr.fc) + "\"";
 				if (attr.fade != 0 ) text += " fade=\"" + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\"";
@@ -1954,13 +1958,13 @@ Subtitle.Smi.fromAttr = (attrs) => {
 			else if (last.u && !attr.u) text += "</U>";
 			
 			if ( last.fs   != attr.fs
-					||  last.fn   != attr.fn
-					||  last.fc   != attr.fc
-					||  last.fade != attr.fade
-					|| (last.shake == null && attr.shake != null)
-					|| (last.shake != null && attr.shake == null)
-					|| (last.typing == null && attr.typing != null)
-					|| (last.typing != null && attr.typing == null)
+			 ||  last.fn   != attr.fn
+			 ||  last.fc   != attr.fc
+			 ||  last.fade != attr.fade
+			 || (last.shake  == null && attr.shake  != null)
+			 || (last.shake  != null && attr.shake  == null)
+			 || (last.typing == null && attr.typing != null)
+			 || (last.typing != null && attr.typing == null)
 			) {
 				// 기존에 속성이 있었을 때만 닫는 태그
 				if (last.fs > 0 || !last.fn == ("") || !last.fc == ("") || last.fade != 0 || last.shake != null || last.typing != null)
@@ -1969,7 +1973,10 @@ Subtitle.Smi.fromAttr = (attrs) => {
 				// 신규 속성이 있을 때만 여는 태그
 				if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.shake != null || attr.typing != null) {
 					text += "<FONT";
-					if (attr.fs   >  0 ) text += " size=\"" + attr.fs + "\"";
+					if (attr.fs > 0) {
+						if (forWeb)      text += " style=\"font-size: " + (attr.fs / 18 * 100) + "%;\"";
+						else             text += " size=\"" + attr.fs + "\"";
+					}
 					if (attr.fn   != "") text += " face=\"" + attr.fn + "\"";
 					if (attr.fc   != "") text += " color=\""+ Subtitle.Smi.colorFromAttr(attr.fc) + "\"";
 					if (attr.fade != 0 ) text += " fade=\"" + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\"";
@@ -1979,10 +1986,11 @@ Subtitle.Smi.fromAttr = (attrs) => {
 				}
 			}
 		}
-		
-		text += $("<a>").text(attr.text).html();
+
+		text += (attr.text == "\n") ? "<br>" : a.text(attr.text).html();
 		last = attr;
 	}
+	a.remove();
 	
 	return text;
 }
@@ -2641,11 +2649,16 @@ Subtitle.SmiFile.prototype.antiNormalize = function() {
 			if (comment.length > 6 && comment.substring(0, 6).toUpperCase() == "<SYNC ") {
 				let newBody = new Subtitle.SmiFile(comment).body;
 				if (i > 0) {
+					if (!newBody  [0    ].text.split("&nbsp;").join("").trim()
+					 && !this.body[i - 1].text.split("&nbsp;").join("").trim()) {
+						// 메인홀드 앞쪽이 공백싱크면서 주석 내용물도 공백싱크로 시작할 경우 중복 제거
+						newBody = newBody.slice(1);
+					}
 					newBody = this.body.slice(0, i).concat(newBody);
 				}
 				if (removeEnd < this.body.length
-						&& !this.body[removeEnd].text.split("&nbsp;").join("").trim()
-						&& !newBody[newBody.length - 1].text.split("&nbsp;").join("").trim()) {
+						&& !this.body[removeEnd         ].text.split("&nbsp;").join("").trim()
+						&& !newBody  [newBody.length - 1].text.split("&nbsp;").join("").trim()) {
 					this.body = newBody.concat(this.body.slice(removeEnd + 1));
 				} else {
 					this.body = newBody.concat(this.body.slice(removeEnd));
@@ -2655,6 +2668,11 @@ Subtitle.SmiFile.prototype.antiNormalize = function() {
 				
 			} else if (comment.startsWith("Hold=")) {
 				removeStart = i;
+				if (removeEnd < this.body.length
+						&& !this.body[removeEnd].text.split("&nbsp;").join("").trim()) {
+					// 바로 다음이 공백 싱크면 내포 홀드에 포함
+					removeEnd++;
+				}
 				const hold = new Subtitle.SmiFile();
 				hold.body = this.body.splice(removeStart, removeEnd - removeStart);
 				hold.body[0].text = afterComment;
@@ -2675,7 +2693,7 @@ Subtitle.SmiFile.prototype.antiNormalize = function() {
 				result.push(hold);
 				
 				if (removeStart > 0
-						&& this.body[removeStart - 1].text.split("&nbsp;").join("").trim()) {
+						&& !!this.body[removeStart - 1].text.split("&nbsp;").join("").trim()) {
 					// 내포 홀드 분리 후 메인 홀드에 종료싱크 넣어줘야 하는 경우
 					const newBody = this.body.slice(0, removeStart);
 					newBody.push(new Subtitle.Smi(hold.body[0].start, hold.body[0].syncType, "&nbsp;"));

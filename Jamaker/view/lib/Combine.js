@@ -27,8 +27,8 @@ window.Combine = {
 	const LOG = false;
 	
 	function getWidth(smi, checker) {
-		// RUBY태그 문법이 미묘하게 달라서 가공 필요
-		smi = smi.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
+		// RUBY태그 없애고 계산
+		smi = smi.split("<RT").join("<!--RT").split("</RT>").join("</RT-->");
 		
 		// 태그 밖의 공백문자 치환
 		{	const tags = smi.split("<");
@@ -40,12 +40,16 @@ window.Combine = {
 			}
 			smi = tags.join("<");
 		}
+		/* 왜 html로 안 하고 text로 바꿨었더라?
 		const lines = smi.split(/<br>/gi);
 		for (let i = 0; i < lines.length; i++) {
 			lines[i] = checker.html(lines[i]).text();
 		}
 		const width = checker.text(lines.join("\n")).width();
 		//console.log(width, lines);
+		*/
+		const width = checker.html(smi).width();
+		if (LOG) console.log(width, smi);
 		return width;
 	}
 	function getChecker() {
@@ -318,15 +322,37 @@ window.Combine = {
 					if (sync[WIDTH] < group.maxWidth) {
 						let line = sync[TEXT];
 						const lines = line.split(/<br>/gi);
+						let attrs = Subtitle.Smi.toAttr(line);
+						for (let k = 0; k < attrs.length; k++) {
+							const attr = attrs[k];
+							const attrLines = attr.text.split("\n");
+							if (attrLines.length > 1) {
+								const newAttrs = [];
+								for (let l = 0; l < attrLines.length; l++) {
+									if (l > 0) {
+										const brAttr = new Subtitle.Attr();
+										brAttr.text = "\n";
+										newAttrs.push(brAttr);
+									}
+									const newAttr = new Subtitle.Attr(attr);
+									newAttr.text = attrLines[l];
+									newAttrs.push(newAttr);
+								}
+								attrs = attrs.slice(0, k).concat(newAttrs).concat(attrs.slice(k + 1));
+								k += attrLines.length - 1;
+							}
+						}
+						//const lines = Subtitle.Smi.fromAttr(attrs).split(/<br>/gi);
+						const htmlLines = Subtitle.Smi.fromAttr(attrs, true).split(/<br>/gi);
 						
 						// 여러 줄일 경우 제일 긴 줄 찾기
-						if (lines.length > 1) {
+						if (htmlLines.length > 1) {
 							let maxWidth = 0;
-							for (let k = 0; k < lines.length; k++) {
-								const width = getWidth(lines[k], checker);
+							for (let k = 0; k < htmlLines.length; k++) {
+								const width = getWidth(htmlLines[k], checker);
 								if (width > maxWidth) {
 									maxWidth = width;
-									line = lines[k];
+									line = htmlLines[k];
 								}
 							}
 						}
@@ -337,7 +363,7 @@ window.Combine = {
 						let lastPad;
 						let lastWidth;
 						if (LOG) console.log(line.split("&nbsp;").join(" ") + ": " + width);
-						const realLines = line.split("\n"); // 실제론 여러 줄일 수 있음
+						const realLines = line.split("\n"); // 실제론 여러 줄일 수 있음 <- 바로 위에서 한 줄만 남긴 것 같은데...?
 						do {
 							lastPad = pad;
 							lastWidth = width;
@@ -597,6 +623,7 @@ if (Subtitle && Subtitle.SmiFile) {
 				const hold = holdsWithoutMain[hi];
 				result[hold.resultIndex = (hi + 1)] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + hold.text.split("<").join("<​").split(">").join("​>") + "\n-->";
 				hold.imported = false;
+				hold.afterMain = false;
 				
 				// 내용물 없으면 내포 홀드 아님
 				const holdBody = new Subtitle.SmiFile(hold.text).body;
@@ -608,6 +635,7 @@ if (Subtitle && Subtitle.SmiFile) {
 					const i = main.body.length;
 					const lastLine = main.body[i - 1];
 					if (lastLine.start <= hold.start && (lastLine.text.split("&nbsp;").join("").trim().length == 0)) {
+						hold.afterMain = true;
 						let hasImport = false;
 						for (let j = 0; j < imports.length; j++) {
 							if (imports[j][0] == i) {
@@ -658,6 +686,9 @@ if (Subtitle && Subtitle.SmiFile) {
 					if (hold.end == main.body[index].start) {
 						importBody.pop();
 					}
+				}
+				if (hold.afterMain) {
+					holdEnd++;
 				}
 				if (withComment) {
 					importBody[0].text = "<!-- End=" + holdEnd + "\nHold=" + hold.pos + "|" + hold.name + "\n-->\n" + importBody[0].text;
