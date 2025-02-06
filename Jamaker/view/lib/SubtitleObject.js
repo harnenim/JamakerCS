@@ -1898,7 +1898,7 @@ Subtitle.Smi.prototype.fromAttr = function(attrs) {
 	this.text = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
 	return this;
 }
-Subtitle.Smi.fromAttr = (attrs, forWeb=false) => {
+Subtitle.Smi.fromAttr = (attrs, fontSize=0) => {
 	let text = "";
 	
 	const a = $("<a>");
@@ -1929,8 +1929,7 @@ Subtitle.Smi.fromAttr = (attrs, forWeb=false) => {
 			if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.shake != null || attr.typing != null) {
 				text += "<FONT";
 				if (attr.fs > 0) {
-					// TODO: 18은 팟플레이어 설정을 따른 건데...
-					if (forWeb)      text += " style=\"font-size: " + (attr.fs / 18 * 100) + "%;\"";
+					if (fontSize)    text += " style=\"font-size: " + (attr.fs / fontSize * 100) + "%;\"";
 					else             text += " size=\"" + attr.fs + "\"";
 				}
 				if (attr.fn   != "") text += " face=\"" + attr.fn + "\"";
@@ -1974,7 +1973,7 @@ Subtitle.Smi.fromAttr = (attrs, forWeb=false) => {
 				if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.shake != null || attr.typing != null) {
 					text += "<FONT";
 					if (attr.fs > 0) {
-						if (forWeb)      text += " style=\"font-size: " + (attr.fs / 18 * 100) + "%;\"";
+						if (fontSize)    text += " style=\"font-size: " + (attr.fs / fontSize * 100) + "%;\"";
 						else             text += " size=\"" + attr.fs + "\"";
 					}
 					if (attr.fn   != "") text += " face=\"" + attr.fn + "\"";

@@ -1,5 +1,6 @@
 window.Combine = {
 	css: 'font-family: 맑은 고딕;'
+,	defaultSize: 18 // TODO: 설정에서 바뀌도록...?
 };
 {
 	const LINE = {
@@ -237,7 +238,7 @@ window.Combine = {
 									k += attrLines.length - 1;
 								}
 							}
-							sizedWidth = getWidth(Subtitle.Smi.fromAttr(attrs, true), checker);
+							sizedWidth = getWidth(Subtitle.Smi.fromAttr(attrs, Combine.defaultSize), checker);
 						}
 						
 						//[STIME, STYPE, ETIME, ETYPE, TEXT, LINES, WIDTH, SIZED];
@@ -336,6 +337,7 @@ window.Combine = {
 		}
 		for (let gi = 0; gi < groups.length; gi++) {
 			const group = groups[gi];
+			const withFontSize = group.maxSized < group.maxWidth;
 			group.lines = [];
 			let last = null;
 			
@@ -362,7 +364,7 @@ window.Combine = {
 						{
 							let groupMaxWidth;
 							let lines;
-							if (group.maxSized < group.maxWidth) {
+							if (withFontSize) {
 								// 글씨 크기 적용했을 때 더 작아졌으면 이걸 기준으로 구함
 								
 								if (sync[WIDTH] > group.maxSized) {
@@ -502,6 +504,9 @@ window.Combine = {
 							}
 						}
 						sync[TEXT] = lines.join("<br>");
+						if (withFontSize && (sync[WIDTH] == sync[SIZED])) {
+							sync[TEXT] = '<font size="' + Combine.defaultSize + '">' + sync[TEXT] + '</font>';
+						}
 					}
 					
 					// 줄 높이 맞춰주기

@@ -28,6 +28,7 @@ function setSetting(jsonSetting) {
 let lines = [[],[],[]];
 let viewer = null;
 let viewers = [];
+// TODO: 사실 window.open이 아닌 별도 창을 띄울 경우를 위해 변수 공유 안 하고 이렇게 받은 거였는데...
 function setLines(newLines) {
 	lines = JSON.parse(newLines);
 	if (lines.length == 0) {
@@ -213,8 +214,9 @@ function setTextToView(text, hold) {
 					
 					let style = 'style="font-size: ' + potSize + 'px;"';
 					*/
-					// 18은 팟플레이어 설정에 따라 달라지는데...
-					let style = 'style="font-size: ' + (size / 18 * 100) + '%;"';
+					// TODO: defaultSize 설정 만들어서 가져오도록 하는 게...?
+					let defaultSize = 18;
+					let style = 'style="font-size: ' + (size / defaultSize * 100) + '%;"';
 					text = text.substring(0, begin + index) + style + text.substring(begin + qEnd);
 					end = end - qEnd + index + style.length;
 				}
