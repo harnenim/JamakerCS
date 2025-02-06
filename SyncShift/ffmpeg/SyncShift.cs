@@ -112,7 +112,7 @@ namespace Jamaker
                         }
                     }
                     List<double> ratios = new List<double>();
-                    for (var i = 0; i < CHECK_RANGE; i++)
+                    for (int i = 0; i < CHECK_RANGE; i++)
                     {
                         ratios.Add(Math.Log10((origin[originStart + i] + 0.000001) / (target[originStart + tShift + i] + 0.000001)));
                     }
