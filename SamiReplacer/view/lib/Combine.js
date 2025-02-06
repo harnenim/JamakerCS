@@ -719,6 +719,9 @@ if (Subtitle && Subtitle.SmiFile) {
 				if (holdBody.length == 0) {
 					continue;
 				}
+				if (!hold.end) {
+					hold.end = holdBody[holdBody.length - 1].start;
+				}
 				
 				{	// 메인 홀드보다 뒤에 있는지 확인
 					const i = main.body.length;

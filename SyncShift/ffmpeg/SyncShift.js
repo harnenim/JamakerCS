@@ -27,7 +27,7 @@ SyncShift.GetShiftsForRange = function(origin, target, range, targetRangeStart, 
 	
 	const shifts = [];
 	const start = range.start;
-	const shift = range.shift;
+	let   shift = range.shift;
 	const limitOfOrigin = Math.min(range.end, origin.length);
 
     let minPoint = null;
