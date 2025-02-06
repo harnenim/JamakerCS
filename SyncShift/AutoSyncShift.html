@@ -60,7 +60,7 @@ window.main = new WebForm();
 			main.mainView.contentWindow.binder = main.binder = new Binder(main);
 
 			const cd = main.mainView.contentDocument;
-			cd.addEventListener("dragenter", (e) => {
+			cd.addEventListener("dragenter", function(e) {
 				e.preventDefault();
 				main.showDragging();
 			});
@@ -306,31 +306,31 @@ window.main = new WebForm();
 		main.showProcessing("작업 중");
 		
 		setTimeout(function() {
-			let sRanges = strRanges.length ? strRanges.split('|') : [];
-			let sShifts = strShifts.length ? strShifts.split('|') : [];
-			let ranges = [];
+			const sRanges = strRanges.length ? strRanges.split('|') : [];
+			const sShifts = strShifts.length ? strShifts.split('|') : [];
+			const ranges = [];
 
 			if (sRanges.length == 0) {
 				main.script("addRange", [0, main.originVideoFile.GetSfs().Count * 10]);
 				ranges.push(new Range(0, main.originVideoFile.GetSfs().length));
 			} else {
-				let shifts = [];
+				const shifts = [];
 				for (let i = 0; i < sShifts.length; i++) {
-					let split = sShifts[i].split(':');
-					let start = Math.floor(Number(split[0]) / 10);
-					let shift = Math.floor(Number(split[1]) / 10);
+					const split = sShifts[i].split(':');
+					const start = Math.floor(Number(split[0]) / 10);
+					const shift = Math.floor(Number(split[1]) / 10);
 					shifts.push(new Range(start, shift));
 				}
 				
 				let last = null;
 				for (let i = 0; i < sRanges.length; i++) {
-					let split = sRanges[i].split('~');
-					let start = Math.floor(Number(split[0]) / 10);
-					let end   = Math.floor(Number(split[1]) / 10);
+					const split = sRanges[i].split('~');
+					const start = Math.floor(Number(split[0]) / 10);
+					const end   = Math.floor(Number(split[1]) / 10);
 					ranges.push(last = new Range(start, end, last == null ? 0 : last.shift));
 					
 					for (let j = 0; j < shifts.length; j++) {
-						let shift = shifts[j];
+						const shift = shifts[j];
 						if (shift.start < start) continue;
 						if (shift.start >= end) break;
 
@@ -344,7 +344,7 @@ window.main = new WebForm();
 				}
 			}
 
-			let result = SyncShift.GetShiftsForRanges(
+			const result = SyncShift.GetShiftsForRanges(
 					main.originVideoFile.GetSfs()
 				,	main.targetVideoFile.GetSfs()
 				,	ranges
@@ -352,7 +352,7 @@ window.main = new WebForm();
 			);
 			
 			for (let i = 0; i < result.length; i++) {
-				let shift = result[i];
+				const shift = result[i];
 				main.script("addShift", [shift.start * 10, shift.shift * 10]);
 			}
 
@@ -367,7 +367,7 @@ window.main = new WebForm();
 			main.script("alert", ["목표 영상 파일을 선택해주세요."]);
 			return;
 		}
-		let path = targetVideoFile.path.Substring(0, targetVideoFile.path.Length - new FileInfo(targetVideoFile.path).Extension.Length) + "." + operation;
+		const path = targetVideoFile.path.Substring(0, targetVideoFile.path.Length - new FileInfo(targetVideoFile.path).Extension.Length) + "." + operation;
 
 		StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8);
 		sw.Write(text);
@@ -376,7 +376,7 @@ window.main = new WebForm();
 		main.script("alert", ["저장했습니다."]);
 		*/
 		// 무조건 대화상자 열어야 함
-		let types = [];
+		const types = [];
 		switch (operation) {
 			case "smi": {
 				types.push({ description: "SAMI", accept: { "text/sami": [".smi"] } });
@@ -391,12 +391,12 @@ window.main = new WebForm();
 				break;
 			}
 		}
-		let fileBuffer = await window.showSaveFilePicker({ types: types });
+		const fileBuffer = await window.showSaveFilePicker({ types: types });
 		if (fileBuffer) {
-			let stream = await fileBuffer.createWritable();
+			const stream = await fileBuffer.createWritable();
 			await stream.write("\ufeff" + text); // BOM 넣어줌
 			await stream.close();
- 		   main.script("alert", ["저장했습니다."]);
+ 			main.script("alert", ["저장했습니다."]);
 		}
 	}
 }
