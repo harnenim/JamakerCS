@@ -131,6 +131,11 @@ const window_open = function(url, name, options, opener) {
 			case ".srt":
 			case ".txt": {
 				await editor.loadFile(file);
+				break;
+			}
+			case ".fkf": {
+				await editor.script("loadFkfFile", [file]);
+				break;
 			}
 		}
 	}

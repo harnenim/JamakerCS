@@ -1196,46 +1196,55 @@ function loadFkf(fkfName) {
 	req.open("GET", "../temp/" + fkfName);
 	req.responseType = "arraybuffer";
 	req.onload = (e) => {
-		const buffer = req.response;
-		
-		const fkf = new Int32Array(buffer);
-		const vfsLength = fkf[0];
-		const kfsLength = fkf[1];
-		
-		const vfs = [];
-		const kfs = [];
-		
-		let offset = 8;
-		let view = new DataView(buffer.slice(offset, offset + (vfsLength * 4)));
-		for (let i = 0; i < vfsLength; i++) {
-			vfs.push(view.getInt32(i * 4, true));
-		}
-		offset = offset + (vfsLength * 4);
-		view = new DataView(buffer.slice(offset, offset + (kfsLength * 4)));
-		for (let i = 0; i < kfsLength; i++) {
-			kfs.push(view.getInt32(i * 4, true));
-		}
-		
-		SmiEditor.video.fs  = vfs;
-		SmiEditor.video.kfs = kfs;
-		
-		// 키프레임 신뢰 기능 활성화
-		$("#forFrameSync").removeClass("disabled");
-		$("#checkTrustKeyframe").attr({ disabled: false });
-		Progress.set("#forFrameSync", 0);
-		
-		for (let i = 0; i < tabs.length; i++) {
-			const holds = tabs[i].holds;
-			for (let j = 0; j < holds.length; j++) {
-				holds[j].refreshKeyframe();
-			}
-		}
+		afterLoadFkfFile(req.response);
 	}
 	req.onerror = (e) => {
 		// 실패했어도 프로그레스바는 없애줌
 		Progress.set("#forFrameSync", 0);
 	}
 	req.send();
+}
+// 웹버전 샘플에서 fkf 파일 드래그로 열었을 경우
+function loadFkfFile(file) {
+	const fr = new FileReader();
+	fr.onload = function(e) {
+		afterLoadFkfFile(e.target.result);
+	}
+	fr.readAsArrayBuffer(file);
+}
+function afterLoadFkfFile(buffer) {
+	const fkf = new Int32Array(buffer);
+	const vfsLength = fkf[0];
+	const kfsLength = fkf[1];
+	
+	const vfs = [];
+	const kfs = [];
+	
+	let offset = 8;
+	let view = new DataView(buffer.slice(offset, offset + (vfsLength * 4)));
+	for (let i = 0; i < vfsLength; i++) {
+		vfs.push(view.getInt32(i * 4, true));
+	}
+	offset = offset + (vfsLength * 4);
+	view = new DataView(buffer.slice(offset, offset + (kfsLength * 4)));
+	for (let i = 0; i < kfsLength; i++) {
+		kfs.push(view.getInt32(i * 4, true));
+	}
+	
+	SmiEditor.video.fs  = vfs;
+	SmiEditor.video.kfs = kfs;
+	
+	// 키프레임 신뢰 기능 활성화
+	$("#forFrameSync").removeClass("disabled");
+	$("#checkTrustKeyframe").attr({ disabled: false });
+	Progress.set("#forFrameSync", 0);
+	
+	for (let i = 0; i < tabs.length; i++) {
+		const holds = tabs[i].holds;
+		for (let j = 0; j < holds.length; j++) {
+			holds[j].refreshKeyframe();
+		}
+	}
 }
 
 // 종료 전 C# 쪽에서 호출
