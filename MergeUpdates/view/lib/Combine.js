@@ -823,7 +823,7 @@ if (Subtitle && Subtitle.SmiFile) {
 				if (aPos > bPos) return 1;
 				return 0;
 			});
-			
+
 			const holdSmis = [];
 			for (let hi = 1; hi < holds.length; hi++) {
 				const hold = holds[hi];
@@ -835,11 +835,11 @@ if (Subtitle && Subtitle.SmiFile) {
 				if (withNormalize) {
 					Subtitle.Smi.normalize(smi.body, false);
 				}
-				
+
 				if (smi.body.length == 0) {
 					continue;
 				}
-				
+
 				// 메인에서 홀드와 겹치는 영역 찾기
 				let mainBegin = 0;
 				let mainEnd = 0;
@@ -864,7 +864,7 @@ if (Subtitle && Subtitle.SmiFile) {
 					if (main.body[mainBegin].text.split("&nbsp;").join("").trim().length == 0) {
 						mainBegin++;
 					}
-					
+
 					mainEnd = mainBegin;
 					const end = smi.body[smi.body.length - 1].start;
 					for (; mainEnd < main.body.length; mainEnd++) {
@@ -879,11 +879,11 @@ if (Subtitle && Subtitle.SmiFile) {
 						continue;
 					}
 				}
-				
+
 				// 홀드 결합
 				const sliced = new Subtitle.SmiFile();
 				sliced.body = main.body.slice(mainBegin, mainEnd);
-				
+
 				const slicedText = sliced.toTxt().trim();
 				const combineText = smi.toTxt().trim();
 				const combined = new Subtitle.SmiFile(((hold.pos < 0) ? Combine.combine(slicedText, combineText) : Combine.combine(combineText, slicedText)).join("\n"));
@@ -892,58 +892,56 @@ if (Subtitle && Subtitle.SmiFile) {
 			}
 			
 			if (withComment) {
-				if (withCombine) {
-					// 홀드 결합 있을 경우 주석처리 재계산
-					logs = [];
-					let oi = 0;
-					let ni = 0;
+				// 홀드 결합 있을 경우 주석처리 재계산
+				logs = [];
+				let oi = 0;
+				let ni = 0;
+				
+				while ((oi < originBody.length) && (ni < main.body.length)) {
+					if ((originBody[oi].start == main.body[ni].start)
+						&& (originBody[oi].text  == main.body[ni].text )) {
+						oi++;
+						ni++;
+						continue;
+					}
 					
+					// 변환결과가 원본과 동일하지 않은 범위 찾기
+					const newLog = {
+							from: [oi, originBody.length]
+						,	to  : [ni, main.body.length]
+						,	start: main.body[ni].start
+						,	end: 999999999
+					};
 					while ((oi < originBody.length) && (ni < main.body.length)) {
-						if ((originBody[oi].start == main.body[ni].start)
-						 && (originBody[oi].text  == main.body[ni].text )) {
+						if (originBody[oi].start < main.body[ni].start) {
+							oi++;
+							continue;
+						}
+						if (originBody[oi].start > main.body[ni].start) {
+							ni++;
+							continue;
+						}
+						if (originBody[oi].text != main.body[ni].text) {
 							oi++;
 							ni++;
 							continue;
 						}
-						
-						// 변환결과가 원본과 동일하지 않은 범위 찾기
-						const newLog = {
-								from: [oi, originBody.length]
-							,	to  : [ni, main.body.length]
-							,	start: main.body[ni].start
-							,	end: 999999999
-						};
-						while ((oi < originBody.length) && (ni < main.body.length)) {
-							if (originBody[oi].start < main.body[ni].start) {
-								oi++;
-								continue;
-							}
-							if (originBody[oi].start > main.body[ni].start) {
-								ni++;
-								continue;
-							}
-							if (originBody[oi].text != main.body[ni].text) {
-								oi++;
-								ni++;
-								continue;
-							}
-							// 싱크-내용 모두 동일한 곳 찾음
-							newLog.from[1] = oi;
-							newLog.to  [1] = ni;
-							newLog.end = main.body[ni].start;
-							break;
-						}
-						logs.push(newLog);
+						// 싱크-내용 모두 동일한 곳 찾음
+						newLog.from[1] = oi;
+						newLog.to  [1] = ni;
+						newLog.end = main.body[ni].start;
+						break;
 					}
-					// 메인 홀드에 없는 내용만 남음
-					if (ni < main.body.length) {
-						logs.push({
-								from: [oi, oi]
-							,	to  : [ni, main.body.length]
-							,	start: main.body[ni].start
-							,	end  : main.body[main.body.length - 1].start + 1
-						});
-					}
+					logs.push(newLog);
+				}
+				// 메인 홀드에 없는 내용만 남음
+				if (ni < main.body.length) {
+					logs.push({
+							from: [oi, oi]
+						,	to  : [ni, main.body.length]
+						,	start: main.body[ni].start
+						,	end  : main.body[main.body.length - 1].start + 1
+					});
 				}
 				
 				const origin = new Subtitle.SmiFile();
@@ -958,61 +956,7 @@ if (Subtitle && Subtitle.SmiFile) {
 					}
 					origin.body = originBody.slice(log.from[0], log.from[1]);
 					let comment = origin.toTxt().trim();
-					
-					// 메인 홀드 내용이 없으면 다른 홀드가 통째로 들어왔는지 확인
-					/*
-					// 위쪽 내포 홀드에서 처리됐어야 함
-					if (comment.length == 0) {
-						const start = log.to[0];
-						for (let hi = 1; hi < holds.length; hi++) {
-							const smi = holdSmis[hi];
-							if (!smi.body.length) continue;
-
-							let isImported = true;
-							for (let j = 0; j < smi.body.length; j++) {
-								if (smi.body[j].start != main.body[start+j].start) {
-									isImported = false;
-									break;
-								}
-								if (smi.body[j].text != main.body[start+j].text) {
-									if (j == smi.body.length - 1) {
-										// 마지막 싱크일 경우 공백이면 통과시키기
-										if (smi.body[j].text.split("&nbsp;").join("").trim().length == 0) {
-											continue;
-										}
-									}
-									isImported = false;
-									break;
-								}
-							}
-							if (isImported) {
-								const hold = holds[hi];
-								comment = "Hold=" + hold.pos + "|" + hold.name;
-								result[hold.resultIndex] = "";
-								if (smi.body.length < (log.to[1] - log.to[0])) {
-									// 현재 홀드가 내포 홀드의 일부일 경우 나머지 구간 분할
-									const nextLog = {
-											from: log.from
-										,	to  : [log.to[0] + smi.body.length, log.to[1]]
-										,	end : log.end
-									};
-									log.end = nextLog.start = main.body[nextLog.to[0]].start;
-									logs = logs.slice(0, i).concat([log, nextLog]).concat(logs.slice(i + 1));
-								}
-								
-								if (withComment) {
-									for (let j = 0; j < smi.body.length; j++) {
-										const sync = smi.body[j];
-										if (sync.comment) {
-											main.body[start + j].text = sync.comment + "\n" + sync.text;
-										}
-									}
-								}
-								break;
-							}
-						}
-					}
-					*/
+				
 					main.body[log.to[0]].text = "<!-- End=" + log.end + "\n" + (comment.split("<").join("<​").split(">").join("​>")) + "\n-->\n" + main.body[log.to[0]].text;
 				}
 			}

@@ -172,7 +172,7 @@ Progress.prototype.set = function (value, total) {
 	if (ratio) { // 0일 땐 무조건 실행
 		// 과도한 UI 갱신 방지
 		const now = new Date().getTime();
-		if (now - this.last < 100) {
+		if (now - this.last < 15) {
 			return;
 		}
 		this.last = now;
@@ -191,7 +191,7 @@ Progress.set = (selector, ratio) => {
 	if (ratio) { // 0일 땐 무조건 실행
 		// 과도한 UI 갱신 방지
 		const now = new Date().getTime();
-		if (now - Progress.last < 100) {
+		if (now - Progress.last < 15) {
 			return;
 		}
 		Progress.last = now;

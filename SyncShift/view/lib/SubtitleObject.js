@@ -2109,7 +2109,6 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 		let hasFade = false;
 		let hasShake = false;
 		let hasTyping = false;
-		let type = null;
 		for (let j = 0; j < attrs.length; j++) {
 			if (attrs[j].fade != 0) {
 				hasFade = true;
@@ -2403,6 +2402,7 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				const color = fadeColors[j];
 				attrs[color.index].fc = color.get(1, 2 * count);
 			}
+			const smiText = smi.text;
 			smi.fromAttr(attrs);
 			for (let j = 1; j < count; j++) {
 				for (let k = 0; k < fadeColors.length; k++) {
@@ -2412,7 +2412,7 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				smis.splice(i + j, 0, new Subtitle.Smi((start * (count - j) + end * j) / count, Subtitle.SyncType.inner).fromAttr(attrs));
 			}
 			if (withComment) {
-				smis[i].text = "<!-- End=" + end + "\n" + smi.text.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[i].text;
+				smis[i].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[i].text;
 			}
 			result.logs.push({
 					from: [i - added, i - added + 1]
