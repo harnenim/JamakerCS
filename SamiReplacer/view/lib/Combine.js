@@ -1,6 +1,6 @@
 window.Combine = {
 	css: 'font-family: 맑은 고딕;'
-,	defaultSize: 18 // TODO: 설정에서 바뀌도록...?
+,	defaultSize: 18 // TODO: 설정에서 바뀌도록... 하려면 서브 프로그램에서도 설정을 불러와야 하는데...
 };
 {
 	const LINE = {
@@ -28,10 +28,11 @@ window.Combine = {
 	
 	const LOG = false;
 	
-	function getWidth(smi, checker) {
+	function toText(html, checker) {
 		// RUBY태그 없애고 계산
-		smi = smi.split("<RT").join("<!--RT").split("</RT>").join("</RT-->");
-		
+		return checker.html(html.split("<RT").join("<!--RT").split("</RT>").join("</RT-->")).text();
+	}
+	function getWidth(smi, checker) {
 		// 태그 밖의 공백문자 치환
 		{	const tags = smi.split("<");
 			for (let i = 1; i < tags.length; i++) {
@@ -213,7 +214,7 @@ window.Combine = {
 						const lineCount = textLines.length;
 						let defaultWidth = 0;
 						for (let k = 0; k < textLines.length; k++) {
-							defaultWidth = Math.max(defaultWidth, getWidth(checker.html(textLines[k]).text(), checker));
+							defaultWidth = Math.max(defaultWidth, getWidth(toText(textLines[k], checker), checker));
 						}
 
 						let sizedWidth = defaultWidth;
@@ -402,7 +403,7 @@ window.Combine = {
 									// 현재 내용물에는 폰트 크기 적용 안 됨
 									lines = text.split(/<br>/gi);
 									for (let k = 0; k < lines.length; k++) {
-										lines[k] = checker.html(lines[k]).text();
+										lines[k] = toText(lines[k], checker);
 									}
 								}
 								
@@ -410,7 +411,7 @@ window.Combine = {
 								groupMaxWidth = group.maxWidth;
 								lines = text.split(/<br>/gi);
 								for (let k = 0; k < lines.length; k++) {
-									lines[k] = checker.html(lines[k]).text();
+									lines[k] = toText(lines[k], checker);
 								}
 							}
 							
@@ -456,7 +457,7 @@ window.Combine = {
 						for (let k = 0; k < lines.length; k++) {
 							let newLine = lines[k].split("​").join(""); // Zero-Width-Space 중복으로 들어가지 않도록
 							
-							if ($("<span>").html(newLine).text().split("　").join("").split(" ").join("").length) {
+							if (toText(newLine, checker).split("　").join("").split(" ").join("").length) {
 								// 공백 줄인 경우는 별도 처리 하지 않음
 								// 태그로 감싼 줄은 태그 안에 공백문자 넣기
 								let prev = "";
@@ -510,7 +511,7 @@ window.Combine = {
 					}
 					
 					// 줄 높이 맞춰주기
-					// TODO: 글씨 크기 있을 때 지원 필요?
+					// TODO: 글씨 크기 있을 때 지원 필요? ... 그룹 범위 내에서 크기 바뀐다면 대처하기 어려울 듯?
 					for (let k = sync[LINES]; k < group.maxLines[i]; k++) {
 						sync[TEXT] = "<b>　</b><br>" + sync[TEXT];
 					}
