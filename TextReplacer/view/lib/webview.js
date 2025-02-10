@@ -169,7 +169,7 @@ window.Progress = function() {
 	this.last = 0;
 };
 Progress.prototype.set = function (value, total) {
-	if (ratio) { // 0일 땐 무조건 실행
+	if (0 < ratio && ratio < 1) { // 0, 1일 땐 무조건 실행
 		// 과도한 UI 갱신 방지
 		const now = new Date().getTime();
 		if (now - this.last < 15) {
@@ -187,8 +187,8 @@ Progress.prototype.hide = function() {
 // Progress 객체 없이 직접 다루는 경우
 Progress.bars = {};
 Progress.last = 0;
-Progress.set = (selector, ratio) => {
-	if (ratio) { // 0일 땐 무조건 실행
+Progress.set = (selector, ratio, unit="calc([ratio] * 100%)") => {
+	if (0 < ratio && ratio < 1) { // 0, 1일 땐 무조건 실행
 		// 과도한 UI 갱신 방지
 		const now = new Date().getTime();
 		if (now - Progress.last < 15) {
@@ -202,5 +202,5 @@ Progress.set = (selector, ratio) => {
 		Progress.bars[selector] = bar = $("<div>").addClass("progress-bar");
 		area.addClass("progress").prepend(bar);
 	}
-	bar.width(ratio * 100 + "%");
+	bar.width(unit.split("[ratio]").join(ratio));
 }

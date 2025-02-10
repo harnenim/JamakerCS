@@ -823,7 +823,7 @@ if (Subtitle && Subtitle.SmiFile) {
 				if (aPos > bPos) return 1;
 				return 0;
 			});
-
+			
 			const holdSmis = [];
 			for (let hi = 1; hi < holds.length; hi++) {
 				const hold = holds[hi];
@@ -835,11 +835,11 @@ if (Subtitle && Subtitle.SmiFile) {
 				if (withNormalize) {
 					Subtitle.Smi.normalize(smi.body, false);
 				}
-
+				
 				if (smi.body.length == 0) {
 					continue;
 				}
-
+				
 				// 메인에서 홀드와 겹치는 영역 찾기
 				let mainBegin = 0;
 				let mainEnd = 0;
@@ -864,7 +864,7 @@ if (Subtitle && Subtitle.SmiFile) {
 					if (main.body[mainBegin].text.split("&nbsp;").join("").trim().length == 0) {
 						mainBegin++;
 					}
-
+					
 					mainEnd = mainBegin;
 					const end = smi.body[smi.body.length - 1].start;
 					for (; mainEnd < main.body.length; mainEnd++) {
@@ -879,11 +879,11 @@ if (Subtitle && Subtitle.SmiFile) {
 						continue;
 					}
 				}
-
+				
 				// 홀드 결합
 				const sliced = new Subtitle.SmiFile();
 				sliced.body = main.body.slice(mainBegin, mainEnd);
-
+				
 				const slicedText = sliced.toTxt().trim();
 				const combineText = smi.toTxt().trim();
 				const combined = new Subtitle.SmiFile(((hold.pos < 0) ? Combine.combine(slicedText, combineText) : Combine.combine(combineText, slicedText)).join("\n"));
@@ -899,7 +899,7 @@ if (Subtitle && Subtitle.SmiFile) {
 				
 				while ((oi < originBody.length) && (ni < main.body.length)) {
 					if ((originBody[oi].start == main.body[ni].start)
-						&& (originBody[oi].text  == main.body[ni].text )) {
+					 && (originBody[oi].text  == main.body[ni].text )) {
 						oi++;
 						ni++;
 						continue;
@@ -956,7 +956,7 @@ if (Subtitle && Subtitle.SmiFile) {
 					}
 					origin.body = originBody.slice(log.from[0], log.from[1]);
 					let comment = origin.toTxt().trim();
-				
+					
 					main.body[log.to[0]].text = "<!-- End=" + log.end + "\n" + (comment.split("<").join("<​").split(">").join("​>")) + "\n-->\n" + main.body[log.to[0]].text;
 				}
 			}

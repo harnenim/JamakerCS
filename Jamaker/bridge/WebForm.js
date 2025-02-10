@@ -32,8 +32,8 @@ WebForm.prototype.confirm = function(name, msg) {
 		this.mainView.contentWindow.afterConfirmNo();
 	}
 }
-WebForm.prototype.prompt = function(name, msg) {
-	this.mainView.contentWindow.afterPrompt(this.getHwnd(name)._prompt(msg));
+WebForm.prototype.prompt = function(name, msg, def) {
+	this.mainView.contentWindow.afterPrompt(this.getHwnd(name)._prompt(msg, def));
 }
 
 WebForm.prototype.showDragging = function(id) {
@@ -70,20 +70,20 @@ WebForm.prototype.initializeComponent = function() {
 	}).hide());
 
 	const self = this;
-	document.addEventListener("dragenter", function(e) {
+	document.addEventListener("dragenter", (e) => {
 		e.preventDefault();
 		self.showDragging();
 	});
 	const layerForDrag = self.layerForDrag[0];
-	layerForDrag.addEventListener("dragleave", function(e) {
+	layerForDrag.addEventListener("dragleave", (e) => {
 		e.preventDefault();
 		self.hideDragging();
 	});
-	layerForDrag.addEventListener("dragover", function(e) {
+	layerForDrag.addEventListener("dragover", (e) => {
 		e.preventDefault();
 		self.script("dragover", [ e.offsetX, e.offsetY ]);
 	});
-	layerForDrag.addEventListener("drop", async function(e) {
+	layerForDrag.addEventListener("drop", async (e) => {
 		e.preventDefault();
 		if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
 			self.droppedFiles = e.dataTransfer.files;
@@ -91,7 +91,7 @@ WebForm.prototype.initializeComponent = function() {
 		self.hideDragging();
 		await self.drop(e.offsetX, e.offsetY);
 	});
-	layerForDrag.addEventListener("click", async function(e) {
+	layerForDrag.addEventListener("click", async (e) => {
         // 레이어가 클릭됨 -> 드래그 끝났는데 안 사라진 상태
 		self.hideDragging();
 	});
@@ -101,7 +101,7 @@ WebForm.prototype.super_initAfterLoad =
 WebForm.prototype.initAfterLoad = function() {
 	this.windows[this.mainView.contentWindow.windowName] = window;
 };
-WebForm.prototype.beforeExit = function(e) {}
+WebForm.prototype.beforeExit = (e) => {}
 
 function MenuStrip() {
 	const self = this;

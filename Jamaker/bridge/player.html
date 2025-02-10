@@ -30,18 +30,18 @@ document.addEventListener("DOMContentLoaded", function () {
 	
 	const dropLayer = document.getElementById("dropLayer");
 	
-	document.addEventListener("dragenter", function(e) {
+	document.addEventListener("dragenter", (e) => {
 		e.preventDefault();
 		dropLayer.style.display = "";
 	});
-	dropLayer.addEventListener("dragleave", function(e) {
+	dropLayer.addEventListener("dragleave", (e) => {
 		e.preventDefault();
 		dropLayer.style.display = "none";
 	});
-	dropLayer.addEventListener("dragover", function(e) {
+	dropLayer.addEventListener("dragover", (e) => {
 		e.preventDefault();
 	});
-	dropLayer.addEventListener("drop", function(e) {
+	dropLayer.addEventListener("drop", (e) => {
 		e.preventDefault();
 		if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
 			const file = e.dataTransfer.files[0];
@@ -111,7 +111,7 @@ play = function() {
 		video.play();
 	} else {
 		if (!junk.play) {
-			junk.play = setInterval(function() {
+			junk.play = setInterval(() => {
 				showJunkTime(junk.time += 10);
 			}, 10);
 		}
