@@ -1877,7 +1877,7 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 		}, 100);
 	}, 1);
 }
-SmiEditor.prototype.fitSyncsToFrame = function() {
+SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false) {
 	if (!SmiEditor.video.fs.length) {
 		//*
 		return;
@@ -1914,7 +1914,7 @@ SmiEditor.prototype.fitSyncsToFrame = function() {
 	const colSyncs = this.colSync.children();
 	for (let i = range[0]; i < range[1]; i++) {
 		const line = this.lines[i];
-		if (line[LINE.TYPE] == TYPE.BASIC || line[LINE.TYPE] == TYPE.FRAME) {
+		if ((line[LINE.TYPE] == TYPE.FRAME) || (!frameSyncOnly && (line[LINE.TYPE] == TYPE.BASIC))) {
 			const sync = SmiEditor.findSync(line[LINE.SYNC], SmiEditor.video.fs);
 			if (sync != null) {
 				line[LINE.TEXT] = SmiEditor.makeSyncLine((line[LINE.SYNC] = sync), line[LINE.TYPE]);
