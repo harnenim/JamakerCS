@@ -1473,6 +1473,8 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 						const attr = attrs[i][1].split(",");
 						if (isFinite(attr[0])) shake.ms   = Number(attr[0]);
 						if (isFinite(attr[1])) shake.size = Number(attr[1]);
+						if (shake.ms   < 1) shake.ms   = 1;
+						if (shake.size < 1) shake.size = 1;
 					}
 					this.shake.push(shake);
 					break;
