@@ -476,7 +476,6 @@ function setDefault(target, dflt) {
 
 // C# 쪽에서 호출
 function init(jsonSetting) {
-	let setting = {};
 	try {
 		setting = JSON.parse(jsonSetting);
 		
@@ -593,7 +592,7 @@ function init(jsonSetting) {
 	const inputWeight = $("#inputWeight").bind("input propertychange", function() {
 		const weight = inputWeight.val();
 		if (isFinite(weight)) {
-			SmiEditor.sync.weight = Number(weight);
+			SmiEditor.sync.weight = setting.sync.weight = Number(weight);
 		} else {
 			alert("숫자를 입력하세요.");
 			const cursor = inputWeight[0].selectionEnd - 1;
@@ -604,7 +603,7 @@ function init(jsonSetting) {
 	const inputUnit = $("#inputUnit").on("input propertychange", function() {
 		const unit = inputUnit.val();
 		if (isFinite(unit)) {
-			SmiEditor.sync.unit = Number(unit);
+			SmiEditor.sync.unit = setting.sync.unit = Number(unit);
 		} else {
 			alert("숫자를 입력하세요.");
 			const cursor = inputUnit[0].selectionEnd - 1;

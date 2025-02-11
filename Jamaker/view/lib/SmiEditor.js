@@ -356,6 +356,13 @@ SmiEditor.activateKeyEvent = function() {
 					}
 					break;
 				}
+				case 36: { // Home
+					if (hasFocus) {
+						// 커서가 원래부터 맨 앞에 있는 경우엔 커서 이동이 없어서, 알아서 스크롤이 안 됨
+						editor.input.scrollLeft(0);
+					}
+					break;
+				}
 				case 38: { // ↑
 					if (e.shiftKey) {
 						if (e.ctrlKey) {
@@ -1877,9 +1884,13 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 		}, 100);
 	}, 1);
 }
-SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false) {
+/**
+ * frameSyncOnly: 화면 싱크만 맞춰주기
+ * add: 과거 반프레임 보정치 안 넣었던 것들을 위해 추가
+ */
+SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 	if (!SmiEditor.video.fs.length) {
-		//*
+		/*
 		return;
 		/*/
 		// 테스트용 코드
@@ -1903,8 +1914,9 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false) {
 		}
 		//*/
 	}
+	const lines = JSON.parse(JSON.stringify(this.lines.slice(0)));
 	const cursor = this.getCursor();
-	const range = [0, this.lines.length];
+	const range = [0, lines.length];
 	const cursorLine = this.text.substring(0, cursor[0]).split("\n").length - 1;
 	if (cursor[0] < cursor[1]) {
 		range[0] = cursorLine;
@@ -1913,9 +1925,9 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false) {
 	
 	const colSyncs = this.colSync.children();
 	for (let i = range[0]; i < range[1]; i++) {
-		const line = this.lines[i];
+		const line = lines[i];
 		if ((line[LINE.TYPE] == TYPE.FRAME) || (!frameSyncOnly && (line[LINE.TYPE] == TYPE.BASIC))) {
-			const sync = SmiEditor.findSync(line[LINE.SYNC], SmiEditor.video.fs);
+			const sync = SmiEditor.findSync(line[LINE.SYNC] + add, SmiEditor.video.fs);
 			if (sync != null) {
 				line[LINE.TEXT] = SmiEditor.makeSyncLine((line[LINE.SYNC] = sync), line[LINE.TYPE]);
 
@@ -1934,12 +1946,45 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false) {
 			}
 		}
 	}
-	// TODO: 중간 싱크 재계산도 여기서 해줘야 하나?
-	// 그냥 저장 자동치환에 맡기는 게 나은가? 사용 빈도 자체가 드문데
-	this.input.val(this.text = linesToText(this.lines));
-	this.setCursor(cursorLine == 0 ? 0 : (this.text.split("\n").slice(0, cursorLine).join("\n").length + 1));
-	this.updateHighlight();
-	this.afterChangeSaved(this.isSaved());
+	{	// 중간 싱크 재계산
+		let lastIndex = -1;
+		let startIndex = -1;
+		let count = 0;
+		for (let i = 0; i < lines.length; i++) {
+			if (lines[i][LINE.TYPE]) { // 텍스트 건너뛰고 싱크 라인만 따짐
+				if (lines[i][LINE.TYPE] == TYPE.RANGE) {
+					if (startIndex < 0) {
+						startIndex = lastIndex;
+						count = 2;
+					} else {
+						count++;
+					}
+				} else {
+					if (startIndex >= 0) {
+						const endIndex = i;
+						const startSync = lines[startIndex][LINE.SYNC];
+						const endSync   = lines[endIndex  ][LINE.SYNC];
+						
+						let ratio = 0;
+						for (let j = startIndex + 1; j < endIndex; j++) {
+							if (lines[j][LINE.TYPE] == TYPE.RANGE) {
+								ratio++;
+								const line = lines[j];
+								const sync = Math.round(((count - ratio) * startSync + ratio * endSync) / count);
+								line[LINE.TEXT] = SmiEditor.makeSyncLine((line[LINE.SYNC] = sync), TYPE.RANGE);
+							}
+						}
+						startIndex = -1;
+					}
+					lastIndex = i;
+				}
+			}
+		}
+	}
+	const text = linesToText(lines);
+	this.input.val(text);
+	this.setCursor(cursorLine == 0 ? 0 : (text.split("\n").slice(0, cursorLine).join("\n").length + 1));
+	this.updateSync(range);
 }
 SmiEditor.prototype.refreshKeyframe = function() {
 	const colSyncs = this.colSync.children();
