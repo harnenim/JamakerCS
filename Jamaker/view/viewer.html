@@ -16,6 +16,11 @@ const indexes = [];
 const normalizedLines = [];
 const normalizedIndex = [];
 
+$span = $("<span>");
+function htmlToText(html) {
+	return $span.html(html).text();
+}
+
 let style = null;
 let setting = {}
 function setSetting(jsonSetting) {
@@ -113,22 +118,29 @@ function refreshTime(receiveTime, withoutTitle) {
 		hasLine[hold] = false;
 		let showLines = [];
 		let nextSyncLine = null;
-		for (let j = indexes[hold] + 1; j < lines[hold].length; j++) {
-			if (lines[hold][j][LINE.SYNC]) {
-				nextSyncLine = lines[hold][j];
-				break;
-			}
-			let line = lines[hold][j][LINE.TEXT].split(/<br>/gi);
-			for (let k = 0; k < line.length; k++) {
-				if (k == 0 || k < line.length - 1 || line[k].length) {
-					showLines.push(line[k]);
+		
+		{	let last = null;
+			for (let j = indexes[hold] + 1; j < lines[hold].length; j++) {
+				if (lines[hold][j][LINE.SYNC]) {
+					nextSyncLine = lines[hold][j];
+					break;
+				}
+				let line = lines[hold][j][LINE.TEXT].split(/<br>/gi);
+				for (let k = 0; k < line.length; k++) {
+					if (k == 0 || k < line.length - 1 || line[k].length) {
+						if (last && !htmlToText(last)) {
+							showLines[showLines.length - 1] = last = (last + line[k]);
+						} else {
+							showLines.push(last = line[k]);
+						}
+					}
 				}
 			}
 		}
 		// 줄표 있을 때 왼쪽 정렬
 		if (setting.viewer.useAlign && showLines.length < 4) { // 줄 개수 제한 없으면 싱크 안 찍은 전체 내용에 대해 동작해버림
 			for (let k = 0; k < showLines.length; k++) {
-				if ($("<span>").html(showLines[k][0]).text()[0] == '-') {
+				if (htmlToText(showLines[k][0])[0] == '-') {
 					hasLine[hold] = true;
 					break;
 				}
@@ -137,7 +149,7 @@ function refreshTime(receiveTime, withoutTitle) {
 		if (hasLine[hold]) {
 			for (let j = 0; j < showLines.length; j++) {
 				let line = showLines[j];
-				if ($("<span>").html(line).text()[0] != '-') {
+				if (htmlToText(line)[0] != '-') {
 					line = "<span style='opacity: 0;'>-</span>" + line;
 				}
 				showLines[j] = line + "<span style='opacity: 0;'>-</span>";
@@ -229,7 +241,7 @@ function setTextToView(text, hold) {
 		let showLines = text.split(/<br>/gi);
 		if (lines[hold].length > 2) {
 			let line = showLines;
-			if ($("<span>").html(line).text() == "　") {
+			if (htmlToText(line) == "　") {
 				if (line.indexOf("font-size:") > 0) {
 					showlines[hold] = line.split("<font style=\"font-size:").join("<div style=\"height:").split("</font>").join("</div>");
 				}
