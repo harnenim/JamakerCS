@@ -27,17 +27,34 @@ $(() => {
 			start = editor.text.substring(0, range[0]).split("\n").length - 1;
 			end   = editor.text.substring(0, range[1]).split("\n").length;
 		}
-		$("#input").val(linesToText(editor.lines.slice(start, end)));
+		//$("#input").val(linesToText(editor.lines.slice(start, end)));
+		const smiFile = new Subtitle.SmiFile(linesToText(editor.lines.slice(start, end)));
+		smiFile.body = Subtitle.Smi.normalize(smiFile.body).result;
+		$("#input").val(smiFile.toTxt());
 	}
-	
+
+	function optimizeSync(sync) {
+		return Math.floor((findSync(sync) - 15) / 10);
+	}
+	function findSync(sync) {
+		return opener.SmiEditor.findSync(sync, opener.SmiEditor.video.fs);
+	}
 	$("#btnExport").on("click", function() {
 		const input = new Subtitle.SmiFile($("#input").val());
 		{	// 프레임 단위 싱크 역보정... 필요한가?
 			if (opener && opener.SmiEditor && opener.SmiEditor.sync && opener.SmiEditor.sync.frame) {
-				const FL = opener.SmiEditor.video.FL;
-				for (let i = 0; i < input.body.length; i++) {
-					const item = input.body[i];
-					item.start = Math.max(1, ((Math.round(item.start / FL) - 0.5) * FL));
+				if (opener.SmiEditor.video.fs.length) {
+					const fs = opener.SmiEditor.video.fs;
+					for (let i = 0; i < input.body.length; i++) {
+						const item = input.body[i];
+						item.start = optimizeSync(item.start) * 10;
+					}
+				} else {
+					const FL = opener.SmiEditor.video.FL;
+					for (let i = 0; i < input.body.length; i++) {
+						const item = input.body[i];
+						item.start = Math.max(1, ((Math.round(item.start / FL) - 0.5) * FL));
+					}
 				}
 			}
 		}
