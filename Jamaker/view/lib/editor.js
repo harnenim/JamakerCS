@@ -1220,16 +1220,17 @@ function afterLoadFkfFile(buffer) {
 	const kfs = [];
 	
 	let offset = 8;
-	let view = new DataView(buffer.slice(offset, offset + (vfsLength * 4)));
-	for (let i = 0; i < vfsLength; i++) {
-		vfs.push(view.getInt32(i * 4, true));
+	{	const view = new DataView(buffer.slice(offset, offset + (vfsLength * 4)));
+		for (let i = 0; i < vfsLength; i++) {
+			vfs.push(view.getInt32(i * 4, true));
+		}
 	}
 	offset = offset + (vfsLength * 4);
-	view = new DataView(buffer.slice(offset, offset + (kfsLength * 4)));
-	for (let i = 0; i < kfsLength; i++) {
-		kfs.push(view.getInt32(i * 4, true));
+	{	const view = new DataView(buffer.slice(offset, offset + (kfsLength * 4)));
+		for (let i = 0; i < kfsLength; i++) {
+			kfs.push(view.getInt32(i * 4, true));
+		}
 	}
-	
 	SmiEditor.video.fs  = vfs;
 	SmiEditor.video.kfs = kfs;
 	
