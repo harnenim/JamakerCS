@@ -2305,7 +2305,18 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			}
 			
 			smis.splice(i, 1);
+			
+			// 10ms 미만 간격이면 팟플레이어에서 겹쳐서 나오므로 적절히 건너뛰기
+			const countLimit = Math.min(count, Math.floor((end - start) / 10));
+			let realJ = 0;
+			
 			for (let j = 0; j < count; j++) {
+				const sync = (start * (count - j) + end * (j)) / count;
+				const limitSync = (countLimit < count) ? ((start * (countLimit - realJ) + end * (realJ)) / countLimit) : sync;
+				if (sync < limitSync) {
+					continue;
+				}
+				
 				const textLines = types[j + typingStart].split("\n");
 				const text = textLines.join("<br>");
 				{
@@ -2344,7 +2355,8 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				tAttrs.push(attr);
 				tAttrs.push(...attrs.slice(attrIndex + 1));
 				
-				smis.splice(i + j, 0, new Subtitle.Smi((start * (count - j) + end * (j)) / count, (j == 0 ? smi.syncType : Subtitle.SyncType.inner)).fromAttr(tAttrs));
+				smis.splice(i + realJ, 0, new Subtitle.Smi(limitSync, (j == 0 ? smi.syncType : Subtitle.SyncType.inner)).fromAttr(tAttrs));
+				realJ++;
 			}
 			if (withComment) {
 				smis[i].text = "<!-- End=" + end + "\n" + smi.text.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[i].text;
