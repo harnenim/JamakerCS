@@ -415,7 +415,13 @@ function apply() {
 	
 	// 싱크보다 앞에 있는 것들
 	for (; bi < basicLines.length; bi++) {
-		const sync = getSync(basicLines[bi]);
+		const basicLine = basicLines[bi].toUpperCase();
+		if (basicLine == "</BODY>"
+		 || basicLine == "</SAMI>") {
+			bLast = 999999999;
+			break;
+		}
+		const sync = getSync(basicLine);
 		if (sync) {
 			bLast = sync;
 			break;
