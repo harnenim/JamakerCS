@@ -1014,8 +1014,10 @@ SmiEditor.prototype.insertSync = function(forFrame) {
 				lineText = lineText.split(" >").join(">");
 				type = TYPE.BASIC;
 			}
-		} 
-		for (let i = 0; i < lineNo + SmiEditor.sync.update; i++) { // 싱크 찍은 다음 줄로 커서 이동
+		}
+		// 에디터 맨 아래에 싱크줄이 있는 예외가 있음
+		const limit = Math.min(this.lines.length, lineNo + SmiEditor.sync.update);
+		for (let i = 0; i < limit; i++) { // 싱크 찍은 다음 줄로 커서 이동
 			cursor += this.lines[i][LINE.TEXT].length + 1;
 		}
 		this.input.val(linesToText(this.lines.slice(0, lineNo).concat([[lineText, sync, type]], this.lines.slice(lineNo + 1))));
@@ -1890,7 +1892,7 @@ SmiEditor.prototype.afterMoveSync = function(range) {
  */
 SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 	if (!SmiEditor.video.fs.length) {
-		/*
+		//*
 		return;
 		/*/
 		// 테스트용 코드
