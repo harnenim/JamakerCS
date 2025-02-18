@@ -306,6 +306,7 @@ function checkDiff() {
 
 	if (originLines.length != targetLines.length) {
 		if (targetLines[0].length > 0) {
+			$("#checker").empty(); // 오차 경고는 없애줌
 			alert("줄 수가 안 맞습니다.");
 		}
 		return false;
