@@ -17,7 +17,7 @@ function refreshTime(now, fr) {
 			tabs[tab].holds[tabs[tab].hold].findSync();
 		}
 	}
-	if (fr) {
+	if (!SmiEditor.video.isAudio && fr) {
 		if (fr == 23975) {
 			fr = 23975.7; // 일부 영상 버그
 		}
@@ -1173,7 +1173,7 @@ function confirmLoadVideo(path) {
 	setTimeout(() => {
 		confirm("동영상 파일을 같이 열까요?\n" + path, function() {
 			binder.loadVideoFile(path);
-		});
+		});	
 	}, 1);
 }
 
@@ -1185,7 +1185,23 @@ function setVideo(path) {
 		SmiEditor.video.kfs = [];
 		$("#forFrameSync").addClass("disabled");
 		$("#checkTrustKeyframe").attr({ disabled: true });
-		binder.requestFrames(path);
+
+		// 동영상 파일이 열려있을 때만 프레임 분석 진행
+		const ext = path.toLowerCase();
+		if (ext.endsWith(".avi")
+		 || ext.endsWith(".mp4")
+		 || ext.endsWith(".mkv")
+		 || ext.endsWith(".ts")
+		 || ext.endsWith(".m2ts")
+		) {
+			SmiEditor.video.isAudio = false;
+			binder.requestFrames(path);
+		} else {
+			// 오디오 파일을 불러온 경우 ms 단위 싱크로 동작
+			SmiEditor.video.isAudio = true;
+			SmiEditor.video.FR = 1000000;
+			SmiEditor.video.FL = 1;
+		}
 	}
 }
 // C# 쪽에서 호출
