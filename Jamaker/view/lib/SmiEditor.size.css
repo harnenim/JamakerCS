@@ -69,7 +69,8 @@ label, #showFps {
 	font-size: calc(20px * 0.7);
 	line-height: 20px;
 }
-.hold > .col-sync {
+.hold > .col-sync,
+.hold > .col-sync-cover {
 	width: calc(20px * 5);
 }
 .hold > .input {
