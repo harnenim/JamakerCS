@@ -169,13 +169,18 @@ button {
 	font-family: '맑은 고딕';
 	outline: 0;
 }
-.hold > .col-sync {
+.hold > .col-sync,
+.hold > .col-sync-cover {
 	left: 0;
 	height: 100%;
 	text-align: center;
 	overflow: hidden;
 	padding-bottom: 2000px;
 	border: 1px solid transparent;
+}
+.hold > .col-sync-cover {
+	background: transparent;
+	display: none;
 }
 .hold > .input {
 	right: 0;
@@ -225,6 +230,18 @@ button {
 .sync.frame { border-top-width: 1px; }
 .sync.range + span { border-left-width: 1px; border-style: dotted; }
 .sync.range { opacity: 0.5; }
+.sync { position: relative; }
+.col-sync .sync.normal:after, .col-sync .sync.frame:after {
+	display: none;
+	content: "▲\A▼";
+	white-space: pre;
+	position: absolute;
+	top: 0;
+	text-align: center;
+}
+.col-sync:hover .sync.normal:after, .col-sync:hover .sync.frame:after {
+	display: block;
+}
 
 .hljs-color {
 	display: inline-block;

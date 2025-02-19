@@ -70,13 +70,20 @@ label, #showFps {
 	line-height: 20px;
 }
 .hold > .col-sync {
-	width: calc(20px * 4 + 20px);
+	width: calc(20px * 5);
 }
 .hold > .input {
-	left: calc(20px * 4 + 20px);
+	left: calc(20px * 5);
 }
 
 .sync.frame { line-height: calc(20px - 1px); }
+.col-sync .sync.normal:after, .col-sync .sync.frame:after {
+	right: calc(20px * -2.5);
+	width: calc(20px * 0.8);
+    text-decoration-thickness: calc(20px / 4);
+    font-size: calc(20px * 0.5);
+    line-height: calc(20px / 2);
+}
 
 .hljs-color {
 	height: 20px;

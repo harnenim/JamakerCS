@@ -28,7 +28,7 @@ window.SmiEditor = function(text) {
 	this.initialize = false;
 	this.area = $("<div class='hold'>");
 	this.area.append(this.colSync = $("<div class='col-sync'>"));
-	this.area.append($("<div class='col-sync' style='background: transparent;'>")); // 블록지정 방지 영역
+	this.area.append(this.colSyncCover = $("<div class='col-sync-cover'>")); // 블록지정 방지 영역
 	{	// 문법 하이라이트 기능 지원용
 		this.hArea = $("<div class='input highlight-textarea hljs" + (SmiEditor.useHighlight ? "" : " nonactive") + "'>");
 		this.hArea.append($("<div>").append(this.hview = $("<div>")));
@@ -303,7 +303,55 @@ SmiEditor.prototype.bindEvent = function() {
 	
 	this.input.on("mousedown", function(e) {
 		editor.history.log();
+		editor.colSyncCover.show();
 	});
+	this.area.on("mouseup", function(e) {
+		editor.colSyncCover.hide();
+	});
+	// 창 벗어난 상태에서 mouseup 해서 레이어가 안 사라진 경우, 클릭하면 제거
+	this.colSyncCover.on("click", function(e) {
+		editor.colSyncCover.hide();
+	});
+	
+	{
+		// 싱크 영역에서 휠 돌리는 경우
+		let targetScrollTop = 0;
+		let lastScrollStart = -1;
+		this.colSync.on("wheel", function(e) {
+			if (e.ctrlKey || e.shiftKey || e.altKey) {
+				return;
+			}
+			
+			if (lastScrollStart < 0) {
+				targetScrollTop = editor.input.scrollTop() + e.originalEvent.deltaY;
+			} else {
+				targetScrollTop += e.originalEvent.deltaY;
+			}
+			editor.input[0].scrollTo({ top: targetScrollTop, behavior: "smooth" });
+			
+			const start = lastScrollStart = new Date().getTime();
+			setTimeout(() =>  {
+				if (start == lastScrollStart) {
+					lastScrollStart = -1;
+				}
+			}, 200);
+		}).on("wheel", ".sync", function(e) {
+			if (!e.ctrlKey) {
+				return;
+			}
+			// Ctrl+휠이면 싱크 조절 동작
+			const $sync = $(this);
+			editor.moveSyncLine($sync.index(), (e.originalEvent.deltaY < 0));
+		}).attr({ title: "Ctrl+휠로 개별 싱크를 조절할 수 있습니다." });
+
+		// 싱크 조절 버튼 기능
+		this.colSync.on("click", ".sync", function(e) {
+			if ((e.clientX / editor.colSync.width()) >= 0.84) {
+				const $sync = $(this);
+				editor.moveSyncLine($sync.index(), (((e.clientY - $sync.offset().top) / $sync.height() * 4) < 1));
+			}
+		});
+	}
 };
 
 SmiEditor.selected = null;
@@ -1475,6 +1523,8 @@ SmiEditor.prototype.updateSync = function(range=null) {
 					if (line.indexOf(" >") > 0) {
 						newLines[i][LINE.TYPE] = TYPE.FRAME;
 						typeCss = " frame";
+					} else {
+						typeCss = " normal";
 					}
 					if (SmiEditor.findSync(sync, SmiEditor.video.kfs, false)) {
 						typeCss += " keyframe";
@@ -1885,6 +1935,22 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 			}
 		}, 100);
 	}, 1);
+}
+SmiEditor.prototype.moveSyncLine = function(lineIndex, toForward) {
+	this.history.log();
+	
+	const line = this.lines[lineIndex];
+	const lines = this.text.split("\n");
+	const sync = line[LINE.SYNC] + ((toForward ? 1 : -1) * SmiEditor.sync.unit);
+	lines[lineIndex] = SmiEditor.makeSyncLine(sync, line[LINE.TYPE]);
+	
+	this.input.val(lines.join("\n"));
+	this.setCursor(lines.slice(0, lineIndex).join("\n").length + 1);
+	this.updateSync();
+	this.scrollToCursor();
+	this.input.focus();
+
+	this.history.log();
 }
 /**
  * frameSyncOnly: 화면 싱크만 맞춰주기
