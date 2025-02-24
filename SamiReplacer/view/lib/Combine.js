@@ -728,7 +728,8 @@ if (Subtitle && Subtitle.SmiFile) {
 					hold.end = holdBody[holdBody.length - 1].start;
 				}
 				
-				{	// 메인 홀드보다 뒤에 있는지 확인
+				if (main.body.length) {
+					// 메인 홀드보다 뒤에 있는지 확인
 					const i = main.body.length;
 					const lastLine = main.body[i - 1];
 					if (lastLine.start <= hold.start && (lastLine.text.split("&nbsp;").join("").trim().length == 0)) {

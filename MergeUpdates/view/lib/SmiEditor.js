@@ -1958,29 +1958,7 @@ SmiEditor.prototype.moveSyncLine = function(lineIndex, toForward) {
  */
 SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 	if (!SmiEditor.video.fs.length) {
-		//*
 		return;
-		/*/
-		// 테스트용 코드
-		for (let s = 0; s < 2000000; s += 50) {
-			SmiEditor.video.fs.push(s);
-			if (s % 1000 == 0) {
-				SmiEditor.video.kfs.push(s);
-			}
-		}
-		
-		// 키프레임 신뢰 기능 활성화
-		$("#forFrameSync").removeClass("disabled");
-		$("#checkTrustKeyframe").attr({ disabled: false });
-		Progress.set("#forFrameSync", 0);
-		
-		for (let i = 0; i < tabs.length; i++) {
-			const holds = tabs[i].holds;
-			for (let j = 0; j < holds.length; j++) {
-				holds[j].refreshKeyframe();
-			}
-		}
-		//*/
 	}
 	const lines = JSON.parse(JSON.stringify(this.lines.slice(0)));
 	const cursor = this.getCursor();
