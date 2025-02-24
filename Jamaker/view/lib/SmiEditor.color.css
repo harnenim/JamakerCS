@@ -59,6 +59,10 @@ input,
 .tab.not-saved {
 	background: [notSaved];
 }
+.tab.not-saved.tmp-saved {
+	background: [notSaved]aa;
+	transition: 1s;
+}
 .hold-selector > .selector.not-saved {
 	border-color: [notSaved];
 }

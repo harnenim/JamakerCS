@@ -367,12 +367,12 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 }
 Tab.prototype.onChangeSaved = function(hold) {
 	if (this.isSaved()) {
-		this.area.removeClass("not-saved");
+		this.area.removeClass("tmp-saved").removeClass("not-saved");
 		for (let i = 0; i < this.holds.length; i++) {
 			this.holds[i].selector.removeClass("not-saved");
 		}
 	} else {
-		this.area.addClass("not-saved");
+		this.area.removeClass("tmp-saved").addClass("not-saved");
 	}
 	
 	if (hold) {
@@ -1140,6 +1140,7 @@ function saveTemp() {
 		for (let i = 0; i < currentTab.holds.length; i++) {
 			currentTab.holds[i].tempSavedText = texts[i];
 		}
+		currentTab.area.addClass("tmp-saved");
 	}
 }
 
