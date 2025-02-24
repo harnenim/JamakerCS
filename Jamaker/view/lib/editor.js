@@ -101,7 +101,7 @@ window.Tab = function(text, path) {
 			hold.pos++;
 		}
 		tab.updateHoldSelector();
-		tab.onChangeSaved();
+		hold.afterChangeSaved(hold.isSaved());
 		SmiEditor.Viewer.refresh();
 		
 	}).on("click", ".btn-hold-lower", function(e) {
@@ -113,7 +113,7 @@ window.Tab = function(text, path) {
 			hold.pos--;
 		}
 		tab.updateHoldSelector();
-		tab.onChangeSaved();
+		hold.afterChangeSaved(hold.isSaved());
 		SmiEditor.Viewer.refresh();
 	});
 };
@@ -368,12 +368,15 @@ Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 Tab.prototype.onChangeSaved = function(hold) {
 	if (this.isSaved()) {
 		this.area.removeClass("not-saved");
+		for (let i = 0; i < this.holds.length; i++) {
+			this.holds[i].selector.removeClass("not-saved");
+		}
 	} else {
 		this.area.addClass("not-saved");
 	}
 	
-	// 홀드 갱신
 	if (hold) {
+		// 홀드 수정에 따른 갱신
 		hold.updateTimeRange();
 		this.updateHoldSelector();
 	}
@@ -396,6 +399,15 @@ SmiEditor.prototype.isSaved = function() {
 	return (this.name == this.savedName) && (this.pos == this.savedPos) && (this.saved == this.input.val());
 };
 SmiEditor.prototype.onChangeSaved = function(saved) {
+	// 홀드 저장 여부 표시
+	if (this.selector) {
+		if (saved) {
+			this.selector.removeClass("not-saved");
+		} else {
+			this.selector.addClass("not-saved");
+		}
+	}
+	
 	// 수정될 수 있는 건 열려있는 탭이므로
 	if (!tabs.length) return;
 	const currentTab = tabs[tab];
