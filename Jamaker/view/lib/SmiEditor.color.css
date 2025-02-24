@@ -59,6 +59,9 @@ input,
 .tab.not-saved {
 	background: [notSaved];
 }
+.hold-selector > .selector.not-saved {
+	border-color: [notSaved];
+}
 
 /* 스크롤바(배경색 기반)... 맘에 안 드는데... * /
 ::-webkit-scrollbar {background: [background]; }
