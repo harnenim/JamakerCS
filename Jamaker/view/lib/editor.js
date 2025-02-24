@@ -705,14 +705,6 @@ function init(jsonSetting) {
 			}, 1);
 		});
 	});
-	$(document).on("keydown", function(e) {
-		// Ctrl+F4 닫기
-		if (e.ctrlKey && e.keyCode == 115 && setting.useTab) {
-			if (tabs.length && tabs[tab]) {
-				$("#tabSelector .th:eq(" + tab + ") .btn-close-tab").click();
-			}
-		}
-	});
 	
 	SmiEditor.activateKeyEvent();
 	
@@ -856,7 +848,8 @@ function setSetting(setting, initial=false) {
 	SmiEditor.withCtrls["N"] = newFile;
 	SmiEditor.withCtrls["O"] = openFile;
 	SmiEditor.withCtrls["S"] = saveFile;
-	SmiEditor.withCtrls.reserved += "NOS";
+	SmiEditor.withCtrls["s"] = closeCurrentTab; // Ctrl+F4
+	SmiEditor.withCtrls.reserved += "NOSs";
 	
 	// 가중치 등
 	$("#inputWeight").val(setting.sync.weight);
@@ -1006,6 +999,11 @@ function closeTab(th) {
 	SmiEditor.selected = null;
 	SmiEditor.Viewer.refresh();
 	return index;
+}
+function closeCurrentTab() {
+	if (setting.useTab && tabs.length && tabs[tab]) {
+		$("#tabSelector .th:eq(" + tab + ") .btn-close-tab").click();
+	}
 }
 
 function newFile() {
