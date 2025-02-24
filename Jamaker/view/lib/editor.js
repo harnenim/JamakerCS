@@ -1098,7 +1098,7 @@ function afterSaveFile(path) {
 	}
 	currentTab.path = path;
 	const title = path ? ((path.length > 14) ? ("..." + path.substring(path.length - 14, path.length - 4)) : path.substring(0, path.length - 4)) : "새 문서";
-	$("#tabSelector .th:eq(" + tab + ") span").text(title);
+	$("#tabSelector .th:eq(" + tab + ") span").text(title).attr({ title: path });
 	currentTab.holdEdited = false;
 	currentTab.savedHolds = currentTab.holds.slice(0);
 	
@@ -1158,7 +1158,7 @@ function openNewTab(text, path, forVideo) {
 	tabs.push(tab);
 	$("#editor").append(tab.area);
 
-	const th = $("<div class='th'>").append($("<span>").text(title));
+	const th = $("<div class='th'>").append($("<span>").text(title)).attr({ title: path });
 	th.append($("<button type='button' class='btn-close-tab'>").text("×"));
 	$("#btnNewTab").before(th);
 	
