@@ -734,6 +734,7 @@ function setSetting(setting, initial=false) {
 			delete(setting.css);
 		}
 		
+		/*
 		// 스크롤바 버튼 새로 그려야 함 - 커서 문제로 현재 미적용...
 		let button = "";
 		let disabled = "";
@@ -759,14 +760,14 @@ function setSetting(setting, initial=false) {
 			c.fill();
 			disabled = SmiEditor.canvas.toDataURL();
 		}
-		
+		*/
 		$.ajax({url: "lib/SmiEditor.color.css"
 			,	dataType: "text"
 			,	success: (preset) => {
 					for (let name in setting.color) {
 						preset = preset.split("[" + name + "]").join(setting.color[name]);
 					}
-					preset = preset.split("[button]").join(button).split("[buttonDisabled]").join(disabled);
+					//preset = preset.split("[button]").join(button).split("[buttonDisabled]").join(disabled);
 					
 					let $style = $("#styleColor");
 					if (!$style.length) {
