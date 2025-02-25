@@ -696,18 +696,19 @@ function init(jsonSetting) {
 			const index = closeTab(th);
 
 			setTimeout(() => {
-				if (tabs.length && $("#tabSelector .th.selected").length == 0) {
-					// 선택돼있던 탭을 닫았을 경우 다른 탭 선택
-					tab = Math.min(index, tabs.length - 1);
-				} else {
-					// 비활성 탭을 닫았을 경우
-					if (index < tab) {
-						// 닫힌 탭보다 뒤면 1씩 당겨서 재선택
-						tab--;
+				if (tabs.length) {
+					if ($("#tabSelector .th.selected").length == 0) {
+						// 선택돼있던 탭을 닫았을 경우 다른 탭 선택
+						tab = Math.min(index, tabs.length - 1);
+					} else {
+						// 비활성 탭을 닫았을 경우
+						if (index < tab) {
+							// 닫힌 탭보다 뒤면 1씩 당겨서 재선택
+							tab--;
+						}
 					}
+					$("#tabSelector .th:eq(" + tab + ")").click();
 				}
-				$("#tabSelector .th:eq(" + tab + ")").click();
-				
 				closingTab = null;
 			}, 1);
 			
