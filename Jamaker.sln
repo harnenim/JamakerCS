@@ -21,6 +21,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamiReplacer", "SamiReplace
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncShift", "SyncShift\SyncShift.csproj", "{EC4F4AA8-47F3-4C09-BD04-D64691E3AF49}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MakeFkf", "MakeFkf\MakeFkf.csproj", "{57DF7E61-B5A6-4029-B61F-BDE82870D9DB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OptimizeAssSync", "OptimizeAssSync\OptimizeAssSync.csproj", "{ECF2578E-AA33-47E0-A152-84C05068480F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +67,14 @@ Global
 		{EC4F4AA8-47F3-4C09-BD04-D64691E3AF49}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EC4F4AA8-47F3-4C09-BD04-D64691E3AF49}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EC4F4AA8-47F3-4C09-BD04-D64691E3AF49}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57DF7E61-B5A6-4029-B61F-BDE82870D9DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57DF7E61-B5A6-4029-B61F-BDE82870D9DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57DF7E61-B5A6-4029-B61F-BDE82870D9DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57DF7E61-B5A6-4029-B61F-BDE82870D9DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ECF2578E-AA33-47E0-A152-84C05068480F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ECF2578E-AA33-47E0-A152-84C05068480F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ECF2578E-AA33-47E0-A152-84C05068480F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ECF2578E-AA33-47E0-A152-84C05068480F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

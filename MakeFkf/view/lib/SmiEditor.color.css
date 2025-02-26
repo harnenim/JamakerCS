@@ -1,0 +1,83 @@
+@charset "utf-8";
+
+/* 기본 배경 색 */
+html, body,
+.hold > .col-sync,
+#tabSelector > .th:hover,
+#tabSelector > .th.selected,
+.hold-selector > .selector.selected,
+.hold-selector > .selector:hover,
+button {
+	background: [background];
+}
+#tabSelector > .th.selected {
+	border-bottom-color: [background];
+}
+
+/* 탭/홀드 선택영역 배경 색 */
+#tabSelector,
+.hold-selector {
+	background: [selector];
+}
+/* 비활성 탭/홀드 색 */
+#tabSelector > .th,
+.hold-selector > .selector {
+	background: [tab];
+}
+
+/* 설정/탭 테두리 색 */
+#tabSelector,
+#tabSelector > .th,
+input, button {
+	border-color: [tabBorder];
+}
+/* 홀드/에디터 테두리 색 */
+.hold-selector,
+.hold-selector > .selector,
+.highlight-textarea {
+	border-color: [border];
+}
+
+/* 에디터 배경 색 */
+input,
+.highlight-textarea.nonactive > textarea {
+	background: [editor];
+}
+/* 기본 글씨 색 */
+*:not(.hljs *),
+.hljs.nonactive textarea {
+	color: [text];
+	caret-color: [text];
+}
+
+/* 버튼 활성 색 */
+.hold-selector > .selector button:hover {
+	background: [hover];
+}
+
+/* 저장되지 않았을 때 표시 */
+.tab.not-saved {
+	background: [notSaved];
+}
+
+/* 스크롤바(배경색 기반)... 맘에 안 드는데... * /
+::-webkit-scrollbar {background: [background]; }
+::-webkit-scrollbar-corner { background: [tab]; }
+::-webkit-scrollbar-button,
+::-webkit-scrollbar-track { background: [background]; }
+::-webkit-scrollbar-thumb { background: [selector]; border-color: [background]; }
+::-webkit-scrollbar-thumb:hover { background: [border]; }
+::-webkit-scrollbar-button { background-image: url('[button]'); }
+.scrollTop::-webkit-scrollbar-button:vertical:start,
+.scrollBottom::-webkit-scrollbar-button:vertical:end,
+.scrollLeft::-webkit-scrollbar-button:horizontal:start,
+.scrollRight::-webkit-scrollbar-button:horizontal:end { background-image: url('[buttonDisabled]'); }
+*/
+
+/* 싱크 구분 색 */
+.sync { border-color: [syncBorder]; }
+.sync.error { background: [syncError]; }
+.sync.equal { background: [syncEqual]; }
+
+/* 어두운 테마 + 문법 하이라이트 밝은 테마일 때 커서 보이도록 */
+.hold textarea { caret-color: #000; }

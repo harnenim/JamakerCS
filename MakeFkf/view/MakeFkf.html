@@ -1,0 +1,128 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>Make FKF</title>
+	<script src="lib/jquery-3.2.1.min.js"></script>
+	<script src="lib/webview.js"></script>
+	<script src="lib/ListView.js"></script>
+	<link rel="stylesheet" type="text/css" href="lib/webview.css" />
+	<link rel="stylesheet" type="text/css" href="lib/ListView.css" />
+	<script>
+function setTextareaHeight(obj) {
+	const lineCount = obj.val().split("\n").length;
+	obj.css("height", 4 + 14 * lineCount);
+}
+
+let listFiles;
+let isProcessing = false;
+function showProcessing() {
+	isProcessing = true;
+	//$("#processing").show();
+	listFiles.lock = true;
+}
+function hideProcessing() {
+	//$("#processing").hide();
+	isProcessing = false;
+	listFiles.lock = false;
+}
+
+function addFile(file) {
+	if (isProcessing) return;
+	
+	const ext = file.toLowerCase();
+	if (ext.endsWith(".avi")
+	 || ext.endsWith(".mp4")
+	 || ext.endsWith(".mkv")
+	 || ext.endsWith(".ts")
+	 || ext.endsWith(".m2ts")
+			) {
+		listFiles.add(file, true);
+	}
+}
+
+function drop(x, y) {
+	binder.addFilesByDrag();
+}
+
+function setProgress(index, ratio) {
+	["#listFiles li:eq(" + index + ")", ratio, "calc((100vw - 19px) * [ratio])"]
+}
+function scrollTo(index) {
+	const li = listFiles.area.find("li:eq(" + index + ")");
+	const offsetTop = li.offset().top;
+	const top = listFiles.area.scrollTop() + offsetTop - 1;
+	if (offsetTop < 0) {
+		listFiles.area.scrollTop(top);
+	} else {
+		const bottom = top + li.height();
+		const limit = listFiles.area.height() - 19;
+		if (bottom > limit) {
+			listFiles.area.scrollTop(bottom - limit);
+		}
+	}
+}
+
+$(() => {
+	listFiles = new ListView($("#listFiles"));
+	
+	document.addEventListener("dragenter", (e) => {
+		e.preventDefault();
+		binder.showDragging();
+	});
+	$("#cover").on("click", function(e) {
+		binder.hideDragging();
+	});
+
+	$("#btnMakeFkfs").on("click", function() {
+		const files = [];
+		for (let i = 0; i < listFiles.list.length; i++) {
+			files.push(listFiles.list[i].value);
+		}
+		if (files.length == 0) {
+			alert("작업할 파일이 없습니다.");
+			return;
+		}
+		listFiles.area.find(".progress-bar").css({ width: 0 });
+		listFiles.area.scrollLeft(0);
+		binder.makeFkfs(files);
+	});
+});
+	</script>
+	<style>
+#listFiles {
+	width: 100%;
+	height: calc(100% - 20px);
+}
+#btnMakeFkfs {
+	width: 100%;
+	height: 20px;
+}
+#processing {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(255,255,255,0.5);
+}
+
+
+.list-selectable li {
+	position: relative;
+}
+.list-selectable li > * {
+	display: block;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+	</style>
+</head>
+<body>
+	<div id="listFiles"></div>
+	<button id="btnMakeFkfs">FKF 생성</button>
+	<div id="processing" style="display: none;"></div>
+</body>
+</html>

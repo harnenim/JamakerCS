@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>AssSyncOptimizer 샘플</title>
+<link rel="stylesheet" type="text/css" href="bridge/WebForm.css" />
+<script src="view/lib/jquery-3.2.1.min.js"></script>
+<script src="bridge/WinAPI.js"></script>
+<script src="bridge/Binder.js"></script>
+<script>
+Binder.prototype.dropFiles = function() {
+	this._.dropFiles();
+}
+Binder.prototype.checkAndMakeFkf = function(path) {
+	this._.checkAndMakeFkf(path);
+}
+Binder.prototype.saveFile = function(text) {
+	this._.saveFile(text);
+}
+</script>
+<script src="bridge/WebForm.js"></script>
+<script>
+const main = new WebForm();
+{	// main
+	main.settingJson = '{"from":"from","to":"to"}';
+	
+	main.run = function() {
+		this.initializeComponent();
+		
+		const settingJson = localStorage.getItem("setting.AssSyncOptimizer");
+		if (settingJson) {
+			main.settingJson = settingJson;
+		}
+		
+		main.mainView.src = "view/AssSyncOptimizer.html";
+		main.mainView.onload = function() {
+			// 브라우저 샘플에선 url 변형 필요
+			main.mainView.contentWindow._open_ = main.mainView.contentWindow.open;
+			main.mainView.contentWindow.open = (url, name, options) => {
+				if (url.substring(0, 4) != "http") {
+					url = location.href.substring(0, location.href.lastIndexOf("/")) + "/view/" + url;
+				}
+				return main.windows[name] = window_open(url, name, options, main.mainView.contentWindow);
+			}
+			
+			main.mainView.contentWindow.binder = main.binder = new Binder(main);
+
+			const cd = main.mainView.contentDocument;
+			cd.addEventListener("dragenter", (e) => {
+				e.preventDefault();
+				main.showDragging();
+			});
+		};
+	}
+
+	main.initAfterLoad = function() {
+		this.super_initAfterLoad();
+	};
+	
+	main.beforeExit = function(e) {
+		this.script("beforeExit");
+	}
+}
+{
+	main.dropFiles = async function() {
+		if (!this.droppedFiles) return;
+		if (this.droppedFiles.length < 1) {
+			this.droppedFiles = null;
+			return;
+		}
+		let hasAss = false;
+		let hasVideo = false;
+		for (let i = 0; i < this.droppedFiles.length; i++) {
+			const file = this.droppedFiles[i];
+			const ext = file.name.toLowerCase();
+
+			if (ext.endsWith(".ass")) {
+				if (hasAss) continue;
+				hasAss = true;
+				const text = await file.text();
+				main.script("setAssFile", [ file.name, text ]);
+				
+				const lines = text.split("\n");
+				// TODO: 비디오 파일 정보 있을 때 처리
+				
+			} else if (ext.endsWith(".avi")
+					|| ext.endsWith(".mp4")
+					|| ext.endsWith(".mkv")
+					|| ext.endsWith(".ts")
+					|| ext.endsWith(".m2ts")) {
+				if (hasVideo) continue;
+				hasVideo = true;
+				main.script("setVideoFile", [ file.name ]);
+				main.checkAndMakeFkf(file.name);
+				
+			} else if (ext.endsWith(".fkf")) {
+				if (hasVideo) continue;
+				hasVideo = true;
+				main.script("setVideoFile", [ file.name ]);
+				main.script("setFkfFile", [ file ]);
+			}
+		}
+		this.droppedFiles = null;
+	}
+	main.checkAndMakeFkf = function(videoFile) {
+		// TODO: ffmpeg 작업
+		// Progress.set("#labelVideo", 0.8)
+	}
+	main.saveFile = function(name, text) {
+		// TODO
+	}
+}
+{
+	main.exitAfterSaveSetting = function(setting) {
+		localStorage.setItem("setting.AssSyncOptimizer", setting);
+	}
+}
+$(() => {
+	main.run();
+	window.addEventListener("beforeunload", (e) => {
+		main.beforeExit(e);
+		return false;
+	});
+});
+</script>
+<style>
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+html, body {
+	width: 100%;
+	height: 100%;
+	border: 0;
+	overflow: hidden;
+}
+</style>
+</head>
+<body></body>
+</html>

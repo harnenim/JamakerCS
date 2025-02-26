@@ -1,0 +1,238 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>ASS 싱크 보정기</title>
+	<script src="lib/jquery-3.2.1.min.js"></script>
+	<script src="lib/webview.js"></script>
+	<script src="lib/SubtitleObject.js"></script>
+	<link rel="stylesheet" type="text/css" href="lib/webview.css" />
+	<script>
+let sw = 0;
+let fs = [];
+let HFL = 41.7;
+
+function drop(x, y) {
+	binder.dropFiles();
+}
+
+function setAssFile(name, text) {
+	$labelAss.find("span").text(name);
+	$origin.val(text);
+	$result.val("");
+	
+	const lines = text.split("\n");
+	let isAPG = false;
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i].trim();
+		if (isAPG) {
+			if (!line) {
+				isAPG = false;
+			} else if (line.startsWith("Video File: ")) {
+				let videoFile = line.substring(12);
+				if (videoFile.indexOf(":") < 0) {
+					videoFile = name.substring(0, name.lastIndexOf("/") + 1) + videoFile;
+				}
+				binder.setVideoFile(videoFile);
+				break;
+			}
+		} else {
+			if (line == "[Aegisub Project Garbage]") {
+				isAPG = true;
+			}
+		}
+	}
+}
+function setVideoFile(name) {
+	$labelVideo.addClass("disabled");
+	$labelVideo.find("span").text(name);
+	fs = [];
+}
+function setFkfFile(file) {
+	if (typeof file == "string") {
+		const paths = file.split("\\").join("/").split("/");
+		paths[paths.length - 1] = encodeURIComponent(paths[paths.length - 1]);
+        const path = (paths.length > 1 ? ("file://" + paths.join("/")) : ("../temp/" + paths[0]));
+		const req = new XMLHttpRequest();
+		req.open("GET", path);
+		req.responseType = "arraybuffer";
+		req.onload = (e) => {
+			afterLoadFkfFile(req.response);
+		}
+		req.onerror = (e) => {
+			// 실패했어도 프로그레스바는 없애줌
+			Progress.set("#labelVideo", 0);
+		}
+		req.send();
+		
+	} else {
+		// 웹버전 샘플에서 fkf 파일 열었을 경우
+		const fr = new FileReader();
+		fr.onload = function(e) {
+			afterLoadFkfFile(e.target.result);
+		}
+		fr.readAsArrayBuffer(file);
+	}
+}
+function afterLoadFkfFile(buffer) {
+	const fkf = new Int32Array(buffer);
+	const vfsLength = fkf[0];
+	
+	fs = [];
+	const view = new DataView(buffer.slice(8, 8 + (vfsLength * 4)));
+	for (let i = 0; i < vfsLength; i++) {
+		fs.push(view.getInt32(i * 4, true));
+	}
+	HFL = fs[fs.length - 1] / fs.length / 2
+	
+	$labelVideo.removeClass("disabled");
+}
+
+function optimize() {
+	const origin = $origin.val();
+	if (!origin) {
+		alert("자막 정보가 없습니다.");
+		return;
+	}
+	if (!fs.length) {
+		alert("동영상 정보가 없습니다.");
+		return;
+	}
+	
+	const ass = new Subtitle.AssFile(origin);
+	for (let i = 0; i < ass.body.length; i++) {
+		const item = ass.body[i];
+		item.start = optimizeSync(smiSync(item.start));
+		item.end   = optimizeSync(smiSync(item.end  ));
+	}
+	const result = ass.toTxt();
+	$result.val(result);
+}
+function smiSync(assSync) {
+	return assSync * 10 + HFL;
+}
+function optimizeSync(sync) {
+	return Math.floor((findSync(sync) - 15) / 10);
+}
+function findSync(sync, findNear=true, from=0, to=-1) {
+	if (fs.length == 0) return null;
+	if (to < 0) to = fs.length;
+	if (from + 1 == to) {
+		const dist0 = sync - fs[from];
+		const dist1 = fs[to] - sync;
+		if (dist0 <= dist1) {
+			return (findNear || (dist0 == 0)) ? fs[from] : null;
+		} else {
+			return (findNear || (dist1 == 0)) ? fs[to] : null;
+		}
+	}
+	const mid = from + Math.floor((to - from) / 2);
+	if (fs[mid] < sync) {
+		return findSync(sync, findNear, mid, to);
+	} else {
+		return findSync(sync, findNear, from, mid);
+	}
+}
+
+function save() {
+	const text = $result.val();
+	if (text) {
+		binder.save($labelAss.find("span").text(), text);
+	} else {
+		alert("변환 결과물이 없습니다.");
+	}
+}
+
+let $labelAss = null;
+let $labelVideo = null;
+let $origin = null;
+let $result = null;
+
+$(() => {
+	document.addEventListener("dragenter", (e) => {
+		e.preventDefault();
+		binder.showDragging();
+	});
+	$("#cover").on("click", () => {
+		binder.hideDragging();
+	});
+
+	$labelAss = $("#labelAss");
+	$labelVideo = $("#labelVideo");
+	$origin = $("#origin");
+	$result = $("#result");
+	
+	$("#btnOptimize").on("click", () => {
+		optimize();
+	});
+	
+	$("#btnSave").on("click", () => {
+		save();
+	});
+});
+	</script>
+	<style>
+body > * {
+	position: absolute;
+}
+#labels {
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 40px;
+}
+#labels > div {
+	position: relative;
+	height: 20px;
+	border-bottom: 1px solid #888;
+}
+#labels > div > * {
+	display: block;
+	position: absolute;
+	top: 0;
+	left: 0;
+    padding: 2px;
+}
+#labels > div.disabled > span {
+	opacity: 0.5;
+}
+textarea { border: 0; }
+#origin {
+	top: 40px;
+	left: 0;
+	width: calc(50% - 10px);
+	height: calc(100% - 60px);
+}
+#btnOptimize {
+	top: 40px;
+	left: calc(50% - 10px);
+	width: 20px;
+	height: calc(100% - 60px);
+	border-width: 0 1px;
+}
+#result {
+	top: 40px;
+	right: 0;
+	width: calc(50% - 10px);
+	height: calc(100% - 60px);
+}
+#btnSave {
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 20px;
+}
+	</style>
+</head>
+<body>
+	<div id="labels">
+		<div id="labelAss"><span></span></div>
+		<div id="labelVideo"><span></span></div>
+	</div>
+	<textarea id="origin" spellcheck="false" placeholder="입력 파일"></textarea>
+	<button id="btnOptimize">→</button>
+	<textarea id="result" spellcheck="false" placeholder="출력 파일"></textarea>
+	<button id="btnSave">저장</button>
+</body>
+</html>
