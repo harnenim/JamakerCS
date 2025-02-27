@@ -2399,7 +2399,7 @@ SmiEditor.Finder = {
 				if (now != this.lastFocus) return;
 				
 				binder.focus("finder");
-				SmiEditor.Finder.window.focus();
+				SmiEditor.Finder.window.focus(); // 웹버전에선 binder로 동작 안 함...
 				SmiEditor.Finder.lastFocus = 0;
 			}, delay);
 		}
