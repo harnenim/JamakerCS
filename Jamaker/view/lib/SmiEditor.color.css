@@ -88,6 +88,3 @@ input,
 .col-sync .sync.normal:after, .col-sync .sync.frame:after {
     text-decoration-color: [background];
 }
-
-/* 어두운 테마 + 문법 하이라이트 밝은 테마일 때 커서 보이도록 */
-.hold textarea { caret-color: #000; }

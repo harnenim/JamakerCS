@@ -840,7 +840,9 @@ function setSetting(setting, initial=false) {
 						$.ajax({url: "lib/highlight/styles/" + setting.highlight.style + ".css"
 							,	dataType: "text"
 							,	success: (style) => {
-									SmiEditor.highlightCss = style;
+									// 문법 하이라이트 밝은 테마일 때 커서 검은색 되도록 기본값 추가
+									// 어두운 테마는 css 파일에서 가져온 값으로 덮어써짐
+									SmiEditor.highlightCss = ".hold textarea { caret-color: #000; }\n" + style;
 									afterLoadHighlight();
 								}
 						});

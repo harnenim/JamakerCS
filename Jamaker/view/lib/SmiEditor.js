@@ -1726,7 +1726,7 @@ SmiEditor.highlightText = (text, state=null) => {
 SmiEditor.refreshHighlight = () => {
 	let $style = $("#styleHighlight");
 	if (!$style.length) {
-		$("head").append($style = $("<style id='#styleHighlight'>"));
+		$("head").append($style = $("<style id='styleHighlight'>"));
 	}
 	$style.html(SmiEditor.highlightCss);
 }
