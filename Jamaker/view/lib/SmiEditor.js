@@ -304,9 +304,6 @@ SmiEditor.prototype.bindEvent = function() {
 	this.input.on("mousedown", function(e) {
 		editor.history.log();
 		editor.colSyncCover.show();
-	}).on("mouseup", function(e) {
-		// 찾기/바꾸기 창이 있었을 경우 재활성화
-		SmiEditor.Finder.focus();
 	}).on("keyup", function(e) {
 		// 찾기/바꾸기 창이 있었을 경우 재활성화
 		SmiEditor.Finder.focus();
@@ -1715,7 +1712,7 @@ SmiEditor.prototype.updateHighlight = function() {
 		setTimeout(() => {
 			if (self.needToUpdateHighlight) {
 				// 렌더링 대기열 있으면 재실행
-				self.updateSync();
+				self.updateHighlight();
 			}
 		}, 1);
 	};
@@ -2266,9 +2263,7 @@ SmiEditor.Finder = {
 			this.finding.upperFind = this.finding.find.toUpperCase();
 		}
 	,	afterFind: function() {
-			const editor = SmiEditor.selected;
-			editor.updateSync();
-			editor.scrollToCursor();
+			SmiEditor.selected.scrollToCursor();
 			this.last.find    = this.finding.find;
 			this.last.replace = this.finding.replace;
 			this.last.withCase= this.finding.withCase;
@@ -2332,6 +2327,7 @@ SmiEditor.Finder = {
 				this.finding.input.value = this.finding.text;
 				this.finding.input.setSelectionRange(selection[0], selection[1]);
 				this.afterFind();
+				SmiEditor.selected.updateSync();
 				SmiEditor.selected.history.log();
 			}
 			
@@ -2341,10 +2337,7 @@ SmiEditor.Finder = {
 				this.afterFind();
 				
 			} else {
-				// 딜레이 안 주면 화면 갱신 안 된 상태로 뜰 수 있음
-				setTimeout(() => {
-					this.sendMsgAfterRun("찾을 수 없습니다.");
-				}, 1);
+				this.sendMsgAfterRun("찾을 수 없습니다.");
 			}
 		}
 	,	runReplaceAll: function(params) {
@@ -2373,16 +2366,15 @@ SmiEditor.Finder = {
 				this.finding.input.value = this.finding.text;
 				this.finding.input.setSelectionRange(last[0], last[1]);
 				this.afterFind();
+				SmiEditor.selected.updateSync();
 				SmiEditor.selected.history.log();
 				this.sendMsgAfterRun(count + "개 바꿈");
 			} else {
-				// 딜레이 안 주면 화면 갱신 안 된 상태로 뜰 수 있음
-				setTimeout(() => {
-					this.sendMsgAfterRun("찾을 수 없습니다.");
-				}, 1);
+				this.sendMsgAfterRun("찾을 수 없습니다.");
 			}
 		}
 	,	sendMsgAfterRun: function(msg) {
+			// 딜레이 안 주면 화면 갱신 안 된 상태로 뜰 수 있음
 			setTimeout(() => {
 				binder.sendMsg("finder", msg);
 			}, 1);
@@ -2390,7 +2382,7 @@ SmiEditor.Finder = {
 
 		// 찾기/바꾸기 창 항상 위에
 	,	lastFocus: 0
-	,	focus: function(delay=300) {
+	,	focus: function(delay=1000) {
 			if (!this.window) return;
 			
 			const now = this.lastFocus = new Date().getTime();
@@ -2398,8 +2390,8 @@ SmiEditor.Finder = {
 				// 다른 입력이 있었으면 넘김
 				if (now != this.lastFocus) return;
 				
-				binder.focus("finder");
-				SmiEditor.Finder.window.focus(); // 웹버전에선 binder로 동작 안 함...
+				binder.focus("finder"); // C#
+				SmiEditor.Finder.window.focus(); // 웹버전
 				SmiEditor.Finder.lastFocus = 0;
 			}, delay);
 		}
@@ -2661,4 +2653,9 @@ SmiEditor.fillSync = (text) => {
 
 $(() => {
 	SmiEditor.refreshHighlight();
+	
+	$(document).on("mouseup", function(e) {
+		// 찾기/바꾸기 창이 있었을 경우 재활성화
+		SmiEditor.Finder.focus();
+	});
 });
