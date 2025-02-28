@@ -304,6 +304,9 @@ SmiEditor.prototype.bindEvent = function() {
 	this.input.on("mousedown", function(e) {
 		editor.history.log();
 		editor.colSyncCover.show();
+	}).on("keyup", function(e) {
+		// 찾기/바꾸기 창이 있었을 경우 재활성화
+		SmiEditor.Finder.focus();
 	});
 	this.area.on("mouseup", function(e) {
 		editor.colSyncCover.hide();
@@ -1709,7 +1712,7 @@ SmiEditor.prototype.updateHighlight = function() {
 		setTimeout(() => {
 			if (self.needToUpdateHighlight) {
 				// 렌더링 대기열 있으면 재실행
-				self.updateSync();
+				self.updateHighlight();
 			}
 		}, 1);
 	};
@@ -1726,7 +1729,7 @@ SmiEditor.highlightText = (text, state=null) => {
 SmiEditor.refreshHighlight = () => {
 	let $style = $("#styleHighlight");
 	if (!$style.length) {
-		$("head").append($style = $("<style id='#styleHighlight'>"));
+		$("head").append($style = $("<style id='styleHighlight'>"));
 	}
 	$style.html(SmiEditor.highlightCss);
 }
@@ -2260,9 +2263,7 @@ SmiEditor.Finder = {
 			this.finding.upperFind = this.finding.find.toUpperCase();
 		}
 	,	afterFind: function() {
-			const tab = SmiEditor.selected;
-			tab.updateSync();
-			tab.scrollToCursor();
+			SmiEditor.selected.scrollToCursor();
 			this.last.find    = this.finding.find;
 			this.last.replace = this.finding.replace;
 			this.last.withCase= this.finding.withCase;
@@ -2322,9 +2323,12 @@ SmiEditor.Finder = {
 			
 			// 찾은 상태로 선택돼 있었으면 바꾸기
 			if (selection = this.doReplace()) {
+				SmiEditor.selected.history.log();
 				this.finding.input.value = this.finding.text;
 				this.finding.input.setSelectionRange(selection[0], selection[1]);
 				this.afterFind();
+				SmiEditor.selected.updateSync();
+				SmiEditor.selected.history.log();
 			}
 			
 			// 다음 거 찾기
@@ -2358,18 +2362,38 @@ SmiEditor.Finder = {
 			}
 			
 			if (count) {
+				SmiEditor.selected.history.log();
 				this.finding.input.value = this.finding.text;
 				this.finding.input.setSelectionRange(last[0], last[1]);
 				this.afterFind();
+				SmiEditor.selected.updateSync();
+				SmiEditor.selected.history.log();
 				this.sendMsgAfterRun(count + "개 바꿈");
 			} else {
 				this.sendMsgAfterRun("찾을 수 없습니다.");
 			}
 		}
 	,	sendMsgAfterRun: function(msg) {
+			// 딜레이 안 주면 화면 갱신 안 된 상태로 뜰 수 있음
 			setTimeout(() => {
 				binder.sendMsg("finder", msg);
 			}, 1);
+		}
+
+		// 찾기/바꾸기 창 항상 위에
+	,	lastFocus: 0
+	,	focus: function(delay=1000) {
+			if (!this.window) return;
+			
+			const now = this.lastFocus = new Date().getTime();
+			setTimeout(() => {
+				// 다른 입력이 있었으면 넘김
+				if (now != this.lastFocus) return;
+				
+				binder.focus("finder"); // C#
+				SmiEditor.Finder.window.focus(); // 웹버전
+				SmiEditor.Finder.lastFocus = 0;
+			}, delay);
 		}
 };
 
@@ -2630,16 +2654,8 @@ SmiEditor.fillSync = (text) => {
 $(() => {
 	SmiEditor.refreshHighlight();
 	
-	// 찾기/바꾸기 창 항상 위에
-	let last = 0;
-	window.addEventListener("focus", () => {
-		if (SmiEditor.Finder.window) {
-			now = new Date().getTime();
-			if ((now - last) < 100) return; // 중복 실행 방지
-			last = now;
-			setTimeout(() => {
-				binder.focus("finder");
-			}, 100); // 딜레이 안 주면 순서 꼬임
-		}
+	$(document).on("mouseup", function(e) {
+		// 찾기/바꾸기 창이 있었을 경우 재활성화
+		SmiEditor.Finder.focus();
 	});
 });
