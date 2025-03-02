@@ -528,6 +528,11 @@ namespace Jamaker
                 {
                     di.Create();
                 }
+                else if (File.Exists("setting/Jamaker.json"))
+                {
+                    // 기존 설정파일 백업 후 진행
+                    File.Move("setting/Jamaker.json", "setting/Jamaker.json.bak");
+                }
 
                 StreamWriter sw = new StreamWriter("setting/Jamaker.json", false, Encoding.UTF8);
                 sw.Write(strSettingJson);
