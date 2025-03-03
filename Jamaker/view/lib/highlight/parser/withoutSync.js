@@ -132,6 +132,10 @@ SmiEditor.highlightText = (text, state=null) => {
 						state = '`';
 						break;
 					}
+					case '<': { // 잘못된 문법
+						html += "&lt;";
+						break;
+					}
 					default: {
 						html += c;
 					}
@@ -156,6 +160,10 @@ SmiEditor.highlightText = (text, state=null) => {
 					}
 					case '\t': {
 						html += "&nbsp;";
+						break;
+					}
+					case '<': { // 잘못된 문법
+						html += "&lt;";
 						break;
 					}
 					default: { // 속성값 없는 속성으로 확정, 새 속성 시작
@@ -222,6 +230,10 @@ SmiEditor.highlightText = (text, state=null) => {
 					case '\t': {
 						html += "</span>&#09;";
 						state = '>';
+						break;
+					}
+					case '<': { // 잘못된 문법
+						html += "&lt;";
 						break;
 					}
 					default: {

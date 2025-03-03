@@ -1,4 +1,4 @@
-SmiEditor.highlightText = (text, state=null) =>{
+SmiEditor.highlightText = (text, state=null) => {
 	const previewLine = $("<span>").data({ state: state });
 	
 	/*
@@ -19,7 +19,7 @@ SmiEditor.highlightText = (text, state=null) =>{
 		case '"': html = "<span class='hljs-string'>"; break;
 		case '!': html = "<span class='hljs-comment'>"; break;
 	}
-
+	
 	for (let pos = 0; pos < text.length; pos++) {
 		const c = text[pos];
 		switch (state) {
@@ -129,6 +129,10 @@ SmiEditor.highlightText = (text, state=null) =>{
 						state = '`';
 						break;
 					}
+					case '<': { // 잘못된 문법
+						html += "&lt;";
+						break;
+					}
 					default: {
 						html += c;
 					}
@@ -153,6 +157,10 @@ SmiEditor.highlightText = (text, state=null) =>{
 					}
 					case '\t': {
 						html += "&nbsp;";
+						break;
+					}
+					case '<': { // 잘못된 문법
+						html += "&lt;";
 						break;
 					}
 					default: { // 속성값 없는 속성으로 확정, 새 속성 시작
@@ -219,6 +227,10 @@ SmiEditor.highlightText = (text, state=null) =>{
 					case '\t': {
 						html += "</span>&#09;";
 						state = '>';
+						break;
+					}
+					case '<': { // 잘못된 문법
+						html += "&lt;";
 						break;
 					}
 					default: {
