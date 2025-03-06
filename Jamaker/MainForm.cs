@@ -530,8 +530,14 @@ namespace Jamaker
                 }
                 else if (File.Exists("setting/Jamaker.json"))
                 {
+                    // TODO: 설정 파일 깨졌으면 추가 백업 돌아가지 않도록 플래그 넣어줘야 함
+
                     // 기존 설정파일 백업 후 진행
-                    File.Move("setting/Jamaker.json", "setting/Jamaker.json.bak");
+                    if (File.Exists("setting/Jamaker.json.bak"))
+                    {
+                        File.Delete("setting/Jamaker.json.bak");
+                        File.Move("setting/Jamaker.json", "setting/Jamaker.json.bak");
+                    }
                 }
 
                 StreamWriter sw = new StreamWriter("setting/Jamaker.json", false, Encoding.UTF8);

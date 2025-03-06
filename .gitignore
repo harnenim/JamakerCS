@@ -395,3 +395,17 @@ healthchecksdb
 /SyncShift/view/lib/SmiEditor.size.css
 /TextReplacer/view/lib/SmiEditor.size.css
 *.bak
+/MakeFkf/view/lib/AutoCompleteTextarea.css
+/MakeFkf/view/lib/AutoCompleteTextarea.js
+/MakeFkf/view/lib/Combine.js
+/MakeFkf/view/lib/editor.js
+/MakeFkf/view/lib/History.js
+/MakeFkf/view/lib/popup.css
+/MakeFkf/view/lib/popup.js
+/MakeFkf/view/lib/setting.js
+/MakeFkf/view/lib/SmiEditor.color.css
+/MakeFkf/view/lib/SmiEditor.css
+/MakeFkf/view/lib/SmiEditor.js
+/MakeFkf/view/lib/SmiEditor.size.css
+/MakeFkf/view/lib/SubtitleObject.js
+/OptimizeAssSync/view/lib/editor.js

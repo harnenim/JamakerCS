@@ -601,7 +601,7 @@ function init(jsonSetting) {
 		if (tabs.length == 0) return;
 		tabs[tab].addHold();
 	});
-	const inputWeight = $("#inputWeight").bind("input propertychange", function() {
+	const inputWeight = $("#inputWeight").on("input propertychange", function() {
 		const weight = inputWeight.val();
 		if (isFinite(weight)) {
 			SmiEditor.sync.weight = setting.sync.weight = Number(weight);
