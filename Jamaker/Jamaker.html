@@ -31,6 +31,9 @@ Binder.prototype.focusToMenu = function(keyCode) {
 	//this._.focusToMenu(keyCode);
 }
 
+Binder.prototype.repairSetting = function() {
+	this._.repairSetting();
+}
 Binder.prototype.saveSetting = function(setting) {
 	this._.saveSetting(setting);
 }
@@ -495,8 +498,8 @@ window.MB = 9;
 
 {	// 설정
 	editor.loadSetting = function(afterSuccess) {
-		editor.strSettingJson = localStorage.getItem("setting");
-		editor.strBridgeList = playerDlls;
+		this.strSettingJson = localStorage.getItem("setting");
+		this.strBridgeList = playerDlls;
 		$.ajax({url: "view/lib/highlight/list.txt"
 			,	dataType: "text"
 			,	success: (highlights) => {
@@ -506,6 +509,19 @@ window.MB = 9;
 					}
 				}
 		});
+	}
+	editor.repairSetting = function() {
+		// 백지 상태에서 시작
+		this.strSettingJson = "";
+		
+		// TODO: 설정 파일 존재하면 삭제
+		
+		// 백업 파일 존재하는지 확인
+		if (false) {
+			// 존재하면 가져오기
+			this.strSettingJson = localStorage.getItem("setting.bak");
+		}
+		this.script("init", [this.strSettingJson, false]);
 	}
 	editor.saveSetting = function(setting) {
 		localStorage.setItem("setting", (this.strSettingJson = setting));

@@ -60,6 +60,10 @@
             _.FocusToMenu(keyCode);
         }
 
+        public void RepairSetting()
+        {
+            _.RepairSetting();
+        }
         public void SaveSetting(string setting)
         {
             _.SaveSetting(setting);

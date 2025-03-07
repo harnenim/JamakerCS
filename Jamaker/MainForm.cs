@@ -87,7 +87,7 @@ namespace Jamaker
         {
             try
             {
-                Script("init", strSettingJson); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
+                Script("init", new object[] { strSettingJson, false }); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
                 Script("setPlayerDlls", strBridgeList); // 플레이어 브리지 추가 가능토록
                 Script("setHighlights", strHighlights);
                 Script("setDroppable");
@@ -516,6 +516,41 @@ namespace Jamaker
             }
         }
 
+        public void RepairSetting()
+        {
+            // 백지 상태에서 시작
+            strSettingJson = "";
+
+            StreamReader sr = null;
+            try
+            {
+                // 설정 폴더 없으면 생성
+                DirectoryInfo di = new DirectoryInfo("setting");
+                if (!di.Exists)
+                {
+                    di.Create();
+                }
+                else
+                {
+                    if (File.Exists("setting/Jamaker.json"))
+                    {   // 설정파일 있는데 여기로 왔으면 설정파일이 깨졌다는 의미
+                        File.Delete("setting/Jamaker.json");
+                    }
+                    if (File.Exists("setting/Jamaker.json.bak"))
+                    {   // 백업 파일 존재하면 가져오기
+                        File.Move("setting/Jamaker.json.bak", "setting/Jamaker.json");
+                        sr = new StreamReader("setting/Jamaker.json", Encoding.UTF8);
+                        strSettingJson = sr.ReadToEnd();
+                    }
+                }
+            }
+            catch (Exception e) { Console.WriteLine(e); }
+            finally { sr?.Close(); }
+
+            // 프로그램 다시 초기화
+            Script("init", new object[] { strSettingJson, true });
+        }
+
         public void SaveSetting(string strSettingJson)
         {
             this.strSettingJson = strSettingJson;
@@ -530,14 +565,12 @@ namespace Jamaker
                 }
                 else if (File.Exists("setting/Jamaker.json"))
                 {
-                    // TODO: 설정 파일 깨졌으면 추가 백업 돌아가지 않도록 플래그 넣어줘야 함
-
                     // 기존 설정파일 백업 후 진행
                     if (File.Exists("setting/Jamaker.json.bak"))
                     {
                         File.Delete("setting/Jamaker.json.bak");
-                        File.Move("setting/Jamaker.json", "setting/Jamaker.json.bak");
                     }
+                    File.Move("setting/Jamaker.json", "setting/Jamaker.json.bak");
                 }
 
                 StreamWriter sw = new StreamWriter("setting/Jamaker.json", false, Encoding.UTF8);

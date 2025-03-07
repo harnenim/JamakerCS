@@ -487,9 +487,15 @@ function setDefault(target, dflt) {
 }
 
 // C# 쪽에서 호출
-function init(jsonSetting) {
+function init(jsonSetting, isBackup=true) {
 	try {
 		setting = JSON.parse(jsonSetting);
+		if (typeof setting != "object") {
+			if (!isBackup) {
+				binder.repairSetting();
+				return;
+			}
+		}
 		
 		const notified = checkVersion(setting.version);
 		
@@ -525,7 +531,7 @@ function init(jsonSetting) {
 		}
 		
 		// C#에서 보내준 세팅값 오류로 빠진 게 있으면 채워주기
-		if (typeof setting == "object" && !Array.isArray(setting)) {
+		if (!Array.isArray(setting)) {
 			let count = setDefault(setting, DEFAULT_SETTING);
 			if (setting.version != DEFAULT_SETTING.version) {
 				setting.version = DEFAULT_SETTING.version;
@@ -624,6 +630,12 @@ function init(jsonSetting) {
 		
 	} catch (e) {
 		console.log(e);
+		
+		if (!isBackup) {
+			binder.repairSetting();
+			return;
+		}
+		
 		setting = deepCopyObj(DEFAULT_SETTING);
 		saveSetting();
 	}
