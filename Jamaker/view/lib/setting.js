@@ -36,12 +36,12 @@ let checkVersion;
 	}
 	const lastNotifyForCommand = "2024.12.07.v1";
 	const lastNotifyForAutoComplete = "";
-	const lastNotifyForStyle = "2025.01.07.v1";
+	const lastNotifyForStyle = "2025.03.07.v1";
 	const lastNotifyForMenu = "2024.11.19.v2";
 }
 
 window.DEFAULT_SETTING =
-{	version: "2025.02.19.v1"
+{	version: "2025.03.07.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -358,9 +358,9 @@ window.DEFAULT_SETTING =
 		,	height: 200
 		}
 	,	useAlign: false
-	,	css : "background: #fff;\n"
+	,	size: 18
+	,	css : "background: #888;\n"
 			+ "color: #fff;\n"
-			+ "font-size: 39.4px;\n"
 			+ "font-family: '맑은 고딕';\n"
 			+ "font-weight: bold;\n"
 			+ "text-shadow: -2px -2px #000\n"

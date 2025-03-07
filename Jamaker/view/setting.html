@@ -725,6 +725,7 @@ $(() => {
 			setting.highlight.enter  = $("input[name=highlight_enter]").prop("checked");
 			setting.highlight.color  = $("input[name=highlight_color]").prop("checked");
 			setting.viewer.useAlign  = $("input[name=viewer_useAlign]").prop("checked");
+			setting.viewer.size      = $("input[name=viewer_size]").val();
 			setting.viewer.css       = $("textarea[name=viewer_css]").val();
 			setting.newFile          = $("textarea[name=newFile]"   ).val();
 			setting.color.background = $("input[name=color_background]").val();
@@ -1531,9 +1532,8 @@ fieldset ol button,
 			<textarea name="newFile" spellcheck="false" style="height: 400px;"></textarea>
 		</label>
 		<br />
-		<label>미리보기
-			<textarea name="viewer_css" spellcheck="false" style="height: 300px;"></textarea>
-		</label>
+		<label for="taViewerCss">미리보기</label> / <label>글씨 크기 <input type="number" name="viewer_size" style="width: 40px" /> (팟플레이어 기준)</label>
+		<textarea id="taViewerCss" name="viewer_css" spellcheck="false" style="height: 300px;"></textarea>
 	</form>
 	
 	<form id="player">

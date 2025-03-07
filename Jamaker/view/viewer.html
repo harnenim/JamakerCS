@@ -1,5 +1,4 @@
-﻿<!doctype html>
-<html>
+﻿<html><!-- <!doctype html> 선언하면 <font size> 줄여도 줄 높이가 안 줄어듦... -->
 <head>
 <meta charset="utf-8">
 <title>미리보기</title>
@@ -28,7 +27,7 @@ function setSetting(jsonSetting) {
 	if (style == null) {
 		$("head").append(style = $("<style>"));
 	}
-	style.html("#viewer {\n" + setting.viewer.css + "}");
+	style.html("#viewer {\nfont-size: calc(" + setting.viewer.size + "vw / 5.86);\n" + setting.viewer.css + "}");
 }
 let lines = [[],[],[]];
 let viewer = null;
@@ -226,9 +225,7 @@ function setTextToView(text, hold) {
 					
 					let style = 'style="font-size: ' + potSize + 'px;"';
 					*/
-					// TODO: defaultSize 설정 만들어서 가져오도록 하는 게...?
-					let defaultSize = 18;
-					let style = 'style="font-size: ' + (size / defaultSize * 100) + '%;"';
+					let style = 'style="font-size: calc(' + size + 'vw / 5.86);"';
 					text = text.substring(0, begin + index) + style + text.substring(begin + qEnd);
 					end = end - qEnd + index + style.length;
 				}

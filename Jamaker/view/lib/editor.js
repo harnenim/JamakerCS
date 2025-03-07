@@ -493,6 +493,37 @@ function init(jsonSetting) {
 		
 		const notified = checkVersion(setting.version);
 		
+		if (notified.style) {
+			// 스타일 기본값이 바뀌었을 경우
+			const css = setting.viewer.css.split("/*");
+			
+			// 주석 분리
+			css[0] = [null, css[0]];
+			for (let i = 1; i < css.length; i++) {
+				const aCss = css[i].split("*/");
+				css[i] = [aCss[0], aCss.slice(1).join("*/")];
+			}
+			
+			// 내용 중 font-size 있으면 주석 처리
+			for (let i = 0; i < css.length; i++) {
+				const aCss =  css[i][1];
+				const begin = aCss.indexOf("font-size");
+				if (begin >= 0) {
+					let end = aCss.indexOf(";", begin);
+					if (end < 0) {
+						end = aCss.length;
+					} else {
+						end++;
+					}
+					
+					css[i][1] = aCss.substring(0, begin) + "/* " + aCss.substring(begin, end) + " font-size 비활성화 */" + aCss.substring(end);
+				}
+				css[i] = (css[i][0] ? ("/* " + css[i][0] + " */") : "") + css[i][1];
+			}
+			
+			setting.viewer.css = css.join("");
+		}
+		
 		// C#에서 보내준 세팅값 오류로 빠진 게 있으면 채워주기
 		if (typeof setting == "object" && !Array.isArray(setting)) {
 			let count = setDefault(setting, DEFAULT_SETTING);
