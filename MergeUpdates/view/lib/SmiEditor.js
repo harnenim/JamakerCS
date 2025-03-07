@@ -2514,20 +2514,22 @@ function extSubmit(method, url, values, withoutTag=true) {
 				const lines = text.text.split("\n");
 				const lineNo = text.text.substring(0, text.selection[0]).split("\n").length - 1;
 
-				// 현재 싱크 맨 윗줄 찾기
+				// 현재 문단 or 싱크 맨 윗줄 찾기
 				let syncLineNo = lineNo;
 				while (syncLineNo >= 0) {
-					if (lines[syncLineNo].substring(0, 6).toUpperCase() == "<SYNC ") {
+					const line = lines[syncLineNo];
+					if (!line || line.substring(0, 6).toUpperCase() == "<SYNC ") {
 						break;
 					}
 					syncLineNo--;
 				}
 
 				if (syncLineNo >= 0) {
-					// 다음 싱크 라인 찾기
+					// 다음 문단 or 싱크 라인 찾기
 					let nextSyncLineNo = syncLineNo + 1;
 					while (nextSyncLineNo < lines.length) {
-						if (lines[nextSyncLineNo].substring(0, 6).toUpperCase() == "<SYNC ") {
+						const line = lines[nextSyncLineNo];
+						if (!line || line.substring(0, 6).toUpperCase() == "<SYNC ") {
 							break;
 						}
 						nextSyncLineNo++;
