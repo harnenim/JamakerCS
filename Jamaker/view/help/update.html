@@ -13,7 +13,7 @@ $(() => {
 	$("#version").text(opener.setting.version);
 	
 	const url = (opener && opener.binder && !opener.binder._)
-		? /* C# 프로그램에서 서버 호출 */ "https://harnenim.github.io/Jamaker/updates.json"
+		? /* C# 프로그램에서 서버 호출 */ "https://harnenim.github.io/Jamaker/updates.json?" + Math.random()
 		: /* 웹버전 내부에서 로컬 호출 */ "../../updates.json"
 		;
 	$.ajax({url : url
