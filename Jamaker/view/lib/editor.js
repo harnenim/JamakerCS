@@ -837,7 +837,7 @@ function setSetting(setting, initial=false) {
 		$.ajax({url: "lib/SmiEditor.size.css"
 			,	dataType: "text"
 				,	success: (preset) => {
-					preset = preset.split("20px").join((20 * setting.size) + "px");
+					preset = preset.split("20px").join((LH = (20 * setting.size)) + "px");
 					
 					let $style = $("#styleSize");
 					if (!$style.length) {
