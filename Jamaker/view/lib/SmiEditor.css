@@ -41,6 +41,7 @@ button {
 
 #body > div:first-child {
 	padding: 3px 2px;
+	white-space: pre;
 }
 
 #tabSelector {

@@ -63,7 +63,7 @@ window.Tab = function(text, path) {
 				return;
 			}
 			hold.selector.find(".hold-name > span").text(tab.holds.indexOf(hold) + "." + (hold.name = input));
-			tab.onChangeSaved();
+			hold.afterChangeSaved(hold.isSaved());
 		}, hold.name);
 		
 	}).on("click", ".btn-hold-remove", function(e) {
