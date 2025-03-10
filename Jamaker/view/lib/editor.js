@@ -414,23 +414,6 @@ SmiEditor.prototype.onChangeSaved = function(saved) {
 	if (!currentTab) return;
 	currentTab.onChangeSaved(this);
 };
-SmiEditor.prototype.updateTimeRange = function() {
-	let start = 999999998;
-	let end = 0;
-	for (let i = 0; i < this.lines.length; i++) {
-		const line = this.lines[i];
-		if (line[LINE.TYPE]) {
-			start = Math.min(start, line[LINE.SYNC]);
-			end   = Math.max(end  , line[LINE.SYNC]);
-		}
-	}
-	this.start = start;
-	if (end) {
-		this.end   = (start == end) ? 999999999 : end;
-	} else {
-		this.end = 999999999;
-	}
-}
 
 function deepCopyObj(obj) {
 	if (obj && typeof obj == "object") {
