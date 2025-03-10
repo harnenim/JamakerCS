@@ -46,17 +46,14 @@ label, #showFps {
 	height: calc(20px * 4);
 	font-size: calc(20px * 0.7);
 }
+.hold-selector > .selector .area-btn-hold {
+	width: calc(20px * 2);
+}
 .hold-selector > .selector button {
 	font-size: calc(20px * 0.6);
 }
 .hold-selector > .selector .btn-hold-remove {
-	width: 20px;
 	font-size: 20px;
-}
-.hold-selector > .selector .btn-hold-upper,
-.hold-selector > .selector .btn-hold-lower {
-	right: 20px;
-	width: 20px;
 }
 .hold-selector > .selector .btn-hold-upper:after,
 .hold-selector > .selector .btn-hold-lower:after {
