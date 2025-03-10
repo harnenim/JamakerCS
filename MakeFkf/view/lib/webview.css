@@ -10,6 +10,9 @@
 	user-select: none;
 	-ms-user-select: none;
 }
+.width-checker * {
+	font-size: unset;
+}
 html, body {
 	height: 100%;
 	overflow: hidden;

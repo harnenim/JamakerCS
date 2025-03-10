@@ -49,7 +49,7 @@ window.Combine = {
 	}
 	function getChecker() {
 		if (!Combine.checker) {
-			$("body").append(Combine.checker = $("<span>"));
+			$("body").append(Combine.checker = $("<span class='width-checker'>"));
 		}
 		Combine.checker.attr({ style: Combine.css }).css({
 				whiteSpace: "pre"
