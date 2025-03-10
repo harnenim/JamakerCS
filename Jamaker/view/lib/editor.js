@@ -63,6 +63,7 @@ window.Tab = function(text, path) {
 				return;
 			}
 			hold.selector.find(".hold-name > span").text(tab.holds.indexOf(hold) + "." + (hold.name = input));
+			hold.selector.attr({ title: hold.name });
 			hold.afterChangeSaved(hold.isSaved());
 		}, hold.name);
 		
@@ -129,6 +130,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	this.holds.push(hold);
 	this.holdSelector.append(hold.selector = $("<div class='selector'>").data({ hold: hold }));
 	hold.selector.append($("<div class='hold-name'>").append($("<span>").text(hold.name = hold.savedName = info.name)));
+	hold.selector.attr({ title: hold.name });
 	hold.owner = this;
 	hold.pos = hold.savedPos = info.pos;
 	hold.tempSavedText = info.text;
@@ -136,9 +138,11 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	if (isMain) {
 		hold.selector.addClass("selected");
 	} else {
-		hold.selector.append($("<button type='button' class='btn-hold-remove'>"));
-		hold.selector.append($("<button type='button' class='btn-hold-upper'>"));
-		hold.selector.append($("<button type='button' class='btn-hold-lower'>"));
+		const btnArea = $("<div class='area-btn-hold'>");
+		hold.selector.append(btnArea);
+		btnArea.append($("<button type='button' class='btn-hold-remove'>"));
+		btnArea.append($("<button type='button' class='btn-hold-upper'>"));
+		btnArea.append($("<button type='button' class='btn-hold-lower'>"));
 		hold.area.hide();
 	}
 	this.holdArea.append(hold.area);

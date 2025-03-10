@@ -115,9 +115,17 @@ button {
 	vertical-align: middle;
 	white-space: nowrap;
 }
+.hold-selector > .selector .area-btn-hold {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	max-width: 60%;
+}
 .hold-selector > .selector button {
 	position: absolute;
 	padding: 0;
+	width: 50%;
 }
 .hold-selector > .selector .btn-hold-remove {
 	top: 0;
@@ -127,11 +135,13 @@ button {
 }
 .hold-selector > .selector .btn-hold-upper {
 	top: 0;
+	right: 50%;
 	height: 50%;
 	border-width: 0 0 1px 1px;
 }
 .hold-selector > .selector .btn-hold-lower {
 	bottom: 0;
+	right: 50%;
 	height: 50%;
 	border-width: 1px 0 0 1px;
 }
