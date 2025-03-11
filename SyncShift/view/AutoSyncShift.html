@@ -676,7 +676,7 @@ function apply() {
 					,	start: hold.body.length ? hold.body[0].start : 999999999
 				});
 			}
-			const withCombine = $("#chkCombine").prop("checked");
+			const withCombine = !$("#chkCombine").prop("checked");
 			operation.output = Subtitle.SmiFile.holdsToText(holds, withCombine, withCombine);
 			refreshPreview(true);
 			break;
