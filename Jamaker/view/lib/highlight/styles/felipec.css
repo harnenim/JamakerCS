@@ -17,7 +17,6 @@ code.hljs {
   color: #dddde1;
   background: #1e1e22
 }
-.hold textarea { caret-color: #fff; }
 .hljs::selection,
 .hljs ::selection {
   color: #1e1e22;

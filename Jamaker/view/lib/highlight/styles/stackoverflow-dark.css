@@ -25,7 +25,6 @@ code.hljs {
   /* var(--highlight-bg) */
   background: #1c1b1b
 }
-.hold textarea { caret-color: #fff; }
 .hljs-subst {
   /* var(--highlight-color) */
   color: #ffffff

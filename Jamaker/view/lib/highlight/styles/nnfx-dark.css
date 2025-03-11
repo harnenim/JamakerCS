@@ -20,7 +20,6 @@ code.hljs {
   background: #333;
   color: #fff
 }
-.hold textarea { caret-color: #fff; }
 .language-xml .hljs-meta,
 .language-xml .hljs-meta-string {
   font-weight: bold;

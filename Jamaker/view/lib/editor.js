@@ -867,12 +867,24 @@ function setSetting(setting, initial=false) {
 				,	dataType: "text"
 				,	success: (parser) => {
 						eval(parser);
-						$.ajax({url: "lib/highlight/styles/" + setting.highlight.style + ".css"
+						
+						let name = setting.highlight.style;
+						let isDark = false;
+						if (name.endsWith("-dark") || (name.indexOf("-dark-") > 0)) {
+							isDark = true;
+						} else if (name.endsWith("?dark")) {
+							isDark = true;
+							name = name.split("?")[0];
+						}
+						
+						$.ajax({url: "lib/highlight/styles/" + name + ".css"
 							,	dataType: "text"
 							,	success: (style) => {
-									// 문법 하이라이트 밝은 테마일 때 커서 검은색 되도록 기본값 추가
-									// 어두운 테마는 css 파일에서 가져온 값으로 덮어써짐
-									SmiEditor.highlightCss = ".hold textarea { caret-color: #000; }\n" + style;
+									// 문법 하이라이트 테마에 따른 커서 색상 추가
+									SmiEditor.highlightCss
+										= ".hljs { color: unset; }\n"
+										+ ".hold textarea { caret-color: " + (isDark ? "#fff" : "#000") + "; }\n"
+										+ style;
 									afterLoadHighlight();
 								}
 						});

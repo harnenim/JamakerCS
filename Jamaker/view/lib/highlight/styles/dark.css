@@ -15,7 +15,6 @@ Dark style from softwaremaniacs.org (c) Ivan Sagalaev <Maniac@SoftwareManiacs.Or
   color: #ddd;
   background: #303030
 }
-.hold textarea { caret-color: #fff; }
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-literal,

@@ -44,7 +44,7 @@ input,
 	background: [editor];
 }
 /* 기본 글씨 색 */
-*:not(.hljs *),
+body, input, button,
 .hljs.nonactive textarea {
 	color: [text];
 	caret-color: [text];

@@ -13,7 +13,6 @@ Monokai style - ported by Luigi Maselli - http://grigio.org
   background: #272822;
   color: #ddd
 }
-.hold textarea { caret-color: #fff; }
 .hljs-tag,
 .hljs-keyword,
 .hljs-selector-tag,

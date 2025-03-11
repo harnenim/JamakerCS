@@ -1,4 +1,4 @@
-pre code.hljs {
+﻿pre code.hljs {
   display: block;
   overflow-x: auto;
   padding: 1em
@@ -18,7 +18,6 @@ code.hljs {
   color: #e3dfff;
   font-weight: normal
 }
-.hold textarea { caret-color: #fff; }
 .hljs-subst {
   color: #e3dfff
 }

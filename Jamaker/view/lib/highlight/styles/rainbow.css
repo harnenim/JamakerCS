@@ -15,7 +15,6 @@ Style with support for rainbow parens
   background: #474949;
   color: #d1d9e1
 }
-.hold textarea { caret-color: #fff; }
 .hljs-comment,
 .hljs-quote {
   color: #969896;

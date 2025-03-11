@@ -15,7 +15,6 @@ ISBL Editor style dark color scheme (c) Dmitriy Tarasov <dimatar@gmail.com>
   background: #404040;
   color: #f0f0f0
 }
-.hold textarea { caret-color: #fff; }
 /* Base color: saturation 0; */
 .hljs,
 .hljs-subst {

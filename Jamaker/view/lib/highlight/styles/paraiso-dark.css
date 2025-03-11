@@ -1,4 +1,4 @@
-pre code.hljs {
+﻿pre code.hljs {
   display: block;
   overflow-x: auto;
   padding: 1em
@@ -15,7 +15,6 @@ code.hljs {
   background: #2f1e2e;
   color: #a39e9b
 }
-.hold textarea { caret-color: #fff; }
 /* Paraíso Comment */
 .hljs-comment,
 .hljs-quote {

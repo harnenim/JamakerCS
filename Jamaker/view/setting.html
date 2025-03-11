@@ -696,7 +696,8 @@ $(() => {
 				if (item.length) {
 					const split = item.split(":");
 					const value = split[0].trim();
-					const name = (split.length > 1) ? split[1].trim() : value;
+					let name = (split.length > 1) ? split[1].trim() : value;
+					if (name.indexOf("?")) name = name.split("?")[0];
 					selectStyle.append($("<option>").val(value).text(name));
 				}
 			}

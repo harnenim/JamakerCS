@@ -1,9 +1,9 @@
 eclipse            : Eclipse
 vs                 : Visual Studio
-vs2015             : Visual Studio 2015
+vs2015?dark        : Visual Studio 2015
 intellij-light     : IntelliJ
 xcode              : Xcode
-androidstudio      : Android Studio
+androidstudio?dark : Android Studio
 github             : Github
 github-dark        : Github Dark
 github-dark-dimmed : Github Dark Dimmed
@@ -12,62 +12,62 @@ stackoverflow-dark : StackOverflow(dark)
 1c-light
 a11y-light
 a11y-dark
-agate
-an-old-hope
+agate?dark
+an-old-hope?dark
 arduino-light
-arta
+arta?dark
 ascetic
 atom-one-light
 atom-one-dark
 atom-one-dark-reasonable
 brown-paper
-codepen-embed
+codepen-embed?dark
 color-brewer
-dark
+dark?dark
 default
-devibeans
+devibeans?dark
 docco
-far
-felipec
-gml
+far?dark
+felipec?dark
+gml?dark
 googlecode
 gradient-light
 gradient-dark
 grayscale
-hybrid
+hybrid?dark
 idea
-ir-black
+ir-black?dark
 isbl-editor-light
 isbl-editor-dark
 kimbie-dark
 kimbie-light
 lightfair
-lioshi
+lioshi?dark
 magula
-mono-blue
-monokai-sublime
-monokai
-night-owl
+mono-blue?dark
+monokai-sublime?dark
+monokai?dark
+night-owl?dark
 nnfx-dark
 nnfx-light
-nord
-obsidian
+nord?dark
+obsidian?dark
 panda-syntax-light
 panda-syntax-dark
 paraiso-dark
 paraiso-light
-pojoaque
+pojoaque?dark
 purebasic
 qtcreator-dark
 qtcreator-light
-rainbow
+rainbow?dark
 routeros
 school-book
-shades-of-purple
-srcery
-sunburst
+shades-of-purple?dark
+srcery?dark
+sunburst?dark
 tokyo-night-dark
 tokyo-night-light
-tomorrow-night-blue
-tomorrow-night-bright
-xt256
+tomorrow-night-blue?dark
+tomorrow-night-bright?dark
+xt256?dark
