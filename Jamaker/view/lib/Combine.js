@@ -734,20 +734,22 @@ if (Subtitle && Subtitle.SmiFile) {
 					const lastLine = main.body[i - 1];
 					if (lastLine.start <= hold.start && (lastLine.text.split("&nbsp;").join("").trim().length == 0)) {
 						hold.afterMain = true;
-						let hasImport = false;
-						for (let j = 0; j < imports.length; j++) {
-							if (imports[j][0] == i) {
-								hasImport = true;
+						if (withCombine) {
+							let hasImport = false;
+							for (let j = 0; j < imports.length; j++) {
+								if (imports[j][0] == i) {
+									hasImport = true;
+								}
+							}
+							if (!hasImport) {
+								// 내포 홀드는 결합 대상에서 제외
+								imports.push([i, hold, holdBody]);
+								result[hold.resultIndex] = "";
+								hold.imported = true;
 							}
 						}
-						if (!hasImport) {
-							// 내포 홀드는 결합 대상에서 제외
-							imports.push([i, hold, holdBody]);
-							result[hold.resultIndex] = "";
-							hold.imported = true;
-						}
 					}
-					if (!hold.imported) {
+					if (withCombine && !hold.imported) {
 						for (let i = 0; i < main.body.length; i++) {
 							const line = main.body[i];
 							if (hold.start < line.start) {
@@ -776,7 +778,7 @@ if (Subtitle && Subtitle.SmiFile) {
 							}
 						}
 					}
-				} else {
+				} else if (withCombine) {
 					// 메인 홀드 없으면 서로 겹치지만 않으면 내포 홀드 처리
 					let hasImport = false;
 					for (let j = 0; j < imports.length; j++) {

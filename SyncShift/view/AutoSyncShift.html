@@ -676,7 +676,8 @@ function apply() {
 					,	start: hold.body.length ? hold.body[0].start : 999999999
 				});
 			}
-			operation.output = Subtitle.SmiFile.holdsToText(holds);
+			const withCombine = $("#chkCombine").prop("checked");
+			operation.output = Subtitle.SmiFile.holdsToText(holds, withCombine, withCombine);
 			refreshPreview(true);
 			break;
 		}
@@ -1037,12 +1038,14 @@ body.drag-file fieldset.hover {
 	background: #fff;
 }
 
-#settingForm > #settingSkf {
+#settingForm > #settingSkf,
+#settingForm > #settingCombine {
 	line-height: 20px;
 	border: 0;
 	text-align: center;
 }
-#settingSkf > label {
+#settingSkf > label,
+#settingCombine > label {
 	display: block;
 	padding-right: 10px;
 }
@@ -1283,6 +1286,9 @@ h4 {
 		</div>
 		<button id="btnApply" style="margin-right: 8px;">적용</button><button id="btnSave">저장</button>
 		<button id="btnApplySave">적용 & 저장</button>
+		<div id="settingCombine">
+			<label><input type="checkbox" id="chkCombine" /> <span>홀드 결합 생략</span></label>
+		</div>
 	</div>
 
 	<div id="processing" style="display: none;">
