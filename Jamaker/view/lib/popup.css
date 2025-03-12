@@ -13,6 +13,9 @@ html, body {
 	font-family: '맑은 고딕';
 	font-size: 14px;
 }
+.width-checker * {
+	font-size: unset;
+}
 input, textarea, button {
 	font-family: '맑은 고딕';
 	font-size: 12px;
