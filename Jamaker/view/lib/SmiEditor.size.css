@@ -83,6 +83,10 @@ label, #showFps {
     line-height: calc(20px / 2);
 }
 
+.hljs > div > div > span {
+	display: block;
+	height: 20px;
+}
 .hljs-color {
 	height: 20px;
 }

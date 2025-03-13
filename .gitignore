@@ -411,3 +411,6 @@ healthchecksdb
 /OptimizeAssSync/view/lib/editor.js
 /OptimizeAssSync/view/lib/setting.js
 /OptimizeAssSync/view/lib/SmiEditor.css
+/MergeUpdates/view/lib/SmiEditor.js
+/OptimizeAssSync/view/lib/SmiEditor.js
+/OptimizeAssSync/view/lib/SmiEditor.size.css

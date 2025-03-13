@@ -1702,7 +1702,7 @@ SmiEditor.prototype.updateHighlight = function() {
 				highlightLine.append($("<span class='hljs-comment enter'>").text("↵"));
 			}
 			
-			highlightLine.append("<br />");
+			highlightLine;
 			newLines.push(highlightLine);
 			if (lastLine) {
 				lastLine.after(highlightLine);
@@ -1719,7 +1719,7 @@ SmiEditor.prototype.updateHighlight = function() {
 				}
 				// 다음 줄 문법 하이라이트 재계산 필요
 				highlightLine.remove();
-				lastLine.after(highlightLine = SmiEditor.highlightText(lines[i], state).append("<br />"));
+				lastLine.after(highlightLine = SmiEditor.highlightText(lines[i], state));
 				state = (lastLine = highlightLine).data("next");
 			}
 		}
