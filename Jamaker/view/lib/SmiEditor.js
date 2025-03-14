@@ -1680,8 +1680,7 @@ SmiEditor.prototype.updateHighlight = function() {
 				}
 			}
 			for (; changeEnd < limit - changeBegin - 1; changeEnd++) {
-				if (lines[lines.length - changeEnd] != newLines[newLines.length - changeEnd]) {
-					changeEnd--;
+				if (lines[lines.length - 1 - changeEnd] != newLines[newLines.length - 1 - changeEnd]) {
 					break;
 				}
 			}
