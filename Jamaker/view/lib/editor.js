@@ -285,7 +285,7 @@ Tab.prototype.selectHold = function(hold) {
 	this.holdArea.find(".hold").hide();
 	hold.selector.addClass("selected");
 	hold.area.show();
-	hold.input.focus();
+	hold.input.focus().scroll();
 	if ((this.hold = index) > 0) {
 		this.lastHold = this.hold;
 	}
