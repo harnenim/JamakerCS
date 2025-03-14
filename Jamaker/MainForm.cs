@@ -372,6 +372,8 @@ namespace Jamaker
 
                 lastOffset = offset;
                 saveSettingAfter = 300; // 창 이동 후 3초간 변화 없으면 설정 저장
+
+                Script("refreshPaddingBottom");
             }
             else if (saveSettingAfter > 0)
             {

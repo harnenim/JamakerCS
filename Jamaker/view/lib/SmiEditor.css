@@ -224,6 +224,10 @@ button {
 .highlight-textarea > div * {
 	font-weight: normal; /* 굵게 하면 글자폭이 달라짐 */
 }
+.highlight-textarea > div > div > span {
+	display: block;
+	position: absolute;
+}
 .highlight-textarea > div span.enter {
 	opacity: 0.5;
 	font-style: normal;

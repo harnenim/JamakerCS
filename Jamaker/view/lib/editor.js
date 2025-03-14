@@ -998,9 +998,6 @@ function openSetting() {
 function saveSetting() {
 	if (window.binder) {
 		binder.saveSetting(stringify(setting));
-		
-		// 창 위치/크기 조절하고 일정 시간 지나면 C#에서 여기가 호출됨
-		refreshPaddingBottom();
 	}
 }
 function refreshPaddingBottom() {
@@ -1012,6 +1009,9 @@ function refreshPaddingBottom() {
 		$("head").append($style = $("<style id='stylePaddingBottom'>"));
 	}
 	$style.html(append);
+	if (SmiEditor.selected) {
+		SmiEditor.selected.input.scroll();
+	}
 }
 
 function openHelp(name) {

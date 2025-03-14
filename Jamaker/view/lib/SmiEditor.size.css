@@ -83,8 +83,7 @@ label, #showFps {
     line-height: calc(20px / 2);
 }
 
-.hljs > div > div > span {
-	display: block;
+.highlight-textarea > div > span {
 	height: 20px;
 }
 .hljs-color {

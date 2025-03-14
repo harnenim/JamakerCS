@@ -402,6 +402,8 @@ window.MB = 9;
 			//this.saveSettingAfter = 300; // 창 이동 후 3초간 변화 없으면 설정 저장
 			this.saveSettingAfter = 60; // 리프레시 주기가 C#에선 10ms였는데 여기선 50ms임
 			
+			this.script("refreshPaddingBottom");
+			
 		} else if (this.saveSettingAfter > 0) {
 			if (--this.saveSettingAfter == 0) {
 				WinAPI.GetWindowRect(this.getHwnd("editor"), this.offset);
@@ -612,7 +614,7 @@ window.MB = 9;
 		if (fb) {
 			const file = await fb.getFile();
 			const stream = await fb.createWritable();
-			await stream.write('\ufeff' + this.strSettingJson);
+			await stream.write(this.strSettingJson);
 			await stream.close();
 		}
 	};
