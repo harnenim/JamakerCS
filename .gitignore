@@ -414,3 +414,5 @@ healthchecksdb
 /MergeUpdates/view/lib/SmiEditor.js
 /OptimizeAssSync/view/lib/SmiEditor.js
 /OptimizeAssSync/view/lib/SmiEditor.size.css
+/OptimizeAssSync/view/lib/AutoCompleteTextarea.css
+/OptimizeAssSync/view/lib/SmiEditor.color.css
