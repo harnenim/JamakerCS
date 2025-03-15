@@ -88,3 +88,14 @@ body, input, button,
 .col-sync .sync.normal:after, .col-sync .sync.frame:after {
     text-decoration-color: [background];
 }
+
+/* 자동완성 */
+.act-select {
+	border-color: [tabBorder];
+	background: [editor];
+	color: [text];
+}
+.act-select > li.selected {
+	background: #acf;
+	color: #000;
+}
