@@ -86,7 +86,7 @@ body, input, button,
 .sync.error { background: [syncError]; }
 .sync.equal { background: [syncEqual]; }
 .col-sync .sync.normal:after, .col-sync .sync.frame:after {
-    text-decoration-color: [background];
+	text-decoration-color: [background];
 }
 
 /* 자동완성 */

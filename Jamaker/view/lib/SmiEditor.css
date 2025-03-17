@@ -219,7 +219,7 @@ button {
 	right: 0;
 	bottom: 17px;
 	overflow: hidden;
-    pointer-events: none;
+	pointer-events: none;
 }
 .highlight-textarea > div * {
 	font-weight: normal; /* 굵게 하면 글자폭이 달라짐 */
@@ -355,5 +355,5 @@ body, input, button,
 .sync.error { background: #ff8888; }
 .sync.equal { background: #88ff88; }
 .col-sync .sync.normal:after, .col-sync .sync.frame:after {
-    text-decoration-color: #f0f0f0;
+	text-decoration-color: #f0f0f0;
 }

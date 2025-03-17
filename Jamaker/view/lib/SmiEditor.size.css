@@ -78,9 +78,9 @@ label, #showFps {
 .col-sync .sync.normal:after, .col-sync .sync.frame:after {
 	right: calc(20px * -2.5);
 	width: calc(20px * 0.8);
-    text-decoration-thickness: calc(20px / 4);
-    font-size: calc(20px * 0.5);
-    line-height: calc(20px / 2);
+	text-decoration-thickness: calc(20px / 4);
+	font-size: calc(20px * 0.5);
+	line-height: calc(20px / 2);
 }
 
 .highlight-textarea > div > span {

@@ -29,6 +29,7 @@ devibeans?dark
 docco
 far?dark
 felipec?dark
+foundation?dark
 gml?dark
 googlecode
 gradient-light
