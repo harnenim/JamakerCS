@@ -6,6 +6,8 @@ const LINE = {
 		TEXT: 0
 	,	SYNC: 1
 	,	TYPE: 2
+	,	LEFT: 3
+	,	VIEW: 4 // TODO: 추후 updateHighlight를 updateSync랑 통합하는 게?
 };
 const TYPE = {
 		TEXT: null
@@ -294,6 +296,9 @@ SmiEditor.prototype.bindEvent = function() {
 		
 		if (SmiEditor.useHighlight) {
 			// 문법 하이라이트 스크롤 동기화
+			editor.colSync.css({
+					marginTop : -scrollTop 
+			});
 			editor.hview.css({
 					marginTop : -scrollTop 
 				,	marginLeft: -scrollLeft
@@ -303,6 +308,11 @@ SmiEditor.prototype.bindEvent = function() {
 			const showFrom = Math.floor(scrollTop / LH);
 			const showEnd  = Math.ceil((scrollTop + editor.input.outerHeight()) / LH);
 			
+			const toAppendLefts = [];
+			const toRemoveLefts = [];
+			editor.colSync.children().each(function() {
+				toRemoveLefts.push(this);
+			});
 			const toAppendViews = [];
 			const toRemoveViews = [];
 			editor.hview.children().each(function() {
@@ -313,7 +323,20 @@ SmiEditor.prototype.bindEvent = function() {
 			const b = Math.min(showEnd, editor.HL.views.length);
 			for (let i = a; i < b; i++) {
 				const css = { top: (i * LH) + "px" };
+				const $left = editor.lines[i][LINE.LEFT];
 				const $view = editor.HL.views[i];
+				if ($left != null) {
+					const rIndex = toRemoveLefts.indexOf($left[0]);
+					if (rIndex >= 0) {
+						// 기존에 있었는데 범위 벗어남
+						toRemoveLefts.splice(rIndex, 1);
+					} else {
+						// 기존에 없었는데 범위에 들어옴
+						toAppendLefts.push($left);
+					}
+					// 위치 계산은 새로 해줌
+					$left.css(css);
+				}
 				{
 					const rIndex = toRemoveViews.indexOf($view[0]);
 					if (rIndex >= 0) {
@@ -326,6 +349,12 @@ SmiEditor.prototype.bindEvent = function() {
 					// 위치 계산은 새로 해줌
 					$view.css(css);
 				}
+			}
+			for (let i = 0; i < toRemoveLefts.length; i++) {
+				$(toRemoveLefts[i]).remove();
+			}
+			for (let i = 0; i < toAppendLefts.length; i++) {
+				editor.colSync.append(toAppendLefts[i]);
 			}
 			for (let i = 0; i < toRemoveViews.length; i++) {
 				$(toRemoveViews[i]).remove();
@@ -387,14 +416,15 @@ SmiEditor.prototype.bindEvent = function() {
 			if ($sync.hasClass("range")) {
 				return;
 			}
-			editor.moveSyncLine($sync.index(), (e.originalEvent.deltaY < 0));
+			editor.moveSyncLine($sync.data("index"), (e.originalEvent.deltaY < 0));
+			
 		}).attr({ title: "Ctrl+휠로 개별 싱크를 조절할 수 있습니다." });
 
 		// 싱크 조절 버튼 기능
-		this.colSync.on("click", ".sync", function(e) {
+		this.colSync.on("click", ".sync:not(.range)", function(e) {
 			if ((e.clientX / editor.colSync.width()) >= 0.84) {
 				const $sync = $(this);
-				editor.moveSyncLine($sync.index(), (((e.clientY - $sync.offset().top) / $sync.height() * 4) < 1));
+				editor.moveSyncLine($sync.data("index"), (((e.clientY - $sync.offset().top) / $sync.height() * 2) < 1));
 			}
 		});
 	}
@@ -1403,6 +1433,16 @@ SmiEditor.prototype.updateSync = function(range=null) {
 	// 프로세스 분리할 필요가 있나?
 	const self = this;
 	const thread = function() {
+		// TODO: 문법 하이라이트도 이쪽에서 작업하도록 개선 예정
+		// 설정이 바뀔 경우 재생성 방안 필요
+		/*
+		if (SmiEditor.useHighlight) {
+			self.hArea.removeClass("nonactive");
+		} else {
+			self.hArea.addClass("nonactive");
+		}
+		*/
+		
 		const textLines = text.split("\n");
 		const syncLines = [];
 		
@@ -1475,23 +1515,21 @@ SmiEditor.prototype.updateSync = function(range=null) {
 		let nextSyncLine = null;
 		for (let i = range[1]; i < self.lines.length; i++) {
 			if (self.lines[i][LINE.SYNC]) {
-				nextSyncLine = [self.lines[i][LINE.SYNC], self.colSync.find("span.sync:eq(" + i + ")")];
+				nextSyncLine = self.lines[i];
 				break;
 			}
 		}
-		
-		// 수정된 부분 삭제
-		self.colSync.find("span.sync").each((i, el) => {
-			if (i < range[0]) return;
-			if (i >= range[1]) return;
-			$(el).remove();
-		});
 		
 		const toUpdate = textLines.length - (self.lines.length - range[1]) - range[0];
 		for (let i = 0; i < toUpdate; i++) {
 			newLines.push(["", 0, null]);
 		}
 		newLines.push(...self.lines.slice(range[1]));
+		
+		/*
+		// TODO: 문법 하이라이트도 이쪽에서 작업하도록 개선 예정
+		let state = (SmiEditor.useHighlight && (i > 0) && newLines[i - 1][LINE.VIEW]) ? newLines[i - 1][LINE.VIEW].data("next") : null;
+		*/
 		
 		// 새로 그릴 범위 파싱
 		// 싱크값을 제외하면 별도의 값을 취하지 않는 간이 파싱
@@ -1598,27 +1636,56 @@ SmiEditor.prototype.updateSync = function(range=null) {
 				const ms = h % 1000; h = (h - ms) / 1000;
 				const s  = h %   60; h = (h -  s) /   60;
 				const m  = h %   60; h = (h -  m) /   60;
-				syncLines.push("<span class='sync" + (sync < beforeSync ? " error" : (sync == beforeSync ? " equal" : "")) + typeCss + "'>"
-						+ h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms
-						+ "<br /></span>");
+				const syncText = (h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms);
+				
+				if (newLines[i][LINE.LEFT] == null) {
+					(newLines[i][LINE.LEFT] = $("<div>")).append($("<span>"));
+				}
+				const $div = newLines[i][LINE.LEFT];
+				$div.attr({
+						"class": "sync" + (sync < beforeSync ? " error" : (sync == beforeSync ? " equal" : "")) + typeCss
+					,	"data-index": i // data로 넣어주면 지우고 다시 그릴 때 사라짐
+				});
+				//$div.data({ index: i });
+				$div.find("span").text(syncText);
+				
 				beforeSync = sync;
+				
 			} else {
 				newLines[i][LINE.TYPE] = TYPE.TEXT;
-				syncLines.push("<span class='sync'><br /></span>");
+				if (newLines[i][LINE.LEFT] != null) {
+					newLines[i][LINE.LEFT].remove();
+					newLines[i][LINE.LEFT] = null;
+				}
+			}
+			/*
+			// TODO: 문법 하이라이트도 이쪽에서 작업하도록 개선 예정
+			if (SmiEditor.useHighlight) {
+				const $view = SmiEditor.highlightView(line, state);
+				newLines[i][LINE.VIEW] = $view;
+				$view.attr({ "data-state": state, "data-next": (state = $view.data("next")) });
+			}
+			*/
+		}
+		/*
+		// TODO: 문법 하이라이트도 이쪽에서 작업하도록 개선 예정
+		if (SmiEditor.useHighlight) {
+			for (let i = range[1] + add; i < textLines.length; i++) {
+				let $view = newLines[i][LINE.VIEW];
+				if ($view && ($view.data("state") == state)) {
+					break;
+				}
+				newLines[i][LINE.VIEW] = $view = SmiEditor.highlightView(textLines[i], state);
+				$view.attr({ "data-state": state, "data-next": (state = $view.data("next")) });
 			}
 		}
+		*/
 		
-		// 수정된 내용 삽입
-		if (lastSync.length) {
-			lastSync.after(syncLines.join(""));
-		} else {
-			self.colSync.prepend(syncLines.join(""));
-		}
 		if (nextSyncLine && beforeSync) {
-			if (nextSyncLine[0] <= beforeSync) {
-				nextSyncLine[1].addClass(nextSyncLine[0] == beforeSync ? "equal" : "error");
+			if (nextSyncLine[LINE.SYNC] <= beforeSync) {
+				nextSyncLine[LINE.LEFT].addClass(nextSyncLine[0] == beforeSync ? "equal" : "error");
 			} else {
-				nextSyncLine[1].removeClass("equal").removeClass("error");
+				nextSyncLine[LINE.LEFT].removeClass("equal").removeClass("error");
 			}
 		}
 		

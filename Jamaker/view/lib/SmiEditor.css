@@ -184,13 +184,16 @@ button {
 .hold > .col-sync,
 .hold > .col-sync-cover {
 	left: 0;
-	height: 100%;
 	text-align: center;
 	overflow: hidden;
 	padding-bottom: 2000px;
 	border: 1px solid transparent;
 }
+.hold > .col-sync {
+	height: 100000px;
+}
 .hold > .col-sync-cover {
+	height: 100%;
 	background: transparent;
 	display: none;
 }
@@ -243,20 +246,32 @@ button {
 }
 
 #editor.trust-keyframe .sync.keyframe { font-weight: bold; }
-.sync.frame { border-top-width: 1px; }
-.sync.range + span { border-left-width: 1px; border-style: dotted; }
+.sync.frame > span { border-top-width: 1px; }
 .sync.range { opacity: 0.5; }
-.sync { position: relative; }
+.sync {
+	position: absolute;
+	width: 100%;
+	text-align: center;
+}
 .col-sync .sync.normal:after, .col-sync .sync.frame:after {
 	display: none;
 	content: "▲\A▼";
 	white-space: pre;
 	position: absolute;
 	top: 0;
+	right: 0;
 	text-align: center;
 }
 .col-sync:hover .sync.normal:after, .col-sync:hover .sync.frame:after {
 	display: block;
+}
+.col-sync .sync.range:after {
+	display: block;
+	content: "";
+	width: 0;
+	margin: 0 auto;
+	border-width: 0 0 0 1px;
+	border-style: dotted;
 }
 
 .hljs-color {
@@ -351,9 +366,9 @@ body, input, button,
 }
 
 /* 싱크 구분 색 */
-.sync { border-color: #000000; }
-.sync.error { background: #ff8888; }
-.sync.equal { background: #88ff88; }
+.sync,.sync > span { border-color: #000000; }
+.sync.error > span { background: #ff8888; }
+.sync.equal > span { background: #88ff88; }
 .col-sync .sync.normal:after, .col-sync .sync.frame:after {
 	text-decoration-color: #f0f0f0;
 }

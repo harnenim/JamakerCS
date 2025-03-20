@@ -82,9 +82,9 @@ body, input, button,
 */
 
 /* 싱크 구분 색 */
-.sync { border-color: [syncBorder]; }
-.sync.error { background: [syncError]; }
-.sync.equal { background: [syncEqual]; }
+.sync,.sync > span { border-color: [syncBorder]; }
+.sync.error > span { background: [syncError]; }
+.sync.equal > span { background: [syncEqual]; }
 .col-sync .sync.normal:after, .col-sync .sync.frame:after {
 	text-decoration-color: [background];
 }
