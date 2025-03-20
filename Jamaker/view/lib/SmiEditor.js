@@ -1466,10 +1466,10 @@ SmiEditor.prototype.updateSync = function(range=null) {
 			}
 		}
 		const lastSync = range[0]>0 ? self.colSync.find("span.sync:eq(" + (range[0] - 1) + ")") : [];
-		let nextSync = null;
+		let nextSyncLine = null;
 		for (let i = range[1]; i < self.lines.length; i++) {
 			if (self.lines[i][LINE.SYNC]) {
-				nextSync = [self.lines[i][LINE.SYNC], self.colSync.find("span.sync:eq(" + i + ")")];
+				nextSyncLine = [self.lines[i][LINE.SYNC], self.colSync.find("span.sync:eq(" + i + ")")];
 				break;
 			}
 		}
@@ -1608,11 +1608,11 @@ SmiEditor.prototype.updateSync = function(range=null) {
 		} else {
 			self.colSync.prepend(syncLines.join(""));
 		}
-		if (nextSync && beforeSync) {
-			if (nextSync[0] <= beforeSync) {
-				nextSync[1].addClass(nextSync[0] == beforeSync ? "equal" : "error");
+		if (nextSyncLine && beforeSync) {
+			if (nextSyncLine[0] <= beforeSync) {
+				nextSyncLine[1].addClass(nextSyncLine[0] == beforeSync ? "equal" : "error");
 			} else {
-				nextSync[1].removeClass("equal").removeClass("error");
+				nextSyncLine[1].removeClass("equal").removeClass("error");
 			}
 		}
 		
@@ -1671,35 +1671,35 @@ SmiEditor.prototype.updateHighlight = function() {
 		const newLines = self.input.val().split("\n");
 		
 		// 텍스트 바뀐 범위 찾기
-		let changeBegin = 0;
-		let changeEnd = 0;
+		let ramaindHead = 0;
+		let ramaindFoot = 0;
 		{	const limit = Math.min(lines.length, newLines.length);
-			for (; changeBegin < limit; changeBegin++) {
-				if (lines[changeBegin] != newLines[changeBegin]) {
+			for (; ramaindHead < limit; ramaindHead++) {
+				if (lines[ramaindHead] != newLines[ramaindHead]) {
 					break;
 				}
 			}
-			for (; changeEnd < limit - changeBegin - 1; changeEnd++) {
-				if (lines[lines.length - 1 - changeEnd] != newLines[newLines.length - 1 - changeEnd]) {
+			for (; ramaindFoot < limit - ramaindHead - 1; ramaindFoot++) {
+				if (lines[lines.length - 1 - ramaindFoot] != newLines[newLines.length - 1 - ramaindFoot]) {
 					break;
 				}
 			}
 		}
 		
 		// 텍스트 바뀐 범위보다 앞쪽
-		const newViews = self.HL.views.slice(0, changeBegin);
-		let state = (changeBegin > 0) ? self.HL.views[changeBegin - 1].data("next") : null;
+		const newViews = self.HL.views.slice(0, ramaindHead);
+		let state = (ramaindHead > 0) ? self.HL.views[ramaindHead - 1].data("next") : null;
 		
 		{	// 텍스트 바뀐 범위
-			for (let i = changeBegin; i < newLines.length - changeEnd; i++) {
+			for (let i = ramaindHead; i < newLines.length - ramaindFoot; i++) {
 				const $view = SmiEditor.highlightView(newLines[i], state);
 				newViews.push($view);
-				state = $view.data("next");
+				$view.attr({ "data-state": state, "data-next": (state = $view.data("next")) }); // data로 넣어주면 지우고 다시 그릴 때 사라짐
 			}
 		}
 		{	// 텍스트 바뀐 범위보다 뒤쪽
-			newViews.push(...self.HL.views.slice(lines.length - changeEnd));
-			for (let i = newLines.length - changeEnd; i < newLines.length; i++) {
+			newViews.push(...self.HL.views.slice(lines.length - ramaindFoot));
+			for (let i = newLines.length - ramaindFoot; i < newLines.length; i++) {
 				const $view = newViews[i];
 				if ($view.data("state") == state) {
 					break;
@@ -1722,115 +1722,6 @@ SmiEditor.prototype.updateHighlight = function() {
 				self.input.scroll();
 			}
 		}, 1);
-		
-		/*
-		let lines = self.input.val().split("\n");
-		
-		let add = 0;
-		let changeBegin = 0;
-		let changeEnd = Math.min(lines.length, self.HL.lines.length);
-		if (self.HL.lines.length) {
-			{	// 수정된 범위 찾기
-				let i;
-				for (i = 0; i < changeEnd; i++) {
-					if (self.HL.lines[i] != lines[i]) {
-						break;
-					}
-				}
-				changeBegin = i;
-				
-				add = lines.length - self.HL.lines.length;
-				for (i = self.HL.lines.length - 1; i > (add > 0 ? changeBegin : changeBegin - add); i--) {
-					if (self.HL.lines[i] != lines[i + add]) {
-						break;
-					}
-				}
-				changeEnd = i + 1;
-			}
-			
-			{	// 기존 결과물 삭제
-				let removeLines = self.hview.children().splice(changeBegin, changeEnd - changeBegin);
-				for (let i = 0; i < removeLines.length; i++) {
-					$(removeLines[i]).remove();
-				}
-			}
-		} else {
-			add = lines.length;
-		}
-		
-		const newLines = [];
-		const highlightLines = self.hview.children();
-		
-		let lastLine = (changeBegin > 0) ? $(highlightLines[changeBegin - 1]) : null;
-		let state = lastLine ? lastLine.data("next") : null;
-		let i = changeBegin;
-		for (; i < changeEnd + add; i++) {
-			const highlightLine = SmiEditor.highlightText(lines[i], state);
-			
-			// 색상 미리보기
-			if (SmiEditor.showColor) {
-				highlightLine.find(".hljs-attr").each((_, el) => {
-					const $attr = $(el);
-					const attrName = $attr.text().trim().toLowerCase();
-					if (attrName == "color" || attrName == "fade") {
-						const $value = $attr.next();
-						if ($value.hasClass("hljs-value")) {
-							let color = $value.text();
-							if (color.startsWith('"') || color.startsWith("'")) {
-								color = color.substring(1, color.length - 1);
-							}
-							color = color.trim();
-							if (!(color.length == 7 && color.startsWith("#"))) {
-								let hex = sToAttrColor(color);
-								if (hex == color) {
-									return;
-								}
-								color = "#" + hex;
-							}
-							$value.addClass("hljs-color").css({ borderColor: color });
-						}
-					}
-				});
-			}
-			
-			// 줄바꿈 표시
-			if (SmiEditor.showEnter) {
-				highlightLine.append($("<span class='hljs-comment enter'>").text("↵"));
-			}
-			
-			highlightLine.append("<br />");
-			newLines.push(highlightLine);
-			if (lastLine) {
-				lastLine.after(highlightLine);
-			} else {
-				self.hview.prepend(highlightLine);
-			}
-			state = (lastLine = highlightLine).data("next");
-		}
-		if (lastLine) {
-			for (; i < highlightLines.length; i++) {
-				let highlightLine = lastLine.next();
-				if (highlightLine.length == 0 || highlightLine.data("state") == state) {
-					break;
-				}
-				// 다음 줄 문법 하이라이트 재계산 필요
-//				highlightLine.remove();
-//				lastLine.after(highlightLine = SmiEditor.highlightText(lines[i], state).append("<br />"));
-				highlightLine.html(SmiEditor.highlightText(lines[i], state).html() + "<br />");
-				state = (lastLine = highlightLine).data("next");
-			}
-		}
-		
-		self.HL.lines = lines;
-		
-		self.HL.updating = false;
-		setTimeout(() => {
-			if (self.HL.needToUpdate) {
-				// 렌더링 대기열 있으면 재실행
-				self.updateHighlight();
-			}
-		}, 1);
-		*/
 	};
 	setTimeout(thread, 1);
 }
@@ -2018,10 +1909,10 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 			}
 		}
 		const lastSync = range[0]>0 ? self.colSync.find("span.sync:eq(" + (range[0] - 1) + ")") : [];
-		let nextSync = null;
+		let nextSyncLine = null;
 		for (let i = range[1]; i < self.lines.length; i++) {
 			if (self.lines[i][LINE.SYNC]) {
-				nextSync = [self.lines[i][LINE.SYNC], self.colSync.find("span.sync:eq(" + i + ")")];
+				nextSyncLine = [self.lines[i][LINE.SYNC], self.colSync.find("span.sync:eq(" + i + ")")];
 				break;
 			}
 		}
@@ -2067,11 +1958,11 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 		} else {
 			self.colSync.prepend(syncLines.join(""));
 		}
-		if (nextSync && beforeSync) {
-			if (nextSync[0] <= beforeSync) {
-				nextSync[1].addClass(nextSync[0] == beforeSync ? "equal" : "error");
+		if (nextSyncLine && beforeSync) {
+			if (nextSyncLine[0] <= beforeSync) {
+				nextSyncLine[1].addClass(nextSyncLine[0] == beforeSync ? "equal" : "error");
 			} else {
-				nextSync[1].removeClass("equal").removeClass("error");
+				nextSyncLine[1].removeClass("equal").removeClass("error");
 			}
 		}
 
