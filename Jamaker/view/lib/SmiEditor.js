@@ -1960,12 +1960,9 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 	this.needToUpdateSync = false;
 	this.syncUpdating = true;
 	
-	const text = this.input.val();
-	
 	// 프로세스 분리할 필요가 있나?
 	const self = this;
 	setTimeout(() => {
-		const lines = text.split("\n");
 		const syncLines = [];
 		
 		// 줄 수 변동량
@@ -1982,7 +1979,7 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 		let nextSyncLine = null;
 		for (let i = range[1]; i < self.lines.length; i++) {
 			if (self.lines[i][LINE.SYNC]) {
-				nextSyncLine = [self.lines[i][LINE.SYNC], self.colSync.find("span.sync:eq(" + i + ")")];
+				nextSyncLine = self.lines[i];
 				break;
 			}
 		}
@@ -2013,12 +2010,27 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 				let ms = h % 1000; h = (h - ms) / 1000;
 				let s  = h %   60; h = (h -  s) /   60;
 				let m  = h %   60; h = (h -  m) /   60;
-				syncLines.push("<span class='sync" + (sync < beforeSync ? " error" : (sync == beforeSync ? " equal" : "")) + typeCss + "'>"
-						+ h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms
-						+ "<br /></span>");
+				const syncText = (h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms);
+				
+				if (self.lines[i][LINE.LEFT] == null) {
+					(self.lines[i][LINE.LEFT] = $("<div>")).append($("<span>"));
+				}
+				const $div = self.lines[i][LINE.LEFT];
+				$div.attr({
+						"class": "sync" + (sync < beforeSync ? " error" : (sync == beforeSync ? " equal" : "")) + typeCss
+					,	"data-index": i // data로 넣어주면 지우고 다시 그릴 때 사라짐
+				});
+				//$div.data({ index: i });
+				$div.find("span").text(syncText);
+				
 				beforeSync = sync;
+
 			} else {
-				syncLines.push("<span class='sync'><br /></span>");
+				self.lines[i][LINE.TYPE] = TYPE.TEXT;
+				if (self.lines[i][LINE.LEFT] != null) {
+					self.lines[i][LINE.LEFT].remove();
+					self.lines[i][LINE.LEFT] = null;
+				}
 			}
 		}
 		
@@ -2029,10 +2041,10 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 			self.colSync.prepend(syncLines.join(""));
 		}
 		if (nextSyncLine && beforeSync) {
-			if (nextSyncLine[0] <= beforeSync) {
-				nextSyncLine[1].addClass(nextSyncLine[0] == beforeSync ? "equal" : "error");
+			if (nextSyncLine[LINE.SYNC] <= beforeSync) {
+				nextSyncLine[LINE.LEFT].addClass(nextSyncLine[LINE.SYNC] == beforeSync ? "equal" : "error");
 			} else {
-				nextSyncLine[1].removeClass("equal").removeClass("error");
+				nextSyncLine[LINE.LEFT].removeClass("equal").removeClass("error");
 			}
 		}
 
