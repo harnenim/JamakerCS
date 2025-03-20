@@ -2085,8 +2085,10 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 		range[0] = cursorLine;
 		range[1] = this.text.substring(0, cursor[1]).split("\n").length;
 	}
-	
-	const colSyncs = this.colSync.children();
+
+	// TODO: updateSync 뜯어고쳤더니... 괜히 기교 안 부리고 그냥 전체 업데이트 돌아가게 고치는 게 맞을 듯...?
+
+	//const colSyncs = this.colSync.children();
 	for (let i = range[0]; i < range[1]; i++) {
 		const line = lines[i];
 		if ((line[LINE.TYPE] == TYPE.FRAME) || (!frameSyncOnly && (line[LINE.TYPE] == TYPE.BASIC))) {
@@ -2094,7 +2096,8 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 			if (sync != null) {
 				line[LINE.TEXT] = SmiEditor.makeSyncLine((line[LINE.SYNC] = sync), line[LINE.TYPE]);
 
-				const colSync = $(colSyncs[i]);
+				//const colSync = $(colSyncs[i]);
+				const colSync = this.lines[i][LINE.LEFT];
 				let h = sync;
 				let ms = h % 1000; h = (h - ms) / 1000;
 				let s  = h %   60; h = (h -  s) /   60;
