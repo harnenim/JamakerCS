@@ -181,7 +181,10 @@ window.Combine = {
 				// 화면 싱크 체크
 				parsed[LINE.TYPE] = TYPE.BASIC;
 				let typeCss = "";
-				if (line.indexOf(" >") > 0) {
+				if (line.indexOf("  >") > 0) {
+					// 자동 생성 공백 싱크는 일반 싱크 취급
+					syncLines.basic[sync] = line;
+				} else if (line.indexOf(" >") > 0) {
 					parsed[LINE.TYPE] = TYPE.FRAME;
 					typeCss = " frame";
 					syncLines.frame[sync] = line;
@@ -683,11 +686,23 @@ if (Subtitle && Subtitle.SmiFile) {
 		normalized[0].pos = 0;
 		normalized[0].name = "메인";
 		holds = normalized.concat(holds.slice(1));
+		if (holds[0].isWithSplit()) {
+			// 대사 사이 1프레임 공백 싱크 제거
+			const body = holds[0].body;
+			for (let i = 1; i < body.length; i++) {
+				const smi = body[i];
+				if (smi.syncType == Subtitle.SyncType.split) {
+					body[i - 1].text = smi.text;
+					body.splice(i, 1);
+				}
+			}
+		}
 		holds[0].text = holds[0].toTxt().trim();
+		
 		for (let i = 1; i < normalized.length; i++) {
 			// 내포된 홀드는 종료싱크가 빠졌을 수 있음
 			const hold = holds[i];
-			if (hold.next && hold.body[hold.body.length - 1].text.split("&nbsp;").join("").trim().length > 0) {
+			if (hold.next && !hold.body[hold.body.length - 1].isEmpty()) {
 				hold.body.push(new Subtitle.Smi(hold.next.start, hold.next.syncType, "&nbsp;"));
 			}
 			holds[i].text = hold.toTxt().trim();
@@ -697,12 +712,60 @@ if (Subtitle && Subtitle.SmiFile) {
 		}
 		return holds;
 	}
+	
 	Subtitle.SmiFile.holdsToText = (origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) => {
 		const result = [];
 		let logs = [];
 		let originBody = [];
 		
 		const main = new Subtitle.SmiFile(origHolds[0].text);
+		if (main.isWithSplit()) { // TODO: 메인 홀드 이외에도 가능하게 해야 하나?
+			// 대사 사이 1프레임 공백 싱크 생성
+			const body = main.body;
+			const add = Math.round(1000 / fps);
+			let before = null;
+			for (let i = 0; i < body.length; i++) {
+				const smi = body[i];
+				if (smi.text.split("&nbsp;").join(" ").trim().length == 0) {
+					before = null;
+				} else {
+					if (smi.text.indexOf(" fade=") > 0) {
+						before = null;
+						// 페이드인일 경우 끊기지 않도록 다음 싱크도 건너뛰기
+						i++;
+						continue;
+					}
+					
+					// TODO: 설정에 따른 예외처리 넣기... 정규식으로?
+					if (smi.text.indexOf("harne") >= 0) {
+						before = null;
+						continue;
+					}
+					if (smi.text.startsWith("[")) {
+						before = null;
+						continue;
+					}
+					
+					if (before) {
+						const splitted = new Subtitle.Smi((smi.start + add), Subtitle.SyncType.split, (before = smi.text));
+						body.splice(++i, 0, splitted);
+						smi.text = "&nbsp;";
+						/*
+					} else if (smi.syncType == Subtitle.SyncType.frame) {
+						const splitted = new Subtitle.Smi((smi.start + add), Subtitle.SyncType.split, (before = smi.text));
+						body.splice(++i, 0, splitted);
+						smi.text = "&nbsp;";
+						//*/
+					} else {
+						before = smi.text;
+					}
+				}
+			}
+			
+			// TODO: 여기서 작업한 결과는 아래에 주석 생성 없도록 만들어야 함
+		}
+		//console.log(JSON.parse(JSON.stringify(body)));
+		
 		withCombine = withCombine && origHolds.length > 1;
 		
 		{	// 시작 시간 순으로 저장
