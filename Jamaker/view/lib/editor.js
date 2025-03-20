@@ -52,20 +52,7 @@ window.Tab = function(text, path) {
 		
 	}).on("dblclick", ".hold-name", function(e) {
 		e.stopPropagation();
-		const hold = $(this).parents(".selector").data("hold");
-		if (hold == tab.holds[0]) {
-			// 메인 홀드는 이름 변경 X
-			return;
-		}
-		prompt("홀드 이름 변경", (input) => {
-			if (!input) {
-				alert("잘못된 입력입니다.");
-				return;
-			}
-			hold.selector.find(".hold-name > span").text(tab.holds.indexOf(hold) + "." + (hold.name = input));
-			hold.selector.attr({ title: hold.name });
-			hold.afterChangeSaved(hold.isSaved());
-		}, hold.name);
+		$(this).parents(".selector").data("hold").rename();
 		
 	}).on("click", ".btn-hold-remove", function(e) {
 		e.stopPropagation();
@@ -418,6 +405,22 @@ SmiEditor.prototype.onChangeSaved = function(saved) {
 	if (!currentTab) return;
 	currentTab.onChangeSaved(this);
 };
+SmiEditor.prototype.rename = function() {
+	if (this == this.owner.holds[0]) {
+		// 메인 홀드는 이름 변경 X
+		return;
+	}
+	const hold = this;
+	prompt("홀드 이름 변경", (input) => {
+		if (!input) {
+			alert("잘못된 입력입니다.");
+			return;
+		}
+		hold.selector.find(".hold-name > span").text(hold.owner.holds.indexOf(hold) + "." + (hold.name = input));
+		hold.selector.attr({ title: hold.name });
+		hold.afterChangeSaved(hold.isSaved());
+	}, hold.name);
+}
 
 function deepCopyObj(obj) {
 	if (obj && typeof obj == "object") {
@@ -835,6 +838,7 @@ function setSetting(setting, initial=false) {
 					for (let i = 0; i < tabs.length; i++) {
 						const holds = tabs[i].holds;
 						for (let j = 0; j < holds.length; j++) {
+							holds[j].input.scroll();
 							if (holds[j].act) {
 								holds[j].act.resize();
 							}
