@@ -633,6 +633,7 @@ window.Subtitle = {
 	,	normal: 0
 	,	frame: 1
 	,	inner: 2
+	,	split: 3
 	}
 };
 Subtitle.SyncAttr = function(start, end, startType, endType, text) {
@@ -1228,12 +1229,17 @@ Subtitle.Smi = function(start, syncType, text) {
 	this.syncType = syncType ? syncType : Subtitle.SyncType.normal;
 	this.text = text ? text : "";
 }
+Subtitle.Smi.TypeParser = {};
+Subtitle.Smi.TypeParser[Subtitle.SyncType.normal] = "";
+Subtitle.Smi.TypeParser[Subtitle.SyncType.frame] = " ";
+Subtitle.Smi.TypeParser[Subtitle.SyncType.inner] = "\t";
+Subtitle.Smi.TypeParser[Subtitle.SyncType.split] = "  ";
 
 Subtitle.Smi.prototype.toTxt = function() {
 	if (this.syncType == Subtitle.SyncType.comment) { // Normalize 시에만 존재
 		return "<!--" + this.text + "-->";
 	}
-	return "<Sync Start=" + this.start + "><P Class=KRCC" + (this.syncType == Subtitle.SyncType.inner ? "\t" : (this.syncType == Subtitle.SyncType.frame ? " " : "")) + ">\n" + this.text;
+	return "<Sync Start=" + this.start + "><P Class=KRCC" + Subtitle.Smi.TypeParser[this.syncType] + ">\n" + this.text;
 }
 Subtitle.Smi.smi2txt = (smis) => {
 	let result = "";
@@ -1241,6 +1247,9 @@ Subtitle.Smi.smi2txt = (smis) => {
 		result += smis[i].toTxt() + "\n";
 	}
 	return result;
+}
+Subtitle.Smi.prototype.isEmpty = function() {
+	return (this.text.split("&nbsp;").join("").trim().length == 0);
 }
 
 function sToAttrColor(soColor) {
@@ -2462,11 +2471,13 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 	let index = 0;
 	let pos = 0;
 	let last = null;
+	let isWithSplit = false;
 	
 	while ((pos = txt.indexOf('<', index)) >= 0) {
 		if (txt.length > pos + 6 && txt.substring(pos, pos + 6).toUpperCase() == ("<SYNC ")) {
 			if (last == null) {
 				this.header = txt.substring(0, pos);
+				isWithSplit = this.isWithSplit();
 			} else {
 				last.text += txt.substring(index, pos);
 			}
@@ -2492,6 +2503,7 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 			const endOfP = txt.indexOf('>', pos + 3) + 1;
 			if (last == null) {
 				this.header = txt.substring(0, pos);
+				isWithSplit = this.isWithSplit();
 			} else {
 				// last.text가 있음 -> <P> 태그가 <SYNC> 태그 바로 뒤에 붙은 게 아님 - 별도 텍스트로 삽입
 				last.text += txt.substring(index, last.text ? endOfP : pos);
@@ -2503,7 +2515,11 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 			}
 			switch (txt[index - 2]) {
 				case ' ':
-					last.syncType = Subtitle.SyncType.frame;
+					if (txt[index - 3] == ' ') {
+						last.syncType = Subtitle.SyncType.split;
+					} else {
+						last.syncType = Subtitle.SyncType.frame;
+					}
 					break;
 				case '\t':
 					last.syncType = Subtitle.SyncType.inner;
@@ -2512,6 +2528,7 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 		} else if (txt.length > pos + 6 && txt.substring(pos, pos + 7).toUpperCase() == ("</BODY>")) {
 			if (last == null) {
 				this.header = txt.substring(0, pos);
+				isWithSplit = this.isWithSplit();
 				last = { text: "" }; // 아래에서 헤더에 중복으로 추가되지 않도록 함
 			} else {
 				last.text += txt.substring(index, pos);
@@ -2524,6 +2541,7 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 			pos++;
 			if (last == null) {
 				this.header = txt.substring(0, pos);
+				isWithSplit = this.isWithSplit();
 			} else {
 				last.text += txt.substring(index, pos);
 			}
@@ -2533,6 +2551,7 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 
 	if (last == null) {
 		this.header = txt.substring(0);
+		isWithSplit = this.isWithSplit();
 	} else {
 		last.text += txt.substring(index);
 	}
@@ -2550,6 +2569,10 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 	}
 
 	return this;
+}
+Subtitle.SmiFile.prototype.isWithSplit = function() {
+	const match = /<body( [^>]*)*>/gi.exec(this.header);
+	return match && (match[0].indexOf("split") > 0);
 }
 
 Subtitle.SmiFile.prototype.toSync = function() {
