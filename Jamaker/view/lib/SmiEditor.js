@@ -303,32 +303,35 @@ SmiEditor.prototype.bindEvent = function() {
 			const showFrom = Math.floor(scrollTop / LH);
 			const showEnd  = Math.ceil((scrollTop + editor.input.outerHeight()) / LH);
 			
-			const toAppends = [];
-			const toRemoves = [];
+			const toAppendViews = [];
+			const toRemoveViews = [];
 			editor.hview.children().each(function() {
-				toRemoves.push(this);
+				toRemoveViews.push(this);
 			});
 			
 			const a = Math.max(0, showFrom);
 			const b = Math.min(showEnd, editor.HL.views.length);
 			for (let i = a; i < b; i++) {
+				const css = { top: (i * LH) + "px" };
 				const $view = editor.HL.views[i];
-				const rIndex = toRemoves.indexOf($view[0]);
-				if (rIndex >= 0) {
-					// 기존에 있었는데 범위 벗어남
-					toRemoves.splice(rIndex, 1);
-				} else {
-					// 기존에 없었는데 범위에 들어옴
-					toAppends.push($view);
+				{
+					const rIndex = toRemoveViews.indexOf($view[0]);
+					if (rIndex >= 0) {
+						// 기존에 있었는데 범위 벗어남
+						toRemoveViews.splice(rIndex, 1);
+					} else {
+						// 기존에 없었는데 범위에 들어옴
+						toAppendViews.push($view);
+					}
+					// 위치 계산은 새로 해줌
+					$view.css(css);
 				}
-				// 위치 계산은 새로 해줌
-				$view.css({ top: (i * LH) + "px" });
 			}
-			for (let i = 0; i < toRemoves.length; i++) {
-				$(toRemoves[i]).remove();
+			for (let i = 0; i < toRemoveViews.length; i++) {
+				$(toRemoveViews[i]).remove();
 			}
-			for (let i = 0; i < toAppends.length; i++) {
-				editor.hview.append(toAppends[i]);
+			for (let i = 0; i < toAppendViews.length; i++) {
+				editor.hview.append(toAppendViews[i]);
 			}
 		}
 	});
