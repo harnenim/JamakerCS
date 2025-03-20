@@ -384,6 +384,9 @@ SmiEditor.prototype.bindEvent = function() {
 			}
 			// Ctrl+휠이면 싱크 조절 동작
 			const $sync = $(this);
+			if ($sync.hasClass("range")) {
+				return;
+			}
 			editor.moveSyncLine($sync.index(), (e.originalEvent.deltaY < 0));
 		}).attr({ title: "Ctrl+휠로 개별 싱크를 조절할 수 있습니다." });
 
