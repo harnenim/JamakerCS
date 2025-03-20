@@ -1511,7 +1511,6 @@ SmiEditor.prototype.updateSync = function(range=null) {
 				break;
 			}
 		}
-		const lastSync = range[0]>0 ? self.colSync.find("span.sync:eq(" + (range[0] - 1) + ")") : [];
 		let nextSyncLine = null;
 		for (let i = range[1]; i < self.lines.length; i++) {
 			if (self.lines[i][LINE.SYNC]) {
@@ -1688,6 +1687,7 @@ SmiEditor.prototype.updateSync = function(range=null) {
 				nextSyncLine[LINE.LEFT].removeClass("equal").removeClass("error");
 			}
 		}
+		self.colSync.css({ height: (newLines.length * LH + 10000) + "px" });
 		
 		self.text = text;
 		self.lines = newLines;
@@ -1698,9 +1698,6 @@ SmiEditor.prototype.updateSync = function(range=null) {
 			SmiEditor.Viewer.refresh();
 		}
 		self.syncUpdating = false;
-		if (self.input.scrollTop() != self.colSync.scrollTop()) {
-			self.input.scroll();
-		}
 		
 		self.afterChangeSaved(self.isSaved());
 		

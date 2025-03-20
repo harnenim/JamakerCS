@@ -189,9 +189,6 @@ button {
 	padding-bottom: 2000px;
 	border: 1px solid transparent;
 }
-.hold > .col-sync {
-	height: 100000px;
-}
 .hold > .col-sync-cover {
 	height: 100%;
 	background: transparent;
