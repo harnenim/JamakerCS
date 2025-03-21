@@ -853,13 +853,7 @@ function setSetting(setting, initial=false) {
 			SmiEditor.refreshHighlight();
 			for (let i = 0; i < tabs.length; i++) {
 				for (let j = 0; j < tabs[i].holds.length; j++) {
-					const hold = tabs[i].holds[j];
-					/*
-					hold.HL.lines = [];
-					hold.HL.views = [];
-					hold.renderHighlight();
-					*/
-					hold.refreshHighlight();
+					tabs[i].holds[j].refreshHighlight();
 				}
 			}
 		}

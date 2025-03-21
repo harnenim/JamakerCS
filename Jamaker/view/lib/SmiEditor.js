@@ -9,7 +9,22 @@ const LINE = {
 	,	LEFT: "LEFT"
 	,	VIEW: "VIEW"
 };
-function Line(text="", sync=0, type=TYPE.TEXT) {
+const TYPE = {
+		TEXT: null
+	,	BASIC: 1
+	,	FRAME: 2
+	,	RANGE: 3
+};
+const TIDs = [null, "", " ", "	"];
+function linesToText(lines) {
+	const textLines = [];
+	for (let i = 0; i < lines.length; i++) {
+		textLines.push(lines[i].TEXT);
+	}
+	return textLines.join("\n");
+}
+
+window.Line = function (text="", sync=0, type=TYPE.TEXT) {
 	this.TEXT = text;
 	this.SYNC = sync;
 	this.TYPE = type;
@@ -100,19 +115,94 @@ function Line(text="", sync=0, type=TYPE.TEXT) {
 		}
 	}
 }
-const TYPE = {
-		TEXT: null
-	,	BASIC: 1
-	,	FRAME: 2
-	,	RANGE: 3
-};
-const TIDs = [null, "", " ", "	"];
-function linesToText(lines) {
-	const textLines = [];
-	for (let i = 0; i < lines.length; i++) {
-		textLines.push(lines[i].TEXT);
+Line.prototype.render = function(index, last={ sync: 0, state: null }) {
+	if (this.SYNC) { // 어차피 0이면 플레이어에서도 씹힘
+		const sync = this.SYNC;
+		
+		// 화면 싱크 체크
+		let typeCss = "";
+		if (this.TYPE == TYPE.RANGE) {
+			typeCss = " range";
+		} else {
+			if (this.TYPE == TYPE.FRAME) {
+				typeCss = " frame";
+			} else {
+				typeCss = " normal";
+			}
+			if (SmiEditor.findSync(sync, SmiEditor.video.kfs, false)) {
+				typeCss += " keyframe";
+			}
+		}
+		let h = sync;
+		const ms = h % 1000; h = (h - ms) / 1000;
+		const s  = h %   60; h = (h -  s) /   60;
+		const m  = h %   60; h = (h -  m) /   60;
+		const syncText = (h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms);
+		
+		if (this.LEFT == null) {
+			(this.LEFT = $("<div>")).append($("<span>"));
+		}
+		const $div = this.LEFT;
+		$div.attr({
+				"class": "sync" + (sync < last.sync ? " error" : (sync == last.sync ? " equal" : "")) + typeCss
+			,	"data-index": index // data로 넣어주면 지우고 다시 그릴 때 사라짐
+		});
+		$div.find("span").text(syncText);
+		
+		last.sync = sync;
+		
+	} else {
+		this.TYPE = TYPE.TEXT;
+		if (this.LEFT != null) {
+			this.LEFT.remove();
+			this.LEFT = null;
+		}
 	}
-	return textLines.join("\n");
+	this.renderHighlight(last);
+};
+Line.prototype.renderHighlight = function(last, forced=false) {
+	if (SmiEditor.useHighlight) {
+		if (!forced && this.VIEW && this.VIEW.data("state") == last.state) {
+			// 상태가 바뀌지 않음
+			return false;
+		}
+		const $view = this.VIEW = SmiEditor.highlightText(this.TEXT, last.state);
+		$view.attr({ "data-state": last.state, "data-next": (last.state = $view.data("next")) });
+		
+		// 색상 미리보기
+		if (SmiEditor.showColor) {
+			$view.find(".hljs-attr").each((_, el) => {
+				const $attr = $(el);
+				const attrName = $attr.text().trim().toLowerCase();
+				if (attrName == "color" || attrName == "fade") {
+					const $value = $attr.next();
+					if ($value.hasClass("hljs-value")) {
+						let color = $value.text();
+						if (color.startsWith('"') || color.startsWith("'")) {
+							color = color.substring(1, color.length - 1);
+						}
+						color = color.trim();
+						if (!(color.length == 7 && color.startsWith("#"))) {
+							let hex = sToAttrColor(color);
+							if (hex == color) {
+								return;
+							}
+							color = "#" + hex;
+						}
+						$value.addClass("hljs-color").css({ borderColor: color });
+					}
+				}
+			});
+		}
+		
+		// 줄바꿈 표시
+		if (SmiEditor.showEnter) {
+			$view.append($("<span class='hljs-comment enter'>").text("↵"));
+		}
+		
+		return true;
+	}
+	return false;
 }
 
 window.SmiEditor = function(text) {
@@ -171,7 +261,6 @@ window.SmiEditor = function(text) {
 	
 	this.text = "";
 	this.lines = [new Line()];
-	this.HL = { lines: [], views: [] };
 	
 	this.isRendering = false;
 	this.needToRender = false;
@@ -415,7 +504,6 @@ SmiEditor.prototype.bindEvent = function() {
 			for (let i = a; i < b; i++) {
 				const css = { top: (i * LH) + "px" };
 				const $left = editor.lines[i].LEFT;
-//				const $view = editor.HL.views[i];
 				const $view = editor.lines[i].VIEW;
 				if ($left != null) {
 					const rIndex = toRemoveLefts.indexOf($left[0]);
@@ -1502,346 +1590,6 @@ SmiEditor.prototype.updateTimeRange = function() {
 	}
 }
 
-Line.prototype.render = function(index, last={ sync: 0, state: null }) {
-	if (this.SYNC) { // 어차피 0이면 플레이어에서도 씹힘
-		const sync = this.SYNC;
-		
-		// 화면 싱크 체크
-		if (true) {
-			// TODO: type 확인은 미리 돌아갔어야 함
-			this.TYPE = TYPE.BASIC;
-			if (this.TEXT.indexOf("\t>") > 0) {
-				this.TYPE = TYPE.RANGE;
-			} else if (this.TEXT.indexOf(" >") > 0) {
-				this.TYPE = TYPE.FRAME;
-			}
-		}
-		let typeCss = "";
-		if (this.TYPE == TYPE.RANGE) {
-			typeCss = " range";
-		} else {
-			if (this.TYPE == TYPE.FRAME) {
-				typeCss = " frame";
-			} else {
-				typeCss = " normal";
-			}
-			if (SmiEditor.findSync(sync, SmiEditor.video.kfs, false)) {
-				typeCss += " keyframe";
-			}
-		}
-		let h = sync;
-		const ms = h % 1000; h = (h - ms) / 1000;
-		const s  = h %   60; h = (h -  s) /   60;
-		const m  = h %   60; h = (h -  m) /   60;
-		const syncText = (h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms);
-		
-		if (this.LEFT == null) {
-			(this.LEFT = $("<div>")).append($("<span>"));
-		}
-		const $div = this.LEFT;
-		$div.attr({
-				"class": "sync" + (sync < last.sync ? " error" : (sync == last.sync ? " equal" : "")) + typeCss
-			,	"data-index": index // data로 넣어주면 지우고 다시 그릴 때 사라짐
-		});
-		$div.find("span").text(syncText);
-		
-		last.sync = sync;
-		
-	} else {
-		this.TYPE = TYPE.TEXT;
-		if (this.LEFT != null) {
-			this.LEFT.remove();
-			this.LEFT = null;
-		}
-	}
-	this.renderHighlight(last);
-};
-Line.prototype.renderHighlight = function(last) {
-	if (SmiEditor.useHighlight) {
-		if (this.VIEW && this.VIEW.data("state") == last.state) {
-			// 상태가 바뀌지 않음
-			return false;
-		}
-		const $view = this.VIEW = SmiEditor.highlightView(this.TEXT, last.state);
-		$view.attr({ "data-state": last.state, "data-next": (last.state = $view.data("next")) });
-		return true;
-	}
-	return false;
-}
-SmiEditor.prototype.refreshHighlight = function() {
-	const last = { state: null };
-	for (let i = 0; i < this.lines.length; i++) {
-		const line = this.lines[i];
-		line.VIEW = null;
-		line.renderHighlight(last);
-	}
-	this.input.scroll();
-}
-
-SmiEditor.prototype.render0 = function(range=null) {
-	this.renderHighlight();
-
-	if (this.isRendering) {
-		// 이미 렌더링 중이면 대기열 활성화
-		this.needToRender = true;
-		this.afterChangeSaved(this.isSaved());
-		return;
-	}
-	this.needToRender = false;
-	this.isRendering = true;
-	
-	const text = this.input.val();
-	
-	if (text == this.text) {
-		this.isRendering = false;
-		this.afterChangeSaved(this.isSaved());
-		return;
-	}
-	
-	// 프로세스 분리할 필요가 있나?
-	const self = this;
-	const thread = function() {
-		// TODO: 문법 하이라이트도 이쪽에서 작업하도록 개선 예정
-		// 설정이 바뀔 경우 재생성 방안 필요
-		/*
-		if (SmiEditor.useHighlight) {
-			self.hArea.removeClass("nonactive");
-		} else {
-			self.hArea.addClass("nonactive");
-		}
-		*/
-		
-		const textLines = text.split("\n");
-		const syncLines = [];
-		
-		// 줄 수 변동량
-		const add = textLines.length - self.lines.length;
-		
-		if (range) {
-			// 바뀌지 않은 범위 제외
-			for (; range[0] < range[1]; range[0]++) {
-				if (textLines[range[0]] != self.lines[range[0]].TEXT) {
-					break;
-				}
-			}
-			for (; range[1] > range[0]; range[1]--) {
-				if (textLines[range[1] - 1 + add] != self.lines[range[1] - 1].TEXT) {
-					break;
-				}
-			}
-			
-		} else {
-			// 커서가 위치한 줄
-			const lineNo = text.substring(0, self.input[0].selectionEnd).split("\n").length - 1;
-			
-			// 커서 전후로 수정된 범위를 찾을 범위 지정
-			range = [Math.max(0, (add < 0 ? lineNo+add : lineNo-add) - 1), Math.min(self.lines.length, (add < 0 ? lineNo-add : lineNo+add) + 1)];
-			
-			// 수정된 범위 찾기
-			for (range[0] = 0; range[0] < range[1]; range[0]++) {
-				if (textLines[range[0]] != self.lines[range[0]].TEXT) {
-					break;
-				}
-			}
-			if (range[0] == range[1] && add == 0) {
-				// 변동 없음
-				self.isRendering = false;
-				setTimeout(() => {
-					if (self.needToRender) {
-						// 렌더링 대기열 있으면 재실행
-						self.render();
-					}
-				}, 100);
-				return;
-			}
-			const min = add > 0 ? range[0] : range[0] - add;
-			for (range[1]--; range[1] > min; range[1]--) {
-				if (textLines[range[1] + add] != self.lines[range[1]].TEXT) {
-					break;
-				}
-			}
-			range[1]++;
-		}
-		
-		// 수정된 범위 직후의 싱크 찾기
-		for (i = range[1] + 1; i < self.lines.length; i++) {
-			if (self.lines[i].TYPE) {
-				range[1] = ++i;
-				break;
-			}
-		}
-		
-		const newLines = range[0]>0 ? self.lines.slice(0, range[0]) : [];
-		const last = { sync: 0 };
-		for (let i = range[0] - 1; i >= 0; i--) {
-			if (self.lines[i].SYNC) {
-				last.sync = self.lines[i].SYNC;
-				break;
-			}
-		}
-		let nextSyncLine = null;
-		for (let i = range[1]; i < self.lines.length; i++) {
-			if (self.lines[i].SYNC) {
-				nextSyncLine = self.lines[i];
-				break;
-			}
-		}
-		
-		const toUpdate = textLines.length - (self.lines.length - range[1]) - range[0];
-		for (let i = 0; i < toUpdate; i++) {
-			newLines.push(new Line());
-		}
-		newLines.push(...self.lines.slice(range[1]));
-		
-		/*
-		// TODO: 문법 하이라이트도 이쪽에서 작업하도록 개선 예정
-		let state = (SmiEditor.useHighlight && (i > 0) && newLines[i - 1].VIEW) ? newLines[i - 1].VIEW.data("next") : null;
-		*/
-		
-		// 새로 그릴 범위 파싱
-		// 싱크값을 제외하면 별도의 값을 취하지 않는 간이 파싱
-		// SMI는 태그 꺽쇠 내에서 줄바꿈을 하는 경우는 일반적으로 없다고 가정
-		// 이 가정이 없을 경우, 항상 전체 범위에 대해 파싱해야 해서 성능 문제 발생
-		for (let i = range[0]; i < range[1] + add; i++) {
-			const line = newLines[i].TEXT = textLines[i];
-			let j = 0;
-			let k = 0;
-			let sync = 0;
-			
-			while ((k = line.indexOf("<", j)) >= 0) {
-				// 태그 열기
-				j = k + 1;
-
-				// 태그 닫힌 곳까지 탐색
-				const closeIndex = line.indexOf(">", j);
-				if (j < closeIndex) {
-					// 태그명 찾기
-					for (k = j; k < closeIndex; k++) {
-						const c = line[k];
-						if (c == ' ' || c == '\t' || c == '"' || c == "'" || c == '\n') {
-							break;
-						}
-					}
-					const tagName = line.substring(j, k);
-					j = k;
-
-					if (tagName.toUpperCase() == "SYNC") {
-						while (j < closeIndex) {
-							// 속성 찾기
-							for (; j < closeIndex; j++) {
-								const c = line[j];
-								if (('0'<=c&&c<='9') || ('a'<=c&&c<='z') || ('A'<=c&&c<='Z')) {
-									break;
-								}
-							}
-							for (k = j; k < closeIndex; k++) {
-								const c = line[k];
-								if ((c<'0'||'9'<c) && (c<'a'||'z'<c) && (c<'A'||'Z'<c)) {
-									break;
-								}
-							}
-							const attrName = textLines[i].substring(j, k);
-							j = k;
-							
-							// 속성 값 찾기
-							if (line[j] == "=") {
-								j++;
-								
-								let q = line[j];
-								if (q == "'" || q == '"') { // 따옴표로 묶인 경우
-									k = textLines[i].indexOf(q, j + 1);
-									k = (0 <= k && k < closeIndex) ? k : closeIndex;
-								} else {
-									q = "";
-									k = textLines[i].indexOf(" ");
-									k = (0 <= k && k < closeIndex) ? k : closeIndex;
-									k = textLines[i].indexOf("\t");
-									k = (0 <= k && k < closeIndex) ? k : closeIndex;
-								}
-								const value = line.substring(j + q.length, k);
-								
-								if (q.length && k < closeIndex) { // 닫는 따옴표가 있을 경우
-									j += q.length + value.length + q.length;
-								} else {
-									j += q.length + value.length;
-								}
-								
-								if (attrName.toUpperCase() == "START" && isFinite(value)) {
-									sync = Number(value);
-								}
-							}
-						}
-					} else {
-						// 싱크 태그 아니면 그냥 제낌
-						j = closeIndex;
-					}
-					
-					// 태그 닫기
-					j++;
-				}
-			}
-			
-			// TODO: 문법 하이라이트도 이쪽에서 작업하도록 개선 예정
-			newLines[i].SYNC = sync;
-			newLines[i].render(i, last);
-		}
-		if (add) {
-			for (let i = range[1] + add; i < textLines.length; i++) {
-				let $left = newLines[i].LEFT;
-				if ($left) {
-					$left.attr({ "data-index": i });//.data({ index: i });
-				}
-			}
-		}
-		/*
-		// TODO: 문법 하이라이트도 이쪽에서 작업하도록 개선 예정
-		if (SmiEditor.useHighlight) {
-			for (let i = range[1] + add; i < textLines.length; i++) {
-				let $view = newLines[i].VIEW;
-				if ($view && ($view.data("state") == state)) {
-					break;
-				}
-				newLines[i].VIEW = $view = SmiEditor.highlightView(textLines[i], state);
-				$view.attr({ "data-state": state, "data-next": (state = $view.data("next")) });
-			}
-		}
-		*/
-		
-		if (nextSyncLine && last.sync) {
-			if (nextSyncLine.SYNC <= last.sync) {
-				nextSyncLine.LEFT.addClass(nextSyncLine[0] == last.sync ? "equal" : "error");
-			} else {
-				nextSyncLine.LEFT.removeClass("equal").removeClass("error");
-			}
-		}
-		self.colSync.css({ height: (newLines.length * LH + 10000) + "px" });
-		
-		self.text = text;
-		self.lines = newLines;
-		if (SmiEditor.PlayerAPI && SmiEditor.PlayerAPI.setLines) {
-			SmiEditor.PlayerAPI.setLines(newLines);
-		}
-		if (SmiEditor.Viewer.window) {
-			SmiEditor.Viewer.refresh();
-		}
-		self.isRendering = false;
-		
-		self.afterChangeSaved(self.isSaved());
-		
-		setTimeout(() => {
-			if (self.needToRender) {
-				// 렌더링 대기열 있으면 재실행
-				self.render();
-			}
-		}, 100);
-	};
-	if (this.initialized) {
-		setTimeout(thread, 1);
-	} else {
-		thread();
-		this.initialized = true;
-	}
-}
 SmiEditor.prototype.render = function(range=null) {
 	if (this.isRendering) {
 		// 이미 렌더링 중이면 대기열 활성화
@@ -1853,12 +1601,6 @@ SmiEditor.prototype.render = function(range=null) {
 
 	const self = this;
 	function thread() {
-		if (SmiEditor.useHighlight) {
-			self.hArea.removeClass("nonactive");
-		} else {
-			self.hArea.addClass("nonactive");
-		}
-		
 		const lines = self.lines;
 		const newText = self.input.val();
 		const newTextLines = newText.split("\n");
@@ -1950,86 +1692,6 @@ SmiEditor.prototype.render = function(range=null) {
 	};
 	setTimeout(thread, 1);
 }
-SmiEditor.prototype.renderHighlight = function() {
-	if (this.HL.isRendering) {
-		// 이미 렌더링 중이면 대기열 활성화
-		this.HL.needToRender = true;
-		return;
-	}
-	this.HL.needToRender = false;
-	this.HL.isRendering = true;
-	
-	const self = this;
-	function thread() {
-		if (SmiEditor.useHighlight) {
-			self.hArea.removeClass("nonactive");
-		} else {
-			self.hArea.addClass("nonactive");
-			self.HL.lines = [];
-			self.HL.views = [];
-			self.hview.empty();
-			self.HL.isRendering = false;
-			return;
-		}
-		
-		const lines = self.HL.lines;
-		const newLines = self.input.val().split("\n");
-		
-		// 텍스트 바뀐 범위 찾기
-		let remainedHead = 0;
-		let remainedFoot = 0;
-		{	const limit = Math.min(lines.length, newLines.length);
-		for (; remainedHead < limit; remainedHead++) {
-			if (lines[remainedHead] != newLines[remainedHead]) {
-				break;
-			}
-		}
-		for (; remainedFoot < limit - remainedHead - 1; remainedFoot++) {
-			if (lines[lines.length - 1 - remainedFoot] != newLines[newLines.length - 1 - remainedFoot]) {
-				break;
-			}
-		}
-		}
-		
-		// 텍스트 바뀐 범위보다 앞쪽
-		const newViews = self.HL.views.slice(0, remainedHead);
-		let state = (remainedHead > 0) ? self.HL.views[remainedHead - 1].data("next") : null;
-		
-		{	// 텍스트 바뀐 범위
-			for (let i = remainedHead; i < newLines.length - remainedFoot; i++) {
-				const $view = SmiEditor.highlightView(newLines[i], state);
-				newViews.push($view);
-				$view.attr({ "data-state": state, "data-next": (state = $view.data("next")) }); // data로 넣어주면 지우고 다시 그릴 때 사라짐
-			}
-		}
-		{	// 텍스트 바뀐 범위보다 뒤쪽
-			newViews.push(...self.HL.views.slice(lines.length - remainedFoot));
-			for (let i = newLines.length - remainedFoot; i < newLines.length; i++) {
-				const $view = newViews[i];
-				if ($view.data("state") == state) {
-					break;
-				}
-				// 텍스트는 그대로여도 문법 파싱 상태가 달라졌으면 새로 그려야 함
-				state = (newViews[i] = SmiEditor.highlightView(newLines[i], state)).data("next");
-			}
-		}
-		
-		self.HL.lines = newLines;
-		self.HL.views = newViews;
-		
-		self.HL.isRendering = false;
-		setTimeout(() => {
-			if (self.HL.needToRender) {
-				// 렌더링 대기열 있으면 재실행
-				self.renderHighlight();
-			} else {
-				// 렌더링 끝났으면 출력 새로고침
-				self.input.scroll();
-			}
-		}, 1);
-	};
-	setTimeout(thread, 1);
-}
 // highlightCss, highlightText는 설정 가져와서 override
 SmiEditor.highlightCss = ".hljs-sync: { color: #3F5FBF; }";
 SmiEditor.highlightText = (text, state=null) => {
@@ -2039,42 +1701,6 @@ SmiEditor.highlightText = (text, state=null) => {
 	}
 	return previewLine.text(text);
 }
-SmiEditor.highlightView = (text, state=null) => {
-	const $view = SmiEditor.highlightText(text, state);
-	
-	// 색상 미리보기
-	if (SmiEditor.showColor) {
-		$view.find(".hljs-attr").each((_, el) => {
-			const $attr = $(el);
-			const attrName = $attr.text().trim().toLowerCase();
-			if (attrName == "color" || attrName == "fade") {
-				const $value = $attr.next();
-				if ($value.hasClass("hljs-value")) {
-					let color = $value.text();
-					if (color.startsWith('"') || color.startsWith("'")) {
-						color = color.substring(1, color.length - 1);
-					}
-					color = color.trim();
-					if (!(color.length == 7 && color.startsWith("#"))) {
-						let hex = sToAttrColor(color);
-						if (hex == color) {
-							return;
-						}
-						color = "#" + hex;
-					}
-					$value.addClass("hljs-color").css({ borderColor: color });
-				}
-			}
-		});
-	}
-	
-	// 줄바꿈 표시
-	if (SmiEditor.showEnter) {
-		$view.append($("<span class='hljs-comment enter'>").text("↵"));
-	}
-	
-	return $view;
-}
 SmiEditor.refreshHighlight = () => {
 	let $style = $("#styleHighlight");
 	if (!$style.length) {
@@ -2082,6 +1708,19 @@ SmiEditor.refreshHighlight = () => {
 	}
 	$style.html(SmiEditor.highlightCss);
 }
+SmiEditor.prototype.refreshHighlight = function() {
+	if (SmiEditor.useHighlight) {
+		this.hArea.removeClass("nonactive");
+		const last = { state: null };
+		for (let i = 0; i < this.lines.length; i++) {
+			this.lines[i].renderHighlight(last, true);
+		}
+		this.input.scroll();
+	} else {
+		this.hArea.addClass("nonactive");
+	}
+}
+
 SmiEditor.prototype.moveLine = function(toNext) {
 	if (this.isRendering) return;
 	this.history.log();
@@ -2186,8 +1825,6 @@ SmiEditor.prototype.moveSync = function(toForward) {
 }
 // TODO: 위에서 this.lines를 직접 건드려서 updateSync로 갱신이 안 되는데... 이대로 가는 게 맞나? 일원화?
 SmiEditor.prototype.afterMoveSync = function(range) {
-	this.renderHighlight();
-	
 	if (this.isRendering) {
 		// 이미 렌더링 중이면 대기열 활성화
 		this.needToRender = true;
@@ -2229,57 +1866,9 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 		
 		// 새로 그리기
 		for (let i = range[0]; i < range[1] + add; i++) {
-			/*
-			const sync = self.lines[i].SYNC;
-			if (sync) { // 어차피 0이면 플레이어에서도 씹힘
-				let typeCss = "";
-				if (self.lines[i].TYPE == TYPE.RANGE) {
-					typeCss = " range";
-				} else {
-					if (self.lines[i].TYPE == TYPE.FRAME) {
-						typeCss = " frame";
-					}
-					if (SmiEditor.findSync(sync, SmiEditor.video.kfs, false)) {
-						typeCss += " keyframe";
-					}
-				}
-				let h = sync;
-				let ms = h % 1000; h = (h - ms) / 1000;
-				let s  = h %   60; h = (h -  s) /   60;
-				let m  = h %   60; h = (h -  m) /   60;
-				const syncText = (h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms);
-				
-				if (self.lines[i].LEFT == null) {
-					(self.lines[i].LEFT = $("<div>")).append($("<span>"));
-				}
-				const $div = self.lines[i].LEFT;
-				$div.attr({
-						"class": "sync" + (sync < last.sync ? " error" : (sync == last.sync ? " equal" : "")) + typeCss
-					,	"data-index": i // data로 넣어주면 지우고 다시 그릴 때 사라짐
-				});
-				$div.find("span").text(syncText);
-				
-				last.sync = sync;
-
-			} else {
-				self.lines[i].TYPE = TYPE.TEXT;
-				if (self.lines[i].LEFT != null) {
-					self.lines[i].LEFT.remove();
-					self.lines[i].LEFT = null;
-				}
-			}
-			*/
 			self.lines[i].render(i, last);
 		}
 		
-		/*
-		// 수정된 내용 삽입
-		if (lastSyncView && lastSyncView.length) {
-			lastSyncView.after(syncLines.join(""));
-		} else {
-			self.colSync.prepend(syncLines.join(""));
-		}
-		*/
 		if (nextSyncLine && last.sync) {
 			if (nextSyncLine.SYNC <= last.sync) {
 				nextSyncLine.LEFT.addClass(nextSyncLine.SYNC == last.sync ? "equal" : "error");
