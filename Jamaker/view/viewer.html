@@ -79,8 +79,8 @@ function refreshTime(receiveTime, withoutTitle) {
 		// 현재 시간 이전의 가장 마지막 싱크 찾기
 		let index = indexes[hold];
 		for (let j = (indexes[hold] < 0 ? 0 : indexes[hold]); j < lines[hold].length; j++) {
-			if (lines[hold][j][LINE.SYNC]) {
-				if (lines[hold][j][LINE.SYNC] > receiveTime) {
+			if (lines[hold][j].SYNC) {
+				if (lines[hold][j].SYNC > receiveTime) {
 					break;
 				}
 				index = j;
@@ -120,11 +120,11 @@ function refreshTime(receiveTime, withoutTitle) {
 		
 		{	let last = null;
 			for (let j = indexes[hold] + 1; j < lines[hold].length; j++) {
-				if (lines[hold][j][LINE.SYNC]) {
+				if (lines[hold][j].SYNC) {
 					nextSyncLine = lines[hold][j];
 					break;
 				}
-				let line = lines[hold][j][LINE.TEXT].split(/<br>/gi);
+				let line = lines[hold][j].TEXT.split(/<br>/gi);
 				for (let k = 0; k < line.length; k++) {
 					if (k == 0 || k < line.length - 1 || line[k].length) {
 						if (last && !htmlToText(last)) {
@@ -161,7 +161,7 @@ function refreshTime(receiveTime, withoutTitle) {
 		 && nextSyncLine
 		 && setting.saveWithNormalize
 		) {
-			let toNormalize = new Subtitle.SmiFile(lines[hold][indexes[hold]][LINE.TEXT] + "\n" + showText[hold] + "\n" + nextSyncLine[LINE.TEXT]);
+			let toNormalize = new Subtitle.SmiFile(lines[hold][indexes[hold]].TEXT + "\n" + showText[hold] + "\n" + nextSyncLine.TEXT);
 			Subtitle.Smi.normalize(toNormalize.body);
 			if (toNormalize.body.length > 2) {
 				normalizedLines[hold] = toNormalize.body.slice(0, toNormalize.body.length - 1);

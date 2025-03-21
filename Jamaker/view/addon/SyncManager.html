@@ -90,38 +90,38 @@ function splitOrigin() {
 	let i = origin.start;
 	for (; i < origin.end; i++) {
 		const line = origin.lines[i];
-		if (line[LINE.TYPE] != null) {
+		if (line.TYPE != null) {
 			break;
 		}
-		header.push(line[LINE.TEXT]);
+		header.push(line.TEXT);
 	}
 	let frameCount = 0;
 	for (; i < origin.end; i++) {
 		const line = origin.lines[i];
-		if (line[LINE.TEXT].toUpperCase() == "</BODY>") {
+		if (line.TEXT.toUpperCase() == "</BODY>") {
 			break;
 		}
-		if (line[LINE.TYPE]) { // 싱크
-			if (line[LINE.TYPE] == TYPE.RANGE) { // 중간 싱크
+		if (line.TYPE) { // 싱크
+			if (line.TYPE == TYPE.RANGE) { // 중간 싱크
 				last.lines.push("<~>");
 				
 			} else {
-				last.end     = line[LINE.SYNC];
-				last.endType = line[LINE.TYPE];
+				last.end     = line.SYNC;
+				last.endType = line.TYPE;
 				syncs.push(last = {
-						start    : line[LINE.SYNC]
-					,	startType: line[LINE.TYPE]
+						start    : line.SYNC
+					,	startType: line.TYPE
 					,	end: 0
 					,	endType: 0
 					,	lines: []
 				});
-				if (line[LINE.TYPE] == TYPE.FRAME) {
+				if (line.TYPE == TYPE.FRAME) {
 					frameCount++;
 				}
 			}
 			
 		} else { // 텍스트
-			last.lines.push(line[LINE.TEXT].split("\r")[0]);
+			last.lines.push(line.TEXT.split("\r")[0]);
 		}
 	}
 	if (frameCount == 0) {
@@ -131,7 +131,7 @@ function splitOrigin() {
 	}
 	for (; i < origin.end; i++) {
 		const line = origin.lines[i];
-		footer.push(line[LINE.TEXT]);
+		footer.push(line.TEXT);
 	}
 
 	let forBasic = header;
@@ -355,9 +355,9 @@ function checkDiff() {
 				let count = 0;
 				for (let j = 0; j < origin.lines.length; j++) {
 					const line = origin.lines[j];
-					if (line[LINE.TYPE] == TYPE.BASIC) {
-						if ((originLines[i] < line[LINE.SYNC] && line[LINE.SYNC] < targetLines[i])
-						 || (targetLines[i] < line[LINE.SYNC] && line[LINE.SYNC] < originLines[i])) {
+					if (line.TYPE == TYPE.BASIC) {
+						if ((originLines[i] < line.SYNC && line.SYNC < targetLines[i])
+						 || (targetLines[i] < line.SYNC && line.SYNC < originLines[i])) {
 							joinnable = false;
 							areaChecker.append($("<div>").css({
 									position: "absolute"

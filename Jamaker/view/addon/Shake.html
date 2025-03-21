@@ -100,20 +100,20 @@ function shake() {
 	let i = start;
 	for (; i < end; i++) {
 		const line = editor.lines[i];
-		if (line[LINE.TYPE]) {
+		if (line.TYPE) {
 			break;
 		} else {
-			result.push(line[LINE.TEXT]);
+			result.push(line.TEXT);
 		}
 	}
 	for (; i < end; i++) {
 		const line = editor.lines[i];
-		if (line[LINE.TYPE]) {
-			group.end = line[LINE.SYNC];
-			groups.push(group = { start: line[LINE.SYNC], type: line[LINE.TYPE], end: 0, text: [] });
+		if (line.TYPE) {
+			group.end = line.SYNC;
+			groups.push(group = { start: line.SYNC, type: line.TYPE, end: 0, text: [] });
 			lastSyncIndex = i;
 		} else {
-			group.text.push(line[LINE.TEXT]);
+			group.text.push(line.TEXT);
 		}
 	}
 	if (lastSyncIndex < 0) {
@@ -122,7 +122,7 @@ function shake() {
 		
 	} else {
 		// 마지막에 추가한 건 종료싱크 없음
-		const footer = [editor.lines[lastSyncIndex][LINE.TEXT]].concat(group.text);
+		const footer = [editor.lines[lastSyncIndex].TEXT].concat(group.text);
 		
 		const shaked = [];
 		{
