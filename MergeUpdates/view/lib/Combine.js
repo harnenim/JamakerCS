@@ -755,14 +755,14 @@ if (Subtitle && Subtitle.SmiFile) {
 						const splitted = new Subtitle.Smi((smi.start + add), Subtitle.SyncType.split, (before = smi.text));
 						body.splice(++i, 0, splitted);
 						smi.text = "&nbsp;";
+						
+						// TODO: 여기서 작업한 결과는 아래에 주석 생성 없도록 만들어야 함
 						//*/
 					} else {
 						before = smi.text;
 					}
 				}
 			}
-			
-			// TODO: 여기서 작업한 결과는 아래에 주석 생성 없도록 만들어야 함
 		}
 		//console.log(JSON.parse(JSON.stringify(body)));
 		
