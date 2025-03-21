@@ -1004,7 +1004,9 @@ function saveSetting() {
 function refreshPaddingBottom() {
 	// 에디터 하단 여백 재조정
 	const holdTop = tabs.length ? Number(tabs[tab].area.find(".holds").css("top").split("px")[0]) : 0;
-	const append = "\n#editor textarea { padding-bottom: " + ($("#editor").height() - holdTop - SB - LH - 2) + "px; }";
+	const padding = $("#editor").height() - holdTop - LH;
+	const append = "\n#editor textarea { padding-bottom: " + (padding - 2 - SB) + "px; }"
+	             + "\n.hold > .col-sync > div:first-child { height: " + (padding - 1) + "px; }";
 	let $style = $("#stylePaddingBottom");
 	if (!$style.length) {
 		$("head").append($style = $("<style id='stylePaddingBottom'>"));

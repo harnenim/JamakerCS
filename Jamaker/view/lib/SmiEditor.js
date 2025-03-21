@@ -219,7 +219,7 @@ window.SmiEditor = function(text) {
 //		this.hArea.append(this.input = $("<textarea spellcheck='false' class='scrollTop scrollLeft'>"));
 		this.area.append(this.hArea);
 	}
-	this.colSync.html('<span class="sync"><br /></span>');
+	this.colSync.append(this.colSyncSizer = $('<div class="sync">&nbsp;</div>'));
 	if (text) {
 		text = text.split("\r\n").join("\n");
 		
@@ -476,9 +476,7 @@ SmiEditor.prototype.bindEvent = function() {
 		
 		if (SmiEditor.useHighlight) {
 			// 문법 하이라이트 스크롤 동기화
-			editor.colSync.css({
-					marginTop : -scrollTop 
-			});
+			editor.colSync.scrollTop(scrollTop);
 			editor.hview.css({
 					marginTop : -scrollTop 
 				,	marginLeft: -scrollLeft
@@ -530,7 +528,8 @@ SmiEditor.prototype.bindEvent = function() {
 					$view.css(css);
 				}
 			}
-			for (let i = 0; i < toRemoveLefts.length; i++) {
+			// 0번은 colSyncSizer
+			for (let i = 1; i < toRemoveLefts.length; i++) {
 				$(toRemoveLefts[i]).remove();
 			}
 			for (let i = 0; i < toAppendLefts.length; i++) {
@@ -569,24 +568,12 @@ SmiEditor.prototype.bindEvent = function() {
 		// 싱크 영역에서 휠 돌리는 경우
 		let targetScrollTop = 0;
 		let lastScrollStart = -1;
-		this.colSync.on("wheel", function(e) {
+		this.colSync.on("scroll", function(e) {
 			if (e.ctrlKey || e.shiftKey || e.altKey) {
 				return;
 			}
+			editor.input.scrollTop(editor.colSync.scrollTop());
 			
-			if (lastScrollStart < 0) {
-				targetScrollTop = editor.input.scrollTop() + e.originalEvent.deltaY;
-			} else {
-				targetScrollTop += e.originalEvent.deltaY;
-			}
-			editor.input[0].scrollTo({ top: targetScrollTop, behavior: "smooth" });
-			
-			const start = lastScrollStart = new Date().getTime();
-			setTimeout(() =>  {
-				if (start == lastScrollStart) {
-					lastScrollStart = -1;
-				}
-			}, 200);
 		}).on("wheel", ".sync", function(e) {
 			if (!e.ctrlKey) {
 				return;
@@ -1635,7 +1622,7 @@ SmiEditor.prototype.render = function(range=null) {
 			}
 		}
 		if (SmiEditor.useHighlight && remainedHead > 0) {
-			last.state = self.lines[remainedHead - 1].VIEW.data("next");
+			last.state = self.lines[remainedHead - 1].VIEW ? self.lines[remainedHead - 1].VIEW.data("next") : null;
 		}
 		
 		{	// 텍스트 바뀐 범위
@@ -1670,6 +1657,8 @@ SmiEditor.prototype.render = function(range=null) {
 
 		self.text = newText;
 		self.lines = newLines;
+		self.colSyncSizer.css({ top: newLines.length * LH + "px" });
+		
 		if (SmiEditor.PlayerAPI && SmiEditor.PlayerAPI.setLines) {
 			SmiEditor.PlayerAPI.setLines(newLines);
 		}

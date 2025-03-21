@@ -184,13 +184,16 @@ button {
 .hold > .col-sync,
 .hold > .col-sync-cover {
 	left: 0;
+	height: 100%;
 	text-align: center;
-	overflow: hidden;
-	padding-bottom: 2000px;
 	border: 1px solid transparent;
 }
+.hold > .col-sync {
+	overflow-y: scroll;
+}
+.hold > .col-sync::-webkit-scrollbar { width: 0; height: 0; }
 .hold > .col-sync-cover {
-	height: 100%;
+	overflow: hidden;
 	background: transparent;
 	display: none;
 }
