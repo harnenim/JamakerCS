@@ -1,7 +1,7 @@
-// TODO: 자동으로 구해지도록?
 let LH = 20; // LineHeight
-let SB = 16; // ScrollBarWidth
+let SB = 16; // ScrollBarWidth ... TODO: 자동으로 구해지도록?
 
+// TODO: 괜히 처음에 배열로 만들었나... 그냥 객체로 만들까?
 const LINE = {
 		TEXT: 0
 	,	SYNC: 1
@@ -1410,6 +1410,63 @@ SmiEditor.prototype.updateTimeRange = function() {
 	}
 }
 
+SmiEditor.renderLine = function(line, last={ sync: 0, state: null }) {
+	if (line[LINE.SYNC]) { // 어차피 0이면 플레이어에서도 씹힘
+		const sync = line[LINE.SYNC];
+		
+		// 화면 싱크 체크
+		line[LINE.TYPE] = TYPE.BASIC;
+		let typeCss = "";
+		if (line[LINE.TEXT].indexOf("\t>") > 0) {
+			line[LINE.TYPE] = TYPE.RANGE;
+			typeCss = " range";
+		} else {
+			if (line[LINE.TEXT].indexOf(" >") > 0) {
+				line[LINE.TYPE] = TYPE.FRAME;
+				typeCss = " frame";
+			} else {
+				typeCss = " normal";
+			}
+			if (SmiEditor.findSync(sync, SmiEditor.video.kfs, false)) {
+				typeCss += " keyframe";
+			}
+		}
+		let h = sync;
+		const ms = h % 1000; h = (h - ms) / 1000;
+		const s  = h %   60; h = (h -  s) /   60;
+		const m  = h %   60; h = (h -  m) /   60;
+		const syncText = (h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms);
+		
+		if (line[LINE.LEFT] == null) {
+			(line[LINE.LEFT] = $("<div>")).append($("<span>"));
+		}
+		const $div = line[LINE.LEFT];
+		$div.attr({
+				"class": "sync" + (sync < last.sync ? " error" : (sync == last.sync ? " equal" : "")) + typeCss
+			,	"data-index": i // data로 넣어주면 지우고 다시 그릴 때 사라짐
+		});
+		//$div.data({ index: i });
+		$div.find("span").text(syncText);
+		
+		last.sync = sync;
+		
+	} else {
+		line[LINE.TYPE] = TYPE.TEXT;
+		if (line[LINE.LEFT] != null) {
+			line[LINE.LEFT].remove();
+			line[LINE.LEFT] = null;
+		}
+	}
+	/*
+	// TODO: 문법 하이라이트도 이쪽에서 작업하도록 개선 예정
+	if (SmiEditor.useHighlight) {
+		const $view = SmiEditor.highlightView(line, last.state);
+		line[LINE.VIEW] = $view;
+		$view.attr({ "data-state": last.state, "data-next": (last.state = $view.data("next")) });
+	}
+	*/
+}
+
 SmiEditor.prototype.updateSync = function(range=null) {
 	this.updateHighlight();
 
@@ -1504,10 +1561,10 @@ SmiEditor.prototype.updateSync = function(range=null) {
 		}
 		
 		const newLines = range[0]>0 ? self.lines.slice(0, range[0]) : [];
-		let beforeSync = 0;
+		const last = { sync: 0 };
 		for (let i = range[0] - 1; i >= 0; i--) {
 			if (self.lines[i][LINE.SYNC]) {
-				beforeSync = self.lines[i][LINE.SYNC];
+				last.sync = self.lines[i][LINE.SYNC];
 				break;
 			}
 		}
@@ -1613,6 +1670,7 @@ SmiEditor.prototype.updateSync = function(range=null) {
 				}
 			}
 			
+			/*
 			if (newLines[i][LINE.SYNC] = sync) { // 어차피 0이면 플레이어에서도 씹힘
 				// 화면 싱크 체크
 				newLines[i][LINE.TYPE] = TYPE.BASIC;
@@ -1642,13 +1700,13 @@ SmiEditor.prototype.updateSync = function(range=null) {
 				}
 				const $div = newLines[i][LINE.LEFT];
 				$div.attr({
-						"class": "sync" + (sync < beforeSync ? " error" : (sync == beforeSync ? " equal" : "")) + typeCss
+						"class": "sync" + (sync < last.sync ? " error" : (sync == last.sync ? " equal" : "")) + typeCss
 					,	"data-index": i // data로 넣어주면 지우고 다시 그릴 때 사라짐
 				});
 				//$div.data({ index: i });
 				$div.find("span").text(syncText);
 				
-				beforeSync = sync;
+				last.sync = sync;
 				
 			} else {
 				newLines[i][LINE.TYPE] = TYPE.TEXT;
@@ -1665,6 +1723,8 @@ SmiEditor.prototype.updateSync = function(range=null) {
 				$view.attr({ "data-state": state, "data-next": (state = $view.data("next")) });
 			}
 			*/
+			newLines[i][LINE.SYNC] = sync;
+			SmiEditor.renderLine(newLines[i], last);
 		}
 		/*
 		// TODO: 문법 하이라이트도 이쪽에서 작업하도록 개선 예정
@@ -1680,9 +1740,9 @@ SmiEditor.prototype.updateSync = function(range=null) {
 		}
 		*/
 		
-		if (nextSyncLine && beforeSync) {
-			if (nextSyncLine[LINE.SYNC] <= beforeSync) {
-				nextSyncLine[LINE.LEFT].addClass(nextSyncLine[0] == beforeSync ? "equal" : "error");
+		if (nextSyncLine && last.sync) {
+			if (nextSyncLine[LINE.SYNC] <= last.sync) {
+				nextSyncLine[LINE.LEFT].addClass(nextSyncLine[0] == last.sync ? "equal" : "error");
 			} else {
 				nextSyncLine[LINE.LEFT].removeClass("equal").removeClass("error");
 			}
@@ -1949,6 +2009,7 @@ SmiEditor.prototype.moveSync = function(toForward) {
 	this.afterMoveSync([lineRange[0], lineRange[1]+1]);
 	this.history.log();
 }
+// TODO: 위에서 this.lines를 직접 건드려서 updateSync로 갱신이 안 되는데... 이대로 가는 게 맞나? 일원화?
 SmiEditor.prototype.afterMoveSync = function(range) {
 	this.updateHighlight();
 	
@@ -1968,14 +2029,14 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 		// 줄 수 변동량
 		let add = 0;
 		
-		let beforeSync = 0;
+		const last = { sync: 0 };
 		for (let i = range[0] - 1; i >= 0; i--) {
 			if (self.lines[i][LINE.SYNC]) {
-				beforeSync = self.lines[i][LINE.SYNC];
+				last.sync = self.lines[i][LINE.SYNC];
 				break;
 			}
 		}
-		const lastSync = range[0]>0 ? self.colSync.find("span.sync:eq(" + (range[0] - 1) + ")") : [];
+		const lastSyncView = range[0]>0 ? self.lines[range[0] - 1][LINE.LEFT] : [];
 		let nextSyncLine = null;
 		for (let i = range[1]; i < self.lines.length; i++) {
 			if (self.lines[i][LINE.SYNC]) {
@@ -1993,6 +2054,7 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 		
 		// 새로 그리기
 		for (let i = range[0]; i < range[1] + add; i++) {
+			/*
 			const sync = self.lines[i][LINE.SYNC];
 			if (sync) { // 어차피 0이면 플레이어에서도 씹힘
 				let typeCss = "";
@@ -2017,13 +2079,13 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 				}
 				const $div = self.lines[i][LINE.LEFT];
 				$div.attr({
-						"class": "sync" + (sync < beforeSync ? " error" : (sync == beforeSync ? " equal" : "")) + typeCss
+						"class": "sync" + (sync < last.sync ? " error" : (sync == last.sync ? " equal" : "")) + typeCss
 					,	"data-index": i // data로 넣어주면 지우고 다시 그릴 때 사라짐
 				});
 				//$div.data({ index: i });
 				$div.find("span").text(syncText);
 				
-				beforeSync = sync;
+				last.sync = sync;
 
 			} else {
 				self.lines[i][LINE.TYPE] = TYPE.TEXT;
@@ -2032,17 +2094,19 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 					self.lines[i][LINE.LEFT] = null;
 				}
 			}
+			*/
+			SmiEditor.renderLine(self.lines[i], last);
 		}
 		
 		// 수정된 내용 삽입
-		if (lastSync.length) {
-			lastSync.after(syncLines.join(""));
+		if (lastSyncView && lastSyncView.length) {
+			lastSyncView.after(syncLines.join(""));
 		} else {
 			self.colSync.prepend(syncLines.join(""));
 		}
-		if (nextSyncLine && beforeSync) {
-			if (nextSyncLine[LINE.SYNC] <= beforeSync) {
-				nextSyncLine[LINE.LEFT].addClass(nextSyncLine[LINE.SYNC] == beforeSync ? "equal" : "error");
+		if (nextSyncLine && last.sync) {
+			if (nextSyncLine[LINE.SYNC] <= last.sync) {
+				nextSyncLine[LINE.LEFT].addClass(nextSyncLine[LINE.SYNC] == last.sync ? "equal" : "error");
 			} else {
 				nextSyncLine[LINE.LEFT].removeClass("equal").removeClass("error");
 			}
