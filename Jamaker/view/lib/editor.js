@@ -856,7 +856,7 @@ function setSetting(setting, initial=false) {
 					const hold = tabs[i].holds[j];
 					hold.HL.lines = [];
 					hold.HL.views = [];
-					hold.updateHighlight();
+					hold.renderHighlight();
 				}
 			}
 		}
