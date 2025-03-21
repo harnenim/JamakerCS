@@ -3,11 +3,6 @@ window.Combine = {
 ,	defaultSize: 18 // TODO: 설정에서 바뀌도록... 하려면 서브 프로그램에서도 설정을 불러와야 하는데...
 };
 {
-	const LINE = {
-			TEXT: 0
-		,	SYNC: 1
-		,	TYPE: 2
-	};
 	const TYPE = {
 			TEXT: null
 		,	BASIC: 1
@@ -94,122 +89,30 @@ window.Combine = {
 		// SMI는 태그 꺽쇠 내에서 줄바꿈을 하는 경우는 일반적으로 없다고 가정
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			let parsed = [line, null, null];
+			let parsed = new Line(line);
 			parseds.push(parsed);
-			
-			let j = 0;
-			let k = 0;
-			let hasSync = false;
-			let sync = 0;
-			
-			while ((k = line.indexOf("<", j)) >= 0) {
-				// 태그 열기
-				j = k + 1;
 
-				// 태그 닫힌 곳까지 탐색
-				const closePos = line.indexOf(">", j);
-				if (j < closePos) {
-					// 태그명 찾기
-					for (k = j; k < closePos; k++) {
-						const c = line[k];
-						if (c == ' ' || c == '\t' || c == '"' || c == "'" || c == '\n') {
-							break;
-						}
-					}
-					const tagName = line.substring(j, k);
-					j = k;
-					
-					hasSync = (tagName.toUpperCase() == "SYNC");
-
-					if (hasSync) {
-						while (j < closePos) {
-							// 속성 찾기
-							for (; j < closePos; j++) {
-								const c = line[j];
-								if (('0'<=c&&c<='9') || ('a'<=c&&c<='z') || ('A'<=c&&c<='Z')) {
-									break;
-								}
-							}
-							for (k = j; k < closePos; k++) {
-								const c = line[k];
-								if ((c<'0'||'9'<c) && (c<'a'||'z'<c) && (c<'A'||'Z'<c)) {
-									break;
-								}
-							}
-							const attrName = line.substring(j, k);
-							j = k;
-							
-							// 속성 값 찾기
-							if (line[j] == "=") {
-								j++;
-								
-								let q = line[j];
-								if (q == "'" || q == '"') { // 따옴표로 묶인 경우
-									k = line.indexOf(q, j + 1);
-									k = (0 <= k && k < closePos) ? k : closePos;
-								} else {
-									q = "";
-									k = line.indexOf(" ");
-									k = (0 <= k && k < closePos) ? k : closePos;
-									k = line.indexOf("\t");
-									k = (0 <= k && k < closePos) ? k : closePos;
-								}
-								const value = line.substring(j + q.length, k);
-								
-								if (q.length && k < closePos) { // 닫는 따옴표가 있을 경우
-									j += q.length + value.length + q.length;
-								} else {
-									j += q.length + value.length;
-								}
-								
-								if (attrName.toUpperCase() == "START" && isFinite(value)) {
-									sync = Number(value);
-								}
-							}
-						}
-					} else {
-						// 싱크 태그 아니면 그냥 제낌
-						j = closePos;
-					}
-					
-					// 태그 닫기
-					j++;
-				}
-			}
-			
-			if (parsed[LINE.SYNC] = sync) { // 어차피 0이면 플레이어에서도 씹힘
-				// 화면 싱크 체크
-				parsed[LINE.TYPE] = TYPE.BASIC;
-				let typeCss = "";
-				if (line.indexOf("  >") > 0) {
-					// 자동 생성 공백 싱크는 일반 싱크 취급
-					syncLines.basic[sync] = line;
-				} else if (line.indexOf(" >") > 0) {
-					parsed[LINE.TYPE] = TYPE.FRAME;
-					typeCss = " frame";
-					syncLines.frame[sync] = line;
-				} else if (line.indexOf("\t>") > 0) {
-					parsed[LINE.TYPE] = TYPE.RANGE;
-					typeCss = " range";
-					syncLines.range[sync] = line;
+			if (parsed.SYNC) {
+				if (parsed.TYPE == TYPE.FRAME) {
+					syncLines.frame[parsed.SYNC] = line;
+				} else if (parsed.TYPE == TYPE.RANGE) {
+					syncLines.range[parsed.SYNC] = line;
 				} else {
-					syncLines.basic[sync] = line;
+					syncLines.basic[parsed.SYNC] = line;
 				}
-			} else {
-				parsed[LINE.TYPE] = TYPE.TEXT;
 			}
 		}
-		parseds.push(["&nbsp;", 99999999, TYPE.BASIC]);
+		parseds.push(new Line("&nbsp;", 99999999, TYPE.BASIC));
 		
 		const syncs = [];
 		let last = null;
 		for (let i = 0; i < parseds.length; i++) {
 			const parsed = parseds[i];
-			if (parsed[LINE.TYPE]) {
+			if (parsed.TYPE) {
 				if (last) {
 					const lines = [];
 					for (let j = last[0] + 1; j < i; j++) {
-						lines.push(parseds[j][LINE.TEXT]);
+						lines.push(parseds[j].TEXT);
 					}
 					const text = lines.join("\n");
 					if (text.split("&nbsp;").join("").trim()) {
@@ -244,12 +147,12 @@ window.Combine = {
 							}
 							sizedWidth = getWidth(Subtitle.Smi.fromAttr(attrs, Combine.defaultSize), checker);
 						}
-						
+
 						//[STIME, STYPE, ETIME, ETYPE, TEXT, LINES, WIDTH, SIZED];
-						syncs.push([last[LINE.SYNC], last[LINE.TYPE], parsed[LINE.SYNC], parsed[LINE.TYPE], text, lineCount, defaultWidth, sizedWidth]);
+						syncs.push([last[1], last[2], parsed.SYNC, parsed.TYPE, text, lineCount, defaultWidth, sizedWidth]);
 					}
 				}
-				last = [i, parsed[LINE.SYNC], parsed[LINE.TYPE]];
+				last = [i, parsed.SYNC, parsed.TYPE];
 			}
 		}
 		
