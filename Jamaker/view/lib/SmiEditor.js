@@ -2141,7 +2141,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 	}
 	
 	for (let i = 0; i < textLines.length; i++) {
-		textLines[i] = [textLines[i], 0, TYPE.TEXT];
+		textLines[i] = new Line(textLines[i]);
 	}
 	
 	this.history.log();
