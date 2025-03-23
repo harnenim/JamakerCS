@@ -32,8 +32,9 @@ function setAssFile(name, text) {
 			} else if (line.startsWith("Video File: ")) {
 				let videoFile = line.substring(12);
 				if (videoFile.indexOf(":") < 0) {
-					videoFile = name.substring(0, name.lastIndexOf("/") + 1) + videoFile;
+                    videoFile = name.substring(0, name.split("/").join("\\").lastIndexOf("\\") + 1) + videoFile;
 				}
+                setVideoFile(videoFile);
 				binder.setVideoFile(videoFile);
 				break;
 			}
