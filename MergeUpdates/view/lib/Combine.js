@@ -616,13 +616,18 @@ if (Subtitle && Subtitle.SmiFile) {
 		return holds;
 	}
 	
+	// TODO: <BODY split> 형식일 때 동작 - 기능이 필요할까...?
+	Subtitle.SmiFile.prototype.isWithSplit = function() {
+		const match = /<body( [^>]*)*>/gi.exec(this.header);
+		return match && (match[0].indexOf("split") > 0);
+	}
 	Subtitle.SmiFile.holdsToText = (origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) => {
 		const result = [];
 		let logs = [];
 		let originBody = [];
 		
 		const main = new Subtitle.SmiFile(origHolds[0].text);
-		if (main.isWithSplit()) { // TODO: 메인 홀드 이외에도 가능하게 해야 하나?
+		if (main.isWithSplit()) { // 메인 홀드 이외에도 지원이 필요한가...?
 			// 대사 사이 1프레임 공백 싱크 생성
 			const body = main.body;
 			const add = Math.round(1000 / fps);
@@ -639,7 +644,7 @@ if (Subtitle && Subtitle.SmiFile) {
 						continue;
 					}
 					
-					// TODO: 설정에 따른 예외처리 넣기... 정규식으로?
+					// TODO: 설정에 따른 예외처리 넣기? 정규식으로?
 					if (smi.text.indexOf("harne") >= 0) {
 						before = null;
 						continue;
@@ -650,11 +655,13 @@ if (Subtitle && Subtitle.SmiFile) {
 					}
 					
 					if (before) {
+						// 대사끼리 붙어있을 때 1프레임 공백 싱크 생성
 						const splitted = new Subtitle.Smi((smi.start + add), Subtitle.SyncType.split, (before = smi.text));
 						body.splice(++i, 0, splitted);
 						smi.text = "&nbsp;";
 						/*
-					} else if (smi.syncType == Subtitle.SyncType.frame) {
+					} else if (smi.syncType == Subtitle.SyncType.frame) { // TODO: 설정으로 on/off? <BODY> 태그 플래그로?
+						// 대사 사이 싱크가 화면 싱크일 때
 						const splitted = new Subtitle.Smi((smi.start + add), Subtitle.SyncType.split, (before = smi.text));
 						body.splice(++i, 0, splitted);
 						smi.text = "&nbsp;";
@@ -703,8 +710,13 @@ if (Subtitle && Subtitle.SmiFile) {
 						if (withCombine) {
 							let hasImport = false;
 							for (let j = 0; j < imports.length; j++) {
-								if (imports[j][0] == i) {
-									hasImport = true;
+								const imported = imports[j];
+								if (imported[0] == i) {
+									// 기존 내포 홀드와 겹치면 내포 홀드 불가능
+									if (hold.start < imported[1].end) {
+										hasImport = true;
+										break;
+									}
 								}
 							}
 							if (!hasImport) {
@@ -859,11 +871,24 @@ if (Subtitle && Subtitle.SmiFile) {
 					}
 					
 					mainEnd = mainBegin;
-					const end = smi.body[smi.body.length - 1].start;
-					for (; mainEnd < main.body.length; mainEnd++) {
-						if (main.body[mainEnd].start > end) {
-							break;
+					const last = smi.body[smi.body.length - 1];
+					let isEnded = last.isEmpty();
+					if (!isEnded) {
+						// 미완성 자막인 경우 과도한 결합 발생
+						// 마지막 대사가 5줄 넘어가면 미완성본으로 간주하고 종료 싱크로 처리, 결합 대상에서 제외
+						isEnded = (last.TEXT.split("\n").length > 5);
+					}
+					if (isEnded) {
+						// 마지막 싱크가 종료 싱크일 경우 결합 범위 찾기
+						const end = last.start;
+						for (; mainEnd < main.body.length; mainEnd++) {
+							if (main.body[mainEnd].start > end) {
+								break;
+							}
 						}
+					} else {
+						// 대사가 남은 채 끝날 경우 끝까지 결합
+						mainEnd = main.body.length;
 					}
 					if (mainEnd == 0) {
 						// 홀드 전체가 메인보다 앞에 있음
