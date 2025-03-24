@@ -703,8 +703,13 @@ if (Subtitle && Subtitle.SmiFile) {
 						if (withCombine) {
 							let hasImport = false;
 							for (let j = 0; j < imports.length; j++) {
-								if (imports[j][0] == i) {
-									hasImport = true;
+								const imported = imports[j];
+								if (imported[0] == i) {
+									// 기존 내포 홀드와 겹치면 내포 홀드 불가능
+									if (hold.start < imported[1].end) {
+										hasImport = true;
+										break;
+									}
 								}
 							}
 							if (!hasImport) {
