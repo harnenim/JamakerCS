@@ -871,11 +871,24 @@ if (Subtitle && Subtitle.SmiFile) {
 					}
 					
 					mainEnd = mainBegin;
-					const end = smi.body[smi.body.length - 1].start;
-					for (; mainEnd < main.body.length; mainEnd++) {
-						if (main.body[mainEnd].start > end) {
-							break;
+					const last = smi.body[smi.body.length - 1];
+					let isEnded = last.isEmpty();
+					if (!isEnded) {
+						// 미완성 자막인 경우 과도한 결합 발생
+						// 마지막 대사가 5줄 넘어가면 미완성본으로 간주하고 종료 싱크로 처리, 결합 대상에서 제외
+						isEnded = (last.TEXT.split("\n").length > 5);
+					}
+					if (isEnded) {
+						// 마지막 싱크가 종료 싱크일 경우 결합 범위 찾기
+						const end = last.start;
+						for (; mainEnd < main.body.length; mainEnd++) {
+							if (main.body[mainEnd].start > end) {
+								break;
+							}
 						}
+					} else {
+						// 대사가 남은 채 끝날 경우 끝까지 결합
+						mainEnd = main.body.length;
 					}
 					if (mainEnd == 0) {
 						// 홀드 전체가 메인보다 앞에 있음
