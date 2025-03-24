@@ -876,7 +876,7 @@ if (Subtitle && Subtitle.SmiFile) {
 					if (!isEnded) {
 						// 미완성 자막인 경우 과도한 결합 발생
 						// 마지막 대사가 5줄 넘어가면 미완성본으로 간주하고 종료 싱크로 처리, 결합 대상에서 제외
-						isEnded = (last.TEXT.split("\n").length > 5);
+						isEnded = (last.text.split("\n").length > 5);
 					}
 					if (isEnded) {
 						// 마지막 싱크가 종료 싱크일 경우 결합 범위 찾기
