@@ -159,6 +159,7 @@ Line.prototype.render = function(index, last={ sync: 0, state: null }) {
 		}
 	}
 	this.renderHighlight(last);
+	return this;
 };
 Line.prototype.renderHighlight = function(last, forced=false) {
 	if (SmiEditor.useHighlight) {
@@ -1627,9 +1628,7 @@ SmiEditor.prototype.render = function(range=null) {
 		
 		{	// 텍스트 바뀐 범위
 			for (let i = remainedHead; i < newTextLines.length - remainedFoot; i++) {
-				const line = new Line(newTextLines[i]);
-				line.render(i, last);
-				newLines.push(line);
+				newLines.push(new Line(newTextLines[i]).render(i, last));
 			}
 		}
 		{	// 텍스트 바뀐 범위보다 뒤쪽
@@ -1846,16 +1845,13 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 			}
 		}
 		
-		// 수정된 부분 삭제
-		self.colSync.find("span.sync").each((i, el) => {
-			if (i < range[0]) return;
-			if (i >= range[1]) return;
-			$(el).remove();
-		});
-		
 		// 새로 그리기
 		for (let i = range[0]; i < range[1] + add; i++) {
-			self.lines[i].render(i, last);
+			const line = self.lines[i];
+			if (line.TYPE) { // 싱크 줄만 갱신
+				line.VIEW = null;
+				line.render(i, last);
+			}
 		}
 		
 		if (nextSyncLine && last.sync) {
@@ -1879,6 +1875,9 @@ SmiEditor.prototype.afterMoveSync = function(range) {
 			if (self.needToRender) {
 				// 렌더링 대기열 있으면 재실행
 				self.render();
+			} else {
+				// 렌더링 끝났으면 출력 새로고침
+				self.input.scroll();
 			}
 		}, 100);
 	}, 1);
