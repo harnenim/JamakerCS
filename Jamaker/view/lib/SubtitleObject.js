@@ -2067,9 +2067,9 @@ Subtitle.Smi.Color.hex = (v) => {
 	return "" + Subtitle.Smi.Color.c(v / 16) + Subtitle.Smi.Color.c(v % 16);
 }
 Subtitle.Smi.Color.prototype.get = function(value, total) {
-	return Subtitle.Smi.Color.hex(((this.r * (total - value)) + (this.tr * value)) / total)
-	     + Subtitle.Smi.Color.hex(((this.g * (total - value)) + (this.tg * value)) / total)
-	     + Subtitle.Smi.Color.hex(((this.b * (total - value)) + (this.tb * value)) / total);
+	return Subtitle.Smi.Color.hex(Math.ceil(((this.r * (total - value)) + (this.tr * value)) / total))
+	     + Subtitle.Smi.Color.hex(Math.ceil(((this.g * (total - value)) + (this.tg * value)) / total))
+	     + Subtitle.Smi.Color.hex(Math.ceil(((this.b * (total - value)) + (this.tb * value)) / total));
 }
 Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 	const origin = new Subtitle.SmiFile();
