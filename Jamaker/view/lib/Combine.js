@@ -634,7 +634,7 @@ if (Subtitle && Subtitle.SmiFile) {
 			let before = null;
 			for (let i = 0; i < body.length; i++) {
 				const smi = body[i];
-				if (smi.text.split("&nbsp;").join(" ").trim().length == 0) {
+				if (smi.isEmpty()) {
 					before = null;
 				} else {
 					if (smi.text.indexOf(" fade=") > 0) {
@@ -705,7 +705,7 @@ if (Subtitle && Subtitle.SmiFile) {
 					// 메인 홀드보다 뒤에 있는지 확인
 					const i = main.body.length;
 					const lastLine = main.body[i - 1];
-					if (lastLine.start <= hold.start && (lastLine.text.split("&nbsp;").join("").trim().length == 0)) {
+					if ((lastLine.start <= hold.start) && lastLine.isEmpty()) {
 						hold.afterMain = true;
 						if (withCombine) {
 							let hasImport = false;
@@ -732,7 +732,7 @@ if (Subtitle && Subtitle.SmiFile) {
 							const line = main.body[i];
 							if (hold.start < line.start) {
 								if (hold.end <= line.start) {
-									if ((i == 0) || (main.body[i - 1].text.split("&nbsp;").join("").trim().length == 0)) {
+									if ((i == 0) || main.body[i - 1].isEmpty()) {
 										let hasImport = false;
 										for (let j = 0; j < imports.length; j++) {
 											const imported = imports[j];
@@ -866,7 +866,7 @@ if (Subtitle && Subtitle.SmiFile) {
 						main.body = main.body.concat(smi.body);
 						continue;
 					}
-					if (main.body[mainBegin].text.split("&nbsp;").join("").trim().length == 0) {
+					if (main.body[mainBegin].isEmpty()) {
 						mainBegin++;
 					}
 					
