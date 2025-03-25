@@ -24,7 +24,7 @@ function linesToText(lines) {
 	return textLines.join("\n");
 }
 
-window.Line = function (text="", sync=0, type=TYPE.TEXT) {
+window.Line = function(text="", sync=0, type=TYPE.TEXT) {
 	this.TEXT = text;
 	this.SYNC = sync;
 	this.TYPE = type;
@@ -477,7 +477,6 @@ SmiEditor.prototype.bindEvent = function() {
 		
 		if (SmiEditor.useHighlight) {
 			// 문법 하이라이트 스크롤 동기화
-			editor.colSync.scrollTop(scrollTop);
 			editor.hview.css({
 					marginTop : -scrollTop 
 				,	marginLeft: -scrollLeft
@@ -1392,7 +1391,7 @@ SmiEditor.prototype.toggleSyncType = function() {
 			this.setCursor(cursor);
 			
 			this.history.log();
-			this.afterMoveSync([i, i+1]);
+			this.renderByResync([i, i+1]);
 			return;
 		}
 	}
@@ -1808,11 +1807,11 @@ SmiEditor.prototype.moveSync = function(toForward) {
 		range[0] = range[1] = index;
 	}
 	this.setCursor(range[0], range[1]);
-	this.afterMoveSync([lineRange[0], lineRange[1]+1]);
+	this.renderByResync([lineRange[0], lineRange[1]+1]);
 	this.history.log();
 }
-// TODO: 위에서 this.lines를 직접 건드려서 updateSync로 갱신이 안 되는데... 이대로 가는 게 맞나? 일원화?
-SmiEditor.prototype.afterMoveSync = function(range) {
+// 위에서 this.lines를 직접 건드려서 render로 갱신이 안 되는데... 이대로 가는 게 맞나? 일원화?
+SmiEditor.prototype.renderByResync = function(range) {
 	if (this.isRendering) {
 		// 이미 렌더링 중이면 대기열 활성화
 		this.needToRender = true;
@@ -1915,9 +1914,7 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 		range[1] = this.text.substring(0, cursor[1]).split("\n").length;
 	}
 
-	// TODO: updateSync 뜯어고쳤더니... 괜히 기교 안 부리고 그냥 전체 업데이트 돌아가게 고치는 게 맞을 듯...?
-
-	//const colSyncs = this.colSync.children();
+	// TODO: 렌더링 뜯어고쳤더니... 괜히 기교 안 부리고 그냥 전체 업데이트 돌아가는 게 맞을 것 같기도...?
 	for (let i = range[0]; i < range[1]; i++) {
 		const line = lines[i];
 		if ((line.TYPE == TYPE.FRAME) || (!frameSyncOnly && (line.TYPE == TYPE.BASIC))) {
@@ -1982,14 +1979,13 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 	this.render(range);
 }
 SmiEditor.prototype.refreshKeyframe = function() {
-	const colSyncs = this.colSync.children();
 	for (let i = 0; i < this.lines.length; i++) {
 		const line = this.lines[i];
 		if (line.TYPE == TYPE.BASIC || line.TYPE == TYPE.FRAME) {
 			if (SmiEditor.findSync(line.SYNC, SmiEditor.video.kfs, false)) {
-				$(colSyncs[i]).addClass("keyframe");
+				line.LEFT.addClass("keyframe");
 			} else {
-				$(colSyncs[i]).removeClass("keyframe");
+				line.LEFT.removeClass("keyframe");
 			}
 		}
 	}
