@@ -22,6 +22,100 @@ window.Combine = {
 	const LOWER = 5;
 	
 	const LOG = false;
+
+	if (!window.Line) {
+		window.Line = function (text = "", sync = 0, type = TYPE.TEXT) {
+			this.TEXT = text;
+			this.SYNC = sync;
+			this.TYPE = type;
+
+			if (sync == 0 && type == null) {
+				let j = 0;
+				let k = 0;
+
+				while ((k = text.indexOf("<", j)) >= 0) {
+					// 태그 열기
+					j = k + 1;
+
+					// 태그 닫힌 곳까지 탐색
+					const closeIndex = text.indexOf(">", j);
+					if (j < closeIndex) {
+						// 태그명 찾기
+						for (k = j; k < closeIndex; k++) {
+							const c = text[k];
+							if (c == ' ' || c == '\t' || c == '"' || c == "'" || c == '\n') {
+								break;
+							}
+						}
+						const tagName = text.substring(j, k);
+						j = k;
+
+						if (tagName.toUpperCase() == "SYNC") {
+							while (j < closeIndex) {
+								// 속성 찾기
+								for (; j < closeIndex; j++) {
+									const c = text[j];
+									if (('0' <= c && c <= '9') || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')) {
+										break;
+									}
+								}
+								for (k = j; k < closeIndex; k++) {
+									const c = text[k];
+									if ((c < '0' || '9' < c) && (c < 'a' || 'z' < c) && (c < 'A' || 'Z' < c)) {
+										break;
+									}
+								}
+								const attrName = text.substring(j, k);
+								j = k;
+
+								// 속성 값 찾기
+								if (text[j] == "=") {
+									j++;
+
+									let q = text[j];
+									if (q == "'" || q == '"') { // 따옴표로 묶인 경우
+										k = text.indexOf(q, j + 1);
+										k = (0 <= k && k < closeIndex) ? k : closeIndex;
+									} else {
+										q = "";
+										k = text.indexOf(" ");
+										k = (0 <= k && k < closeIndex) ? k : closeIndex;
+										k = text.indexOf("\t");
+										k = (0 <= k && k < closeIndex) ? k : closeIndex;
+									}
+									const value = text.substring(j + q.length, k);
+
+									if (q.length && k < closeIndex) { // 닫는 따옴표가 있을 경우
+										j += q.length + value.length + q.length;
+									} else {
+										j += q.length + value.length;
+									}
+
+									if (attrName.toUpperCase() == "START" && isFinite(value)) {
+										this.SYNC = Number(value);
+									}
+								}
+							}
+						} else {
+							// 싱크 태그 아니면 그냥 제낌
+							j = closeIndex;
+						}
+
+						// 태그 닫기
+						j++;
+					}
+				}
+			}
+			if (this.SYNC && type == null) {
+				this.TYPE = TYPE.BASIC;
+				if (text.indexOf("\t>") > 0) {
+					this.TYPE = TYPE.RANGE;
+				} else if (text.indexOf(" >") > 0) {
+					this.TYPE = TYPE.FRAME;
+				}
+			}
+		}
+	}
 	
 	function toText(html, checker) {
 		// RUBY태그 없애고 계산
