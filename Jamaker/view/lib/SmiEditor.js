@@ -506,7 +506,7 @@ SmiEditor.prototype.bindEvent = function() {
 				if ($left != null) {
 					const rIndex = toRemoveLefts.indexOf($left[0]);
 					if (rIndex >= 0) {
-						// 기존에 있었는데 범위 벗어남
+						// 기존에 있었는데 범위에 남아있음
 						toRemoveLefts.splice(rIndex, 1);
 					} else {
 						// 기존에 없었는데 범위에 들어옴
@@ -518,7 +518,7 @@ SmiEditor.prototype.bindEvent = function() {
 				if ($view != null) {
 					const rIndex = toRemoveViews.indexOf($view[0]);
 					if (rIndex >= 0) {
-						// 기존에 있었는데 범위 벗어남
+						// 기존에 있었는데 범위에 남아있음
 						toRemoveViews.splice(rIndex, 1);
 					} else {
 						// 기존에 없었는데 범위에 들어옴

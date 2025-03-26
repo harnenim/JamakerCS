@@ -22,17 +22,17 @@ window.Combine = {
 	const LOWER = 5;
 	
 	const LOG = false;
-
+	
 	if (!window.Line) {
-		window.Line = function (text = "", sync = 0, type = TYPE.TEXT) {
+		window.Line = function(text="", sync=0, type=TYPE.TEXT) {
 			this.TEXT = text;
 			this.SYNC = sync;
 			this.TYPE = type;
-
+			
 			if (sync == 0 && type == null) {
 				let j = 0;
 				let k = 0;
-
+				
 				while ((k = text.indexOf("<", j)) >= 0) {
 					// 태그 열기
 					j = k + 1;
@@ -55,23 +55,23 @@ window.Combine = {
 								// 속성 찾기
 								for (; j < closeIndex; j++) {
 									const c = text[j];
-									if (('0' <= c && c <= '9') || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')) {
+									if (('0'<=c&&c<='9') || ('a'<=c&&c<='z') || ('A'<=c&&c<='Z')) {
 										break;
 									}
 								}
 								for (k = j; k < closeIndex; k++) {
 									const c = text[k];
-									if ((c < '0' || '9' < c) && (c < 'a' || 'z' < c) && (c < 'A' || 'Z' < c)) {
+									if ((c<'0'||'9'<c) && (c<'a'||'z'<c) && (c<'A'||'Z'<c)) {
 										break;
 									}
 								}
 								const attrName = text.substring(j, k);
 								j = k;
-
+								
 								// 속성 값 찾기
 								if (text[j] == "=") {
 									j++;
-
+									
 									let q = text[j];
 									if (q == "'" || q == '"') { // 따옴표로 묶인 경우
 										k = text.indexOf(q, j + 1);
@@ -84,13 +84,13 @@ window.Combine = {
 										k = (0 <= k && k < closeIndex) ? k : closeIndex;
 									}
 									const value = text.substring(j + q.length, k);
-
+									
 									if (q.length && k < closeIndex) { // 닫는 따옴표가 있을 경우
 										j += q.length + value.length + q.length;
 									} else {
 										j += q.length + value.length;
 									}
-
+									
 									if (attrName.toUpperCase() == "START" && isFinite(value)) {
 										this.SYNC = Number(value);
 									}
@@ -100,7 +100,7 @@ window.Combine = {
 							// 싱크 태그 아니면 그냥 제낌
 							j = closeIndex;
 						}
-
+						
 						// 태그 닫기
 						j++;
 					}
@@ -463,7 +463,7 @@ window.Combine = {
 							
 							if (toText(newLine, checker).split("　").join("").split(" ").join("").length) {
 								// 공백 줄인 경우는 별도 처리 하지 않음
-								// 태그로 감싼 줄은 태그 안에 공백문자 넣기
+								// 태그로 감싼 줄은 태그 안에 공백문자 넣기 <- 기능X, 그냥 소스 보기 좋게 만들기
 								let prev = "";
 								let next = "";
 								while (newLine.startsWith("\n")) {
@@ -486,6 +486,20 @@ window.Combine = {
 									const tagStart = newLine.lastIndexOf("<");
 									if (tagStart < 0) {
 										break;
+									}
+									const tagEnd = newLine.lastIndexOf(">") + 1;
+									if (tagEnd <= tagStart) {
+										break;
+									}
+									{
+										const tag = newLine.substring(tagStart, tagEnd).toUpperCase();
+										
+										// 밑줄은 공백문자 추가되면 안 됨
+										if (tag == "<U>" || tag == "</U>") {
+											break;
+										}
+										
+										// TODO: font size 적용된 경우도 막아야 하나...?
 									}
 									next = newLine.substring(tagStart) + next;
 									newLine = newLine.substring(0, tagStart);
