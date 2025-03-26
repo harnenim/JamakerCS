@@ -1328,7 +1328,7 @@ SmiEditor.prototype.insertSync = function(forFrame) {
 		if (lineNo > 0) {
 			const prevLine = this.lines[lineNo-1];
 			if (prevLine.SYNC) {
-				inputLines.push(["&nbsp;", 0, TYPE.TEXT]);
+				inputLines.push(new Line("&nbsp;"));
 				cursor += 7;
 			} else if (prevLine.TEXT.trim() == "") {
 				cursor += 7 - prevLine.TEXT.length;
