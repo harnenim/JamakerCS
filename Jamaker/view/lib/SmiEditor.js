@@ -1333,6 +1333,8 @@ SmiEditor.prototype.insertSync = function(forFrame) {
 			} else if (prevLine.TEXT.trim() == "") {
 				cursor += 7 - prevLine.TEXT.length;
 				prevLine.TEXT = "&nbsp;";
+				prevLine.VIEW = null;
+				prevLine.render();
 			}
 		}
 		
