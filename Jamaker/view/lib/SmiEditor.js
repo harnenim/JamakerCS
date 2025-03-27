@@ -215,7 +215,11 @@ window.SmiEditor = function(text) {
 	this.area.append(this.colSyncCover = $("<div class='col-sync-cover'>")); // 블록지정 방지 영역
 	{	// 문법 하이라이트 기능 지원용
 		this.hArea = $("<div class='input highlight-textarea hljs" + (SmiEditor.useHighlight ? "" : " nonactive") + "'>");
-		this.hArea.append($("<div>").append(this.hview = $("<div>")));
+		{	const inner = $("<div>");
+			inner.append(this.hview = $("<div>"));
+			inner.append(this.block = $("<p>").css({ display: "none", position: "absolute", color: "transparent", opacity: 0.5 }));
+			this.hArea.append(inner);
+		}
 		this.hArea.append(this.input = $("<textarea spellcheck='false'>"));
 //		this.hArea.append(this.input = $("<textarea spellcheck='false' class='scrollTop scrollLeft'>"));
 		this.area.append(this.hArea);
@@ -481,6 +485,10 @@ SmiEditor.prototype.bindEvent = function() {
 					marginTop : -scrollTop 
 				,	marginLeft: -scrollLeft
 			});
+			editor.block.css({
+					marginTop : -scrollTop 
+				,	marginLeft: -scrollLeft
+			});
 			
 			// 문법 하이라이트 보이는 범위 찾기
 			const showFrom = Math.floor(scrollTop / LH);
@@ -542,6 +550,14 @@ SmiEditor.prototype.bindEvent = function() {
 				editor.hview.append(toAppendViews[i]);
 			}
 		}
+	}).on("blur", function() {
+		const text = editor.input.val();
+		const prev  = $("<span>").text(text.substring(0, editor.input[0].selectionStart));
+		const block = $("<span>").text(text.substring(editor.input[0].selectionStart, editor.input[0].selectionEnd)).css({ background: "#7f7f7f" });
+		const next  = $("<span>").text(text.substring(editor.input[0].selectionEnd));
+		editor.block.empty().append(prev).append(block).append(next).show();
+	}).on("focus", function() {
+		editor.block.hide();
 	});
 	
 	// 개발용 임시
