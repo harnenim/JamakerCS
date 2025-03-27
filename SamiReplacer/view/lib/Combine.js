@@ -800,6 +800,11 @@ if (Subtitle && Subtitle.SmiFile) {
 				hold.imported = false;
 				hold.afterMain = false;
 				
+				// 홀드 위치가 1 또는 -1인 경우에만 내포 홀드 여부 확인
+				if ((hold.pos > 1) || (hold.pos < -1)) {
+					continue;
+				}
+				
 				// 내용물 없으면 내포 홀드 아님
 				const holdBody = new Subtitle.SmiFile(hold.text).body;
 				if (holdBody.length == 0) {
