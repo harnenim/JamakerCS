@@ -84,7 +84,7 @@ window.DEFAULT_SETTING =
 		]
 	]
 ,	window:
-	{	x: 0
+	{	x: 1280
 	,	y: 0
 	,	width: 640
 	,	height: 920
@@ -353,7 +353,7 @@ window.DEFAULT_SETTING =
 		+	"</SAMI>"
 ,	viewer:
 	{	window:
-		{	x: 640
+		{	x: 0
 		,	y: 720
 		,	width: 1280
 		,	height: 200
@@ -375,7 +375,7 @@ window.DEFAULT_SETTING =
 	}
 ,	player:
 	{	window:
-		{	x: 640
+		{	x: 0
 		,	y: 0
 		,	width: 1280
 		,	height: 720

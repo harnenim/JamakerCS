@@ -483,6 +483,7 @@
     <Content Include="view\lib\highlight\styles\default.css" />
     <Content Include="view\lib\highlight\styles\devibeans.css" />
     <Content Include="view\lib\highlight\styles\docco.css" />
+    <Content Include="view\lib\highlight\styles\nscc4.css" />
     <Content Include="view\lib\highlight\styles\eclipse.css" />
     <Content Include="view\lib\highlight\styles\far.css" />
     <Content Include="view\lib\highlight\styles\felipec.css" />

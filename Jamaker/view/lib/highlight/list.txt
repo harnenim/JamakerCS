@@ -9,6 +9,7 @@ github-dark        : Github Dark
 github-dark-dimmed : Github Dark Dimmed
 stackoverflow-light: StackOverflow
 stackoverflow-dark : StackOverflow(dark)
+nscc4              : NS Caption Creator 4
 1c-light
 a11y-light
 a11y-dark
