@@ -1630,15 +1630,18 @@ Subtitle.Smi.toAttr = (text) => {
 			case "RUBY":
 				if (last.text.length > 0)
 					result.push((last = new Subtitle.Attr()));
+				Subtitle.Smi.setStyle(last, status);
 				ruby = last;
 				break;
 			case "RT":
 				if (last.text.length > 0)
 					last = new Subtitle.Attr();
+				Subtitle.Smi.setStyle(last, status);
 				furigana = last;
 				break;
 			case "RP":
 				last = new Subtitle.Attr(); // 정크 데이터
+				Subtitle.Smi.setStyle(last, status);
 				break;
 			case "BR":
 				last.text += "\n";
@@ -1671,6 +1674,7 @@ Subtitle.Smi.toAttr = (text) => {
 			case "RUBY":
 				if (last.text.length > 0)
 					result.push((last = new Subtitle.Attr()));
+				Subtitle.Smi.setStyle(last, status);
 				break;
 			case "RT":
 				if (ruby) {
@@ -1917,7 +1921,7 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => {
 	for (let i = 0; i < attrs.length; i++) {
 		const attr = attrs[i];
 		
-		if (last.furigana || attr.furigana) {
+		if (attr.furigana) {
 			// <RUBY> 태그 적용 시 무조건 태그 닫고 열기
 			
 			if (last.b) text += "</B>";
@@ -1925,18 +1929,45 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => {
 			if (last.u) text += "</U>";
 			
 			// 기존에 속성이 있었을 때 닫는 태그
-			if (last.fs > 0 || !last.fn == ("") || !last.fc == ("") || last.fade != 0 || last.shake != null || last.typing != null)
+			if (last.fs > 0 || !last.fn == ("") || !last.fc == ("") || last.fade != 0 || last.shake != null || last.typing != null) {
 				text += "</FONT>";
-			
-			if (attr.furigana) {
-				text += "<RUBY>";
 			}
+			let prev = "<RUBY>";
+			let next = "";
+			
+			if (attr.b) { prev += "<B>"; next = "</B>" + next; };
+			if (attr.i) { prev += "<I>"; next = "</I>" + next; };
+			if (attr.u) { prev += "<U>"; next = "</U>" + next; };
+			
+			// 속성이 있을 때 여는 태그
+			let fontStart = "";
+			let fontEnd = "";
+			if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.shake != null || attr.typing != null) {
+				fontStart = "<FONT";
+				if (attr.fs > 0) {
+					if (fontSize)    fontStart += " style=\"font-size: " + (attr.fs / fontSize * 100) + "%;\"";
+					else             fontStart += " size=\"" + attr.fs + "\"";
+				}
+				if (attr.fn   != "") fontStart += " face=\"" + attr.fn + "\"";
+				if (attr.fc   != "") fontStart += " color=\""+ Subtitle.Smi.colorFromAttr(attr.fc) + "\"";
+				if (attr.fade != 0 ) fontStart += " fade=\"" + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\"";
+				if (attr.shake != null) fontStart += " shake=\"" + attr.shake.ms + "," + attr.shake.size + "\"";
+				if (attr.typing != null) fontStart += " typing=\"" + Typing.Mode.toString(attr.typing.mode) + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString(attr.typing.cursor) + "\"";
+				fontStart += ">";
+				fontEnd = "</FONT>";
+			}
+			next += "<RT><RP>(</RP>" + Subtitle.Smi.fromAttr([attr.furigana, new Subtitle.Attr()]) + "<RP>)</RP></RT></RUBY>";
+			
+			text += fontStart + prev + attr.text + next + fontEnd;
+			
+		} else if (last.furigana) {
+			// 앞쪽에 <RUBY> 태그 있었을 때
 			
 			if (attr.b) text += "<B>";
 			if (attr.i) text += "<I>";
 			if (attr.u) text += "<U>";
 			
-			// 신규 속성이 있을 때 여는 태그
+			// 속성이 있을 때 여는 태그
 			if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.shake != null || attr.typing != null) {
 				text += "<FONT";
 				if (attr.fs > 0) {
@@ -1951,11 +1982,7 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => {
 				text += ">";
 			}
 			
-			if (attr.furigana) {
-				text += "<RT><RP>(</RP>" + Subtitle.Smi.fromAttr([attr.furigana]) + "<RP>)</RP></RT></RUBY>";
-			}
-			
-			last = new Subtitle.Attr();
+			text += attr.text;
 			
 		} else {
 			if (!last.b && attr.b) text += "<B>";
@@ -1995,9 +2022,9 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => {
 					text += ">";
 				}
 			}
+			
+			text += (attr.text == "\n") ? "<br>" : a.text(attr.text).html();
 		}
-
-		text += (attr.text == "\n") ? "<br>" : a.text(attr.text).html();
 		last = attr;
 	}
 	a.remove();
@@ -2134,6 +2161,9 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			const shake = attrs[shakeRange[0]].shake;
 			for (let j = shakeRange[0]; j < shakeRange[1]; j++) {
 				attrs[j].shake = null;
+				if (attrs[j].furigana) {
+					attrs[j].furigana.shake = null;
+				}
 			}
 			attrs[shakeRange[0]  ].text = "{SL}" + attrs[shakeRange[0]].text;
 			attrs[shakeRange[1]-1].text = attrs[shakeRange[1]-1].text + "{SR}";
@@ -2170,9 +2200,17 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			const fadeColors = [];
 			if (hasFade) {
 				for (let j = 0; j < attrs.length; j++) {
-					if (attrs[j].fade != 0) {
-						fadeColors.push(new Subtitle.Smi.Color(j, attrs[j].fade, ((attrs[j].fc.length == 6) ? attrs[j].fc : "ffffff")));
-						attrs[j].fade = 0;
+					const attr = attrs[j];
+					if (attr.fade != 0) {
+						fadeColors.push(new Subtitle.Smi.Color(j, attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff")));
+						attr.fade = 0;
+					}
+					if (attr.furigana) {
+						const furi = attr.furigana;
+						if (furi.fade != 0) {
+							fadeColors.push(new Subtitle.Smi.Color(-1-j, furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff")));
+							furi.fade = 0;
+						}
 					}
 				}
 				if (fadeColors.length == 0) {
@@ -2204,7 +2242,7 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				// 페이드 효과 추가 처리
 				for (let k = 0; k < fadeColors.length; k++) {
 					const color = fadeColors[k];
-					attrs[color.index].fc = color.get(1 + 2 * j, 2 * count);
+					((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1 + 2 * j, 2 * count);
 				}
 				let text = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
 				
@@ -2303,9 +2341,17 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			const fadeColors = [];
 			if (hasFade) {
 				for (let j = 0; j < attrs.length; j++) {
-					if (attrs[j].fade != 0) {
-						fadeColors.push(new Subtitle.Smi.Color(j, attrs[j].fade, ((attrs[j].fc.length == 6) ? attrs[j].fc : "ffffff")));
-						attrs[j].fade = 0;
+					const attr = attrs[j];
+					if (attr.fade != 0) {
+						fadeColors.push(new Subtitle.Smi.Color(j, attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff")));
+						attr.fade = 0;
+					}
+					if (attr.furigana) {
+						const furi = attr.furigana;
+						if (furi.fade != 0) {
+							fadeColors.push(new Subtitle.Smi.Color(-1-j, furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff")));
+							furi.fade = 0;
+						}
 					}
 				}
 				if (fadeColors.length == 0) {
@@ -2356,7 +2402,7 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				// 페이드 효과 추가 처리
 				for (let k = 0; k < fadeColors.length; k++) {
 					const color = fadeColors[k];
-					attrs[color.index].fc = color.get(1 + 2 * j, 2 * count);
+					((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1 + 2 * j, 2 * count);
 				}
 				
 				const tAttrs = attrs.slice(0, attrIndex);
@@ -2387,9 +2433,17 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			
 			const fadeColors = [];
 			for (let j = 0; j < attrs.length; j++) {
-				if (attrs[j].fade != 0) {
-					fadeColors.push(new Subtitle.Smi.Color(j, attrs[j].fade, ((attrs[j].fc.length == 6) ? attrs[j].fc : "ffffff")));
-					attrs[j].fade = 0;
+				const attr = attrs[j];
+				if (attr.fade != 0) {
+					fadeColors.push(new Subtitle.Smi.Color(j, attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff")));
+					attr.fade = 0;
+				}
+				if (attr.furigana) {
+					const furi = attr.furigana;
+					if (furi.fade != 0) {
+						fadeColors.push(new Subtitle.Smi.Color(-1-j, furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff")));
+						furi.fade = 0;
+					}
 				}
 			}
 			if (fadeColors.length == 0) {
@@ -2398,14 +2452,14 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			
 			for (let j = 0; j < fadeColors.length; j++) {
 				const color = fadeColors[j];
-				attrs[color.index].fc = color.get(1, 2 * count);
+				((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1, 2 * count);
 			}
 			const smiText = smi.text;
 			smi.fromAttr(attrs);
 			for (let j = 1; j < count; j++) {
 				for (let k = 0; k < fadeColors.length; k++) {
 					const color = fadeColors[k];
-					attrs[color.index].fc = color.get(1 + 2 * j, 2 * count);
+					((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1 + 2 * j, 2 * count);
 				}
 				smis.splice(i + j, 0, new Subtitle.Smi((start * (count - j) + end * j) / count, Subtitle.SyncType.inner).fromAttr(attrs));
 			}
