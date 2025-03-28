@@ -475,6 +475,14 @@ window.Combine = {
 									if (tagEnd == 0) {
 										break;
 									}
+									{	const tag = newLine.substring(0, tagEnd).toUpperCase();
+										
+										// 밑줄은 공백문자 추가되면 안 됨
+										if (tag == "<U>") {
+											break;
+										}
+										// TODO: font size 적용된 경우도 막아야 하나...?
+									}
 									while (newLine.length > tagEnd && newLine[tagEnd] == "\n") {
 										// 태그 직후에 줄바꿈을 한 경우가 있음
 										tagEnd++;
@@ -491,14 +499,12 @@ window.Combine = {
 									if (tagEnd <= tagStart) {
 										break;
 									}
-									{
-										const tag = newLine.substring(tagStart, tagEnd).toUpperCase();
+									{	const tag = newLine.substring(tagStart, tagEnd).toUpperCase();
 										
 										// 밑줄은 공백문자 추가되면 안 됨
-										if (tag == "<U>" || tag == "</U>") {
+										if (tag == "</U>") {
 											break;
 										}
-										
 										// TODO: font size 적용된 경우도 막아야 하나...?
 									}
 									next = newLine.substring(tagStart) + next;
