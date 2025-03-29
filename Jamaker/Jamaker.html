@@ -263,7 +263,7 @@ window.MB = 9;
 	// override
 	editor.getHwnd = function(name) {
 		if (name == "player") {
-			return this.player.hwnd && this.player.hwnd.window;
+			return this.player && this.player.hwnd && this.player.hwnd.window;
 		}
 		return this.super_getHwnd(name);
 	}
