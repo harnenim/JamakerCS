@@ -24,6 +24,7 @@ window.Combine = {
 	const LOG = false;
 	
 	if (!window.Line) {
+		// SmiEditor의 Line에서 렌더링 기능 빼고 가져옴
 		window.Line = function(text="", sync=0, type=TYPE.TEXT) {
 			this.TEXT = text;
 			this.SYNC = sync;

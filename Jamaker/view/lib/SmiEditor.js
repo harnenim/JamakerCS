@@ -24,7 +24,9 @@ function linesToText(lines) {
 	return textLines.join("\n");
 }
 
-window.Line = function(text="", sync=0, type=TYPE.TEXT) {
+window.Line = function (text = "", sync = 0, type = TYPE.TEXT) {
+	// TODO: 처음에 객체 변수명이 아니라, 배열 번호 상수로 만들어서 대문자로 해놔서
+	// 고칠 때도 대문자를 따라가 버렸는데, 변수명은 소문자로 바꾸는 게 맞나...
 	this.TEXT = text;
 	this.SYNC = sync;
 	this.TYPE = type;
