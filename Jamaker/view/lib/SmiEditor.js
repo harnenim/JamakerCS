@@ -24,7 +24,7 @@ function linesToText(lines) {
 	return textLines.join("\n");
 }
 
-window.Line = function (text = "", sync = 0, type = TYPE.TEXT) {
+window.Line = function(text="", sync=0, type=TYPE.TEXT) {
 	// TODO: 처음에 객체 변수명이 아니라, 배열 번호 상수로 만들어서 대문자로 해놔서
 	// 고칠 때도 대문자를 따라가 버렸는데, 변수명은 소문자로 바꾸는 게 맞나...
 	this.TEXT = text;
@@ -903,9 +903,18 @@ SmiEditor.activateKeyEvent = function() {
 					return;
 				}
 				case 9: { // Tab
-					e.preventDefault();
-					if (hasFocus) {
-						editor.inputTextLikeNative("\t"); // TODO: 횡스크롤 이동 안 되고 있음...
+					if (e.ctrlKey) { // Ctrl+Tab → 탭 전환
+						// 순정 SmiEditor엔 탭이 없음
+						// editor.js 등에서 추가 선언 필요함
+						if (SmiEditor.selectTab) {
+							SmiEditor.selectTab();
+						}
+						
+					} else {
+						if (hasFocus) {
+							e.preventDefault();
+							editor.inputTextLikeNative("\t"); // TODO: 횡스크롤 이동 안 되고 있음...
+						}
 					}
 					break;
 				}

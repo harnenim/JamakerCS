@@ -421,6 +421,37 @@ SmiEditor.prototype.rename = function() {
 		hold.afterChangeSaved(hold.isSaved());
 	}, hold.name);
 }
+SmiEditor.selectTab = function(index=-1) {
+	const tabSelector = $("#tabSelector");
+	if (index < 0) {
+		const selectedTab = tabSelector.find(".selected").data("tab");
+		console.log(selectedTab);
+		if (selectedTab) {
+			// 다음 탭 선택
+			index = (tabs.indexOf(selectedTab) + 1) % tabs.length;
+		} else {
+			index = 0;
+		}
+	}
+	
+	const currentTab = tabs[tab = index];
+	tabSelector.find(".selected").removeClass("selected");
+	$(currentTab.th).addClass("selected").data("tab");
+	
+	$("#editor > .tab").hide();
+	currentTab.area.show();
+	if (_for_video_) { // 동영상 파일명으로 자막 파일을 연 경우 동영상 열기 불필요
+		_for_video_ = false;
+	} else if (currentTab.path && currentTab.path.length > 4 && binder) {
+		binder.checkLoadVideoFile(currentTab.path);
+	}
+	SmiEditor.selected = currentTab.holds[currentTab.hold];
+	SmiEditor.Viewer.refresh();
+	SmiEditor.selected.input.focus();
+	
+	// 탭에 따라 홀드 여부 다를 수 있음
+	refreshPaddingBottom();
+}
 
 function deepCopyObj(obj) {
 	if (obj && typeof obj == "object") {
@@ -691,24 +722,10 @@ function init(jsonSetting, isBackup=true) {
 			return;
 		}
 		
-		tabSelector.find(".selected").removeClass("selected");
-		const currentTab = th.addClass("selected").data("tab");
+		const currentTab = th.data("tab");
 		if (currentTab) {
-			tab = tabs.indexOf(currentTab);
-			hold = tab.hold;
-			$("#editor > .tab").hide();
-			currentTab.area.show();
-			if (_for_video_) { // 동영상 파일명으로 자막 파일을 연 경우 동영상 열기 불필요
-				_for_video_ = false;
-			} else if (currentTab.path && currentTab.path.length > 4 && binder) {
-				binder.checkLoadVideoFile(currentTab.path);
-			}
+			SmiEditor.selectTab(tabs.indexOf(currentTab));
 		}
-		SmiEditor.selected = currentTab.holds[currentTab.hold];
-		SmiEditor.Viewer.refresh();
-		
-		// 탭에 따라 홀드 여부 다를 수 있음
-		refreshPaddingBottom();
 		
 	}).on("click", ".btn-close-tab", function(e) {
 		e.preventDefault();
@@ -1223,8 +1240,7 @@ function openNewTab(text, path, forVideo) {
 	$("#btnNewTab").before(th);
 	
 	_for_video_ = forVideo;
-	th.data("tab", tab).click();
-	tab.th = th;
+	(tab.th = th).data("tab", tab).click();
 	
 	return tab;
 }
