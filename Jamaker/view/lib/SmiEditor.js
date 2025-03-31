@@ -2219,6 +2219,9 @@ SmiEditor.Finder = {
 				return "열려있는 파일이 없습니다.";
 			}
 			this.finding = JSON.parse(params);
+			if (this.finding.find.length == 0) {
+				return "찾을 문자열이 없습니다.";
+			}
 			this.finding.input = SmiEditor.selected.input[0];
 			this.finding.text      = this.finding.input.value;
 			this.finding.upperText = this.finding.text.toUpperCase();
