@@ -122,6 +122,10 @@ button {
 	right: 0;
 	bottom: 0;
 	max-width: 60%;
+	display: none;
+}
+.hold-selector > .selector:hover .area-btn-hold {
+	display: block;
 }
 .hold-selector > .selector button {
 	position: absolute;
