@@ -288,17 +288,15 @@ input, textarea {
 	user-select: text;
 }
 
-/*
-::-webkit-scrollbar { width: 17px; height: 17px; }
-::-webkit-scrollbar-button,
-::-webkit-scrollbar-track,
-::-webkit-scrollbar-thumb { cursor: default; }
-::-webkit-scrollbar-thumb { border: 0 solid #000; }
-::-webkit-scrollbar-thumb:vertical   { border-width: 0 2px; }
-::-webkit-scrollbar-thumb:horizontal { border-width: 2px 0; }
-::-webkit-scrollbar-button:end { background-position-y: 17px; }
-::-webkit-scrollbar-button:horizontal { background-position-x: 17px; }
-*/
+.custom-scrollbar ::-webkit-scrollbar { width: 17px; height: 17px; }
+.custom-scrollbar ::-webkit-scrollbar-button,
+.custom-scrollbar ::-webkit-scrollbar-track,
+.custom-scrollbar ::-webkit-scrollbar-thumb { cursor: default; }
+.custom-scrollbar ::-webkit-scrollbar-thumb { border: 0 solid #000; }
+.custom-scrollbar ::-webkit-scrollbar-thumb:vertical   { border-width: 0 2px; }
+.custom-scrollbar ::-webkit-scrollbar-thumb:horizontal { border-width: 2px 0; }
+.custom-scrollbar ::-webkit-scrollbar-button:end { background-position-y: 17px; }
+.custom-scrollbar ::-webkit-scrollbar-button:horizontal { background-position-x: 17px; }
 
 /* 색상 설정 불러온 후 덮어 써질 내용 */
 

@@ -797,40 +797,51 @@ function setSetting(setting, initial=false) {
 			delete(setting.css);
 		}
 		
-		/*
-		// 스크롤바 버튼 새로 그려야 함 - 커서 문제로 현재 미적용...
+		// 스크롤바 버튼 새로 그려야 함 //- 커서 문제로 현재 미적용...
 		let button = "";
 		let disabled = "";
 		{
-			let canvas = SmiEditor.canvas;
-			if (!canvas) canvas = SmiEditor.canvas = document.createElement("canvas");
-			canvas.width = 34;
-			canvas.height = 34;
-			
-			const c = canvas.getContext("2d");
-			let x;
-			let y;
-			x =  8; y =  8; c.moveTo(x, y-1.5); c.lineTo(x+3.5, y+2), c.lineTo(x-3.5, y+2); c.closePath();
-			x =  8; y = 25; c.moveTo(x, y+1.5); c.lineTo(x+3.5, y-2), c.lineTo(x-3.5, y-2); c.closePath();
-			x = 25; y =  8; c.moveTo(x-1.5, y); c.lineTo(x+2, y-3.5), c.lineTo(x+2, y+3.5); c.closePath();
-			x = 25; y = 25; c.moveTo(x+1.5, y); c.lineTo(x-2, y+3.5), c.lineTo(x-2, y-3.5); c.closePath();
-			
-			c.fillStyle = setting.color.tabBorder;
-			c.fill();
-			button = SmiEditor.canvas.toDataURL();
-			
-			c.fillStyle = setting.color.border;
-			c.fill();
-			disabled = SmiEditor.canvas.toDataURL();
+			// TODO: 배경색이 어두운 테마일 때만 적용?
+			const bgcolor = setting.color.background;
+			if (false && ((Number("0x" + bgcolor.substring(1,3)) + Number("0x" + bgcolor.substring(3,5)) + Number("0x" + bgcolor.substring(5,7))) < 382))
+			{
+				let canvas = SmiEditor.canvas;
+				if (!canvas) canvas = SmiEditor.canvas = document.createElement("canvas");
+				canvas.width = 34;
+				canvas.height = 34;
+				
+				const c = canvas.getContext("2d");
+				let x;
+				let y;
+				x =  8; y =  8; c.moveTo(x, y-1.5); c.lineTo(x+3.5, y+2), c.lineTo(x-3.5, y+2); c.closePath();
+				x =  8; y = 25; c.moveTo(x, y+1.5); c.lineTo(x+3.5, y-2), c.lineTo(x-3.5, y-2); c.closePath();
+				x = 25; y =  8; c.moveTo(x-1.5, y); c.lineTo(x+2, y-3.5), c.lineTo(x+2, y+3.5); c.closePath();
+				x = 25; y = 25; c.moveTo(x+1.5, y); c.lineTo(x-2, y+3.5), c.lineTo(x-2, y-3.5); c.closePath();
+				
+				const r = Math.floor((Number("0x" + setting.color.border.substring(1,3)) + Number("0x" + setting.color.text.substring(1,3))) / 2);
+				const g = Math.floor((Number("0x" + setting.color.border.substring(3,5)) + Number("0x" + setting.color.text.substring(3,5))) / 2);
+				const b = Math.floor((Number("0x" + setting.color.border.substring(5,7)) + Number("0x" + setting.color.text.substring(5,7))) / 2);
+				c.fillStyle = "#" + ((((r << 8) | g) << 8) + b).toString(16);
+				c.fill();
+				button = SmiEditor.canvas.toDataURL();
+				
+				c.fillStyle = setting.color.border;
+				c.fill();
+				disabled = SmiEditor.canvas.toDataURL();
+			}
 		}
-		*/
 		$.ajax({url: "lib/SmiEditor.color.css"
 			,	dataType: "text"
 			,	success: (preset) => {
 					for (let name in setting.color) {
 						preset = preset.split("[" + name + "]").join(setting.color[name]);
 					}
-					//preset = preset.split("[button]").join(button).split("[buttonDisabled]").join(disabled);
+					if (button) {
+						preset = preset.split("[button]").join(button).split("[buttonDisabled]").join(disabled);
+						$("body").addClass("custom-scrollbar");
+					} else {
+						$("body").removeClass("custom-scrollbar");
+					}
 					
 					let $style = $("#styleColor");
 					if (!$style.length) {

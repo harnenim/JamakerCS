@@ -67,19 +67,19 @@ body, input, button,
 	border-color: [notSaved];
 }
 
-/* 스크롤바(배경색 기반)... 맘에 안 드는데... * /
-::-webkit-scrollbar {background: [background]; }
-::-webkit-scrollbar-corner { background: [tab]; }
-::-webkit-scrollbar-button,
-::-webkit-scrollbar-track { background: [background]; }
-::-webkit-scrollbar-thumb { background: [selector]; border-color: [background]; }
-::-webkit-scrollbar-thumb:hover { background: [border]; }
-::-webkit-scrollbar-button { background-image: url('[button]'); }
-.scrollTop::-webkit-scrollbar-button:vertical:start,
-.scrollBottom::-webkit-scrollbar-button:vertical:end,
-.scrollLeft::-webkit-scrollbar-button:horizontal:start,
-.scrollRight::-webkit-scrollbar-button:horizontal:end { background-image: url('[buttonDisabled]'); }
-*/
+/* 스크롤바(배경색 기반)... */
+.custom-scrollbar ::-webkit-scrollbar {background: [background]; }
+.custom-scrollbar ::-webkit-scrollbar-corner { background: [tab]; }
+.custom-scrollbar ::-webkit-scrollbar-button,
+.custom-scrollbar ::-webkit-scrollbar-track { background: [background]; }
+.custom-scrollbar ::-webkit-scrollbar-thumb { background: [selector]; border-color: [background]; }
+.custom-scrollbar ::-webkit-scrollbar-thumb:hover { background: [border]; }
+.custom-scrollbar ::-webkit-scrollbar-button { background-image: url('[button]'); }
+.custom-scrollbar .scrollTop::-webkit-scrollbar-button:vertical:start,
+.custom-scrollbar .scrollBottom::-webkit-scrollbar-button:vertical:end,
+.custom-scrollbar .scrollLeft::-webkit-scrollbar-button:horizontal:start,
+.custom-scrollbar .scrollRight::-webkit-scrollbar-button:horizontal:end { background-image: url('[buttonDisabled]'); }
+.custom-scrollbar .disable-scroll-x::-webkit-scrollbar-thumb:horizontal { background: [background]; }
 
 /* 싱크 구분 색 */
 .sync,.sync > span { border-color: [syncBorder]; }

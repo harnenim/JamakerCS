@@ -478,6 +478,30 @@ SmiEditor.prototype.bindEvent = function() {
 		const scrollTop  = editor.input.scrollTop ();
 		const scrollLeft = editor.input.scrollLeft();
 		
+		{
+			const ta = editor.input[0];
+			if (ta.scrollTop) {
+				editor.input.removeClass("scrollTop");
+			} else {
+				editor.input.addClass("scrollTop");
+			}
+			if (ta.clientHeight + ta.scrollTop < ta.scrollHeight) {
+				editor.input.removeClass("scrollBottom");
+			} else {
+				editor.input.addClass("scrollBottom");
+			}
+			if (ta.scrollLeft) {
+				editor.input.removeClass("scrollLeft");
+			} else {
+				editor.input.addClass("scrollLeft");
+			}
+			if (ta.clientWidth + ta.scrollLeft < ta.scrollWidth) {
+				editor.input.removeClass("scrollRight");
+			} else {
+				editor.input.addClass("scrollRight");
+			}
+		}
+		
 		// 싱크 스크롤 동기화
 		editor.colSync.scrollTop(scrollTop);
 		
@@ -1697,6 +1721,24 @@ SmiEditor.prototype.render = function(range=null) {
 		self.afterChangeSaved(self.isSaved());
 		
 		setTimeout(() => {
+			{
+				const ta = self.input[0];
+				if (ta.scrollWidth > ta.clientWidth) {
+					self.input.removeClass("disable-scroll-x");
+					if (ta.scrollLeft) {
+						self.input.removeClass("scrollLeft");
+					} else {
+						self.input.addClass("scrollLeft");
+					}
+					if (ta.clientWidth + ta.scrollLeft < ta.scrollWidth) {
+						self.input.removeClass("scrollRight");
+					} else {
+						self.input.addClass("scrollRight");
+					}
+				} else {
+					self.input.addClass("disable-scroll-x scrollLeft scrollRight");
+				}
+			}
 			if (self.needToRender) {
 				// 렌더링 대기열 있으면 재실행
 				self.render();
