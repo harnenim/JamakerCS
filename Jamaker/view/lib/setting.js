@@ -317,9 +317,9 @@ window.DEFAULT_SETTING =
 	,	"다크테마":
 		{ background: "#0f0f0f"
 		, selector  : "#4c4c4c"
-		, border    : "#aaaaaa"
+		, border    : "#888888"
 		, tab       : "#222222"
-		, tabBorder : "#888888"
+		, tabBorder : "#aaaaaa"
 		, editor    : "#000000"
 		, text      : "#ffffff"
 		, hover     : "#000000"
