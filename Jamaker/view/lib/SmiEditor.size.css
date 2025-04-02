@@ -48,6 +48,7 @@ label, #showFps {
 }
 .hold-selector > .selector .area-btn-hold {
 	width: calc(20px * 2);
+	right: calc(20px * -2);
 }
 .hold-selector > .selector button {
 	font-size: calc(20px * 0.6);

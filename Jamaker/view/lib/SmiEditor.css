@@ -98,6 +98,8 @@ button {
 	top: 30%;
 	height: 40%;
 	border-width: 1px;
+	transition: 0.2s;
+	opacity: 0.9;
 }
 .hold-selector > .selector:not(:first-child).selected {
 	z-index: 9999;
@@ -119,13 +121,13 @@ button {
 .hold-selector > .selector .area-btn-hold {
 	position: absolute;
 	top: 0;
-	right: 0;
+	right: -100%;
 	bottom: 0;
 	max-width: 60%;
-	display: none;
+	transition: 0.2s;
 }
 .hold-selector > .selector:hover .area-btn-hold {
-	display: block;
+	right: 0;
 }
 .hold-selector > .selector button {
 	position: absolute;
