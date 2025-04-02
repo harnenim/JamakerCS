@@ -505,8 +505,8 @@ SmiEditor.prototype.bindEvent = function() {
 		// 싱크 스크롤 동기화
 		editor.colSync.scrollTop(scrollTop);
 		
+		// 문법 하이라이트 스크롤 동기화
 		if (SmiEditor.useHighlight) {
-			// 문법 하이라이트 스크롤 동기화
 			editor.hview.css({
 					marginTop : -scrollTop 
 				,	marginLeft: -scrollLeft
@@ -515,40 +515,44 @@ SmiEditor.prototype.bindEvent = function() {
 					marginTop : -scrollTop 
 				,	marginLeft: -scrollLeft
 			});
-			
-			// 문법 하이라이트 보이는 범위 찾기
-			const showFrom = Math.floor(scrollTop / LH);
-			const showEnd  = Math.ceil((scrollTop + editor.input.outerHeight()) / LH);
-			
-			const toAppendLefts = [];
-			const toRemoveLefts = [];
-			editor.colSync.children().each(function() {
-				toRemoveLefts.push(this);
-			});
-			const toAppendViews = [];
-			const toRemoveViews = [];
+		}
+		
+		// 현재 스크롤에서 보이는 범위 찾기
+		const showFrom = Math.floor(scrollTop / LH);
+		const showEnd  = Math.ceil((scrollTop + editor.input.outerHeight()) / LH);
+		
+		const toAppendLefts = [];
+		const toRemoveLefts = [];
+		const toAppendViews = [];
+		const toRemoveViews = [];
+		editor.colSync.children().each(function() {
+			toRemoveLefts.push(this);
+		});
+		if (SmiEditor.useHighlight) {
 			editor.hview.children().each(function() {
 				toRemoveViews.push(this);
 			});
-			
-			const a = Math.max(0, showFrom);
-			const b = Math.min(showEnd, editor.lines.length);
-			for (let i = a; i < b; i++) {
-				const css = { top: (i * LH) + "px" };
-				const $left = editor.lines[i].LEFT;
-				const $view = editor.lines[i].VIEW;
-				if ($left != null) {
-					const rIndex = toRemoveLefts.indexOf($left[0]);
-					if (rIndex >= 0) {
-						// 기존에 있었는데 범위에 남아있음
-						toRemoveLefts.splice(rIndex, 1);
-					} else {
-						// 기존에 없었는데 범위에 들어옴
-						toAppendLefts.push($left);
-					}
-					// 위치 계산은 새로 해줌
-					$left.css(css);
+		}
+		
+		const a = Math.max(0, showFrom);
+		const b = Math.min(showEnd, editor.lines.length);
+		for (let i = a; i < b; i++) {
+			const css = { top: (i * LH) + "px" };
+			const $left = editor.lines[i].LEFT;
+			if ($left != null) {
+				const rIndex = toRemoveLefts.indexOf($left[0]);
+				if (rIndex >= 0) {
+					// 기존에 있었는데 범위에 남아있음
+					toRemoveLefts.splice(rIndex, 1);
+				} else {
+					// 기존에 없었는데 범위에 들어옴
+					toAppendLefts.push($left);
 				}
+				// 위치 계산은 새로 해줌
+				$left.css(css);
+			}
+			if (SmiEditor.useHighlight) {
+				const $view = editor.lines[i].VIEW;
 				if ($view != null) {
 					const rIndex = toRemoveViews.indexOf($view[0]);
 					if (rIndex >= 0) {
@@ -562,13 +566,15 @@ SmiEditor.prototype.bindEvent = function() {
 					$view.css(css);
 				}
 			}
-			// 0번은 colSyncSizer
-			for (let i = 1; i < toRemoveLefts.length; i++) {
-				$(toRemoveLefts[i]).remove();
-			}
-			for (let i = 0; i < toAppendLefts.length; i++) {
-				editor.colSync.append(toAppendLefts[i]);
-			}
+		}
+		// 0번은 colSyncSizer
+		for (let i = 1; i < toRemoveLefts.length; i++) {
+			$(toRemoveLefts[i]).remove();
+		}
+		for (let i = 0; i < toAppendLefts.length; i++) {
+			editor.colSync.append(toAppendLefts[i]);
+		}
+		if (SmiEditor.useHighlight) {
 			for (let i = 0; i < toRemoveViews.length; i++) {
 				$(toRemoveViews[i]).remove();
 			}
@@ -576,6 +582,7 @@ SmiEditor.prototype.bindEvent = function() {
 				editor.hview.append(toAppendViews[i]);
 			}
 		}
+		
 	}).on("blur", function() {
 		const text = editor.input.val();
 		const prev  = $("<span>").text(text.substring(0, editor.input[0].selectionStart));
@@ -1708,7 +1715,7 @@ SmiEditor.prototype.render = function(range=null) {
 
 		self.text = newText;
 		self.lines = newLines;
-		self.colSyncSizer.css({ top: newLines.length * LH + "px" });
+		self.colSyncSizer.css({ top: (newLines.length * LH) + "px" });
 		
 		if (SmiEditor.PlayerAPI && SmiEditor.PlayerAPI.setLines) {
 			SmiEditor.PlayerAPI.setLines(newLines);
