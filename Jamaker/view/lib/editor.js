@@ -769,6 +769,12 @@ function init(jsonSetting, isBackup=true) {
 		});
 	});
 	
+	// ::-webkit-scrollbar에 대해 CefSharp에서 커서 모양이 안 바뀜
+	// ... 라이브러리 버그? 업데이트하면 달라지나?
+	$("body").on("mousemove", "textarea", function(e) {
+		$(this).css({ cursor: ((this.clientWidth <= e.offsetX) || (this.clientHeight <= e.offsetY) ? "default" : "text") });
+	});
+	
 	SmiEditor.activateKeyEvent();
 	
 	setSetting(setting, true);
@@ -801,34 +807,29 @@ function setSetting(setting, initial=false) {
 		let button = "";
 		let disabled = "";
 		{
-			// TODO: 배경색이 어두운 테마일 때만 적용?
-			const bgcolor = setting.color.background;
-			if (false && ((Number("0x" + bgcolor.substring(1,3)) + Number("0x" + bgcolor.substring(3,5)) + Number("0x" + bgcolor.substring(5,7))) < 382))
-			{
-				let canvas = SmiEditor.canvas;
-				if (!canvas) canvas = SmiEditor.canvas = document.createElement("canvas");
-				canvas.width = 34;
-				canvas.height = 34;
-				
-				const c = canvas.getContext("2d");
-				let x;
-				let y;
-				x =  8; y =  8; c.moveTo(x, y-1.5); c.lineTo(x+3.5, y+2), c.lineTo(x-3.5, y+2); c.closePath();
-				x =  8; y = 25; c.moveTo(x, y+1.5); c.lineTo(x+3.5, y-2), c.lineTo(x-3.5, y-2); c.closePath();
-				x = 25; y =  8; c.moveTo(x-1.5, y); c.lineTo(x+2, y-3.5), c.lineTo(x+2, y+3.5); c.closePath();
-				x = 25; y = 25; c.moveTo(x+1.5, y); c.lineTo(x-2, y+3.5), c.lineTo(x-2, y-3.5); c.closePath();
-				
-				const r = Math.floor((Number("0x" + setting.color.border.substring(1,3)) + Number("0x" + setting.color.text.substring(1,3))) / 2);
-				const g = Math.floor((Number("0x" + setting.color.border.substring(3,5)) + Number("0x" + setting.color.text.substring(3,5))) / 2);
-				const b = Math.floor((Number("0x" + setting.color.border.substring(5,7)) + Number("0x" + setting.color.text.substring(5,7))) / 2);
-				c.fillStyle = "#" + ((((r << 8) | g) << 8) + b).toString(16);
-				c.fill();
-				button = SmiEditor.canvas.toDataURL();
-				
-				c.fillStyle = setting.color.border;
-				c.fill();
-				disabled = SmiEditor.canvas.toDataURL();
-			}
+			let canvas = SmiEditor.canvas;
+			if (!canvas) canvas = SmiEditor.canvas = document.createElement("canvas");
+			canvas.width = 34;
+			canvas.height = 34;
+			
+			const c = canvas.getContext("2d");
+			let x;
+			let y;
+			x =  8; y =  8; c.moveTo(x, y-1.5); c.lineTo(x+3.5, y+2), c.lineTo(x-3.5, y+2); c.closePath();
+			x =  8; y = 25; c.moveTo(x, y+1.5); c.lineTo(x+3.5, y-2), c.lineTo(x-3.5, y-2); c.closePath();
+			x = 25; y =  8; c.moveTo(x-1.5, y); c.lineTo(x+2, y-3.5), c.lineTo(x+2, y+3.5); c.closePath();
+			x = 25; y = 25; c.moveTo(x+1.5, y); c.lineTo(x-2, y+3.5), c.lineTo(x-2, y-3.5); c.closePath();
+			
+			const r = Math.floor((Number("0x" + setting.color.border.substring(1,3)) + Number("0x" + setting.color.text.substring(1,3))) / 2);
+			const g = Math.floor((Number("0x" + setting.color.border.substring(3,5)) + Number("0x" + setting.color.text.substring(3,5))) / 2);
+			const b = Math.floor((Number("0x" + setting.color.border.substring(5,7)) + Number("0x" + setting.color.text.substring(5,7))) / 2);
+			c.fillStyle = "#" + ((((r << 8) | g) << 8) + b).toString(16);
+			c.fill();
+			button = SmiEditor.canvas.toDataURL();
+			
+			c.fillStyle = setting.color.border;
+			c.fill();
+			disabled = SmiEditor.canvas.toDataURL();
 		}
 		$.ajax({url: "lib/SmiEditor.color.css"
 			,	dataType: "text"
@@ -1121,8 +1122,21 @@ function openFileForVideo(path, text) {
 let exporting = false;
 function saveFile(asNew, isExport) {
 	const currentTab = tabs[tab];
+	let syncError = null;
+	
 	for (let i = 0; i < currentTab.holds.length; i++) {
-		currentTab.holds[i].history.log();
+		const hold = currentTab.holds[i];
+		hold.history.log();
+		
+		if (!syncError) {
+			for (let j = 0; j < hold.lines.length; j++) {
+				const line = hold.lines[j];
+				if (line.LEFT && (line.LEFT.hasClass("error") || line.LEFT.hasClass("equal"))) {
+					syncError = [i, j];
+					break;
+				}
+			}
+		}
 	}
 
 	let path = currentTab.path;
@@ -1157,9 +1171,18 @@ function saveFile(asNew, isExport) {
 	}
 	*/
 	
-	if (currentTab.area.find(".sync.error,.sync.equal").length) {
+	if (syncError) {
 		confirm("싱크 오류가 있습니다.\n저장하시겠습니까?", function() {
 			binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path);
+			
+		}, function() {
+			const hold = currentTab.holds[syncError[0]];
+			currentTab.selectHold(hold);
+			
+			const lineNo = syncError[1];
+			const cursor = (lineNo ? hold.text.split("\n").slice(0, lineNo).join("\n").length + 1 : 0);
+			hold.setCursor(cursor);
+			hold.scrollToCursor(lineNo);
 		});
 	} else {
 		binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path);
