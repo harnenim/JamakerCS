@@ -478,8 +478,8 @@ window.Combine = {
 									}
 									{	const tag = newLine.substring(0, tagEnd).toUpperCase();
 										
-										// 밑줄은 공백문자 추가되면 안 됨
-										if (tag == "<U>") {
+										// 밑줄/취소선은 공백문자 추가되면 안 됨
+										if (tag == "<U>" || tag == "<S>") {
 											break;
 										}
 										// TODO: font size 적용된 경우도 막아야 하나...?
@@ -502,8 +502,8 @@ window.Combine = {
 									}
 									{	const tag = newLine.substring(tagStart, tagEnd).toUpperCase();
 										
-										// 밑줄은 공백문자 추가되면 안 됨
-										if (tag == "</U>") {
+										// 밑줄/취소선은 공백문자 추가되면 안 됨
+										if (tag == "</U>" || tag == "</S>") {
 											break;
 										}
 										// TODO: font size 적용된 경우도 막아야 하나...?
@@ -1036,11 +1036,28 @@ if (Subtitle && Subtitle.SmiFile) {
 				let ni = 0;
 				
 				while ((oi < originBody.length) && (ni < main.body.length)) {
-					if ((originBody[oi].start == main.body[ni].start)
-					 && (originBody[oi].text  == main.body[ni].text )) {
-						oi++;
-						ni++;
-						continue;
+					if (originBody[oi].start == main.body[ni].start) {
+						if (originBody[oi].text == main.body[ni].text) {
+							oi++;
+							ni++;
+							continue;
+						} else if (originBody[oi].isEmpty() && main.body[ni].isEmpty()) {
+							// 파트 구분 등을 위해 의도적으로 &nbsp; 2개 넣거나 한 경우가 있음
+							// 결합 결과가 아닌 원본대로 넣어, 불필요한 주석 생성 방지
+							main.body[ni].text = originBody[oi].text;
+							oi++;
+							ni++;
+							continue;
+						} else if (originBody[oi].text.startsWith("<!--")) {
+							const commentEnd = originBody[oi].text.indexOf("-->\n");
+							if (commentEnd > 4 && originBody[oi].text.substring(commentEnd + 4) == main.body[ni].text) {
+								// 주석 때문에 다르게 나온 거면 원본대로 넣어, 불필요한 주석 생성 방지 
+								main.body[ni].text = originBody[oi].text;
+								oi++;
+								ni++;
+								continue;
+							}
+						}
 					}
 					
 					// 변환결과가 원본과 동일하지 않은 범위 찾기
