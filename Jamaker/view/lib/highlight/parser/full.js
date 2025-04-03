@@ -10,6 +10,7 @@ SmiEditor.highlightText = (text, state=null) => {
 	 * 속성명: a
 	 * 속성값: =, ', "
 	 * 주석  : !
+	 * CDATA : C
 	 */
 	let html = "";
 	switch (state) {
@@ -331,6 +332,28 @@ SmiEditor.highlightText = (text, state=null) => {
 				}
 				break;
 			}
+			case 'C': { // CDATA
+				if ((pos + 3 <= text.length) && (text.substring(pos, pos+3) == "]]>")) {
+					html += "<span class='hljs-tag'>]]&gt;</span>";
+					state = null;
+					pos += 2;
+				} else {
+					switch (c) {
+						case '<': {
+							html += "&lt;";
+							break;
+						}
+						case '&': {
+							html += "&amp;";
+							break;
+						}
+						default: {
+							html += c;
+						}
+					}
+				}
+				break;
+			}
 			default: { // 텍스트
 				switch (c) {
 					case '<': { // 태그 시작
@@ -338,6 +361,10 @@ SmiEditor.highlightText = (text, state=null) => {
 							html += "<span class='hljs-comment'>&lt;!--";
 							state = '!';
 							pos += 3;
+						} else if ((pos + 9 <= text.length) && (text.substring(pos, pos+9) == "<![CDATA[")) {
+							html += "<span class='hljs-tag'>&lt;![CDATA[</span>";
+							state = 'C';
+							pos += 8;
 						} else {
 							html += "<span class='hljs-tag'>&lt;";
 							state = '/';
@@ -371,6 +398,7 @@ SmiEditor.highlightText = (text, state=null) => {
 		case '`':
 		case '=':
 		case '~':
+		case 'C':
 			state = null;
 	}
 	return previewLine.html(html ? html : "").data({ next: state });
