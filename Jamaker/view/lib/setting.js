@@ -41,7 +41,7 @@ let checkVersion;
 }
 
 window.DEFAULT_SETTING =
-{	version: "2025.03.29.v1"
+{	version: "2025.04.05.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -93,7 +93,7 @@ window.DEFAULT_SETTING =
 ,	sync:
 	{	insert: 1    // 싱크 입력 시 커서 이동
 	,	update: 2    // 싱크 수정 시 커서 이동 / 예) 싱크 새로 찍기: 2
-	,	weight: -450 // 가중치 설정
+	,	weight: -400 // 가중치 설정
 	,	unit: 42     // 싱크 조절량 설정 (기본값: 24fps이면 1프레임당 41.7ms)
 	,	move: 2000   // 재생 이동 단위
 	,	lang: "KRCC" // 그냥 아래 preset 설정으로 퉁치는 게 나은가...?
