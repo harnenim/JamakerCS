@@ -92,3 +92,8 @@ label, #showFps {
 .hljs-color {
 	height: 20px;
 }
+
+.custom-scrollbar ::-webkit-scrollbar,
+.custom-scrollbar ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }
+.custom-scrollbar ::-webkit-scrollbar-button:end { background-position-y: calc(20px * 0.8 + 1px); }
+.custom-scrollbar ::-webkit-scrollbar-button:horizontal { background-position-x: calc(20px * 0.8 + 1px); }

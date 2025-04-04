@@ -797,7 +797,7 @@ function setSetting(setting, initial=false) {
 	}
 	
 	SmiEditor.setSetting(setting);
-	if (initial || (JSON.stringify(oldSetting.color) != JSON.stringify(setting.color))) {
+	if (initial || (oldSetting.size != setting.size) || (JSON.stringify(oldSetting.color) != JSON.stringify(setting.color))) {
 		// 스타일 바뀌었을 때만 재생성
 		if (setting.css) {
 			delete(setting.css);
@@ -809,16 +809,20 @@ function setSetting(setting, initial=false) {
 		{
 			let canvas = SmiEditor.canvas;
 			if (!canvas) canvas = SmiEditor.canvas = document.createElement("canvas");
-			canvas.width = 34;
-			canvas.height = 34;
-			
+			canvas.width = canvas.height = ((SB = (16 * setting.size)) + 1) * 2;
+
+			const v1 = SB / 2;
+			const v2 = SB + 1 + (SB / 2);
+			const v15 = setting.size * 1.5;
+			const v20 = setting.size * 2.0;
+			const v35 = setting.size * 3.5;
 			const c = canvas.getContext("2d");
 			let x;
 			let y;
-			x =  8; y =  8; c.moveTo(x, y-1.5); c.lineTo(x+3.5, y+2), c.lineTo(x-3.5, y+2); c.closePath();
-			x =  8; y = 25; c.moveTo(x, y+1.5); c.lineTo(x+3.5, y-2), c.lineTo(x-3.5, y-2); c.closePath();
-			x = 25; y =  8; c.moveTo(x-1.5, y); c.lineTo(x+2, y-3.5), c.lineTo(x+2, y+3.5); c.closePath();
-			x = 25; y = 25; c.moveTo(x+1.5, y); c.lineTo(x-2, y+3.5), c.lineTo(x-2, y-3.5); c.closePath();
+			x = v1; y = v1; c.moveTo(x, y-v15); c.lineTo(x+v35, y+v20), c.lineTo(x-v35, y+v20); c.closePath();
+			x = v1; y = v2; c.moveTo(x, y+v15); c.lineTo(x+v35, y-v20), c.lineTo(x-v35, y-v20); c.closePath();
+			x = v2; y = v1; c.moveTo(x-v15, y); c.lineTo(x+v20, y-v35), c.lineTo(x+v20, y+v35); c.closePath();
+			x = v2; y = v2; c.moveTo(x+v15, y); c.lineTo(x-v20, y+v35), c.lineTo(x-v20, y-v35); c.closePath();
 			
 			const r = Math.floor((Number("0x" + setting.color.border.substring(1,3)) + Number("0x" + setting.color.text.substring(1,3))) / 2);
 			const g = Math.floor((Number("0x" + setting.color.border.substring(3,5)) + Number("0x" + setting.color.text.substring(3,5))) / 2);
