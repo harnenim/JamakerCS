@@ -679,7 +679,7 @@ if (Subtitle && Subtitle.SmiFile) {
 			}
 			// Hold 내용물 뒤에 뭐가 더 붙어있을 경우
 			if (end < hold.length - 3) {
-				holds[0].text += hold.substring(end);
+				holds[0].text += hold.substring(end + 3);
 			}
 			let name = hold.substring(0, begin).trim();
 			let pos = 1;
