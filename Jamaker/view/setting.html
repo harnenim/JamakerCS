@@ -60,7 +60,7 @@ $(() => {
 	const setting = JSON.parse(JSON.stringify(opener.setting));
 	
 	function refresh(form, setting) {
-		form.find("input[type=text][name],input[type=number][name],input[type=color][name],textarea[name]").each((_, el) => {
+		form.find("input[type=text][name],input[type=number][name],input[type=color][name],input[type=range][name],textarea[name]").each((_, el) => {
 			const input = $(el);
 			let name = input.attr("name");
 			if (name.indexOf("what") > 0) {
@@ -709,9 +709,14 @@ $(() => {
 		}
 		selectParser.on("change", function() {
 			if (selectParser.val()) {
-				$("#optionsForHighlight").removeClass("disabled").find("input, select").attr({ disabled: false });
+				$("#style_highlight_setting").removeClass("disabled").find("input, select:not([name=highlight_parser])").attr({ disabled: false });
+				if (selectParser.val() == "withoutSync") {
+					$("#style_highlight_setting").addClass("withoutSync");
+				} else {
+					$("#style_highlight_setting").removeClass("withoutSync").find("input[name=highlight_sync]").attr({ disabled: true });
+				}
 			} else {
-				$("#optionsForHighlight").addClass   ("disabled").find("input, select").attr({ disabled: true  });
+				$("#style_highlight_setting").addClass   ("disabled").find("input, select:not([name=highlight_parser])").attr({ disabled: true  });
 			}
 		}).change();
 
@@ -728,6 +733,7 @@ $(() => {
 			setting.highlight.style  = $("select[name=highlight_style]").val();
 			setting.highlight.enter  = $("input[name=highlight_enter]").prop("checked");
 			setting.highlight.color  = $("input[name=highlight_color]").prop("checked");
+			setting.highlight.sync   = Number($("input[name=highlight_sync]").val());
 			setting.viewer.useAlign  = $("input[name=viewer_useAlign]").prop("checked");
 			setting.viewer.size      = $("input[name=viewer_size]").val();
 			setting.viewer.css       = $("textarea[name=viewer_css]").val();
@@ -1163,14 +1169,29 @@ fieldset ol button,
 #replace input + button { border-left-width: 1px; }
 
 /* 스타일 */
-#optionsForHighlight > span {
-	margin-left: 215px;
+#style_highlight_setting > div {
+	float: left;
+	margin-right: 4px;
 }
-#optionsForHighlight label {
+#style_highlight_setting:after {
+	display: block;
+	content: ""; 
+	clear: both;
+	margin-bottom: 8px;
+}
+#style_highlight_setting label {
 	margin-right: 8px;
 }
-#optionsForHighlight.disabled label > span {
+#style_highlight_setting .for-withoutSync span,
+#style_highlight_setting.disabled label > span {
 	opacity: 0.5;
+}
+#style_highlight_setting.withoutSync .for-withoutSync span {
+	opacity: 1;
+}
+#style_highlight_setting select[name=highlight_parser],
+#style_highlight_setting input[name=highlight_sync] {
+	width: 101px;
 }
 #style_color_preset {
 	float: left;
@@ -1477,22 +1498,28 @@ fieldset ol button,
 	</form>
 	
 	<form id="style">
-		<label>문법 하이라이트:
-			<select name="highlight_parser">
-				<option value="">사용 안 함</option>
-				<option value="SyncOnly">싱크만 구분</option>
-				<option value="withoutSync">싱크 제외</option>
-				<option value="full">전체</option>
-			</select>
-		</label>
-		<span id="optionsForHighlight">
-			<select name="highlight_style"></select><br />
-			<span>
-				<label><input type="checkbox" name="highlight_enter" /> <span>줄바꿈 표시</span></label>
-				<label><input type="checkbox" name="highlight_color" /> <span>색상 미리보기</span></label>
-			</span>
-		</span>
-		<br />
+		<div id="style_highlight_setting">
+			<div>
+				<label>문법 하이라이트:
+					<select name="highlight_parser">
+						<option value="">사용 안 함</option>
+						<option value="SyncOnly">싱크만 구분</option>
+						<option value="withoutSync">싱크 제외</option>
+						<option value="full">전체</option>
+					</select>
+				</label><br />
+				<label class="for-withoutSync"><span >　　싱크 투명도:</span>
+					<input type="range" name="highlight_sync" min="0" max="1" step="0.01" />
+				</label>
+			</div>
+			<div>
+				<select name="highlight_style"></select><br />
+				<span>
+					<label><input type="checkbox" name="highlight_enter" /> <span>줄바꿈 표시</span></label>
+					<label><input type="checkbox" name="highlight_color" /> <span>색상 미리보기</span></label>
+				</span>
+			</div>
+		</div>
 		<label>UI 배율
 			<select name="size">
 				<option value="0.8" >80%</option>

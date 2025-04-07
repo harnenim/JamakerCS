@@ -918,7 +918,8 @@ function setSetting(setting, initial=false) {
 									SmiEditor.highlightCss
 										= ".hljs { color: unset; }\n"
 										+ ".hold textarea { caret-color: " + (isDark ? "#fff" : "#000") + "; }\n"
-										+ style;
+										+ style
+										+ ".hljs-sync { opacity: " + setting.highlight.sync + " }\n";
 									afterLoadHighlight();
 								}
 						});

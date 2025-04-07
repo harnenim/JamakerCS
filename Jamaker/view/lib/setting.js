@@ -282,6 +282,7 @@ window.DEFAULT_SETTING =
 	, style : "eclipse"
 	, enter : false
 	, color : true
+	, sync  : 1.0
 	}
 ,	size: 1
 ,	color:
