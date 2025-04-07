@@ -2108,7 +2108,7 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 		,	logs: []
 	};
 	let added = 0;
-
+	
 	// 중간 싱크 재계산
 	let startIndex = -1;
 	for (let i = 1; i < smis.length; i++) {
@@ -2603,7 +2603,7 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 	} else {
 		last.text += txt.substring(index);
 	}
-
+	
 	for (let i = 0; i < this.body.length; i++) {
 		const smi = this.body[i];
 		if (smi.text.length > 0) {
@@ -2664,6 +2664,64 @@ Subtitle.SmiFile.prototype.fromSync = function(syncs) {
 	return this;
 }
 
+Subtitle.SmiFile.prototype.normalize = function(withComment=false, fps=23.976) {
+	const smis = [];
+	smis.push(...this.body);
+
+	let preset = null;
+	{
+		let begin = this.header.indexOf("<!-- Preset\n");
+		if (begin >= 0) {
+			begin += 12;
+			let end = this.header.indexOf("\n-->", begin);
+			if (end > 0) {
+				const comment = this.header.substring(begin, end).trim();
+				preset = ["", ""];
+				let tags = comment.split("<");
+				for (let j = 1; j < tags.length; j++) {
+					const tag = tags[j];
+					if (tag.indexOf(">") > 0) {
+						const inTag = tag.substring(0, tag.indexOf(">"));
+						const tagName = inTag.split(" ")[0].split("\t")[0];
+						preset[0] += "<" + inTag + ">";
+						preset[1] = "</" + tagName + ">" + preset[1];
+					}
+				}
+			}
+		}
+	}
+	
+	if (preset) {
+		for (let i = 0; i < smis.length; i++) {
+			const smi = smis[i];
+			const text = smi.text.split("&nbsp;").join("").trim();
+			if (text.length) {
+				let hasText = false;
+				const tags = text.split("<");
+				if (tags[0]) {
+					hasText = true;
+				} else {
+					for (let j = 1; j < tags.length; j++) {
+						const tag = tags[j];
+						if (tag.indexOf(">") > 0) {
+							if (tag.substring(tag.indexOf(">") + 1)) {
+								hasText = true;
+								break;
+							}
+						}
+					}
+				}
+				if (hasText) {
+					smi.text = preset.join(smi.text);
+				}
+			}
+		}
+	}
+	
+	const result = Subtitle.Smi.normalize(smis, withComment, fps);
+	this.body = result.result;
+	return result;
+}
 Subtitle.SmiFile.prototype.antiNormalize = function() {
 	const result = [this];
 	
