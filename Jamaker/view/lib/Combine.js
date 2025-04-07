@@ -917,7 +917,7 @@ if (Subtitle && Subtitle.SmiFile) {
 		
 		// 정규화 등 작업
 		if (withNormalize) {
-			const normalized = Subtitle.Smi.normalize(main.body, withComment && !withCombine, fps);
+			const normalized = main.normalize(withComment && !withCombine, fps);
 			originBody = normalized.origin;
 			logs = normalized.logs;
 		} else {
@@ -956,9 +956,9 @@ if (Subtitle && Subtitle.SmiFile) {
 					continue;
 				}
 				const smi = holdSmis[hi] = new Subtitle.SmiFile(hold.text);
-				smi.header = smi.footer = "";
+//				smi.header = smi.footer = "";
 				if (withNormalize) {
-					Subtitle.Smi.normalize(smi.body, false);
+					smi.normalize(false);
 				}
 				
 				if (smi.body.length == 0) {
