@@ -1,5 +1,8 @@
 SmiEditor.highlightText = (text, state=null) => {
 	const previewLine = $("<span>").data({ state: state });
+	if (state == null && text.toUpperCase().startsWith("<SYNC ")) {
+		previewLine.addClass("hljs-sync");
+	}
 	
 	/*
 	 * 상태값

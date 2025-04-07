@@ -709,14 +709,9 @@ $(() => {
 		}
 		selectParser.on("change", function() {
 			if (selectParser.val()) {
-				$("#style_highlight_setting").removeClass("disabled").find("input, select:not([name=highlight_parser])").attr({ disabled: false });
-				if (selectParser.val() == "withoutSync") {
-					$("#style_highlight_setting").addClass("withoutSync");
-				} else {
-					$("#style_highlight_setting").removeClass("withoutSync").find("input[name=highlight_sync]").attr({ disabled: true });
-				}
+				$("#style_highlight_setting").removeClass("disabled").find("input, select").attr({ disabled: false });
 			} else {
-				$("#style_highlight_setting").addClass   ("disabled").find("input, select:not([name=highlight_parser])").attr({ disabled: true  });
+				$("#style_highlight_setting").addClass   ("disabled").find("input, select").attr({ disabled: true  });
 			}
 		}).change();
 
@@ -1182,12 +1177,8 @@ fieldset ol button,
 #style_highlight_setting label {
 	margin-right: 8px;
 }
-#style_highlight_setting .for-withoutSync span,
 #style_highlight_setting.disabled label > span {
 	opacity: 0.5;
-}
-#style_highlight_setting.withoutSync .for-withoutSync span {
-	opacity: 1;
 }
 #style_highlight_setting select[name=highlight_parser],
 #style_highlight_setting input[name=highlight_sync] {
