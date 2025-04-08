@@ -258,10 +258,12 @@ button {
 }
 .hold-preset-area > div {
 	position: absolute;
+	border: 1px solid #000;
 }
 .hold-preset-area > div > button {
 	position: absolute;
     border: 0;
+	cursor: pointer;
 }
 .hold-preset-area > div > button:after {
     content: "×";

@@ -98,8 +98,7 @@ label, #showFps {
 	left: calc(20px * 0.5);
 	right: calc(20px * 0.5);
 	height: calc(20px * 3 + 2px);
-	border: 1px solid #000;
-	border-radius: calc(20px * 0.5);
+	border-radius: calc(20px * 0.4);
 	padding: calc(20px * 0.5);
 }
 .hold-preset-area > div > input {

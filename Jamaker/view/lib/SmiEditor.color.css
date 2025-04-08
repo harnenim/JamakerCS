@@ -67,6 +67,9 @@ body, input, button,
 .hold-selector > .selector.not-saved {
 	border-color: [notSaved];
 }
+.hold-preset-area > div {
+	border-color: [tabBorder];
+}
 
 /* 스크롤바(배경색 기반)... */
 .custom-scrollbar ::-webkit-scrollbar {background: [background]; }
