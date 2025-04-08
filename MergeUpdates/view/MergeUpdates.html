@@ -533,10 +533,10 @@ $(() => {
 		}
 
 		$targetAftFrames.val("");
-		SmiEditor.selected.updateSync();
+		SmiEditor.selected.render();
 		$targetAftUpdate.val(targetAftUpdate.toTxt());
 		$targetAftFrames.val(targetAftFrames.toTxt());
-		SmiEditor.selected.updateSync();
+		SmiEditor.selected.render();
 
 		if (frameChanged) {
 			// updateSync 딜레이 고려

@@ -32,7 +32,7 @@ function setAssFile(name, text) {
 			} else if (line.startsWith("Video File: ")) {
 				let videoFile = line.substring(12);
 				if (videoFile.indexOf(":") < 0) {
-                    videoFile = name.substring(0, name.split("/").join("\\").lastIndexOf("\\") + 1) + videoFile;
+					videoFile = name.substring(0, name.split("/").join("\\").lastIndexOf("\\") + 1) + videoFile;
 				}
                 setVideoFile(videoFile);
 				binder.setVideoFile(videoFile);
@@ -54,7 +54,7 @@ function setFkfFile(file) {
 	if (typeof file == "string") {
 		const paths = file.split("\\").join("/").split("/");
 		paths[paths.length - 1] = encodeURIComponent(paths[paths.length - 1]);
-        const path = (paths.length > 1 ? ("file://" + paths.join("/")) : ("../temp/" + paths[0]));
+		const path = (paths.length > 1 ? ("file://" + paths.join("/")) : ("../temp/" + paths[0]));
 		const req = new XMLHttpRequest();
 		req.open("GET", path);
 		req.responseType = "arraybuffer";
@@ -193,7 +193,7 @@ body > * {
 	position: absolute;
 	top: 0;
 	left: 0;
-    padding: 2px;
+	padding: 2px;
 }
 #labels > div.disabled > span {
 	opacity: 0.5;

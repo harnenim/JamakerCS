@@ -46,9 +46,9 @@ let $fieldTarget;
 const operation = { type: null, input: [] };
 
 function syncText(sync) {
-    let h = sync;
-    const ms = h % 1000; h = (h - ms) / 1000;
-    const s  = h % 60;   h = (h - s) / 60;
+	let h = sync;
+	const ms = h % 1000; h = (h - ms) / 1000;
+	const s  = h % 60;   h = (h - s) / 60;
 	const m  = h % 60;   h = (h - m) / 60;
 	return h + ":" + (m > 9 ? "" : "0") + m + ":" + (s > 9 ? "" : "0") + s + ":" + (ms > 99 ? "" : "0") + (ms > 9 ? "" : "0") + ms;
 }
@@ -115,14 +115,14 @@ $(() => {
 	$fieldTarget.find(".preview-body").on("scroll", function() {
 		$fieldOrigin.find(".preview-body").scrollTop($(this).scrollTop());
 	});
-
-    document.addEventListener("dragenter", function(e) {
-        e.preventDefault();
-        binder.showDragging();
-    });
-    $("#cover").on("click", function(e) {
-        binder.hideDragging();
-    });
+	
+	document.addEventListener("dragenter", function(e) {
+		e.preventDefault();
+		binder.showDragging();
+	});
+	$("#cover").on("click", function(e) {
+		binder.hideDragging();
+	});
 });
 
 function findDragArea(x, y) {
@@ -166,34 +166,34 @@ function setOriginSubtitleFile(path, text) {
 	$("#originSub input").val(path);
 	$("#originSub").attr({ title: path });
 	
-    const separators = $("#inputSeparator").val().split("\n");
-    for (let i = 0; i < separators.length; i++) {
-        const separator = separators[i].trim();
-        if (separator.length == 0) {
-            separators.splice(i--, 1);
-        }
-    }
-    separators.push("\n\n");
-    
-    function hasSeparator(text) {
-    	for (let index = 0; index < separators.length; index++) {
-    		if (text.indexOf(separators[index]) >= 0) {
-    			return true;
-    		}
-    	}
-    	return false;
-    }
-    
-    let maxBlank = $("#inputMaxBlank").val();
-    if (isFinite(maxBlank)) {
-	    maxBlank = Number(maxBlank) * 1000;
-    } else {
-    	maxBlank = 999999999;
-    	setTimeout(() => {
-	    	alert("공백 시간은 숫자여야 합니다.");
-	    	$("#inputMaxBlank").val(maxBlank = 30);
-    	}, 1);
-    }
+	const separators = $("#inputSeparator").val().split("\n");
+	for (let i = 0; i < separators.length; i++) {
+		const separator = separators[i].trim();
+		if (separator.length == 0) {
+			separators.splice(i--, 1);
+		}
+	}
+	separators.push("\n\n");
+	
+	function hasSeparator(text) {
+		for (let index = 0; index < separators.length; index++) {
+			if (text.indexOf(separators[index]) >= 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	let maxBlank = $("#inputMaxBlank").val();
+	if (isFinite(maxBlank)) {
+		maxBlank = Number(maxBlank) * 1000;
+	} else {
+		maxBlank = 999999999;
+		setTimeout(() => {
+			alert("공백 시간은 숫자여야 합니다.");
+			$("#inputMaxBlank").val(maxBlank = 30);
+		}, 1);
+	}
 	
 	{	const ext = path.substring(path.length - 4);
 		if (ext == ".smi") {
@@ -216,8 +216,8 @@ function setOriginSubtitleFile(path, text) {
 	const sortedBody = refreshPreview();
 	refreshPreview(true);
 	
-    let range = [0, 0]
-    const ranges = [];
+	let range = [0, 0]
+	const ranges = [];
 	
 	for (let i = 0; i < sortedBody.length; i++) {
 		const item = sortedBody[i];
@@ -542,32 +542,32 @@ function apply() {
 			target.header = origin.header;
 			target.footer = origin.footer;
 
-            let ki = 0;
+			let ki = 0;
 			function shiftHold(hold) {
 				for (let i = 0; i < hold.body.length; i++) {
 					const smi = hold.body[i];
 					const index = getShiftIndex(smi.start);
 					smi.start = shiftSync(smi.start);
 
-                    if (withKf && (smi.syncType == Subtitle.SyncType.frame)) {
+					if (withKf && (smi.syncType == Subtitle.SyncType.frame)) {
 						const shift =	shifts[index];
-                        if (shift.skipped == null || shift.fCount == 0 || shift.skipped.length == 0) {
-                            continue;
-                        }
-                        while (kfs[ki] > smi.start) {
-                            if (ki == 0) break;
-                            ki--;
-                        }
-                        while ((ki + 1 < kfs.length) && (kfs[ki + 1] < smi.start)) {
-                            ki++;
-                        }
-                        const distPrev = smi.start - kfs[ki];
-                        const distNext = (ki + 1 < kfs.length) ? (kfs[ki + 1] - smi.start) : 999999999;
-                        if (distPrev > 150 && distNext > 150) { // 3프레임 이상의 오차
-                            smi.start += Math.round(shift.fSum / shift.fCount);
-                            continue;
-                        }
-                        smi.start += (distPrev < distNext) ? -distPrev : distNext;
+						if (shift.skipped == null || shift.fCount == 0 || shift.skipped.length == 0) {
+							continue;
+						}
+						while (kfs[ki] > smi.start) {
+							if (ki == 0) break;
+							ki--;
+						}
+						while ((ki + 1 < kfs.length) && (kfs[ki + 1] < smi.start)) {
+							ki++;
+						}
+						const distPrev = smi.start - kfs[ki];
+						const distNext = (ki + 1 < kfs.length) ? (kfs[ki + 1] - smi.start) : 999999999;
+						if (distPrev > 150 && distNext > 150) { // 3프레임 이상의 오차
+							smi.start += Math.round(shift.fSum / shift.fCount);
+							continue;
+						}
+						smi.start += (distPrev < distNext) ? -distPrev : distNext;
 					}
 				}
 				return hold;
@@ -589,7 +589,7 @@ function apply() {
 								
 								syncEnd = shiftSync(syncEnd);
 								if (comment.length > 6 && comment.substring(0, 6).toUpperCase() == "<SYNC ") {
-                                    comment = shiftHold(new Subtitle.SmiFile(comment)).toTxt().trim();
+									comment = shiftHold(new Subtitle.SmiFile(comment)).toTxt().trim();
 								}
 								comment = comment.trim().split("<").join("<​").split(">").join("​>");
 								item.text = "<!-- End=" + syncEnd + "\n" + comment + "\n-->\n" + afterComment;
@@ -601,7 +601,7 @@ function apply() {
 					target.body.push(smi);
 					
 					// 화면 싱크 키프레임 대조
-	                if (withKf && (smi.syncType == Subtitle.SyncType.frame)) {
+					if (withKf && (smi.syncType == Subtitle.SyncType.frame)) {
 						console.log("withKf: " + smi.start);
 	
 						const shift = shifts[shiftIndex];
@@ -710,8 +710,8 @@ function apply() {
 					target.body.push(ass);
 
 					// 화면 싱크 키프레임 대조
-	                if (withKf) {
-	                	if (ass.fs = item.fs) {
+					if (withKf) {
+						if (ass.fs = item.fs) {
 							console.log("withKf: " + ass.ms);
 							
 							const shift = shifts[shiftIndex];
@@ -740,8 +740,8 @@ function apply() {
 							shift.fCount++;
 							console.log(ass.ms + " -> " + (ass.ms + add));
 							ass.ms += add;
-	                	}
-	                	if (ass.fe = item.fe) {
+						}
+						if (ass.fe = item.fe) {
 							console.log("withKf: " + ass.me);
 							
 							const shift = shifts[shiftIndex];
@@ -770,8 +770,8 @@ function apply() {
 							shift.fCount++;
 							console.log(ass.me + " -> " + (ass.me + add));
 							ass.me += add;
-	                	}
-	                }
+						}
+					}
 				}
 			}
 

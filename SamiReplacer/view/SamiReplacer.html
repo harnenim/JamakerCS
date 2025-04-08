@@ -57,10 +57,10 @@ function replace(index, text) {
 	const holds = Subtitle.SmiFile.textToHolds(text);
 	
 	let changed = 0;
-    for (let hi = 0; hi < holds.length; hi++) {
+	for (let hi = 0; hi < holds.length; hi++) {
 		const hold = holds[hi];
 		const originSmi = new Subtitle.SmiFile(hold.text);
-        let isChanged = false;
+		let isChanged = false;
 	
 		let i = 0;
 		let shiftIndex = 0;
@@ -104,7 +104,7 @@ function replace(index, text) {
 			for (let k = 0; k < targetRange.length; k++) {
 				if (targetRange[k].syncType == Subtitle.SyncType.frame && matches[k] >= 0) {
 					console.log([i, k, matches[k]].join(","));
-                    console.log((i + matches[k]) + " / " + originSmi.body.length)
+					console.log((i + matches[k]) + " / " + originSmi.body.length)
 					targetSmi.body.push(new Subtitle.Smi(
 							originSmi.body[i + matches[k]].start
 						,	targetRange[k].syncType
@@ -124,7 +124,7 @@ function replace(index, text) {
 			}
 	
 			hold.text = targetSmi.toTxt();
-	    }
+		}
 	}
 	
 	if (changed) {
@@ -133,8 +133,8 @@ function replace(index, text) {
 		text = null;
 	}
 	
-    binder.saveAndReplaceNext(index, text);
-    return;
+	binder.saveAndReplaceNext(index, text);
+	return;
 }
 
 $(() => {
