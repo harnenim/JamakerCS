@@ -250,6 +250,22 @@ button {
 .hold > .input > textarea {
 	border: 0;
 }
+.hold-preset-area {
+	left: 0;
+	right: 0;
+	background: #7f7f7f7f;
+	display: none;
+}
+.hold-preset-area > div {
+	position: absolute;
+}
+.hold-preset-area > div > button {
+	position: absolute;
+    border: 0;
+}
+.hold-preset-area > div > button:after {
+    content: "×";
+}
 
 #editor.trust-keyframe .sync.keyframe { font-weight: bold; }
 .sync.frame > span { border-top-width: 1px; }
@@ -280,6 +296,24 @@ button {
 	border-style: dotted;
 }
 
+.btn-hold-preset {
+	position: absolute;
+	top: 0;
+	opacity: 0.3;
+	transition: 0.2s;
+}
+.btn-hold-preset:hover {
+	opacity: 1;
+}
+.btn-hold-preset:after {
+	content: "۞";
+}
+.btn-hold-preset {
+	right: calc(20px * 0.8 + 2px);
+	width: calc(20px + 2px);
+	height: calc(20px + 2px);
+}
+
 .hljs-color {
 	display: inline-block;
 	border-bottom-width: 3px;
@@ -306,6 +340,7 @@ html, body,
 #tabSelector > .th.selected,
 .hold-selector > .selector.selected,
 .hold-selector > .selector:hover,
+.hold-preset-area > div,
 button {
 	background: #f0f0f0;
 }

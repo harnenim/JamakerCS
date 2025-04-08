@@ -93,6 +93,28 @@ label, #showFps {
 	height: 20px;
 }
 
+.hold-preset-area > div {
+	top: calc(20px * 0.5);
+	left: calc(20px * 0.5);
+	right: calc(20px * 0.5);
+	height: calc(20px * 3 + 2px);
+	border: 1px solid #000;
+	border-radius: calc(20px * 0.5);
+	padding: calc(20px * 0.5);
+}
+.hold-preset-area > div > input {
+	width: calc(100% - 20px * 1.5);
+	height: 20px;
+}
+.hold-preset-area > div > button {
+	top: calc(20px * 0.5);
+	right: calc(20px * 0.5);
+	width: calc(20px * 1.5);
+	height: calc(20px * 2);
+    font-size: calc(20px * 1.5);
+    padding-bottom: calc(20px * 0.5);
+}
+
 .custom-scrollbar ::-webkit-scrollbar,
 .custom-scrollbar ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }
 .custom-scrollbar ::-webkit-scrollbar-button:end { background-position-y: calc(20px * 0.8 + 1px); }
