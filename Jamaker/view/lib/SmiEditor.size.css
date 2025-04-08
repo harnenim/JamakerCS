@@ -114,6 +114,11 @@ label, #showFps {
     font-size: calc(20px * 1.5);
     padding-bottom: calc(20px * 0.5);
 }
+.btn-hold-preset {
+	right: calc(20px * 0.8 + 1px);
+	width: calc(20px + 2px);
+	height: calc(20px + 2px);
+}
 
 .custom-scrollbar ::-webkit-scrollbar,
 .custom-scrollbar ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }

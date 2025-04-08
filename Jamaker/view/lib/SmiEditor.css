@@ -308,11 +308,6 @@ button {
 .btn-hold-preset:after {
 	content: "۞";
 }
-.btn-hold-preset {
-	right: calc(20px * 0.8 + 2px);
-	width: calc(20px + 2px);
-	height: calc(20px + 2px);
-}
 
 .hljs-color {
 	display: inline-block;

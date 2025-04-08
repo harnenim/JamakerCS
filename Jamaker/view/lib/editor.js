@@ -146,8 +146,8 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 		const area = $("<div>");
 		hold.presetArea.append(area);
 		
-		hold.inputPreset = $("<input type='text' class='input-hold-preset' placeholder='홀드 공통 스타일 태그 입력' />");
-		const inputEnd = $("<input type='text' class='input-hold-preset-end' placeholder='종료 태그는 자동으로 생성됩니다.' disabled />");
+		hold.inputPreset = $("<input type='text' spellcheck='false' class='input-hold-preset' placeholder='홀드 공통 스타일 태그 입력' />");
+		const inputEnd = $("<input type='text' spellcheck=false' class='input-hold-preset-end' placeholder='종료 태그는 자동으로 생성됩니다.' disabled />");
 		const btnClose = $("<button type='button' class='btn-close-preset'>");
 		area.append(hold.inputPreset).append(inputEnd).append(btnClose);
 		
