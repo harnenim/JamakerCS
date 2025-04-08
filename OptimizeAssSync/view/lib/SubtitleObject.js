@@ -1132,11 +1132,11 @@ Subtitle.Ass.prototype.toSync = function() {
 		,	this.toAttr()
 	);
 }
-Subtitle.Ass.prototype.fromSync = function(sync) {
+Subtitle.Ass.prototype.fromSync = function(sync, checkFrame=true) {
 	this.start = sync.start / 10;
 	this.end   = sync.end   / 10;
 	this.style = 
-		( (sync.startType == Subtitle.SyncType.normal && sync.endType == Subtitle.SyncType.normal)
+		( (!checkFrame || (sync.startType == Subtitle.SyncType.normal && sync.endType == Subtitle.SyncType.normal))
 			? "Default"
 			: ( (sync.startType == Subtitle.SyncType.frame ? "［" : "（")
 			  + (sync.endType   == Subtitle.SyncType.frame ? "］" : "）")
@@ -1210,10 +1210,10 @@ Subtitle.AssFile.prototype.toSync = function() {
 	return result;
 }
 
-Subtitle.AssFile.prototype.fromSync = function(syncs) {
+Subtitle.AssFile.prototype.fromSync = function(syncs, checkFrame=true) {
 	this.body = [];
 	for (let i = 0; i < syncs.length; i++) {
-		this.body.push(new Subtitle.Ass().fromSync(syncs[i]));
+		this.body.push(new Subtitle.Ass().fromSync(syncs[i], checkFrame));
 	}
 	return this;
 }
@@ -2670,22 +2670,20 @@ Subtitle.SmiFile.prototype.normalize = function(withComment=false, fps=23.976) {
 
 	let preset = null;
 	{
-		let begin = this.header.indexOf("<!-- Preset\n");
-		if (begin >= 0) {
-			begin += 12;
-			let end = this.header.indexOf("\n-->", begin);
-			if (end > 0) {
-				const comment = this.header.substring(begin, end).trim();
-				preset = ["", ""];
-				let tags = comment.split("<");
-				for (let j = 1; j < tags.length; j++) {
-					const tag = tags[j];
-					if (tag.indexOf(">") > 0) {
-						const inTag = tag.substring(0, tag.indexOf(">"));
-						const tagName = inTag.split(" ")[0].split("\t")[0];
-						preset[0] += "<" + inTag + ">";
-						preset[1] = "</" + tagName + ">" + preset[1];
-					}
+		const lines = this.header.split("\n");
+		if (lines.length >= 3
+		 && (lines[0] == "<!-- Style" || lines[0] == "<!-- Preset") // 처음 개발할 때 혼용함...
+		 && lines[2] == "-->") {
+			const comment = lines[1].trim();
+			preset = ["", ""];
+			let tags = comment.split("<");
+			for (let j = 1; j < tags.length; j++) {
+				const tag = tags[j];
+				if (tag.indexOf(">") > 0) {
+					const inTag = tag.substring(0, tag.indexOf(">"));
+					const tagName = inTag.split(" ")[0].split("\t")[0];
+					preset[0] += "<" + inTag + ">";
+					preset[1] = "</" + tagName + ">" + preset[1];
 				}
 			}
 		}

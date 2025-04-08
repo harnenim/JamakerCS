@@ -726,7 +726,13 @@ if (Subtitle && Subtitle.SmiFile) {
 			holds[i].text = hold.toTxt().trim();
 		}
 		for (let i = normalized.length; i < holds.length; i++) {
-			holds[i].text = new Subtitle.SmiFile(holds[i].text).antiNormalize()[0].toTxt().trim();
+			const lines = (holds[i].text = new Subtitle.SmiFile(holds[i].text).antiNormalize()[0].toTxt().trim()).split("\n");
+			
+			if ((lines[0] == "<!-- Style" || lines[0] == "<!-- Preset")
+			 && lines[2] == "-->") {
+				holds[i].preset = lines[1].trim();
+				holds[i].text = lines.slice(3).join("\n");
+			}
 		}
 		return holds;
 	}
@@ -803,7 +809,11 @@ if (Subtitle && Subtitle.SmiFile) {
 			const imports = [];
 			for (let hi = 0; hi < holdsWithoutMain.length; hi++) {
 				const hold = holdsWithoutMain[hi];
-				result[hold.resultIndex = (hi + 1)] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + hold.text.split("<").join("<​").split(">").join("​>") + "\n-->";
+				let text = hold.text;
+				if (hold.preset) {
+					text = "<!-- Style\n" + hold.preset + "\n-->\n" + text;
+				}
+				result[hold.resultIndex = (hi + 1)] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + text.split("<").join("<​").split(">").join("​>") + "\n-->";
 				hold.imported = false;
 				hold.afterMain = false;
 				
@@ -955,8 +965,11 @@ if (Subtitle && Subtitle.SmiFile) {
 				if (hold.imported) {
 					continue;
 				}
-				const smi = holdSmis[hi] = new Subtitle.SmiFile(hold.text);
-//				smi.header = smi.footer = "";
+				let text = hold.text;
+				if (hold.preset) {
+					text = "<!-- Style\n" + hold.preset + "\n-->\n" + text;
+				}
+				const smi = holdSmis[hi] = new Subtitle.SmiFile(text);
 				if (withNormalize) {
 					smi.normalize(false);
 				}
