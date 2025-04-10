@@ -40,8 +40,8 @@ function setLines(newLines) {
 		lines.push([]);
 		presets.push(["", ""]);
 	} else {
-        for (let i = 0; i < lines.length; i++) {
-            const preset = presets[i] = ["", ""];
+		for (let i = 0; i < lines.length; i++) {
+			const preset = presets[i] = ["", ""];
 			if ((lines[i][0].TEXT == "<!-- Preset")
 			 && (lines[i][2].TEXT == "-->")
 			) {
@@ -174,14 +174,14 @@ function refreshTime(receiveTime, withoutTitle) {
 				showLines[j] = line + "<span style='opacity: 0;'>-</span>";
 			}
 		}
-        showText[hold] = presets[hold].join(showLines.join("<br>"));
+		showText[hold] = presets[hold].join(showLines.join("<br>"));
 		
 		// 정규화 자동 적용
 		if ((showLines.length < 16) // 싱크 안 찍은 줄에 fade 같은 게 들어가면 연산량 과도해질 수 있음
 		 && nextSyncLine
 		 && setting.saveWithNormalize
 		) {
-            let toNormalize = new Subtitle.SmiFile(lines[hold][indexes[hold]].TEXT + "\n" + showText[hold] + "\n" + nextSyncLine.TEXT);
+			let toNormalize = new Subtitle.SmiFile(lines[hold][indexes[hold]].TEXT + "\n" + showText[hold] + "\n" + nextSyncLine.TEXT);
 			toNormalize.normalize();
 			if (toNormalize.body.length > 2) {
 				normalizedLines[hold] = toNormalize.body.slice(0, toNormalize.body.length - 1);

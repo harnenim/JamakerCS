@@ -93,7 +93,7 @@ label, #showFps {
 	height: 20px;
 }
 
-.hold-preset-area > div {
+.hold-style-area > div {
 	top: calc(20px * 0.5);
 	left: calc(20px * 0.5);
 	right: calc(20px * 0.5);
@@ -101,11 +101,11 @@ label, #showFps {
 	border-radius: calc(20px * 0.4);
 	padding: calc(20px * 0.5);
 }
-.hold-preset-area > div > input {
+.hold-style-area > div > input {
 	width: calc(100% - 20px * 1.5);
 	height: 20px;
 }
-.hold-preset-area > div > button {
+.hold-style-area > div > button {
 	top: calc(20px * 0.5);
 	right: calc(20px * 0.5);
 	width: calc(20px * 1.5);
@@ -113,7 +113,7 @@ label, #showFps {
     font-size: calc(20px * 1.5);
     padding-bottom: calc(20px * 0.5);
 }
-.btn-hold-preset {
+.btn-hold-style {
 	right: calc(20px * 0.8 + 1px);
 	width: calc(20px + 2px);
 	height: calc(20px + 2px);

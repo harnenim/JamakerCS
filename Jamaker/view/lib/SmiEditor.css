@@ -250,22 +250,22 @@ button {
 .hold > .input > textarea {
 	border: 0;
 }
-.hold-preset-area {
+.hold-style-area {
 	left: 0;
 	right: 0;
 	background: #7f7f7f7f;
 	display: none;
 }
-.hold-preset-area > div {
+.hold-style-area > div {
 	position: absolute;
 	border: 1px solid #000;
 }
-.hold-preset-area > div > button {
+.hold-style-area > div > button {
 	position: absolute;
     border: 0;
 	cursor: pointer;
 }
-.hold-preset-area > div > button:after {
+.hold-style-area > div > button:after {
     content: "×";
 }
 
@@ -298,16 +298,16 @@ button {
 	border-style: dotted;
 }
 
-.btn-hold-preset {
+.btn-hold-style {
 	position: absolute;
 	top: 0;
 	opacity: 0.3;
 	transition: 0.2s;
 }
-.btn-hold-preset:hover {
+.btn-hold-style:hover {
 	opacity: 1;
 }
-.btn-hold-preset:after {
+.btn-hold-style:after {
 	content: "۞";
 }
 
@@ -337,7 +337,7 @@ html, body,
 #tabSelector > .th.selected,
 .hold-selector > .selector.selected,
 .hold-selector > .selector:hover,
-.hold-preset-area > div,
+.hold-style-area > div,
 button {
 	background: #f0f0f0;
 }

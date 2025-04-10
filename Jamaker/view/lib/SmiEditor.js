@@ -2400,7 +2400,7 @@ SmiEditor.Finder = {
 			// 딜레이 안 주면 화면 갱신 안 된 상태로 뜰 수 있음
 			setTimeout(() => {
 				binder.sendMsg("finder", msg);
-			}, 1);
+			}, 100);
 		}
 
 		// 찾기/바꾸기 창 항상 위에

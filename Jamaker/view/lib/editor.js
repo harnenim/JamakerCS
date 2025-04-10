@@ -125,8 +125,8 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	hold.selector.append($("<div class='hold-name'>").append($("<span>").text(hold.name = hold.savedName = info.name)));
 	hold.selector.attr({ title: hold.name });
 	hold.owner = this;
-	hold.pos    = hold.savedPos    = info.pos;
-	hold.preset = hold.savedPreset = (info.preset ? info.preset : "");
+	hold.pos   = hold.savedPos   = info.pos;
+	hold.style = hold.savedStyle = (info.style ? info.style : "");
 	hold.tempSavedText = info.text;
 	hold.updateTimeRange();
 	
@@ -141,10 +141,10 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 		btnArea.append($("<button type='button' class='btn-hold-lower'  title='아래로'>"));
 		hold.area.hide();
 		
-		hold.area.append($("<button type='button' class='btn-hold-preset' title='홀드 공통 스타일 설정'>").data({ hold: hold }));
-		hold.area.append(hold.presetArea = $("<div class='hold-preset-area'>"));
+		hold.area.append($("<button type='button' class='btn-hold-style' title='홀드 공통 스타일 설정'>").data({ hold: hold }));
+		hold.area.append(hold.styleArea = $("<div class='hold-style-area'>"));
 		const area = $("<div>");
-		hold.presetArea.append(area);
+		hold.styleArea.append(area);
 		
 		hold.inputPreset = $("<input type='text' spellcheck='false' class='input-hold-preset' placeholder='홀드 공통 스타일 태그 입력' />");
 		const inputEnd = $("<input type='text' spellcheck=false' class='input-hold-preset-end' placeholder='종료 태그는 자동으로 생성됩니다.' disabled />");
@@ -152,11 +152,11 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 		area.append(hold.inputPreset).append(inputEnd).append(btnClose);
 		
 		hold.inputPreset.on("input propertychange", function() {
-			hold.preset = $(this).val();
+			hold.style = $(this).val();
 			hold.afterChangeSaved(hold.isSaved());
 
 			let presetEnd = "";
-			let tags = hold.preset.split("<");
+			let tags = hold.style.split("<");
 			for (let j = 1; j < tags.length; j++) {
 				const tag = tags[j];
 				if (tag.indexOf(">") > 0) {
@@ -167,13 +167,15 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			}
 			inputEnd.val(presetEnd);
 		}).on("keydown", function(e) {
-			if (e.keyCode == 27) { // Esc
+			if (e.keyCode == 27 // Esc
+			 || e.keyCode == 13 // Enter
+			) {
 				btnClose.click();
 			}
-		}).val(hold.preset).trigger("input");
+		}).val(hold.style).trigger("input");
 		
 		btnClose.on("click", function() {
-			hold.presetArea.hide();
+			hold.styleArea.hide();
 		})
 	}
 	
@@ -432,9 +434,9 @@ Tab.prototype.isSaved = function() {
 }
 
 SmiEditor.prototype.isSaved = function() {
-	return (this.savedName   == this.name  )
-		&& (this.savedPos    == this.pos   )
-		&& (this.savedPreset == this.preset)
+	return (this.savedName  == this.name )
+		&& (this.savedPos   == this.pos  )
+		&& (this.savedStyle == this.style)
 		&& (this.saved == this.input.val());
 };
 SmiEditor.prototype.onChangeSaved = function(saved) {
@@ -1238,7 +1240,10 @@ function saveFile(asNew, isExport) {
 			hold.scrollToCursor(lineNo);
 		});
 	} else {
-		binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path);
+		// replaceBeforeSave 이후 렌더링 작업이 덜 끝났을 수 있음
+		setTimeout(function() {
+			binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path);
+		}, 100);
 	}
 }
 
@@ -1258,7 +1263,7 @@ function afterSaveFile(path) {
 		hold.saved = hold.input.val();
 		hold.savedPos = hold.pos;
 		hold.savedName = hold.name;
-		hold.savedPreset = hold.preset;
+		hold.savedStyle = hold.style;
 	}
 	currentTab.path = path;
 	const title = path ? ((path.length > 14) ? ("..." + path.substring(path.length - 14, path.length - 4)) : path.substring(0, path.length - 4)) : "새 문서";
