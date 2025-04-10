@@ -105,9 +105,9 @@ window.Tab = function(text, path) {
 		SmiEditor.Viewer.refresh();
 	});
 	
-	this.area.on("click", ".btn-hold-preset", function(e) {
+	this.area.on("click", ".btn-hold-style", function(e) {
 		const hold = $(this).data("hold");
-		hold.presetArea.show();
+		hold.styleArea.show();
 		hold.inputPreset.focus();
 	});
 };
@@ -137,8 +137,8 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 		const btnArea = $("<div class='area-btn-hold'>");
 		hold.selector.append(btnArea);
 		btnArea.append($("<button type='button' class='btn-hold-remove' title='삭제'>"));
-		btnArea.append($("<button type='button' class='btn-hold-upper'  title='위로'>"));
-		btnArea.append($("<button type='button' class='btn-hold-lower'  title='아래로'>"));
+		btnArea.append($("<button type='button' class='btn-hold-upper'  title='위로(Ctrl+Alt+↑)'>"));
+		btnArea.append($("<button type='button' class='btn-hold-lower'  title='아래로(Ctrl+Alt+↓)'>"));
 		hold.area.hide();
 		
 		hold.area.append($("<button type='button' class='btn-hold-style' title='홀드 공통 스타일 설정'>").data({ hold: hold }));

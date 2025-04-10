@@ -720,6 +720,10 @@ SmiEditor.activateKeyEvent = function() {
 					} else {
 						if (e.ctrlKey) {
 							if (e.altKey) {
+								// 홀드 위로 올리기
+								if (editor.selector) {
+									editor.selector.find(".btn-hold-upper").click();
+								}
 								
 							} else {
 								// 스크롤 이동
@@ -770,6 +774,10 @@ SmiEditor.activateKeyEvent = function() {
 					} else {
 						if (e.ctrlKey) {
 							if (e.altKey) {
+								// 홀드 아래로 내리기
+								if (editor.selector) {
+									editor.selector.find(".btn-hold-lower").click();
+								}
 								
 							} else {
 								// 스크롤 이동
