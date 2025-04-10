@@ -730,7 +730,7 @@ if (Subtitle && Subtitle.SmiFile) {
 			
 			if ((lines[0] == "<!-- Style" || lines[0] == "<!-- Preset")
 			 && lines[2] == "-->") {
-				holds[i].preset = lines[1].trim();
+				holds[i].style = lines[1].trim();
 				holds[i].text = lines.slice(3).join("\n");
 			}
 		}
@@ -810,8 +810,8 @@ if (Subtitle && Subtitle.SmiFile) {
 			for (let hi = 0; hi < holdsWithoutMain.length; hi++) {
 				const hold = holdsWithoutMain[hi];
 				let text = hold.text;
-				if (hold.preset) {
-					text = "<!-- Style\n" + hold.preset + "\n-->\n" + text;
+				if (hold.style) {
+					text = "<!-- Style\n" + hold.style + "\n-->\n" + text;
 				}
 				result[hold.resultIndex = (hi + 1)] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + text.split("<").join("<​").split(">").join("​>") + "\n-->";
 				hold.imported = false;
@@ -819,6 +819,11 @@ if (Subtitle && Subtitle.SmiFile) {
 				
 				// 홀드 위치가 1 또는 -1인 경우에만 내포 홀드 여부 확인
 				if ((hold.pos > 1) || (hold.pos < -1)) {
+					continue;
+				}
+				
+				// 스타일 적용 필요하면 내포 홀드 처리 하지 않음
+				if (hold.style) {
 					continue;
 				}
 				
@@ -966,8 +971,8 @@ if (Subtitle && Subtitle.SmiFile) {
 					continue;
 				}
 				let text = hold.text;
-				if (hold.preset) {
-					text = "<!-- Style\n" + hold.preset + "\n-->\n" + text;
+				if (hold.style) {
+					text = "<!-- Style\n" + hold.style + "\n-->\n" + text;
 				}
 				const smi = holdSmis[hi] = new Subtitle.SmiFile(text);
 				if (withNormalize) {
