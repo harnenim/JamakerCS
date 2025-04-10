@@ -223,7 +223,11 @@ window.DEFAULT_SETTING =
 		}
 	}
 ,	autoComplete:
-	{	"50" : ['@', [
+	{	"0" : ['', [
+			'미노프스키 입자'
+		,	'아스티카시아 학원'
+		]]
+	,	"50" : ['@', [
 			'@naver.com'
 		,	"@gmail.com"
 		]]
