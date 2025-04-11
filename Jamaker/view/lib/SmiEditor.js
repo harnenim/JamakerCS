@@ -2475,7 +2475,16 @@ SmiEditor.Viewer = {
 							return 0;
 						});
 						for (let i = 0; i < holds.length; i++) {
-							lines.push(holds[i].lines);
+							if (holds[i].style) {
+								// 홀드 스타일 있을 경우 넣어줌
+								const holdLines = JSON.parse(JSON.stringify(holds[i].lines));
+								for (let j = 0; j < holdLines.length; j++) {
+									holdLines[j].TEXT = holds[i].style + holdLines[j].TEXT; // 닫는 태그는 그냥 브라우저한테 맡김
+								}
+								lines.push(holdLines);
+							} else {
+								lines.push(holds[i].lines);
+							}
 						}
 					} else {
 						// 홀드 기능 개발 전 코드 일단은 유지
