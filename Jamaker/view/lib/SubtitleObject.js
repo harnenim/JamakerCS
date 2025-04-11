@@ -2139,7 +2139,11 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 		// 그라데이션 먼저 글자 단위 분해
 		for (let j = 0; j < attrs.length; j++) {
 			const attr = attrs[j];
-			if (attr.fc.length == 15 && attr.fc[0] == '#' && attr.fc[7] == '~' && attr.fc[8] == '#') {
+			if ((attr.fc.length == 15)
+			 && (attr.fc[0] == '#')
+			 && (attr.fc[7] == '~')
+			 && (attr.fc[8] == '#')
+			) {
 				const from = attr.fc.substring(1, 7);
 				const to   = attr.fc.substring(8, 15);
 				const color = new Subtitle.Smi.Color(0, to, from);;
@@ -2157,8 +2161,8 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				attrs.push(...newAttrs);
 				attrs.push(...after);
 				j += newAttrs.length - 1;
+				smi.fromAttr(attrs);
 			}
-			smi.fromAttr(attrs);
 		}
 		
 		let hasFade = false;
