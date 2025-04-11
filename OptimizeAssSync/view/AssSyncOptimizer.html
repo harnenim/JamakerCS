@@ -34,7 +34,7 @@ function setAssFile(name, text) {
 				if (videoFile.indexOf(":") < 0) {
 					videoFile = name.substring(0, name.split("/").join("\\").lastIndexOf("\\") + 1) + videoFile;
 				}
-                setVideoFile(videoFile);
+				setVideoFile(videoFile);
 				binder.setVideoFile(videoFile);
 				break;
 			}

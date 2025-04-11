@@ -110,8 +110,8 @@ label, #showFps {
 	right: calc(20px * 0.5);
 	width: calc(20px * 1.5);
 	height: calc(20px * 2);
-    font-size: calc(20px * 1.5);
-    padding-bottom: calc(20px * 0.5);
+	font-size: calc(20px * 1.5);
+	padding-bottom: calc(20px * 0.5);
 }
 .btn-hold-style {
 	right: calc(20px * 0.8 + 1px);

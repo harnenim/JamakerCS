@@ -262,11 +262,11 @@ button {
 }
 .hold-style-area > div > button {
 	position: absolute;
-    border: 0;
+	border: 0;
 	cursor: pointer;
 }
 .hold-style-area > div > button:after {
-    content: "×";
+	content: "×";
 }
 
 #editor.trust-keyframe .sync.keyframe { font-weight: bold; }
