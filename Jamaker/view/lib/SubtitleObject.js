@@ -2047,7 +2047,7 @@ Subtitle.Smi.getLineWidth = (text) => {
 }
 
 Subtitle.Smi.Color = function(index, target, color) {
-	this.index = index;
+	this.index = index; // TODO: 이 index 안 쓰게 된 듯...?
 	
 	this.r = this.tr = Subtitle.Smi.Color.v(color.substring(0, 2));
 	this.g = this.tg = Subtitle.Smi.Color.v(color.substring(2, 4));
@@ -2136,17 +2136,43 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 		
 		const attrs = smi.toAttr();
 		
+		// 그라데이션 먼저 글자 단위 분해
+		for (let j = 0; j < attrs.length; j++) {
+			const attr = attrs[j];
+			if (attr.fc.length == 15 && attr.fc[0] == '#' && attr.fc[7] == '~' && attr.fc[8] == '#') {
+				const from = attr.fc.substring(1, 7);
+				const to   = attr.fc.substring(8, 15);
+				const color = new Subtitle.Smi.Color(0, to, from);;
+				
+				const newAttrs = [];
+				for (let k = 0; k < attr.text.length; k++) {
+					const newAttr = new Subtitle.Attr(attr);
+					newAttr.fc = color.get(k, attr.text.length - 1);
+					newAttr.text = attr.text[k];
+					newAttrs.push(newAttr);
+				}
+				const after = attrs.slice(j + 1);
+				
+				attrs.length = j;
+				attrs.push(...newAttrs);
+				attrs.push(...after);
+				j += newAttrs.length - 1;
+			}
+			smi.fromAttr(attrs);
+		}
+		
 		let hasFade = false;
 		let hasTyping = false;
 		let shakeRange = null;
 		for (let j = 0; j < attrs.length; j++) {
-			if (attrs[j].fade != 0) {
+			const attr = attrs[j];
+			if (attr.fade != 0) {
 				hasFade = true;
 			}
-			if (attrs[j].typing) {
+			if (attr.typing) {
 				hasTyping = true;
 			}
-			if (attrs[j].shake) {
+			if (attr.shake) {
 				// 흔들기는 연속된 그룹으로 처리
 				if (!shakeRange) {
 					shakeRange = [j, j+1];

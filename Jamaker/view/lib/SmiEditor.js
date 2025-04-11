@@ -185,14 +185,26 @@ Line.prototype.renderHighlight = function(last, forced=false) {
 							color = color.substring(1, color.length - 1);
 						}
 						color = color.trim();
-						if (!(color.length == 7 && color.startsWith("#"))) {
-							let hex = sToAttrColor(color);
-							if (hex == color) {
-								return;
+						
+						if (color.length == 15 && color[0] == '#' && color[7] == '~' && color[8] == '#') {
+							// 그라데이션 색상
+							$value.addClass("hljs-color").css({
+									borderColor: "transparent"
+								,	borderImage: "linear-gradient(to right, " + color.substring(0,7) + " 0%, " + color.substring(8,15) + " 100%)"
+								,	borderImageSlice: "1"
+							});
+							
+						} else {
+							if (!(color.length == 7 && color.startsWith("#"))) {
+								let hex = sToAttrColor(color);
+								if (hex == color) {
+									return;
+								}
+								color = "#" + hex;
 							}
-							color = "#" + hex;
+							
+							$value.addClass("hljs-color").css({ borderColor: color });
 						}
-						$value.addClass("hljs-color").css({ borderColor: color });
 					}
 				}
 			});

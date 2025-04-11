@@ -183,10 +183,10 @@ function refreshTime(receiveTime, withoutTitle) {
 		) {
 			let toNormalize = new Subtitle.SmiFile(lines[hold][indexes[hold]].TEXT + "\n" + showText[hold] + "\n" + nextSyncLine.TEXT);
 			toNormalize.normalize();
-			if (toNormalize.body.length > 2) {
+			//if (toNormalize.body.length > 2) { // 그라데이션만 적용된 경우 싱크 개수가 늘지 않음
 				normalizedLines[hold] = toNormalize.body.slice(0, toNormalize.body.length - 1);
 				showText[hold] = normalizedLines[hold][normalizedIndex[hold] = 0].text; // 일단은 첫 싱크 출력, 다음 루프에 추가로 잡아주기
-			}
+			//}
 		}
 		setTextToView(showText[hold], hold);
 	}
