@@ -58,7 +58,7 @@ setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 			const c = johap[i];
 			switch (mode) {
 				case ' ': {
-					if (c == ' ' || c == '\t' || c == '\n' || c == '​') {
+					if (c == ' ' || c == '\t' || c == '\n' || c == '​' || c == '　') {
 						cs += c;
 					} else if (c == '&') {
 						cs += c;
@@ -80,7 +80,7 @@ setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 					break;
 				}
 				case '&' : {
-					if (c == ' ' || c == '\t' || c == '\n' || c == '​') {
+					if (c == ' ' || c == '\t' || c == '\n' || c == '​' || c == '　') {
 						cs += c;
 						mode = ' ';
 					} else if (c == '&') {
@@ -115,7 +115,7 @@ setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 					break;
 				}
 				default: {
-					if (c == ' ' || c == '\t' || c == '\n' || c == '​') {
+					if (c == ' ' || c == '\t' || c == '\n' || c == '​' || c == '　') {
 						cs = c;
 						mode = ' ';
 					} else if (c == '&') {
@@ -1464,9 +1464,20 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 					} else if (fade == "out") {
 						fade = -1;
 					} else {
-						if (typeof fade == "string" && fade.length == 7 && fade[0] == "#") {
-							// 16진수 맞는지 확인
-							if (!isFinite("0x" + fade.substring(1))) {
+						if (typeof fade == "string" && fade[0] == "#") {
+							if (fade.length == 7) {
+								// 16진수 맞는지 확인
+								if (!isFinite("0x" + fade.substring(1))) {
+									fade = 0;
+								}
+							} else if (fade.length == 15 && fade[7] == "~" && fade[8] == "#") {
+								// 16진수 맞는지 확인
+								if (!isFinite("0x" + fade.substring(1, 7))
+								 || !isFinite("0x" + fade.substring(9))
+								) {
+									fade = 0;
+								}
+							} else {
 								fade = 0;
 							}
 						} else {
@@ -2133,20 +2144,30 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 
 	for (let i = 0; i < smis.length - 1; i++) {
 		const smi = smis[i];
+		const smiText = smi.text;
 		
 		const attrs = smi.toAttr();
 		
 		// 그라데이션 먼저 글자 단위 분해
+		let hasGradation = false;
 		for (let j = 0; j < attrs.length; j++) {
 			const attr = attrs[j];
-			if ((attr.fc.length == 15)
-			 && (attr.fc[0] == '#')
-			 && (attr.fc[7] == '~')
-			 && (attr.fc[8] == '#')
-			) {
-				const from = attr.fc.substring(1, 7);
-				const to   = attr.fc.substring(8, 15);
-				const color = new Subtitle.Smi.Color(0, to, from);;
+			
+			const gc = (attr.fc.length == 15)
+				&& (attr.fc[0] == '#')
+				&& (attr.fc[7] == '~')
+				&& (attr.fc[8] == '#');
+			const gf = (attr.fade.length == 15)
+				&& (attr.fade[0] == '#')
+				&& (attr.fade[7] == '~')
+				&& (attr.fade[8] == '#');
+			
+			if (gc || gf) {
+				hasGradation = true;
+				
+				const cFrom = gc ? attr.fc.substring(1,  7) : (attr.fc ? attr.fc : "#ffffff");
+				const cTo   = gc ? attr.fc.substring(8, 15) : (attr.fc ? attr.fc : "#ffffff");
+				const color = new Subtitle.Smi.Color(0, cTo, cFrom);
 				
 				const newAttrs = [];
 				for (let k = 0; k < attr.text.length; k++) {
@@ -2154,6 +2175,14 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 					newAttr.fc = color.get(k, attr.text.length - 1);
 					newAttr.text = attr.text[k];
 					newAttrs.push(newAttr);
+				}
+				if (gf) {
+					const fFrom = attr.fade.substring(1,  7);
+					const fTo   = attr.fade.substring(8, 15);
+					const fColor = new Subtitle.Smi.Color(0, fTo, fFrom);
+					for (let k = 0; k < newAttrs.length; k++) {
+						newAttrs[k].fade = "#" + fColor.get(k, newAttrs.length - 1);
+					}
 				}
 				const after = attrs.slice(j + 1);
 				
@@ -2309,7 +2338,7 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				smis.splice(i + j, 0, new Subtitle.Smi((start * (count - j) + end * (j)) / count, (j == 0 ? smi.syncType : Subtitle.SyncType.inner), text));
 			}
 			if (withComment) {
-				smis[i].text = "<!-- End=" + end + "\n" + smi.text.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[i].text;
+				smis[i].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[i].text;
 			}
 			result.logs.push({
 					from: [i - added, i - added + 1]
@@ -2444,7 +2473,7 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				realJ++;
 			}
 			if (withComment) {
-				smis[i].text = "<!-- End=" + end + "\n" + smi.text.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[i].text;
+				smis[i].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[i].text;
 			}
 			result.logs.push({
 					from: [i - added, i - added + 1]
@@ -2484,7 +2513,6 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				const color = fadeColors[j];
 				((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1, 2 * count);
 			}
-			const smiText = smi.text;
 			smi.fromAttr(attrs);
 			for (let j = 1; j < count; j++) {
 				for (let k = 0; k < fadeColors.length; k++) {
@@ -2506,6 +2534,12 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			i += add;
 			added += add;
 			
+		} else if (hasGradation) {
+			// 주석 추가
+			if (withComment) {
+				const end = smis[i + 1].start;
+				smi.text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smi.text;
+			}
 		}
 	}
 	

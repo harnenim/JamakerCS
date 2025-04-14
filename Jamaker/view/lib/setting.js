@@ -56,7 +56,7 @@ window.DEFAULT_SETTING =
 		,	"찾기/바꾸기(&F)|SmiEditor.Finder.open()"
 		,	"색상코드 입력(&C)|binder.runColorPicker()"
 		,	"특수태그 정규화|SmiEditor.selected && SmiEditor.selected.normalize()"
-		,	"싱크 채우기|SmiEditor.selected && SmiEditor.selected.fillSync()"
+		,	"중간 싱크 생성|SmiEditor.selected && SmiEditor.selected.fillSync()"
 		,	"미리보기창 실행|SmiEditor.Viewer.open()"
 		,	"설정(&S)|openSetting()"
 		]
@@ -207,7 +207,8 @@ window.DEFAULT_SETTING =
 		,	'F': '/* 싱크 유지 텍스트 대체 */\n' + 'openAddon("Fusion");'
 		}
 	,	withCtrlShifts:
-		{	'`': 'editor.owner.selectHold(0);'
+		{	'`': '/* 메인홀드-최근홀드 전환 */\n'
+			   + 'editor.owner.selectHold(0);'
 		,	'1': 'editor.owner.selectHold(1);'
 		,	'2': 'editor.owner.selectHold(2);'
 		,	'3': 'editor.owner.selectHold(3);'
@@ -286,7 +287,7 @@ window.DEFAULT_SETTING =
 	, style : "eclipse"
 	, enter : false
 	, color : true
-	, sync  : 1.0
+	, sync  : 0.5
 	}
 ,	size: 1
 ,	color:
