@@ -8,6 +8,9 @@
 	border-style: solid;
 	user-select: none;
 }
+*:not(.hold-selector button) {
+	font-family: 맑은 고딕;
+}
 html, body {
 	width: 100%;
 	height: 100%;
