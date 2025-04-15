@@ -355,190 +355,192 @@ window.Combine = {
 			
 			// 팟플레이어 왼쪽 정렬에서 좌우로 흔들리지 않도록 잡아줌
 			// ... 사실 폰트에 따라 흔들리긴 함...
-			const lists = [group.upper, group.lower];
-			for (let i = 0; i < lists.length; i++) {
-				const list = lists[i];
-				
-				for (let j = 0; j < list.length; j++) {
-					// 줄 길이 채워주기
-					const sync = list[j];
-					if (sync[WIDTH] < group.maxWidth && sync[SIZED] < group.maxSized) {
-						const text = sync[TEXT];
-
-						// 여백을 붙여서 제일 적절한 값 찾기
-						let pad = "";
-						{
-							let groupMaxWidth;
-							let lines;
-							if (withFontSize) {
-								// 글씨 크기 적용했을 때 더 작아졌으면 이걸 기준으로 구함
-								
-								if (sync[WIDTH] > group.maxSized) {
-									// 크기 조절 안 했을 때의 폭을 이미 넘어섰으면 작업 안 함
-									console.log("over??");
-									continue;
-								}
-								
-								groupMaxWidth = group.maxSized;
-								
-								if (text.toLowerCase().indexOf("size=") > 0) {
-									let attrs = Subtitle.Smi.toAttr(text);
-									for (let k = 0; k < attrs.length; k++) {
-										const attr = attrs[k];
-										const attrLines = attr.text.split("\n");
-										if (attrLines.length > 1) {
-											const newAttrs = [];
-											for (let l = 0; l < attrLines.length; l++) {
-												if (l > 0) {
-													const brAttr = new Subtitle.Attr();
-													brAttr.text = "\n";
-													newAttrs.push(brAttr);
+			if (group.upper.length && group.lower.length) {
+				const lists = [group.upper, group.lower];
+				for (let i = 0; i < lists.length; i++) {
+					const list = lists[i];
+					
+					for (let j = 0; j < list.length; j++) {
+						// 줄 길이 채워주기
+						const sync = list[j];
+						if (sync[WIDTH] < group.maxWidth && sync[SIZED] < group.maxSized) {
+							const text = sync[TEXT];
+	
+							// 여백을 붙여서 제일 적절한 값 찾기
+							let pad = "";
+							{
+								let groupMaxWidth;
+								let lines;
+								if (withFontSize) {
+									// 글씨 크기 적용했을 때 더 작아졌으면 이걸 기준으로 구함
+									
+									if (sync[WIDTH] > group.maxSized) {
+										// 크기 조절 안 했을 때의 폭을 이미 넘어섰으면 작업 안 함
+										console.log("over??");
+										continue;
+									}
+									
+									groupMaxWidth = group.maxSized;
+									
+									if (text.toLowerCase().indexOf("size=") > 0) {
+										let attrs = Subtitle.Smi.toAttr(text);
+										for (let k = 0; k < attrs.length; k++) {
+											const attr = attrs[k];
+											const attrLines = attr.text.split("\n");
+											if (attrLines.length > 1) {
+												const newAttrs = [];
+												for (let l = 0; l < attrLines.length; l++) {
+													if (l > 0) {
+														const brAttr = new Subtitle.Attr();
+														brAttr.text = "\n";
+														newAttrs.push(brAttr);
+													}
+													const newAttr = new Subtitle.Attr(attr);
+													newAttr.text = attrLines[l];
+													newAttrs.push(newAttr);
 												}
-												const newAttr = new Subtitle.Attr(attr);
-												newAttr.text = attrLines[l];
-												newAttrs.push(newAttr);
+												attrs = attrs.slice(0, k).concat(newAttrs).concat(attrs.slice(k + 1));
+												k += attrLines.length - 1;
 											}
-											attrs = attrs.slice(0, k).concat(newAttrs).concat(attrs.slice(k + 1));
-											k += attrLines.length - 1;
+										}
+										lines = Subtitle.Smi.fromAttr(attrs, true).split(/<br>/gi);
+										
+									} else {
+										// 현재 내용물에는 폰트 크기 적용 안 됨
+										lines = text.split(/<br>/gi);
+										for (let k = 0; k < lines.length; k++) {
+											lines[k] = toText(lines[k], checker);
 										}
 									}
-									lines = Subtitle.Smi.fromAttr(attrs, true).split(/<br>/gi);
 									
 								} else {
-									// 현재 내용물에는 폰트 크기 적용 안 됨
+									groupMaxWidth = group.maxWidth;
 									lines = text.split(/<br>/gi);
 									for (let k = 0; k < lines.length; k++) {
 										lines[k] = toText(lines[k], checker);
 									}
 								}
 								
-							} else {
-								groupMaxWidth = group.maxWidth;
-								lines = text.split(/<br>/gi);
-								for (let k = 0; k < lines.length; k++) {
-									lines[k] = toText(lines[k], checker);
-								}
-							}
-							
-							// 여러 줄일 경우 제일 긴 줄 찾기
-							let maxLine = text;
-							if (lines.length > 1) {
-								let maxWidth = 0;
-								for (let k = 0; k < lines.length; k++) {
-									const width = getWidth(lines[k], checker);
-									if (width > maxWidth) {
-										maxWidth = width;
-										maxLine = lines[k];
+								// 여러 줄일 경우 제일 긴 줄 찾기
+								let maxLine = text;
+								if (lines.length > 1) {
+									let maxWidth = 0;
+									for (let k = 0; k < lines.length; k++) {
+										const width = getWidth(lines[k], checker);
+										if (width > maxWidth) {
+											maxWidth = width;
+											maxLine = lines[k];
+										}
 									}
 								}
-							}
-							let width = getWidth(maxLine, checker);
-							let lastPad;
-							let lastWidth;
-							if (LOG) console.log(maxLine.split("&nbsp;").join(" ") + ": " + width);
-							const realLines = maxLine.split("\n"); // 실제론 여러 줄일 수 있음 <- ... 그 개념이 아니지 않나?
-							do {
-								lastPad = pad;
-								lastWidth = width;
-								pad = lastPad + " ";
-								const curr = "​" + pad + realLines.join(pad + "​\n​" + pad) + pad + "​";
-								width = getWidth(curr, checker);
-								if (LOG) console.log(curr.split("&nbsp;").join(" ") + ": " + width);
-								
-							} while (width < groupMaxWidth);
-							
-							if ((width - groupMaxWidth) > (groupMaxWidth - lastWidth)) {
-								pad = lastPad;
-								if (LOG) {
+								let width = getWidth(maxLine, checker);
+								let lastPad;
+								let lastWidth;
+								if (LOG) console.log(maxLine.split("&nbsp;").join(" ") + ": " + width);
+								const realLines = maxLine.split("\n"); // 실제론 여러 줄일 수 있음 <- ... 그 개념이 아니지 않나?
+								do {
+									lastPad = pad;
+									lastWidth = width;
+									pad = lastPad + " ";
 									const curr = "​" + pad + realLines.join(pad + "​\n​" + pad) + pad + "​";
 									width = getWidth(curr, checker);
+									if (LOG) console.log(curr.split("&nbsp;").join(" ") + ": " + width);
+									
+								} while (width < groupMaxWidth);
+								
+								if ((width - groupMaxWidth) > (groupMaxWidth - lastWidth)) {
+									pad = lastPad;
+									if (LOG) {
+										const curr = "​" + pad + realLines.join(pad + "​\n​" + pad) + pad + "​";
+										width = getWidth(curr, checker);
+									}
+								}
+								pad = pad.split("&nbsp;").join(" ");
+							}
+							
+							// 다시 원본 가져와서 공백문자 붙이기
+							const lines = text.split(/<br>/gi);
+							for (let k = 0; k < lines.length; k++) {
+								let newLine = lines[k].split("​").join(""); // Zero-Width-Space 중복으로 들어가지 않도록
+								
+								if (toText(newLine, checker).split("　").join("").split(" ").join("").length) {
+									// 공백 줄인 경우는 별도 처리 하지 않음
+									// 태그로 감싼 줄은 태그 안에 공백문자 넣기 <- 기능X, 그냥 소스 보기 좋게 만들기
+									let prev = "";
+									let next = "";
+									while (newLine.startsWith("\n")) {
+										prev += "\n";
+										newLine = newLine.substring(1);
+									}
+									while (newLine.startsWith("<")) {
+										let tagEnd = newLine.indexOf(">") + 1;
+										if (tagEnd == 0) {
+											break;
+										}
+										{	const tag = newLine.substring(0, tagEnd).toUpperCase();
+											
+											// 밑줄/취소선은 공백문자 추가되면 안 됨
+											if (tag == "<U>" || tag == "<S>") {
+												break;
+											}
+											// TODO: font size 적용된 경우도 막아야 하나...?
+										}
+										while (newLine.length > tagEnd && newLine[tagEnd] == "\n") {
+											// 태그 직후에 줄바꿈을 한 경우가 있음
+											tagEnd++;
+										}
+										prev += newLine.substring(0, tagEnd);
+										newLine = newLine.substring(tagEnd);
+									}
+									while (newLine.endsWith(">")) {
+										const tagStart = newLine.lastIndexOf("<");
+										if (tagStart < 0) {
+											break;
+										}
+										const tagEnd = newLine.lastIndexOf(">") + 1;
+										if (tagEnd <= tagStart) {
+											break;
+										}
+										{	const tag = newLine.substring(tagStart, tagEnd).toUpperCase();
+											
+											// 밑줄/취소선은 공백문자 추가되면 안 됨
+											if (tag == "</U>" || tag == "</S>") {
+												break;
+											}
+											// TODO: font size 적용된 경우도 막아야 하나...?
+										}
+										next = newLine.substring(tagStart) + next;
+										newLine = newLine.substring(0, tagStart);
+									}
+									if (pad) {
+										newLine = prev + "​" + pad + newLine + pad + "​" + next;
+									} else {
+										{	const c = newLine[0];
+											if (c == ' ' || c == '　' || c == '\t') {
+												newLine = "​" + newLine;
+											}
+										}
+										{	const c = newLine[newLine.length - 1];
+											if (c == ' ' || c == '　' || c == '\t') {
+												newLine = newLine + "​";
+											}
+										}
+										newLine = prev + newLine + next;
+									}
+									lines[k] = newLine;
 								}
 							}
-							pad = pad.split("&nbsp;").join(" ");
+							sync[TEXT] = lines.join("<br>");
+							if (withFontSize && (sync[WIDTH] == sync[SIZED])) {
+								sync[TEXT] = '<font size="' + Combine.defaultSize + '">' + sync[TEXT] + '</font>';
+							}
 						}
 						
-						// 다시 원본 가져와서 공백문자 붙이기
-						const lines = text.split(/<br>/gi);
-						for (let k = 0; k < lines.length; k++) {
-							let newLine = lines[k].split("​").join(""); // Zero-Width-Space 중복으로 들어가지 않도록
-							
-							if (toText(newLine, checker).split("　").join("").split(" ").join("").length) {
-								// 공백 줄인 경우는 별도 처리 하지 않음
-								// 태그로 감싼 줄은 태그 안에 공백문자 넣기 <- 기능X, 그냥 소스 보기 좋게 만들기
-								let prev = "";
-								let next = "";
-								while (newLine.startsWith("\n")) {
-									prev += "\n";
-									newLine = newLine.substring(1);
-								}
-								while (newLine.startsWith("<")) {
-									let tagEnd = newLine.indexOf(">") + 1;
-									if (tagEnd == 0) {
-										break;
-									}
-									{	const tag = newLine.substring(0, tagEnd).toUpperCase();
-										
-										// 밑줄/취소선은 공백문자 추가되면 안 됨
-										if (tag == "<U>" || tag == "<S>") {
-											break;
-										}
-										// TODO: font size 적용된 경우도 막아야 하나...?
-									}
-									while (newLine.length > tagEnd && newLine[tagEnd] == "\n") {
-										// 태그 직후에 줄바꿈을 한 경우가 있음
-										tagEnd++;
-									}
-									prev += newLine.substring(0, tagEnd);
-									newLine = newLine.substring(tagEnd);
-								}
-								while (newLine.endsWith(">")) {
-									const tagStart = newLine.lastIndexOf("<");
-									if (tagStart < 0) {
-										break;
-									}
-									const tagEnd = newLine.lastIndexOf(">") + 1;
-									if (tagEnd <= tagStart) {
-										break;
-									}
-									{	const tag = newLine.substring(tagStart, tagEnd).toUpperCase();
-										
-										// 밑줄/취소선은 공백문자 추가되면 안 됨
-										if (tag == "</U>" || tag == "</S>") {
-											break;
-										}
-										// TODO: font size 적용된 경우도 막아야 하나...?
-									}
-									next = newLine.substring(tagStart) + next;
-									newLine = newLine.substring(0, tagStart);
-								}
-								if (pad) {
-									newLine = prev + "​" + pad + newLine + pad + "​" + next;
-								} else {
-									{	const c = newLine[0];
-										if (c == ' ' || c == '　' || c == '\t') {
-											newLine = "​" + newLine;
-										}
-									}
-									{	const c = newLine[newLine.length - 1];
-										if (c == ' ' || c == '　' || c == '\t') {
-											newLine = newLine + "​";
-										}
-									}
-									newLine = prev + newLine + next;
-								}
-								lines[k] = newLine;
-							}
+						// 줄 높이 맞춰주기
+						// TODO: 글씨 크기 있을 때 지원 필요? ... 그룹 범위 내에서 크기 바뀐다면 대처하기 어려울 듯?
+						for (let k = sync[LINES]; k < group.maxLines[i]; k++) {
+							sync[TEXT] = "<b>　</b><br>" + sync[TEXT];
 						}
-						sync[TEXT] = lines.join("<br>");
-						if (withFontSize && (sync[WIDTH] == sync[SIZED])) {
-							sync[TEXT] = '<font size="' + Combine.defaultSize + '">' + sync[TEXT] + '</font>';
-						}
-					}
-					
-					// 줄 높이 맞춰주기
-					// TODO: 글씨 크기 있을 때 지원 필요? ... 그룹 범위 내에서 크기 바뀐다면 대처하기 어려울 듯?
-					for (let k = sync[LINES]; k < group.maxLines[i]; k++) {
-						sync[TEXT] = "<b>　</b><br>" + sync[TEXT];
 					}
 				}
 			}
