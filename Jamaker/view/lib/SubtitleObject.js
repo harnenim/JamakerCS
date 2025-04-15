@@ -2057,26 +2057,36 @@ Subtitle.Smi.getLineWidth = (text) => {
 	return Subtitle.Width.getWidth(Subtitle.Smi.toAttr(text));
 }
 
-Subtitle.Smi.Color = function(index, target, color) {
-	this.index = index; // TODO: 이 index 안 쓰게 된 듯...?
+Subtitle.Smi.Color = function(target, color, index=0) {
+	this.index = index; // 페이드 index가 아니라, 속성의 index를 변칙적으로 사용 중...
 	
-	this.r = this.tr = Subtitle.Smi.Color.v(color.substring(0, 2));
-	this.g = this.tg = Subtitle.Smi.Color.v(color.substring(2, 4));
-	this.b = this.tb = Subtitle.Smi.Color.v(color.substring(4, 6));
+	if (color.length == 7 && color[0] == "#") {
+		color = color.substring(1);
+	}
+	// 16진수 맞는지 확인
+	if (isFinite("0x" + color)) {
+		this.r = this.tr = Subtitle.Smi.Color.v(color.substring(0, 2));
+		this.g = this.tg = Subtitle.Smi.Color.v(color.substring(2, 4));
+		this.b = this.tb = Subtitle.Smi.Color.v(color.substring(4, 6));
+	} else {
+		this.r = this.tr = 255;
+		this.g = this.tg = 255;
+		this.b = this.tb = 255;
+	}
 	
 	if (target == 1) {
 		this.r = this.g = this.b = 0;
 	} else if (target == -1) {
 		this.tr = this.tg = this.tb = 0;
 	} else {
-		if (typeof target == "string" && target.length == 7 && target[0] == "#") {
-			// 16진수 맞는지 확인
+		if (target.length == 7 && target[0] == "#") {
 			target = target.substring(1);
-			if (isFinite("0x" + target)) {
-				this.tr = Subtitle.Smi.Color.v(target.substring(0, 2));
-				this.tg = Subtitle.Smi.Color.v(target.substring(2, 4));
-				this.tb = Subtitle.Smi.Color.v(target.substring(4, 6));
-			}
+		}
+		// 16진수 맞는지 확인
+		if (isFinite("0x" + target)) {
+			this.tr = Subtitle.Smi.Color.v(target.substring(0, 2));
+			this.tg = Subtitle.Smi.Color.v(target.substring(2, 4));
+			this.tb = Subtitle.Smi.Color.v(target.substring(4, 6));
 		}
 	}
 }
@@ -2165,9 +2175,9 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			if (gc || gf) {
 				hasGradation = true;
 				
-				const cFrom = gc ? attr.fc.substring(1,  7) : (attr.fc ? attr.fc : "#ffffff");
+				const cFrom = gc ? attr.fc.substring(0,  7) : (attr.fc ? attr.fc : "#ffffff");
 				const cTo   = gc ? attr.fc.substring(8, 15) : (attr.fc ? attr.fc : "#ffffff");
-				const color = new Subtitle.Smi.Color(0, cTo, cFrom);
+				const color = new Subtitle.Smi.Color(cTo, cFrom);
 				
 				const newAttrs = [];
 				for (let k = 0; k < attr.text.length; k++) {
@@ -2177,9 +2187,9 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 					newAttrs.push(newAttr);
 				}
 				if (gf) {
-					const fFrom = attr.fade.substring(1,  7);
+					const fFrom = attr.fade.substring(0,  7);
 					const fTo   = attr.fade.substring(8, 15);
-					const fColor = new Subtitle.Smi.Color(0, fTo, fFrom);
+					const fColor = new Subtitle.Smi.Color(fTo, fFrom);
 					for (let k = 0; k < newAttrs.length; k++) {
 						newAttrs[k].fade = "#" + fColor.get(k, newAttrs.length - 1);
 					}
@@ -2226,6 +2236,11 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			}
 			attrs[shakeRange[0]  ].text = "{SL}" + attrs[shakeRange[0]].text;
 			attrs[shakeRange[1]-1].text = attrs[shakeRange[1]-1].text + "{SR}";
+			for (let j = shakeRange[0]; j < shakeRange[1]; j++) {
+				if (attrs[j].text.indexOf("\n") >= 0) {
+					attrs[j].text = attrs[j].text.split("\n").join("{SR}\n{\SL}");
+				}
+			}
 			
 			const start = smi.start;
 			const end = smis[i + 1].start;
@@ -2261,13 +2276,13 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				for (let j = 0; j < attrs.length; j++) {
 					const attr = attrs[j];
 					if (attr.fade != 0) {
-						fadeColors.push(new Subtitle.Smi.Color(j, attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff")));
+						fadeColors.push(new Subtitle.Smi.Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
 						attr.fade = 0;
 					}
 					if (attr.furigana) {
 						const furi = attr.furigana;
 						if (furi.fade != 0) {
-							fadeColors.push(new Subtitle.Smi.Color(-1-j, furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff")));
+							fadeColors.push(new Subtitle.Smi.Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
 							furi.fade = 0;
 						}
 					}
@@ -2402,13 +2417,13 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				for (let j = 0; j < attrs.length; j++) {
 					const attr = attrs[j];
 					if (attr.fade != 0) {
-						fadeColors.push(new Subtitle.Smi.Color(j, attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff")));
+						fadeColors.push(new Subtitle.Smi.Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
 						attr.fade = 0;
 					}
 					if (attr.furigana) {
 						const furi = attr.furigana;
 						if (furi.fade != 0) {
-							fadeColors.push(new Subtitle.Smi.Color(-1-j, furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff")));
+							fadeColors.push(new Subtitle.Smi.Color( furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
 							furi.fade = 0;
 						}
 					}
@@ -2494,13 +2509,13 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			for (let j = 0; j < attrs.length; j++) {
 				const attr = attrs[j];
 				if (attr.fade != 0) {
-					fadeColors.push(new Subtitle.Smi.Color(j, attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff")));
+					fadeColors.push(new Subtitle.Smi.Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
 					attr.fade = 0;
 				}
 				if (attr.furigana) {
 					const furi = attr.furigana;
 					if (furi.fade != 0) {
-						fadeColors.push(new Subtitle.Smi.Color(-1-j, furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff")));
+						fadeColors.push(new Subtitle.Smi.Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
 						furi.fade = 0;
 					}
 				}
