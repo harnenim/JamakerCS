@@ -139,7 +139,9 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 		btnArea.append($("<button type='button' class='btn-hold-remove' title='삭제'>"));
 		btnArea.append($("<button type='button' class='btn-hold-upper'  title='위로(Ctrl+Alt+↑)'>"));
 		btnArea.append($("<button type='button' class='btn-hold-lower'  title='아래로(Ctrl+Alt+↓)'>"));
-		hold.area.hide();
+		// 홀드 생성 직후에 숨기면 스크롤바 렌더링이 문제 생김
+		// 최초 로딩 시 메인 홀드만 보이는 상태에서 사용상 문제는 없음
+		//hold.area.hide();
 		
 		hold.area.append($("<button type='button' class='btn-hold-style' title='홀드 공통 스타일 설정'>").data({ hold: hold }));
 		hold.area.append(hold.styleArea = $("<div class='hold-style-area'>"));
@@ -176,7 +178,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 		
 		btnClose.on("click", function() {
 			hold.styleArea.hide();
-		})
+		});
 	}
 	
 	this.holdArea.append(hold.area);
