@@ -318,6 +318,12 @@ button {
 	display: inline-block;
 	border-bottom-width: 3px;
 }
+.hljs-zw {
+	display: inline-block;
+	border-width: 0 1px;
+	margin: 0 -1px;
+	opacity: 0.2;
+}
 
 input, textarea {
 	border-width: 1px;
@@ -382,6 +388,9 @@ body, input, button,
 .hljs.nonactive textarea {
 	color: #000000;
 	caret-color: #000000;
+}
+.hljs-zw {
+	border-color: #000000;
 }
 
 /* 버튼 활성 색 */

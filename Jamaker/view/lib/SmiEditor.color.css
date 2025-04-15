@@ -50,6 +50,9 @@ body, input, button,
 	color: [text];
 	caret-color: [text];
 }
+.hljs-zw {
+	border-color: [text];
+}
 
 /* 버튼 활성 색 */
 .hold-selector > .selector button:hover {

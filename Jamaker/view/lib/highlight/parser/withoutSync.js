@@ -386,6 +386,10 @@ SmiEditor.highlightText = (text, state=null) => {
 						html += '&#09;';
 						break;
 					}
+					case '​': {
+						html += "<span class='hljs-zw'>​</span>";
+						break;
+					}
 					default: {
 						html += c;
 					}

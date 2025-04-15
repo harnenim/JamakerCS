@@ -283,7 +283,7 @@ window.DEFAULT_SETTING =
 ,	tempSave: 300
 ,	useTab: false // 탭 사용 기본값은 꺼두는 걸로
 ,	highlight:
-	{ parser: "withoutSync"
+	{ parser: "full"
 	, style : "eclipse"
 	, enter : false
 	, color : true
