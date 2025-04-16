@@ -5,6 +5,8 @@
 <title>설정</title>
 <script src="lib/jquery-3.2.1.min.js"></script>
 <script src="lib/popup.js"></script>
+<script src="lib/History.js"></script>
+<script src="lib/SmiEditor.js"></script>
 <link rel="stylesheet" type="text/css" href="lib/popup.css" />
 <script>
 windowName = "setting";
@@ -56,8 +58,8 @@ function requestClose(keys) {
 }
 
 $(() => {
-	const SmiEditor = opener.SmiEditor;
 	const setting = JSON.parse(JSON.stringify(opener.setting));
+	const oSmiEditor = opener.SmiEditor;
 	
 	function refresh(form, setting) {
 		form.find("input[type=text][name],input[type=number][name],input[type=color][name],input[type=range][name],textarea[name]").each((_, el) => {
@@ -306,8 +308,8 @@ $(() => {
 				for (let j = 0; j < withs.length; j++) {
 					const w = withs[j];
 					const td = $("<td>");
-					if (SmiEditor[w].reserved.indexOf(key) >= 0) {
-						let func = SmiEditor[w][key];
+					if (oSmiEditor[w].reserved.indexOf(key) >= 0) {
+						let func = oSmiEditor[w][key];
 						let label = func;
 						if (label) {
 							let type = typeof label;
@@ -408,7 +410,7 @@ $(() => {
 						if (e.altKey) {
 							
 						} else {
-							if (SmiEditor.withCtrlShifts.reserved.indexOf(key) >= 0) {
+							if (oSmiEditor.withCtrlShifts.reserved.indexOf(key) >= 0) {
 								keyName = "Ctrl + Shift + 예약키";
 							} else {
 								func = tableCommand.find(selector + " > td:eq(3)").data("func");
@@ -420,7 +422,7 @@ $(() => {
 				} else {
 					if (e.ctrlKey) {
 						if (e.altKey) {
-							if (SmiEditor.withCtrlAlts.reserved.indexOf(key) >= 0) {
+							if (oSmiEditor.withCtrlAlts.reserved.indexOf(key) >= 0) {
 								keyName = "Ctrl + Alt + 예약키";
 							} else {
 								func = tableCommand.find(selector + " > td:eq(2)").data("func");
@@ -428,7 +430,7 @@ $(() => {
 								keyName = "Ctrl + Alt + " + keyName;
 							}
 						} else {
-							if (SmiEditor.withCtrls.reserved.indexOf(key) >= 0) {
+							if (oSmiEditor.withCtrls.reserved.indexOf(key) >= 0) {
 								keyName = "Ctrl + 예약키";
 							} else {
 								func = tableCommand.find(selector + " > td:eq(0)").data("func");
@@ -438,7 +440,7 @@ $(() => {
 						}
 					} else {
 						if (e.altKey) {
-							if (SmiEditor.withAlts.reserved.indexOf(key) >= 0) {
+							if (oSmiEditor.withAlts.reserved.indexOf(key) >= 0) {
 								keyName = "Alt + 예약키";
 							} else {
 								func = tableCommand.find(selector + " > td:eq(1)").data("func");
@@ -675,8 +677,67 @@ $(() => {
 				presetUl.append(li);
 			}
 		}
-
-		(refreshFuncs["style"] = () => {
+		
+		function refreshHighlight() {
+			const setting = { highlight: {} };
+			setting.highlight.parser = $("select[name=highlight_parser]").val();
+			setting.highlight.style  = $("select[name=highlight_style]").val();
+			setting.highlight.enter  = $("input[name=highlight_enter]").prop("checked");
+			setting.highlight.color  = $("input[name=highlight_color]").prop("checked");
+			setting.highlight.sync   = Number($("input[name=highlight_sync]").val());
+			
+			SmiEditor.useHighlight = setting.highlight && setting.highlight.parser;
+			SmiEditor.showColor = setting.highlight.color;
+			SmiEditor.showEnter = setting.highlight.enter;
+			if (setting.highlight.parser) {
+				$.ajax({url: "lib/highlight/parser/" + setting.highlight.parser + ".js"
+					,	dataType: "text"
+					,	success: (parser) => {
+							eval(parser);
+							
+							let name = setting.highlight.style;
+							let isDark = false;
+							if (name.endsWith("-dark") || (name.indexOf("-dark-") > 0)) {
+								isDark = true;
+							} else if (name.endsWith("?dark")) {
+								isDark = true;
+								name = name.split("?")[0];
+							}
+							
+							$.ajax({url: "lib/highlight/styles/" + name + ".css"
+								,	dataType: "text"
+								,	success: (style) => {
+										// 문법 하이라이트 테마에 따른 커서 색상 추가
+										SmiEditor.highlightCss
+											= ".hljs { color: unset; }\n"
+											+ ".hold textarea { caret-color: " + (isDark ? "#fff" : "#000") + "; }\n"
+											+ style
+											+ ".hljs-sync { opacity: " + setting.highlight.sync + " }\n";
+											SmiEditor.refreshHighlight();
+											editorNewFile.refreshHighlight();
+									}
+							});
+						}
+				});
+			} else {
+				editorNewFile.refreshHighlight();
+			}
+		}
+		const editorNewFile = new SmiEditor();
+		const labelNewFile = $("#areaNewFile").append(editorNewFile.area.height(400));
+		{	// textarea resize
+			let resizeNewFile = false;
+			editorNewFile.input.attr({ name: "newFile" }).height(398).on("mousedown", function() {
+				resizeNewFile = true;
+			});
+			$(document).on("mousemove", function() {
+				editorNewFile.area.height(editorNewFile.input.outerHeight());
+			}).on("mouseup", function() {
+				resizeNewFile = false;
+			});
+		}
+		
+		(refreshFuncs["style"] = (setting) => {
 			refresh($("#style"), setting);
 			refreshPreset(setting);
 			setSaved("style"
@@ -688,6 +749,8 @@ $(() => {
 				&& (JSON.stringify(setting.newFile    ) == JSON.stringify(opener.setting.newFile    ))
 				&& (JSON.stringify(setting.viewer.css ) == JSON.stringify(opener.setting.viewer.css ))
 			);
+			editorNewFile.render();
+			refreshHighlight();
 		})(setting);
 
 		let selectParser = $("select[name=highlight_parser]");
@@ -707,14 +770,20 @@ $(() => {
 			selectParser.find("option[value='" + setting.highlight.parser + "']").prop("selected", true);
 			selectStyle .find("option[value='" + setting.highlight.style  + "']").prop("selected", true);
 		}
+		$([	"select[name=highlight_parser]"
+		,	"select[name=highlight_style]"
+		,	"input[name=highlight_enter]"
+		,	"input[name=highlight_color]"].join(",")).on("change", function() {
+			refreshHighlight();
+		});
 		selectParser.on("change", function() {
 			if (selectParser.val()) {
-				$("#style_highlight_setting").removeClass("disabled").find("input, select").attr({ disabled: false });
+				$("#style_highlight_setting").removeClass("disabled").find("input, select[name=highlight_style]").attr({ disabled: false });
 			} else {
-				$("#style_highlight_setting").addClass   ("disabled").find("input, select").attr({ disabled: true  });
+				$("#style_highlight_setting").addClass   ("disabled").find("input, select[name=highlight_style]").attr({ disabled: true  });
 			}
 		}).change();
-
+		
 		selectSize.find("option[value='" + selectSize.data("value") + "']").prop("selected", true);
 		
 		$("#style").on("input propertychange", function() {
@@ -745,6 +814,7 @@ $(() => {
 			setting.color.syncBorder = $("input[name=color_syncBorder]").val();
 			setting.color.syncError  = $("input[name=color_syncError]" ).val();
 			setting.color.syncEqual  = $("input[name=color_syncEqual]" ).val();
+			refreshHighlight();
 			setSaved("style", true);
 			opener.setSetting(setting);
 			opener.saveSetting();
@@ -1237,6 +1307,67 @@ fieldset ol button,
 	content: "";
 	clear: both;
 }
+.hold {
+	overflow: hidden;
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+.hold * {
+	font-family: 맑은 고딕;
+	font-size: 14px;
+	line-height: 20px;
+}
+.hold > .col-sync {
+	display: none;
+}
+.hold > .input {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+.highlight-textarea > div,
+.highlight-textarea > div > div,
+.highlight-textarea > textarea {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	white-space: pre;
+}
+.highlight-textarea > div {
+	left: 2px;
+	right: 2px;
+	bottom: 0;
+	overflow: hidden;
+}
+.highlight-textarea > div > div > span {
+    display: block;
+    position: absolute;
+}
+.highlight-textarea > div span.enter {
+    opacity: 0.5;
+    font-style: normal;
+}
+.highlight-textarea > textarea {
+	left: 0;
+	right: 0;
+	background: transparent;
+	color: transparent;
+	overflow: scroll;
+}
+/* color */
+.hljs {
+	background: #fff;
+	color: #000;
+}
+.hljs.nonactive textarea {
+    background: #ffffff;
+    color: #000000;
+    caret-color: #000000;
+}
 </style>
 </head>
 <body>
@@ -1551,8 +1682,7 @@ fieldset ol button,
 				<label><span>싱크 역전 표현    </span><input type="color" name="color_syncError"  /></label><label><span>싱크 중복 표현    </span><input type="color" name="color_syncEqual"  /></label><br />
 			</div>
 		</fieldset>
-		<label>새 문서
-			<textarea name="newFile" spellcheck="false" style="height: 400px;"></textarea>
+		<label id="areaNewFile">새 문서
 		</label>
 		<br />
 		<label for="taViewerCss">미리보기</label> / <label>글씨 크기 <input type="number" name="viewer_size" style="width: 40px" /> (팟플레이어 기준)</label>
