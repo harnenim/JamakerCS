@@ -943,7 +943,7 @@ function setSetting(setting, initial=false) {
 			}
 		}
 		if (setting.useHighlight == false) {
-			setting.highlight = { parser: "", style: eclipse };
+			setting.highlight = { parser: "", style: "eclipse" };
 			delete(setting.useHighlight);
 		} else if (setting.useHighlight) {
 			delete(setting.useHighlight);
