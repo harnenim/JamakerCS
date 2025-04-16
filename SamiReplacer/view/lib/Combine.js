@@ -923,6 +923,8 @@ if (Subtitle && Subtitle.SmiFile) {
 					}
 				}
 				if (hold.afterMain) {
+					// 메인 홀드보다 뒤쪽에 독립된 경우, 종료싱크를 잡아주기 위해 +1
+					// TODO: 독립 홀드 2개 이상이 있으면서 싱크가 붙어있으면 증발 문제 발생
 					holdEnd++;
 				}
 				if (withComment) {
