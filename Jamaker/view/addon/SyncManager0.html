@@ -174,8 +174,8 @@ function splitOrigin() {
 		if (sync.startType == 2) {
 			let text = $("<span>").html(sync.lines.join("\\N").split(/<br>/gi).join("\\N")).text().trim();
 			if (requiredEnd) { // []
-				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.start - add) + "," + smi2assTime(sync.start + add) + ",［）,,0000,0000,0000,," + text);
 				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.end   - add) + "," + smi2assTime(sync.end   + add) + ",［）,,0000,0000,0000,,&nbsp;");
+				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.start - add) + "," + smi2assTime(sync.start + add) + ",［）,,0000,0000,0000,," + text);
 				requiredEnd = false;
 				
 			} else { // [)
