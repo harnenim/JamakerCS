@@ -934,52 +934,19 @@ function setSetting(setting, initial=false) {
 	}
 	if (initial || (JSON.stringify(oldSetting.highlight) != JSON.stringify(setting.highlight))) {
 		// 문법 하이라이트 양식 바뀌었을 때만 재생성
-		function afterLoadHighlight() {
-			SmiEditor.refreshHighlight();
-			for (let i = 0; i < tabs.length; i++) {
-				for (let j = 0; j < tabs[i].holds.length; j++) {
-					tabs[i].holds[j].refreshHighlight();
-				}
-			}
-		}
 		if (setting.useHighlight == false) {
 			setting.highlight = { parser: "", style: "eclipse" };
 			delete(setting.useHighlight);
 		} else if (setting.useHighlight) {
 			delete(setting.useHighlight);
 		}
-		if (setting.highlight.parser && setting.highlight.style) {
-			$.ajax({url: "lib/highlight/parser/" + setting.highlight.parser + ".js"
-				,	dataType: "text"
-				,	success: (parser) => {
-						eval(parser);
-						
-						let name = setting.highlight.style;
-						let isDark = false;
-						if (name.endsWith("-dark") || (name.indexOf("-dark-") > 0)) {
-							isDark = true;
-						} else if (name.endsWith("?dark")) {
-							isDark = true;
-							name = name.split("?")[0];
-						}
-						
-						$.ajax({url: "lib/highlight/styles/" + name + ".css"
-							,	dataType: "text"
-							,	success: (style) => {
-									// 문법 하이라이트 테마에 따른 커서 색상 추가
-									SmiEditor.highlightCss
-										= ".hljs { color: unset; }\n"
-										+ ".hold textarea { caret-color: " + (isDark ? "#fff" : "#000") + "; }\n"
-										+ style
-										+ ".hljs-sync { opacity: " + setting.highlight.sync + " }\n";
-									afterLoadHighlight();
-								}
-						});
-					}
-			});
-		} else {
-			afterLoadHighlight();
+		const editors = [];
+		for (let i = 0; i < tabs.length; i++) {
+			for (let j = 0; j < tabs[i].holds.length; j++) {
+				editors.push(tabs[i].holds[j]);
+			}
 		}
+		SmiEditor.setHighlight(setting.highlight, editors);
 	}
 	{
 		if (setting.sync.kLimit == undefined) {

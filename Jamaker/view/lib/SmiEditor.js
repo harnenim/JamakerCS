@@ -1786,12 +1786,57 @@ SmiEditor.highlightText = (text, state=null) => {
 	}
 	return previewLine.text(text);
 }
-SmiEditor.refreshHighlight = () => {
+SmiEditor.setHighlight = (SH, editors) => {
+	SmiEditor.useHighlight = SH && SH.parser;
+	SmiEditor.showColor = SH.color;
+	SmiEditor.showEnter = SH.enter;
+	if (SH.parser) {
+		$.ajax({url: "lib/highlight/parser/" + SH.parser + ".js"
+			,	dataType: "text"
+			,	success: (parser) => {
+					eval(parser);
+					
+					let name = SH.style;
+					let isDark = false;
+					if (name.endsWith("-dark") || (name.indexOf("-dark-") > 0)) {
+						isDark = true;
+					} else if (name.endsWith("?dark")) {
+						isDark = true;
+						name = name.split("?")[0];
+					}
+					
+					$.ajax({url: "lib/highlight/styles/" + name + ".css"
+						,	dataType: "text"
+						,	success: (style) => {
+								// 문법 하이라이트 테마에 따른 커서 색상 추가
+								SmiEditor.highlightCss
+									= ".hljs { color: unset; }\n"
+									+ ".hold textarea { caret-color: " + (isDark ? "#fff" : "#000") + "; }\n"
+									+ style
+									+ ".hljs-sync { opacity: " + SH.sync + " }\n";
+									SmiEditor.refreshHighlight(editors);
+							}
+					});
+				}
+		});
+	} else {
+		SmiEditor.afterRefreshHighlight(editors);
+	}
+}
+SmiEditor.refreshHighlight = (editors) => {
 	let $style = $("#styleHighlight");
 	if (!$style.length) {
 		$("head").append($style = $("<style id='styleHighlight'>"));
 	}
 	$style.html(SmiEditor.highlightCss);
+	
+	SmiEditor.afterRefreshHighlight(editors);
+}
+SmiEditor.afterRefreshHighlight = (editors) => {
+	if (!editors) return;
+	for (let i = 0; i < editors.length; i++) {
+		editors[i].refreshHighlight();
+	}
 }
 SmiEditor.prototype.refreshHighlight = function() {
 	if (SmiEditor.useHighlight) {

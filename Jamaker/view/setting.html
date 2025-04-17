@@ -8,6 +8,7 @@
 <script src="lib/History.js"></script>
 <script src="lib/SmiEditor.js"></script>
 <link rel="stylesheet" type="text/css" href="lib/popup.css" />
+<link rel="stylesheet" type="text/css" href="lib/SmiEditor.css" />
 <script>
 windowName = "setting";
 
@@ -680,49 +681,13 @@ $(() => {
 		}
 		
 		function refreshHighlight() {
-			const setting = { highlight: {} };
-			setting.highlight.parser = $("select[name=highlight_parser]").val();
-			setting.highlight.style  = $("select[name=highlight_style]").val();
-			setting.highlight.enter  = $("input[name=highlight_enter]").prop("checked");
-			setting.highlight.color  = $("input[name=highlight_color]").prop("checked");
-			setting.highlight.sync   = Number($("input[name=highlight_sync]").val());
-			
-			SmiEditor.useHighlight = setting.highlight && setting.highlight.parser;
-			SmiEditor.showColor = setting.highlight.color;
-			SmiEditor.showEnter = setting.highlight.enter;
-			if (setting.highlight.parser) {
-				$.ajax({url: "lib/highlight/parser/" + setting.highlight.parser + ".js"
-					,	dataType: "text"
-					,	success: (parser) => {
-							eval(parser);
-							
-							let name = setting.highlight.style;
-							let isDark = false;
-							if (name.endsWith("-dark") || (name.indexOf("-dark-") > 0)) {
-								isDark = true;
-							} else if (name.endsWith("?dark")) {
-								isDark = true;
-								name = name.split("?")[0];
-							}
-							
-							$.ajax({url: "lib/highlight/styles/" + name + ".css"
-								,	dataType: "text"
-								,	success: (style) => {
-										// 문법 하이라이트 테마에 따른 커서 색상 추가
-										SmiEditor.highlightCss
-											= ".hljs { color: unset; }\n"
-											+ ".hold textarea { caret-color: " + (isDark ? "#fff" : "#000") + "; }\n"
-											+ style
-											+ ".hljs-sync { opacity: " + setting.highlight.sync + " }\n";
-											SmiEditor.refreshHighlight();
-											editorNewFile.refreshHighlight();
-									}
-							});
-						}
-				});
-			} else {
-				editorNewFile.refreshHighlight();
-			}
+			SmiEditor.setHighlight({
+					parser: $("select[name=highlight_parser]").val()
+				,	style : $("select[name=highlight_style]").val()
+				,	enter : $("input[name=highlight_enter]").prop("checked")
+				,	color : $("input[name=highlight_color]").prop("checked")
+				,	sync  : Number($("input[name=highlight_sync]").val())
+			}, [editorNewFile]);
 		}
 		const editorNewFile = new SmiEditor();
 		const labelNewFile = $("#areaNewFile").append(editorNewFile.area.height(400));
@@ -1308,66 +1273,18 @@ fieldset ol button,
 	content: "";
 	clear: both;
 }
-.hold {
-	overflow: hidden;
-	position: relative;
-	width: 100%;
-	height: 100%;
-}
-.hold * {
-	font-family: 맑은 고딕;
-	font-size: 14px;
-	line-height: 20px;
-}
-.hold > .col-sync {
+/* 새 문서 에디터 */
+#areaNewFile .hold > .col-sync {
 	display: none;
 }
-.hold > .input {
-	position: absolute;
-	top: 0;
+#areaNewFile .hold > .input {
 	left: 0;
-	right: 0;
-	bottom: 0;
 }
-.highlight-textarea > div,
-.highlight-textarea > div > div,
-.highlight-textarea > textarea {
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	white-space: pre;
+#areaNewFile .highlight-textarea {
+	border: 1px solid #888;
 }
-.highlight-textarea > div {
-	left: 2px;
-	right: 2px;
-	bottom: 0;
-	overflow: hidden;
-}
-.highlight-textarea > div > div > span {
-    display: block;
-    position: absolute;
-}
-.highlight-textarea > div span.enter {
-    opacity: 0.5;
-    font-style: normal;
-}
-.highlight-textarea > textarea {
-	left: 0;
-	right: 0;
-	background: transparent;
-	color: transparent;
-	overflow: scroll;
-}
-/* color */
-.hljs {
-	background: #fff;
-	color: #000;
-}
-.hljs.nonactive textarea {
-    background: #ffffff;
-    color: #000000;
-    caret-color: #000000;
+#areaNewFile .highlight-textarea > textarea {
+	resize: vertical;
 }
 </style>
 </head>
