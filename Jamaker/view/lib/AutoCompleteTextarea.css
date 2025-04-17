@@ -17,7 +17,8 @@
 	background: #fff;
 	color: #000;
 }
-.act-select > li.selected {
+.act-select > li.selected,
+.act-select > li:hover {
 	background: #acf;
 	color: #000;
 }

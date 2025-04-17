@@ -16,6 +16,7 @@ function show(index) {
 	$("#settingNav > a:eq(" + index + ")").addClass("selected");
 	$("#settingArea > form.selected").removeClass("selected");
 	opened = $("#settingArea > form:eq(" + index + ")").addClass("selected").attr("id");
+	opener.setting.show = index;
 }
 let opened = null;
 const submitFuncs = {};
@@ -1036,7 +1037,7 @@ $(() => {
 		form.append($("<button type='submit'>").hide());
 	});
 	
-	show(0);
+	show(opener.setting.show ? opener.setting.show : 0);
 });
 </script>
 <style>

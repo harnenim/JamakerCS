@@ -11,7 +11,15 @@ window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 	}
 	
 	if (!AutoCompleteTextarea.view) {
-		$("body").append(AutoCompleteTextarea.view = $("<ol class='act-select'>").css(this.font).hide());
+		AutoCompleteTextarea.view = $("<ol class='act-select'>").css(this.font).hide().on("click", "li", function() {
+			const act = AutoCompleteTextarea.opened;
+			act.input($(this));
+			act.close();
+			if (act.onSelect) {
+				act.onSelect();
+			}
+		});
+		$("body").append(AutoCompleteTextarea.view);
 	}
 	
 	this.LH = Number(this.font["line-height"].split("px")[0]);
@@ -90,6 +98,7 @@ AutoCompleteTextarea.prototype.open = function(list) {
 		this.select(0);
 		this.setPos();
 		AutoCompleteTextarea.view.show();
+		AutoCompleteTextarea.opened = this;
 	}
 };
 // 닫기
@@ -165,24 +174,7 @@ AutoCompleteTextarea.prototype.onKeyup = function(e) {
 				e.preventDefault();
 				
 				// 현재 항목 입력 및 커서 이동
-				let pos = this.pos;
-				let value = this.lis[this.selected].text();
-				if (value.indexOf("|") > 0) {
-					value = value.split("|")[1];
-				}
-				this.ta.val(this.text.substring(0, pos) + value + this.text.substring(this.end));
-				pos += value.length;
-				this.ta[0].setSelectionRange(pos, pos);
-				
-				// 커서 위치에 맞게 스크롤 이동
-				let tmp = this.ta.val().substring(0, pos).split("\n");
-				tmp = tmp[tmp.length - 1];
-				this.ta.parent().append(tmp = $("<span>").text(tmp));
-				const targetLeft = tmp.width() - this.ta.width() + this.SB;
-				tmp.remove();
-				if (targetLeft > this.ta.scrollLeft()) {
-					this.ta.scrollLeft(targetLeft);
-				}
+				this.input(this.lis[this.selected]);
 			}
 			
 			// 선택 닫기
@@ -205,6 +197,26 @@ AutoCompleteTextarea.prototype.onKeyup = function(e) {
 		}
 	}
 };
+AutoCompleteTextarea.prototype.input = function(li) {
+	let pos = this.pos;
+	let value = li.text();
+	if (value.indexOf("|") > 0) {
+		value = value.split("|")[1];
+	}
+	this.ta.val(this.text.substring(0, pos) + value + this.text.substring(this.end));
+	pos += value.length;
+	this.ta[0].setSelectionRange(pos, pos);
+	
+	// 커서 위치에 맞게 스크롤 이동
+	let tmp = this.ta.val().substring(0, pos).split("\n");
+	tmp = tmp[tmp.length - 1];
+	this.ta.parent().append(tmp = $("<span>").text(tmp));
+	const targetLeft = tmp.width() - this.ta.width() + this.SB;
+	tmp.remove();
+	if (targetLeft > this.ta.scrollLeft()) {
+		this.ta.scrollLeft(targetLeft);
+	}
+}
 AutoCompleteTextarea.prototype.afterInput = function() {
 	// 최초 리스트에서 현재 입력값에 대해 검색
 	const value = this.ta.val().substring(this.pos, this.ta[0].selectionEnd);
