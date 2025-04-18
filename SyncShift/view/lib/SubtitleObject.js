@@ -2802,6 +2802,7 @@ Subtitle.SmiFile.prototype.normalize = function(withComment=false, fps=23.976) {
 Subtitle.SmiFile.prototype.antiNormalize = function() {
 	const result = [this];
 	
+	// 역정규화
 	for (let i = 0; i < this.body.length; i++) {
 		const smi = this.body[i];
 		
@@ -2829,6 +2830,11 @@ Subtitle.SmiFile.prototype.antiNormalize = function() {
 			if (index > 0) {
 				comment = comment.substring(index + 1);
 			}
+			// 내포 홀드 분리는 원본 복원 끝나고 해야 함
+			if (comment.startsWith("Hold=")) {
+				continue;
+			}
+			
 			let removeStart = i + (index < 0 ? 0 : 1);
 			let removeEnd = removeStart;
 			for(; removeEnd < this.body.length; removeEnd++) {
@@ -2856,47 +2862,92 @@ Subtitle.SmiFile.prototype.antiNormalize = function() {
 				// 이중변환 재해석 필요할 수 있음
 				i--;
 				
-			} else if (comment.startsWith("Hold=")) {
-				removeStart = i;
-				if (removeEnd < this.body.length
-						&& !this.body[removeEnd].text.split("&nbsp;").join("").trim()) {
-					// 바로 다음이 공백 싱크면 내포 홀드에 포함
-					removeEnd++;
-				}
-				const hold = new Subtitle.SmiFile();
-				hold.body = this.body.splice(removeStart, removeEnd - removeStart);
-				hold.body[0].text = afterComment;
-				hold.antiNormalize();
-				hold.next = this.body[removeStart];
-				
-				hold.name = comment = comment.substring(5);
-				hold.pos = 1;
-				const nameIndex = comment.indexOf("|");
-				if (nameIndex) {
-					try {
-						hold.pos = Number(comment.substring(0, nameIndex));
-					} catch (e) {
-						console.log(e);
-					}
-					hold.name = comment.substring(nameIndex + 1);
-				}
-				result.push(hold);
-				
-				if (removeStart > 0
-						&& !!this.body[removeStart - 1].text.split("&nbsp;").join("").trim()) {
-					// 내포 홀드 분리 후 메인 홀드에 종료싱크 넣어줘야 하는 경우
-					const newBody = this.body.slice(0, removeStart);
-					newBody.push(new Subtitle.Smi(hold.body[0].start, hold.body[0].syncType, "&nbsp;"));
-					newBody.push(...this.body.slice(removeStart));
-					this.body = newBody;
-				}
-				i--;
-				
 			} else {
 				this.body[i].text = comment;
 				this.body.splice(removeStart, removeEnd - removeStart);
 				i--;
 			}
+			
+		} catch (e) {
+			console.log(e);
+		}
+	}
+	
+	// 내포 홀드 분리
+	for (let i = 0; i < this.body.length; i++) {
+		const smi = this.body[i];
+		
+		// 주석 시작점 찾기
+		if (!smi.text.startsWith("<!-- End=")) {
+			continue;
+		}
+		
+		// 주석 끝 찾기
+		const commentEnd = smi.text.indexOf("-->");
+		if (commentEnd < 0) {
+			continue;
+		}
+		
+		// 주석이 여기에서 온전히 끝났을 경우
+		let comment = smi.text.substring(9, commentEnd).trim();
+		const afterComment = smi.text.substring(commentEnd + 3).trim();
+		
+		comment = comment.split("<​").join("<").split("​>").join(">");
+		try {
+			const index = comment.indexOf("\n");
+			const syncEnd = Number(index < 0 ? comment : comment.substring(0, index));
+			
+			// 자동 생성 내용물 삭제하고 주석 내용물 복원
+			if (index > 0) {
+				comment = comment.substring(index + 1);
+			}
+			// 여기선 내포 홀드만 처리함
+			if (!comment.startsWith("Hold=")) {
+				continue;
+			}
+			
+			let removeStart = i + (index < 0 ? 0 : 1);
+			let removeEnd = removeStart;
+			for(; removeEnd < this.body.length; removeEnd++) {
+				if (this.body[removeEnd].start >= syncEnd) {
+					break;
+				}
+			}
+			
+			removeStart = i;
+			if (removeEnd < this.body.length
+					&& !this.body[removeEnd].text.split("&nbsp;").join("").trim()) {
+				// 바로 다음이 공백 싱크면 내포 홀드에 포함
+				removeEnd++;
+			}
+			const hold = new Subtitle.SmiFile();
+			hold.body = this.body.splice(removeStart, removeEnd - removeStart);
+			hold.body[0].text = afterComment;
+			hold.antiNormalize();
+			hold.next = this.body[removeStart];
+			
+			hold.name = comment = comment.substring(5);
+			hold.pos = 1;
+			const nameIndex = comment.indexOf("|");
+			if (nameIndex) {
+				try {
+					hold.pos = Number(comment.substring(0, nameIndex));
+				} catch (e) {
+					console.log(e);
+				}
+				hold.name = comment.substring(nameIndex + 1);
+			}
+			result.push(hold);
+			
+			if (removeStart > 0
+					&& !!this.body[removeStart - 1].text.split("&nbsp;").join("").trim()) {
+				// 내포 홀드 분리 후 메인 홀드에 종료싱크 넣어줘야 하는 경우
+				const newBody = this.body.slice(0, removeStart);
+				newBody.push(new Subtitle.Smi(hold.body[0].start, hold.body[0].syncType, "&nbsp;"));
+				newBody.push(...this.body.slice(removeStart));
+				this.body = newBody;
+			}
+			i--;
 			
 		} catch (e) {
 			console.log(e);

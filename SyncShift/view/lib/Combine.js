@@ -255,7 +255,9 @@ window.Combine = {
 	}
 	
 	Combine.combine = (inputUpper, inputLower) => {
-		const hljs = $(".hljs").hide(); // 결합 로직 돌아갈 때 문법 하이라이트가 있으면 성능 저하됨
+		// 결합 로직 돌아갈 때 문법 하이라이트가 있으면 성능 저하됨
+		// ... 지금은 개선해서 큰 저하 없을지도?
+		const hljs = $(".hljs").hide();
 		const checker = getChecker();
 		const upperSyncs = parse(inputUpper, checker);
 		const lowerSyncs = parse(inputLower, checker);
@@ -275,7 +277,7 @@ window.Combine = {
 					 && (   (us[STYPE] == TYPE.RANGE) // 중간 싱크
 					     || (group.lower.length && (group.lower[group.lower.length - 1][ETIME] > us[STIME]))
 					    )
-					){ // 그룹 유지
+					) { // 그룹 유지
 						group.upper.push(us);
 						group.maxLines[0] = Math.max(group.maxLines[0], us[LINES]);
 						group.maxWidth = Math.max(group.maxWidth, us[WIDTH]);
@@ -654,7 +656,14 @@ window.Combine = {
 					lines.push((line[UPPER] ? line[UPPER][TEXT] : forEmpty[0]) + "<br>" + (line[LOWER] ? line[LOWER][TEXT] : forEmpty[1]));
 				}
 				if (line[ETIME] < 99999999) {
-					lines.push(getSyncLine(lastSync = line[ETIME], line[ETYPE]));
+					let syncLine = getSyncLine(lastSync = line[ETIME], line[ETYPE]);
+					/* 반영해도 되는지 검토 필요
+					if (i < group.lines.length - 1) {
+						// 결합 시 임시로 중간 싱크로 처리, 이중 결합 시 그룹화
+						syncLine = syncLine.substring(0, syncLine.length - 1) + "\t\t>";
+					}
+					*/
+					lines.push(syncLine);
 				} else {
 					lastSync = 0;
 				}
@@ -1010,6 +1019,11 @@ if (Subtitle && Subtitle.SmiFile) {
 					}
 					if (main.body[mainBegin].isEmpty()) {
 						mainBegin++;
+					} else {
+						// 중간 싱크는 함께 결합돼야 함
+						while (mainBegin >= 0 && (main.body[mainBegin].syncType == Subtitle.SyncType.inner)) {
+							mainBegin--;
+						}
 					}
 					
 					mainEnd = mainBegin;
