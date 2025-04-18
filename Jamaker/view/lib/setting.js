@@ -35,13 +35,13 @@ let checkVersion;
 		return notified;
 	}
 	const lastNotifyForCommand = "2024.12.07.v1";
-	const lastNotifyForAutoComplete = "";
+	const lastNotifyForAutoComplete = "2025.04.19.v1";
 	const lastNotifyForStyle = "2025.03.07.v1";
 	const lastNotifyForMenu = "2024.11.19.v2";
 }
 
 window.DEFAULT_SETTING =
-{	version: "2025.04.05.v1"
+{	version: "2025.04.19.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -224,7 +224,9 @@ window.DEFAULT_SETTING =
 	}
 ,	autoComplete:
 	{	"0" : ['', [
-			'미노프스키 입자'
+			'fade="in"'
+		,	'fade="out"'
+		,	'미노프스키 입자'
 		,	'아스티카시아 학원'
 		]]
 	,	"50" : ['@', [
@@ -267,7 +269,7 @@ window.DEFAULT_SETTING =
 	, { from: "신 났"     , to: "신났"    , use: true }
 	
 	, { from: "지구 상"   , to: "지구상"  , use: true } // 2017년 맞춤법 변경사항
-	, { from: "지도 상"   , to: "지도상"  , use: true }
+	, { from: "지도 상"   , to: "지도상"  , use: false } // '지구 상공'에 과잉 보정되는 경우
 	, { from: "직선 상"   , to: "직선상"  , use: true }
 	, { from: "궤도 상"   , to: "궤도상"  , use: true }
 	, { from: "인터넷 상" , to: "인터넷상", use: true }
@@ -279,7 +281,7 @@ window.DEFAULT_SETTING =
 	, { from: "터키"      , to: "튀르키예", use: false }
 	, { from: "켄튀르키예", to: "켄터키"  , use: false }
 	]
-,	tempSave: 300
+,	tempSave: 300 // 임시 저장 주기 설정 현재 만들지 않음
 ,	useTab: false // 탭 사용 기본값은 꺼두는 걸로
 ,	highlight:
 	{ parser: "full"
