@@ -58,6 +58,13 @@ window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 				ta.ac.onCheckWord();
 			}
 		}
+	}).on("keydown", function (e) {
+		if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
+			if (e.keyCode == 9) { // Tab
+				e.preventDefault();
+				ta.ac.onCheckWord();
+			}
+		}
 	});
 	ta.on("click", function() {
 		ta.ac.close();
