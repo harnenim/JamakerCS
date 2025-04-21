@@ -2595,6 +2595,21 @@ Subtitle.SmiFile.prototype.toTxt = function() {
 	     + this.footer.split("\r\n").join("\n")
 	     ).trim();
 }
+Subtitle.Smi.getSyncType = function(syncLine) {
+	switch (syncLine[syncLine.length - 2]) {
+		case ' ':
+			if (syncLine[syncLine.length - 3] == ' ') {
+				return Subtitle.SyncType.split;
+			} else {
+				return Subtitle.SyncType.frame;
+			}
+			break;
+		case '\t':
+			return Subtitle.SyncType.inner;
+			break;
+	}
+	return Subtitle.SyncType.normal;
+}
 Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 	txt = (this.text = txt).split("\r\n").join("\n");
 	this.header = "";
@@ -2643,18 +2658,8 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 				index = txt.length;
 				break;
 			}
-			switch (txt[index - 2]) {
-				case ' ':
-					if (txt[index - 3] == ' ') {
-						last.syncType = Subtitle.SyncType.split;
-					} else {
-						last.syncType = Subtitle.SyncType.frame;
-					}
-					break;
-				case '\t':
-					last.syncType = Subtitle.SyncType.inner;
-					break;
-			}
+			last.syncType = Subtitle.Smi.getSyncType(txt.substring(0, index));
+			
 		} else if (txt.length > pos + 6 && txt.substring(pos, pos + 7).toUpperCase() == ("</BODY>")) {
 			if (last == null) {
 				this.header = txt.substring(0, pos);
@@ -2906,15 +2911,14 @@ Subtitle.SmiFile.prototype.antiNormalize = function() {
 				continue;
 			}
 			
-			let removeStart = i + (index < 0 ? 0 : 1);
-			let removeEnd = removeStart;
+			let removeEnd = i + (index < 0 ? 0 : 1);
 			for(; removeEnd < this.body.length; removeEnd++) {
 				if (this.body[removeEnd].start >= syncEnd) {
 					break;
 				}
 			}
 			
-			removeStart = i;
+			let removeStart = i;
 			if (removeEnd < this.body.length
 					&& !this.body[removeEnd].text.split("&nbsp;").join("").trim()) {
 				// 바로 다음이 공백 싱크면 내포 홀드에 포함
