@@ -964,7 +964,9 @@ SmiEditor.activateKeyEvent = function() {
 					} else {
 						if (hasFocus) {
 							e.preventDefault();
-							editor.inputTextLikeNative("\t"); // TODO: 횡스크롤 이동 안 되고 있음...
+							// 탭을 에디터에 입력하는 경우는 없다고 가정, 자동완성 기능으로 활용
+							// 탭문자는 중간 싱크에만 활용 - 중간 싱크는 자동 생성으로만 존재
+							editor.input.ac.onCheckWord();
 						}
 					}
 					break;
