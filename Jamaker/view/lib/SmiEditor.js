@@ -1300,7 +1300,7 @@ SmiEditor.prototype.reSyncPrompt = function() {
 		editor.reSync(Number(value), true);
 	});
 }
-SmiEditor.prototype.reSync = function(sync, limitRange) {
+SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 	if (this.isRendering) {
 		return;
 	}
@@ -1314,6 +1314,15 @@ SmiEditor.prototype.reSync = function(sync, limitRange) {
 		sync = SmiEditor.getSyncTime();
 	}
 	
+	let withEveryHolds = SmiEditor.sync.holds;
+
+	const endCursor = this.input[0].selectionEnd;
+	let limitLine = this.lines.length;
+	if (limitRange && endCursor > cursor) {
+		limitLine = this.input.val().substring(0, endCursor).split("\n").length;
+		withEveryHolds = false;
+	}
+	
 	// 적용 시작할 싱크 찾기
 	let i = lineNo;
 	for (; i < this.lines.length; i++) {
@@ -1325,32 +1334,66 @@ SmiEditor.prototype.reSync = function(sync, limitRange) {
 		// 적용할 싱크 없음
 		return;
 	}
-	const add = sync - this.lines[lineNo = i].SYNC;
-	const lines = this.lines.slice(0, lineNo);
-	
-	let limitLine = this.lines.length;
-	if (limitRange) {
-		const endCursor = this.input[0].selectionEnd;
-		if (endCursor > cursor) {
-			limitLine = this.input.val().substring(0, endCursor).split("\n").length;
+	const originSync = this.lines[lineNo = i].SYNC;
+	const add = sync - originSync;
+
+	console.log("withEveryHolds: " + withEveryHolds);
+	if (withEveryHolds && this.owner) {
+		// 모든 홀드에 작업
+		const holds = this.owner.holds;
+		
+		for (let h = 0; h < holds.length; h++) {
+			const hold = holds[h];
+			
+			// 적용 시작할 싱크 찾기
+			let i = 0;
+			for (; i < hold.lines.length; i++) {
+				if (hold.lines[i].SYNC >= originSync) {
+					break;
+				}
+			}
+			const beginLineNo = i;
+			const lines = hold.lines.slice(0, beginLineNo);
+			
+			for (; i < hold.lines.length; i++) {
+				const line = hold.lines[i];
+				if (line.SYNC) {
+					const sync = line.SYNC;
+					const newSync = sync + add;
+					// 싱크 줄에는 다른 숫자가 없다고 가정
+					lines.push(new Line(line.TEXT.split(sync).join(newSync), newSync, line.TYPE));
+				} else {
+					lines.push(line);
+				}
+			}
+			
+			hold.input.val(linesToText(lines));
+			hold.setCursor(cursor);
+			hold.history.log();
+			hold.render([beginLineNo, hold.lines.length]);
 		}
-	}
-	for (; i < this.lines.length; i++) {
-		const line = this.lines[i];
-		if (i < limitLine && line.SYNC) {
-			const sync = line.SYNC;
-			const newSync = sync + add;
-			// 싱크 줄에는 다른 숫자가 없다고 가정
-			lines.push(new Line(line.TEXT.split(sync).join(newSync), newSync, line.TYPE));
-		} else {
-			lines.push(line);
+		
+	} else {
+		// 현재 홀드만 작업
+		const lines = this.lines.slice(0, lineNo);
+		
+		for (; i < this.lines.length; i++) {
+			const line = this.lines[i];
+			if (i < limitLine && line.SYNC) {
+				const sync = line.SYNC;
+				const newSync = sync + add;
+				// 싱크 줄에는 다른 숫자가 없다고 가정
+				lines.push(new Line(line.TEXT.split(sync).join(newSync), newSync, line.TYPE));
+			} else {
+				lines.push(line);
+			}
 		}
+		
+		this.input.val(linesToText(lines));
+		this.setCursor(cursor);
+		this.history.log();
+		this.render([lineNo, this.lines.length]);
 	}
-	
-	this.input.val(linesToText(lines));
-	this.setCursor(cursor);
-	this.history.log();
-	this.render([lineNo, this.lines.length]);
 }
 SmiEditor.prototype.insertSync = function(forFrame) {
 	if (this.isRendering) {

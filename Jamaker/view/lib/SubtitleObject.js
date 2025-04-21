@@ -2906,15 +2906,14 @@ Subtitle.SmiFile.prototype.antiNormalize = function() {
 				continue;
 			}
 			
-			let removeStart = i + (index < 0 ? 0 : 1);
-			let removeEnd = removeStart;
+			let removeEnd = i + (index < 0 ? 0 : 1);
 			for(; removeEnd < this.body.length; removeEnd++) {
 				if (this.body[removeEnd].start >= syncEnd) {
 					break;
 				}
 			}
 			
-			removeStart = i;
+			let removeStart = i;
 			if (removeEnd < this.body.length
 					&& !this.body[removeEnd].text.split("&nbsp;").join("").trim()) {
 				// 바로 다음이 공백 싱크면 내포 홀드에 포함

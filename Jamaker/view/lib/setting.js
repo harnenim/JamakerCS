@@ -101,6 +101,7 @@ window.DEFAULT_SETTING =
 	,	frame: true
 	,	kframe: false
 	,	kLimit: 200
+	,	holds: true
 	}
 ,	command:
 	{	fn: // F1~F12: pqrstuvwxyz{
