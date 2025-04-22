@@ -2534,11 +2534,8 @@ SmiEditor.Finder = {
 SmiEditor.Finder2 = {
 		last: { find: "", replace: "", withCase: false, reverse: false }
 	,	open: function(isReplace) {
-			const w = 440 * DPI;
-			const h = 220 * DPI;
-			const x = Math.ceil((setting.window.x + (setting.window.width  / 2)) - (w / 2));
-			const y = Math.ceil((setting.window.y + (setting.window.height / 2)) - (h / 2));
-			
+			const w = 440;
+			const h = 220;
 			this.window.frame.css({
 					top: (window.innerHeight - h) / 2
 				,	left: (window.innerWidth - w) / 2
