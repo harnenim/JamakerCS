@@ -596,11 +596,7 @@ SmiEditor.prototype.bindEvent = function() {
 		}
 		
 	}).on("blur", function() {
-		const text = editor.input.val();
-		const prev  = $("<span>").text(text.substring(0, editor.input[0].selectionStart));
-		const block = $("<span>").text(text.substring(editor.input[0].selectionStart, editor.input[0].selectionEnd)).css({ background: "#7f7f7f" });
-		const next  = $("<span>").text(text.substring(editor.input[0].selectionEnd));
-		editor.block.empty().append(prev).append(block).append(next).show();
+		editor.showBlockArea();
 	}).on("focus", function() {
 		editor.block.hide();
 	});
@@ -657,6 +653,13 @@ SmiEditor.prototype.bindEvent = function() {
 		});
 	}
 };
+SmiEditor.prototype.showBlockArea = function() {
+	const text = this.input.val();
+	const prev  = $("<span>").text(text.substring(0, this.input[0].selectionStart));
+	const block = $("<span>").text(text.substring(this.input[0].selectionStart, this.input[0].selectionEnd)).css({ background: "#7f7f7f" });
+	const next  = $("<span>").text(text.substring(this.input[0].selectionEnd));
+	this.block.empty().append(prev).append(block).append(next).show();
+}
 
 SmiEditor.selected = null;
 SmiEditor.keyEventActivated = false;
@@ -1336,8 +1339,7 @@ SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 	}
 	const originSync = this.lines[lineNo = i].SYNC;
 	const add = sync - originSync;
-
-	console.log("withEveryHolds: " + withEveryHolds);
+	
 	if (withEveryHolds && this.owner) {
 		// 모든 홀드에 작업
 		const holds = this.owner.holds;
@@ -2482,7 +2484,7 @@ SmiEditor.Finder = {
 			let selection = null;
 			
 			// 바꾸기
-			if (selection = this.doReplace()) count++;
+			if (last = selection = this.doReplace()) count++;
 			
 			// 다음 찾기
 			selection = this.doFind(selection);
