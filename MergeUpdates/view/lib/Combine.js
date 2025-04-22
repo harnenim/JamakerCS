@@ -777,7 +777,8 @@ if (Subtitle && Subtitle.SmiFile) {
 		let logs = [];
 		let originBody = [];
 		
-		const main = new Subtitle.SmiFile(origHolds[0].text);
+		// .text 동기화 안 끝났을 가능성 고려, 현재 값 다시 불러옴
+		const main = new Subtitle.SmiFile(origHolds[0].input.val());
 		if (main.isWithSplit()) { // 메인 홀드 이외에도 지원이 필요한가...?
 			// 대사 사이 1프레임 공백 싱크 생성
 			const body = main.body;
@@ -839,7 +840,8 @@ if (Subtitle && Subtitle.SmiFile) {
 			const imports = [];
 			for (let hi = 0; hi < holdsWithoutMain.length; hi++) {
 				const hold = holdsWithoutMain[hi];
-				let text = hold.text;
+				const holdText = hold.input.val(); // .text 동기화 안 끝났을 가능성 고려, 현재 값 다시 불러옴
+				let text = holdText;
 				if (hold.style) {
 					text = "<!-- Style\n" + hold.style + "\n-->\n" + text;
 				}
@@ -858,7 +860,7 @@ if (Subtitle && Subtitle.SmiFile) {
 				}
 				
 				// 내용물 없으면 내포 홀드 아님
-				const holdBody = new Subtitle.SmiFile(hold.text).body;
+				const holdBody = new Subtitle.SmiFile(holdText).body;
 				if (holdBody.length == 0) {
 					continue;
 				}
@@ -1002,7 +1004,8 @@ if (Subtitle && Subtitle.SmiFile) {
 				if (hold.imported) {
 					continue;
 				}
-				let text = hold.text;
+				const holdText = hold.input.val();
+				let text = holdText;
 				if (hold.style) {
 					text = "<!-- Style\n" + hold.style + "\n-->\n" + text;
 				}
