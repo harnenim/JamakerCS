@@ -2711,7 +2711,7 @@ SmiEditor.Finder2 = {
 	,	sendMsgAfterRun: function(msg) {
 			// 딜레이 안 주면 화면 갱신 안 된 상태로 뜰 수 있음
 			setTimeout(() => {
-				alert("finder", msg);
+				alert(msg);
 			}, 100);
 		}
 
