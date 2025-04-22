@@ -22,7 +22,9 @@ button {
 }
 /* 비활성 탭/홀드 색 */
 #tabSelector > .th,
-.hold-selector > .selector {
+.hold-selector > .selector,
+.fr > .fhead,
+.fr > .fhead > button {
 	background: [tab];
 }
 
@@ -52,6 +54,10 @@ body, input, button,
 }
 .hljs-zw {
 	border-color: [text];
+}
+/* 찾기/바꾸기 창 그림자 */
+.window-frame {
+	box-shadow: 0 0 4px 4px [text]22;
 }
 
 /* 버튼 활성 색 */
