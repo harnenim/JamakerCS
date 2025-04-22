@@ -227,6 +227,10 @@ window.DEFAULT_SETTING =
 	{	"0" : ['', [
 			'fade="in"'
 		,	'fade="out"'
+		,	'ㄹ|fade="in"'
+		,	'ㄹ|fade="out"'
+		,	'typing="keyboard"'
+		,	'ㅅ|typing="keyboard"'
 		,	'미노프스키 입자'
 		,	'아스티카시아 학원'
 		]]
@@ -248,6 +252,8 @@ window.DEFAULT_SETTING =
 			'<br>'
 		,	'<RUBY>쓰기<RT><RP>(</RP>읽기<RP>)</RP></RT></RUBY>'
 		,	'<font color="#cccccc">'
+		,	'<font fade="in">'
+		,	'<font keyboard="typing">'
 		]]
 	,	"190": ['>', ['>>>|…']]
 	}

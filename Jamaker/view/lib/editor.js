@@ -343,7 +343,7 @@ Tab.prototype.selectLastHold = function() {
 }
 Tab.prototype.replaceBeforeSave = function() {
 	for (let i = 0; i < this.holds.length; i++) {
-		let text = this.holds[i].text = this.holds[i].input.val(); // .text 동기화 실패 가능성 고려, 현재 값 다시 불러옴
+		let text = this.holds[i].input.val(); // .text 동기화 실패 가능성 고려, 현재 값 다시 불러옴
 		let changed = false;
 		
 		// 커서 기준 3개로 나눠서 치환
@@ -1209,10 +1209,7 @@ function saveFile(asNew, isExport) {
 			hold.scrollToCursor(lineNo);
 		});
 	} else {
-		// replaceBeforeSave 이후 렌더링 작업이 덜 끝났을 수 있음
-		setTimeout(function() {
-			binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path);
-		}, 100);
+		binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path);
 	}
 }
 
