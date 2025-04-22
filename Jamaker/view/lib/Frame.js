@@ -159,7 +159,7 @@ $(() => {
 	}
 	$(document).on("mousedown", ".fhead h3, .border", function(e) {
 		const obj = $(this);
-		const frame = obj.parents(".frame");
+		const frame = obj.parents(".window-frame");
 		if (obj.hasClass("border")) {
 			const frameObj = frame.data("obj");
 			if (frameObj && frameObj.resizable) {
@@ -236,9 +236,9 @@ $(() => {
 			dragging.frame = null;
 			$("#cover").hide();
 		}
-	}).on("mousedown", ".frame", function() {
+	}).on("mousedown", ".window-frame", function() {
 		Frame.refreshOrder($(this).data("obj"));
 	}).on("click", ".fhead button", function() {
-		$(this).parents(".frame").data("obj").close();
+		$(this).parents(".window-frame").data("obj").close();
 	});
 });
