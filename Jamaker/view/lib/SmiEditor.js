@@ -2531,6 +2531,193 @@ SmiEditor.Finder = {
 			}, delay);
 		}
 };
+SmiEditor.Finder2 = {
+		last: { find: "", replace: "", withCase: false, reverse: false }
+	,	open: function(isReplace) {
+			const w = 440 * DPI;
+			const h = 220 * DPI;
+			const x = Math.ceil((setting.window.x + (setting.window.width  / 2)) - (w / 2));
+			const y = Math.ceil((setting.window.y + (setting.window.height / 2)) - (h / 2));
+			
+			this.window.frame.css({
+					top: (window.innerHeight - h) / 2
+				,	left: (window.innerWidth - w) / 2
+				,	width: w
+				,	height: h
+			}).show();
+			this.window.iframe.focus();
+			if (isReplace) {
+				this.onloadReplace();
+			} else {
+				this.onloadFind();
+			}
+		}
+	,	onloadFind: function(isReplace) {
+			this.last.toFocus = "[name=find]";
+			
+			if (SmiEditor.selected) {
+				const editor = SmiEditor.selected;
+				const selection = editor.getCursor();
+				const length = selection[1] - selection[0];
+				if (length) {
+					this.last.find = editor.text.substring(selection[0], selection[1]);
+					this.last.toFocus = (isReplace ? "[name=replace]" : ".button-find");
+				}
+			}
+			
+			this.window.iframe.contentWindow.init(JSON.stringify(this.last));
+		}
+	,	openChange: function() {
+			this.open(true);
+		}
+	,	onloadReplace: function() {
+			this.onloadFind(true);
+		}
+		
+	,	finding: {
+				find: ""
+			,	replace: ""
+			,	withCase: false
+			,	reverse: false
+		}
+	,	checkError: function(params) {
+			if (!SmiEditor.selected) {
+				return "열려있는 파일이 없습니다.";
+			}
+			this.finding = JSON.parse(params);
+			if (this.finding.find.length == 0) {
+				return "찾을 문자열이 없습니다.";
+			}
+			this.finding.input = SmiEditor.selected.input[0];
+			this.finding.text      = this.finding.input.value;
+			this.finding.upperText = this.finding.text.toUpperCase();
+			this.finding.upperFind = this.finding.find.toUpperCase();
+		}
+	,	afterFind: function() {
+			SmiEditor.selected.scrollToCursor();
+			this.last.find    = this.finding.find;
+			this.last.replace = this.finding.replace;
+			this.last.withCase= this.finding.withCase;
+			this.last.reverse = this.finding.reverse;
+		}
+		
+	,	doFind: function(selection) {
+			if (!selection) selection = [this.finding.input.selectionStart, this.finding.input.selectionEnd];
+			let index = -1;
+			let text = this.finding.text;
+			let find = this.finding.find;
+			if (!this.finding.withCase) {
+				text = this.finding.upperText;
+				find = this.finding.upperFind;
+			}
+			if (this.finding.reverse) {
+				index = text.lastIndexOf(find, selection[0] - 1);
+			} else {
+				index = text.indexOf(find, selection[1]);
+			}
+			if (index < 0) return null;
+			return [index, index + find.length];
+		}
+	,	doReplace: function(selection) {
+			if (!selection) selection = [this.finding.input.selectionStart, this.finding.input.selectionEnd];
+			let text = this.finding.text;
+			let find = this.finding.find;
+			if (!this.finding.withCase) {
+				text = this.finding.upperText;
+				find = this.finding.upperFind;
+			}
+			if (text.substring(selection[0], selection[1]) == find) {
+				this.finding.text      = this.finding.text     .substring(0, selection[0]) + this.finding.replace + this.finding.text     .substring(selection[1]);
+				this.finding.upperText = this.finding.upperText.substring(0, selection[0]) + this.finding.replace + this.finding.upperText.substring(selection[1]);
+				selection[1] = selection[0] + this.finding.replace.length;
+				return selection;
+			}
+			return null;
+		}
+		
+	,	runFind: function(params) {
+			const err = this.checkError(params);
+			if (err) return this.sendMsgAfterRun(err);
+			
+			let selection = null;
+			if (selection = this.doFind()) {
+				this.finding.input.setSelectionRange(selection[0], selection[1]);
+				this.afterFind();
+				SmiEditor.selected.showBlockArea();
+			} else {
+				this.sendMsgAfterRun("찾을 수 없습니다.");
+			}
+		}
+	,	runReplace: function(params) {
+			const err = this.checkError(params);
+			if (err) return this.sendMsgAfterRun(err);
+			let selection = null;
+			
+			// 찾은 상태로 선택돼 있었으면 바꾸기
+			if (selection = this.doReplace()) {
+				SmiEditor.selected.history.log();
+				this.finding.input.value = this.finding.text;
+				this.finding.input.setSelectionRange(selection[0], selection[1]);
+				this.afterFind();
+				SmiEditor.selected.render();
+				SmiEditor.selected.history.log();
+				SmiEditor.selected.showBlockArea();
+			}
+			
+			// 다음 거 찾기
+			if (selection = this.doFind(selection)) {
+				this.finding.input.setSelectionRange(selection[0], selection[1]);
+				this.afterFind();
+				SmiEditor.selected.showBlockArea();
+				
+			} else {
+				this.sendMsgAfterRun("찾을 수 없습니다.");
+			}
+		}
+	,	runReplaceAll: function(params) {
+			const err = this.checkError(params);
+			if (err) return this.sendMsgAfterRun(err);
+			
+			let count = 0;
+			let last = null;
+			let selection = null;
+			
+			// 바꾸기
+			if (last = selection = this.doReplace()) count++;
+			
+			// 다음 찾기
+			selection = this.doFind(selection);
+			
+			// 바꾸기-찾기 반복
+			while (selection) {
+				count++;
+				last = selection;
+				selection = this.doFind(this.doReplace(selection));
+			}
+			
+			if (count) {
+				SmiEditor.selected.history.log();
+				this.finding.input.value = this.finding.text;
+				this.finding.input.setSelectionRange(last[0], last[1]);
+				this.afterFind();
+				SmiEditor.selected.render();
+				SmiEditor.selected.history.log();
+				SmiEditor.selected.showBlockArea();
+				this.sendMsgAfterRun(count + "개 바꿈");
+			} else {
+				this.sendMsgAfterRun("찾을 수 없습니다.");
+			}
+		}
+	,	sendMsgAfterRun: function(msg) {
+			// 딜레이 안 주면 화면 갱신 안 된 상태로 뜰 수 있음
+			setTimeout(() => {
+				alert("finder", msg);
+			}, 100);
+		}
+
+		// 찾기/바꾸기 창 항상 위에 필요 없음
+	,	focus: function() {}
+};
 
 SmiEditor.Viewer = {
 		window: null
@@ -2800,8 +2987,22 @@ SmiEditor.fillSync = (text) => {
 $(() => {
 	SmiEditor.refreshHighlight();
 	
-	$(document).on("mouseup", function(e) {
-		// 찾기/바꾸기 창이 있었을 경우 재활성화
-		SmiEditor.Finder.focus();
-	});
+	if (true) {
+		SmiEditor.Finder = SmiEditor.Finder2;
+		SmiEditor.Finder.window = new Frame("finder.html", "finder", "", () => {
+			SmiEditor.Finder.window.close =
+			SmiEditor.Finder.window.iframe.contentWindow.close = function() {
+				SmiEditor.Finder.window.frame.hide();
+				setTimeout(function() { // X 클릭했을 경우 포커스 뺏김
+					SmiEditor.selected.input.focus();
+				}, 1);
+			}
+		});
+		SmiEditor.Finder.window.frame.hide();
+	} else {
+		$(document).on("mouseup", function(e) {
+			// 찾기/바꾸기 창이 있었을 경우 재활성화
+			SmiEditor.Finder.focus();
+		});
+	}
 });

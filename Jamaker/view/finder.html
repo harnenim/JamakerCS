@@ -42,9 +42,17 @@ function getParams() {
 }
 
 $(() => {
-	$(".button-find"       ).on("click", function() { binder.runFind      (getParams()); });
-	$(".button-replace"    ).on("click", function() { binder.runReplace   (getParams()); });
-	$(".button-replace-all").on("click", function() { binder.runReplaceAll(getParams()); });
+	if (typeof binder == "undefined") {
+		if (opener && opener.SmiEditor && opener.SmiEditor.Finder) {
+			$(".button-find"       ).on("click", function() { opener.SmiEditor.Finder.runFind      (getParams()); });
+			$(".button-replace"    ).on("click", function() { opener.SmiEditor.Finder.runReplace   (getParams()); });
+			$(".button-replace-all").on("click", function() { opener.SmiEditor.Finder.runReplaceAll(getParams()); });
+		}
+	} else {
+		$(".button-find"       ).on("click", function() { binder.runFind      (getParams()); });
+		$(".button-replace"    ).on("click", function() { binder.runReplace   (getParams()); });
+		$(".button-replace-all").on("click", function() { binder.runReplaceAll(getParams()); });
+	}
 	$("textarea").on("keydown", function(e) {
 		if (e.keyCode == 13) { // Enter
 			if (!e.shiftKey && !e.altKey) {
@@ -66,9 +74,15 @@ $(() => {
 	});
 
 	if (opener) {
-		opener.SmiEditor.Finder.onload();
-	} else if (binder) {
-		binder.onloadFinder();
+		if (opener.SmiEditor.Finder.onload) {
+			opener.SmiEditor.Finder.onload();
+		}
+	} else {
+		if (typeof binder == "undefined") {
+			
+		} else {
+			binder.onloadFinder();
+		}
 	}
 });
 </script>
