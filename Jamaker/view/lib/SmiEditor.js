@@ -2342,11 +2342,12 @@ SmiEditor.prototype.moveToSide = function(direction) {
 	this.render([syncLine, nextLine]);
 }
 
-SmiEditor.Finder = {
+SmiEditor.Finder1 = {
 		last: { find: "", replace: "", withCase: false, reverse: false }
 	,	open: function(isReplace) {
-			const w = 440 * DPI;
-			const h = 220 * DPI;
+			const ratio = DPI ? DPI : 1;
+			const w = 440 * ratio;
+			const h = 220 * ratio;
 			const x = Math.ceil((setting.window.x + (setting.window.width  / 2)) - (w / 2));
 			const y = Math.ceil((setting.window.y + (setting.window.height / 2)) - (h / 2));
 		
@@ -2534,14 +2535,21 @@ SmiEditor.Finder = {
 SmiEditor.Finder2 = {
 		last: { find: "", replace: "", withCase: false, reverse: false }
 	,	open: function(isReplace) {
-			const w = 440;
-			const h = 220;
+			const ratio = setting ? Number(setting.size) : 1;
+			const w = 440 * ratio;
+			const h = 220 * ratio;
 			this.window.frame.css({
 					top: (window.innerHeight - h) / 2
 				,	left: (window.innerWidth - w) / 2
 				,	width: w
 				,	height: h
 			}).show();
+			SmiEditor.Finder.window.iframe.contentWindow.setSize(ratio);
+			
+			if (setting && setting.color) {
+				SmiEditor.Finder.window.iframe.contentWindow.setColor(setting.color);
+			}
+			
 			this.window.iframe.focus();
 			if (isReplace) {
 				this.onloadReplace();
@@ -2984,19 +2992,25 @@ SmiEditor.fillSync = (text) => {
 $(() => {
 	SmiEditor.refreshHighlight();
 	
-	if (true) {
+	if (window.Frame) {
 		SmiEditor.Finder = SmiEditor.Finder2;
 		SmiEditor.Finder.window = new Frame("finder.html", "finder", "", () => {
+			// 좌우 크기만 조절 가능
+			SmiEditor.Finder.window.frame.find(".tl, .t, .tr, .bl, .b, .br").remove();
+			
 			SmiEditor.Finder.window.close =
 			SmiEditor.Finder.window.iframe.contentWindow.close = function() {
+				// 닫기가 아닌 숨기기로 재정의
 				SmiEditor.Finder.window.frame.hide();
-				setTimeout(function() { // X 클릭했을 경우 포커스 뺏김
+				setTimeout(function() {
+					// X 클릭했을 경우 버튼에 포커스 뺏기는데, 에디터에 돌려줌
 					SmiEditor.selected.input.focus();
 				}, 1);
-			}
+			};
 		});
 		SmiEditor.Finder.window.frame.hide();
 	} else {
+		SmiEditor.Finder = SmiEditor.Finder1;
 		$(document).on("mouseup", function(e) {
 			// 찾기/바꾸기 창이 있었을 경우 재활성화
 			SmiEditor.Finder.focus();

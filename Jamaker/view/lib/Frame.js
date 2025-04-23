@@ -46,8 +46,18 @@ window.Frame = function(url, name, options, onload) {
 		};
 		$(self.iframe.contentDocument).on("mousedown", function() {
 			Frame.refreshOrder(self);
-		});
-		$(self.iframe.contentDocument).find("iframe").each((_, el) => {
+		}).on("keydown", function(e) {
+			switch (e.keyCode) {
+				case 115: { // F4
+					if (e.altKey) {
+						// Alt+F4 최상위 창 종료 막기
+						e.preventDefault();
+						self.close();
+					}
+					break;
+				}
+			}
+		}).find("iframe").each((_, el) => {
 			subIframe = el;
 			/*
 			subIframe.contentWindow.onload = function() {
@@ -62,7 +72,7 @@ window.Frame = function(url, name, options, onload) {
 					Frame.refreshOrder(self);
 				});
 			}, 100);
-		})
+		});
 		if (onload) {
 			onload();
 		}
@@ -224,17 +234,22 @@ $(() => {
 			$("#cover").hide();
 		}
 	}).on("keydown", function(e) {
-		if (dragging.frame && e.keyCode == 27) { // 드래그 중 Esc
-			dragging.frame.css({ // 위치 원상복구
-					top   : dragging.top
-				,	left  : dragging.left
-				,	width : dragging.width
-				,	height: dragging.height
-			});
-			dragging.frame.find(".cover").hide();
-			dragging.frame.data("obj").iframe.focus();
-			dragging.frame = null;
-			$("#cover").hide();
+		switch (e.keyCode) {
+			case 27: { // Esc
+				if (dragging.frame) { // 드래그 취소
+					dragging.frame.css({ // 위치 원상복구
+							top   : dragging.top
+						,	left  : dragging.left
+						,	width : dragging.width
+						,	height: dragging.height
+					});
+					dragging.frame.find(".cover").hide();
+					dragging.frame.data("obj").iframe.focus();
+					dragging.frame = null;
+					$("#cover").hide();
+				}
+				break;
+			}
 		}
 	}).on("mousedown", ".window-frame", function() {
 		Frame.refreshOrder($(this).data("obj"));

@@ -907,6 +907,15 @@ function setSetting(setting, initial=false) {
 					$style.html(preset);
 				}
 		});
+		
+		// 찾기/바꾸기 내재화했을 경우
+		if (SmiEditor.Finder
+		 && SmiEditor.Finder.window
+		 && SmiEditor.Finder.window.iframe
+		 && SmiEditor.Finder.window.iframe.contentWindow
+		 && SmiEditor.Finder.window.iframe.contentWindow.setColor) {
+			SmiEditor.Finder.window.iframe.contentWindow.setColor(setting.color);
+		}
 	}
 	if (initial || (oldSetting.size != setting.size)) {
 		$.ajax({url: "lib/SmiEditor.size.css"
@@ -931,6 +940,23 @@ function setSetting(setting, initial=false) {
 					}
 				}
 		});
+		
+		// 찾기/바꾸기 내재화했을 경우
+		if (SmiEditor.Finder
+		 && SmiEditor.Finder.window
+		 && SmiEditor.Finder.window.iframe
+		 && SmiEditor.Finder.window.iframe.contentWindow
+		 && SmiEditor.Finder.window.iframe.contentWindow.setSize) {
+			SmiEditor.Finder.window.iframe.contentWindow.setSize(setting.size);
+			const w = 440 * setting.size;
+			const h = 220 * setting.size;
+			SmiEditor.Finder.window.frame.css({
+					top: (window.innerHeight - h) / 2
+				,	left: (window.innerWidth - w) / 2
+				,	width: w
+				,	height: h
+			});
+		}
 	}
 	if (initial || (JSON.stringify(oldSetting.highlight) != JSON.stringify(setting.highlight))) {
 		// 문법 하이라이트 양식 바뀌었을 때만 재생성
