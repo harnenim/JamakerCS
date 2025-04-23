@@ -6,11 +6,9 @@
 <script src="lib/jquery-3.2.1.min.js"></script>
 <script src="lib/popup.js"></script>
 <link rel="stylesheet" type="text/css" href="lib/popup.css" />
-<style>
-* { font-size: 12px; }
-</style>
 <script>
 windowName = "finder";
+let styleSizePreset = "";
 
 $(document).on("keydown", function(e) {
 	if (e.ctrlKey) {
@@ -39,6 +37,10 @@ function getParams() {
 	params.withCase  = $("[name=case]").prop("checked");
 	params.reverse   = $("[name=direction][value=-1]").prop("checked");
 	return JSON.stringify(params);
+}
+
+function setSize(size) {
+	$("#styleSize").html(styleSizePreset.split("20px").join((20 * size) + "px"));
 }
 
 $(() => {
@@ -72,6 +74,8 @@ $(() => {
 			}
 		}
 	});
+	
+	styleSizePreset = $("#styleSize").html();
 
 	if (opener) {
 		if (opener.SmiEditor.Finder.onload) {
@@ -86,77 +90,92 @@ $(() => {
 	}
 });
 </script>
+<style>
+#labelFind,
+#labelFind > span,
+#labelReplace,
+#labelReplace > span,
+#labelCase {
+	display: block;
+	position: absolute;
+}
+textarea, button, fieldset {
+	position: absolute;
+}
+</style>
+<style id="styleSize">
+* {
+	font-size: calc(20px * 0.6);
+}
+input, textarea, button {
+	font-size: calc(20px * 0.6);
+	line-height: calc(20px * 0.7);
+	padding: 0 calc(20px * 0.1);
+}
+#labelFind, #labelReplace {
+	left: calc(20px * 0.4);
+	right: calc(20px * 5.8);
+	height: calc(20px * 3);
+}
+#labelFind {
+	top: calc(20px * 0.4);
+}
+#labelReplace {
+	top: calc(20px * 3.9);
+}
+textarea {
+	left: calc(20px * 3.8);
+	right: 0;
+	height: calc(20px * 3);
+	resize: none;
+}
+#btnFind,
+#btnReplace {
+	right: calc(20px * 0.4);
+	width: calc(20px * 5);
+	height: calc(20px * 1.7);
+}
+#btnFind {
+	top: calc(20px * 0.4);
+}
+#btnReplace {
+	top: calc(20px * 2.5);
+}
+#btnReplaceAll {
+	top: calc(20px * 4.6);
+	right: calc(20px * 0.4);
+	width: calc(20px * 5);
+	height: calc(20px * 2.2);
+}
+#labelCase {
+	top: calc(20px * 7.8);
+	left: 20px;
+}
+#fieldsetDirection {
+	top: calc(20px * 7);
+	right: calc(20px * 5.8);
+	padding: calc(20px * 0.2) calc(20px * 0.3);
+}
+</style>
 </head>
 <body>
 	<form class="modal-main">
-		<label>
-			<span style="
-				display: block;
-				position: absolute;
-				top: 8px;
-				left: 8px;
-			">찾을 내용(<u>N</u>)</span>
-			<textarea name="find" accesskey="N" spellcheck="false" placeholder="줄바꿈 = Ctrl+Enter" style="
-				position: absolute;
-				top: 8px;
-				left: 80px;
-				right: 116px;
-				height: 60px;
-				resize: none;
-			"></textarea>
+		<label id="labelFind">
+			<span>찾을 내용(<u>N</u>)</span>
+			<textarea name="find" accesskey="N" spellcheck="false" placeholder="줄바꿈 = Ctrl+Enter"></textarea>
 		</label>
-		<button type="button" class="button-find" accesskey="F" style="
-			position: absolute;
-			top: 8px;
-			right: 8px;
-			width: 100px;
-			height: 34px;
-		">찾기(<u>F</u>)</button>
-		<label>
-			<span style="
-				display: block;
-				position: absolute;
-				top: 76px;
-				left: 8px;
-			">바꿀 내용(<u>P</u>)</span>
-			<textarea name="replace" accesskey="P" spellcheck="false" placeholder="줄바꿈 = Ctrl+Enter" style="
-				position: absolute;
-				top: 76px;
-				left: 80px;
-				right: 116px;
-				height: 60px;
-				resize: none;
-			"></textarea>
+		<button type="button" class="button-find" accesskey="F" id="btnFind">찾기(<u>F</u>)</button>
+		<label id="labelReplace">
+			<span>바꿀 내용(<u>P</u>)</span>
+			<textarea name="replace" accesskey="P" spellcheck="false" placeholder="줄바꿈 = Ctrl+Enter"></textarea>
 		</label>
-		<button type="button" class="button-replace" accesskey="R" style="
-			position: absolute;
-			top: 50px;
-			right: 8px;
-			width: 100px;
-			height: 34px;
-		">바꾸기(<u>R</u>)</button>
-		<button type="button" class="button-replace-all" accesskey="A" style="
-			position: absolute;
-			top: 92px;
-			right: 8px;
-			width: 100px;
-			height: 44px;
-		">모두 바꾸기(<u>A</u>)</button>
-		<label style="
-			position: absolute;
-			display: block;
-			top: 156px;
-			left: 20px;
-		">
+		<button type="button" class="button-replace" accesskey="R" id="btnReplace">바꾸기(<u>R</u>)</button>
+		<button type="button" class="button-replace-all" accesskey="A" id="btnReplaceAll">모두 바꾸기(<u>A</u>)</button>
+		<label id="labelCase">
 			<input type="checkbox" name="case" accesskey="C" />
 			<span>대소문자 구분(<u>C</u>)</span>
 		</label>
-		<fieldset style="
-			position: absolute;
-			top: 140px;
-			right: 116px;
-			padding: 0 6px;
-		">
+		<fieldset id="fieldsetDirection">
 			<legend>방향</legend>
 			<label>
 				<input type="radio" name="direction" value="-1" accesskey="U" />
