@@ -14,9 +14,9 @@ const replacer = [ "김철수", "홍길동" ];
 
 $(() => {
 	const properList = opener.setting.autoComplete[0][1].slice(0);
-	properList.sort((a,b) => { // 역순 정렬 - 긴 단어를 먼저 변환하기 위함
-		return	a < b ?  1 :
-				a > b ? -1 : 0;
+	properList.sort((a,b) => { // 긴 단어를 먼저 변환하도록 정렬
+		return	a.length() < b.length() ?  1 :
+				a.length() > b.length() ? -1 : 0;
 	});
 	for (let i = 0; i < properList.length; i++) {
 		const word = properList[i].trim();
