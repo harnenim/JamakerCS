@@ -1,0 +1,40 @@
+@charset "utf-8";
+
+html, body {
+	background: [background];
+	color: [text];
+}
+input, select, textarea {
+	background: [editor];
+	border-color: [tabBorder];
+	color: [text];
+}
+fieldset {
+	border-color: [tab];
+}
+button {
+	border-color: [tabBorder];
+	background: [selector]80;
+	color: [text];
+}
+button:hover {
+	border-color: #0178d7;
+	background: #e5f1fb;
+	color: #000;
+}
+button:focus {
+	border-color: #005499;
+	background: #cce4f7;
+	color: #000;
+}
+input:focus,
+select:focus,
+textarea:focus {
+	border-color: #06a;
+}
+table, th, td {
+	border-color: [border];
+}
+td {
+	background: [editor];
+}

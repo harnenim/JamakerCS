@@ -99,6 +99,23 @@ if (opener) {
 	}
 }
 
+function setColor(color) {
+	$.ajax({url: "lib/popup.color.css"
+		,	dataType: "text"
+		,	success: (preset) => {
+				for (let name in color) {
+					preset = preset.split("[" + name + "]").join(color[name]);
+				}
+				
+				let $style = $("#styleColor");
+				if (!$style.length) {
+					$("head").append($style = $("<style id='styleColor'>"));
+				}
+				$style.html(preset);
+			}
+	});
+}
+
 $(() => {
 	$("textarea").attr({ spellcheck: false });
 });

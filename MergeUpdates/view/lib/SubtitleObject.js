@@ -2658,7 +2658,7 @@ Subtitle.SmiFile.prototype.fromTxt = function(txt) {
 				index = txt.length;
 				break;
 			}
-			last.syncType = Subtitle.Smi.getSyncType(txt.substring(0, index));
+			last.syncType = Subtitle.Smi.getSyncType(txt.substring(pos, index));
 			
 		} else if (txt.length > pos + 6 && txt.substring(pos, pos + 7).toUpperCase() == ("</BODY>")) {
 			if (last == null) {
