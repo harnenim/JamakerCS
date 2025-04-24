@@ -189,7 +189,7 @@ window.DEFAULT_SETTING =
 		,	'0': '/* 색상태그 종료 */\n' + 'editor.inputText("</font>")'
 		,	'D': '/* 줄 삭제 */\n' + 'editor.deleteLine();'
 		,	'M': '/* 화면 싱크 매니저 실행 */\n' + 'openAddon("SyncManager");'
-		,	'Q': '/* 현재 위치 재생 */\n' + 'editor.moveToSync();'
+		,	'Q': '/* 현재 위치 재생 */\n' + 'editor.moveToSync(-2000);'
 		}
 	,	withAlts:
 		{	't': '/* 일괄 싱크 입력 */\n' + 'editor.reSyncPrompt();'
