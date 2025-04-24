@@ -2989,6 +2989,237 @@ SmiEditor.fillSync = (text) => {
 	return smi.toTxt().trim();
 };
 
+// 자동완성에 닫는 태그 추가
+AutoCompleteTextarea.getList = function(text, pos, list) {
+	if (text[pos] == '<') {
+		// '<' 입력일 경우 닫는 태그 자동완성에 추가
+		let lines = text.substring(0, pos).split("\n");
+		let begin = lines.length - 1;
+		for (; begin >= 0; begin--) {
+			if (lines[begin].substring(0, 6).toUpperCase() == "<SYNC ") {
+				begin++;
+				break;
+			}
+		}
+		if (begin > 0) {
+			lines = lines.slice(begin);
+		}
+		let syncText = lines.join("");
+		
+		let state = null;
+		let tag = null;
+		let tags = [];
+		
+		function openTag() {
+			if (tag.toUpperCase() != "BR") {
+				tags.push(tag);
+			}
+			tag = null;
+		}
+		function closeTag(tagName) {
+			tagName = tagName.toUpperCase();
+			for (let i = tags.length - 1; i >= 0; i--) {
+				if (tags[i].toUpperCase() == tagName) {
+					tags.length = i;
+					break;
+				}
+			}
+		}
+		
+		for (let pos = 0; pos < syncText.length; pos++) {
+			const c = syncText[pos];
+			switch (state) {
+				case '/': { // 태그?!
+					state = '<';
+					if (c == '/') { // 종료 태그 시작일 경우
+						const end = syncText.indexOf('>', pos);
+						if (end < 0) {
+							// 태그 끝이 없음
+							pos = syncText.length;
+							break;
+						}
+						closeTag(syncText.substring(pos + 1, end));
+						pos = end;
+						state = null;
+						break;
+					}
+					// 종료 태그 아닐 경우 아래로 이어서 진행
+					tag = "";
+				}
+				case '<': { // 태그명
+					switch (c) {
+						case '>': { // 태그 종료
+							openTag();
+							state = null;
+							break;
+						}
+						case ' ':
+						case '\t': { // 태그명 끝
+							state = '>';
+							break;
+						}
+						default: {
+							tag += c;
+							break;
+						}
+					}
+					break;
+				}
+				case '>': { // 태그 내
+					switch (c) {
+						case '>': { // 태그 종료
+							openTag();
+							state = null;
+							break;
+						}
+						case ' ': 
+						case '\t':
+						case '<':
+						case '&': {
+							break;
+						}
+						default: { // 속성명 시작
+							state = 'a';
+							break;
+						}
+					}
+					break;
+				}
+				case 'a': { // 속성명
+					switch (c) {
+						case '>': { // 태그 종료
+							openTag();
+							state = null;
+							break;
+						}
+						case '=': { // 속성값 시작
+							state = '=';
+							break;
+						}
+						case ' ':
+						case '\t': { // 일단은 속성이 끝나지 않을 걸로 간주
+							state = '`';
+							break;
+						}
+					}
+					break;
+				}
+				case '`': { // 속성명+공백문자
+					switch (c) {
+						case '>': { // 태그 종료
+							openTag();
+							state = null;
+							break;
+						}
+						case '=': { // 속성값 시작
+							state = '=';
+							break;
+						}
+						case ' ':
+						case '\t': { // 일단은 속성이 끝나지 않을 걸로 간주
+							break;
+						}
+						default: { // 속성값 없는 속성으로 확정, 새 속성 시작
+							state = 'a';
+						}
+					}
+					break;
+				}
+				case '=': { // 속성값 시작 전
+					switch (c) {
+						case '>': { // 태그 종료
+							openTag();
+							state = null;
+							break;
+						}
+						case '"': { // 속성값 따옴표 시작
+							state = '"';
+							break;
+						}
+						case "'": { // 속성값 따옴표 시작
+							state = "'";
+							break;
+						}
+						case ' ': { // 일단은 속성이 끝나지 않을 걸로 간주
+							break;
+						}
+						case '\t': {
+							break;
+						}
+						default: {
+							state = '~';
+						}
+					}
+					break;
+				}
+				case '~': { // 따옴표 없는 속성값
+					switch (c) {
+						case '>': { // 태그 종료
+							openTag();
+							state = null;
+							break;
+						}
+						case ' ':
+						case '\t': { // 속성 종료
+							state = '>';
+							break;
+						}
+					}
+					break;
+				}
+				case '"': {
+					switch (c) {
+						case '"': { // 속성 종료
+							state = '>';
+							break;
+						}
+					}
+					break;
+				}
+				case "'": {
+					switch (c) {
+						case "'": { // 속성 종료
+							state = '>';
+							break;
+						}
+					}
+					break;
+				}
+				case '!': { // 주석
+					if ((pos + 3 <= syncText.length) && (syncText.substring(pos, pos+3) == "-->")) {
+						state = null;
+						pos += 2;
+					}
+					break;
+				}
+				default: { // 텍스트
+					switch (c) {
+						case '<': { // 태그 시작
+							if ((pos + 4 <= syncText.length) && (syncText.substring(pos, pos+4) == "<!--")) {
+								state = '!';
+								pos += 3;
+							} else {
+								state = '/';
+							}
+							break;
+						}
+						case '\n': { // 줄바꿈 무자 무시
+							break;
+						}
+					}
+				}
+			}
+		}
+		const newList = [];
+		for (let i = tags.length - 1; i >= 0; i--) {
+			newList.push("</" + tags[i] + ">");
+		}
+		newList.push(...list);
+		list = newList;
+	}
+	return list;
+}
+
 $(() => {
 	SmiEditor.refreshHighlight();
 	

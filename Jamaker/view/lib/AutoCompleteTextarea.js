@@ -251,8 +251,11 @@ AutoCompleteTextarea.prototype.onCheck = function(e) {
 		this.text = text;
 		this.pos = pos;
 		this.end = pos + 1;
-		this.open(sets[1]);
+		this.open(AutoCompleteTextarea.getList(text, pos, sets[1]));
 	}
+}
+AutoCompleteTextarea.getList = function(text, pos, list) {
+	return list;
 }
 //TODO: 구분자 더 필요한가...?
 AutoCompleteTextarea.wordBreaker = " \t\r\n()<>[]{},.`'\"?!;:/\\";
