@@ -10,6 +10,7 @@ namespace Jamaker
         public string map;
         public string type;
         public string language;
+        public double startTime = 0;
         public Dictionary<string, string> metadata = new Dictionary<string, string>();
     }
 	
@@ -151,15 +152,47 @@ namespace Jamaker
             proc.StartInfo.Arguments = "-hide_banner -show_format -show_streams -pretty \"" + path + "\"";
             proc.Start();
             lines = proc.StandardOutput.ReadToEnd().Split(new char[] { '\n', '\r' });
+
+            bool isStream = false;
+            int index = 0;
             foreach (string line in lines)
             {
                 Console.WriteLine(line);
+                if (isStream)
+                {
+                    if (line.StartsWith("[/STREAM]"))
+                    {
+                        isStream = false;
+                    }
+                    else if (line.StartsWith("index="))
+                    {
+                        index = int.Parse(line.Substring(6));
+                    }
+                    else if (line.StartsWith("start_time="))
+                    {
+                        string[] parts = line.Substring(11).Split(':');
+                        double time = 0;
+                        foreach (string part in parts)
+                        {
+                            time = time * 60 + double.Parse(part);
+                        }
+                        streams[index].startTime = time;
+                    }
+                }
+                else
+                {
+                    if (line.StartsWith("[STREAM]"))
+                    {
+                        isStream = true;
+                    }
+                }
             }
             proc.Close();
         }
 
         public List<int> audioTrackIndexes = new List<int>();
         public string audioMap = null;
+        public double audioStart = 0;
         private List<double> sfs = null;
         private List<int> kfs = null;
         private List<int> vfs = null;
@@ -190,6 +223,16 @@ namespace Jamaker
         public List<double> ReadSfs(double from, double to)
         {
             sfs = new List<double>();
+
+            // start_time 잡혀있을 경우
+            if (audioStart > 0)
+            {
+                int prev = (int) Math.Round(audioStart * 100);
+                for (int i = 0; i < prev; i++)
+                {
+                    sfs.Add(0);
+                }
+            }
 
             Process proc = GetProcess("ffmpeg.exe", true);
             proc.StartInfo.Arguments = string.Format($"-i \"{path}\" -vn -map {audioMap} -ar 44100 -ac 1 -f f32le -");

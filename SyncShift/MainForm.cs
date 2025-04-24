@@ -175,6 +175,7 @@ namespace Jamaker
                 });
             })).Start();
         }
+        private List<StreamAttr> audios = new List<StreamAttr>();
         public void AfterRefreshInfo(VideoInfo video, bool isOrigin, bool withSaveSkf, bool withKf)
         {
             Console.WriteLine("AfterRefreshInfo");
@@ -191,7 +192,7 @@ namespace Jamaker
 
                 List<StreamAttr> streams = video.streams;
 
-                List<StreamAttr> audios = new List<StreamAttr>();
+                audios = new List<StreamAttr>();
                 for (int i = 0; i < streams.Count; i++)
                 {
                     StreamAttr stream = streams[i];
@@ -215,7 +216,7 @@ namespace Jamaker
                         return;
                     case 1:
                         {
-                            SelectAudio(audios[0].map, isOrigin, withSaveSkf, withKf);
+                            SelectAudio(audios[0], isOrigin, withSaveSkf, withKf);
                             break;
                         }
                     default:
@@ -238,7 +239,18 @@ namespace Jamaker
         }
         public void SelectAudio(string map, bool isOrigin, bool withSaveSkf, bool withKf)
         {
-            Console.WriteLine("SelectAudio: {0}", map);
+            foreach (StreamAttr audio in audios)
+            {
+                if (audio.map == map)
+                {
+                    SelectAudio(audio, isOrigin, withSaveSkf, withKf);
+                    break;
+                }
+            }
+        }
+        public void SelectAudio(StreamAttr stream, bool isOrigin, bool withSaveSkf, bool withKf)
+        {
+            Console.WriteLine("SelectAudio: {0}", stream.map);
             VideoInfo video = originVideoFile;
             string progress = "#originVideo > .input";
             
@@ -254,7 +266,8 @@ namespace Jamaker
             
             new Thread(new ThreadStart(() =>
             {
-            	video.audioMap = map;
+            	video.audioMap = stream.map;
+                video.audioStart = stream.startTime;
             	video.RefreshSkf(withSaveSkf, withKf);
             	SetProgress(progress, 0);
             	HideProcessing();
