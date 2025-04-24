@@ -928,10 +928,10 @@ Subtitle.Ass.prototype.toAttr = function() {
 
 	while ((pos = this.text.indexOf('{', index)) >= 0) {
 		last.text += this.text.substring(index, pos).split("\\N").join("\n");
-
+		
 		const endPos = text.indexOf('}', pos);
 		const attrString = this.text.substring(pos + 1, endPos);
-
+		
 		let mode = -1;
 		let tagStart = 0, tagEnd = 0;
 		let tag = null;

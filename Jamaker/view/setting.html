@@ -1269,30 +1269,30 @@ fieldset ol button,
 	resize: vertical;
 }
 </style>
+<style id="styleColor"></style>
 <style id="styleColorAppend">
+body {
+	background: [selector];
+}
 #settingArea fieldset {
 	border-color: [tabBorder];
 }
 
-#settingArea {
-	background: [editor]88;
-	/*
-	border-color: #888;
-	*/
+#settingArea,
+#applyArea button {
+	background: [background];
+	color: [text];
 }
 #settingNav > a {
-	/*
-	border-color: #888;
-	background: #eee;
-	*/
+	background: [tab];
 	color: [text];
 }
 #settingNav > a.selected {
-	background: [editor]88;
-	border-bottom-color: [editor]dd;
+	background: [background];
+	border-bottom-color: [background];
 }
 #settingNav > a:hover {
-	background: [hover]88;
+	background: [background];
 }
 
 #fieldWindow > fieldset:hover {
