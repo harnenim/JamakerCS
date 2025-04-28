@@ -855,7 +855,7 @@ function setSetting(setting, initial=false) {
 			delete(setting.css);
 		}
 		
-		// 스크롤바 버튼 새로 그려야 함 //- 커서 문제로 현재 미적용...
+		// 스크롤바 버튼 새로 그려야 함
 		let button = "";
 		let disabled = "";
 		{

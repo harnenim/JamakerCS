@@ -126,10 +126,13 @@ window.DEFAULT_SETTING =
 			   + 'let text = editor.getText();\n'
 			   + 'let lines = text.text.split("\\n");\n'
 			   + 'let lineNo = text.text.substring(0, text.selection[0]).split("\\n").length - 1;\n'
-			   + '// 현재 싱크 맨 윗줄 찾기\n'
+			   + '// 현재 싱크 맨 윗줄 찾기 (공백 줄이어도 끊음)\n'
 			   + 'let syncLineNo = lineNo;\n'
 			   + 'while (syncLineNo >= 0) {\n'
-			   + '	if (lines[syncLineNo].substring(0, 6).toUpperCase() == "<SYNC ") {\n'
+			   + '	const line = lines[syncLineNo].trim();\n'
+			   + '	if (line.length == 0\n'
+			   + '	 || line == "&nbsp"\n'
+			   + '	 || line.substring(0, 6).toUpperCase() == "<SYNC ") {\n'
 			   + '		break;\n'
 			   + '	}\n'
 			   + '	syncLineNo--;\n'
@@ -276,7 +279,7 @@ window.DEFAULT_SETTING =
 	, { from: "신 났"     , to: "신났"    , use: true }
 	
 	, { from: "지구 상"   , to: "지구상"  , use: true } // 2017년 맞춤법 변경사항
-	, { from: "지도 상"   , to: "지도상"  , use: false } // '지구 상공'에 과잉 보정되는 경우
+	, { from: "지도 상"   , to: "지도상"  , use: false } // '지구 상공'에 과잉 보정되는 경우 있음
 	, { from: "직선 상"   , to: "직선상"  , use: true }
 	, { from: "궤도 상"   , to: "궤도상"  , use: true }
 	, { from: "인터넷 상" , to: "인터넷상", use: true }
@@ -287,6 +290,13 @@ window.DEFAULT_SETTING =
 	, { from: "맥주있"    , to: "비어있"  , use: false }
 	, { from: "터키"      , to: "튀르키예", use: false }
 	, { from: "켄튀르키예", to: "켄터키"  , use: false }
+	
+	, { from: "ㅇ벗", to: "없"  , use: true }
+	, { from: "ㅇ낳", to: "않"  , use: true }
+	, { from: "햇다", to: "했다", use: true }
+	, { from: "햇어", to: "했어", use: true }
+	, { from: "혓다", to: "혔다", use: true }
+	, { from: "혓어", to: "혔어", use: true }
 	]
 ,	tempSave: 300 // 임시 저장 주기 설정 현재 만들지 않음
 ,	useTab: false // 탭 사용 기본값은 꺼두는 걸로

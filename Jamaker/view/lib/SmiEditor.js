@@ -1235,6 +1235,9 @@ SmiEditor.prototype.setText = function(text, selection) {
 	} else {
 		this.setCursor(this.input[0].selectionStart);
 	}
+	if (this.block.is(":visible")) {
+		this.showBlockArea();
+	}
 	
 	this.history.log();
 	this.render();
@@ -2991,7 +2994,7 @@ SmiEditor.fillSync = (text) => {
 
 // 자동완성에 닫는 태그 추가
 if (window.AutoCompleteTextarea) {
-	AutoCompleteTextarea.getList = function (text, pos, list) {
+	AutoCompleteTextarea.getList = function(text, pos, list) {
 		if (text[pos] == '<') {
 			// '<' 입력일 경우 닫는 태그 자동완성에 추가
 			let lines = text.substring(0, pos).split("\n");
@@ -3006,11 +3009,11 @@ if (window.AutoCompleteTextarea) {
 				lines = lines.slice(begin);
 			}
 			let syncText = lines.join("");
-
+			
 			let state = null;
 			let tag = null;
 			let tags = [];
-
+			
 			function openTag() {
 				if (tag.toUpperCase() != "BR") {
 					tags.push(tag);
@@ -3026,7 +3029,7 @@ if (window.AutoCompleteTextarea) {
 					}
 				}
 			}
-
+			
 			for (let pos = 0; pos < syncText.length; pos++) {
 				const c = syncText[pos];
 				switch (state) {
@@ -3187,7 +3190,7 @@ if (window.AutoCompleteTextarea) {
 						break;
 					}
 					case '!': { // 주석
-						if ((pos + 3 <= syncText.length) && (syncText.substring(pos, pos + 3) == "-->")) {
+						if ((pos + 3 <= syncText.length) && (syncText.substring(pos, pos+3) == "-->")) {
 							state = null;
 							pos += 2;
 						}
@@ -3196,7 +3199,7 @@ if (window.AutoCompleteTextarea) {
 					default: { // 텍스트
 						switch (c) {
 							case '<': { // 태그 시작
-								if ((pos + 4 <= syncText.length) && (syncText.substring(pos, pos + 4) == "<!--")) {
+								if ((pos + 4 <= syncText.length) && (syncText.substring(pos, pos+4) == "<!--")) {
 									state = '!';
 									pos += 3;
 								} else {
@@ -3213,7 +3216,10 @@ if (window.AutoCompleteTextarea) {
 			}
 			const newList = [];
 			for (let i = tags.length - 1; i >= 0; i--) {
-				newList.push("</" + tags[i] + ">");
+				const item = "</" + tags[i] + ">";
+				if (newList.indexOf(item) < 0) { // 중복 제외
+					newList.push(item);
+				}
 			}
 			newList.push(...list);
 			list = newList;
