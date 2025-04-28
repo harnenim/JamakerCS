@@ -40,6 +40,18 @@ $(() => {
 		// 지역변수 setting도 건드려야 함
 		opener.setting.show = setting.show = index;
 	}
+	// Ctrl+Tab 탭 전환
+	$(document).on("keydown", function(e) {
+		if (e.keyCode == 9 && e.ctrlKey) {
+			let index = setting.show;
+			if (e.shiftKey) {
+				index = (index + 7) % 8;
+			} else {
+				index = (index + 1) % 8;
+			}
+			show(index);
+		}
+	});
 	let opened = null;
 	const submitFuncs = {};
 	const refreshFuncs = {};
