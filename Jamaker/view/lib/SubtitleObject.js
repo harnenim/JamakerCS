@@ -744,12 +744,14 @@ Subtitle.Width =
 	}
 }
 
-Subtitle.Attr = function(old) {
+// 객체 복사용이 아닌, 기존 속성에 이어지는 새 객체를 만드는 쪽으로 만들었던 부분이라 text는 비운 채로 생성함
+Subtitle.Attr = function(old, text="") {
 	if (old) {
-		this.text = "";
+		this.text = text;
 		this.b    = old.b;
 		this.i    = old.i;
 		this.u    = old.u;
+		this.s    = old.s;
 		this.fs   = old.fs;
 		this.fn   = old.fn;
 		this.fc   = old.fc;
@@ -757,10 +759,11 @@ Subtitle.Attr = function(old) {
 		this.shake = old.shake;
 		this.typing = old.typing;
 	} else {
-		this.text = "";
+		this.text = text;
 		this.b    = false; // Bold
 		this.i    = false; // Italic
 		this.u    = false; // Underline
+		this.s    = false; // Strike
 		this.fs   = 0;	// FontSize
 		this.fn   = ""; // FontName
 		this.fc   = ""; // Fontcolor
@@ -847,7 +850,9 @@ Subtitle.Attr.prototype.toHtml = function() {
 	let css = "";
 	if (this.b) css += "font-weight: bold;";
 	if (this.i) css += "font-style: italic;";
-	if (this.u) css += "font-decoration: underline;";
+	if ( this.u && !this.s) css += "text-decoration: underline;";
+	if (!this.u &&  this.s) css += "text-decoration: line-through;";
+	if ( this.u &&  this.s) css += "text-decoration: line-through underline;";
 	if (this.fs > 0) css += "font-size: " + fs + "px; line-height: " + (11 + 4 * this.fs) + "px;";
 	if (this.fn != null && this.fn.length > 0) css += "font-family: '" + this.fn + "';";
 	if (this.fc != null && this.fc.length > 0) css += "color: #" + this.fc + ";";
@@ -1036,6 +1041,9 @@ Subtitle.Ass.prototype.fromAttr = function(attrs) {
 
 		if (!last.u && attr.u) text += "{\\u1}";
 		else if (last.u && !attr.u) text += "{\\u}";
+
+		if (!last.s && attr.s) text += "{\\s1}";
+		else if (last.s && !attr.s) text += "{\\s}";
 
 		if (last.fn != attr.fn) text += "{\\fn" + attr.fn + "}";
 
@@ -1414,6 +1422,7 @@ Subtitle.Smi.Status = function() {
 	this.b = 0;
 	this.i = 0;
 	this.u = 0;
+	this.s = 0;
 	this.fs = [];
 	this.fn = [];
 	this.fc = [];
@@ -1435,6 +1444,11 @@ Subtitle.Smi.Status.prototype.setI = function(isOpen) {
 Subtitle.Smi.Status.prototype.setU = function(isOpen) {
 	if (isOpen) this.u++;
 	else if (this.u > 0) this.u--;
+	return this;
+}
+Subtitle.Smi.Status.prototype.setS = function(isOpen) {
+	if (isOpen) this.s++;
+	else if (this.s > 0) this.s--;
 	return this;
 }
 Subtitle.Smi.Status.prototype.setFont = function(attrs) {
@@ -1587,6 +1601,7 @@ Subtitle.Smi.setStyle = (attr, status) => {
 	attr.b = status.b > 0;
 	attr.i = status.i > 0;
 	attr.u = status.u > 0;
+	attr.s = status.s > 0;
 	attr.fs = (status.fs.length > 0) ? status.fs[status.fs.length - 1] : 0;
 	attr.fn = (status.fn.length > 0) ? status.fn[status.fn.length - 1] : "";
 	attr.fc = (status.fc.length > 0) ? status.fc[status.fc.length - 1] : "";
@@ -1626,6 +1641,11 @@ Subtitle.Smi.toAttr = (text) => {
 				if (last.text.length > 0)
 					result.push((last = new Subtitle.Attr()));
 				Subtitle.Smi.setStyle(last, status.setU(true));
+				break;
+			case "S":
+				if (last.text.length > 0)
+					result.push((last = new Subtitle.Attr()));
+				Subtitle.Smi.setStyle(last, status.setS(true));
 				break;
 			case "FONT":
 				if (last.text.length > 0)
@@ -1676,6 +1696,11 @@ Subtitle.Smi.toAttr = (text) => {
 				if (last.text.length > 0)
 					result.push((last = new Subtitle.Attr()));
 				Subtitle.Smi.setStyle(last, status.setU(false));
+				break;
+			case "S":
+				if (last.text.length > 0)
+					result.push((last = new Subtitle.Attr()));
+				Subtitle.Smi.setStyle(last, status.setS(false));
 				break;
 			case "FONT":
 				if (last.text.length > 0)
@@ -1938,6 +1963,7 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => {
 			if (last.b) text += "</B>";
 			if (last.i) text += "</I>";
 			if (last.u) text += "</U>";
+			if (last.s) text += "</S>";
 			
 			// 기존에 속성이 있었을 때 닫는 태그
 			if (last.fs > 0 || !last.fn == ("") || !last.fc == ("") || last.fade != 0 || last.shake != null || last.typing != null) {
@@ -1949,6 +1975,7 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => {
 			if (attr.b) { prev += "<B>"; next = "</B>" + next; };
 			if (attr.i) { prev += "<I>"; next = "</I>" + next; };
 			if (attr.u) { prev += "<U>"; next = "</U>" + next; };
+			if (attr.s) { prev += "<S>"; next = "</S>" + next; };
 			
 			// 속성이 있을 때 여는 태그
 			let fontStart = "";
@@ -1977,6 +2004,7 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => {
 			if (attr.b) text += "<B>";
 			if (attr.i) text += "<I>";
 			if (attr.u) text += "<U>";
+			if (attr.s) text += "<S>";
 			
 			// 속성이 있을 때 여는 태그
 			if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.shake != null || attr.typing != null) {
@@ -2004,6 +2032,9 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => {
 			
 			if (!last.u && attr.u) text += "<U>";
 			else if (last.u && !attr.u) text += "</U>";
+			
+			if (!last.s && attr.s) text += "<S>";
+			else if (last.s && !attr.s) text += "</S>";
 			
 			if ( last.fs   != attr.fs
 			 ||  last.fn   != attr.fn
@@ -2468,6 +2499,7 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				for (let k = 0; k < newAttrs.length; k++) {
 					newAttrs[k].b = attr.b;
 					newAttrs[k].i = attr.i;
+					newAttrs[k].s = attr.s;
 					newAttrs[k].fc = attr.fc;
 					newAttrs[k].fn = attr.fn;
 					newAttrs[k].fs = attr.fs;
