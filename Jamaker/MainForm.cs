@@ -587,7 +587,7 @@ namespace Jamaker
             UpdateViewerSetting();
         }
 
-        private string[] videoExts = new string[] { "mkv", "mp4", "avi", "m2ts", "ts" };
+        private string[] videoExts = new string[] { "mkv", "mp4", "avi", "wmv", "m2ts", "ts" };
         public void SetVideoExts(string exts)
         {
             videoExts = exts.Split(',');
