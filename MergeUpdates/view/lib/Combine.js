@@ -502,8 +502,8 @@ window.Combine = {
 										}
 										{	const tag = newLine.substring(0, tagEnd).toUpperCase();
 											
-											// 밑줄/취소선은 공백문자 추가되면 안 됨
-											if (tag == "<U>" || tag == "<S>") {
+											// 밑줄/취소선, RUBY태그는 공백문자 추가되면 안 됨
+											if (tag == "<U>" || tag == "<S>" || tag == "<RUBY>") {
 												break;
 											}
 											// TODO: font size 적용된 경우도 막아야 하나...?
@@ -526,8 +526,8 @@ window.Combine = {
 										}
 										{	const tag = newLine.substring(tagStart, tagEnd).toUpperCase();
 											
-											// 밑줄/취소선은 공백문자 추가되면 안 됨
-											if (tag == "</U>" || tag == "</S>") {
+											// 밑줄/취소선, RUBY태그는 공백문자 추가되면 안 됨
+											if (tag == "</U>" || tag == "</S>" || tag == "</RUBY>") {
 												break;
 											}
 											// TODO: font size 적용된 경우도 막아야 하나...?
