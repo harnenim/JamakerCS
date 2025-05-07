@@ -1193,12 +1193,20 @@ if (Subtitle && Subtitle.SmiFile) {
 				}
 			}
 		}
-		result[0] = main.toTxt();
-		for (let i = 1; i < result.length; i++) {
-			if (result[i].length == 0) {
-				result.splice(i--, 1);
+		if (withComment) {
+			result[0] = main.toTxt();
+			for (let i = 1; i < result.length; i++) {
+				if (result[i].length == 0) {
+					result.splice(i--, 1);
+				}
 			}
+			return result.join("\n");
+			
+		} else {
+			for (let i = 0; i < main.body.length; i++) {
+				main.body[i].text = main.body[i].text.split("\n").join("");
+			}
+			return main.toTxt();
 		}
-		return withComment ? result.join("\n") : result[0];
 	}
 }
