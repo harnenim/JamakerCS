@@ -1643,6 +1643,7 @@ SmiEditor.prototype.deleteLine = function() {
 	this.setCursor(cursor);
 	this.history.log();
 	this.render();
+	this.scrollToCursor();
 }
 
 SmiEditor.prototype.tagging = function(tag, fromCursor) {
