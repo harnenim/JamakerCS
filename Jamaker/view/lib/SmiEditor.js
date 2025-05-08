@@ -428,6 +428,25 @@ SmiEditor.findSync = (sync, fs=[], findNear=true, from=0, to=-1) => {
 		return SmiEditor.findSync(sync, fs, findNear, from, mid);
 	}
 }
+SmiEditor.findSyncIndex = (sync, fs=[], from=0, to=-1) => {
+	if (fs.length == 0) return null;
+	if (to < 0) to = fs.length;
+	if (from + 1 == to) {
+		const dist0 = sync - fs[from];
+		const dist1 = fs[to] - sync;
+		if (dist0 <= dist1) {
+			return from;
+		} else {
+			return to;
+		}
+	}
+	const mid = from + Math.floor((to - from) / 2);
+	if (fs[mid] < sync) {
+		return SmiEditor.findSyncIndex(sync, fs, mid, to);
+	} else {
+		return SmiEditor.findSyncIndex(sync, fs, from, mid);
+	}
+}
 SmiEditor.getSyncTime = (sync, forKeyFrame=false, output={}) => { /* output: 리턴값은 숫자여야 하는데, 키프레임 상태값 반환이 필요해져서 C# out처럼 만듦 */
 	if (!sync) sync = (time + SmiEditor.sync.weight);
 	if (SmiEditor.sync.frame) { // 프레임 단위 싱크 보정
