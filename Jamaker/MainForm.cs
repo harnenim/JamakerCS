@@ -9,6 +9,8 @@ using System.Diagnostics;
 using Jamaker.addon;
 using System.Reflection;
 using System.Threading;
+using CefSharp.DevTools.Profiler;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 
 namespace Jamaker
 {
@@ -1014,6 +1016,84 @@ namespace Jamaker
                     });
                 }
                 catch (Exception e) { Console.WriteLine(e); }
+            }).Start();
+        }
+        public void RenderThumbnails(string path, string paramsStr)
+        {
+            Console.WriteLine($"RenderThumbnails({path}, {paramsStr})");
+            string[] list = paramsStr.Split('\n');
+            new Thread(() =>
+            {
+                string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
+                string exeFile = Path.Combine(exePath, "ffmpeg.exe");
+
+                string dir = "temp/thumbnails";
+                DirectoryInfo di = new DirectoryInfo(dir);
+                if (!di.Exists)
+                {
+                    di.Create();
+                }
+
+                int didread;
+                int offset = 0;
+                byte[] buffer = new byte[sizeof(float) * (1024 + 1)];
+
+                foreach (string paramStr in list)
+                {
+                    string[] param = paramStr.Split(',');
+                    int time  = int.Parse(param[0]);
+                    double length = double.Parse(param[1]) / 1000;
+                    int begin = int.Parse(param[2]);
+                    int end   = int.Parse(param[3]);
+                    string flag = param[4];
+
+                    int ms = time % 60000;
+                    int m = time / 60000;
+                    int h = m / 60;
+                    m %= 60;
+                    string timeStr = ((100 + h) * 100 + m) * 100000 + ms + "";
+                    timeStr = timeStr.Substring(1, 2) + ":" + timeStr.Substring(3, 2) + ":" + timeStr.Substring(5, 2) + "." + timeStr.Substring(7, 3);
+
+                    string vf = "";
+                    if (flag == "b") vf = "-vf \"curves=r='0/0 0.1/0.9 1/1'\" ";
+                    else
+                    if (flag == "d") vf = "-vf \"curves=r='0/0 0.9/0.1 1/1'\" ";
+
+                    string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s 192x108 -qscale:v 2 {vf}-f image2 \"{dir}/{begin}{flag}_%d.jpg\"";
+
+                    try
+                    {
+                        Process proc = new Process();
+                        proc.StartInfo.UseShellExecute = false;
+                        proc.StartInfo.CreateNoWindow = true;
+                        proc.StartInfo.RedirectStandardOutput = true;
+                        proc.StartInfo.RedirectStandardError = true;
+                        proc.StartInfo.FileName = exeFile;
+                        proc.StartInfo.Arguments = args;
+                        proc.Start();
+                        proc.BeginErrorReadLine();
+
+                        Stream stream = proc.StandardOutput.BaseStream;
+
+                        while ((didread = stream.Read(buffer, offset, sizeof(float) * 1024)) != 0)
+                        {
+                        }
+
+                        for (int index = 0; index < (end - begin); index++)
+                        {
+                            string from = $"{dir}/{begin}{flag}_{index + 1}.jpg";
+                            string to = $"{dir}/{begin + index}{flag}.jpg";
+                            File.Delete(to);
+                            File.Move(from, to);
+                        }
+
+                        Script("afterRenderThumbnails", new object[] { begin, end, flag });
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.ToString());
+                    }
+                }
             }).Start();
         }
 

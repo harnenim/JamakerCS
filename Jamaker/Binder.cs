@@ -105,6 +105,10 @@
         {
             _.RequestFrames(path);
         }
+        public void RenderThumbnails(string path, string paramsStr)
+        {
+            _.RenderThumbnails(path, paramsStr);
+        }
         public void DoExit(bool resetPlayer, bool exitPlayer)
         {
             _.DoExit(resetPlayer, exitPlayer);

@@ -1,0 +1,393 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>화면 싱크 매니저</title>
+	<script src="../lib/jquery-3.2.1.min.js"></script>
+	<script src="../lib/SubtitleObject.js"></script>
+	<script src="../lib/popup.js"></script>
+	<script src="../lib/SmiEditor.js"></script>
+	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
+	<script>
+windowName = "addon";
+
+// 초기 상태 기억
+// TODO: 경우에 따라 opener 분리 필요
+const tab = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
+const origin = tab ? tab.getText() : null;
+if (tab) {
+	SmiEditor.video = opener.SmiEditor.video;
+}
+const RANGE = 8;
+
+$(() => {
+	if (!origin) {
+		alert("작업 대상이 없습니다.");
+		window.close();
+	}
+	if (SmiEditor.video.fs.length == 0) {
+		alert("영상 프레임 정보가 없습니다.");
+		window.close();
+	}
+	const fs = SmiEditor.video.fs;
+	
+	origin.tab = tab;
+	origin.lines = tab.lines;
+	origin.start = 0;
+	origin.end = 0;
+
+	// 선택 범위만 작업
+	if (origin.selection[0] != origin.selection[1]) {
+		origin.start = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
+		origin.end   = origin.text.substring(0, origin.selection[1]).split("\n").length;
+	} else {
+		origin.end = origin.text.split("\n").length;
+	}
+	
+	const lines = origin.lines.slice(origin.start, origin.end);
+	for (let i = 0; i < lines.length; i++) {
+		lines[i] = lines[i].TEXT;
+	}
+	origin.file = new Subtitle.SmiFile(lines.join("\n"));
+	
+	const $body = $("body");
+	const $tbody = $("#editor tbody").empty();
+	const frameSyncs = [];
+	
+	$("#editor thead").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origin.file.header)));
+	$("#editor tfoot").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origin.file.footer)));
+	
+	const renderList = [];
+	let renderGroup = { end: -11 };
+	
+	let lastFade = 0;
+	for (let i = 0; i < origin.file.body.length; i++) {
+		const smi = origin.file.body[i];
+		const attrs = smi.toAttr();
+		let fade = 0;
+		for (let j = 0; j < attrs.length; j++) {
+			const attr = attrs[j];
+			if (attr.fade == -1 || attr.fade == 1) {
+				fade = attr.fade;
+				break;
+			}
+		}
+		
+		const $tr = $("<tr>").data({ smi: smi });
+		if (smi.syncType == Subtitle.SyncType.frame) {
+			const frameIndex = SmiEditor.findSyncIndex(smi.start, fs);
+			const $frames = $("<div>").addClass("frames");
+			const $sync = $("<td>").addClass("sync").text(fs[frameIndex]);
+			$tr.addClass("fs").append($("<td>").append($frames)).append($sync).append($("<td>").text(smi.text));
+			$tr.data({ index: frameSyncs.length, $frames: $frames, frameIndex: frameIndex, offset: 0 });
+			$tbody.append($tr);
+			frameSyncs.push($tr);
+			
+			let flag = "";
+			if (fade == 1) {
+				// 페이드인 시작 이미지 밝게
+				flag = "b";
+			} else if (fade == -1) {
+				// 페이드아웃 시작 이미지 어둡게
+				flag = "d";
+			} else if (lastFade == -1) {
+				// 페이드아웃 종료 이미지 밝게
+				flag = "b";
+			} else if (lastFade == 1) {
+				// 페이드인 종료 이미지 어둡게
+				flag = "d";
+			}
+			
+            const begin = (frameIndex < RANGE ? 0 : frameIndex - RANGE);
+            const end = (frameIndex + RANGE > fs.length ? fs.length : frameIndex + RANGE);
+			if (renderGroup.flag == flag && begin < renderGroup.end + 50) { // 50프레임 정도는 불필요한 섬네일 생성으로 인한 손해보단, 연속 생성에 따른 이득이 크다고 예상
+				renderGroup.end = end;
+			} else {
+				renderList.push(renderGroup = {
+						flag: flag
+					,	time: fs[begin] + 1 // 반올림되거나 한 경우 고려해서 +1ms
+					,	begin: begin
+					,	end: end
+				});
+			}
+			
+            for (let j = -RANGE; j < RANGE; j++) {
+				const imgIndex = frameIndex + j;
+				$frames.append($("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j }));
+			}
+			
+		} else {
+			$tr.append($("<td>").html("&nbsp;")).append($("<td>").addClass("sync").text(smi.syncType == Subtitle.SyncType.inner ? "~" : smi.start)).append($("<td>").text(smi.text))
+			$tbody.append($tr);
+		}
+		
+		lastFade = fade;
+	}
+	
+	// 이미지 렌더링 요청
+	let params = [];
+	for (let i = 0; i < renderList.length; i++) {
+		const group = renderList[i];
+		params.push([group.time, fs[group.end - 1] + 1 - group.time, group.begin, group.end, group.flag].join(","));
+	}
+	opener.binder.renderThumbnails(SmiEditor.video.path, params.join("\n"));
+	
+	// 렌더링 완료 후 이미지 세팅
+	opener.afterRenderThumbnails = function(begin, end, flag) {
+		for (let i = begin; i < end; i++) {
+			$tbody.find("img.img" + i + flag).attr({ src: "../../temp/thumbnails/" + i + flag + ".jpg" });
+		}
+	}
+	
+	let selected = -1;
+	function select(index) {
+		if (selected == index) return;
+		
+		const $tr = frameSyncs[selected = index];
+		
+		$tbody.find("tr.fs.selected").removeClass("selected");
+		$tr.addClass("selected");
+		
+		const offset = $tr.offset();
+		if (offset.top < 0) {
+			$body.stop().animate({ scrollTop: $body.scrollTop() + offset.top }, 200);
+		} else {
+			const bottom = offset.top + 56;
+			const margin = $body.height() - bottom;
+			if (margin < 0) {
+				$body.stop().animate({ scrollTop: $body.scrollTop() - margin }, 200);
+			}
+		}
+	}
+	function moveSync(direction, isOffset=false) {
+		const $tr = frameSyncs[selected];
+		const data = $tr.data();
+		
+		const offset = isOffset ? direction : (data.offset + direction);
+		if (offset < -12 || offset >= 12) return;
+		
+		const index = data.frameIndex + offset;
+		if (index < 0) return;
+		
+		$tr.data({ offset: offset });
+		data.$frames.css({ left: ((2.5 - offset) * 98) + "px" });
+		$tr.find("td.sync").text(fs[index]);
+	}
+	
+	function apply() {
+		const smis = [];
+		$tbody.find("tr").each(function() {
+			const $tr = $(this);
+			const smi = $tr.data("smi");
+			if ($tr.hasClass("fs")) {
+				smi.start = Number($tr.find(".sync").text());
+			}
+			smis.push(smi);
+		});
+		
+		// 중간 싱크 재계산
+		let startIndex = -1;
+		for (let i = 1; i < smis.length; i++) {
+			if (smis[i].syncType == Subtitle.SyncType.inner) {
+				if (startIndex < 0) {
+					startIndex = i - 1;
+				}
+			} else {
+				if (startIndex >= 0) {
+					const endIndex = i;
+					const startSync = smis[startIndex].start;
+					const endSync   = smis[endIndex  ].start;
+					const count = endIndex - startIndex;
+
+					for (let j = 1; j < count; j++) {
+						smis[startIndex + j].start = Math.round(((count - j) * startSync + j * endSync) / count);
+					}
+					startIndex = -1;
+				}
+			}
+		}
+		
+		const result = new Subtitle.SmiFile();
+		result.header = origin.file.header;
+		result.footer = origin.file.footer;
+		result.body = smis;
+		
+		// 해당 줄 앞뒤 전체 선택되도록 조정
+		const origLines = origin.text.split("\n");
+		const prev = origLines.slice(0, origin.start).join("\n");
+		const next = origLines.slice(origin.end).join("\n");
+		
+		// 교체 및 종료
+		origin.tab.setText((prev ? prev + "\n" : "") + result.toTxt() + (next ? "\n" + next : ""), [(origin.start > 0) ? (front.join("\n").length + 1) : 0]);
+	}
+	
+	$tbody.on("click", "tr.fs", function(e) {
+		select($(this).data("index"));
+	}).on("click", "img.frame", function(e) {
+		moveSync($(this).data("offset"), true);
+	});
+	
+	$(document).on("keydown", function(e) {
+		switch (e.keyCode) {
+			case 38: { // ↑
+				if (e.ctrlKey) {
+					$body.stop().animate({ scrollTop: $body.scrollTop() - 56 }, 200);
+					break;
+				}
+				if (selected > 0) {
+					select(selected - 1);
+				}
+				break;
+			}
+			case 40: { // ↓
+				if (e.ctrlKey) {
+					$body.stop().animate({ scrollTop: $body.scrollTop() + 56 }, 200);
+					break;
+				}
+				if (selected < frameSyncs.length - 1) {
+					select(selected + 1);
+				}
+				break;
+			}
+			case 37: { // ←
+				moveSync(-1);
+				break;
+			}
+			case 39: { // →
+				moveSync(+1);
+				break;
+			}
+		}
+	});
+	$("#inputShift").on("keydown", function(e) {
+		e.stopPropagation();
+	});
+	$("#formShift").on("submit", function() {
+		const shift = Number($("#inputShift").val());
+		for (let i = 0; i < origin.file.body.length; i++) {
+			const smi = origin.file.body[i];
+			if (smi.syncType == Subtitle.SyncType.frame) {
+				const frameIndex = SmiEditor.findSyncIndex(smi.start, fs);
+				const shiftIndex = SmiEditor.findSyncIndex(smi.start + shift, fs);
+				const offset = shiftIndex - frameIndex;
+				const $tr = $tbody.find("tr:eq(" + i + ")");
+				$tr.data({ offset: offset });
+				$tr.data("$frames").css({ left: ((2.5 - offset) * 98) + "px" });
+				$tr.find("td.sync").text(fs[shiftIndex]);
+			}
+		}
+		return false;
+	});
+	
+	$("#btnApply").on("click", function() {
+		apply();
+		window.close();
+	});
+	
+	select(0);
+});
+	</script>
+	<style>
+body {
+	overflow-y: scroll;
+}
+#editor {
+	width: 100%;
+	border: 0;
+}
+#editor tr {
+	line-height: 0;
+	color: #888;
+}
+#editor tr.fs {
+	height: 56px;
+	color: #000;
+}
+#editor tr.fs.selected td {
+	background: #ffc;
+}
+#editor td {
+	overflow: hidden;
+	padding: 4px 2px;
+}
+#editor td:first-child {
+	position: relative;
+	border-left: 0;
+}
+#editor td:nth-child(2) {
+	text-align: right;
+}
+#editor td:last-child {
+	white-space: pre;
+	border-right: 0;
+}
+#editor .frames {
+	position: absolute;
+	top: 0;
+	left: calc(2.5 * 98px);
+	height: 56px;
+	transition: 0.2s;
+}
+#editor .frame {
+	display: block;
+	position: absolute;
+	top: 0;
+	border: 1px solid #888;
+	width: 98px;
+	height: 56px;
+}
+#frameChecker {
+	position: absolute;
+	top: 0;
+	left: calc(2.5 * 98px - 1px);
+	width: 2px;
+	bottom: 0;
+	background: #f00;
+}
+#formShift, #btnApply {
+	position: fixed;
+	opacity: 0.5;
+	right: 0;
+}
+#formShift:hover, #btnApply:hover {
+	opacity: 1;
+}
+#formShift {
+	top: 0;
+	border: 0 solid #aaa;
+	border-width: 0 0 1px 1px;
+	background: #fff;
+	width: 160px;
+	height: 28px;
+	padding: 4px;
+}
+#inputShift {
+	width: 50px;
+}
+#btnShift {
+	width: 50px;
+}
+#btnApply {
+	width: 100px;
+	height: 30px;
+	bottom: 0;
+}
+	</style>
+</head>
+<body>
+	<table id="editor">
+		<colgroup>
+			<col style="width: calc(5 * 98px);" />
+			<col style="width: 80px;" />
+			<col />
+		</colgroup>
+		<thead></thead>
+		<tbody></tbody>
+		<tfoot></tfoot>
+	</table>
+	<div id="frameChecker"></div>
+	<form id="formShift"><label>가중치 <input id="inputShift" type="number" value="0" /></label><button type="submit" id="btnShift">초기화</button></form>
+	<button type="button" id="btnApply">적용</button>
+</body>
+</html>
