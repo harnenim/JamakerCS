@@ -219,7 +219,7 @@ $(() => {
 		const next = origLines.slice(origin.end).join("\n");
 		
 		// 교체 및 종료
-		origin.tab.setText((prev ? prev + "\n" : "") + result.toTxt() + (next ? "\n" + next : ""), [(origin.start > 0) ? (front.join("\n").length + 1) : 0]);
+		origin.tab.setText((prev ? prev + "\n" : "") + result.toTxt() + (next ? "\n" + next : ""), [prev ? prev.length + 1 : 0]);
 	}
 	
 	$tbody.on("click", "tr.fs", function(e) {
