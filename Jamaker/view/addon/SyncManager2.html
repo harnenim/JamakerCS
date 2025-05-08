@@ -25,10 +25,12 @@ $(() => {
 	if (!origin) {
 		alert("작업 대상이 없습니다.");
 		window.close();
+		return;
 	}
-	if (SmiEditor.video.fs.length == 0) {
+	if (!SmiEditor || !SmiEditor.video || !SmiEditor.video.fs || !SmiEditor.video.fs.length) {
 		alert("영상 프레임 정보가 없습니다.");
 		window.close();
+		return;
 	}
 	const fs = SmiEditor.video.fs;
 	
@@ -50,6 +52,11 @@ $(() => {
 		lines[i] = lines[i].TEXT;
 	}
 	origin.file = new Subtitle.SmiFile(lines.join("\n"));
+    if (!origin.file.body.length) {
+        alert("작업 대상이 없습니다.");
+        window.close();
+        return;
+	}
 	
 	const $body = $("body");
 	const $tbody = $("#editor tbody").empty();
@@ -136,7 +143,7 @@ $(() => {
 	// 렌더링 완료 후 이미지 세팅
 	opener.afterRenderThumbnails = function(begin, end, flag) {
 		for (let i = begin; i < end; i++) {
-			$tbody.find("img.img" + i + flag).attr({ src: "../../temp/thumbnails/" + i + flag + ".jpg" });
+			$tbody.find("img.img" + i + flag).data({ img: i + flag }).attr({ src: "../../temp/thumbnails/" + i + flag + ".jpg" });
 		}
 	}
 	
@@ -224,8 +231,10 @@ $(() => {
 	
 	$tbody.on("click", "tr.fs", function(e) {
 		select($(this).data("index"));
-	}).on("click", "img.frame", function(e) {
-		moveSync($(this).data("offset"), true);
+	}).on("click", "img.frame", function (e) {
+		const $img = $(this);
+		select($img.parents("tr").data("index"));
+		moveSync($img.data("offset"), true);
 	});
 	
 	$(document).on("keydown", function(e) {
@@ -278,6 +287,13 @@ $(() => {
 			}
 		}
 		return false;
+	});
+	$("#cbDiff").on("click", function() {
+		const diff = $(this).prop("checked") ? "_" : "";
+		$tbody.find("img").each(function() {
+			const $img = $(this);
+            $img.attr({ src: "../../temp/thumbnails/" + $img.data("img") + diff + ".jpg" });
+		});
 	});
 	
 	$("#btnApply").on("click", function() {
@@ -359,7 +375,7 @@ body {
 	border-width: 0 0 1px 1px;
 	background: #fff;
 	width: 160px;
-	height: 28px;
+	height: 44px;
 	padding: 4px;
 }
 #inputShift {
@@ -387,7 +403,10 @@ body {
 		<tfoot></tfoot>
 	</table>
 	<div id="frameChecker"></div>
-	<form id="formShift"><label>가중치 <input id="inputShift" type="number" value="0" /></label><button type="submit" id="btnShift">초기화</button></form>
+	<form id="formShift"><label>가중치 <input id="inputShift" type="number" value="0" /></label><button type="submit" id="btnShift">초기화</button>
+		<br />
+		<label><input type="checkbox" id="cbDiff" /> 비교값 보기</label>
+	</form>
 	<button type="button" id="btnApply">적용</button>
 </body>
 </html>

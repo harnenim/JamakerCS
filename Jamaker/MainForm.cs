@@ -9,8 +9,6 @@ using System.Diagnostics;
 using Jamaker.addon;
 using System.Reflection;
 using System.Threading;
-using CefSharp.DevTools.Profiler;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 
 namespace Jamaker
 {
@@ -1055,11 +1053,13 @@ namespace Jamaker
                     timeStr = timeStr.Substring(1, 2) + ":" + timeStr.Substring(3, 2) + ":" + timeStr.Substring(5, 2) + "." + timeStr.Substring(7, 3);
 
                     string vf = "";
+                    /*
                     if (flag == "b") vf = "-vf \"curves=r='0/0 0.1/0.9 1/1'\" ";
                     else
                     if (flag == "d") vf = "-vf \"curves=r='0/0 0.9/0.1 1/1'\" ";
+                    */
 
-                    string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s 192x108 -qscale:v 2 {vf}-f image2 \"{dir}/{begin}{flag}_%d.jpg\"";
+                    string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s 96x54 -qscale:v 2 {vf}-f image2 \"{dir}/{begin}{flag}_%d.jpg\"";
 
                     try
                     {
@@ -1077,14 +1077,48 @@ namespace Jamaker
 
                         while ((didread = stream.Read(buffer, offset, sizeof(float) * 1024)) != 0)
                         {
+                            Console.WriteLine(didread);
                         }
 
                         for (int index = 0; index < (end - begin); index++)
                         {
-                            string from = $"{dir}/{begin}{flag}_{index + 1}.jpg";
-                            string to = $"{dir}/{begin + index}{flag}.jpg";
-                            File.Delete(to);
-                            File.Move(from, to);
+                            string orig = $"{dir}/{begin}{flag}_{index + 1}.jpg";
+                            string trgt = $"{dir}/{begin + index}{flag}.jpg";
+                            if (File.Exists(trgt)) File.Delete(trgt);
+                            File.Move(orig, trgt);
+
+                            string prev = $"{dir}/{begin + index - 1}{flag}.jpg";
+                            string diff = $"{dir}/{begin + index}{flag}_.jpg";
+                            if (File.Exists(diff)) File.Delete(diff);
+                            if (File.Exists(prev))
+                            {
+                                // 라이브러리 써보려고 했는데 결과물이 별로임 & 사이즈가 크지 않음
+                                Bitmap bPrev = new Bitmap(prev);
+                                Bitmap bTrgt = new Bitmap(trgt);
+                                new Thread(() =>
+                                {
+                                    Bitmap bDiff = new Bitmap(96, 54);
+                                    for (int y = 0; y < 54; y++)
+                                    {
+                                        for (int x = 0; x < 96; x++)
+                                        {
+                                            Color p = bPrev.GetPixel(x, y);
+                                            Color t = bTrgt.GetPixel(x, y);
+                                            Color d = Color.FromArgb(255
+                                                , Math.Min(Math.Abs(p.R - t.R) * 4, 255)
+                                                , Math.Min(Math.Abs(p.G - t.G) * 4, 255)
+                                                , Math.Min(Math.Abs(p.B - t.B) * 4, 255)
+                                            );
+                                            bDiff.SetPixel(x, y, d);
+                                        }
+                                    }
+                                    bDiff.Save(diff, System.Drawing.Imaging.ImageFormat.Jpeg);
+                                }).Start();
+                            }
+                            else
+                            {
+                                File.Copy(trgt, diff);
+                            }
                         }
 
                         Script("afterRenderThumbnails", new object[] { begin, end, flag });
