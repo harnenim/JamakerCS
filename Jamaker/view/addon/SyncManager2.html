@@ -293,7 +293,7 @@ $(() => {
 				const offset = shiftIndex - frameIndex;
 				const $tr = $tbody.find("tr:eq(" + i + ")");
 				$tr.data({ offset: offset });
-				$tr.data("$frames").css({ left: "50%" });
+				$tr.data("$frames").css({ left: "calc(" + (-98 * offset) + "px + 50%" });
 				$tr.find("td.sync").text(fs[shiftIndex]);
 			}
 		}

@@ -1121,7 +1121,8 @@ namespace Jamaker
                                         }
                                     }
 
-                                    double a = isFade ? Math.Max(8, 255.0 / fadeMax) : 4;
+                                    double a = isFade ? 12 : 4;
+                                    //double a = isFade ? Math.Max(8, 255.0 / fadeMax) : 4;
 
                                     Bitmap bDiff = new Bitmap(96, 54);
                                     for (int y = 0; y < 54; y++)
