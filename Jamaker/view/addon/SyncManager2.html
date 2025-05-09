@@ -182,7 +182,7 @@ $(() => {
 		if (index < 0) return;
 		
 		$tr.data({ offset: offset });
-		data.$frames.css({ left: ((2.5 - offset) * 98) + "px" });
+		data.$frames.css({ left: "calc(50% - " + (offset * 98) + "px)" });
 		$tr.find("td.sync").text(fs[index]);
 	}
 	
@@ -300,7 +300,11 @@ $(() => {
 			const $img = $(this);
             $img.attr({ src: "../../temp/thumbnails/" + $img.data("img") + (diff ? "_" : "") + ".jpg" });
 		});
-		$("#frameChecker").css({ width: diff ? 100 : 2 });
+		if (diff) {
+			$("body").addClass("diff");
+        } else {
+            $("body").removeClass("diff");
+		}
 	});
 	
 	$("#btnApply").on("click", function() {
@@ -348,7 +352,7 @@ body {
 #editor .frames {
 	position: absolute;
 	top: 0;
-	left: calc(2.5 * 98px);
+	left: 50%;
 	height: 56px;
 	transition: 0.2s;
 }
@@ -363,12 +367,15 @@ body {
 #frameChecker {
 	position: absolute;
 	top: 0;
-	left: calc(2.5 * 98px - 1px);
+	left: calc(25% - 5px);
 	width: 2px;
 	bottom: 0;
 	border: 0 solid #f00;
 	border-width: 0 1px;
 	transition: 0.5s;
+}
+body.diff #frameChecker {
+	width: 100px;
 }
 #formShift, #btnApply {
 	position: fixed;
@@ -403,7 +410,7 @@ body {
 <body>
 	<table id="editor">
 		<colgroup>
-			<col style="width: calc(5 * 98px);" />
+			<col style="width: 50%;" />
 			<col style="width: 80px;" />
 			<col />
 		</colgroup>
