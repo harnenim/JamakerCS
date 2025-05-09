@@ -1018,6 +1018,7 @@ namespace Jamaker
         }
         public void RenderThumbnails(string path, string paramsStr)
         {
+            Console.WriteLine($"RenderThumbnails: {paramsStr}");
             string[] list = paramsStr.Split('\n');
             new Thread(() =>
             {
@@ -1096,10 +1097,13 @@ namespace Jamaker
                                 Bitmap bTrgt = new Bitmap(trgt);
                                 new Thread(() =>
                                 {
+                                    bool isFade = (flag != "");
                                     int sum = 0;
-                                    Bitmap bDiff = new Bitmap(96, 54);
+                                    int fadeMax = 1; // 0이면 문제 생김
+                                    int[][][] aDiff = new int[54][][];
                                     for (int y = 0; y < 54; y++)
                                     {
+                                        aDiff[y] = new int[96][];
                                         for (int x = 0; x < 96; x++)
                                         {
                                             Color p = bPrev.GetPixel(x, y);
@@ -1107,13 +1111,29 @@ namespace Jamaker
                                             int r = Math.Abs(p.R - t.R);
                                             int g = Math.Abs(p.G - t.G);
                                             int b = Math.Abs(p.B - t.B);
+                                            aDiff[y][x] = new int[] { r, g, b };
+                                            sum += r + g + b;
+                                            if (isFade) {
+                                                if (r < 64) fadeMax = Math.Max(fadeMax, r);
+                                                if (g < 64) fadeMax = Math.Max(fadeMax, g);
+                                                if (b < 64) fadeMax = Math.Max(fadeMax, b);
+                                            }
+                                        }
+                                    }
+
+                                    double a = isFade ? Math.Max(8, 255.0 / fadeMax) : 4;
+
+                                    Bitmap bDiff = new Bitmap(96, 54);
+                                    for (int y = 0; y < 54; y++)
+                                    {
+                                        for (int x = 0; x < 96; x++)
+                                        {
                                             Color d = Color.FromArgb(255
-                                                , Math.Min(r * 4, 255)
-                                                , Math.Min(g * 4, 255)
-                                                , Math.Min(b * 4, 255)
+                                                , Math.Min((int) (aDiff[y][x][0] * a), 255)
+                                                , Math.Min((int) (aDiff[y][x][1] * a), 255)
+                                                , Math.Min((int) (aDiff[y][x][2] * a), 255)
                                             );
                                             bDiff.SetPixel(x, y, d);
-                                            sum += r + g + b;
                                         }
                                     }
                                     bDiff.Save(diff, System.Drawing.Imaging.ImageFormat.Jpeg);

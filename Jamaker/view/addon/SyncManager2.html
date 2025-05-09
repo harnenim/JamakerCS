@@ -130,7 +130,12 @@ $(() => {
 		}
 		
 		lastFade = fade;
-	}
+    }
+    if (!renderList.length) {
+        alert("작업 대상이 없습니다.");
+        window.close();
+        return;
+    }
 	
 	// 이미지 렌더링 요청
 	let params = [];
@@ -288,7 +293,7 @@ $(() => {
 				const offset = shiftIndex - frameIndex;
 				const $tr = $tbody.find("tr:eq(" + i + ")");
 				$tr.data({ offset: offset });
-				$tr.data("$frames").css({ left: ((2.5 - offset) * 98) + "px" });
+				$tr.data("$frames").css({ left: "50%" });
 				$tr.find("td.sync").text(fs[shiftIndex]);
 			}
 		}
@@ -370,7 +375,7 @@ body {
 	left: calc(25% - 5px);
 	width: 2px;
 	bottom: 0;
-	border: 0 solid #f00;
+	border: 0 solid #f0f;
 	border-width: 0 1px;
 	transition: 0.5s;
 }
