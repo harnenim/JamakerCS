@@ -146,6 +146,10 @@ $(() => {
 			$tbody.find("img.img" + i + flag).data({ img: i + flag }).attr({ src: "../../temp/thumbnails/" + i + flag + ".jpg" });
 		}
 	}
+	const diffs = {};
+	opener.setDiff = function(index, diff) {
+		diffs[index] = diff;
+	}
 	
 	let selected = -1;
 	function select(index) {

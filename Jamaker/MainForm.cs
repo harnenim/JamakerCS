@@ -1018,7 +1018,6 @@ namespace Jamaker
         }
         public void RenderThumbnails(string path, string paramsStr)
         {
-            Console.WriteLine($"RenderThumbnails({path}, {paramsStr})");
             string[] list = paramsStr.Split('\n');
             new Thread(() =>
             {
@@ -1097,6 +1096,7 @@ namespace Jamaker
                                 Bitmap bTrgt = new Bitmap(trgt);
                                 new Thread(() =>
                                 {
+                                    int sum = 0;
                                     Bitmap bDiff = new Bitmap(96, 54);
                                     for (int y = 0; y < 54; y++)
                                     {
@@ -1104,15 +1104,20 @@ namespace Jamaker
                                         {
                                             Color p = bPrev.GetPixel(x, y);
                                             Color t = bTrgt.GetPixel(x, y);
+                                            int r = Math.Abs(p.R - t.R);
+                                            int g = Math.Abs(p.G - t.G);
+                                            int b = Math.Abs(p.B - t.B);
                                             Color d = Color.FromArgb(255
-                                                , Math.Min(Math.Abs(p.R - t.R) * 4, 255)
-                                                , Math.Min(Math.Abs(p.G - t.G) * 4, 255)
-                                                , Math.Min(Math.Abs(p.B - t.B) * 4, 255)
+                                                , Math.Min(r * 4, 255)
+                                                , Math.Min(g * 4, 255)
+                                                , Math.Min(b * 4, 255)
                                             );
                                             bDiff.SetPixel(x, y, d);
+                                            sum += r + g + b;
                                         }
                                     }
                                     bDiff.Save(diff, System.Drawing.Imaging.ImageFormat.Jpeg);
+                                    Script("setDiff", new object[] { begin + index, sum });
                                 }).Start();
                             }
                             else
