@@ -106,8 +106,8 @@ $(() => {
 				flag = "d";
 			}
 			
-            const begin = (frameIndex < RANGE ? 0 : frameIndex - RANGE);
-            const end = (frameIndex + RANGE > fs.length ? fs.length : frameIndex + RANGE);
+			const begin = (frameIndex < RANGE ? 0 : frameIndex - RANGE);
+			const end = (frameIndex + RANGE > fs.length ? fs.length : frameIndex + RANGE);
 			if (renderGroup.flag == flag && begin < renderGroup.end + 50) { // 50프레임 정도는 불필요한 섬네일 생성으로 인한 손해보단, 연속 생성에 따른 이득이 크다고 예상
 				renderGroup.end = end;
 			} else {
@@ -119,7 +119,7 @@ $(() => {
 				});
 			}
 			
-            for (let j = -RANGE; j < RANGE; j++) {
+			for (let j = -RANGE; j < RANGE; j++) {
 				const imgIndex = frameIndex + j;
 				$frames.append($("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j }));
 			}
@@ -231,7 +231,7 @@ $(() => {
 	
 	$tbody.on("click", "tr.fs", function(e) {
 		select($(this).data("index"));
-	}).on("click", "img.frame", function (e) {
+	}).on("click", "img.frame", function(e) {
 		const $img = $(this);
 		select($img.parents("tr").data("index"));
 		moveSync($img.data("offset"), true);
@@ -289,11 +289,12 @@ $(() => {
 		return false;
 	});
 	$("#cbDiff").on("click", function() {
-		const diff = $(this).prop("checked") ? "_" : "";
+		const diff = $(this).prop("checked");
 		$tbody.find("img").each(function() {
 			const $img = $(this);
-            $img.attr({ src: "../../temp/thumbnails/" + $img.data("img") + diff + ".jpg" });
+            $img.attr({ src: "../../temp/thumbnails/" + $img.data("img") + (diff ? "_" : "") + ".jpg" });
 		});
+		$("#frameChecker").css({ width: diff ? 100 : 2 });
 	});
 	
 	$("#btnApply").on("click", function() {
@@ -359,7 +360,9 @@ body {
 	left: calc(2.5 * 98px - 1px);
 	width: 2px;
 	bottom: 0;
-	background: #f00;
+	border: 0 solid #f00;
+	border-width: 0 1px;
+	transition: 0.5s;
 }
 #formShift, #btnApply {
 	position: fixed;
@@ -405,8 +408,8 @@ body {
 	<div id="frameChecker"></div>
 	<form id="formShift"><label>가중치 <input id="inputShift" type="number" value="0" /></label><button type="submit" id="btnShift">초기화</button>
 		<br />
-		<label><input type="checkbox" id="cbDiff" /> 비교값 보기</label>
+		<label><input type="checkbox" id="cbDiff" accesskey="d" /> 비교값 보기</label>
 	</form>
-	<button type="button" id="btnApply">적용</button>
+	<button type="button" id="btnApply" accesskey="s">적용</button>
 </body>
 </html>
