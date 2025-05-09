@@ -244,6 +244,7 @@ $(() => {
 	$(document).on("keydown", function(e) {
 		switch (e.keyCode) {
 			case 38: { // ↑
+				e.stopPropagation();
 				if (e.ctrlKey) {
 					$body.stop().animate({ scrollTop: $body.scrollTop() - 56 }, 200);
 					break;
@@ -253,7 +254,8 @@ $(() => {
 				}
 				break;
 			}
-			case 40: { // ↓
+            case 40: { // ↓
+                e.stopPropagation();
 				if (e.ctrlKey) {
 					$body.stop().animate({ scrollTop: $body.scrollTop() + 56 }, 200);
 					break;
