@@ -1117,7 +1117,7 @@ namespace Jamaker
                                         }
                                     }
                                     bDiff.Save(diff, System.Drawing.Imaging.ImageFormat.Jpeg);
-                                    Script("setDiff", new object[] { begin + index, sum });
+                                    Script("setDiff", new object[] { $"{begin + index}{flag}", sum });
                                 }).Start();
                             }
                             else
