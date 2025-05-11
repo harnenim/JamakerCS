@@ -326,8 +326,8 @@ namespace Jamaker
             CefSettings settings = new CefSettings
             {   Locale = "ko"
             ,   CachePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\" + (name == null ? @"CEF" : name)
+            ,   CommandLineArgsDisabled = false
             };
-            settings.CommandLineArgsDisabled = false;
             settings.CefCommandLineArgs.Add("disable-web-security");
             settings.CefCommandLineArgs.Add("disable-popup-blocking");
             Cef.Initialize(settings);
