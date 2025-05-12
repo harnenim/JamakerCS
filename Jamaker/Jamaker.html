@@ -68,6 +68,9 @@ Binder.prototype.loadVideoFile = function(path) {
 Binder.prototype.requestFrames = function(path) {
 	this._.requestFrames(path);
 }
+Binder.prototype.renderThumbnails = function(path, params) {
+	this._.renderThumbnails(path, params);
+}
 Binder.prototype.openTempDir = function() {
 	this._.openTempDir();
 }
@@ -700,6 +703,219 @@ window.MB = 9;
 	editor.checkLoadVideoFile = function() { /* native */ }
 	editor.loadVideoFile = function(path) { /* native */ }
 	editor.requestFrames = function(path) { /* native */ }
+	editor.renderThumbnails = function(path, params) { /* native */
+		const list = params.split("\n");
+		
+		function sleep(sec) {
+			return new Promise(resolve => setTimeout(resolve, sec * 1000));
+		}
+		
+		setTimeout(async function() {
+			for (let i = 0; i < list.length; i++) {
+				const param = list[i].split(",");
+				const time   = param[0];
+				const length = param[1];
+				const begin  = param[2];
+				const end    = param[3];
+				const flag   = param[4];
+				
+				let ms = time % 60000;
+				let m = Math.floor(time / 60000);
+				let h = Math.floor(m / 60);
+				m %= 60;
+				let timeStr = ((100 + h) * 100 + m) * 100000 + ms + "";
+				timeStr = timeStr.substring(1, 3) + ":" + timeStr.substring(3, 5) + ":" + timeStr.substring(5, 7) + "." + timeStr.substring(7, 10);
+				const args = "-ss {ss} -t {length} -i \"{path}\" -s 96x54 -f image2 \"tmp/thumbnails/{begin}{flag}_%d.jpg\""
+				.split("{ss}"    ).join(timeStr)
+				.split("{length}").join(length / 1000)
+				.split("{path}"  ).join("~")
+				.split("{begin}" ).join(begin)
+				.split("{flag}"  ).join(flag)
+				;
+				console.log(args);
+				await sleep(0.1);
+				
+				for (let index = 0; index < (end - begin); index++) {
+					const from = "tmp/thumbnails/" + begin + flag + "_" + (index + 1) + ".jpg";
+					const to = "tmp/thumbnails/" + (begin + index) + flag + ".jpg";
+					const cmdDel = "del \"{to}\"".split("{to}").join(to);
+					const cmdRen = "ren \"{from}\" \"{to}\"".split("{from}").join(from).split("{to}").join(to);
+					console.log(cmdDel);
+					console.log(cmdRen);
+				}
+				
+				editor.script("afterRenderThumbnails", [begin, end, flag]);
+			}
+		}, 1);
+		
+		//*
+        Console.WriteLine($"RenderThumbnails: {paramsStr}");
+        string[] list = paramsStr.Split('\n');
+        new Thread(() =>
+        {
+            string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
+            string exeFile = Path.Combine(exePath, "ffmpeg.exe");
+
+            string dir = "temp/thumbnails";
+            DirectoryInfo di = new DirectoryInfo(dir);
+            if (!di.Exists)
+            {
+                di.Create();
+            }
+
+            int didread;
+            int offset = 0;
+            byte[] buffer = new byte[sizeof(float) * (1024 + 1)];
+
+            foreach (string paramStr in list)
+            {
+                string[] param = paramStr.Split(',');
+                int time  = int.Parse(param[0]);
+                double length = double.Parse(param[1]) / 1000;
+                int begin = int.Parse(param[2]);
+                int end   = int.Parse(param[3]);
+                string flag = param[4];
+
+                int ms = time % 60000;
+                int m = time / 60000;
+                int h = m / 60;
+                m %= 60;
+                string timeStr = ((100 + h) * 100 + m) * 100000 + ms + "";
+                timeStr = timeStr.Substring(1, 2) + ":" + timeStr.Substring(3, 2) + ":" + timeStr.Substring(5, 2) + "." + timeStr.Substring(7, 3);
+
+                string vf = "";
+                //if (flag == "b") vf = "-vf \"curves=r='0/0 0.1/0.9 1/1'\" ";
+                //else
+                //if (flag == "d") vf = "-vf \"curves=r='0/0 0.9/0.1 1/1'\" ";
+                
+                string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s 96x54 -qscale:v 2 {vf}-f image2 \"{dir}/{begin}{flag}_%d.jpg\"";
+
+                try
+                {
+                    Process proc = new Process();
+                    proc.StartInfo.UseShellExecute = false;
+                    proc.StartInfo.CreateNoWindow = true;
+                    proc.StartInfo.RedirectStandardOutput = true;
+                    proc.StartInfo.RedirectStandardError = true;
+                    proc.StartInfo.FileName = exeFile;
+                    proc.StartInfo.Arguments = args;
+                    proc.Start();
+                    proc.BeginErrorReadLine();
+
+                    Stream stream = proc.StandardOutput.BaseStream;
+
+                    while ((didread = stream.Read(buffer, offset, sizeof(float) * 1024)) != 0)
+                    {
+                        Console.WriteLine(didread);
+                    }
+					
+                    Bitmap bLast = null;
+                    for (int index = 0; index < (end - begin); index++)
+                    {
+                    	// 위에서 만든 이미지 경로
+                    	string img0 = $"{dir}/{begin}{flag}_{index + 1}.jpg";
+                    	
+                    	// 실제 필요한 이미지 경로
+                        string img1 = $"{dir}/{begin + index}{flag}.jpg";
+                        if (File.Exists(img1)) File.Delete(img1);
+                        File.Move(img0, img1);
+
+                        // 프레임 간 차이 이미지 경로
+                        string img2 = $"{dir}/{begin + index}{flag}_.jpg";
+                        if (File.Exists(img2)) File.Delete(img2);
+                        
+                        // 밝기 변화 이미지 경로
+                        string img3 = $"{dir}/{begin + index}{flag}~.jpg";
+                        if (File.Exists(img3)) File.Delete(img3);
+                        
+                        if (bLast != null)
+                        {
+                            // 라이브러리 써보려고 했는데 결과물이 별로임
+                            // 96x54 정도는 직접 돌릴 만한 크기
+                            Bitmap bPrev = bLast;
+                            Bitmap bTrgt = bLast = new Bitmap(img1);
+                            
+                            new Thread(() =>
+                            {
+                                bool isFade = (flag != "");
+                                int sum = 0;
+                                int dMax = 1; // 0이면 문제 생김
+                                
+                                // 각 픽셀 비교
+                                int[][][] aDiff = new int[54][][];
+                                for (int y = 0; y < 54; y++)
+                                {
+                                    aDiff[y] = new int[96][];
+                                    for (int x = 0; x < 96; x++)
+                                    {
+                                        Color p = bPrev.GetPixel(x, y);
+                                        Color t = bTrgt.GetPixel(x, y);
+                                        int r = p.R - t.R;
+                                        int g = p.G - t.G;
+                                        int b = p.B - t.B;
+                                        aDiff[y][x] = new int[] { r, g, b };
+                                        sum += r + g + b;
+                                        if (isFade) {
+                                            dMax = Math.Max(dMax, Math.Abs(r));
+                                            dMax = Math.Max(dMax, Math.Abs(g));
+                                            dMax = Math.Max(dMax, Math.Abs(b));
+                                        }
+                                    }
+                                }
+
+                                // 페이드 효과에 대해선 더 잘 보이도록
+                                double a = isFade ? 12 : 4;
+                                //double a = isFade ? Math.Max(8, 255.0 / dMax) : 4;
+                                int avg = sum / (96 * 54);
+
+                                Bitmap b2 = new Bitmap(96, 54);
+                                Bitmap b3 = new Bitmap(96, 54);
+                                
+                                for (int y = 0; y < 54; y++)
+                                {
+                                    for (int x = 0; x < 96; x++)
+                                    {
+                                    	// 이전 프레임과 차이
+                                        b2.SetPixel(x, y, Color.FromArgb(255
+                                            , Math.Min((int) (Math.Abs(aDiff[y][x][0]) * a), 255)
+                                            , Math.Min((int) (Math.Abs(aDiff[y][x][1]) * a), 255)
+                                            , Math.Min((int) (Math.Abs(aDiff[y][x][2]) * a), 255)
+                                        ));
+                                        
+                                        // 밝기 변화
+                                        int v = Math.Min((int) ((aDiff[y][x][0] + aDiff[y][x][1] + aDiff[y][x][2]) * a), 255);
+                                        b3.SetPixel(x, y, (v > 0)
+                                        	?	Color.FromArgb(255, v, diffAvg, 0)
+                                        	:	Color.FromArgb(255, 0, diffAvg, v)
+                                        );
+                                    }
+                                }
+
+                                b2.Save(img2, System.Drawing.Imaging.ImageFormat.Jpeg);
+                                b3.Save(img3, System.Drawing.Imaging.ImageFormat.Jpeg);
+                                
+                                Script("setDiff", new object[] { $"{begin + index}{flag}", sum });
+                                
+                            }).Start();
+                        }
+                        else
+                        {
+                        	// 앞 프레임이 없음 = 첫 번째 이미지, 그냥 복사
+                            File.Copy(img1, img2);
+                            File.Copy(img1, img3);
+                        }
+                    }
+
+                    Script("afterRenderThumbnails", new object[] { begin, end, flag });
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                }
+            }
+        }).Start();
+        //*/
+	}
 	editor.save = async function(text, path) {
 		const paths = path.split(":");
 		if (paths[1]) {

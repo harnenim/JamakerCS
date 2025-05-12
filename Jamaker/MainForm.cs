@@ -57,6 +57,22 @@ namespace Jamaker
 
             FormClosing += new FormClosingEventHandler(BeforeExit);
             FormClosed += new FormClosedEventHandler(WebFormClosed);
+
+            // 종료 시에 섬네일 삭제 돌리는 건 무리가 있어서
+            // 실행 직후 백그라운드로 돌림
+            new Thread(() =>
+            {
+                string dir = "temp/thumbnails";
+                DirectoryInfo di = new DirectoryInfo(dir);
+                if (di.Exists)
+                {
+                    FileInfo[] files = di.GetFiles();
+                    foreach (FileInfo file in files)
+                    {
+                        file.Delete();
+                    }
+                }
+            }).Start();
         }
         private MenuStrip menuStrip;
         private readonly MouseEventHandler clickMenuStrip;
@@ -1045,10 +1061,10 @@ namespace Jamaker
                 foreach (string paramStr in list)
                 {
                     string[] param = paramStr.Split(',');
-                    int time  = int.Parse(param[0]);
+                    int time = int.Parse(param[0]);
                     double length = double.Parse(param[1]) / 1000;
                     int begin = int.Parse(param[2]);
-                    int end   = int.Parse(param[3]);
+                    int end = int.Parse(param[3]);
                     string flag = param[4];
 
                     int ms = time % 60000;
@@ -1059,11 +1075,9 @@ namespace Jamaker
                     timeStr = timeStr.Substring(1, 2) + ":" + timeStr.Substring(3, 2) + ":" + timeStr.Substring(5, 2) + "." + timeStr.Substring(7, 3);
 
                     string vf = "";
-                    /*
-                    if (flag == "b") vf = "-vf \"curves=r='0/0 0.1/0.9 1/1'\" ";
-                    else
-                    if (flag == "d") vf = "-vf \"curves=r='0/0 0.9/0.1 1/1'\" ";
-                    */
+                    //if (flag == "b") vf = "-vf \"curves=r='0/0 0.1/0.9 1/1'\" ";
+                    //else
+                    //if (flag == "d") vf = "-vf \"curves=r='0/0 0.9/0.1 1/1'\" ";
 
                     string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s 96x54 -qscale:v 2 {vf}-f image2 \"{dir}/{begin}{flag}_%d.jpg\"";
 
@@ -1086,26 +1100,39 @@ namespace Jamaker
                             Console.WriteLine(didread);
                         }
 
-                        for (int index = 0; index < (end - begin); index++)
+                        new Thread(() =>
                         {
-                            string orig = $"{dir}/{begin}{flag}_{index + 1}.jpg";
-                            string trgt = $"{dir}/{begin + index}{flag}.jpg";
-                            if (File.Exists(trgt)) File.Delete(trgt);
-                            File.Move(orig, trgt);
-
-                            string prev = $"{dir}/{begin + index - 1}{flag}.jpg";
-                            string diff = $"{dir}/{begin + index}{flag}_.jpg";
-                            if (File.Exists(diff)) File.Delete(diff);
-                            if (File.Exists(prev))
+                            Bitmap bLast = null;
+                            for (int index = 0; index < (end - begin); index++)
                             {
-                                // 라이브러리 써보려고 했는데 결과물이 별로임 & 사이즈가 크지 않음
-                                Bitmap bPrev = new Bitmap(prev);
-                                Bitmap bTrgt = new Bitmap(trgt);
-                                new Thread(() =>
+                                // 위에서 만든 이미지 경로
+                                string img0 = $"{dir}/{begin}{flag}_{index + 1}.jpg";
+
+                                // 실제 필요한 이미지 경로
+                                string img1 = $"{dir}/{begin + index}{flag}.jpg";
+                                if (File.Exists(img1)) File.Delete(img1);
+                                File.Move(img0, img1);
+
+                                // 프레임 간 차이 이미지 경로
+                                string img2 = $"{dir}/{begin + index}{flag}_.jpg";
+                                if (File.Exists(img2)) File.Delete(img2);
+
+                                // 밝기 변화 이미지 경로
+                                string img3 = $"{dir}/{begin + index}{flag}~.jpg";
+                                if (File.Exists(img3)) File.Delete(img3);
+
+                                if (bLast != null)
                                 {
+                                    // 라이브러리 써보려고 했는데 결과물이 별로임
+                                    // 96x54 정도는 직접 돌릴 만한 크기
+                                    Bitmap bPrev = bLast;
+                                    Bitmap bTrgt = bLast = new Bitmap(img1);
+
                                     bool isFade = (flag != "");
                                     int sum = 0;
-                                    int fadeMax = 1; // 0이면 문제 생김
+                                    int dMax = 1; // 0이면 문제 생김
+
+                                    // 각 픽셀 비교
                                     int[][][] aDiff = new int[54][][];
                                     for (int y = 0; y < 54; y++)
                                     {
@@ -1114,46 +1141,65 @@ namespace Jamaker
                                         {
                                             Color p = bPrev.GetPixel(x, y);
                                             Color t = bTrgt.GetPixel(x, y);
-                                            int r = Math.Abs(p.R - t.R);
-                                            int g = Math.Abs(p.G - t.G);
-                                            int b = Math.Abs(p.B - t.B);
+                                            int r = t.R - p.R;
+                                            int g = t.G - p.G;
+                                            int b = t.B - p.B;
                                             aDiff[y][x] = new int[] { r, g, b };
                                             sum += r + g + b;
-                                            if (isFade) {
-                                                if (r < 64) fadeMax = Math.Max(fadeMax, r);
-                                                if (g < 64) fadeMax = Math.Max(fadeMax, g);
-                                                if (b < 64) fadeMax = Math.Max(fadeMax, b);
+                                            if (isFade)
+                                            {
+                                                dMax = Math.Max(dMax, Math.Abs(r));
+                                                dMax = Math.Max(dMax, Math.Abs(g));
+                                                dMax = Math.Max(dMax, Math.Abs(b));
                                             }
                                         }
                                     }
 
+                                    // 페이드 효과에 대해선 더 잘 보이도록
                                     double a = isFade ? 12 : 4;
-                                    //double a = isFade ? Math.Max(8, 255.0 / fadeMax) : 4;
+                                    //double a = isFade ? Math.Max(8, 255.0 / dMax) : 4;
+                                    int avg = Math.Abs(sum) / (96 * 54 * 3);
 
-                                    Bitmap bDiff = new Bitmap(96, 54);
+                                    Bitmap b2 = new Bitmap(96, 54);
+                                    Bitmap b3 = new Bitmap(96, 54);
+
                                     for (int y = 0; y < 54; y++)
                                     {
                                         for (int x = 0; x < 96; x++)
                                         {
-                                            Color d = Color.FromArgb(255
-                                                , Math.Min((int) (aDiff[y][x][0] * a), 255)
-                                                , Math.Min((int) (aDiff[y][x][1] * a), 255)
-                                                , Math.Min((int) (aDiff[y][x][2] * a), 255)
+                                            // 이전 프레임과 차이
+                                            b2.SetPixel(x, y, Color.FromArgb(255
+                                                , Math.Min((int)(Math.Abs(aDiff[y][x][0]) * a), 255)
+                                                , Math.Min((int)(Math.Abs(aDiff[y][x][1]) * a), 255)
+                                                , Math.Min((int)(Math.Abs(aDiff[y][x][2]) * a), 255)
+                                            ));
+
+                                            // 밝기 변화
+                                            int v = (int)((aDiff[y][x][0] + aDiff[y][x][1] + aDiff[y][x][2]) * a);
+                                            b3.SetPixel(x, y, (v > 0)
+                                                ? Color.FromArgb(255, Math.Min(v, 255), avg, 0)
+                                                : Color.FromArgb(255, 0, avg, Math.Min(-v, 255))
                                             );
-                                            bDiff.SetPixel(x, y, d);
                                         }
                                     }
-                                    bDiff.Save(diff, System.Drawing.Imaging.ImageFormat.Jpeg);
-                                    Script("setDiff", new object[] { $"{begin + index}{flag}", sum });
-                                }).Start();
-                            }
-                            else
-                            {
-                                File.Copy(trgt, diff);
-                            }
-                        }
 
-                        Script("afterRenderThumbnails", new object[] { begin, end, flag });
+                                    b2.Save(img2, System.Drawing.Imaging.ImageFormat.Jpeg);
+                                    b3.Save(img3, System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                                    Script("setDiff", new object[] { $"{begin + index}{flag}", sum });
+                                }
+                                else
+                                {
+                                    // 앞 프레임이 없음 = 첫 번째 이미지, 그냥 복사
+                                    File.Copy(img1, img2);
+                                    File.Copy(img1, img3);
+                                    bLast = new Bitmap(img1);
+                                }
+                            }
+
+                            Script("afterRenderThumbnails", new object[] { begin, end, flag });
+
+                        }).Start();
                     }
                     catch (Exception e)
                     {

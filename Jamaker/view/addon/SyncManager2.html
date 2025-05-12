@@ -19,7 +19,9 @@ const origin = tab ? tab.getText() : null;
 if (tab) {
 	SmiEditor.video = opener.SmiEditor.video;
 }
-const RANGE = 8;
+const RANGE = 10; // 현재 싱크 전후로 렌더링할 범위
+let mode = 1;
+const M = [null, "", "_", "~"]; // 모드에 따른 파일명 끝 표시
 
 $(() => {
 	if (!origin) {
@@ -62,8 +64,8 @@ $(() => {
 	const $tbody = $("#editor tbody").empty();
 	const frameSyncs = [];
 	
-	$("#editor thead").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origin.file.header)));
-	$("#editor tfoot").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origin.file.footer)));
+	$("#editor thead").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origin.file.header.split("\n").join(""))));
+	$("#editor tfoot").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origin.file.footer.split("\n").join(""))));
 	
 	const renderList = [];
 	let renderGroup = { end: -11 };
@@ -86,7 +88,7 @@ $(() => {
 			const frameIndex = SmiEditor.findSyncIndex(smi.start, fs);
 			const $frames = $("<div>").addClass("frames");
 			const $sync = $("<td>").addClass("sync").text(fs[frameIndex]);
-			$tr.addClass("fs").append($("<td>").append($frames)).append($sync).append($("<td>").text(smi.text));
+			$tr.addClass("fs").append($("<td>").append($frames)).append($sync).append($("<td>").text(smi.text.split("\n").join("")));
 			$tr.data({ index: frameSyncs.length, $frames: $frames, frameIndex: frameIndex, offset: 0 });
 			$tbody.append($tr);
 			frameSyncs.push($tr);
@@ -125,17 +127,17 @@ $(() => {
 			}
 			
 		} else {
-			$tr.append($("<td>").html("&nbsp;")).append($("<td>").addClass("sync").text(smi.syncType == Subtitle.SyncType.inner ? "~" : smi.start)).append($("<td>").text(smi.text))
+			$tr.append($("<td>").html("&nbsp;")).append($("<td>").addClass("sync").text(smi.syncType == Subtitle.SyncType.inner ? "~" : smi.start)).append($("<td>").text(smi.text.split("\n").join("")))
 			$tbody.append($tr);
 		}
 		
 		lastFade = fade;
-    }
-    if (!renderList.length) {
-        alert("작업 대상이 없습니다.");
-        window.close();
-        return;
-    }
+	}
+	if (!renderList.length) {
+		alert("작업 대상이 없습니다.");
+		window.close();
+		return;
+	}
 	
 	// 이미지 렌더링 요청
 	let params = [];
@@ -148,7 +150,7 @@ $(() => {
 	// 렌더링 완료 후 이미지 세팅
 	opener.afterRenderThumbnails = function(begin, end, flag) {
 		for (let i = begin; i < end; i++) {
-			$tbody.find("img.img" + i + flag).data({ img: i + flag }).attr({ src: "../../temp/thumbnails/" + i + flag + ".jpg" });
+			$tbody.find("img.img" + i + flag).data({ img: i + flag }).attr({ src: "../../temp/thumbnails/" + i + flag + M[mode] + ".jpg" });
 		}
 	}
 	const diffs = {};
@@ -249,7 +251,7 @@ $(() => {
 	$(document).on("keydown", function(e) {
 		switch (e.keyCode) {
 			case 38: { // ↑
-				e.stopPropagation();
+				e.preventDefault();
 				if (e.ctrlKey) {
 					$body.stop().animate({ scrollTop: $body.scrollTop() - 56 }, 200);
 					break;
@@ -259,8 +261,8 @@ $(() => {
 				}
 				break;
 			}
-            case 40: { // ↓
-                e.stopPropagation();
+			case 40: { // ↓
+				e.preventDefault();
 				if (e.ctrlKey) {
 					$body.stop().animate({ scrollTop: $body.scrollTop() + 56 }, 200);
 					break;
@@ -278,9 +280,17 @@ $(() => {
 				moveSync(+1);
 				break;
 			}
+			case 46: { // Delete: 프레임 선택 취소
+				moveSync(0, true);
+				break;
+			}
 		}
+	}).on("keydown", "input[name=mode]", function(e) {
+		// 모드 선택 후에도 방향키 조작은 원래대로 동작해야 함
+		e.preventDefault();
 	});
 	$("#inputShift").on("keydown", function(e) {
+		// 가중치 입력 중엔 방향키 조작 차단
 		e.stopPropagation();
 	});
 	$("#formShift").on("submit", function() {
@@ -298,14 +308,13 @@ $(() => {
 			}
 		}
 		return false;
-	});
-	$("#cbDiff").on("click", function() {
-		const diff = $(this).prop("checked");
+	}).on("click", "input[name=mode]", function() {
+		mode = $("input[name=mode]:checked").val();
 		$tbody.find("img").each(function() {
 			const $img = $(this);
-            $img.attr({ src: "../../temp/thumbnails/" + $img.data("img") + (diff ? "_" : "") + ".jpg" });
+            $img.attr({ src: "../../temp/thumbnails/" + $img.data("img") + M[mode] + ".jpg" });
 		});
-		if (diff) {
+		if (mode > 1) {
 			$("body").addClass("diff");
         } else {
             $("body").removeClass("diff");
@@ -329,11 +338,10 @@ body {
 	border: 0;
 }
 #editor tr {
-	line-height: 0;
 	color: #888;
 }
 #editor tr.fs {
-	height: 56px;
+	height: 57px;
 	color: #000;
 }
 #editor tr.fs.selected td {
@@ -368,18 +376,27 @@ body {
 	border: 1px solid #888;
 	width: 98px;
 	height: 56px;
+	cursor: pointer;
+}
+#editor .frame:hover {
+	border-color: #f88;
+	opacity: 0.8;
 }
 #frameChecker {
 	position: absolute;
 	top: 0;
-	left: calc(25% - 5px);
+	left: calc(25% - 4.5px);
 	width: 2px;
 	bottom: 0;
 	border: 0 solid #f0f;
 	border-width: 0 1px;
-	transition: 0.5s;
+	transition: 0.2s;
+}
+body.diff #editor .frames {
+	margin-left: -49px;
 }
 body.diff #frameChecker {
+	left: calc(25% - 54px);
 	width: 100px;
 }
 #formShift, #btnApply {
@@ -396,7 +413,6 @@ body.diff #frameChecker {
 	border-width: 0 0 1px 1px;
 	background: #fff;
 	width: 160px;
-	height: 44px;
 	padding: 4px;
 }
 #inputShift {
@@ -425,8 +441,11 @@ body.diff #frameChecker {
 	</table>
 	<div id="frameChecker"></div>
 	<form id="formShift"><label>가중치 <input id="inputShift" type="number" value="0" /></label><button type="submit" id="btnShift">초기화</button>
-		<br />
-		<label><input type="checkbox" id="cbDiff" accesskey="d" /> 비교값 보기</label>
+		<ol>
+			<li><label><input type="radio" name="mode" value="1" accesskey="1" checked /> 기본</label></li>
+			<li><label><input type="radio" name="mode" value="2" accesskey="2" /> 이전 프레임과 차이</label></li>
+			<li><label><input type="radio" name="mode" value="3" accesskey="3" /> 밝기 변화</label></li>
+		</ol>
 	</form>
 	<button type="button" id="btnApply" accesskey="s">적용</button>
 </body>
