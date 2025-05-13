@@ -1949,7 +1949,7 @@ Subtitle.Smi.prototype.fromAttr = function(attrs) {
 	this.text = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
 	return this;
 }
-Subtitle.Smi.fromAttr = (attrs, fontSize=0) => {
+Subtitle.Smi.fromAttr = (attrs, fontSize=0) => { // fontSize를 넣으면 html로 % 크기 출력
 	let text = "";
 	
 	const a = $("<a>");

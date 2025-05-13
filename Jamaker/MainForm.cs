@@ -1156,7 +1156,7 @@ namespace Jamaker
                                     }
 
                                     // 페이드 효과에 대해선 더 잘 보이도록
-                                    double a = isFade ? 12 : 4;
+                                    double a = isFade ? 40 : 4;
                                     //double a = isFade ? Math.Max(8, 255.0 / dMax) : 4;
                                     int avg = Math.Abs(sum) / (96 * 54 * 3);
 

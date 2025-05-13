@@ -477,7 +477,6 @@ SmiEditor.selectTab = function(index=-1) {
 	const tabSelector = $("#tabSelector");
 	if (index < 0) {
 		const selectedTab = tabSelector.find(".selected").data("tab");
-		console.log(selectedTab);
 		if (selectedTab) {
 			// 다음 탭 선택
 			index = (tabs.indexOf(selectedTab) + 1) % tabs.length;

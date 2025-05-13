@@ -1318,11 +1318,20 @@ SmiEditor.prototype.inputTextLikeNative = function(input) {
 SmiEditor.prototype.reSyncPrompt = function() {
 	const editor = this;
 	prompt("싱크 시작 시간을 입력하세요.", (value) => {
-		if (!value || !isFinite(value)) {
+		if (!value) {
 			alert("잘못된 값입니다.");
-			return;
+		} else {
+			try {
+				value = eval(value);
+				if (isFinite(value)) {
+					editor.reSync(Number(value), true);
+				} else {
+					alert("잘못된 값입니다.");
+				}
+			} catch (e) {
+				alert("잘못된 값입니다.");
+			}
 		}
-		editor.reSync(Number(value), true);
 	});
 }
 SmiEditor.prototype.reSync = function(sync, limitRange=false) {

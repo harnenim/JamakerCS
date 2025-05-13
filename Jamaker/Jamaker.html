@@ -216,6 +216,11 @@ const window_open = function(url, name, options, opener) {
 		// 세팅 확인
 		WinAPI.GetWindowRect(this.getHwnd("editor"), this.lastOffset);
 		editor.useFollowWindow = true;
+		
+		// 실행 5초 후 동영상 불러온 것처럼 실행
+		setTimeout(() => {
+			this.script("eval", ["for (let i = 0; i < 100000; i++) { SmiEditor.video.fs.push(Math.round(i * 1001 / 24)); }"]);
+		}, 2000);
 	};
 
 	editor.refreshPlayer = function() {
@@ -740,15 +745,13 @@ window.MB = 9;
 					const to = "tmp/thumbnails/" + (begin + index) + flag + ".jpg";
 					const cmdDel = "del \"{to}\"".split("{to}").join(to);
 					const cmdRen = "ren \"{from}\" \"{to}\"".split("{from}").join(from).split("{to}").join(to);
-					console.log(cmdDel);
-					console.log(cmdRen);
 				}
 				
 				editor.script("afterRenderThumbnails", [begin, end, flag]);
 			}
 		}, 1);
 		
-		//*
+		/*
         Console.WriteLine($"RenderThumbnails: {paramsStr}");
         string[] list = paramsStr.Split('\n');
         new Thread(() =>
