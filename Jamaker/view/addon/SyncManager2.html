@@ -325,6 +325,11 @@ $(() => {
 		apply();
 		window.close();
 	});
+
+	// 페이지 벗어날 경우 렌더링 취소
+    window.onunload = function () {
+		opener.binder.cancelRenderThumbnails();
+    }
 	
 	select(0);
 });

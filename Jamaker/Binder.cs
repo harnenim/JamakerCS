@@ -109,6 +109,10 @@
         {
             _.RenderThumbnails(path, paramsStr);
         }
+        public void CancelRenderThumbnails()
+        {
+            _.CancelRenderThumbnails();
+        }
         public void DoExit(bool resetPlayer, bool exitPlayer)
         {
             _.DoExit(resetPlayer, exitPlayer);

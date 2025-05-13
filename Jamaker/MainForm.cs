@@ -1038,9 +1038,11 @@ namespace Jamaker
                 catch (Exception e) { Console.WriteLine(e); }
             }).Start();
         }
+        private bool isThumbnailsRendering = false;
         public void RenderThumbnails(string path, string paramsStr)
         {
             Console.WriteLine($"RenderThumbnails: {paramsStr}");
+            isThumbnailsRendering = true;
             string[] list = paramsStr.Split('\n');
             new Thread(() =>
             {
@@ -1060,6 +1062,10 @@ namespace Jamaker
 
                 foreach (string paramStr in list)
                 {
+                    if (!isThumbnailsRendering)
+                    {
+                        break;
+                    }
                     string[] param = paramStr.Split(',');
                     int time = int.Parse(param[0]);
                     double length = double.Parse(param[1]) / 1000;
@@ -1175,7 +1181,11 @@ namespace Jamaker
                                             ));
 
                                             // 밝기 변화
-                                            int v = (int)((aDiff[y][x][0] + aDiff[y][x][1] + aDiff[y][x][2]) * a);
+                                            //int v = (int)((aDiff[y][x][0] + aDiff[y][x][1] + aDiff[y][x][2]) * a);
+                                            // RGB 모두 변화하는 것만 확인: 가장 조금 변화하는 것 확인
+                                            int rgb = (Math.Abs(aDiff[y][x][0]) < Math.Abs(aDiff[y][x][1])) ? 0 : 1;
+                                            rgb = (Math.Abs(aDiff[y][x][rgb]) < Math.Abs(aDiff[y][x][2])) ? rgb : 2;
+                                            int v = (int)(aDiff[y][x][rgb] * a);
                                             b3.SetPixel(x, y, (v > 0)
                                                 ? Color.FromArgb(255, Math.Min(v, 255), avg, 0)
                                                 : Color.FromArgb(255, 0, avg, Math.Min(-v, 255))
@@ -1207,6 +1217,10 @@ namespace Jamaker
                     }
                 }
             }).Start();
+        }
+        public void CancelRenderThumbnails()
+        {
+            isThumbnailsRendering = false;
         }
 
         private int saveAfter = 0;
