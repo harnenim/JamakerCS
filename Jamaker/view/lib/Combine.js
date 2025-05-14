@@ -15,21 +15,24 @@ window.Combine = {
 	const ETIME = 2;
 	const ETYPE = 3;
 	const TEXT  = 4;
-	const LINES = 5;
-	const WIDTH = 6;
-	const SIZED = 7;
+	const ATTRS = 5;
+	const LINES = 6;
+	const WIDTH = 7;
+	const SIZED = 8;
+	
 	const UPPER = 4;
 	const LOWER = 5;
 	
 	const LOG = false;
+	const NEW = false;
 	
 	// 다중 결합에 대해 중간 싱크 처리를 위한 부분
 	Subtitle.SyncType.combinedNormal = 4;
 	Subtitle.SyncType.combinedFrame  = 5;
 	Subtitle.SyncType.combinedInner  = 6;
 	Subtitle.Smi.TypeParser[Subtitle.SyncType.combinedNormal] = "\t\t";
-	Subtitle.Smi.TypeParser[Subtitle.SyncType.combinedFrame] = " \t\t";
-	Subtitle.Smi.TypeParser[Subtitle.SyncType.combinedInner] = "\t\t\t";
+	Subtitle.Smi.TypeParser[Subtitle.SyncType.combinedFrame ] = " \t\t";
+	Subtitle.Smi.TypeParser[Subtitle.SyncType.combinedInner ] = "\t\t\t";
 	Subtitle.Smi._getSyncType = Subtitle.Smi.getSyncType;
 	Subtitle.Smi.getSyncType = function(syncLine) {
 		if (syncLine.endsWith("\t\t>")) {
@@ -143,6 +146,14 @@ window.Combine = {
 		// RUBY태그 없애고 계산
 		return checker.html(html.split("<RT").join("<!--RT").split("</RT>").join("</RT-->")).text();
 	}
+	function isClear(attr) {
+		// 공백문자가 들어가도 무관한 속성
+		return !attr.u
+		    && !attr.s
+		    && !attr.fs
+		    && !attr.fn
+		    && !attr.typing; // 타이핑 같은 건 결합 전에 사라져야 함
+	}
 	function getWidth(smi, checker) {
 		// 태그 밖의 공백문자 치환
 		{	const tags = smi.split("<");
@@ -156,6 +167,21 @@ window.Combine = {
 		}
 		const width = checker.html(smi).width();
 		if (LOG) console.log(width, smi);
+		return width;
+	}
+	function getAttrWidth(attrs, checker, withFs=false) {
+		const cAttrs = [];
+		for (let i = 0; i < attrs.length; i++) {
+			const attr = new Subtitle.Attr(attrs[i], attrs[i].text.split("&nbsp;").join(" "));
+			attr.fs = ((withFs && attr.fs) ? attr.fs : Combine.defaultSize);
+			if (attr.fn && attr.fn != "맑은 고딕") {
+				// 팟플레이어 폰트 크기 보정
+				attr.fs = attr.fs * 586 / 456;
+			}
+			cAttrs.push(attr);
+		}
+		const width = checker.html(Subtitle.Smi.fromAttr(cAttrs, Combine.defaultSize).split("\n").join("<br>")).width();
+		if (LOG) console.log(width, attrs);
 		return width;
 	}
 	function getChecker() {
@@ -174,105 +200,168 @@ window.Combine = {
 	const syncLines = { basic: {}, frame: {}, range: {} };
 	function getSyncLine(sync, type) {
 		let line = null;
-		switch (type) {
-			case TYPE.FRAME:
-				line = syncLines.frame[sync];
-				break;
-			case TYPE.RANGE:
-				line = syncLines.range[sync];
-				break;
-			default:
-				line = syncLines.basic[sync];
+		if (NEW) {
+			if (SmiEditor) {
+				line = SmiEditor.makeSyncLine(sync, type + 1);
+			} else {
+				line = "<Sync Start=" + sync + "><P Class=KRCC" + Subtitle.Smi.TypeParser[type] + ">";
+			}
+		} else {
+			switch (type) {
+				case TYPE.FRAME:
+					line = syncLines.frame[sync];
+					break;
+				case TYPE.RANGE:
+					line = syncLines.range[sync];
+					break;
+				default:
+					line = syncLines.basic[sync];
+			}
 		}
 		return line;
 	}
 	
 	function parse(text, checker) {
-		{	// 주석 제거 후 결합
-			const comments = text.split("\n<!--");
-			text = comments[0];
-			for (let i = 1; i < comments.length; i++) {
-				const index = comments[i].indexOf("-->");
-				if (index > 0) {
-					text += comments[i].substring(index + 3);
+		if (NEW) {
+			const smis = new Subtitle.SmiFile(text).body;
+			smis.push(new Subtitle.Smi(99999999, Subtitle.SyncType.normal, "&nbsp;"));
+						
+			const syncs = [];
+			let last = null;
+			for (let i = 0; i < smis.length; i++) {
+				const smi = smis[i];
+				if (last) { // 이전 것 남아있으면 종료싱크 부여
+					last[ETIME] = smi.start;
+					last[ETYPE] = smi.syncType;
+					last = null;
 				}
-			}
-		}
-		const lines = text.split("\n");
-		const parseds = [];
-		
-		// 싱크값을 제외하면 별도의 값을 취하지 않는 간이 파싱
-		// SMI는 태그 꺽쇠 내에서 줄바꿈을 하는 경우는 일반적으로 없다고 가정
-		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
-			let parsed = new Line(line);
-			parseds.push(parsed);
-
-			if (parsed.SYNC) {
-				if (parsed.TYPE == TYPE.FRAME) {
-					syncLines.frame[parsed.SYNC] = line;
-				} else if (parsed.TYPE == TYPE.RANGE) {
-					syncLines.range[parsed.SYNC] = line;
-				} else {
-					syncLines.basic[parsed.SYNC] = line;
-				}
-			}
-		}
-		parseds.push(new Line("&nbsp;", 99999999, TYPE.BASIC));
-		
-		const syncs = [];
-		let last = null;
-		for (let i = 0; i < parseds.length; i++) {
-			const parsed = parseds[i];
-			if (parsed.TYPE) {
-				if (last) {
-					const lines = [];
-					for (let j = last[0] + 1; j < i; j++) {
-						lines.push(parseds[j].TEXT);
-					}
-					const text = lines.join("\n");
-					if (text.split("&nbsp;").join("").trim()) {
-						const textLines = text.split(/<br>/gi);
-						const lineCount = textLines.length;
-						let defaultWidth = 0;
-						for (let k = 0; k < textLines.length; k++) {
-							defaultWidth = Math.max(defaultWidth, getWidth(toText(textLines[k], checker), checker));
-						}
-
-						let sizedWidth = defaultWidth;
-						if (text.toLowerCase().indexOf("size=") > 0) {
-							let attrs = Subtitle.Smi.toAttr(text);
-							for (let k = 0; k < attrs.length; k++) {
-								const attr = attrs[k];
-								const attrLines = attr.text.split("\n");
-								if (attrLines.length > 1) {
-									const newAttrs = [];
-									for (let l = 0; l < attrLines.length; l++) {
-										if (l > 0) {
-											const brAttr = new Subtitle.Attr();
-											brAttr.text = "\n";
-											newAttrs.push(brAttr);
-										}
-										const newAttr = new Subtitle.Attr(attr);
-										newAttr.text = attrLines[l];
-										newAttrs.push(newAttr);
-									}
-									attrs = attrs.slice(0, k).concat(newAttrs).concat(attrs.slice(k + 1));
-									k += attrLines.length - 1;
+				if (smi.text.split("&nbsp;").join("").trim()) {
+					const lineCount = smi.text.split(/<br>/gi).length;
+					
+					const attrs = smi.toAttr();
+					const defaultWidth = getAttrWidth(attrs, checker);
+					const sizedWidth   = getAttrWidth(attrs, checker, true);
+					/*
+					let attrLine = [];
+					const attrLines = [attrLine];
+					for (let k = 0; k < attrs.length; k++) {
+						const attr = attrs[k];
+						if (attr.text == "\n") {
+							attrLines.push(attrLine = []);
+						} else {
+							const index = attr.text.indexOf("\n");
+							if (index >= 0) {
+								if (index > 0) {
+									const a = new Subtitle.Attr(attr);
+									a.text = attr.text.substring(0, index);
+									attrLine.push(a);
 								}
+								if (index < attr.text.length - 1) {
+									const a = new Subtitle.Attr(attr);
+									a.text = attr.text.substring(index + 1);
+									attrLines.push(attrLine = [a]);
+								}
+							} else {
+								attrLine.push(attr);
 							}
-							sizedWidth = getWidth(Subtitle.Smi.fromAttr(attrs, Combine.defaultSize), checker);
 						}
-
-						//[STIME, STYPE, ETIME, ETYPE, TEXT, LINES, WIDTH, SIZED];
-						syncs.push([last[1], last[2], parsed.SYNC, parsed.TYPE, text, lineCount, defaultWidth, sizedWidth]);
+					}
+					
+					syncs.push(last = [smi.start, smi.syncType, 0, 0, smi.text, attrLines, lineCount, defaultWidth, sizedWidth]);
+					*/
+					syncs.push(last = [smi.start, smi.syncType, 0, 0, smi.text, attrs, lineCount, defaultWidth, sizedWidth]);
+				}
+			}
+			
+			return syncs;
+			
+		} else {
+			{	// 주석 제거 후 결합
+				const comments = text.split("\n<!--");
+				text = comments[0];
+				for (let i = 1; i < comments.length; i++) {
+					const index = comments[i].indexOf("-->");
+					if (index > 0) {
+						text += comments[i].substring(index + 3);
 					}
 				}
-				last = [i, parsed.SYNC, parsed.TYPE];
 			}
+			const lines = text.split("\n");
+			const parseds = [];
+			
+			// 싱크값을 제외하면 별도의 값을 취하지 않는 간이 파싱
+			// SMI는 태그 꺽쇠 내에서 줄바꿈을 하는 경우는 일반적으로 없다고 가정
+			for (let i = 0; i < lines.length; i++) {
+				const line = lines[i];
+				let parsed = new Line(line);
+				parseds.push(parsed);
+	
+				if (parsed.SYNC) {
+					if (parsed.TYPE == TYPE.FRAME) {
+						syncLines.frame[parsed.SYNC] = line;
+					} else if (parsed.TYPE == TYPE.RANGE) {
+						syncLines.range[parsed.SYNC] = line;
+					} else {
+						syncLines.basic[parsed.SYNC] = line;
+					}
+				}
+			}
+			parseds.push(new Line("&nbsp;", 99999999, TYPE.BASIC));
+			
+			const syncs = [];
+			let last = null;
+			for (let i = 0; i < parseds.length; i++) {
+				const parsed = parseds[i];
+				if (parsed.TYPE) {
+					if (last) {
+						const lines = [];
+						for (let j = last[0] + 1; j < i; j++) {
+							lines.push(parseds[j].TEXT);
+						}
+						const text = lines.join("\n");
+						if (text.split("&nbsp;").join("").trim()) {
+							const textLines = text.split(/<br>/gi);
+							const lineCount = textLines.length;
+							let defaultWidth = 0;
+							for (let k = 0; k < textLines.length; k++) {
+								defaultWidth = Math.max(defaultWidth, getWidth(toText(textLines[k], checker), checker));
+							}
+	
+							let sizedWidth = defaultWidth;
+							if (text.toLowerCase().indexOf("size=") > 0) {
+								let attrs = Subtitle.Smi.toAttr(text);
+								for (let k = 0; k < attrs.length; k++) {
+									const attr = attrs[k];
+									const attrLines = attr.text.split("\n");
+									if (attrLines.length > 1) {
+										const newAttrs = [];
+										for (let l = 0; l < attrLines.length; l++) {
+											if (l > 0) {
+												const brAttr = new Subtitle.Attr();
+												brAttr.text = "\n";
+												newAttrs.push(brAttr);
+											}
+											const newAttr = new Subtitle.Attr(attr);
+											newAttr.text = attrLines[l];
+											newAttrs.push(newAttr);
+										}
+										attrs = attrs.slice(0, k).concat(newAttrs).concat(attrs.slice(k + 1));
+										k += attrLines.length - 1;
+									}
+								}
+								sizedWidth = getWidth(Subtitle.Smi.fromAttr(attrs, Combine.defaultSize), checker);
+							}
+	
+							//[STIME, STYPE, ETIME, ETYPE, TEXT, ATTRS, LINES, WIDTH, SIZED];
+							syncs.push([last[1], last[2], parsed.SYNC, parsed.TYPE, text, null, lineCount, defaultWidth, sizedWidth]);
+						}
+					}
+					last = [i, parsed.SYNC, parsed.TYPE];
+				}
+			}
+			
+			return syncs;
 		}
-		
-		return syncs;
 	}
 	
 	Combine.combine = (inputUpper, inputLower) => {
@@ -284,363 +373,688 @@ window.Combine = {
 		const lowerSyncs = parse(inputLower, checker);
 		
 		const groups = [];
-		{	let group = null;
-			let ui = 0;
-			let li = 0;
-			while  ((ui <= upperSyncs.length) && (li <= lowerSyncs.length)) {
-				if ((ui == upperSyncs.length) && (li == lowerSyncs.length)) {
-					break;
-				}
-				const us = (ui < upperSyncs.length) ? upperSyncs[ui] : [99999999, 99999999, null, 0];
-				const ls = (li < lowerSyncs.length) ? lowerSyncs[li] : [99999999, 99999999, null, 0];
-				if (us[STIME] < ls[STIME]) { // 위가 바뀜
-					if (group
-					 && (   (us[STYPE] == TYPE.RANGE) // 중간 싱크
-					     || (group.lower.length && (group.lower[group.lower.length - 1][ETIME] > us[STIME]))
-					    )
-					) { // 그룹 유지
-						group.upper.push(us);
-						group.maxLines[0] = Math.max(group.maxLines[0], us[LINES]);
-						group.maxWidth = Math.max(group.maxWidth, us[WIDTH]);
-						group.maxSized = Math.max(group.maxSized, us[SIZED]);
-						
-					} else { // 아래가 없거나 끝남 -> 그룹 끊김
-						groups.push(group = {
-								upper: [us]
-							,	lower: []
-							,	maxLines: [us[LINES], 0]
-							,	maxWidth: us[WIDTH]
-							,	maxSized: us[SIZED]
-						});
+		if (NEW) {
+			{
+				let group = null;
+				let ui = 0;
+				let li = 0;
+				while  ((ui <= upperSyncs.length) && (li <= lowerSyncs.length)) {
+					if ((ui == upperSyncs.length) && (li == lowerSyncs.length)) {
+						break;
 					}
-					ui++;
-					
-				} else if (ls[STIME] < us[STIME]) { // 아래가 바뀜
-					if (group
-					 && (  (ls[STYPE] == TYPE.RANGE) // 중간 싱크
-					     || (group.upper.length && (group.upper[group.upper.length - 1][ETIME] > ls[STIME]))
-					    )
-					) { // 그룹 유지
-						group.lower.push(ls);
-						group.maxLines[1] = Math.max(group.maxLines[1], ls[LINES]);
-						group.maxWidth = Math.max(group.maxWidth, ls[WIDTH]);
-						group.maxSized = Math.max(group.maxSized, ls[SIZED]);
+					const us = (ui < upperSyncs.length) ? upperSyncs[ui] : [99999999, 99999999, null, 0];
+					const ls = (li < lowerSyncs.length) ? lowerSyncs[li] : [99999999, 99999999, null, 0];
+					if (us[STIME] < ls[STIME]) { // 위가 바뀜
+						if (group
+						 && (   ((us[STYPE] == Subtitle.SyncType.inner) || (us[STYPE] > 3)) // 중간 싱크
+						     || (group.lower.length && (group.lower[group.lower.length - 1][ETIME] > us[STIME]))
+						    )
+						) { // 그룹 유지
+							group.upper.push(us);
+							group.maxLines[0] = Math.max(group.maxLines[0], us[LINES]);
+							group.maxWidth = Math.max(group.maxWidth, us[WIDTH]);
+							group.maxSized = Math.max(group.maxSized, us[SIZED]);
+							
+						} else { // 아래가 없거나 끝남 -> 그룹 끊김
+							groups.push(group = {
+									upper: [us]
+								,	lower: []
+								,	maxLines: [us[LINES], 0]
+								,	maxWidth: us[WIDTH]
+								,	maxSized: us[SIZED]
+							});
+						}
+						ui++;
 						
-					} else { // 위가 없거나 끝남 -> 그룹 끊김
-						groups.push(group = {
-								upper: []
-							,	lower: [ls]
-							,	maxLines: [0, ls[LINES]]
-							,	maxWidth: ls[WIDTH]
-							,	maxSized: ls[SIZED]
-						});
-					}
-					li++;
-					
-				} else { // 둘이 같이 바뀜
-					if ((us[STYPE] == TYPE.RANGE) || (ls[STYPE] == TYPE.RANGE)) {
-						// 하나라도 중간 싱크 - 그룹 유지
-						group.upper.push(us);
-						group.lower.push(ls);
-						group.maxLines[0] = Math.max(group.maxLines[0], us[LINES]);
-						group.maxLines[1] = Math.max(group.maxLines[1], ls[LINES]);
-						group.maxWidth = Math.max(group.maxWidth, us[WIDTH]);
-						group.maxWidth = Math.max(group.maxWidth, ls[WIDTH]);
-						group.maxSized = Math.max(group.maxSized, us[SIZED]);
-						group.maxSized = Math.max(group.maxSized, ls[SIZED]);
+					} else if (ls[STIME] < us[STIME]) { // 아래가 바뀜
+						if (group
+						 && (  ((ls[STYPE] == Subtitle.SyncType.inner) || (ls[STYPE] > 3)) // 중간 싱크
+						     || (group.upper.length && (group.upper[group.upper.length - 1][ETIME] > ls[STIME]))
+						    )
+						) { // 그룹 유지
+							group.lower.push(ls);
+							group.maxLines[1] = Math.max(group.maxLines[1], ls[LINES]);
+							group.maxWidth = Math.max(group.maxWidth, ls[WIDTH]);
+							group.maxSized = Math.max(group.maxSized, ls[SIZED]);
+							
+						} else { // 위가 없거나 끝남 -> 그룹 끊김
+							groups.push(group = {
+									upper: []
+								,	lower: [ls]
+								,	maxLines: [0, ls[LINES]]
+								,	maxWidth: ls[WIDTH]
+								,	maxSized: ls[SIZED]
+							});
+						}
+						li++;
 						
-					} else {
-						// 새 그룹
-						groups.push(group = {
-								upper: [us]
-							,	lower: [ls]
-							,	maxLines: [us[LINES], ls[LINES]]
-							,	maxWidth: Math.max(us[WIDTH], ls[WIDTH])
-							,	maxSized: Math.max(us[SIZED], ls[SIZED])
-						});
+					} else { // 둘이 같이 바뀜
+						if ((us[STYPE] == Subtitle.SyncType.inner) || (us[STYPE] > 3) || (ls[STYPE] == Subtitle.SyncType.inner) || (ls[STYPE] > 3)) {
+							// 하나라도 중간 싱크 - 그룹 유지
+							group.upper.push(us);
+							group.lower.push(ls);
+							group.maxLines[0] = Math.max(group.maxLines[0], us[LINES]);
+							group.maxLines[1] = Math.max(group.maxLines[1], ls[LINES]);
+							group.maxWidth = Math.max(group.maxWidth, us[WIDTH]);
+							group.maxWidth = Math.max(group.maxWidth, ls[WIDTH]);
+							group.maxSized = Math.max(group.maxSized, us[SIZED]);
+							group.maxSized = Math.max(group.maxSized, ls[SIZED]);
+							
+						} else {
+							// 새 그룹
+							groups.push(group = {
+									upper: [us]
+								,	lower: [ls]
+								,	maxLines: [us[LINES], ls[LINES]]
+								,	maxWidth: Math.max(us[WIDTH], ls[WIDTH])
+								,	maxSized: Math.max(us[SIZED], ls[SIZED])
+							});
+						}
+						ui++;
+						li++;
 					}
-					ui++;
-					li++;
 				}
 			}
-		}
-		for (let gi = 0; gi < groups.length; gi++) {
-			const group = groups[gi];
-			const withFontSize = group.maxSized < group.maxWidth;
-			group.lines = [];
-			let last = null;
-			
-			if (LOG) {
-				console.log(group);
-				console.log("group width: " + group.maxWidth);
-				console.log("group sized width: " + group.maxSized);
-			}
-			
-			// 팟플레이어 왼쪽 정렬에서 좌우로 흔들리지 않도록 잡아줌
-			// ... 사실 폰트에 따라 흔들리긴 함...
-			if (group.upper.length && group.lower.length) {
-				const lists = [group.upper, group.lower];
-				for (let i = 0; i < lists.length; i++) {
-					const list = lists[i];
-					
-					for (let j = 0; j < list.length; j++) {
-						// 줄 길이 채워주기
-						const sync = list[j];
-						if (sync[WIDTH] < group.maxWidth && sync[SIZED] < group.maxSized) {
-							const text = sync[TEXT];
-	
-							// 여백을 붙여서 제일 적절한 값 찾기
-							let pad = "";
-							{
-								let groupMaxWidth;
-								let lines;
-								if (withFontSize) {
-									// 글씨 크기 적용했을 때 더 작아졌으면 이걸 기준으로 구함
-									
-									if (sync[WIDTH] > group.maxSized) {
-										// 크기 조절 안 했을 때의 폭을 이미 넘어섰으면 작업 안 함
-										console.log("over??");
-										continue;
+			const br = new Subtitle.Attr(null, "\n");
+			for (let gi = 0; gi < groups.length; gi++) {
+				const group = groups[gi];
+				const withFontSize = group.maxSized < group.maxWidth;
+				const groupMaxWidth = withFontSize ? group.maxSized : group.maxWidth;
+				group.lines = [];
+				let last = null;
+				
+				if (LOG) {
+					console.log(group);
+					console.log("group width: " + group.maxWidth);
+					console.log("group sized width: " + group.maxSized);
+				}
+				
+				// 팟플레이어 왼쪽 정렬에서 좌우로 흔들리지 않도록 최대한잡아줌
+				if (group.upper.length) {
+					if (group.lower.length) {
+						const lists = [group.upper, group.lower];
+						for (let i = 0; i < lists.length; i++) {
+							const list = lists[i];
+							
+							for (let j = 0; j < list.length; j++) {
+								// 줄 길이 채워주기
+								const sync = list[j];
+								const attrs = sync[ATTRS];
+								
+								if (sync[WIDTH] < group.maxWidth && sync[SIZED] < group.maxSized) {
+									// 여백을 붙여서 제일 적절한 값 찾기
+									let lines;
+									if (withFontSize) {
+										// 글씨 크기 적용했을 때 더 작아졌으면 이걸 기준으로 구함
+										
+										if (sync[WIDTH] > groupMaxWidth) {
+											// 크기 조절 안 했을 때의 폭을 이미 넘어섰으면 작업 안 함
+											if (LOG) console.log("width over");
+											sync[TEXT] = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
+											continue;
+										}
 									}
 									
-									groupMaxWidth = group.maxSized;
+									let width = sync[SIZED];
+									let padsAttrs = attrs;
+									let lastPad;
+									let lastAttrs;
+									let lastWidth;
 									
-									if (text.toLowerCase().indexOf("size=") > 0) {
-										let attrs = Subtitle.Smi.toAttr(text);
+									let pad = "";
+									const lPad = new Subtitle.Attr();
+									const rPad = new Subtitle.Attr();
+									
+									do {
+										lastPad = pad;
+										lastAttrs = padsAttrs;
+										lastWidth = width;
+										pad = lastPad + " ";
+										padsAttrs = [];
 										for (let k = 0; k < attrs.length; k++) {
 											const attr = attrs[k];
-											const attrLines = attr.text.split("\n");
-											if (attrLines.length > 1) {
-												const newAttrs = [];
-												for (let l = 0; l < attrLines.length; l++) {
-													if (l > 0) {
-														const brAttr = new Subtitle.Attr();
-														brAttr.text = "\n";
-														newAttrs.push(brAttr);
-													}
-													const newAttr = new Subtitle.Attr(attr);
-													newAttr.text = attrLines[l];
-													newAttrs.push(newAttr);
+											if (attr.text == "") {
+												// 내용물 없는 속성(마지막 종료 태그 등)
+												padsAttrs.push(attr);
+												continue;
+												
+											} else if (attr.text == "\n") {
+												// 줄바꿈 혼자 밖에 나와있음
+												padsAttrs.push(attr);
+												continue;
+												
+											} else if (attr.text == "　") {
+												if (((k == 0) || attrs[k - 1].text.endsWith("\n"))
+												 && ((k == attrs.length - 1) || !attrs[k + 1].text || attrs[k + 1].text.startsWith("\n"))
+												) {
+													// 공백 줄
+													padsAttrs.push(attr);
+													continue;
 												}
-												attrs = attrs.slice(0, k).concat(newAttrs).concat(attrs.slice(k + 1));
-												k += attrLines.length - 1;
+											}
+											
+											const attrTexts = attr.text.split("\n");
+											
+											let prev = new Subtitle.Attr(attr, attrTexts[0]);
+											let clearPrev = isClear(prev);
+											if (clearPrev) {
+												prev.text = "​" + pad + prev.text;
+											} else {
+												padsAttrs.push(new Subtitle.Attr(null, "​" + pad));
+											}
+											padsAttrs.push(prev);
+											
+											for (let l = 1; l < attrTexts.length; l++) {
+												const next = new Subtitle.Attr(attr, attrTexts[l]);
+												const clearNext = isClear(next);
+												
+												if (clearPrev) {
+													prev.text += pad + "​";
+													if (clearNext) {
+														if (prev.i     == next.i
+														 && prev.fc    == next.fc
+														 && prev.fade  == next.fade
+														 && prev.shake == next.shake
+														) {
+															// 속성이 완전히 같으면 통합
+															prev.text += "\n​" + pad + next.text;
+															continue;
+															
+														} else {
+															padsAttrs.push(new Subtitle.Attr(null, "\n"));
+															next.text = "​" + pad + next.text;
+														}
+													} else {
+														padsAttrs.push(new Subtitle.Attr(null, "\n​" + pad));
+													}
+												} else {
+													if (clearNext) {
+														padsAttrs.push(new Subtitle.Attr(null, pad + "​\n"));
+														next.text = "​" + pad + next.text;
+													} else {
+														padsAttrs.push(new Subtitle.Attr(null, pad + "​\n​" + pad));
+													}
+												}
+												
+												padsAttrs.push(prev = next);
+												clearPrev = clearNext;
+											}
+											
+											if (clearPrev) {
+												prev.text += pad + "​";
+											} else {
+												padsAttrs.push(new Subtitle.Attr(null, pad + "​"));
 											}
 										}
-										lines = Subtitle.Smi.fromAttr(attrs, true).split(/<br>/gi);
+										width = getAttrWidth(padsAttrs, checker, withFontSize);
+										if (LOG) console.log(padsAttrs, width);
+										
+									} while (width < groupMaxWidth);
+									
+									if ((width - groupMaxWidth) > (groupMaxWidth - lastWidth)) {
+										pad = lastPad;
+										padsAttrs = lastAttrs;
+										width = lastWidth;
+										if (LOG) console.log(padsAttrs, width);
+									}
+									
+									sync[TEXT] = Subtitle.Smi.fromAttr(padsAttrs).split("\n").join("<br>");
+									
+								} else {
+									sync[TEXT] = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
+								}
+								
+								// 줄 높이 맞춰주기
+								// TODO: 글씨 크기 있을 때 지원 필요? ... 그룹 범위 내에서 크기 바뀐다면 대처가 불가능할 듯?
+								// RUBY 태그 있을 때도 유지 안 됨
+								for (let k = sync[LINES]; k < group.maxLines[i]; k++) {
+									sync[TEXT] = "<b>　</b><br>" + sync[TEXT];
+								}
+							}
+						}
+					}
+				}
+				{	let ui = 0;
+					let li = 0;
+					while  ((ui <= group.upper.length) && (li <= group.lower.length)) {
+						if ((ui == group.upper.length) && (li == group.lower.length)) {
+							break;
+						}
+						const us = (ui < group.upper.length) ? group.upper[ui] : [99999999, 99999999, null, 0];
+						const ls = (li < group.lower.length) ? group.lower[li] : [99999999, 99999999, null, 0];
+						
+						if (us[STIME] < ls[STIME]) { // 위가 바뀜
+							if (!last) { // 첫 싱크
+								group.lines.push(last = [us[STIME], us[STYPE], us[ETIME], us[ETYPE], us, null]);
+								
+							} else {
+								// 아래는 유지하고 위는 바뀐 걸 추가
+								if (last[STIME] == us[STIME]) {
+									last[UPPER] = us;
+								} else if (us[STIME] < last[ETIME]) {
+									const curr = [us[STIME], us[STYPE], last[ETIME], last[ETYPE], us, last[LOWER]];
+									last[ETIME] = us[STIME];
+									last[ETYPE] = us[STYPE];
+									group.lines.push(last = curr);
+								}
+								
+								if (us[ETIME] < last[ETIME]) { // 위가 먼저 끝남
+									const curr = [us[ETIME], us[ETYPE], last[ETIME], last[ETYPE], null, last[LOWER]];
+									last[ETIME] = us[ETIME];
+									last[ETYPE] = us[ETYPE];
+									group.lines.push(last = curr);
+								} else if (us[ETIME] > last[ETIME]) { // 아래가 먼저 끝남
+									group.lines.push(last = [last[ETIME], last[ETYPE], us[ETIME], us[ETYPE], us, null]);
+								} else {
+									// 둘 다 끝남 -> 그룹 끝
+								}
+							}
+							ui++;
+							
+						} else if (ls[STIME] < us[STIME]) { // 아래가 바뀜
+							if (!last) { // 첫 싱크
+								group.lines.push(last = [ls[STIME], ls[STYPE], ls[ETIME], ls[ETYPE], null, ls]);
+								
+							} else {
+								// 위는 유지하고 아래는 바뀐 걸 추가
+								if (last[STIME] == ls[STIME]) {
+									last[LOWER] = ls;
+								} else if (ls[STIME] < last[ETIME]) {
+									const curr = [ls[STIME], ls[STYPE], last[ETIME], last[ETYPE], last[UPPER], ls];
+									last[ETIME] = ls[STIME];
+									last[ETYPE] = ls[STYPE];
+									group.lines.push(last = curr);
+								}
+								
+								if (ls[ETIME] < last[ETIME]) { // 아래가 먼저 끝남
+									const curr = [ls[ETIME], ls[ETYPE], last[ETIME], last[ETYPE], last[TEXT], null];
+									last[ETIME] = ls[ETIME];
+									last[ETYPE] = ls[ETYPE];
+									group.lines.push(last = curr);
+								} else if (ls[ETIME] > last[ETIME]) { // 위가 먼저 끝남
+									group.lines.push(last = [last[ETIME], last[ETYPE], ls[ETIME], ls[ETYPE], null, ls]);
+								} else {
+									// 둘 다 끝남 -> 그룹 끝
+								}
+							}
+							li++;
+							
+						} else { // 둘이 같이 바뀜(그룹 첫 싱크에서만 가능)
+							let ss = us;
+							if (ls[ETIME] < us[ETIME]) {
+								ss = ls;
+								li++;
+							} else {
+								ui++;
+							}
+							group.lines.push(last = [us[STIME], us[STYPE], ss[ETIME], ss[ETYPE], us, ls]);
+						}
+					}
+				}
+			}
+			
+		} else {
+			{
+				let group = null;
+				let ui = 0;
+				let li = 0;
+				while  ((ui <= upperSyncs.length) && (li <= lowerSyncs.length)) {
+					if ((ui == upperSyncs.length) && (li == lowerSyncs.length)) {
+						break;
+					}
+					const us = (ui < upperSyncs.length) ? upperSyncs[ui] : [99999999, 99999999, null, 0];
+					const ls = (li < lowerSyncs.length) ? lowerSyncs[li] : [99999999, 99999999, null, 0];
+					if (us[STIME] < ls[STIME]) { // 위가 바뀜
+						if (group
+						 && (   (us[STYPE] == TYPE.RANGE) // 중간 싱크
+						     || (group.lower.length && (group.lower[group.lower.length - 1][ETIME] > us[STIME]))
+						    )
+						) { // 그룹 유지
+							group.upper.push(us);
+							group.maxLines[0] = Math.max(group.maxLines[0], us[LINES]);
+							group.maxWidth = Math.max(group.maxWidth, us[WIDTH]);
+							group.maxSized = Math.max(group.maxSized, us[SIZED]);
+							
+						} else { // 아래가 없거나 끝남 -> 그룹 끊김
+							groups.push(group = {
+									upper: [us]
+								,	lower: []
+								,	maxLines: [us[LINES], 0]
+								,	maxWidth: us[WIDTH]
+								,	maxSized: us[SIZED]
+							});
+						}
+						ui++;
+						
+					} else if (ls[STIME] < us[STIME]) { // 아래가 바뀜
+						if (group
+						 && (  (ls[STYPE] == TYPE.RANGE) // 중간 싱크
+						     || (group.upper.length && (group.upper[group.upper.length - 1][ETIME] > ls[STIME]))
+						    )
+						) { // 그룹 유지
+							group.lower.push(ls);
+							group.maxLines[1] = Math.max(group.maxLines[1], ls[LINES]);
+							group.maxWidth = Math.max(group.maxWidth, ls[WIDTH]);
+							group.maxSized = Math.max(group.maxSized, ls[SIZED]);
+							
+						} else { // 위가 없거나 끝남 -> 그룹 끊김
+							groups.push(group = {
+									upper: []
+								,	lower: [ls]
+								,	maxLines: [0, ls[LINES]]
+								,	maxWidth: ls[WIDTH]
+								,	maxSized: ls[SIZED]
+							});
+						}
+						li++;
+						
+					} else { // 둘이 같이 바뀜
+						if ((us[STYPE] == TYPE.RANGE) || (ls[STYPE] == TYPE.RANGE)) {
+							// 하나라도 중간 싱크 - 그룹 유지
+							group.upper.push(us);
+							group.lower.push(ls);
+							group.maxLines[0] = Math.max(group.maxLines[0], us[LINES]);
+							group.maxLines[1] = Math.max(group.maxLines[1], ls[LINES]);
+							group.maxWidth = Math.max(group.maxWidth, us[WIDTH]);
+							group.maxWidth = Math.max(group.maxWidth, ls[WIDTH]);
+							group.maxSized = Math.max(group.maxSized, us[SIZED]);
+							group.maxSized = Math.max(group.maxSized, ls[SIZED]);
+							
+						} else {
+							// 새 그룹
+							groups.push(group = {
+									upper: [us]
+								,	lower: [ls]
+								,	maxLines: [us[LINES], ls[LINES]]
+								,	maxWidth: Math.max(us[WIDTH], ls[WIDTH])
+								,	maxSized: Math.max(us[SIZED], ls[SIZED])
+							});
+						}
+						ui++;
+						li++;
+					}
+				}
+			}
+			
+			for (let gi = 0; gi < groups.length; gi++) {
+				const group = groups[gi];
+				const withFontSize = group.maxSized < group.maxWidth;
+				group.lines = [];
+				let last = null;
+				
+				if (LOG) {
+					console.log(group);
+					console.log("group width: " + group.maxWidth);
+					console.log("group sized width: " + group.maxSized);
+				}
+				
+				// 팟플레이어 왼쪽 정렬에서 좌우로 흔들리지 않도록 잡아줌
+				// ... 사실 폰트에 따라 흔들리긴 함...
+				if (group.upper.length && group.lower.length) {
+					const lists = [group.upper, group.lower];
+					for (let i = 0; i < lists.length; i++) {
+						const list = lists[i];
+						
+						for (let j = 0; j < list.length; j++) {
+							// 줄 길이 채워주기
+							const sync = list[j];
+							if (sync[WIDTH] < group.maxWidth && sync[SIZED] < group.maxSized) {
+								const text = sync[TEXT];
+								
+								// 여백을 붙여서 제일 적절한 값 찾기
+								let pad = "";
+								{
+									let groupMaxWidth;
+									let lines;
+									if (withFontSize) {
+										// 글씨 크기 적용했을 때 더 작아졌으면 이걸 기준으로 구함
+										
+										if (sync[WIDTH] > group.maxSized) {
+											// 크기 조절 안 했을 때의 폭을 이미 넘어섰으면 작업 안 함
+											console.log("over??");
+											continue;
+										}
+										
+										groupMaxWidth = group.maxSized;
+										
+										if (text.toLowerCase().indexOf("size=") > 0) {
+											let attrs = Subtitle.Smi.toAttr(text);
+											for (let k = 0; k < attrs.length; k++) {
+												const attr = attrs[k];
+												const attrLines = attr.text.split("\n");
+												if (attrLines.length > 1) {
+													const newAttrs = [];
+													for (let l = 0; l < attrLines.length; l++) {
+														if (l > 0) {
+															const brAttr = new Subtitle.Attr();
+															brAttr.text = "\n";
+															newAttrs.push(brAttr);
+														}
+														const newAttr = new Subtitle.Attr(attr);
+														newAttr.text = attrLines[l];
+														newAttrs.push(newAttr);
+													}
+													attrs = attrs.slice(0, k).concat(newAttrs).concat(attrs.slice(k + 1));
+													k += attrLines.length - 1;
+												}
+											}
+											lines = Subtitle.Smi.fromAttr(attrs, true).split(/<br>/gi);
+											
+										} else {
+											// 현재 내용물에는 폰트 크기 적용 안 됨
+											lines = text.split(/<br>/gi);
+											for (let k = 0; k < lines.length; k++) {
+												lines[k] = toText(lines[k], checker);
+											}
+										}
 										
 									} else {
-										// 현재 내용물에는 폰트 크기 적용 안 됨
+										groupMaxWidth = group.maxWidth;
 										lines = text.split(/<br>/gi);
 										for (let k = 0; k < lines.length; k++) {
 											lines[k] = toText(lines[k], checker);
 										}
 									}
 									
-								} else {
-									groupMaxWidth = group.maxWidth;
-									lines = text.split(/<br>/gi);
-									for (let k = 0; k < lines.length; k++) {
-										lines[k] = toText(lines[k], checker);
-									}
-								}
-								
-								// 여러 줄일 경우 제일 긴 줄 찾기
-								let maxLine = text;
-								if (lines.length > 1) {
-									let maxWidth = 0;
-									for (let k = 0; k < lines.length; k++) {
-										const width = getWidth(lines[k], checker);
-										if (width > maxWidth) {
-											maxWidth = width;
-											maxLine = lines[k];
+									// 여러 줄일 경우 제일 긴 줄 찾기
+									let maxLine = text;
+									if (lines.length > 1) {
+										let maxWidth = 0;
+										for (let k = 0; k < lines.length; k++) {
+											const width = getWidth(lines[k], checker);
+											if (width > maxWidth) {
+												maxWidth = width;
+												maxLine = lines[k];
+											}
 										}
 									}
-								}
-								let width = getWidth(maxLine, checker);
-								let lastPad;
-								let lastWidth;
-								if (LOG) console.log(maxLine.split("&nbsp;").join(" ") + ": " + width);
-								const realLines = maxLine.split("\n"); // 실제론 여러 줄일 수 있음 <- ... 그 개념이 아니지 않나?
-								do {
-									lastPad = pad;
-									lastWidth = width;
-									pad = lastPad + " ";
-									const curr = "​" + pad + realLines.join(pad + "​\n​" + pad) + pad + "​";
-									width = getWidth(curr, checker);
-									if (LOG) console.log(curr.split("&nbsp;").join(" ") + ": " + width);
-									
-								} while (width < groupMaxWidth);
-								
-								if ((width - groupMaxWidth) > (groupMaxWidth - lastWidth)) {
-									pad = lastPad;
-									if (LOG) {
+									// TODO: attrs로 변환해서 처리해야 할 듯...?
+									let width = getWidth(maxLine, checker);
+									let lastPad;
+									let lastWidth;
+									if (LOG) console.log(maxLine.split("&nbsp;").join(" ") + ": " + width);
+									const realLines = maxLine.split("\n"); // 실제론 여러 줄일 수 있음 <- ... 그 개념이 아니지 않나?
+									do {
+										lastPad = pad;
+										lastWidth = width;
+										pad = lastPad + " ";
 										const curr = "​" + pad + realLines.join(pad + "​\n​" + pad) + pad + "​";
 										width = getWidth(curr, checker);
+										if (LOG) console.log(curr.split("&nbsp;").join(" ") + ": " + width);
+										
+									} while (width < groupMaxWidth);
+									
+									if ((width - groupMaxWidth) > (groupMaxWidth - lastWidth)) {
+										pad = lastPad;
+										if (LOG) {
+											const curr = "​" + pad + realLines.join(pad + "​\n​" + pad) + pad + "​";
+											width = getWidth(curr, checker);
+										}
+									}
+									pad = pad.split("&nbsp;").join(" ");
+								}
+								
+								// 다시 원본 가져와서 공백문자 붙이기
+								const lines = text.split(/<br>/gi);
+								for (let k = 0; k < lines.length; k++) {
+									let newLine = lines[k].split("​").join(""); // Zero-Width-Space 중복으로 들어가지 않도록
+									
+									if (toText(newLine, checker).split("　").join("").split(" ").join("").length) {
+										// 공백 줄인 경우는 별도 처리 하지 않음
+										// 태그로 감싼 줄은 태그 안에 공백문자 넣기 <- 기능X, 그냥 소스 보기 좋게 만들기
+										let prev = "";
+										let next = "";
+										while (newLine.startsWith("\n")) {
+											prev += "\n";
+											newLine = newLine.substring(1);
+										}
+										while (newLine.startsWith("<")) {
+											let tagEnd = newLine.indexOf(">") + 1;
+											if (tagEnd == 0) {
+												break;
+											}
+											{	const tag = newLine.substring(0, tagEnd).toUpperCase();
+												
+												// 밑줄/취소선, RUBY태그는 공백문자 추가되면 안 됨
+												if (tag == "<U>" || tag == "<S>" || tag == "<RUBY>") {
+													break;
+												}
+												// TODO: font size 적용된 경우도 막아야 하나...?
+											}
+											while (newLine.length > tagEnd && newLine[tagEnd] == "\n") {
+												// 태그 직후에 줄바꿈을 한 경우가 있음
+												tagEnd++;
+											}
+											prev += newLine.substring(0, tagEnd);
+											newLine = newLine.substring(tagEnd);
+										}
+										while (newLine.endsWith(">")) {
+											const tagStart = newLine.lastIndexOf("<");
+											if (tagStart < 0) {
+												break;
+											}
+											const tagEnd = newLine.lastIndexOf(">") + 1;
+											if (tagEnd <= tagStart) {
+												break;
+											}
+											{	const tag = newLine.substring(tagStart, tagEnd).toUpperCase();
+												
+												// 밑줄/취소선, RUBY태그는 공백문자 추가되면 안 됨
+												if (tag == "</U>" || tag == "</S>" || tag == "</RUBY>") {
+													break;
+												}
+												// TODO: font size 적용된 경우도 막아야 하나...?
+											}
+											next = newLine.substring(tagStart) + next;
+											newLine = newLine.substring(0, tagStart);
+										}
+										if (pad) {
+											newLine = prev + "​" + pad + newLine + pad + "​" + next;
+										} else {
+											{	const c = newLine[0];
+												if (c == ' ' || c == '　' || c == '\t') {
+													newLine = "​" + newLine;
+												}
+											}
+											{	const c = newLine[newLine.length - 1];
+												if (c == ' ' || c == '　' || c == '\t') {
+													newLine = newLine + "​";
+												}
+											}
+											newLine = prev + newLine + next;
+										}
+										lines[k] = newLine;
 									}
 								}
-								pad = pad.split("&nbsp;").join(" ");
+								sync[TEXT] = lines.join("<br>");
+								if (withFontSize && (sync[WIDTH] == sync[SIZED])) {
+									sync[TEXT] = '<font size="' + Combine.defaultSize + '">' + sync[TEXT] + '</font>';
+								}
 							}
 							
-							// 다시 원본 가져와서 공백문자 붙이기
-							const lines = text.split(/<br>/gi);
-							for (let k = 0; k < lines.length; k++) {
-								let newLine = lines[k].split("​").join(""); // Zero-Width-Space 중복으로 들어가지 않도록
-								
-								if (toText(newLine, checker).split("　").join("").split(" ").join("").length) {
-									// 공백 줄인 경우는 별도 처리 하지 않음
-									// 태그로 감싼 줄은 태그 안에 공백문자 넣기 <- 기능X, 그냥 소스 보기 좋게 만들기
-									let prev = "";
-									let next = "";
-									while (newLine.startsWith("\n")) {
-										prev += "\n";
-										newLine = newLine.substring(1);
-									}
-									while (newLine.startsWith("<")) {
-										let tagEnd = newLine.indexOf(">") + 1;
-										if (tagEnd == 0) {
-											break;
-										}
-										{	const tag = newLine.substring(0, tagEnd).toUpperCase();
-											
-											// 밑줄/취소선, RUBY태그는 공백문자 추가되면 안 됨
-											if (tag == "<U>" || tag == "<S>" || tag == "<RUBY>") {
-												break;
-											}
-											// TODO: font size 적용된 경우도 막아야 하나...?
-										}
-										while (newLine.length > tagEnd && newLine[tagEnd] == "\n") {
-											// 태그 직후에 줄바꿈을 한 경우가 있음
-											tagEnd++;
-										}
-										prev += newLine.substring(0, tagEnd);
-										newLine = newLine.substring(tagEnd);
-									}
-									while (newLine.endsWith(">")) {
-										const tagStart = newLine.lastIndexOf("<");
-										if (tagStart < 0) {
-											break;
-										}
-										const tagEnd = newLine.lastIndexOf(">") + 1;
-										if (tagEnd <= tagStart) {
-											break;
-										}
-										{	const tag = newLine.substring(tagStart, tagEnd).toUpperCase();
-											
-											// 밑줄/취소선, RUBY태그는 공백문자 추가되면 안 됨
-											if (tag == "</U>" || tag == "</S>" || tag == "</RUBY>") {
-												break;
-											}
-											// TODO: font size 적용된 경우도 막아야 하나...?
-										}
-										next = newLine.substring(tagStart) + next;
-										newLine = newLine.substring(0, tagStart);
-									}
-									if (pad) {
-										newLine = prev + "​" + pad + newLine + pad + "​" + next;
-									} else {
-										{	const c = newLine[0];
-											if (c == ' ' || c == '　' || c == '\t') {
-												newLine = "​" + newLine;
-											}
-										}
-										{	const c = newLine[newLine.length - 1];
-											if (c == ' ' || c == '　' || c == '\t') {
-												newLine = newLine + "​";
-											}
-										}
-										newLine = prev + newLine + next;
-									}
-									lines[k] = newLine;
-								}
+							// 줄 높이 맞춰주기
+							// TODO: 글씨 크기 있을 때 지원 필요? ... 그룹 범위 내에서 크기 바뀐다면 대처하기 어려울 듯?
+							for (let k = sync[LINES]; k < group.maxLines[i]; k++) {
+								sync[TEXT] = "<b>　</b><br>" + sync[TEXT];
 							}
-							sync[TEXT] = lines.join("<br>");
-							if (withFontSize && (sync[WIDTH] == sync[SIZED])) {
-								sync[TEXT] = '<font size="' + Combine.defaultSize + '">' + sync[TEXT] + '</font>';
-							}
-						}
-						
-						// 줄 높이 맞춰주기
-						// TODO: 글씨 크기 있을 때 지원 필요? ... 그룹 범위 내에서 크기 바뀐다면 대처하기 어려울 듯?
-						for (let k = sync[LINES]; k < group.maxLines[i]; k++) {
-							sync[TEXT] = "<b>　</b><br>" + sync[TEXT];
 						}
 					}
 				}
-			}
-			{	let ui = 0;
-				let li = 0;
-				while  ((ui <= group.upper.length) && (li <= group.lower.length)) {
-					if ((ui == group.upper.length) && (li == group.lower.length)) {
-						break;
-					}
-					const us = (ui < group.upper.length) ? group.upper[ui] : [99999999, 99999999, null, 0];
-					const ls = (li < group.lower.length) ? group.lower[li] : [99999999, 99999999, null, 0];
-					
-					if (us[STIME] < ls[STIME]) { // 위가 바뀜
-						if (!last) { // 첫 싱크
-							group.lines.push(last = [us[STIME], us[STYPE], us[ETIME], us[ETYPE], us, null]);
-							
-						} else {
-							// 아래는 유지하고 위는 바뀐 걸 추가
-							if (last[STIME] == us[STIME]) {
-								last[UPPER] = us;
-							} else if (us[STIME] < last[ETIME]) {
-								const curr = [us[STIME], us[STYPE], last[ETIME], last[ETYPE], us, last[LOWER]];
-								last[ETIME] = us[STIME];
-								last[ETYPE] = us[STYPE];
-								group.lines.push(last = curr);
-							}
-							
-							if (us[ETIME] < last[ETIME]) { // 위가 먼저 끝남
-								const curr = [us[ETIME], us[ETYPE], last[ETIME], last[ETYPE], null, last[LOWER]];
-								last[ETIME] = us[ETIME];
-								last[ETYPE] = us[ETYPE];
-								group.lines.push(last = curr);
-							} else if (us[ETIME] > last[ETIME]) { // 아래가 먼저 끝남
-								group.lines.push(last = [last[ETIME], last[ETYPE], us[ETIME], us[ETYPE], us, null]);
-							} else {
-								// 둘 다 끝남 -> 그룹 끝
-							}
+				{	let ui = 0;
+					let li = 0;
+					while  ((ui <= group.upper.length) && (li <= group.lower.length)) {
+						if ((ui == group.upper.length) && (li == group.lower.length)) {
+							break;
 						}
-						ui++;
+						const us = (ui < group.upper.length) ? group.upper[ui] : [99999999, 99999999, null, 0];
+						const ls = (li < group.lower.length) ? group.lower[li] : [99999999, 99999999, null, 0];
 						
-					} else if (ls[STIME] < us[STIME]) { // 아래가 바뀜
-						if (!last) { // 첫 싱크
-							group.lines.push(last = [ls[STIME], ls[STYPE], ls[ETIME], ls[ETYPE], null, ls]);
-							
-						} else {
-							// 위는 유지하고 아래는 바뀐 걸 추가
-							if (last[STIME] == ls[STIME]) {
-								last[LOWER] = ls;
-							} else if (ls[STIME] < last[ETIME]) {
-								const curr = [ls[STIME], ls[STYPE], last[ETIME], last[ETYPE], last[UPPER], ls];
-								last[ETIME] = ls[STIME];
-								last[ETYPE] = ls[STYPE];
-								group.lines.push(last = curr);
-							}
-							
-							if (ls[ETIME] < last[ETIME]) { // 아래가 먼저 끝남
-								const curr = [ls[ETIME], ls[ETYPE], last[ETIME], last[ETYPE], last[TEXT], null];
-								last[ETIME] = ls[ETIME];
-								last[ETYPE] = ls[ETYPE];
-								group.lines.push(last = curr);
-							} else if (ls[ETIME] > last[ETIME]) { // 위가 먼저 끝남
-								group.lines.push(last = [last[ETIME], last[ETYPE], ls[ETIME], ls[ETYPE], null, ls]);
+						if (us[STIME] < ls[STIME]) { // 위가 바뀜
+							if (!last) { // 첫 싱크
+								group.lines.push(last = [us[STIME], us[STYPE], us[ETIME], us[ETYPE], us, null]);
+								
 							} else {
-								// 둘 다 끝남 -> 그룹 끝
+								// 아래는 유지하고 위는 바뀐 걸 추가
+								if (last[STIME] == us[STIME]) {
+									last[UPPER] = us;
+								} else if (us[STIME] < last[ETIME]) {
+									const curr = [us[STIME], us[STYPE], last[ETIME], last[ETYPE], us, last[LOWER]];
+									last[ETIME] = us[STIME];
+									last[ETYPE] = us[STYPE];
+									group.lines.push(last = curr);
+								}
+								
+								if (us[ETIME] < last[ETIME]) { // 위가 먼저 끝남
+									const curr = [us[ETIME], us[ETYPE], last[ETIME], last[ETYPE], null, last[LOWER]];
+									last[ETIME] = us[ETIME];
+									last[ETYPE] = us[ETYPE];
+									group.lines.push(last = curr);
+								} else if (us[ETIME] > last[ETIME]) { // 아래가 먼저 끝남
+									group.lines.push(last = [last[ETIME], last[ETYPE], us[ETIME], us[ETYPE], us, null]);
+								} else {
+									// 둘 다 끝남 -> 그룹 끝
+								}
 							}
-						}
-						li++;
-						
-					} else { // 둘이 같이 바뀜(그룹 첫 싱크에서만 가능)
-						let ss = us;
-						if (ls[ETIME] < us[ETIME]) {
-							ss = ls;
-							li++;
-						} else {
 							ui++;
+							
+						} else if (ls[STIME] < us[STIME]) { // 아래가 바뀜
+							if (!last) { // 첫 싱크
+								group.lines.push(last = [ls[STIME], ls[STYPE], ls[ETIME], ls[ETYPE], null, ls]);
+								
+							} else {
+								// 위는 유지하고 아래는 바뀐 걸 추가
+								if (last[STIME] == ls[STIME]) {
+									last[LOWER] = ls;
+								} else if (ls[STIME] < last[ETIME]) {
+									const curr = [ls[STIME], ls[STYPE], last[ETIME], last[ETYPE], last[UPPER], ls];
+									last[ETIME] = ls[STIME];
+									last[ETYPE] = ls[STYPE];
+									group.lines.push(last = curr);
+								}
+								
+								if (ls[ETIME] < last[ETIME]) { // 아래가 먼저 끝남
+									const curr = [ls[ETIME], ls[ETYPE], last[ETIME], last[ETYPE], last[TEXT], null];
+									last[ETIME] = ls[ETIME];
+									last[ETYPE] = ls[ETYPE];
+									group.lines.push(last = curr);
+								} else if (ls[ETIME] > last[ETIME]) { // 위가 먼저 끝남
+									group.lines.push(last = [last[ETIME], last[ETYPE], ls[ETIME], ls[ETYPE], null, ls]);
+								} else {
+									// 둘 다 끝남 -> 그룹 끝
+								}
+							}
+							li++;
+							
+						} else { // 둘이 같이 바뀜(그룹 첫 싱크에서만 가능)
+							let ss = us;
+							if (ls[ETIME] < us[ETIME]) {
+								ss = ls;
+								li++;
+							} else {
+								ui++;
+							}
+							group.lines.push(last = [us[STIME], us[STYPE], ss[ETIME], ss[ETYPE], us, ls]);
 						}
-						group.lines.push(last = [us[STIME], us[STYPE], ss[ETIME], ss[ETYPE], us, ls]);
 					}
 				}
 			}
@@ -1210,3 +1624,10 @@ if (Subtitle && Subtitle.SmiFile) {
 		}
 	}
 }
+$(() => {
+	if (SmiEditor) {
+		TIDs[5] = Subtitle.Smi.TypeParser[4];
+		TIDs[6] = Subtitle.Smi.TypeParser[5];
+		TIDs[7] = Subtitle.Smi.TypeParser[6];
+	}
+});
