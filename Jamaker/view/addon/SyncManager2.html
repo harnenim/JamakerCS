@@ -35,6 +35,7 @@ $(() => {
 		return;
 	}
 	const fs = SmiEditor.video.fs;
+	const kfs = SmiEditor.video.kfs;
 	
 	origin.tab = tab;
 	origin.lines = tab.lines;
@@ -110,7 +111,17 @@ $(() => {
 			
 			const begin = (frameIndex < RANGE ? 0 : frameIndex - RANGE);
 			const end = (frameIndex + RANGE > fs.length ? fs.length : frameIndex + RANGE);
-			if (renderGroup.flag == flag && begin < renderGroup.end + 50) { // 50프레임 정도는 불필요한 섬네일 생성으로 인한 손해보단, 연속 생성에 따른 이득이 크다고 예상
+			let lastKf = 0;
+			{
+				const beginSync = fs[begin];
+				for (let j = 0; j < kfs.length; j++) {
+					if (kfs[j] < beginSync) {
+						lastKf = kfs[j];
+					}
+				}
+			}
+			if ((renderGroup.flag == flag) && (lastKf < fs[renderGroup.end] + 100)) { // 렌더링에 필요한 키프레임이 앞쪽과 100ms 이내로 이어짐
+			//if (renderGroup.flag == flag && begin < renderGroup.end + 50) { // 50프레임 정도는 불필요한 섬네일 생성으로 인한 손해보단, 연속 생성에 따른 이득이 크다고 예상
 				renderGroup.end = end;
 			} else {
 				renderList.push(renderGroup = {
@@ -447,9 +458,9 @@ body.diff #frameChecker {
 	<div id="frameChecker"></div>
 	<form id="formShift"><label>가중치 <input id="inputShift" type="number" value="0" /></label><button type="submit" id="btnShift">초기화</button>
 		<ol>
-			<li><label><input type="radio" name="mode" value="1" accesskey="1" checked /> 기본</label></li>
-			<li><label><input type="radio" name="mode" value="2" accesskey="2" /> 이전 프레임과 차이</label></li>
-			<li><label><input type="radio" name="mode" value="3" accesskey="3" /> 밝기 변화</label></li>
+			<li title="Alt+1"><label><input type="radio" name="mode" value="1" accesskey="1" checked /> 기본</label></li>
+			<li title="Alt+2"><label><input type="radio" name="mode" value="2" accesskey="2" /> 이전 프레임과 차이</label></li>
+			<li title="Alt+3"><label><input type="radio" name="mode" value="3" accesskey="3" /> 밝기 변화</label></li>
 		</ol>
 	</form>
 	<button type="button" id="btnApply" accesskey="s">적용</button>
