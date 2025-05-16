@@ -745,7 +745,8 @@ Subtitle.Width =
 }
 
 // 객체 복사용이 아닌, 기존 속성에 이어지는 새 객체를 만드는 쪽으로 만들었던 부분이라 text는 비운 채로 생성함
-Subtitle.Attr = function(old, text="") {
+// SMI 복원용 태그는 기본적으론 복사 안 함
+Subtitle.Attr = function(old, text="", withTagString=false) {
 	if (old) {
 		this.text = text;
 		this.b    = old.b;
@@ -758,6 +759,7 @@ Subtitle.Attr = function(old, text="") {
 		this.fade = old.fade;
 		this.shake = old.shake;
 		this.typing = old.typing;
+		this.tagString = withTagString ? old.tagString : null;
 	} else {
 		this.text = text;
 		this.b    = false; // Bold
@@ -770,6 +772,7 @@ Subtitle.Attr = function(old, text="") {
 		this.fade = 0;
 		this.shake = null;
 		this.typing = null;
+		this.tagString = null;
 	}
 }
 Subtitle.Attr.TypingAttr = function(mode, start, end) {
@@ -1520,8 +1523,20 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 					let match = null;
 					let tAttr = null;
 
-					if (mode == "character") {
-						tAttr = new Subtitle.Attr.TypingAttr(Typing.Mode.character);
+					if (mode.startsWith("character")) {
+						if (mode == "character") {
+							tAttr = new Subtitle.Attr.TypingAttr(Typing.Mode.character);
+
+						} else if (mode.length == 11) {
+							const s = ((mode[ 9] == '(') ? 1 : ((mode[ 9] == '[') ? 0 : -1));
+							const e = ((mode[10] == ')') ? 1 : ((mode[10] == ']') ? 0 : -1));
+							if (s > -1 && e > -1) {
+								tAttr = new Subtitle.Attr.TypingAttr(Typing.Mode.character, s, e);
+							}
+							
+						} else if (match = /keyboard\(([0-9]+),([0-9]+)\)/.exec(mode)) {
+							tAttr = new Subtitle.Attr.TypingAttr(Typing.Mode.character, Number(match[1]), Number(match[2]));
+						}
 						
 					} else if (mode == "typewriter") {
 						tAttr = new Subtitle.Attr.TypingAttr(Typing.Mode.typewriter);
@@ -1529,7 +1544,7 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 					} else if (match = /typewriter\(([0-9]+),([0-9]+)\)/.exec(mode)) {
 						tAttr = new Subtitle.Attr.TypingAttr(Typing.Mode.typewriter, Number(match[1]), Number(match[2]));
 						
-					} else if (mode.substring(0, 8) == "keyboard") {
+					} else if (mode.startsWith("keyboard")) {
 						if (mode == "keyboard") {
 							tAttr = new Subtitle.Attr.TypingAttr(Typing.Mode.keyboard);
 							
@@ -1612,15 +1627,17 @@ Subtitle.Smi.setStyle = (attr, status) => {
 Subtitle.Smi.setFurigana = (attr, furigana) => {
 	attr.furigana = furigana ? furigana : null;
 }
-Subtitle.Smi.toAttr = (text) => {
+Subtitle.Smi.toAttr = (text, keepTags=true) => {
 	const status = new Subtitle.Smi.Status();
 	let last = new Subtitle.Attr();
+	last.tagString = "";
 	const result = [last];
 	let ruby = null;
 	let furigana = null;
 	
 	let state = null;
-	
+
+	let tagString = null;
 	let tag = null;
 	let attr = null;
 	let value = null;
@@ -1628,28 +1645,48 @@ Subtitle.Smi.toAttr = (text) => {
 	function openTag() {
 		switch (tag.name.toUpperCase()) {
 			case "B":
-				if (last.text.length > 0)
+				if (last.text.length > 0) {
 					result.push((last = new Subtitle.Attr()));
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setB(true));
 				break;
 			case "I":
-				if (last.text.length > 0)
+				if (last.text.length > 0) {
 					result.push((last = new Subtitle.Attr()));
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setI(true));
 				break;
 			case "U":
-				if (last.text.length > 0)
+				if (last.text.length > 0) {
 					result.push((last = new Subtitle.Attr()));
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setU(true));
 				break;
 			case "S":
-				if (last.text.length > 0)
+				if (last.text.length > 0) {
 					result.push((last = new Subtitle.Attr()));
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setS(true));
 				break;
 			case "FONT":
-				if (last.text.length > 0)
+				if (last.text.length > 0) {
 					result.push((last = new Subtitle.Attr()));
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				{
 					const attrs = [];
 					for (let name in tag.attrs) {
@@ -1659,19 +1696,28 @@ Subtitle.Smi.toAttr = (text) => {
 				}
 				break;
 			case "RUBY":
-				if (last.text.length > 0)
+				if (last.text.length > 0) {
 					result.push((last = new Subtitle.Attr()));
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status);
 				ruby = last;
 				break;
 			case "RT":
-				if (last.text.length > 0)
-					last = new Subtitle.Attr();
+				if (last.text.length > 0) {
+					result.push((last = new Subtitle.Attr()));
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status);
 				furigana = last;
 				break;
 			case "RP":
 				last = new Subtitle.Attr(); // 정크 데이터
+				if (keepTags) last.tagString = tagString;
 				Subtitle.Smi.setStyle(last, status);
 				break;
 			case "BR":
@@ -1679,37 +1725,62 @@ Subtitle.Smi.toAttr = (text) => {
 				break;
 		}
 		tag = null;
+		tagString = null;
 	}
 	function closeTag(tagName) {
 		switch (tagName.toUpperCase()) {
 			case "B":
-				if (last.text.length > 0)
+				if (last.text.length > 0) {
 					result.push((last = new Subtitle.Attr()));
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setB(false));
 				break;
 			case "I":
-				if (last.text.length > 0)
+				if (last.text.length > 0) {
 					result.push((last = new Subtitle.Attr()));
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setI(false));
 				break;
 			case "U":
-				if (last.text.length > 0)
+				if (last.text.length > 0) {
 					result.push((last = new Subtitle.Attr()));
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setU(false));
 				break;
 			case "S":
-				if (last.text.length > 0)
+				if (last.text.length > 0) {
 					result.push((last = new Subtitle.Attr()));
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setS(false));
 				break;
 			case "FONT":
-				if (last.text.length > 0)
+				if (last.text.length > 0) {
 					result.push((last = new Subtitle.Attr()));
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setFont(null));
 				break;
 			case "RUBY":
-				if (last.text.length > 0)
+				if (last.text.length > 0) {
 					result.push((last = new Subtitle.Attr()));
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status);
 				break;
 			case "RT":
@@ -1717,18 +1788,23 @@ Subtitle.Smi.toAttr = (text) => {
 					Subtitle.Smi.setFurigana(ruby, furigana);
 					furigana = null;
 					last = ruby;
+					if (keepTags) last.tagString += tagString;
 				}
 				break;
 			case "RP":
 				if (furigana) last = furigana;
+				if (keepTags) last.tagString += tagString;
 				break;
 			default:
 				break;
 		}
+		tagString = null;
 	}
 	
 	for (let pos = 0; pos < text.length; pos++) {
 		const c = text[pos];
+		if (tagString) tagString += c;
+		
 		switch (state) {
 			case '/': { // 태그?!
 				state = '<';
@@ -1739,6 +1815,7 @@ Subtitle.Smi.toAttr = (text) => {
 						pos = text.length;
 						break;
 					}
+					tagString += text.substring(pos + 1, end + 1);
 					closeTag(text.substring(pos + 1, end));
 					pos = end;
 					state = null;
@@ -1920,12 +1997,15 @@ Subtitle.Smi.toAttr = (text) => {
 			}
 			default: { // 텍스트
 				switch (c) {
-					case '<': { // 태그 시작
+					case '<': {
 						if ((pos + 4 <= text.length) && (text.substring(pos, pos+4) == "<!--")) {
+							// 주석 시작
 							state = '!';
 							pos += 3;
 						} else {
+							// 태그 시작
 							state = '/';
+							tagString = c;
 						}
 						break;
 					}
@@ -1942,8 +2022,8 @@ Subtitle.Smi.toAttr = (text) => {
 	
 	return result;
 }
-Subtitle.Smi.prototype.toAttr = function() {
-	return Subtitle.Smi.toAttr(this.text);
+Subtitle.Smi.prototype.toAttr = function(keepTags=true) {
+	return Subtitle.Smi.toAttr(this.text, keepTags);
 }
 Subtitle.Smi.prototype.fromAttr = function(attrs) {
 	this.text = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
@@ -1951,19 +2031,27 @@ Subtitle.Smi.prototype.fromAttr = function(attrs) {
 }
 Subtitle.Smi.fromAttr = (attrs, fontSize=0) => { // fontSize를 넣으면 html로 % 크기 출력
 	let text = "";
+	let hasTyping = false;
 	
 	const a = $("<a>");
 	let last = new Subtitle.Attr();
 	for (let i = 0; i < attrs.length; i++) {
 		const attr = attrs[i];
 		
+		//*
+		if (attr.tagString && attr.fade == 0 && attr.shake == null && attr.typing == null) {
+			// 원래 태그가 뭔지 알고 있을 경우 원본 복원
+			text += attr.tagString + attr.text;
+			
+		} else
+		//*/
 		if (attr.furigana) {
 			// <RUBY> 태그 적용 시 무조건 태그 닫고 열기
 			
-			if (last.b) text += "</B>";
-			if (last.i) text += "</I>";
-			if (last.u) text += "</U>";
 			if (last.s) text += "</S>";
+			if (last.u) text += "</U>";
+			if (last.i) text += "</I>";
+			if (last.b) text += "</B>";
 			
 			// 기존에 속성이 있었을 때 닫는 태그
 			if (last.fs > 0 || !last.fn == ("") || !last.fc == ("") || last.fade != 0 || last.shake != null || last.typing != null) {
@@ -1972,10 +2060,13 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => { // fontSize를 넣으면 html�
 			let prev = "<RUBY>";
 			let next = "";
 			
-			if (attr.b) { prev += "<B>"; next = "</B>" + next; };
-			if (attr.i) { prev += "<I>"; next = "</I>" + next; };
-			if (attr.u) { prev += "<U>"; next = "</U>" + next; };
+			if (attr.b) { prev += "<B>"; };
+			if (attr.i) { prev += "<I>"; };
+			if (attr.u) { prev += "<U>"; };
 			if (attr.s) { prev += "<S>"; next = "</S>" + next; };
+			if (attr.u) { next = "</U>" + next; };
+			if (attr.i) { next = "</I>" + next; };
+			if (attr.b) { next = "</B>" + next; };
 			
 			// 속성이 있을 때 여는 태그
 			let fontStart = "";
@@ -1990,7 +2081,7 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => { // fontSize를 넣으면 html�
 				if (attr.fc   != "") fontStart += " color=\""+ Subtitle.Smi.colorFromAttr(attr.fc) + "\"";
 				if (attr.fade != 0 ) fontStart += " fade=\"" + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\"";
 				if (attr.shake != null) fontStart += " shake=\"" + attr.shake.ms + "," + attr.shake.size + "\"";
-				if (attr.typing != null) fontStart += " typing=\"" + Typing.Mode.toString(attr.typing.mode) + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString(attr.typing.cursor) + "\"";
+				if (attr.typing != null) fontStart += " typing=\"" + Typing.Mode.toString[attr.typing.mode] + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString[attr.typing.cursor] + "\"";
 				fontStart += ">";
 				fontEnd = "</FONT>";
 			}
@@ -2000,11 +2091,6 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => { // fontSize를 넣으면 html�
 			
 		} else if (last.furigana) {
 			// 앞쪽에 <RUBY> 태그 있었을 때
-			
-			if (attr.b) text += "<B>";
-			if (attr.i) text += "<I>";
-			if (attr.u) text += "<U>";
-			if (attr.s) text += "<S>";
 			
 			// 속성이 있을 때 여는 태그
 			if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.shake != null || attr.typing != null) {
@@ -2017,24 +2103,22 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => { // fontSize를 넣으면 html�
 				if (attr.fc   != "") text += " color=\""+ Subtitle.Smi.colorFromAttr(attr.fc) + "\"";
 				if (attr.fade != 0 ) text += " fade=\"" + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\"";
 				if (attr.shake != null) text += " shake=\"" + attr.shake.ms + "," + attr.shake.size + "\"";
-				if (attr.typing != null) text += " typing=\"" + Typing.Mode.toString(attr.typing.mode) + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString(attr.typing.cursor) + "\"";
+				if (attr.typing != null) text += " typing=\"" + Typing.Mode.toString[attr.typing.mode] + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString[attr.typing.cursor] + "\"";
 				text += ">";
 			}
+			
+			if (attr.b) text += "<B>";
+			if (attr.i) text += "<I>";
+			if (attr.u) text += "<U>";
+			if (attr.s) text += "<S>";
 			
 			text += attr.text;
 			
 		} else {
-			if (!last.b && attr.b) text += "<B>";
-			else if (last.b && !attr.b) text += "</B>";
-			
-			if (!last.i && attr.i) text += "<I>";
-			else if (last.i && !attr.i) text += "</I>";
-			
-			if (!last.u && attr.u) text += "<U>";
-			else if (last.u && !attr.u) text += "</U>";
-			
-			if (!last.s && attr.s) text += "<S>";
-			else if (last.s && !attr.s) text += "</S>";
+			if (last.s && !attr.s) text += "</S>";
+			if (last.u && !attr.u) text += "</U>";
+			if (last.i && !attr.i) text += "</I>";
+			if (last.b && !attr.b) text += "</B>";
 			
 			if ( last.fs   != attr.fs
 			 ||  last.fn   != attr.fn
@@ -2060,10 +2144,16 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => { // fontSize를 넣으면 html�
 					if (attr.fc   != "") text += " color=\""+ Subtitle.Smi.colorFromAttr(attr.fc) + "\"";
 					if (attr.fade != 0 ) text += " fade=\"" + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\"";
 					if (attr.shake != null) text += " shake=\"" + attr.shake.ms + "," + attr.shake.size + "\"";
-					if (attr.typing != null) text += " typing=\"" + Typing.Mode.toString(attr.typing.mode) + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString(attr.typing.cursor) + "\"";
+					if (attr.typing != null) text += " typing=\"" + Typing.Mode.toString[attr.typing.mode] + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString[attr.typing.cursor] + "\"";
 					text += ">";
 				}
 			}
+			
+			// 특수태그 정규화 시 해당 태그는 안쪽에 들어간다고 가정하여 나중에 추가
+			if (!last.b && attr.b) text += "<B>";
+			if (!last.i && attr.i) text += "<I>";
+			if (!last.u && attr.u) text += "<U>";
+			if (!last.s && attr.s) text += "<S>";
 			
 			text += (attr.text == "\n") ? "<br>" : a.text(attr.text).html();
 		}
@@ -2182,7 +2272,7 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			}
 		}
 	}
-
+	
 	for (let i = 0; i < smis.length - 1; i++) {
 		const smi = smis[i];
 		const smiText = smi.text;
@@ -2306,6 +2396,7 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			if (hasFade) {
 				for (let j = 0; j < attrs.length; j++) {
 					const attr = attrs[j];
+					attr.tagString = null;
 					if (attr.fade != 0) {
 						fadeColors.push(new Subtitle.Smi.Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
 						attr.fade = 0;
@@ -2402,22 +2493,29 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			let attr = null;
 			let isLastAttr = false;
 			for (let j = 0; j < attrs.length; j++) {
-				if (attrs[j].typing != null) {
-					attr = attrs[(attrIndex = j)];
-					let remains = "";
-					for (let k = j + 1; k < attrs.length; k++) {
-						remains += attrs[k].text;
-					}
-					isLastAttr = (remains.length == 0) || (remains[0] == "\n");
-					if (!isLastAttr) {
-						let length = 0;
+				if (!attr) {
+					// 타이핑 찾기 전
+					if (attrs[j].typing != null) {
+						attr = attrs[(attrIndex = j)];
+						let remains = "";
 						for (let k = j + 1; k < attrs.length; k++) {
-							length += attrs[k].text.length;
+							remains += attrs[k].text;
 						}
-						isLastAttr = (length == 0);
+						isLastAttr = (remains.length == 0) || (remains[0] == "\n");
+						if (!isLastAttr) {
+							let length = 0;
+							for (let k = j + 1; k < attrs.length; k++) {
+								length += attrs[k].text.length;
+							}
+							isLastAttr = (length == 0);
+						}
 					}
-					break;
+				} else {
+					// 타이핑 찾은 후 나머지에 대해 타이핑 제거
+					attrs[j].typing = null;
 				}
+				// 태그 원본도 신뢰할 수 없음
+				attrs[j].tagString = null;
 			}
 			if (attr == null) {
 				continue;
@@ -2495,7 +2593,7 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 						attr.text += "​";
 					}
 				}
-				const newAttrs = new Subtitle.Smi(null, null, text).toAttr();
+				const newAttrs = new Subtitle.Smi(null, null, text).toAttr(false);
 				for (let k = 0; k < newAttrs.length; k++) {
 					newAttrs[k].b = attr.b;
 					newAttrs[k].i = attr.i;
@@ -2540,6 +2638,7 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			const fadeColors = [];
 			for (let j = 0; j < attrs.length; j++) {
 				const attr = attrs[j];
+				attr.tagString = null;
 				if (attr.fade != 0) {
 					fadeColors.push(new Subtitle.Smi.Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
 					attr.fade = 0;
