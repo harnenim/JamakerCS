@@ -24,7 +24,7 @@ window.Combine = {
 	const LOWER = 5;
 	
 	const LOG = false;
-	const NEW = false;
+	const NEW = true;
 	
 	// 다중 결합에 대해 중간 싱크 처리를 위한 부분
 	Subtitle.SyncType.combinedNormal = 4;
@@ -172,7 +172,7 @@ window.Combine = {
 	function getAttrWidth(attrs, checker, withFs=false) {
 		const cAttrs = [];
 		for (let i = 0; i < attrs.length; i++) {
-			const attr = new Subtitle.Attr(attrs[i], attrs[i].text.split("&nbsp;").join(" "));
+			const attr = new Subtitle.Attr(attrs[i], attrs[i].text.split("&nbsp;").join(" "), true);
 			attr.fs = ((withFs && attr.fs) ? attr.fs : Combine.defaultSize);
 			if (attr.fn && attr.fn != "맑은 고딕") {
 				// 팟플레이어 폰트 크기 보정
@@ -238,37 +238,9 @@ window.Combine = {
 				if (smi.text.split("&nbsp;").join("").trim()) {
 					const lineCount = smi.text.split(/<br>/gi).length;
 					
-					const attrs = smi.toAttr();
+					const attrs = smi.toAttr(false);
 					const defaultWidth = getAttrWidth(attrs, checker);
 					const sizedWidth   = getAttrWidth(attrs, checker, true);
-					/*
-					let attrLine = [];
-					const attrLines = [attrLine];
-					for (let k = 0; k < attrs.length; k++) {
-						const attr = attrs[k];
-						if (attr.text == "\n") {
-							attrLines.push(attrLine = []);
-						} else {
-							const index = attr.text.indexOf("\n");
-							if (index >= 0) {
-								if (index > 0) {
-									const a = new Subtitle.Attr(attr);
-									a.text = attr.text.substring(0, index);
-									attrLine.push(a);
-								}
-								if (index < attr.text.length - 1) {
-									const a = new Subtitle.Attr(attr);
-									a.text = attr.text.substring(index + 1);
-									attrLines.push(attrLine = [a]);
-								}
-							} else {
-								attrLine.push(attr);
-							}
-						}
-					}
-					
-					syncs.push(last = [smi.start, smi.syncType, 0, 0, smi.text, attrLines, lineCount, defaultWidth, sizedWidth]);
-					*/
 					syncs.push(last = [smi.start, smi.syncType, 0, 0, smi.text, attrs, lineCount, defaultWidth, sizedWidth]);
 				}
 			}
@@ -469,7 +441,7 @@ window.Combine = {
 					console.log("group sized width: " + group.maxSized);
 				}
 				
-				// 팟플레이어 왼쪽 정렬에서 좌우로 흔들리지 않도록 최대한잡아줌
+				// 팟플레이어 왼쪽 정렬에서 좌우로 흔들리지 않도록 최대한 잡아줌
 				if (group.upper.length) {
 					if (group.lower.length) {
 						const lists = [group.upper, group.lower];
@@ -480,10 +452,10 @@ window.Combine = {
 								// 줄 길이 채워주기
 								const sync = list[j];
 								const attrs = sync[ATTRS];
-								
+
+								let pad = "";
 								if (sync[WIDTH] < group.maxWidth && sync[SIZED] < group.maxSized) {
 									// 여백을 붙여서 제일 적절한 값 찾기
-									let lines;
 									if (withFontSize) {
 										// 글씨 크기 적용했을 때 더 작아졌으면 이걸 기준으로 구함
 										
@@ -500,10 +472,12 @@ window.Combine = {
 									let lastPad;
 									let lastAttrs;
 									let lastWidth;
-									
-									let pad = "";
-									const lPad = new Subtitle.Attr();
-									const rPad = new Subtitle.Attr();
+
+									// Zero-Width-Space 중복으로 들어가지 않도록
+									const trimedAttrs = [];
+									for (let k = 0; k < attrs.length; k++) {
+										trimedAttrs.push(new Subtitle.Attr(attrs[k], attrs[k].text.split("​").join(""), true));
+									}
 									
 									do {
 										lastPad = pad;
@@ -511,8 +485,9 @@ window.Combine = {
 										lastWidth = width;
 										pad = lastPad + " ";
 										padsAttrs = [];
-										for (let k = 0; k < attrs.length; k++) {
-											const attr = attrs[k];
+										for (let k = 0; k < trimedAttrs.length; k++) {
+											const attr = trimedAttrs[k];
+
 											if (attr.text == "") {
 												// 내용물 없는 속성(마지막 종료 태그 등)
 												padsAttrs.push(attr);
@@ -535,12 +510,14 @@ window.Combine = {
 											
 											const attrTexts = attr.text.split("\n");
 											
-											let prev = new Subtitle.Attr(attr, attrTexts[0]);
+											let prev = new Subtitle.Attr(attr, attrTexts[0], true);
 											let clearPrev = isClear(prev);
-											if (clearPrev) {
-												prev.text = "​" + pad + prev.text;
-											} else {
-												padsAttrs.push(new Subtitle.Attr(null, "​" + pad));
+											if (k == 0) {
+												if (clearPrev) {
+													prev.text = "​" + pad + prev.text;
+												} else {
+													padsAttrs.push(new Subtitle.Attr(null, "​" + pad));
+												}
 											}
 											padsAttrs.push(prev);
 											
@@ -579,11 +556,30 @@ window.Combine = {
 												padsAttrs.push(prev = next);
 												clearPrev = clearNext;
 											}
-											
-											if (clearPrev) {
-												prev.text += pad + "​";
-											} else {
-												padsAttrs.push(new Subtitle.Attr(null, pad + "​"));
+
+											let lastIndex = k;
+											for (let l = k + 1; l < attrs.length; l++) {
+												const attrText = attrs[l].text;
+												if (attrText == "") {
+													// 텍스트 없는 속성이면 건너뜀
+													continue;
+												}
+												if (attrText.startsWith("\n")) {
+													// 다음에 줄바꿈으로 시작하면 끝내기
+													break;
+												}
+												lastIndex = l;
+												if (attrText.indexOf("\n") > 0) {
+													// 다음에 줄바꿈 있으면 검색 끝내기
+													break;
+												}
+											}
+											if (k == lastIndex) {
+												if (clearPrev) {
+													prev.text += pad + "​";
+												} else {
+													padsAttrs.push(new Subtitle.Attr(null, pad + "​"));
+												}
 											}
 										}
 										width = getAttrWidth(padsAttrs, checker, withFontSize);

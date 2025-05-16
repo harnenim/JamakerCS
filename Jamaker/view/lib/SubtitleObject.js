@@ -2404,13 +2404,18 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 					if (attr.furigana) {
 						const furi = attr.furigana;
 						if (furi.fade != 0) {
-							fadeColors.push(new Subtitle.Smi.Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
+							fadeColors.push(new Subtitle.Smi.Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1 - j));
 							furi.fade = 0;
 						}
 					}
 				}
 				if (fadeColors.length == 0) {
 					continue;
+				}
+			} else {
+				// 페이드 없어도 tagString은 빼줘야 함
+				for (let j = 0; j < attrs.length; j++) {
+					attrs[j].tagString = null;
 				}
 			}
 			
