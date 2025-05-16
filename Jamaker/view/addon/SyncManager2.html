@@ -133,8 +133,13 @@ $(() => {
 			}
 			
 			for (let j = -RANGE; j < RANGE; j++) {
-				const imgIndex = frameIndex + j;
+                const imgIndex = frameIndex + j;
 				$frames.append($("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j }));
+				/*
+				for (let m = 1; m <= 3; k++) {
+                    $frames.append($("<img>").addClass("frame img" + imgIndex + flag + " mode" + k).css({ left: (j * 98) }).data({ index: imgIndex, img: imgIndex + flag + M[mode], offset: j }));
+				}
+				*/
 			}
 			
 		} else {
@@ -162,7 +167,13 @@ $(() => {
 	opener.afterRenderThumbnails = function(begin, end, flag) {
 		for (let i = begin; i < end; i++) {
 			$tbody.find("img.img" + i + flag).data({ img: i + flag }).attr({ src: "../../temp/thumbnails/" + i + flag + M[mode] + ".jpg" });
-		}
+			/*
+            for (let m = 0; m <= 3; m++) {
+				const $img = $tbody.find("img.img" + i + flag + ".mode" + m);
+				$img.attr({ src: "../../temp/thumbnails/" + $img.data("img") + ".jpg" });
+			}
+			*/
+        }
 	}
 	const diffs = {};
 	opener.setDiff = function(key, diff) {
@@ -318,7 +329,7 @@ $(() => {
 				}
 				if (offset.top > $body.height()) {
 					// 아래쪽에 있어서 안 보임
-					$tr.removeClass("visible");
+                    $tr.removeClass("visible");
 					return;
 				}
 				
@@ -326,7 +337,7 @@ $(() => {
 				
 			} else {
 				// 아래쪽에 있어서 안 보임
-				$tr.removeClass("visible");
+                $tr.removeClass("visible");
 			}
 		});
 	}).scroll();
@@ -357,10 +368,12 @@ $(() => {
 			const $img = $(this);
             $img.attr({ src: "../../temp/thumbnails/" + $img.data("img") + M[mode] + ".jpg" });
 		});
-		if (mode > 1) {
-			$("body").addClass("diff");
-        } else {
-            $("body").removeClass("diff");
+		for (let i = 1; i <= 3; i++) {
+			if (i == mode) {
+				$body.addClass("mode" + i);
+			} else {
+                $body.removeClass("mode" + i);
+			}
 		}
 	});
 	
@@ -430,6 +443,13 @@ body {
 	height: 56px;
 	cursor: pointer;
 }
+/*
+body.mode0 #editor tr.visible .frame.mode0,
+body.mode1 #editor tr.visible .frame.mode1,
+body.mode2 #editor tr.visible .frame.mode2 {
+	display: block;
+}
+*/
 #editor .frame:hover {
 	border-color: #f88;
 	opacity: 0.8;
@@ -444,10 +464,10 @@ body {
 	border-width: 0 1px;
 	transition: 0.2s;
 }
-body.diff #editor .frames {
+body:not(.mode1) #editor .frames {
 	margin-left: -49px;
 }
-body.diff #frameChecker {
+body:not(.mode1) #frameChecker {
 	left: calc(25% - 54px);
 	width: 100px;
 }
@@ -480,7 +500,7 @@ body.diff #frameChecker {
 }
 	</style>
 </head>
-<body>
+<body class="mode1">
 	<table id="editor">
 		<colgroup>
 			<col style="width: 50%;" />
