@@ -300,10 +300,42 @@ $(() => {
 		// 모드 선택 후에도 방향키 조작은 원래대로 동작해야 함
 		e.preventDefault();
 	});
+	
+	$("body").on("scroll", function(e) {
+		let status = -1;
+		$("#editor tbody tr.fs").each(function() {
+			const $tr = $(this);
+			
+			if (status < 1) {
+				const offset = $tr.offset();
+				
+				if (status < 0) {
+					if (offset.top + 56 < 0) {
+						// 위쪽에 있어서 안 보임
+						$tr.removeClass("visible");
+						return;
+					}
+				}
+				if (offset.top > $body.height()) {
+					// 아래쪽에 있어서 안 보임
+					$tr.removeClass("visible");
+					return;
+				}
+				
+				$tr.addClass("visible");
+				
+			} else {
+				// 아래쪽에 있어서 안 보임
+				$tr.removeClass("visible");
+			}
+		});
+	}).scroll();
+	
 	$("#inputShift").on("keydown", function(e) {
 		// 가중치 입력 중엔 방향키 조작 차단
 		e.stopPropagation();
 	});
+	
 	$("#formShift").on("submit", function() {
 		const shift = Number($("#inputShift").val());
 		for (let i = 0; i < origin.file.body.length; i++) {
@@ -384,6 +416,10 @@ body {
 	left: 50%;
 	height: 56px;
 	transition: 0.2s;
+	display: none;
+}
+#editor tr.visible .frames {
+	display: block;
 }
 #editor .frame {
 	display: block;
