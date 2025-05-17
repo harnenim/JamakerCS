@@ -448,7 +448,12 @@ SmiEditor.findSyncIndex = (sync, fs=[], from=0, to=-1) => {
 	}
 }
 SmiEditor.getSyncTime = (sync, forKeyFrame=false, output={}) => { /* output: 리턴값은 숫자여야 하는데, 키프레임 상태값 반환이 필요해져서 C# out처럼 만듦 */
-	if (!sync) sync = (time + SmiEditor.sync.weight);
+	if (!sync) {
+		sync = (time + SmiEditor.sync.weight);
+	} else if (!isFinite(sync)) {
+		// 가중치 없이 구하기
+		sync = time;
+	}
 	if (SmiEditor.sync.frame) { // 프레임 단위 싱크 보정
 		let adjustSync = null;
 		if (SmiEditor.trustKeyFrame // 키프레임 신뢰
@@ -1103,6 +1108,14 @@ SmiEditor.activateKeyEvent = function() {
 						}
 					}
 				}
+				case 116: { // F5
+					if (e.shiftKey && !e.ctrlKey && !e.altKey) {
+						// Shift+F5: 가중치 없이 싱크 찍기
+						editor.insertSync(false, false);
+						return;
+					}
+					break;
+				}
 			}
 			
 			{	// 단축키 설정
@@ -1428,7 +1441,7 @@ SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 		this.render([lineNo, this.lines.length]);
 	}
 }
-SmiEditor.prototype.insertSync = function(forFrame) {
+SmiEditor.prototype.insertSync = function(forFrame=false, withWeight=true) {
 	if (this.isRendering) {
 		return;
 	}
@@ -1438,7 +1451,7 @@ SmiEditor.prototype.insertSync = function(forFrame) {
 	const lineNo = this.input.val().substring(0, this.input[0].selectionEnd).split("\n").length - 1;
 	
 	let tmp = {};
-	const sync = SmiEditor.getSyncTime(null, forFrame, tmp);
+	const sync = SmiEditor.getSyncTime(withWeight ? null : "!", forFrame, tmp);
 	forFrame = forFrame || tmp.keyframe;
 	
 	let cursor = 0;
