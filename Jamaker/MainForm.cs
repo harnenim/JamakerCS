@@ -58,21 +58,8 @@ namespace Jamaker
             FormClosing += new FormClosingEventHandler(BeforeExit);
             FormClosed += new FormClosedEventHandler(WebFormClosed);
 
-            // 종료 시에 섬네일 삭제 돌리는 건 무리가 있어서
-            // 실행 직후 백그라운드로 돌림
-            new Thread(() =>
-            {
-                string dir = "temp/thumbnails";
-                DirectoryInfo di = new DirectoryInfo(dir);
-                if (di.Exists)
-                {
-                    FileInfo[] files = di.GetFiles();
-                    foreach (FileInfo file in files)
-                    {
-                        file.Delete();
-                    }
-                }
-            }).Start();
+            // 실행 직후 섬네일 남은 게 있으면 삭제
+            ClearThumbnails();
         }
         private MenuStrip menuStrip;
         private readonly MouseEventHandler clickMenuStrip;
@@ -1062,8 +1049,10 @@ namespace Jamaker
 
                 foreach (string paramStr in list)
                 {
+                    // 중간에 작업 끊은 경우
                     if (!isThumbnailsRendering)
                     {
+                        //ClearThumbnails(); // 스레드 충돌 생김
                         break;
                     }
                     string[] param = paramStr.Split(',');
@@ -1216,11 +1205,40 @@ namespace Jamaker
                         Console.WriteLine(e.ToString());
                     }
                 }
+
+                isThumbnailsRendering = false;
+
             }).Start();
         }
         public void CancelRenderThumbnails()
         {
-            isThumbnailsRendering = false;
+            if (isThumbnailsRendering)
+            {
+                isThumbnailsRendering = false;
+                // 작업 중인 걸 끝낸 후에 섬네일 삭제해야 함
+                // 스레드 종료 시점이 불분명해, 여기서 삭제 시키면 터질 수 있음
+            }
+            else
+            {
+                // 생성됐던 섬네일도 삭제
+                //ClearThumbnails();
+            }
+        }
+        public void ClearThumbnails()
+        {
+            new Thread(() =>
+            {
+                string dir = "temp/thumbnails";
+                DirectoryInfo di = new DirectoryInfo(dir);
+                if (di.Exists)
+                {
+                    FileInfo[] files = di.GetFiles();
+                    foreach (FileInfo file in files)
+                    {
+                        file.Delete();
+                    }
+                }
+            }).Start();
         }
 
         private int saveAfter = 0;

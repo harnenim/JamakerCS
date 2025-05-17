@@ -55,14 +55,15 @@ $(() => {
 		lines[i] = lines[i].TEXT;
 	}
 	origin.file = new Subtitle.SmiFile(lines.join("\n"));
-    if (!origin.file.body.length) {
-        alert("작업 대상이 없습니다.");
-        window.close();
-        return;
+	if (!origin.file.body.length) {
+		alert("작업 대상이 없습니다.");
+		window.close();
+		return;
 	}
 	
 	const $body = $("body");
 	const $tbody = $("#editor tbody").empty();
+	const $framesStorage = $("<div>"); // 객체 remove 하면 data가 날아가서 여기에 보관함
 	const frameSyncs = [];
 	
 	$("#editor thead").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origin.file.header.split("\n").join(""))));
@@ -83,13 +84,14 @@ $(() => {
 				break;
 			}
 		}
-		
+
 		const $tr = $("<tr>").data({ smi: smi });
 		if (smi.syncType == Subtitle.SyncType.frame) {
 			const frameIndex = SmiEditor.findSyncIndex(smi.start, fs);
 			const $frames = $("<div>").addClass("frames");
 			const $sync = $("<td>").addClass("sync").text(fs[frameIndex]);
-			$tr.addClass("fs").append($("<td>").append($frames)).append($sync).append($("<td>").text(smi.text.split("\n").join("")));
+			$framesStorage.append($frames);
+			$tr.addClass("fs").append($("<td>")).append($sync).append($("<td>").text(smi.text.split("\n").join("")));
 			$tr.data({ index: frameSyncs.length, $frames: $frames, frameIndex: frameIndex, offset: 0 });
 			$tbody.append($tr);
 			frameSyncs.push($tr);
@@ -121,7 +123,6 @@ $(() => {
 				}
 			}
 			if ((renderGroup.flag == flag) && (lastKf < fs[renderGroup.end] + 100)) { // 렌더링에 필요한 키프레임이 앞쪽과 100ms 이내로 이어짐
-			//if (renderGroup.flag == flag && begin < renderGroup.end + 50) { // 50프레임 정도는 불필요한 섬네일 생성으로 인한 손해보단, 연속 생성에 따른 이득이 크다고 예상
 				renderGroup.end = end;
 			} else {
 				renderList.push(renderGroup = {
@@ -133,13 +134,8 @@ $(() => {
 			}
 			
 			for (let j = -RANGE; j < RANGE; j++) {
-                const imgIndex = frameIndex + j;
-				$frames.append($("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j }));
-				/*
-				for (let m = 1; m <= 3; k++) {
-                    $frames.append($("<img>").addClass("frame img" + imgIndex + flag + " mode" + k).css({ left: (j * 98) }).data({ index: imgIndex, img: imgIndex + flag + M[mode], offset: j }));
-				}
-				*/
+				const imgIndex = frameIndex + j;
+                $frames.append($("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j }));
 			}
 			
 		} else {
@@ -164,16 +160,13 @@ $(() => {
 	opener.binder.renderThumbnails(SmiEditor.video.path, params.join("\n"));
 	
 	// 렌더링 완료 후 이미지 세팅
+	// 미리 값을 넣어주면 삭제되지 않은 다른 영상 섬네일 가져올 수 잇음
 	opener.afterRenderThumbnails = function(begin, end, flag) {
 		for (let i = begin; i < end; i++) {
-			$tbody.find("img.img" + i + flag).data({ img: i + flag }).attr({ src: "../../temp/thumbnails/" + i + flag + M[mode] + ".jpg" });
-			/*
-            for (let m = 0; m <= 3; m++) {
-				const $img = $tbody.find("img.img" + i + flag + ".mode" + m);
-				$img.attr({ src: "../../temp/thumbnails/" + $img.data("img") + ".jpg" });
-			}
-			*/
-        }
+			$tbody.find("img.img" + i + flag).data({ img: i + flag });
+            $framesStorage.find("img.img" + i + flag).data({ img: i + flag });
+		}
+		$body.scroll();
 	}
 	const diffs = {};
 	opener.setDiff = function(key, diff) {
@@ -311,7 +304,18 @@ $(() => {
 		// 모드 선택 후에도 방향키 조작은 원래대로 동작해야 함
 		e.preventDefault();
 	});
-	
+
+	function showFrames($tr) {
+		const $frames = $tr.data("$frames");
+		$frames.find("img").each(function () {
+			const $img = $(this);
+            $img.attr({ src: "../../temp/thumbnails/" + $img.data("img") + M[mode] + ".jpg" });
+		});
+        $tr.find("td:eq(0)").append($frames);
+	}
+	function hideFrames($tr) {
+		$framesStorage.append($tr.data("$frames"));
+	}
 	$("body").on("scroll", function(e) {
 		let status = -1;
 		$("#editor tbody tr.fs").each(function() {
@@ -323,21 +327,21 @@ $(() => {
 				if (status < 0) {
 					if (offset.top + 56 < 0) {
 						// 위쪽에 있어서 안 보임
-						$tr.removeClass("visible");
+						hideFrames($tr);
 						return;
 					}
 				}
 				if (offset.top > $body.height()) {
 					// 아래쪽에 있어서 안 보임
-                    $tr.removeClass("visible");
+					hideFrames($tr);
 					return;
 				}
 				
-				$tr.addClass("visible");
+				showFrames($tr);
 				
 			} else {
 				// 아래쪽에 있어서 안 보임
-                $tr.removeClass("visible");
+				hideFrames($tr);
 			}
 		});
 	}).scroll();
@@ -366,26 +370,29 @@ $(() => {
 		mode = $("input[name=mode]:checked").val();
 		$tbody.find("img").each(function() {
 			const $img = $(this);
-            $img.attr({ src: "../../temp/thumbnails/" + $img.data("img") + M[mode] + ".jpg" });
+			$img.attr({ src: "../../temp/thumbnails/" + $img.data("img") + M[mode] + ".jpg" });
 		});
 		for (let i = 1; i <= 3; i++) {
 			if (i == mode) {
 				$body.addClass("mode" + i);
 			} else {
-                $body.removeClass("mode" + i);
+				$body.removeClass("mode" + i);
 			}
 		}
 	});
 	
 	$("#btnApply").on("click", function() {
 		apply();
-		window.close();
-	});
+    });
+    $("#btnSet").on("click", function () {
+        apply();
+        window.close();
+    });
 
 	// 페이지 벗어날 경우 렌더링 취소
-    window.onunload = function () {
+	window.onunload = function () {
 		opener.binder.cancelRenderThumbnails();
-    }
+	}
 	
 	select(0);
 });
@@ -429,10 +436,6 @@ body {
 	left: 50%;
 	height: 56px;
 	transition: 0.2s;
-	display: none;
-}
-#editor tr.visible .frames {
-	display: block;
 }
 #editor .frame {
 	display: block;
@@ -443,13 +446,6 @@ body {
 	height: 56px;
 	cursor: pointer;
 }
-/*
-body.mode0 #editor tr.visible .frame.mode0,
-body.mode1 #editor tr.visible .frame.mode1,
-body.mode2 #editor tr.visible .frame.mode2 {
-	display: block;
-}
-*/
 #editor .frame:hover {
 	border-color: #f88;
 	opacity: 0.8;
@@ -471,7 +467,7 @@ body:not(.mode1) #frameChecker {
 	left: calc(25% - 54px);
 	width: 100px;
 }
-#formShift, #btnApply {
+#formShift, #btnApply, #btnSet {
 	position: fixed;
 	opacity: 0.5;
 	right: 0;
@@ -494,6 +490,11 @@ body:not(.mode1) #frameChecker {
 	width: 50px;
 }
 #btnApply {
+	width: 100px;
+	height: 30px;
+	bottom: 30px;
+}
+#btnSet {
 	width: 100px;
 	height: 30px;
 	bottom: 0;
@@ -519,6 +520,7 @@ body:not(.mode1) #frameChecker {
 			<li title="Alt+3"><label><input type="radio" name="mode" value="3" accesskey="3" /> 밝기 변화</label></li>
 		</ol>
 	</form>
-	<button type="button" id="btnApply" accesskey="s">적용</button>
+	<button type="button" id="btnApply" accesskey="a">적용</button>
+	<button type="button" id="btnSet" accesskey="s">적용 후 닫기</button>
 </body>
 </html>
