@@ -1717,7 +1717,6 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 				break;
 			case "RP":
 				last = new Subtitle.Attr(); // 정크 데이터
-				if (keepTags) last.tagString = tagString;
 				Subtitle.Smi.setStyle(last, status);
 				break;
 			case "BR":
@@ -1788,12 +1787,10 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 					Subtitle.Smi.setFurigana(ruby, furigana);
 					furigana = null;
 					last = ruby;
-					if (keepTags) last.tagString += tagString;
 				}
 				break;
 			case "RP":
 				if (furigana) last = furigana;
-				if (keepTags) last.tagString += tagString;
 				break;
 			default:
 				break;
@@ -2036,7 +2033,7 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => { // fontSize를 넣으면 html�
 	let last = new Subtitle.Attr();
 	for (let i = 0; i < attrs.length; i++) {
 		const attr = attrs[i];
-		
+
 		//*
 		if (attr.tagString && attr.fade == 0 && attr.shake == null && attr.typing == null) {
 			// 원래 태그가 뭔지 알고 있을 경우 원본 복원
