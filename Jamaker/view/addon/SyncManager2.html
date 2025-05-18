@@ -155,6 +155,7 @@ $(() => {
 	let params = [];
 	for (let i = 0; i < renderList.length; i++) {
 		const group = renderList[i];
+		// [ 시작시간, 종료시간, 시작인덱스, 종료인덱스, 플래그 ]
 		params.push([group.time, fs[group.end - 1] + 1 - group.time, group.begin, group.end, group.flag].join(","));
 	}
 	opener.binder.renderThumbnails(SmiEditor.video.path, params.join("\n"));
