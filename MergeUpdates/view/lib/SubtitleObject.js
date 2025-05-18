@@ -1646,7 +1646,7 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 		switch (tag.name.toUpperCase()) {
 			case "B":
 				if (last.text.length > 0) {
-					result.push((last = new Subtitle.Attr()));
+					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -1655,7 +1655,7 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 				break;
 			case "I":
 				if (last.text.length > 0) {
-					result.push((last = new Subtitle.Attr()));
+					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -1664,7 +1664,7 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 				break;
 			case "U":
 				if (last.text.length > 0) {
-					result.push((last = new Subtitle.Attr()));
+					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -1673,7 +1673,7 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 				break;
 			case "S":
 				if (last.text.length > 0) {
-					result.push((last = new Subtitle.Attr()));
+					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -1682,7 +1682,7 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 				break;
 			case "FONT":
 				if (last.text.length > 0) {
-					result.push((last = new Subtitle.Attr()));
+					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -1697,7 +1697,7 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 				break;
 			case "RUBY":
 				if (last.text.length > 0) {
-					result.push((last = new Subtitle.Attr()));
+					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -1707,7 +1707,7 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 				break;
 			case "RT":
 				if (last.text.length > 0) {
-					result.push((last = new Subtitle.Attr()));
+					last = new Subtitle.Attr();
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -1717,7 +1717,6 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 				break;
 			case "RP":
 				last = new Subtitle.Attr(); // 정크 데이터
-				if (keepTags) last.tagString = tagString;
 				Subtitle.Smi.setStyle(last, status);
 				break;
 			case "BR":
@@ -1731,7 +1730,7 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 		switch (tagName.toUpperCase()) {
 			case "B":
 				if (last.text.length > 0) {
-					result.push((last = new Subtitle.Attr()));
+					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -1740,7 +1739,7 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 				break;
 			case "I":
 				if (last.text.length > 0) {
-					result.push((last = new Subtitle.Attr()));
+					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -1749,7 +1748,7 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 				break;
 			case "U":
 				if (last.text.length > 0) {
-					result.push((last = new Subtitle.Attr()));
+					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -1758,7 +1757,7 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 				break;
 			case "S":
 				if (last.text.length > 0) {
-					result.push((last = new Subtitle.Attr()));
+					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -1767,7 +1766,7 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 				break;
 			case "FONT":
 				if (last.text.length > 0) {
-					result.push((last = new Subtitle.Attr()));
+					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -1776,7 +1775,7 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 				break;
 			case "RUBY":
 				if (last.text.length > 0) {
-					result.push((last = new Subtitle.Attr()));
+					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -1788,12 +1787,10 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 					Subtitle.Smi.setFurigana(ruby, furigana);
 					furigana = null;
 					last = ruby;
-					if (keepTags) last.tagString += tagString;
 				}
 				break;
 			case "RP":
 				if (furigana) last = furigana;
-				if (keepTags) last.tagString += tagString;
 				break;
 			default:
 				break;
@@ -2031,13 +2028,12 @@ Subtitle.Smi.prototype.fromAttr = function(attrs) {
 }
 Subtitle.Smi.fromAttr = (attrs, fontSize=0) => { // fontSize를 넣으면 html로 % 크기 출력
 	let text = "";
-	let hasTyping = false;
 	
 	const a = $("<a>");
 	let last = new Subtitle.Attr();
 	for (let i = 0; i < attrs.length; i++) {
 		const attr = attrs[i];
-		
+
 		//*
 		if (attr.tagString && attr.fade == 0 && attr.shake == null && attr.typing == null) {
 			// 원래 태그가 뭔지 알고 있을 경우 원본 복원
@@ -2160,7 +2156,7 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => { // fontSize를 넣으면 html�
 		last = attr;
 	}
 	a.remove();
-	
+
 	return text;
 }
 

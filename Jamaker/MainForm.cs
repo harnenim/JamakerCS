@@ -1061,6 +1061,7 @@ namespace Jamaker
                     int begin = int.Parse(param[2]);
                     int end = int.Parse(param[3]);
                     string flag = param[4];
+                    double fps = (end - begin - 1) / length;
 
                     int ms = time % 60000;
                     int m = time / 60000;
@@ -1074,7 +1075,7 @@ namespace Jamaker
                     //else
                     //if (flag == "d") vf = "-vf \"curves=r='0/0 0.9/0.1 1/1'\" ";
 
-                    string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s 96x54 -qscale:v 2 {vf}-f image2 \"{dir}/{begin}{flag}_%d.jpg\"";
+                    string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s 96x54 -qscale:v 2 -r {fps} {vf}-f image2 \"{dir}/{begin}{flag}_%d.jpg\"";
 
                     try
                     {
