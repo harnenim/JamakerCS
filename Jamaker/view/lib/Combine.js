@@ -427,7 +427,6 @@ window.Combine = {
 					}
 				}
 			}
-			const br = new Subtitle.Attr(null, "\n");
 			for (let gi = 0; gi < groups.length; gi++) {
 				const group = groups[gi];
 				const withFontSize = group.maxSized < group.maxWidth;
@@ -475,8 +474,26 @@ window.Combine = {
 
 									// Zero-Width-Space 중복으로 들어가지 않도록
 									const trimedAttrs = [];
+									let isNotEmpty = true;
 									for (let k = 0; k < attrs.length; k++) {
-										trimedAttrs.push(new Subtitle.Attr(attrs[k], attrs[k].text.split("​").join(""), true));
+										const attr = new Subtitle.Attr(attrs[k], attrs[k].text.split("​").join(""), true);
+										trimedAttrs.push(attr);
+										if (attr.text == "") {
+											// 내용물 없는 속성(마지막 종료 태그 등)
+											isNotEmpty = false;
+
+										} else if (attr.text == "\n") {
+											// 줄바꿈 혼자 밖에 나와있음
+											isNotEmpty = false;
+
+										} else if (attr.text.split("　").join("").trim() == "") {
+											if (((k == 0) || attrs[k - 1].text.endsWith("\n"))
+												&& ((k == attrs.length - 1) || !attrs[k + 1].text || attrs[k + 1].text.startsWith("\n"))
+											) {
+												// 공백 줄
+												isNotEmpty = false;
+											}
+										}
 									}
 									
 									do {
@@ -498,7 +515,7 @@ window.Combine = {
 												padsAttrs.push(attr);
 												continue;
 												
-											} else if (attr.text == "　") {
+											} else if (attr.text.split("　").join("").trim() == "") {
 												if (((k == 0) || attrs[k - 1].text.endsWith("\n"))
 												 && ((k == attrs.length - 1) || !attrs[k + 1].text || attrs[k + 1].text.startsWith("\n"))
 												) {
@@ -585,7 +602,7 @@ window.Combine = {
 										width = getAttrWidth(padsAttrs, checker, withFontSize);
 										if (LOG) console.log(padsAttrs, width);
 										
-									} while (width < groupMaxWidth);
+									} while (isNotEmpty && width < groupMaxWidth);
 									
 									if ((width - groupMaxWidth) > (groupMaxWidth - lastWidth)) {
 										pad = lastPad;
