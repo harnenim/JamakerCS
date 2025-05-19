@@ -84,7 +84,7 @@ $(() => {
 				break;
 			}
 		}
-
+		
 		const $tr = $("<tr>").data({ smi: smi });
 		if (smi.syncType == Subtitle.SyncType.frame) {
 			const frameIndex = SmiEditor.findSyncIndex(smi.start, fs);
@@ -135,7 +135,7 @@ $(() => {
 			
 			for (let j = -RANGE; j < RANGE; j++) {
 				const imgIndex = frameIndex + j;
-                $frames.append($("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j }));
+				$frames.append($("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j }));
 			}
 			
 		} else {
@@ -161,7 +161,7 @@ $(() => {
 	opener.binder.renderThumbnails(SmiEditor.video.path, params.join("\n"));
 	
 	// 렌더링 완료 후 이미지 세팅
-	// 미리 값을 넣어주면 삭제되지 않은 다른 영상 섬네일 가져올 수 잇음
+	// 미리 값을 넣어주면 삭제되지 않은 다른 영상 섬네일 가져올 수 있음
 	opener.afterRenderThumbnails = function(begin, end, flag) {
 		for (let i = begin; i < end; i++) {
 			$tbody.find("img.img" + i + flag).data({ img: i + flag });
@@ -305,7 +305,7 @@ $(() => {
 		// 모드 선택 후에도 방향키 조작은 원래대로 동작해야 함
 		e.preventDefault();
 	});
-
+	
 	function showFrames($tr) {
 		const $frames = $tr.data("$frames");
 		$frames.find("img").each(function () {
@@ -315,7 +315,8 @@ $(() => {
         $tr.find("td:eq(0)").append($frames);
 	}
 	function hideFrames($tr) {
-		$framesStorage.append($tr.data("$frames"));
+		const $frames = $tr.data("$frames");
+		$framesStorage.append($frames);
 	}
 	$("body").on("scroll", function(e) {
 		let status = -1;
@@ -389,7 +390,7 @@ $(() => {
         apply();
         window.close();
     });
-
+	
 	// 페이지 벗어날 경우 렌더링 취소
 	window.onunload = function () {
 		opener.binder.cancelRenderThumbnails();
@@ -451,23 +452,22 @@ body {
 	border-color: #f88;
 	opacity: 0.8;
 }
-#frameChecker {
+.frameChecker {
 	position: absolute;
 	top: 0;
 	left: calc(25% - 4.5px);
 	width: 2px;
 	bottom: 0;
-	border: 0 solid #f0f;
-	border-width: 0 1px;
+	border: 0;
 	transition: 0.2s;
 }
+.frameChecker.left  { border-left : 1px solid #f0f; }
+.frameChecker.right { border-right: 1px solid #f0f; }
 body:not(.mode1) #editor .frames {
 	margin-left: -49px;
 }
-body:not(.mode1) #frameChecker {
-	left: calc(25% - 54px);
-	width: 100px;
-}
+body:not(.mode1) .frameChecker.left  { left: calc(25% - 54px); }
+body:not(.mode1) .frameChecker.right { left: calc(25% + 44px); }
 #formShift, #btnApply, #btnSet {
 	position: fixed;
 	opacity: 0.5;
@@ -513,7 +513,8 @@ body:not(.mode1) #frameChecker {
 		<tbody></tbody>
 		<tfoot></tfoot>
 	</table>
-	<div id="frameChecker"></div>
+	<div class="frameChecker left"></div>
+	<div class="frameChecker right"></div>
 	<form id="formShift"><label>가중치 <input id="inputShift" type="number" value="0" /></label><button type="submit" id="btnShift">초기화</button>
 		<ol>
 			<li title="Alt+1"><label><input type="radio" name="mode" value="1" accesskey="1" checked /> 기본</label></li>
@@ -521,7 +522,7 @@ body:not(.mode1) #frameChecker {
 			<li title="Alt+3"><label><input type="radio" name="mode" value="3" accesskey="3" /> 밝기 변화</label></li>
 		</ol>
 	</form>
-	<button type="button" id="btnApply" accesskey="a">적용</button>
-	<button type="button" id="btnSet" accesskey="s">적용 후 닫기</button>
+	<button type="button" id="btnApply" title="Alt+A" accesskey="a">적용</button>
+	<button type="button" id="btnSet"   title="Alt+S" accesskey="s">적용 후 닫기</button>
 </body>
 </html>
