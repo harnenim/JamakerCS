@@ -106,7 +106,7 @@ window.DEFAULT_SETTING =
 ,	command:
 	{	fn: // F1~F12: pqrstuvwxyz{
 		{	't': '/* 기본 싱크 */\n' + 'editor.insertSync()'
-		,	'u': '/* 화면 싱크 */\n' + 'editor.insertSync(true)'
+		,	'u': '/* 화면 싱크 */\n' + 'editor.insertSync(1)'
 		,	'v': '/* 기본/화면 싱크 토글 */\n' + 'editor.toggleSyncType()'
 		,	'w': '/* 선택 영역 싱크 삭제 */\n' + 'editor.removeSync()'
 		,	'x': '/* 재생/일시정지 */\n' + 'SmiEditor.PlayerAPI.playOrPause()'

@@ -210,6 +210,13 @@ Line.prototype.renderHighlight = function(last, forced=false) {
 			});
 		}
 		
+		// 공백 싱크인 경우 싱크 투명도 따라감
+		{	const html = $view.html();
+			if (html.split("&amp;nbsp;").join("").trim().length == 0) {
+				$view.html($("<span class='hljs-sync'>").html(html));
+			}
+		}
+		
 		// 줄바꿈 표시
 		if (SmiEditor.showEnter) {
 			$view.append($("<span class='hljs-comment enter'>").text("↵"));
@@ -1111,7 +1118,7 @@ SmiEditor.activateKeyEvent = function() {
 				case 116: { // F5
 					if (e.shiftKey && !e.ctrlKey && !e.altKey) {
 						// Shift+F5: 가중치 없이 싱크 찍기
-						editor.insertSync(false, false);
+						editor.insertSync(2);
 						return;
 					}
 					break;
@@ -1441,18 +1448,29 @@ SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 		this.render([lineNo, this.lines.length]);
 	}
 }
-SmiEditor.prototype.insertSync = function(forFrame=false, withWeight=true) {
+/*
+mode:
+	0: 기본 싱크
+	1: 화면 싱크
+	2: 가중치 없이 화면 싱크
+	true -> 1로 동작 (레거시 지원)
+*/
+SmiEditor.prototype.insertSync = function(mode=0) {
 	if (this.isRendering) {
 		return;
 	}
 	this.history.log();
 	
+	if (mode === true) {
+		mode = 1;
+	}
+	
 	// 현재 커서가 위치한 줄
 	const lineNo = this.input.val().substring(0, this.input[0].selectionEnd).split("\n").length - 1;
 	
 	let tmp = {};
-	const sync = SmiEditor.getSyncTime(withWeight ? null : "!", forFrame, tmp);
-	forFrame = forFrame || tmp.keyframe;
+	const sync = SmiEditor.getSyncTime(((mode == 2) ? "!" : null), (mode == 1), tmp);
+	const forFrame = (mode > 0) || tmp.keyframe;
 	
 	let cursor = 0;
 	const lineSync = this.lines[lineNo].SYNC;
