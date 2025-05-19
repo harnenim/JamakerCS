@@ -2033,7 +2033,7 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => { // fontSize를 넣으면 html�
 	let last = new Subtitle.Attr();
 	for (let i = 0; i < attrs.length; i++) {
 		const attr = attrs[i];
-
+		
 		//*
 		if (attr.tagString && attr.fade == 0 && attr.shake == null && attr.typing == null) {
 			// 원래 태그가 뭔지 알고 있을 경우 원본 복원
@@ -2156,7 +2156,7 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => { // fontSize를 넣으면 html�
 		last = attr;
 	}
 	a.remove();
-
+	
 	return text;
 }
 
@@ -2400,7 +2400,7 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 					if (attr.furigana) {
 						const furi = attr.furigana;
 						if (furi.fade != 0) {
-							fadeColors.push(new Subtitle.Smi.Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1 - j));
+							fadeColors.push(new Subtitle.Smi.Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
 							furi.fade = 0;
 						}
 					}
