@@ -677,6 +677,11 @@ namespace Jamaker
             }
         }
 
+        public string afterInitAddon = "";
+        public void SetAfterInitAddon(string func)
+        {
+            afterInitAddon = func;
+        }
         public void LoadAddonSetting(string path)
         {
             string setting = "";

@@ -1,4 +1,6 @@
-﻿namespace Jamaker
+﻿using System;
+
+namespace Jamaker
 {
     class BaseBinder
     {
@@ -126,8 +128,9 @@
         // setting.html
         public void GetWindows(string[] targets) { _.GetWindows(targets); }
         public void SelectPlayerPath() { _.SelectPlayerPath(); }
-        
-        // addon 설정 용
+
+        // addon 설정용
+        public void SetAfterInitAddon(string func) { _.SetAfterInitAddon(func); }
         public void LoadAddonSetting(string path) { _.LoadAddonSetting(path); }
         public void SaveAddonSetting(string path, string text) { _.SaveAddonSetting(path, text); }
 

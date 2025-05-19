@@ -88,6 +88,7 @@ Binder.prototype.getWindows = function(targets) { this._.getWindows(targets); }
 Binder.prototype.selectPlayerPath = function() { alert("C#에서 동작합니다."); }
 
 // addon 설정 용
+Binder.prototype.setAfterInitAddon = function(func) { this._.setAfterInitAddon(func); }
 Binder.prototype.loadAddonSetting = function(path) { this._.loadAddonSetting(path); }
 Binder.prototype.saveAddonSetting = function(path, text) { this._.saveAddonSetting(path, text); }
 
@@ -559,7 +560,11 @@ window.MB = 9;
 			this.player.moveWindow();
 		}
 	}
-
+	
+	editor.setAfterInitAddon = function(func) {
+		console.log(func);
+		// C#에선 addon 로딩되면 eval 실행
+	}
 	editor.loadAddonSetting = function(path) {
 		$.ajax({"url" : "view/addon/" + path
 			,	"dataType": "text"

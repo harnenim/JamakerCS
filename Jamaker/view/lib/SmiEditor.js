@@ -2849,6 +2849,7 @@ SmiEditor.Viewer = {
 SmiEditor.Addon = {
 		windows: {}
 	,	open: function(name, target="addon") {
+			binder.setInitAddon("");
 			const url = (name.substring(0, 4) == "http") ? name : "addon/" + name.split("..").join("").split(":").join("") + ".html";
 			this.windows[target] = window.open(url, target, "scrollbars=no,location=no,width=1,height=1");
 			setTimeout(() => { // 웹버전에서 딜레이 안 주면 위치를 못 잡는 경우가 있음
@@ -2863,6 +2864,14 @@ SmiEditor.Addon = {
 				,	values: values
 			}
 			this.windows.addon = window.open("addon/ExtSubmit.html", "addon", "scrollbars=no,location=no,width=1,height=1");
+			setTimeout(() => {
+				SmiEditor.Addon.moveWindowToSetting("addon");
+			}, 1);
+			binder.focus("addon");
+		}
+	,	openExt: function(url, afterInit) {
+			binder.setAfterInitAddon(afterInit);
+			this.windows.addon = window.open(url, "addon", "location=no,width=1,height=1");
 			setTimeout(() => {
 				SmiEditor.Addon.moveWindowToSetting("addon");
 			}, 1);
@@ -2956,6 +2965,64 @@ function extSubmit(method, url, values, withoutTag=true) {
 		}
 	} else {
 		SmiEditor.Addon.openExtSubmit(method, url, params);
+	}
+}
+function extSubmitSpeller() {
+	let editor = SmiEditor.selected;
+	if (editor) {
+		const text = editor.getText();
+		let value = "";
+		if (text.selection[0] < text.selection[1]) {
+			// 선택된 내용물 가져오기
+			value = text.text.substring(text.selection[0], text.selection[1]);
+			
+		} else {
+			// 선택된 게 없으면
+			const lines = text.text.split("\n");
+			const lineNo = text.text.substring(0, text.selection[0]).split("\n").length - 1;
+			
+			// 현재 문단 or 싱크 맨 윗줄 찾기
+			let syncLineNo = lineNo;
+			while (syncLineNo >= 0) {
+				const line = lines[syncLineNo];
+				if (!line || line.substring(0, 6).toUpperCase() == "<SYNC ") {
+					break;
+				}
+				syncLineNo--;
+			}
+			
+			if (syncLineNo >= 0) {
+				// 다음 문단 or 싱크 라인 찾기
+				let nextSyncLineNo = syncLineNo + 1;
+				while (nextSyncLineNo < lines.length) {
+					const line = lines[nextSyncLineNo];
+					if (!line || line.substring(0, 6).toUpperCase() == "<SYNC ") {
+						break;
+					}
+					nextSyncLineNo++;
+				}
+				
+				if (nextSyncLineNo < lines.length) {
+					// 현재 싱크 내용물 선택
+					value = lines.slice(syncLineNo + 1, nextSyncLineNo).join("\n");
+					
+				} else {
+					// 현재 줄 선택
+					value = lines[lineNo];
+				}
+			}
+		}
+		
+		// 태그 탈출 처리
+		value = $("<p>").html(value.split(/<br>/gi).join(" ")).text();
+
+		SmiEditor.Addon.openExt("https://nara-speller.co.kr/speller"
+			, "$('textarea')[0].value = " + JSON.stringify(value) + ";\n"
+			+ "{	const $btn = $('button[type=submit]');\n"
+			+ "	$btn.disabled = false;\n"
+			+ "	$btn.clikc();\n"
+			+ "}"
+		);
 	}
 }
 

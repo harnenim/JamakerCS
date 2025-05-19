@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using CefSharp;
 using CefSharp.WinForms;
 using Jamaker.addon;
@@ -81,6 +83,25 @@ namespace Jamaker
                 int hwnd = browser.GetHost().GetWindowHandle().ToInt32();
                 mainForm.SetWindow(names[0], hwnd);
                 mainForm.SetFocus(hwnd);
+
+                if (names[0] == "addon")
+                {
+                    Console.WriteLine($"func: {mainForm.afterInitAddon}");
+                    /*
+                    new Thread(() =>
+                    {
+                        try
+                        {
+                            Thread.Sleep(1000); // 1초 지연 실행
+                            mainForm.Script(chromiumWebBrowser, "eval", mainForm.afterInitAddon );
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+                    }).Start();
+                    */
+                }
             }
         }
 
@@ -213,6 +234,31 @@ namespace Jamaker
                 {
                     object[] args = arg.GetType().IsArray ? (object[])arg : new object[] { arg };
                     mainView.ExecuteScriptAsync(name, args);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            if (result == null) return null;
+            return result.ToString();
+        }
+        public string Script(IWebBrowser chromiumWebBrowser, string name) { return Script(chromiumWebBrowser, name, new object[] { }); }
+        public string Script(IWebBrowser chromiumWebBrowser, string name, object arg)
+        {
+            object result = null;
+
+            try
+            {
+                if (InvokeRequired)
+                {
+                    result = Invoke(new Action(() => { Script(name, arg); }));
+                }
+                else
+                {
+                    object[] args = arg.GetType().IsArray ? (object[])arg : new object[] { arg };
+                    chromiumWebBrowser.ExecuteScriptAsync(name, args);
                 }
             }
             catch (Exception e)
