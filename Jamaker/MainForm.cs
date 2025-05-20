@@ -1067,7 +1067,7 @@ namespace Jamaker
                     int end = int.Parse(param[3]);
                     string flag = param[4];
                     double fps = (end - begin - 1) / length;
-                    //Console.WriteLine($"fps: {fps} = {end - begin - 1} / {length}");
+                    Console.WriteLine($"fps: {fps} = {end - begin} / {length}");
 
                     int ms = time % 60000;
                     int m = time / 60000;
