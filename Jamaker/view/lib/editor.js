@@ -965,13 +965,17 @@ function setSetting(setting, initial=false) {
 		} else if (setting.useHighlight) {
 			delete(setting.useHighlight);
 		}
-		const editors = [];
-		for (let i = 0; i < tabs.length; i++) {
-			for (let j = 0; j < tabs[i].holds.length; j++) {
-				editors.push(tabs[i].holds[j]);
+		// 문법 하이라이트 세팅 중에 내용이 바뀔 수 있어서
+		// 에디터 목록을 만들어서 넘기지 않고, 함수 형태로 넘김
+		SmiEditor.setHighlight(setting.highlight, () => {
+			const editors = [];
+			for (let i = 0; i < tabs.length; i++) {
+				for (let j = 0; j < tabs[i].holds.length; j++) {
+					editors.push(tabs[i].holds[j]);
+				}
 			}
-		}
-		SmiEditor.setHighlight(setting.highlight, editors);
+			return editors;
+		});
 	}
 	{
 		if (setting.sync.kLimit == undefined) {
