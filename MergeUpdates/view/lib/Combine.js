@@ -503,9 +503,10 @@ window.Combine = {
 										lastWidth = width;
 										pad = lastPad + " ";
 										padsAttrs = [];
+										let afterBr = true; // 첫 객체는 무조건 줄 시작
 										for (let k = 0; k < trimedAttrs.length; k++) {
 											const attr = trimedAttrs[k];
-
+											
 											if (attr.text == "") {
 												// 내용물 없는 속성(마지막 종료 태그 등)
 												padsAttrs.push(attr);
@@ -514,23 +515,22 @@ window.Combine = {
 											} else if (attr.text == "\n") {
 												// 줄바꿈 혼자 밖에 나와있음
 												padsAttrs.push(attr);
+												afterBr = true; // 다음 객체는 줄의 시작
 												continue;
 												
 											} else if (attr.text.split("　").join("").trim() == "") {
-												if (((k == 0) || attrs[k - 1].text.endsWith("\n"))
-												 && ((k == attrs.length - 1) || !attrs[k + 1].text || attrs[k + 1].text.startsWith("\n"))
-												) {
-													// 공백 줄
-													padsAttrs.push(attr);
-													continue;
-												}
+												// 공백 줄
+												padsAttrs.push(attr);
+												// 마지막 줄바꿈 이후 내용이 없으면 다음 객체는 줄의 시작
+												afterBr = attr.text.endsWith("\n");
+												continue;
 											}
 											
 											const attrTexts = attr.text.split("\n");
 											
 											let prev = new Subtitle.Attr(attr, attrTexts[0], true);
 											let clearPrev = isClear(prev);
-											if (k == 0) {
+											if (afterBr) {
 												if (clearPrev) {
 													prev.text = "​" + pad + prev.text;
 												} else {
@@ -538,6 +538,9 @@ window.Combine = {
 												}
 											}
 											padsAttrs.push(prev);
+											
+											// 마지막 줄바꿈 이후 내용이 없으면 다음 객체는 줄의 시작
+											afterBr = attr.text.endsWith("\n");
 											
 											for (let l = 1; l < attrTexts.length; l++) {
 												const next = new Subtitle.Attr(attr, attrTexts[l]);
