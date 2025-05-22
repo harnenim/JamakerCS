@@ -188,13 +188,14 @@ window.Combine = {
 	function getChecker() {
 		if (!Combine.checker) {
 			$("body").append(Combine.checker = $("<span class='width-checker'>"));
+			$("style").append($("<style>").html("\n"
+				+ ".width-checker, .width-checker * {\n"
+				+ "white-space: pre;\n"
+				+ "font-size: 144px;\n"
+				+ "font-weight: bold;\n"
+			));
 		}
-		Combine.checker.attr({ style: Combine.css }).css({
-				whiteSpace: "pre"
-			,	fontSize: "144px"
-			,	fontWeight: "bold"
-			,	textShadow: ""
-		});
+		Combine.checker.attr({ style: Combine.css });
 		return Combine.checker.show();
 	}
 	
@@ -202,7 +203,7 @@ window.Combine = {
 	function getSyncLine(sync, type) {
 		let line = null;
 		if (NEW) {
-			if (SmiEditor) {
+			if (window.SmiEditor) {
 				line = SmiEditor.makeSyncLine(sync, type + 1);
 			} else {
 				line = "<Sync Start=" + sync + "><P Class=KRCC" + Subtitle.Smi.TypeParser[type] + ">";
@@ -1092,7 +1093,7 @@ window.Combine = {
 				forEmpty[i] = forEmpty[i].join("<br>");
 			}
 			
-			if (SmiEditor.video.fs) {
+			if (window.SmiEditor && SmiEditor.video && SmiEditor.video.fs) {
 				const fs = SmiEditor.video.fs;
 				for (let i = group.lines.length - 1; i > 0; i--) {
 					const line = group.lines[i];
@@ -1673,7 +1674,7 @@ if (Subtitle && Subtitle.SmiFile) {
 	}
 }
 $(() => {
-	if (SmiEditor) {
+	if (window.SmiEditor) {
 		TIDs[5] = Subtitle.Smi.TypeParser[4];
 		TIDs[6] = Subtitle.Smi.TypeParser[5];
 		TIDs[7] = Subtitle.Smi.TypeParser[6];
