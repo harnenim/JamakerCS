@@ -152,7 +152,8 @@ window.Combine = {
 		    && !attr.s
 		    && !attr.fs
 		    && !attr.fn
-		    && !attr.typing; // 타이핑 같은 건 결합 전에 사라져야 함
+		    && !attr.typing // 타이핑 같은 건 결합 전에 사라져야 함
+		    && !attr.furigana;
 	}
 	function getWidth(smi, checker) {
 		// 태그 밖의 공백문자 치환
