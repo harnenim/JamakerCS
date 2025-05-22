@@ -759,6 +759,7 @@ Subtitle.Attr = function(old, text="", withTagString=false) {
 		this.fade = old.fade;
 		this.shake = old.shake;
 		this.typing = old.typing;
+		this.furigana = old.furigana;
 		this.tagString = withTagString ? old.tagString : null;
 	} else {
 		this.text = text;

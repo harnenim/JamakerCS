@@ -152,7 +152,8 @@ window.Combine = {
 		    && !attr.s
 		    && !attr.fs
 		    && !attr.fn
-		    && !attr.typing; // 타이핑 같은 건 결합 전에 사라져야 함
+		    && !attr.typing // 타이핑 같은 건 결합 전에 사라져야 함
+		    && !attr.furigana;
 	}
 	function getWidth(smi, checker) {
 		// 태그 밖의 공백문자 치환
@@ -187,13 +188,14 @@ window.Combine = {
 	function getChecker() {
 		if (!Combine.checker) {
 			$("body").append(Combine.checker = $("<span class='width-checker'>"));
+			$("style").append($("<style>").html("\n"
+				+ ".width-checker, .width-checker * {\n"
+				+ "white-space: pre;\n"
+				+ "font-size: 144px;\n"
+				+ "font-weight: bold;\n"
+			));
 		}
-		Combine.checker.attr({ style: Combine.css }).css({
-				whiteSpace: "pre"
-			,	fontSize: "144px"
-			,	fontWeight: "bold"
-			,	textShadow: ""
-		});
+		Combine.checker.attr({ style: Combine.css });
 		return Combine.checker.show();
 	}
 	
@@ -201,7 +203,7 @@ window.Combine = {
 	function getSyncLine(sync, type) {
 		let line = null;
 		if (NEW) {
-			if (SmiEditor) {
+			if (window.SmiEditor) {
 				line = SmiEditor.makeSyncLine(sync, type + 1);
 			} else {
 				line = "<Sync Start=" + sync + "><P Class=KRCC" + Subtitle.Smi.TypeParser[type] + ">";
@@ -1091,9 +1093,39 @@ window.Combine = {
 				forEmpty[i] = forEmpty[i].join("<br>");
 			}
 			
+			if (window.SmiEditor && SmiEditor.video && SmiEditor.video.fs) {
+				const fs = SmiEditor.video.fs;
+				for (let i = group.lines.length - 1; i > 0; i--) {
+					const line = group.lines[i];
+					if (line[ETYPE] == Subtitle.SyncType.frame) {
+						let startIndex = SmiEditor.findSyncIndex(line[STIME], fs);
+						const endIndex = SmiEditor.findSyncIndex(line[ETIME], fs);
+						if (startIndex == endIndex) {
+							do {
+								i--;
+								const prev = group.lines[i];
+								let startIndex = SmiEditor.findSyncIndex(prev[STIME], fs);
+								if (startIndex < endIndex) {
+									// 이전 시작 싱크를 가져옴
+									line[STIME] = prev[STIME];
+									line[STYPE] = prev[STYPE];
+									prev[STIME] = -1; // 이전 대사 건너뛰기
+									break;
+								}
+								
+							} while (i > 0);
+						}
+					}
+				}
+			}
+			
 			for (let i = 0; i < group.lines.length; i++) {
 				const line = group.lines[i];
 				
+				if (line[STIME] < 0) {
+					// 건너뛰기
+					continue;
+				}
 				if (lastSync < line[STIME]) {
 					if (gi > 0) { // 처음일 땐 제외
 						lines.push("&nbsp;");
@@ -1642,7 +1674,7 @@ if (Subtitle && Subtitle.SmiFile) {
 	}
 }
 $(() => {
-	if (SmiEditor) {
+	if (window.SmiEditor) {
 		TIDs[5] = Subtitle.Smi.TypeParser[4];
 		TIDs[6] = Subtitle.Smi.TypeParser[5];
 		TIDs[7] = Subtitle.Smi.TypeParser[6];
