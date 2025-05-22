@@ -2752,6 +2752,7 @@ SmiEditor.Finder2 = {
 			let count = 0;
 			let last = null;
 			let selection = null;
+			const cursor = this.finding.input.selectionStart;
 			
 			// 바꾸기
 			if (last = selection = this.doReplace()) count++;
@@ -2769,7 +2770,8 @@ SmiEditor.Finder2 = {
 			if (count) {
 				SmiEditor.selected.history.log();
 				this.finding.input.value = this.finding.text;
-				this.finding.input.setSelectionRange(last[0], last[1]);
+//				this.finding.input.setSelectionRange(last[0], last[1]);
+				this.finding.input.setSelectionRange(cursor, cursor); // 시작점으로 커서 이동
 				this.afterFind();
 				SmiEditor.selected.render();
 				SmiEditor.selected.history.log();
