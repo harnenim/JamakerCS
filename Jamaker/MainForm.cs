@@ -1112,16 +1112,22 @@ namespace Jamaker
 
                                 // 실제 필요한 이미지 경로
                                 string img1 = $"{dir}/{begin + index}{flag}.jpg";
-                                if (File.Exists(img1)) File.Delete(img1);
-                                File.Move(img0, img1);
+                                try {
+                                    if (File.Exists(img1)) File.Delete(img1);
+                                    File.Move(img0, img1);
+                                } catch (Exception e) { Console.WriteLine(e); }
 
                                 // 프레임 간 차이 이미지 경로
                                 string img2 = $"{dir}/{begin + index}{flag}_.jpg";
-                                if (File.Exists(img2)) File.Delete(img2);
+                                try {
+                                    if (File.Exists(img2)) File.Delete(img2);
+                                } catch (Exception e) { Console.WriteLine(e); }
 
                                 // 밝기 변화 이미지 경로
                                 string img3 = $"{dir}/{begin + index}{flag}~.jpg";
-                                if (File.Exists(img3)) File.Delete(img3);
+                                try {
+                                    if (File.Exists(img3)) File.Delete(img3);
+                                } catch (Exception e) { Console.WriteLine(e); }
 
                                 if (bLast != null)
                                 {
@@ -1189,8 +1195,10 @@ namespace Jamaker
                                         }
                                     }
 
-                                    b2.Save(img2, System.Drawing.Imaging.ImageFormat.Jpeg);
-                                    b3.Save(img3, System.Drawing.Imaging.ImageFormat.Jpeg);
+                                    try { // 파일 쓰기 실패인 경우, 높은 확률로 같은 영상에 대해 직전에 같은 명령을 시킨 경우
+                                        b2.Save(img2, System.Drawing.Imaging.ImageFormat.Jpeg);
+                                        b3.Save(img3, System.Drawing.Imaging.ImageFormat.Jpeg);
+                                    } catch (Exception e) { Console.WriteLine(e); }
 
                                     Script("setDiff", new object[] { $"{begin + index}{flag}", sum });
                                 }
