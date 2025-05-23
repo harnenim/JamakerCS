@@ -120,12 +120,17 @@ function findSync(sync, findNear=true, from=0, to=-1) {
 	if (fs.length == 0) return null;
 	if (to < 0) to = fs.length;
 	if (from + 1 == to) {
-		const dist0 = sync - fs[from];
-		const dist1 = fs[to] - sync;
-		if (dist0 <= dist1) {
-			return (findNear || (dist0 == 0)) ? fs[from] : null;
+		if (to < fs.length) {
+			const dist0 = sync - fs[from];
+			const dist1 = fs[to] - sync;
+			if (dist0 <= dist1) {
+				return (findNear || (dist0 == 0)) ? fs[from] : null;
+			} else {
+				return (findNear || (dist1 == 0)) ? fs[to] : null;
+			}
 		} else {
-			return (findNear || (dist1 == 0)) ? fs[to] : null;
+			// 동영상 길이 넘어가서 프레임 정보가 없는 싱크
+			return findNear ? sync : null;
 		}
 	}
 	const mid = from + Math.floor((to - from) / 2);
@@ -193,6 +198,8 @@ body > * {
 	position: absolute;
 	top: 0;
 	left: 0;
+}
+#labels > div > span {
 	padding: 2px;
 }
 #labels > div.disabled > span {
