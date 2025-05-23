@@ -459,13 +459,15 @@ window.Combine = {
 									// 여백을 붙여서 제일 적절한 값 찾기
 									if (withFontSize) {
 										// 글씨 크기 적용했을 때 더 작아졌으면 이걸 기준으로 구함
-										
+
+										/*
 										if (sync[WIDTH] > groupMaxWidth) {
 											// 크기 조절 안 했을 때의 폭을 이미 넘어섰으면 작업 안 함
 											if (LOG) console.log("width over");
 											sync[TEXT] = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
 											continue;
 										}
+										*/
 									}
 
 									let isEmpty = true;

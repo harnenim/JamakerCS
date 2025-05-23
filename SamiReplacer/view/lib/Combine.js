@@ -459,156 +459,181 @@ window.Combine = {
 									// 여백을 붙여서 제일 적절한 값 찾기
 									if (withFontSize) {
 										// 글씨 크기 적용했을 때 더 작아졌으면 이걸 기준으로 구함
-										
+
+										/*
 										if (sync[WIDTH] > groupMaxWidth) {
 											// 크기 조절 안 했을 때의 폭을 이미 넘어섰으면 작업 안 함
 											if (LOG) console.log("width over");
 											sync[TEXT] = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
 											continue;
 										}
+										*/
 									}
-									
+
+									let isEmpty = true;
 									let width = sync[SIZED];
 									let padsAttrs = attrs;
 									let lastPad;
 									let lastAttrs;
 									let lastWidth;
+									let closeAttr = null;
 									
-									// Zero-Width-Space 중복으로 들어가지 않도록
-									const trimedAttrs = [];
-									let isEmpty = true;
+									// 좌우 여백 붙이기 전 줄 단위로 분리 및 기존 Zero-Width-Space 삭제
+									let wasClear = false;
+									let trimedLine = { attrs: [], isEmpty: true };
+									const trimedLines = [trimedLine];
 									for (let k = 0; k < attrs.length; k++) {
-										const attr = new Subtitle.Attr(attrs[k], attrs[k].text.split("​").join(""), true);
-										trimedAttrs.push(attr);
-										if (attr.text == "") {
-											// 내용물 없는 속성(마지막 종료 태그 등)
-
-										} else if (attr.text == "\n") {
-											// 줄바꿈 혼자 밖에 나와있음
-
-										} else if (attr.text.split("　").join("").trim() == "") {
-											if (((k == 0) || attrs[k - 1].text.endsWith("\n"))
-												&& ((k == attrs.length - 1) || !attrs[k + 1].text || attrs[k + 1].text.startsWith("\n"))
-											) {
-												// 공백 줄
+										const attrText = attrs[k].text.split("​").join("");
+										let attr = new Subtitle.Attr(attrs[k], attrText, true);
+										
+										if (attrText.length == 0) {
+											// 내용물 없는 속성 무시
+											if (k < attrs.length - 1) {
+												continue;
+												
 											} else {
-												isEmpty = false;
+												// 종료 태그
+												if (wasClear) {
+													// 앞쪽에 공백문자 넣을 수 있으면 따로 뺌
+													closeAttr = attr;
+													break;
+												}
 											}
+										}
+										
+										const attrLines = attrText.split("\n");
+										if (attrLines.length > 1) {
+											// 속성 안에 줄바꿈이 있었으면 분리 후 진행
+											attr.text = attrLines[0];
+											if (attr.text) {
+												trimedLine.attrs.push(attr);
+												wasClear = isClear(attr);
+											} else {
+												// 첫 줄바꿈 전에 내용 없으면 건너뜀
+												wasClear = false;
+											}
+											
+											if (trimedLine.isEmpty && attr.text.split("　").join("").trim().length) {
+												trimedLine.isEmpty = isEmpty = false;
+											}
+											
+											for (let l = 1; l < attrLines.length; l++) {
+												attr = new Subtitle.Attr(attr, attrLines[l], true);
+												if ((l == attrLines.length - 1) && (attr.text.split("​").join("").length == 0)) {
+													// 마지막 줄바꿈 후에 내용 없으면 건너뜀
+													trimedLines.push(trimedLine = { attrs: [], isEmpty: true });
+												} else {
+													attr.splitted = wasClear; // 재결합 대상
+													trimedLines.push(trimedLine = { attrs: [attr], isEmpty: (attr.text.split("　").join("").trim().length == 0) });
+												}
+											}
+											
 										} else {
-											isEmpty = false;
+											if (attr.text) {
+												trimedLine.attrs.push(attr);
+											}
+											wasClear = isClear(attr);
+											if (trimedLine.isEmpty && attr.text.split("　").join("").trim().length) {
+												trimedLine.isEmpty = isEmpty = false;
+											}
 										}
 									}
+									//console.log(attrs, trimedLines);
 									
-									do {
-										lastPad = pad;
-										lastAttrs = padsAttrs;
-										lastWidth = width;
-										pad = lastPad + " ";
-										padsAttrs = [];
-										let afterBr = true; // 첫 객체는 무조건 줄 시작
-										for (let k = 0; k < trimedAttrs.length; k++) {
-											const attr = trimedAttrs[k];
+									if (!isEmpty) {
+										const br = new Subtitle.Attr(null, "\n");
+										do {
+											lastPad = pad;
+											lastAttrs = padsAttrs;
+											lastWidth = width;
+											pad = lastPad + " ";
+											padsAttrs = [];
 											
-											if (attr.text == "") {
-												// 내용물 없는 속성(마지막 종료 태그 등)
-												padsAttrs.push(attr);
-												continue;
-												
-											} else if (attr.text == "\n") {
-												// 줄바꿈 혼자 밖에 나와있음
-												padsAttrs.push(attr);
-												afterBr = true; // 다음 객체는 줄의 시작
-												continue;
-												
-											} else if (attr.text.split("　").join("").trim() == "") {
-												// 공백 줄
-												padsAttrs.push(attr);
-												// 마지막 줄바꿈 이후 내용이 없으면 다음 객체는 줄의 시작
-												afterBr = attr.text.endsWith("\n");
-												continue;
-											}
-											
-											const attrTexts = attr.text.split("\n");
-											
-											let prev = new Subtitle.Attr(attr, attrTexts[0], true);
-											let clearPrev = isClear(prev);
-											if (afterBr) {
-												if (clearPrev) {
-													prev.text = "​" + pad + prev.text;
-												} else {
-													padsAttrs.push(new Subtitle.Attr(null, "​" + pad));
+											for (let l = 0; l < trimedLines.length; l++) {
+												if (l > 0) {
+													padsAttrs.push(br);
 												}
-											}
-											padsAttrs.push(prev);
-											
-											// 마지막 줄바꿈 이후 내용이 없으면 다음 객체는 줄의 시작
-											afterBr = attr.text.endsWith("\n");
-											
-											for (let l = 1; l < attrTexts.length; l++) {
-												const next = new Subtitle.Attr(attr, attrTexts[l]);
-												const clearNext = isClear(next);
-												
-												if (clearPrev) {
-													prev.text += pad + "​";
-													if (clearNext) {
-														if (prev.i     == next.i
-														 && prev.fc    == next.fc
-														 && prev.fade  == next.fade
-														 && prev.shake == next.shake
-														) {
-															// 속성이 완전히 같으면 통합
-															prev.text += "\n​" + pad + next.text;
-															continue;
-															
+												const trimedLine = trimedLines[l];
+												if (trimedLine.isEmpty) {
+													// 빈 줄이면 그대로 추가
+													padsAttrs.push(...trimedLine.attrs);
+													
+												} else {
+													if (trimedLine.attrs.length == 0) {
+														// 해당 줄에 속성이 없을 때..는 없는 게 맞음
+														
+													} else if (trimedLine.attrs.length == 1) {
+														// 해당 줄에 속성이 하나일 때
+														let attr = trimedLine.attrs[0];
+														if (isClear(attr)) {
+															// 속성에 공백문자 포함
+															if (attr.splitted) {
+																// 재결합 대상
+																padsAttrs.pop(); // 미리 추가한 줄바꿈 제거
+																const lastAttr = padsAttrs.pop();
+																attr = new Subtitle.Attr(attr, lastAttr.text + "\n​" + pad + attr.text + pad + "​", true);
+																padsAttrs.push(attr);
+															} else {
+																attr = new Subtitle.Attr(attr, "​" + pad + attr.text + pad + "​", true);
+																padsAttrs.push(attr);
+															}
 														} else {
-															padsAttrs.push(new Subtitle.Attr(null, "\n"));
-															next.text = "​" + pad + next.text;
+															// 속성 밖에 공백문자 추가
+															padsAttrs.push(new Subtitle.Attr(null, "​" + pad));
+															padsAttrs.push(attr);
+															padsAttrs.push(new Subtitle.Attr(null, pad + "​"));
 														}
+														
 													} else {
-														padsAttrs.push(new Subtitle.Attr(null, "\n​" + pad));
+														// 해당 줄에 속성이 여러 개일 때
+														
+														// 처음 속성
+														let attr = trimedLine.attrs[0];
+														if (isClear(attr)) {
+															// 속성에 공백문자 포함
+															if (attr.splitted) {
+																// 재결합 대상
+																padsAttrs.pop(); // 미리 추가한 줄바꿈 제거
+																const lastAttr = padsAttrs.pop();
+																attr = new Subtitle.Attr(attr, lastAttr.text + "\n​" + pad + attr.text, true);
+																padsAttrs.push(attr);
+															} else {
+																attr = new Subtitle.Attr(attr, "​" + pad + attr.text, true);
+																padsAttrs.push(attr);
+															}
+														} else {
+															// 속성 밖에 공백문자 추가
+															padsAttrs.push(new Subtitle.Attr(null, "​" + pad));
+															padsAttrs.push(attr);
+														}
+														
+														// 중간 속성은 그대로 넣음
+														for (let k = 1; k < trimedLine.attrs.length - 1; k++) {
+															padsAttrs.push(trimedLine.attrs[k]);
+														}
+														
+														// 마지막 속성
+														attr = trimedLine.attrs[trimedLine.attrs.length - 1];
+														if (isClear(attr)) {
+															// 속성에 공백문자 포함
+															padsAttrs.push(new Subtitle.Attr(attr, attr.text + pad + "​", true));
+														} else {
+															// 속성 밖에 공백문자 포함
+															padsAttrs.push(attr);
+															padsAttrs.push(new Subtitle.Attr(null, pad + "​"));
+														}
 													}
-												} else {
-													if (clearNext) {
-														padsAttrs.push(new Subtitle.Attr(null, pad + "​\n"));
-														next.text = "​" + pad + next.text;
-													} else {
-														padsAttrs.push(new Subtitle.Attr(null, pad + "​\n​" + pad));
-													}
-												}
-												
-												padsAttrs.push(prev = next);
-												clearPrev = clearNext;
-											}
-
-											let lastIndex = k;
-											for (let l = k + 1; l < attrs.length; l++) {
-												const attrText = attrs[l].text;
-												if (attrText == "") {
-													// 텍스트 없는 속성이면 건너뜀
-													continue;
-												}
-												if (attrText.startsWith("\n")) {
-													// 다음에 줄바꿈으로 시작하면 끝내기
-													break;
-												}
-												lastIndex = l;
-												if (attrText.indexOf("\n") > 0) {
-													// 다음에 줄바꿈 있으면 검색 끝내기
-													break;
 												}
 											}
-											if (k == lastIndex) {
-												if (clearPrev) {
-													prev.text += pad + "​";
-												} else {
-													padsAttrs.push(new Subtitle.Attr(null, pad + "​"));
-												}
+											if (closeAttr) {
+												// 종료 태그 붙이기
+												padsAttrs.push(closeAttr);
 											}
-										}
-										width = getAttrWidth(padsAttrs, checker, withFontSize);
-										if (LOG) console.log(padsAttrs, width);
-										
-									} while (!isEmpty && width < groupMaxWidth);
+											width = getAttrWidth(padsAttrs, checker, withFontSize);
+											if (LOG) console.log(padsAttrs, width);
+											
+										} while (width < groupMaxWidth);
+									}
 									
 									if ((width - groupMaxWidth) > (groupMaxWidth - lastWidth)) {
 										pad = lastPad;
