@@ -1117,12 +1117,15 @@ window.Combine = {
 				}
 				forEmpty[i] = forEmpty[i].join("<br>");
 			}
-			
+
+			// 프레임 단위로 볼 때 싱크 뭉친 부분 확인
 			if (window.SmiEditor && SmiEditor.video && SmiEditor.video.fs) {
 				const fs = SmiEditor.video.fs;
 				for (let i = group.lines.length - 1; i > 0; i--) {
 					const line = group.lines[i];
-					if (line[ETYPE] == Subtitle.SyncType.frame) {
+					if (line[ETYPE] == Subtitle.SyncType.frame
+					 && line[STYPE] == Subtitle.SyncType.range) {
+						// 중간싱크로 인해 화면싱크가 밀리는지 확인
 						let startIndex = SmiEditor.findSyncIndex(line[STIME], fs);
 						const endIndex = SmiEditor.findSyncIndex(line[ETIME], fs);
 						if (startIndex == endIndex) {
