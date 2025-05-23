@@ -2424,9 +2424,10 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			
 			// 상하로 흔들기
 			// 플레이어에서 사이즈 미지원하면 상하로 흔들리지 않음
-			const TBmin = "<font size=\"" + (0 * shake.size) + "\">　</font>";
-			const TBmid = "<font size=\"" + (1 * shake.size) + "\">　</font>";
-			const TBmax = "<font size=\"" + (2 * shake.size) + "\">　</font>";
+			// size 0은 리스크가 있으므로 +1
+			const TBmin = "<font size=\"" + (0 * shake.size + 1) + "\">　</font>";
+			const TBmid = "<font size=\"" + (1 * shake.size + 1) + "\">　</font>";
+			const TBmax = "<font size=\"" + (2 * shake.size + 1) + "\">　</font>";
 			
 			smis.splice(i, 1);
 			for (let j = 0; j < count; j++) {
