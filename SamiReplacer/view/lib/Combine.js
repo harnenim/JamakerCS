@@ -1117,28 +1117,23 @@ window.Combine = {
 				}
 				forEmpty[i] = forEmpty[i].join("<br>");
 			}
-			
+
+			// 프레임 단위로 볼 때 싱크 뭉친 부분 확인
 			if (window.SmiEditor && SmiEditor.video && SmiEditor.video.fs) {
 				const fs = SmiEditor.video.fs;
-				for (let i = group.lines.length - 1; i > 0; i--) {
+				for (let i = group.lines.length - 1; i >= 0; i--) {
 					const line = group.lines[i];
 					if (line[ETYPE] == Subtitle.SyncType.frame) {
-						let startIndex = SmiEditor.findSyncIndex(line[STIME], fs);
-						const endIndex = SmiEditor.findSyncIndex(line[ETIME], fs);
+						// 중간싱크로 인해 화면싱크가 밀리는지 확인
+						const startIndex = SmiEditor.findSyncIndex(line[STIME], fs);
+						const endIndex   = SmiEditor.findSyncIndex(line[ETIME], fs);
 						if (startIndex == endIndex) {
-							do {
-								i--;
-								const prev = group.lines[i];
-								let startIndex = SmiEditor.findSyncIndex(prev[STIME], fs);
-								if (startIndex < endIndex) {
-									// 이전 시작 싱크를 가져옴
-									line[STIME] = prev[STIME];
-									line[STYPE] = prev[STYPE];
-									prev[STIME] = -1; // 이전 대사 건너뛰기
-									break;
-								}
-								
-							} while (i > 0);
+							// 현재 대사 건너뛰기
+							line[STIME] = -1;
+
+							// 이전 대사 종료싱크 늦추기
+							const prev = group.lines[--i];
+							prev[ETIME] = line[ETIME];
 						}
 					}
 				}
