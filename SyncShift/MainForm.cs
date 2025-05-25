@@ -16,6 +16,13 @@ namespace Jamaker
 
         public MainForm()
         {
+            string ProcName = Process.GetCurrentProcess().ProcessName;
+            if (Process.GetProcessesByName(ProcName).Length > 1)
+            {
+                MessageBox.Show($"{ProcName}는 이미 실행 중입니다.");
+                Process.GetCurrentProcess().Kill();
+            }
+
             WebForm("SyncShift");
 
             int[] rect = { 0, 0, 1280, 800 };
