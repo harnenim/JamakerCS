@@ -827,6 +827,38 @@ function init(jsonSetting, isBackup=true) {
 	});
 	
 	SmiEditor.activateKeyEvent();
+
+	// Win+방향키 이벤트 직후 창 위치 초기화
+	const winKeyStatus = [false, false];
+	$(window).on("keydown", function (e) {
+		if (e.keyCode == 91 || e.keyCode == 92) {
+			// WinKey 최우선 처리
+			winKeyStatus[e.keyCode - 91] = true;
+			return;
+		}
+	}).on("keyup", function (e) {
+		if (winKeyStatus[0] || winKeyStatus[1]) {
+			switch (e.keyCode) {
+				case 37: // ←
+				case 38: // ↑
+				case 39: // →
+				{
+					setTimeout(() => {
+						moveWindowsToSetting();
+					}, 1);
+					break;
+				}
+				case 91: {
+					winKeyStatus[0] = false;
+					break;
+				}
+				case 92: {
+					winKeyStatus[1] = false;
+					break;
+				}
+			}
+		}
+	});
 	
 	setSetting(setting, true);
 	SmiEditor.Viewer.open(); // 스타일 세팅 설정 완료 후에 실행
