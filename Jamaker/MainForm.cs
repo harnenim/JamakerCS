@@ -1071,6 +1071,11 @@ namespace Jamaker
                         //ClearThumbnails(); // 스레드 충돌 생김
                         break;
                     }
+                    // 중간에 다른 파일 불러온 경우
+                    if (lastThumbnailsPath != path)
+                    {
+                        return;
+                    }
                     string[] param = paramStr.Split(',');
                     int time = int.Parse(param[0]);
                     double length = double.Parse(param[1]) / 1000;
@@ -1140,6 +1145,12 @@ namespace Jamaker
                             Console.WriteLine(didread);
                         }
 
+                        // 중간에 다른 파일 불러온 경우
+                        if (lastThumbnailsPath != path)
+                        {
+                            return;
+                        }
+
                         new Thread(() =>
                         {
                             Bitmap bLast = null;
@@ -1169,71 +1180,74 @@ namespace Jamaker
 
                                 if (bLast != null)
                                 {
-                                    // 라이브러리 써보려고 했는데 결과물이 별로임
-                                    // 96x54 정도는 직접 돌릴 만한 크기
-                                    Bitmap bPrev = bLast;
-                                    Bitmap bTrgt = bLast = new Bitmap(img1);
-
                                     bool isFade = (flag != "");
                                     int sum = 0;
                                     int dMax = 1; // 0이면 문제 생김
 
-                                    // 각 픽셀 비교
-                                    int[][][] aDiff = new int[54][][];
-                                    for (int y = 0; y < 54; y++)
+                                    // 이 사이에 다른 스레드에서 이미지 파일 삭제될 수 있어서 try-catch 문에 넣음
+                                    try
                                     {
-                                        aDiff[y] = new int[96][];
-                                        for (int x = 0; x < 96; x++)
+                                        // 라이브러리 써보려고 했는데 결과물이 별로임
+                                        // 96x54 정도는 직접 돌릴 만한 크기
+                                        Bitmap bPrev = bLast;
+                                        Bitmap bTrgt = bLast = new Bitmap(img1);
+
+                                        // 각 픽셀 비교
+                                        int[][][] aDiff = new int[54][][];
+                                        for (int y = 0; y < 54; y++)
                                         {
-                                            Color p = bPrev.GetPixel(x, y);
-                                            Color t = bTrgt.GetPixel(x, y);
-                                            int r = t.R - p.R;
-                                            int g = t.G - p.G;
-                                            int b = t.B - p.B;
-                                            aDiff[y][x] = new int[] { r, g, b };
-                                            sum += r + g + b;
-                                            if (isFade)
+                                            aDiff[y] = new int[96][];
+                                            for (int x = 0; x < 96; x++)
                                             {
-                                                dMax = Math.Max(dMax, Math.Abs(r));
-                                                dMax = Math.Max(dMax, Math.Abs(g));
-                                                dMax = Math.Max(dMax, Math.Abs(b));
+                                                Color p = bPrev.GetPixel(x, y);
+                                                Color t = bTrgt.GetPixel(x, y);
+                                                int r = t.R - p.R;
+                                                int g = t.G - p.G;
+                                                int b = t.B - p.B;
+                                                aDiff[y][x] = new int[] { r, g, b };
+                                                sum += r + g + b;
+                                                if (isFade)
+                                                {
+                                                    dMax = Math.Max(dMax, Math.Abs(r));
+                                                    dMax = Math.Max(dMax, Math.Abs(g));
+                                                    dMax = Math.Max(dMax, Math.Abs(b));
+                                                }
                                             }
                                         }
-                                    }
 
-                                    // 페이드 효과에 대해선 더 잘 보이도록
-                                    double a = isFade ? 40 : 4;
-                                    //double a = isFade ? Math.Max(8, 255.0 / dMax) : 4;
-                                    int avg = Math.Abs(sum) / (96 * 54 * 3);
+                                        // 페이드 효과에 대해선 더 잘 보이도록
+                                        double a = isFade ? 40 : 4;
+                                        //double a = isFade ? Math.Max(8, 255.0 / dMax) : 4;
+                                        int avg = Math.Abs(sum) / (96 * 54 * 3);
 
-                                    Bitmap b2 = new Bitmap(96, 54);
-                                    Bitmap b3 = new Bitmap(96, 54);
+                                        Bitmap b2 = new Bitmap(96, 54);
+                                        Bitmap b3 = new Bitmap(96, 54);
 
-                                    for (int y = 0; y < 54; y++)
-                                    {
-                                        for (int x = 0; x < 96; x++)
+                                        for (int y = 0; y < 54; y++)
                                         {
-                                            // 이전 프레임과 차이
-                                            b2.SetPixel(x, y, Color.FromArgb(255
-                                                , Math.Min((int)(Math.Abs(aDiff[y][x][0]) * a), 255)
-                                                , Math.Min((int)(Math.Abs(aDiff[y][x][1]) * a), 255)
-                                                , Math.Min((int)(Math.Abs(aDiff[y][x][2]) * a), 255)
-                                            ));
+                                            for (int x = 0; x < 96; x++)
+                                            {
+                                                // 이전 프레임과 차이
+                                                b2.SetPixel(x, y, Color.FromArgb(255
+                                                    , Math.Min((int)(Math.Abs(aDiff[y][x][0]) * a), 255)
+                                                    , Math.Min((int)(Math.Abs(aDiff[y][x][1]) * a), 255)
+                                                    , Math.Min((int)(Math.Abs(aDiff[y][x][2]) * a), 255)
+                                                ));
 
-                                            // 밝기 변화
-                                            //int v = (int)((aDiff[y][x][0] + aDiff[y][x][1] + aDiff[y][x][2]) * a);
-                                            // RGB 모두 변화하는 것만 확인: 가장 조금 변화하는 것 확인
-                                            int rgb = (Math.Abs(aDiff[y][x][0]) < Math.Abs(aDiff[y][x][1])) ? 0 : 1;
-                                            rgb = (Math.Abs(aDiff[y][x][rgb]) < Math.Abs(aDiff[y][x][2])) ? rgb : 2;
-                                            int v = (int)(aDiff[y][x][rgb] * a);
-                                            b3.SetPixel(x, y, (v > 0)
-                                                ? Color.FromArgb(255, Math.Min(v, 255), avg, 0)
-                                                : Color.FromArgb(255, 0, avg, Math.Min(-v, 255))
-                                            );
+                                                // 밝기 변화
+                                                //int v = (int)((aDiff[y][x][0] + aDiff[y][x][1] + aDiff[y][x][2]) * a);
+                                                // RGB 모두 변화하는 것만 확인: 가장 조금 변화하는 것 확인
+                                                int rgb = (Math.Abs(aDiff[y][x][0]) < Math.Abs(aDiff[y][x][1])) ? 0 : 1;
+                                                rgb = (Math.Abs(aDiff[y][x][rgb]) < Math.Abs(aDiff[y][x][2])) ? rgb : 2;
+                                                int v = (int)(aDiff[y][x][rgb] * a);
+                                                b3.SetPixel(x, y, (v > 0)
+                                                    ? Color.FromArgb(255, Math.Min(v, 255), avg, 0)
+                                                    : Color.FromArgb(255, 0, avg, Math.Min(-v, 255))
+                                                );
+                                            }
                                         }
-                                    }
 
-                                    try { // 파일 쓰기 실패인 경우, 높은 확률로 같은 영상에 대해 직전에 같은 명령을 시킨 경우
+                                        // 파일 쓰기 실패인 경우, 높은 확률로 같은 영상에 대해 직전에 같은 명령을 시킨 경우
                                         b2.Save(img2, System.Drawing.Imaging.ImageFormat.Jpeg);
                                         b3.Save(img3, System.Drawing.Imaging.ImageFormat.Jpeg);
                                     } catch (Exception e) { Console.WriteLine(e); }
@@ -1286,7 +1300,14 @@ namespace Jamaker
                 FileInfo[] files = di.GetFiles();
                 foreach (FileInfo file in files)
                 {
-                    file.Delete();
+                    try
+                    {
+                        file.Delete();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
                 }
             }
         }
