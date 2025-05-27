@@ -1250,7 +1250,7 @@ if (Subtitle && Subtitle.SmiFile) {
 		return holds;
 	}
 	
-	// TODO: <BODY split> 형식일 때 동작 - 기능이 필요할까...?
+	// TODO: <BODY split> 형식일 때 동작 - 기능이 필요할까...? 일단 개발 보류
 	Subtitle.SmiFile.prototype.isWithSplit = function() {
 		const match = /<body( [^>]*)*>/gi.exec(this.header);
 		return match && (match[0].indexOf("split") > 0);

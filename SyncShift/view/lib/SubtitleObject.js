@@ -2017,6 +2017,12 @@ Subtitle.Smi.toAttr = (text, keepTags=true) => {
 			}
 		}
 	}
+	const a = $("<a>");
+	for (let i = 0; i < result.length; i++) {
+		// &amp; 같은 문자 처리
+		result[i].text = a.html(result[i].text).text();
+	}
+	a.remove();
 	
 	return result;
 }
@@ -2929,6 +2935,8 @@ Subtitle.SmiFile.prototype.normalize = function(withComment=false, fps=23.976) {
 				}
 				if (hasText) {
 					smi.text = preset.join(smi.text);
+					// 태그 재구성
+					smi.fromAttr(smi.toAttr(false));
 				}
 			}
 		}
