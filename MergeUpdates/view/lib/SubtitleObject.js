@@ -1419,7 +1419,7 @@ Subtitle.Smi.colorToAttr = (soColor) => {
 	return sToAttrColor(soColor);
 }
 Subtitle.Smi.colorFromAttr = (attrColor) => {
-	return "#" + attrColor;
+	return ((attrColor.length == 6) ? "#" : "") + attrColor;
 }
 
 Subtitle.Smi.Status = function() {
