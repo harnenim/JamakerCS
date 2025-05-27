@@ -185,12 +185,12 @@ $(() => {
 		
 		const offset = $tr.offset();
 		if (offset.top < 0) {
-			$body.stop().animate({ scrollTop: $body.scrollTop() + offset.top }, 200);
+			$body.stop().animate({ scrollTop: $body.scrollTop() + offset.top - 30 }, 200);
 		} else {
 			const bottom = offset.top + 56;
 			const margin = $body.height() - bottom;
 			if (margin < 0) {
-				$body.stop().animate({ scrollTop: $body.scrollTop() - margin }, 200);
+				$body.stop().animate({ scrollTop: $body.scrollTop() - margin + 30 }, 200);
 			}
 		}
 	}
@@ -258,6 +258,11 @@ $(() => {
 	
 	$tbody.on("click", "tr.fs", function(e) {
 		select($(this).data("index"));
+		
+	}).on("dblclick", "tr.fs", function(e) {
+		// 에디터 해당 싱크로 이동
+		opener.SmiEditor.selected.findSync($(this).find("td.sync").text());
+		
 	}).on("click", "img.frame", function(e) {
 		const $img = $(this);
 		select($img.parents("tr").data("index"));
@@ -268,7 +273,7 @@ $(() => {
 		switch (e.keyCode) {
 			case 38: { // ↑
 				e.preventDefault();
-				if (e.ctrlKey) {
+				if (e.ctrlKey || selected == 0) {
 					$body.stop().animate({ scrollTop: $body.scrollTop() - 56 }, 200);
 					break;
 				}
@@ -279,7 +284,7 @@ $(() => {
 			}
 			case 40: { // ↓
 				e.preventDefault();
-				if (e.ctrlKey) {
+				if (e.ctrlKey || selected == frameSyncs.length - 1) {
 					$body.stop().animate({ scrollTop: $body.scrollTop() + 56 }, 200);
 					break;
 				}
@@ -403,9 +408,13 @@ $(() => {
 body {
 	overflow-y: scroll;
 }
+#editorLayer {
+	position: relative;
+}
 #editor {
 	width: 100%;
 	border: 0;
+	table-layout: fixed;
 }
 #editor tr {
 	color: #888;
@@ -455,19 +464,19 @@ body {
 .frameChecker {
 	position: absolute;
 	top: 0;
-	left: calc(35% - 6.5px);
-	width: 2px;
+	width: 1px;
+	background: #f0f;
 	bottom: 0;
 	border: 0;
 	transition: 0.2s;
 }
-.frameChecker.left  { border-left : 1px solid #f0f; }
-.frameChecker.right { border-right: 1px solid #f0f; }
+.frameChecker.left  { left: calc(35% - 1.5px); }
+.frameChecker.right { left: calc(35% - 0.5px); }
 body:not(.mode1) #editor .frames {
 	margin-left: -49px;
 }
-body:not(.mode1) .frameChecker.left  { left: calc(35% - 55.5px); }
-body:not(.mode1) .frameChecker.right { left: calc(35% + 42.5px); }
+body:not(.mode1) .frameChecker.left  { left: calc(35% - 49.5px); }
+body:not(.mode1) .frameChecker.right { left: calc(35% + 48.5px); }
 #formShift, #btnApply, #btnSet {
 	position: fixed;
 	opacity: 0.5;
@@ -503,18 +512,20 @@ body:not(.mode1) .frameChecker.right { left: calc(35% + 42.5px); }
 	</style>
 </head>
 <body class="mode1">
-	<table id="editor">
-		<colgroup>
-			<col style="width: 70%;" />
-			<col style="width: 80px;" />
-			<col />
-		</colgroup>
-		<thead></thead>
-		<tbody></tbody>
-		<tfoot></tfoot>
-	</table>
-	<div class="frameChecker left"></div>
-	<div class="frameChecker right"></div>
+	<div id="editorLayer">
+		<table id="editor">
+			<colgroup>
+				<col style="width: 70%;" />
+				<col style="width: 80px;" />
+				<col />
+			</colgroup>
+			<thead></thead>
+			<tbody></tbody>
+			<tfoot></tfoot>
+		</table>
+		<div class="frameChecker left"></div>
+		<div class="frameChecker right"></div>
+	</div>
 	<form id="formShift"><label>가중치 <input id="inputShift" type="number" value="0" /></label><button type="submit" id="btnShift">초기화</button>
 		<ol>
 			<li title="Alt+1"><label><input type="radio" name="mode" value="1" accesskey="1" checked /> 기본</label></li>
