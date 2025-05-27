@@ -418,7 +418,14 @@ SmiEditor.video = {
 }
 SmiEditor.findSync = (sync, fs=[], findNear=true, from=0, to=-1) => {
 	if (fs.length == 0) return null;
-	if (to < 0) to = fs.length;
+	if (to < 0) {
+		// 최초 파라미터 없이 탐색 시작일 때
+		to = fs.length;
+		if (sync > fs[to - 1]) {
+			// 마지막 프레임보다 뒤쪽 싱크일 때
+			return findNear ? fs[to - 1] : null;
+		}
+	}
 	if (from + 1 == to) {
 		const dist0 = sync - fs[from];
 		const dist1 = fs[to] - sync;
@@ -1122,6 +1129,14 @@ SmiEditor.activateKeyEvent = function() {
 						return;
 					}
 					break;
+				}
+				case 187:
+				case 189: {
+					if (e.ctrlKey) {
+						// Ctrl + -/= 확대축소 방지
+						e.preventDefault();
+					}
+					break
 				}
 			}
 			
@@ -2609,6 +2624,7 @@ SmiEditor.Finder2 = {
 				,	left: (window.innerWidth - w) / 2
 				,	width: w
 				,	height: h
+				,	zIndex: 99999
 			}).show();
 			SmiEditor.Finder.window.iframe.contentWindow.setSize(ratio);
 			
