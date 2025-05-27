@@ -59,7 +59,10 @@ namespace Jamaker
             FormClosed += new FormClosedEventHandler(WebFormClosed);
 
             // 실행 직후 섬네일 남은 게 있으면 삭제
-            ClearThumbnails();
+            new Thread(() =>
+            {
+                ClearThumbnails();
+            }).Start();
         }
         private MenuStrip menuStrip;
         private readonly MouseEventHandler clickMenuStrip;
@@ -1030,6 +1033,7 @@ namespace Jamaker
                 catch (Exception e) { Console.WriteLine(e); }
             }).Start();
         }
+        private string lastThumbnailsPath = null;
         private bool isThumbnailsRendering = false;
         public void RenderThumbnails(string path, string paramsStr)
         {
@@ -1038,6 +1042,13 @@ namespace Jamaker
             string[] list = paramsStr.Split('\n');
             new Thread(() =>
             {
+                // 섬네일 대상 파일이 바뀐 경후 초기화
+                if (lastThumbnailsPath != path)
+                {
+                    ClearThumbnails();
+                    lastThumbnailsPath = path;
+                }
+
                 string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
                 string exeFile = Path.Combine(exePath, "ffmpeg.exe");
 
@@ -1069,22 +1080,49 @@ namespace Jamaker
                     double fps = (end - begin - 1) / length;
                     Console.WriteLine($"fps: {fps} = {end - begin} / {length}");
 
-                    int ms = time % 60000;
-                    int m = time / 60000;
-                    int h = m / 60;
-                    m %= 60;
-                    string timeStr = ((100 + h) * 100 + m) * 100000 + ms + "";
-                    timeStr = timeStr.Substring(1, 2) + ":" + timeStr.Substring(3, 2) + ":" + timeStr.Substring(5, 2) + "." + timeStr.Substring(7, 3);
-
-                    string vf = "";
-                    //if (flag == "b") vf = "-vf \"curves=r='0/0 0.1/0.9 1/1'\" ";
-                    //else
-                    //if (flag == "d") vf = "-vf \"curves=r='0/0 0.9/0.1 1/1'\" ";
-
-                    string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s 96x54 -qscale:v 2 -r {fps} {vf}-f image2 \"{dir}/{begin}{flag}_%d.jpg\"";
-
                     try
                     {
+                        // 필요한 이미지들이 이미 존재하는지 확인
+                        bool isCompleted = true;
+                        for (int index = 0; index < (end - begin); index++)
+                        {
+                            if (!File.Exists($"{dir}/{begin + index}{flag}.jpg"))
+                            {
+                                isCompleted = false;
+                                break;
+                            }
+                            if (!File.Exists($"{dir}/{begin + index}{flag}_.jpg"))
+                            {
+                                isCompleted = false;
+                                break;
+                            }
+                            if (!File.Exists($"{dir}/{begin + index}{flag}~.jpg"))
+                            {
+                                isCompleted = false;
+                                break;
+                            }
+                        }
+                        // 이미 존재하면 재활용
+                        if (isCompleted)
+                        {
+                            Script("afterRenderThumbnails", new object[] { begin, end, flag });
+                            continue;
+                        }
+
+                        int ms = time % 60000;
+                        int m = time / 60000;
+                        int h = m / 60;
+                        m %= 60;
+                        string timeStr = ((100 + h) * 100 + m) * 100000 + ms + "";
+                        timeStr = timeStr.Substring(1, 2) + ":" + timeStr.Substring(3, 2) + ":" + timeStr.Substring(5, 2) + "." + timeStr.Substring(7, 3);
+
+                        string vf = "";
+                        //if (flag == "b") vf = "-vf \"curves=r='0/0 0.1/0.9 1/1'\" ";
+                        //else
+                        //if (flag == "d") vf = "-vf \"curves=r='0/0 0.9/0.1 1/1'\" ";
+
+                        string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s 96x54 -qscale:v 2 -r {fps} {vf}-f image2 \"{dir}/{begin}{flag}_%d.jpg\"";
+
                         Process proc = new Process();
                         proc.StartInfo.UseShellExecute = false;
                         proc.StartInfo.CreateNoWindow = true;
@@ -1241,19 +1279,16 @@ namespace Jamaker
         }
         public void ClearThumbnails()
         {
-            new Thread(() =>
+            string dir = "temp/thumbnails";
+            DirectoryInfo di = new DirectoryInfo(dir);
+            if (di.Exists)
             {
-                string dir = "temp/thumbnails";
-                DirectoryInfo di = new DirectoryInfo(dir);
-                if (di.Exists)
+                FileInfo[] files = di.GetFiles();
+                foreach (FileInfo file in files)
                 {
-                    FileInfo[] files = di.GetFiles();
-                    foreach (FileInfo file in files)
-                    {
-                        file.Delete();
-                    }
+                    file.Delete();
                 }
-            }).Start();
+            }
         }
 
         private int saveAfter = 0;
