@@ -1034,13 +1034,15 @@ namespace Jamaker
             }).Start();
         }
         private string lastThumbnailsPath = null;
-        private int lastRenderingSeq = 0;
+        private int lastRenderingProcSeq = 0;
+        private int lastRenderingFileSeq = 0;
         private bool isThumbnailsRendering = false;
         public void RenderThumbnails(string path, string paramsStr)
         {
             Console.WriteLine($"RenderThumbnails: {paramsStr}");
             isThumbnailsRendering = true;
-            int renderingSeq = ++lastRenderingSeq;
+            int renderingProcSeq = ++lastRenderingProcSeq;
+            int renderingFileSeq = lastRenderingFileSeq;
             string[] list = paramsStr.Split('\n');
             new Thread(() =>
             {
@@ -1049,6 +1051,7 @@ namespace Jamaker
                 {
                     ClearThumbnails();
                     lastThumbnailsPath = path;
+                    renderingFileSeq = ++lastRenderingFileSeq;
                 }
 
                 string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
@@ -1068,7 +1071,7 @@ namespace Jamaker
                 foreach (string paramStr in list)
                 {
                     // 중간에 작업 끊은 경우
-                    if (renderingSeq != lastRenderingSeq)
+                    if (!isThumbnailsRendering || renderingProcSeq != lastRenderingProcSeq)
                     {
                         //ClearThumbnails(); // 스레드 충돌 생김
                         break;
@@ -1093,17 +1096,17 @@ namespace Jamaker
                         bool isCompleted = true;
                         for (int index = 0; index < (end - begin); index++)
                         {
-                            if (!File.Exists($"{dir}/{begin + index}{flag}.jpg"))
+                            if (!File.Exists($"{dir}/{renderingFileSeq}_{begin + index}{flag}.jpg"))
                             {
                                 isCompleted = false;
                                 break;
                             }
-                            if (!File.Exists($"{dir}/{begin + index}{flag}_.jpg"))
+                            if (!File.Exists($"{dir}/{renderingFileSeq}_{begin + index}{flag}_.jpg"))
                             {
                                 isCompleted = false;
                                 break;
                             }
-                            if (!File.Exists($"{dir}/{begin + index}{flag}~.jpg"))
+                            if (!File.Exists($"{dir}/{renderingFileSeq}_{begin + index}{flag}~.jpg"))
                             {
                                 isCompleted = false;
                                 break;
@@ -1128,7 +1131,7 @@ namespace Jamaker
                         //else
                         //if (flag == "d") vf = "-vf \"curves=r='0/0 0.9/0.1 1/1'\" ";
 
-                        string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s 96x54 -qscale:v 2 -r {fps} {vf}-f image2 \"{dir}/{begin}{flag}_%d.jpg\"";
+                        string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s 96x54 -qscale:v 2 -r {fps} {vf}-f image2 \"{dir}/{renderingFileSeq}_{begin}{flag}_%d.jpg\"";
 
                         Process proc = new Process();
                         proc.StartInfo.UseShellExecute = false;
@@ -1147,8 +1150,8 @@ namespace Jamaker
                             Console.WriteLine(didread);
                         }
 
-                        // 중간에 다른 파일 불러온 경우
-                        if(renderingSeq != lastRenderingSeq) return;
+                        // 중간에 작업 끊은 경우
+                        if (!isThumbnailsRendering || renderingProcSeq != lastRenderingProcSeq) return;
 
                         new Thread(() =>
                         {
@@ -1156,10 +1159,10 @@ namespace Jamaker
                             for (int index = 0; index < (end - begin); index++)
                             {
                                 // 중간에 작업 끊은 경우
-                                if (renderingSeq != lastRenderingSeq) return;
+                                if (!isThumbnailsRendering || renderingProcSeq != lastRenderingProcSeq) return;
 
                                 // 위에서 만든 이미지 경로
-                                string img0 = $"{dir}/{begin}{flag}_{index + 1}.jpg";
+                                string img0 = $"{dir}/{renderingFileSeq}_{begin}{flag}_{index + 1}.jpg";
 
                                 // 실제 필요한 이미지 경로
                                 string img1 = $"{dir}/{begin + index}{flag}.jpg";
@@ -1181,7 +1184,7 @@ namespace Jamaker
                                 } catch (Exception e) { Console.WriteLine(e); }
 
                                 // 중간에 작업 끊은 경우
-                                if (renderingSeq != lastRenderingSeq) return;
+                                if (!isThumbnailsRendering || renderingProcSeq != lastRenderingProcSeq) return;
 
                                 if (bLast != null)
                                 {
@@ -1253,7 +1256,7 @@ namespace Jamaker
                                         }
 
                                         // 중간에 작업 끊은 경우
-                                        if (renderingSeq != lastRenderingSeq) return;
+                                        if (!isThumbnailsRendering || renderingProcSeq != lastRenderingProcSeq) return;
 
                                         b2.Save(img2, System.Drawing.Imaging.ImageFormat.Jpeg);
                                         b3.Save(img3, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -1275,8 +1278,9 @@ namespace Jamaker
                             }
 
                             // 중간에 작업 끊은 경우
-                            if (renderingSeq != lastRenderingSeq) return;
+                            if (!isThumbnailsRendering || renderingProcSeq != lastRenderingProcSeq) return;
 
+                            //Console.WriteLine($"{renderingProcSeq}/{lastRenderingProcSeq}: {begin}, {end}, {flag}");
                             Script("afterRenderThumbnails", new object[] { begin, end, flag });
 
                         }).Start();
