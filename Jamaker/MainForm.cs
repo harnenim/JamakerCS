@@ -1119,6 +1119,8 @@ namespace Jamaker
                             continue;
                         }
 
+                        Script("startRenderThumbnails", new object[] { begin, end, flag });
+
                         int ms = time % 60000;
                         int m = time / 60000;
                         int h = m / 60;
@@ -1159,7 +1161,7 @@ namespace Jamaker
                             for (int index = 0; index < (end - begin); index++)
                             {
                                 // 중간에 작업 끊은 경우
-                                if (!isThumbnailsRendering || renderingProcSeq != lastRenderingProcSeq) return;
+                                if (renderingProcSeq != lastRenderingProcSeq) return;
 
                                 // 위에서 만든 이미지 경로
                                 string img0 = $"{dir}/{renderingFileSeq}_{begin}{flag}_{index + 1}.jpg";
@@ -1184,7 +1186,7 @@ namespace Jamaker
                                 } catch (Exception e) { Console.WriteLine(e); }
 
                                 // 중간에 작업 끊은 경우
-                                if (!isThumbnailsRendering || renderingProcSeq != lastRenderingProcSeq) return;
+                                if (renderingProcSeq != lastRenderingProcSeq) return;
 
                                 if (bLast != null)
                                 {
@@ -1256,7 +1258,7 @@ namespace Jamaker
                                         }
 
                                         // 중간에 작업 끊은 경우
-                                        if (!isThumbnailsRendering || renderingProcSeq != lastRenderingProcSeq) return;
+                                        if (renderingProcSeq != lastRenderingProcSeq) return;
 
                                         b2.Save(img2, System.Drawing.Imaging.ImageFormat.Jpeg);
                                         b3.Save(img3, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -1278,7 +1280,7 @@ namespace Jamaker
                             }
 
                             // 중간에 작업 끊은 경우
-                            if (!isThumbnailsRendering || renderingProcSeq != lastRenderingProcSeq) return;
+                            if (renderingProcSeq != lastRenderingProcSeq) return;
 
                             //Console.WriteLine($"{renderingProcSeq}/{lastRenderingProcSeq}: {begin}, {end}, {flag}");
                             Script("afterRenderThumbnails", new object[] { begin, end, flag });
