@@ -159,9 +159,14 @@ $(() => {
 		params.push([group.time, fs[group.end] + 1 - group.time, group.begin, group.end, group.flag].join(","));
 	}
 	opener.binder.renderThumbnails(SmiEditor.video.path, params.join("\n"));
+	
+	let fileSeq = 0;
+	opener.setThumbnailsFileSeq = function(thumbnailsFileSeq) {
+		fileSeq = thumbnailsFileSeq;
+	}
 
     // 렌더링 중일 때 색깔 넣어줌
-    opener.startRenderThumbnails = function (begin, end, flag) {
+    opener.startRenderThumbnails = function(begin, end, flag) {
         for (let i = begin; i < end; i++) {
             $tbody.find("img.img" + i + flag).addClass("rendering");
             $framesStorage.find("img.img" + i + flag).addClass("rendering");
@@ -325,7 +330,7 @@ $(() => {
 		const $frames = $tr.data("$frames");
 		$frames.find("img").each(function () {
 			const $img = $(this);
-            $img.attr({ src: "../../temp/thumbnails/" + $img.data("img") + M[mode] + ".jpg" });
+            $img.attr({ src: "../../temp/thumbnails/" + fileSeq + "_" + $img.data("img") + M[mode] + ".jpg" });
 		});
         $tr.find("td:eq(0)").append($frames);
 	}

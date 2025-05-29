@@ -1033,17 +1033,21 @@ namespace Jamaker
                 catch (Exception e) { Console.WriteLine(e); }
             }).Start();
         }
-        private string lastThumbnailsPath = null;
-        private int lastRenderingProcSeq = 0;
-        private int lastRenderingFileSeq = 0;
+        
         private bool isThumbnailsRendering = false;
+        private string lastThumbnailsPath = null;
+        private int lastThumbnailsProcSeq = 0;
+        private int lastThumbnailsFileSeq = 0;
+        
         public void RenderThumbnails(string path, string paramsStr)
         {
             Console.WriteLine($"RenderThumbnails: {paramsStr}");
             isThumbnailsRendering = true;
-            int renderingProcSeq = ++lastRenderingProcSeq;
-            int renderingFileSeq = lastRenderingFileSeq;
+            int procSeq = ++lastThumbnailsProcSeq;
+            int fileSeq = lastThumbnailsFileSeq;
+                
             string[] list = paramsStr.Split('\n');
+
             new Thread(() =>
             {
                 // 섬네일 대상 파일이 바뀐 경후 초기화
@@ -1051,8 +1055,9 @@ namespace Jamaker
                 {
                     ClearThumbnails();
                     lastThumbnailsPath = path;
-                    renderingFileSeq = ++lastRenderingFileSeq;
+                    fileSeq = ++lastThumbnailsFileSeq;
                 }
+                Script("setThumbnailsFileSeq", new object[] { fileSeq });
 
                 string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
                 string exeFile = Path.Combine(exePath, "ffmpeg.exe");
@@ -1071,16 +1076,8 @@ namespace Jamaker
                 foreach (string paramStr in list)
                 {
                     // 중간에 작업 끊은 경우
-                    if (!isThumbnailsRendering || renderingProcSeq != lastRenderingProcSeq)
-                    {
-                        //ClearThumbnails(); // 스레드 충돌 생김
-                        break;
-                    }
-                    // 중간에 다른 파일 불러온 경우
-                    if (lastThumbnailsPath != path)
-                    {
-                        return;
-                    }
+                    if (!isThumbnailsRendering || procSeq != lastThumbnailsProcSeq) return;
+
                     string[] param = paramStr.Split(',');
                     int time = int.Parse(param[0]);
                     double length = double.Parse(param[1]) / 1000;
@@ -1096,17 +1093,17 @@ namespace Jamaker
                         bool isCompleted = true;
                         for (int index = 0; index < (end - begin); index++)
                         {
-                            if (!File.Exists($"{dir}/{renderingFileSeq}_{begin + index}{flag}.jpg"))
+                            if (!File.Exists($"{dir}/{fileSeq}_{begin + index}{flag}.jpg"))
                             {
                                 isCompleted = false;
                                 break;
                             }
-                            if (!File.Exists($"{dir}/{renderingFileSeq}_{begin + index}{flag}_.jpg"))
+                            if (!File.Exists($"{dir}/{fileSeq}_{begin + index}{flag}_.jpg"))
                             {
                                 isCompleted = false;
                                 break;
                             }
-                            if (!File.Exists($"{dir}/{renderingFileSeq}_{begin + index}{flag}~.jpg"))
+                            if (!File.Exists($"{dir}/{fileSeq}_{begin + index}{flag}~.jpg"))
                             {
                                 isCompleted = false;
                                 break;
@@ -1133,7 +1130,7 @@ namespace Jamaker
                         //else
                         //if (flag == "d") vf = "-vf \"curves=r='0/0 0.9/0.1 1/1'\" ";
 
-                        string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s 96x54 -qscale:v 2 -r {fps} {vf}-f image2 \"{dir}/{renderingFileSeq}_{begin}{flag}_%d.jpg\"";
+                        string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s 96x54 -qscale:v 2 -r {fps} {vf}-f image2 \"{dir}/p{procSeq}_{begin}{flag}_%d.jpg\"";
 
                         Process proc = new Process();
                         proc.StartInfo.UseShellExecute = false;
@@ -1152,41 +1149,38 @@ namespace Jamaker
                             Console.WriteLine(didread);
                         }
 
-                        // 중간에 작업 끊은 경우
-                        if (!isThumbnailsRendering || renderingProcSeq != lastRenderingProcSeq) return;
+                        // 중간에 작업 끊었어도, 파일 자체가 바뀐 게 아니면 일단 진행
+                        if (fileSeq != lastThumbnailsFileSeq) return;
 
                         new Thread(() =>
                         {
                             Bitmap bLast = null;
                             for (int index = 0; index < (end - begin); index++)
                             {
-                                // 중간에 작업 끊은 경우
-                                if (renderingProcSeq != lastRenderingProcSeq) return;
+                                // 중간에 작업 끊었어도, 파일 자체가 바뀐 게 아니면 일단 진행
+                                if (fileSeq != lastThumbnailsFileSeq) return;
 
                                 // 위에서 만든 이미지 경로
-                                string img0 = $"{dir}/{renderingFileSeq}_{begin}{flag}_{index + 1}.jpg";
+                                string img0 = $"{dir}/p{procSeq}_{begin}{flag}_{index + 1}.jpg";
 
                                 // 실제 필요한 이미지 경로
-                                string img1 = $"{dir}/{begin + index}{flag}.jpg";
+                                string img1 = $"{dir}/{fileSeq}_{begin + index}{flag}.jpg";
                                 try {
                                     if (File.Exists(img1)) File.Delete(img1);
                                     File.Move(img0, img1);
                                 } catch (Exception e) { Console.WriteLine(e); }
 
                                 // 프레임 간 차이 이미지 경로
-                                string img2 = $"{dir}/{begin + index}{flag}_.jpg";
+                                string img2 = $"{dir}/{fileSeq}_{begin + index}{flag}_.jpg";
                                 try {
                                     if (File.Exists(img2)) File.Delete(img2);
                                 } catch (Exception e) { Console.WriteLine(e); }
 
                                 // 밝기 변화 이미지 경로
-                                string img3 = $"{dir}/{begin + index}{flag}~.jpg";
+                                string img3 = $"{dir}/{fileSeq}_{begin + index}{flag}~.jpg";
                                 try {
                                     if (File.Exists(img3)) File.Delete(img3);
                                 } catch (Exception e) { Console.WriteLine(e); }
-
-                                // 중간에 작업 끊은 경우
-                                if (renderingProcSeq != lastRenderingProcSeq) return;
 
                                 if (bLast != null)
                                 {
@@ -1194,7 +1188,7 @@ namespace Jamaker
                                     int sum = 0;
                                     int dMax = 1; // 0이면 문제 생김
 
-                                    // 이 사이에 다른 스레드에서 이미지 파일 삭제될 수 있어서 try-catch 문에 넣음
+                                    // 렌더링 중복 실행 시 다른 스레드에서 파일 삭제될 수 있어서 try-catch 문에 넣음
                                     try
                                     {
                                         // 라이브러리 써보려고 했는데 결과물이 별로임
@@ -1257,9 +1251,6 @@ namespace Jamaker
                                             }
                                         }
 
-                                        // 중간에 작업 끊은 경우
-                                        if (renderingProcSeq != lastRenderingProcSeq) return;
-
                                         b2.Save(img2, System.Drawing.Imaging.ImageFormat.Jpeg);
                                         b3.Save(img3, System.Drawing.Imaging.ImageFormat.Jpeg);
 
@@ -1279,8 +1270,8 @@ namespace Jamaker
                                 }
                             }
 
-                            // 중간에 작업 끊은 경우
-                            if (renderingProcSeq != lastRenderingProcSeq) return;
+                            // 중간에 작업 끊었어도, 파일 자체가 바뀐 게 아니면 갱신해줌
+                            if (fileSeq != lastThumbnailsFileSeq) return;
 
                             //Console.WriteLine($"{renderingProcSeq}/{lastRenderingProcSeq}: {begin}, {end}, {flag}");
                             Script("afterRenderThumbnails", new object[] { begin, end, flag });
