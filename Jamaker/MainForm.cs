@@ -944,6 +944,23 @@ namespace Jamaker
 
             Script("openFile", new object[] { path, text, forVideo });
         }
+        public void LoadAssFile(string path, int tab)
+        {
+            string text = "";
+            StreamReader sr = null;
+            try
+            {
+                sr = new StreamReader(path, DetectEncoding(path));
+                text = sr.ReadToEnd();
+            }
+            catch
+            {
+                Script("alert", "연동된 ASS 파일을 열지 못했습니다.");
+            }
+            finally { sr?.Close(); }
+
+            Script("loadAssFile", new object[] { path, text });
+        }
 
         private string smiPath;
         public void CheckLoadVideoFile(string path)

@@ -435,6 +435,13 @@ Tab.prototype.isSaved = function() {
 	return true;
 }
 
+Tab.prototype.toAss = function() {
+	
+}
+Tab.prototype.getAssText = function() {
+	
+}
+
 SmiEditor.prototype.isSaved = function() {
 	return (this.savedName  == this.name )
 		&& (this.savedPos   == this.pos  )
@@ -1258,9 +1265,31 @@ function saveFile(asNew, isExport) {
 	}
 	*/
 	
+	let withAss = false;
+	{
+		const match = /<sami( [^>]*)*>/gi.exec(currentTab.holds[0].text);
+		if (match && match[1]) {
+			const attrs = match[1].toUpperCase().split(" ");
+			for (let i = 0; i < attrs.length; i++) {
+				if (attrs[i] == "ASS") {
+					withAss = true;
+					break;
+				}
+			}
+		}
+	}
+	if (withAss) {
+		// TODO: ASS 저장용 스타일 지정돼 있는지 확인 및 추가
+	}
+	
 	if (syncError) {
 		confirm("싱크 오류가 있습니다.\n저장하시겠습니까?", function() {
 			binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path);
+			/*
+			if (withAss) {
+				binder.save(currentTab.getAssText(), assPath);
+			}
+			*/
 			
 		}, function() {
 			const hold = currentTab.holds[syncError[0]];
@@ -1273,6 +1302,11 @@ function saveFile(asNew, isExport) {
 		});
 	} else {
 		binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path);
+		/*
+		if (withAss) {
+			binder.save(currentTab.getAssText(), assPath);
+		}
+		*/
 	}
 }
 
@@ -1364,6 +1398,31 @@ function openNewTab(text, path, forVideo) {
 	_for_video_ = forVideo;
 	(tab.th = th).data("tab", tab).click();
 	
+	if (path && path.indexOf(":")) { // 웹버전에선 온전한 파일 경로를 얻지 못해 콜론 없음
+		let withAss = false;
+		{
+			const match = /<sami( [^>]*)*>/gi.exec(text);
+			if (match && match[1]) {
+				const attrs = match[1].toUpperCase().split(" ");
+				for (let i = 0; i < attrs.length; i++) {
+					if (attrs[i] == "ASS") {
+						withAss = true;
+						break;
+					}
+				}
+			}
+		}
+		if (withAss) {
+			let assPath = path + ".ass";
+			if (path.toUpperCase().endsWith(".SMI")) {
+				assPath = path.substring(0, path.length - 4) + ".ass";
+			} else if (path.toUpperCase().endsWith(".SAMI")) {
+				assPath = path.substring(0, path.length - 5) + ".ass";
+			}
+			binder.loadAssFile(assPath, tabs.length - 1);
+		}
+	}
+	
 	return tab;
 }
 // C# 쪽에서 호출
@@ -1373,6 +1432,21 @@ function confirmLoadVideo(path) {
 			binder.loadVideoFile(path);
 		});	
 	}, 1);
+}
+
+// C# 쪽에서 호출
+function loadAssFile(path, text, target=-1) {
+	if (target < 0) {
+		target = tab;
+	}
+	const currentTab = tabs[target];
+	if (!currentTab) return;
+	
+	console.log(text);
+	
+	// TODO:
+	// SMI->ASS 변환 결과 생성 및 비교
+	// 불일치 부분 확인 및 보정
 }
 
 // C# 쪽에서 호출

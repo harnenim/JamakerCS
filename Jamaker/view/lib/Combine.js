@@ -1408,6 +1408,7 @@ if (Subtitle && Subtitle.SmiFile) {
 					}
 				} else if (withCombine) {
 					// 메인 홀드 없으면 서로 겹치지만 않으면 내포 홀드 처리
+					// TODO: 둘 중 하나가 다른 하나에 이중 내포 되는 경우 처리 필요?
 					let hasImport = false;
 					for (let j = 0; j < imports.length; j++) {
 						if (hold.start < imports[j][1].end) {
