@@ -79,10 +79,6 @@ namespace Jamaker
             _.SetPlayer(dll, exe, withRun);
         }
 
-        public void Save(string text, string path)
-        {
-            _.Save(text, path, true);
-        }
         public void Save(string text, string path, bool isSmi)
         {
             _.Save(text, path, isSmi);
