@@ -436,10 +436,57 @@ Tab.prototype.isSaved = function() {
 }
 
 Tab.prototype.toAss = function() {
+	// Default 설정 있어야 함
+	// Style: Default,맑은 고딕,80,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,4,0,2,64,64,40,1
 	
+	// 각 홀드 헤더에 스타일 설정 있으면 가져오기, 없으면 기본값 넣기
+	// 홀드명이 같은데 스타일이 다른 경우 경고 후 해당 홀드에 번호 붙여서 수정
+	/*
+	 * <!-- Ass-Styles
+	 * 
+	 * -->
+	 */
+	for (let h = 0; h < this.holds.length; h++) {
+		const hold = this.holds[h];
+		const input = hold.body ? hold : new Subtitle.SmiFile(hold.text);
+		const syncs = input.toSync();
+		console.log(syncs);
+		const ass = new Subtitle.AssFile2().fromSync(syncs, hold.name);
+		// 타이핑 효과 등 normalize 필요
+		console.log(ass);
+		/*
+		hold.style = 
+		
+		
+		*/
+	}
+	
+	/*
+	 * SMI-ASS 대응
+	 * 
+	 * 1:0 (보통 이런 경우는 잘 없음
+	 * <Font replace="">SMI 전용 대사</Font>
+	 * 
+	 * 1:1 (이게 일반적)
+	 * <Font ass="\fs100"></Font>공통 대사, ASS만의 스타일 추가
+	 * 
+	 * 1:1에 내용 추가
+	 * <Font ass="\fs100"></Font>공통 대사<Font replace="ASS만의 내용 추가"></Font>
+	 * 
+	 * 1:n (동일 싱크의 ASS 자막 여러 개로 분화)
+	 * <Font add="{\fs100}추가 대사"></Font>
+	 * <Font ass="\fs100"></Font>공통 대사, ASS만의 스타일 추가
+	 * 
+	 * 0:n (SMI에 아예 없는 싱크에 대사 추가)
+	 * 홀드에 산입? 비산입?
+	 * <!-- Ass-Events
+	 * (그대로 가져오기)
+	 * -->
+	 * 
+	 */
 }
 Tab.prototype.getAssText = function() {
-	
+	this.toAss();
 }
 
 SmiEditor.prototype.isSaved = function() {
@@ -1279,17 +1326,43 @@ function saveFile(asNew, isExport) {
 		}
 	}
 	if (withAss) {
+		const styles = {};
+		for (let i = 1; i < currentTab.holds.length; i++) {
+			const hold = currentTab.holds[i];
+			if (hold.name.indexOf(",") >= 0) {
+				alert("ASS 자막 변환을 하는 경우 홀드명에 ,(쉼표)가 들어갈 수 없습니다.");
+				currentTab.selectHold(hold);
+				return;
+			}
+			if (typeof styles[hold.name] == "string") {
+				if (hold.style != styles[hold.name]) {
+					alert("같은 이름의 홀드끼리 스타일이 일치하지 않습니다.\n임의로 이름을 변경합니다.");
+					for (let j = 1; ; j++) {
+						let holdName = hold.name + j;
+						if (typeof styles[holdName] == "undefined") {
+							hold.selector.find(".hold-name > span").text(hold.owner.holds.indexOf(hold) + "." + (hold.name = holdName));
+							hold.selector.attr({ title: hold.name });
+							hold.afterChangeSaved(hold.isSaved());
+							styles[hold.name] = hold.style;
+							break;
+						}
+					}
+				}
+			} else {
+				styles[hold.name] = hold.style;
+			}
+		}
+		
 		// TODO: ASS 저장용 스타일 지정돼 있는지 확인 및 추가
 	}
 	
 	if (syncError) {
 		confirm("싱크 오류가 있습니다.\n저장하시겠습니까?", function() {
-			binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path);
-			/*
+			binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path, true);
 			if (withAss) {
-				binder.save(currentTab.getAssText(), assPath);
+				currentTab.getAssText();
+//				binder.save(currentTab.getAssText(), assPath, false);
 			}
-			*/
 			
 		}, function() {
 			const hold = currentTab.holds[syncError[0]];
@@ -1301,12 +1374,11 @@ function saveFile(asNew, isExport) {
 			hold.scrollToCursor(lineNo);
 		});
 	} else {
-		binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path);
-		/*
+		binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path, true);
 		if (withAss) {
-			binder.save(currentTab.getAssText(), assPath);
+			currentTab.getAssText();
+//			binder.save(currentTab.getAssText(), assPath, false);
 		}
-		*/
 	}
 }
 
@@ -1437,12 +1509,14 @@ function confirmLoadVideo(path) {
 // C# 쪽에서 호출
 function loadAssFile(path, text, target=-1) {
 	if (target < 0) {
+		// 탭이 지정 안 된 경우..는 없어야 맞음
 		target = tab;
 	}
 	const currentTab = tabs[target];
 	if (!currentTab) return;
 	
-	console.log(text);
+	const loadedAssFile = new Subtitle.AssFile2(text);
+	console.log(loadedAssFile);
 	
 	// TODO:
 	// SMI->ASS 변환 결과 생성 및 비교
