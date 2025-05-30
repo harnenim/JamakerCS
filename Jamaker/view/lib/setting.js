@@ -37,11 +37,11 @@ let checkVersion;
 	const lastNotifyForCommand = "2024.12.07.v1";
 	const lastNotifyForAutoComplete = "2025.04.19.v1";
 	const lastNotifyForStyle = "2025.03.07.v1";
-	const lastNotifyForMenu = "2025.05.30.v1";
+	const lastNotifyForMenu = "2025.05.30.v2";
 }
 
 window.DEFAULT_SETTING =
-{	version: "2025.05.30.v1"
+{	version: "2025.05.30.v2"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -70,7 +70,7 @@ window.DEFAULT_SETTING =
 		,	"니코동 효과(&N)|openAddon('Nico');"
 		,	"ASS 자막으로 변환(&A)|openAddon('ToAss');"
 		,	"재생 속도 조절|openAddon('Speed');"
-		,	"맞춤법 검사기|extSubmit(\"post\", \"https://nara-speller.co.kr/speller/results\", \"text1\");"
+		,	"맞춤법 검사기|extSubmit(\"post\", \"https://nara-speller.co.kr/old_speller/results\", \"text1\");"
 		,	"국어사전|extSubmit(\"get\", \"https://ko.dict.naver.com/%23/search\", \"query\");"
 		]
 	,	[	"도움말(&H)"
@@ -197,7 +197,7 @@ window.DEFAULT_SETTING =
 		{	't': '/* 일괄 싱크 입력 */\n' + 'editor.reSyncPrompt();'
 		,	'1': '/* 맞춤법 검사기 */\n'
 			   + 'let text = editor.getText();\n'
-			   + 'extSubmit("post", "https://nara-speller.co.kr/speller/results", "text1");'
+			   + 'extSubmit("post", "https://nara-speller.co.kr/old_speller/results", "text1");'
 		,	'2': '/* 국어사전 */\n'
 			   + 'let text = editor.getText();\n'
 			   + 'extSubmit("get", "https://ko.dict.naver.com/%23/search", "query");'
