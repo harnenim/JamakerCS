@@ -918,7 +918,7 @@ Subtitle.Ass.ss2txt = (asss) => {
 }
 
 Subtitle.Ass.sColorFromAttr = (soColor) => {
-	return soColor.length == 6 ? "&H" + soColor.substring(4, 6) + soColor.substring(2, 4) + soColor.substring(0, 2) + "&" : "";
+	return soColor.length == 6 ? "&H" + soColor.substring(4, 6) + soColor.substring(2, 4) + soColor.substring(0, 2) + "&" : soColor;
 }
 Subtitle.Ass.colorToAttr = (soColor) => {
 	return "" + soColor.substring(6, 8) + soColor.substring(4, 6) + soColor.substring(2, 4);
@@ -1039,24 +1039,50 @@ Subtitle.Ass.prototype.fromAttr = function(attrs) {
 		
 		if (!last.b && attr.b) text += "{\\b1}";
 		else if (last.b && !attr.b) text += "{\\b}";
-
+		
 		if (!last.i && attr.i) text += "{\\i1}";
 		else if (last.i && !attr.i) text += "{\\i}";
-
+		
 		if (!last.u && attr.u) text += "{\\u1}";
 		else if (last.u && !attr.u) text += "{\\u}";
-
+		
 		if (!last.s && attr.s) text += "{\\s1}";
 		else if (last.s && !attr.s) text += "{\\s}";
-
-		if (last.fn != attr.fn) text += "{\\fn" + attr.fn + "}";
-
-		if (last.fc != attr.fc) text += "{\\c" + Subtitle.Ass.colorFromAttr(attr.fc) + "}";
 		
-		if (attr.furigana) {
-			text += "[" + attr.text + "|" + attr.furigana.text.split("]").join("\\]") + "]";
+		if (last.fn != attr.fn) text += "{\\fn" + attr.fn + "}";
+		
+		if (attr.fc.length == 15 && attr.fc[0] == '#' && attr.fc[7] == '~' && attr.fc[8] == '#') {
+			// 그라데이션 분할
+			const cFrom = attr.fc.substring(0,  7);
+			const cTo   = attr.fc.substring(8, 15);
+			const color = new Subtitle.Smi.Color(cTo, cFrom); // TODO: Smi 객체에 기생하지 않아야 함...
+			
+			let attrText = "";
+			for (let k = 0; k < attr.text.length; k++) {
+				attrText += "{\\c" + Subtitle.Ass.colorFromAttr(color.get(k, attr.text.length - 1)) + "}" + attr.text[k];
+			}
+
+			if (attr.furigana) {
+				let furigana = "";
+				for (let k = 0; k < attr.furigana.text.length; k++) {
+					furigana += "{\\c" + Subtitle.Ass.colorFromAttr(color.get(k, attr.furigana.text.length - 1)) + "}" + attr.furigana.text[k];
+				}
+				text += "[" + attrText + "|" + furigana.split("]").join("\\]") + "]";
+				
+			} else {
+				text += attrText;
+			}
+			
 		} else {
-			text += attr.text;
+			if (last.fc != attr.fc) {
+				text += "{\\c" + Subtitle.Ass.colorFromAttr(attr.fc) + "}";
+			}
+			
+			if (attr.furigana) {
+				text += "[" + attr.text + "|" + attr.furigana.text.split("]").join("\\]") + "]";
+			} else {
+				text += attr.text;
+			}
 		}
 		last = attr;
 	}
@@ -1130,7 +1156,7 @@ Subtitle.Ass.prototype.fromAttr = function(attrs) {
 			lines[i] = newLine;
 		}
 	}
-
+	
 	this.text = lines.join("\\N").split("}{").join("");
 	return this;
 }
@@ -1149,7 +1175,7 @@ Subtitle.Ass.prototype.fromSync = function(sync, checkFrame=true) {
 	this.end   = sync.end   / 10;
 	this.style = 
 		( (!checkFrame || (sync.startType == Subtitle.SyncType.normal && sync.endType == Subtitle.SyncType.normal))
-			? "Default"
+			? sync.style ? sync.style : "Default"
 			: ( (sync.startType == Subtitle.SyncType.frame ? "［" : "（")
 			  + (sync.endType   == Subtitle.SyncType.frame ? "］" : "）")
 			)
@@ -1226,6 +1252,152 @@ Subtitle.AssFile.prototype.fromSync = function(syncs, checkFrame=true) {
 	this.body = [];
 	for (let i = 0; i < syncs.length; i++) {
 		this.body.push(new Subtitle.Ass().fromSync(syncs[i], checkFrame));
+	}
+	return this;
+}
+
+Subtitle.AssPart = function(name, format=null, body=[]) {
+	this.name = name;
+	this.format = format;
+	this.body = body;
+}
+Subtitle.AssPart.prototype.toTxt = function() {
+	const result = ['[' + this.name + ']'];
+	if (this.format) {
+		result.push("Format: " + this.format.join(", "));
+	}
+	for (let i = 0; i < this.body.length; i++) {
+		const item = this.body[i];
+		if (typeof item == "string") {
+			// 주석
+			result.push(item);
+			continue;
+		}
+		if (this.format) {
+			const value = [];
+			for (let j = 0; j < this.format.length; j++) {
+				value.push(item[this.format[j]]);
+			}
+			result.push(item.key + ": " + value.join(","));
+		} else {
+			result.push(item.key + ": " + item.value);
+		}
+	}
+	return result.join("\n");
+}
+Subtitle.AssPart.StylesFormat = ["Name", "Fontname", "Fontsize", "PrimaryColour", "SecondaryColour", "OutlineColour", "BackColour", "Bold", "Italic", "Underline", "StrikeOut", "ScaleX", "ScaleY", "Spacing", "Angle", "BorderStyle", "Outline", "Shadow", "Alignment", "MarginL", "MarginR", "MarginV", "Encoding"];
+Subtitle.AssPart.EventsFormat = ["Layer", "Start", "End", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
+
+Subtitle.AssFile2 = function(txt) {
+	this.parts = [];
+	if (txt) {
+		this.fromTxt(txt);
+	} else {
+		this.parts.push(new Subtitle.AssPart("V4+ Styles", Subtitle.AssPart.StylesFormat));
+		this.parts.push(new Subtitle.AssPart("Events"    , Subtitle.AssPart.EventsFormat));
+	}
+}
+Subtitle.AssFile2.prototype.toTxt = function() {
+	const result = [];
+	for (let i = 0; i < this.parts.length; i++) {
+		result.push(this.parts[i].toTxt());
+	}
+	return result.join("\n\n");
+}
+Subtitle.AssFile2.prototype.fromTxt = function(txt) {
+	const lines = txt.split("\n");
+	
+	let part = null;
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i].trim();
+		if (!line) continue;
+		
+		if (line.startsWith('[') && line.endsWith(']')) {
+			// 파트 시작
+			this.parts.push(part = new Subtitle.AssPart(line.substring(1, line.length - 1)));
+			
+		} else if (part) {
+			// 파트 내용물
+			if (line.startsWith(";")) {
+				// 주석
+				part.body.push(line);
+				continue;
+			}
+			
+			const colon = line.indexOf(":");
+			if (colon < 0) continue;
+			
+			const key = line.substring(0, colon).trim();
+			let value = line.substring(colon + 1).trim();
+			
+			if (part.format) {
+				// 포맷 지정된 경우
+				value = value.split(",");
+				if (value.length > part.format.length) {
+					// 마지막 Text에 쉼표 들어가서 분리됐으면 다시 합쳐줌
+					value[part.format.length - 1] = value.slice(part.format.length - 1).join(",");
+					value.length = part.format.length;
+				}
+				const item = { key: key };
+				if (part.name == "Events") {
+					// 형 변환 필요?
+				}
+				for (let j = 0; j < part.format.length; j++) {
+					item[part.format[j]] = value[j];
+				}
+				part.body.push(item);
+				
+			} else {
+				// 포맷 지정 안 된 경우
+				if (line.startsWith("Format:")) {
+					// 포맷 설정인 경우
+					part.format = line.substring(7).trim().split(",");
+					for (let j = 0; j < part.format.length; j++) {
+						part.format[j] = part.format[j].trim();
+					}
+				} else {
+					// 키-값 파트인 경우
+					part.body.push({ key: key, value: value });
+				}
+			}
+		}
+	}
+	return this;
+}
+Subtitle.AssFile2.prototype.toSync = function() {
+	let part = null;
+	for (let i = 0; i < this.parts.length; i++) {
+		if (this.parts[i].name == "Events") {
+			part = this.parts[i];
+			break;
+		}
+	}
+	
+	const result = [];
+	if (part) {
+		for (let i = 0; i < part.body.length; i++) {
+			result.push(part.body[i][1]);
+		}
+	}
+	return result;
+}
+
+Subtitle.AssFile2.prototype.fromSync = function(syncs, style) {
+	let part = null;
+	for (let i = 0; i < this.parts.length; i++) {
+		if (this.parts[i].name == "Events") {
+			part = this.parts[i];
+			break;
+		}
+	}
+	if (!part) {
+		part = new Subtitle.AssPart("Events", Subtitle.AssPart.EventsFormat);
+	}
+	
+	this.body = [];
+	for (let i = 0; i < syncs.length; i++) {
+		syncs[i].style = style;
+		this.body.push(new Subtitle.Ass().fromSync(syncs[i], false));
 	}
 	return this;
 }
@@ -2859,7 +3031,9 @@ Subtitle.SmiFile.prototype.toSync = function() {
 			last.endType = this.body[i + 1].syncType;
 			result.push(last);
 		}
-		result.push(last = this.body[i].toSync());
+		if (this.body[i].text.split("&nbsp;").join("").length > 0) {
+			result.push(last = this.body[i].toSync());
+		}
 	}
 
 	return result;
