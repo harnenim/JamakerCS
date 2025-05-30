@@ -37,11 +37,11 @@ let checkVersion;
 	const lastNotifyForCommand = "2024.12.07.v1";
 	const lastNotifyForAutoComplete = "2025.04.19.v1";
 	const lastNotifyForStyle = "2025.03.07.v1";
-	const lastNotifyForMenu = "2024.11.19.v2";
+	const lastNotifyForMenu = "2025.05.30.v1";
 }
 
 window.DEFAULT_SETTING =
-{	version: "2025.04.26.v1"
+{	version: "2025.05.30.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -79,7 +79,6 @@ window.DEFAULT_SETTING =
 		,	"홀드에 대하여|openHelp('aboutHold')"
 		,	"싱크 표현에 대하여|openHelp('aboutSync')"
 		,	"특수 태그에 대하여|openHelp('aboutTag')"
-		,	"화면 싱크 매니저 도움말|openHelp('SyncManager')"
 		,	"업데이트 확인|openHelp('update')"
 		]
 	]
