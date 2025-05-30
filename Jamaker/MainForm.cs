@@ -1341,14 +1341,16 @@ namespace Jamaker
         }
 
         private int saveAfter = 0;
+        private bool saveSmi = true;
         private string textToSave = "";
-        public void Save(string text, string path)
+        public void Save(string text, string path, bool isSmi)
         {
             if (path == null || path.Length == 0)
             {
                 // 파일명 수신 시 동작 설정
                 saveAfter = 100;
                 textToSave = text;
+                saveSmi = isSmi;
                 afterGetFileName = new AfterGetString(SaveWithDialogAfterGetVideoFileName);
                 // player에 현재 재생 중인 파일명 요청
                 player.GetFileName();
@@ -1361,7 +1363,14 @@ namespace Jamaker
             try
             {   // 무조건 UTF-8로 저장
                 (sw = new StreamWriter(path, false, Encoding.UTF8)).Write(text);
-                Script("afterSaveFile", path);
+                if (isSmi)
+                {
+                    Script("afterSaveFile", path);
+                }
+                else
+                {
+                    // TODO: ASS 저장 후 작업은?
+                }
             }
             catch (Exception e)
             {
@@ -1415,7 +1424,7 @@ namespace Jamaker
                 {   // 저장 취소
                     return;
                 }
-                Save(text, dialog.FileName);
+                Save(text, dialog.FileName, saveSmi);
             }
         }
         public void SaveTemp(string text, string path)

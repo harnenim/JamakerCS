@@ -47,8 +47,8 @@ Binder.prototype.runPlayer = function(path) {
 	this._.runPlayer(path);
 }
 
-Binder.prototype.save = function(text, path) {
-	this._.save(text, path);
+Binder.prototype.save = function(text, path, isSmi=true) {
+	this._.save(text, path, isSmi);
 }
 Binder.prototype.saveTemp = function(text, path) {
 	this._.saveTemp(text, path);
@@ -145,6 +145,7 @@ const window_open = function(url, name, options, opener) {
 			}
 			case ".ass": {
 				await editor.loadAssFile(file);
+				break;
 			}
 			case ".fkf": {
 				await editor.script("loadFkfFile", [file]);
@@ -226,7 +227,7 @@ const window_open = function(url, name, options, opener) {
 		
 		// 실행 5초 후 동영상 불러온 것처럼 실행
 		setTimeout(() => {
-			this.script("eval", ["for (let i = 0; i < 100000; i++) { SmiEditor.video.fs.push(Math.round(i / (SmiEditor.video.FR / 1000))); }"]);
+			this.script("eval", ["for (let i = 0; i < 200000; i++) { SmiEditor.video.fs.push(Math.round(i * SmiEditor.video.FL)); }"]);
 		}, 2000);
 	};
 
@@ -605,7 +606,7 @@ window.MB = 9;
 				+ "if (isFinite(fps)) {"
 				+ "    SmiEditor.video.FL = 1000000 / (SmiEditor.video.FR = Math.round(fps * 1000));"
 				+ "    SmiEditor.video.fs.length = 0;"
-				+ "    for (let i = 0; i < 100000; i++) {"
+				+ "    for (let i = 0; i < 200000; i++) {"
 				+ "        SmiEditor.video.fs.push(Math.round(i * SmiEditor.video.FL));"
 				+ "    }"
 				+ "} else {"
@@ -954,19 +955,23 @@ window.MB = 9;
         }).Start();
         //*/
 	}
-	editor.save = async function(text, path) {
+	editor.save = async function(text, path, isSmi) {
 		const paths = path.split(":");
 		if (paths[1]) {
 			const fileBuffer = fileBuffers[paths[0]];
 			const stream = await fileBuffer.createWritable();
 			await stream.write("\ufeff" + text); // BOM 넣어줌
 			await stream.close();
-			editor.script("afterSaveFile", [path]);
+			if (isSmi) {
+				editor.script("afterSaveFile", [path]);
+			} else {
+				
+			}
 		} else {
-			editor.saveWithDialog(text);
+			editor.saveWithDialog(text, isAss);
 		}
 	}
-	editor.saveWithDialog = async function(text) {
+	editor.saveWithDialog = async function(text, isAss) {
 		const fileBuffer = await window.showSaveFilePicker({
 			types: [
 				{ description: "SAMI", accept:{ "text/sami": [".smi"] } }
@@ -976,7 +981,7 @@ window.MB = 9;
 			const index = fileBuffers.length;
 			fileBuffers.push(fileBuffer);
 			const file = await fileBuffer.getFile();
-			editor.save(text, index + ":" + file.name);
+			editor.save(text, index + ":" + file.name, isAss);
 		}
 	}
 	editor.saveTemp = function(text, path) {

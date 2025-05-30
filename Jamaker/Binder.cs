@@ -81,7 +81,11 @@ namespace Jamaker
 
         public void Save(string text, string path)
         {
-            _.Save(text, path);
+            _.Save(text, path, true);
+        }
+        public void Save(string text, string path, bool isSmi)
+        {
+            _.Save(text, path, isSmi);
         }
         public void SaveTemp(string text, string path)
         {
