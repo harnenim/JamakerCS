@@ -16,6 +16,10 @@
 
 ***
 
+[업데이트 내역](https://harnenim.github.io/Jamaker/updates.json)
+
+***
+
 원래는 CC4에 팟플 연동하는 법을 궁리하다가   
 그냥 기존에 혼자 만들어 쓰던 툴을 통합한 프로그램을 만들기로 했습니다.   
 
