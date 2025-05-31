@@ -89,7 +89,8 @@ $(() => {
 		if (smi.syncType == Subtitle.SyncType.frame) {
 			const frameIndex = SmiEditor.findSyncIndex(smi.start, fs);
 			const $frames = $("<div>").addClass("frames");
-			const $sync = $("<td>").addClass("sync").text(fs[frameIndex]);
+			const $sync = $("<td>").addClass("sync");
+            setSync($sync, fs[frameIndex]);
 			$framesStorage.append($frames);
 			$tr.addClass("fs").append($("<td>")).append($sync).append($("<td>").text(smi.text.split("\n").join("")));
 			$tr.data({ index: frameSyncs.length, $frames: $frames, frameIndex: frameIndex, offset: 0 });
@@ -122,8 +123,16 @@ $(() => {
 					}
 				}
 			}
-			if ((renderGroup.flag == flag) && (lastKf < fs[renderGroup.end] + 100)) { // 렌더링에 필요한 키프레임이 앞쪽과 100ms 이내로 이어짐
+			/*
+			if ((renderGroup.flag == flag) && (lastKf < fs[renderGroup.end] + 100)) {
+				// 렌더링에 필요한 키프레임이 앞쪽과 100ms 이내로 이어질 때
+				// ... 1차 렌더링은 몰라도 비교 이미지 생성이 과도하게 많아짐
 				renderGroup.end = end;
+			*/
+            if ((renderGroup.flag == flag) && (fs[begin] < fs[renderGroup.end] + 500)) {
+                // 렌더링에 필요한 프레임이 앞쪽과 500ms 이내로 이어질 때
+				renderGroup.end = end;
+
 			} else {
 				renderList.push(renderGroup = {
 						flag: flag
@@ -135,7 +144,11 @@ $(() => {
 			
 			for (let j = -RANGE; j < RANGE; j++) {
 				const imgIndex = frameIndex + j;
-				$frames.append($("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j }));
+				const $img = $("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j });
+				if (SmiEditor.findSync(fs[imgIndex], kfs, false)) {
+					$img.addClass("keyframe");
+				}
+				$frames.append($img);
 			}
 			
 		} else {
@@ -216,6 +229,14 @@ $(() => {
 			}
 		}
 	}
+    function setSync($td, sync) {
+        $td.text(sync);
+        if (SmiEditor.findSync(sync, kfs, false)) {
+            $td.addClass("keyframe");
+        } else {
+            $td.removeClass("keyframe");
+        }
+	}
 	function moveSync(direction, isOffset=false) {
 		const $tr = frameSyncs[selected];
 		const data = $tr.data();
@@ -228,7 +249,8 @@ $(() => {
 		
 		$tr.data({ offset: offset });
 		data.$frames.css({ left: "calc(50% - " + (offset * 98) + "px)" });
-		$tr.find("td.sync").text(fs[index]);
+
+		setSync($tr.find("td.sync"), fs[index]);
 	}
 	
 	function apply() {
@@ -391,7 +413,7 @@ $(() => {
 				const $tr = $tbody.find("tr:eq(" + i + ")");
 				$tr.data({ offset: offset });
 				$tr.data("$frames").css({ left: "calc(" + (-98 * offset) + "px + 50%" });
-				$tr.find("td.sync").text(fs[shiftIndex]);
+				setSync($tr.find("td.sync"), fs[shiftIndex]);
 			}
 		}
 		return false;
@@ -456,8 +478,11 @@ body {
 	position: relative;
 	border-left: 0;
 }
-#editor td:nth-child(2) {
+#editor td.sync {
 	text-align: right;
+}
+#editor td.sync.keyframe {
+	font-weight: bold;
 }
 #editor td:last-child {
 	white-space: pre;
@@ -478,6 +503,9 @@ body {
 	width: 98px;
 	height: 56px;
 	cursor: pointer;
+}
+#editor .frame.keyframe {
+	border-left-color: #f88;
 }
 #editor .frame.rendering {
 	background: #fee;
