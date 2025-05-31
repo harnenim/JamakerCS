@@ -173,6 +173,13 @@ $(() => {
         }
         $body.scroll();
     }
+    opener.startCompareThumbnails = function (begin, end, flag) {
+        for (let i = begin; i < end; i++) {
+            $tbody.find("img.img" + i + flag).removeClass("rendering").addClass("comparing");
+            $framesStorage.find("img.img" + i + flag).removeClass("rendering").addClass("comparing");
+        }
+        $body.scroll();
+    }
 
 	// 렌더링 완료 후 이미지 세팅
 	// 미리 값을 넣어주면 삭제되지 않은 다른 영상 섬네일 가져올 수 있음
@@ -474,6 +481,9 @@ body {
 }
 #editor .frame.rendering {
 	background: #fee;
+}
+#editor .frame.comparing {
+	background: #efe;
 }
 #editor .frame:hover {
 	border-color: #f88;

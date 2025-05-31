@@ -1171,6 +1171,8 @@ namespace Jamaker
 
                         new Thread(() =>
                         {
+                            Script("startCompareThumbnails", new object[] { begin, end, flag });
+
                             Bitmap bLast = null;
                             for (int index = 0; index < (end - begin); index++)
                             {
