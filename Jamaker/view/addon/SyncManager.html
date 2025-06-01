@@ -36,6 +36,7 @@ $(() => {
 	}
 	const fs = SmiEditor.video.fs;
 	const kfs = SmiEditor.video.kfs;
+	const trustKeyFrame = opener.SmiEditor.trustKeyFrame;
 	
 	origin.tab = tab;
 	origin.lines = tab.lines;
@@ -145,7 +146,7 @@ $(() => {
 			for (let j = -RANGE; j < RANGE; j++) {
 				const imgIndex = frameIndex + j;
 				const $img = $("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j });
-				if (SmiEditor.findSync(fs[imgIndex], kfs, false)) {
+                if (trustKeyFrame && SmiEditor.findSync(fs[imgIndex], kfs, false)) {
 					$img.addClass("keyframe");
 				}
 				$frames.append($img);
@@ -230,7 +231,8 @@ $(() => {
 		}
 	}
     function setSync($td, sync) {
-        $td.text(sync);
+		$td.text(sync);
+		if (!trustKeyFrame) return;
         if (SmiEditor.findSync(sync, kfs, false)) {
             $td.addClass("keyframe");
         } else {
@@ -297,7 +299,12 @@ $(() => {
 		const next = origLines.slice(origin.end).join("\n");
 		
 		// 교체 및 종료
-		origin.tab.setText((prev ? prev + "\n" : "") + result.toTxt() + (next ? "\n" + next : ""), [prev ? prev.length + 1 : 0]);
+        const text = (prev ? prev + "\n" : "") + result.toTxt() + (next ? "\n" + next : "");
+		const lines = text.split("\n");
+		// 현재 커서 위치를 기반으로 다시 맞춤
+		const selectedLine = origin.tab.input.val().substring(0, origin.tab.input[0].selectionEnd).split("\n").length;
+        const cursor = text.split("\n").slice(0, selectedLine - 1).join("\n").length + 1;
+		origin.tab.setText(text, [cursor]);
 	}
 	
 	$tbody.on("click", "tr.fs", function(e) {
@@ -305,7 +312,7 @@ $(() => {
 		
 	}).on("dblclick", "tr.fs", function(e) {
 		// 에디터 해당 싱크로 이동
-		opener.SmiEditor.selected.findSync($(this).find("td.sync").text());
+		opener.SmiEditor.selected.findSync(Number($(this).find("td.sync").text()) + 1);
 		
 	}).on("click", "img.frame", function(e) {
 		const $img = $(this);
