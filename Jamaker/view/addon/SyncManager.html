@@ -91,7 +91,7 @@ $(() => {
 			const frameIndex = SmiEditor.findSyncIndex(smi.start, fs);
 			const $frames = $("<div>").addClass("frames");
 			const $sync = $("<td>").addClass("sync");
-            setSync($sync, fs[frameIndex]);
+			setSync($sync, fs[frameIndex]);
 			$framesStorage.append($frames);
 			$tr.addClass("fs").append($("<td>")).append($sync).append($("<td>").text(smi.text.split("\n").join("")));
 			$tr.data({ index: frameSyncs.length, $frames: $frames, frameIndex: frameIndex, offset: 0 });
@@ -130,8 +130,8 @@ $(() => {
 				// ... 1차 렌더링은 몰라도 비교 이미지 생성이 과도하게 많아짐
 				renderGroup.end = end;
 			*/
-            if ((renderGroup.flag == flag) && (fs[begin] < fs[renderGroup.end] + 500)) {
-                // 렌더링에 필요한 프레임이 앞쪽과 500ms 이내로 이어질 때
+			if ((renderGroup.flag == flag) && (fs[begin] < fs[renderGroup.end] + 500)) {
+				// 렌더링에 필요한 프레임이 앞쪽과 500ms 이내로 이어질 때
 				renderGroup.end = end;
 
 			} else {
@@ -146,7 +146,7 @@ $(() => {
 			for (let j = -RANGE; j < RANGE; j++) {
 				const imgIndex = frameIndex + j;
 				const $img = $("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j });
-                if (trustKeyFrame && SmiEditor.findSync(fs[imgIndex], kfs, false)) {
+				if (trustKeyFrame && SmiEditor.findSync(fs[imgIndex], kfs, false)) {
 					$img.addClass("keyframe");
 				}
 				$frames.append($img);
@@ -179,28 +179,28 @@ $(() => {
 		fileSeq = thumbnailsFileSeq;
 	}
 
-    // 렌더링 중일 때 색깔 넣어줌
-    opener.startRenderThumbnails = function(begin, end, flag) {
-        for (let i = begin; i < end; i++) {
-            $tbody.find("img.img" + i + flag).addClass("rendering");
-            $framesStorage.find("img.img" + i + flag).addClass("rendering");
-        }
-        $body.scroll();
-    }
-    opener.startCompareThumbnails = function (begin, end, flag) {
-        for (let i = begin; i < end; i++) {
-            $tbody.find("img.img" + i + flag).removeClass("rendering").addClass("comparing");
-            $framesStorage.find("img.img" + i + flag).removeClass("rendering").addClass("comparing");
-        }
-        $body.scroll();
-    }
-
+	// 렌더링 중일 때 색깔 넣어줌
+	opener.startRenderThumbnails = function(begin, end, flag) {
+		for (let i = begin; i < end; i++) {
+			$tbody.find("img.img" + i + flag).addClass("rendering");
+			$framesStorage.find("img.img" + i + flag).addClass("rendering");
+		}
+		$body.scroll();
+	}
+	opener.startCompareThumbnails = function (begin, end, flag) {
+		for (let i = begin; i < end; i++) {
+			$tbody.find("img.img" + i + flag).removeClass("rendering").addClass("comparing");
+			$framesStorage.find("img.img" + i + flag).removeClass("rendering").addClass("comparing");
+		}
+		$body.scroll();
+	}
+	
 	// 렌더링 완료 후 이미지 세팅
 	// 미리 값을 넣어주면 삭제되지 않은 다른 영상 섬네일 가져올 수 있음
 	opener.afterRenderThumbnails = function(begin, end, flag) {
 		for (let i = begin; i < end; i++) {
 			$tbody.find("img.img" + i + flag).data({ img: i + flag });
-            $framesStorage.find("img.img" + i + flag).data({ img: i + flag });
+			$framesStorage.find("img.img" + i + flag).data({ img: i + flag });
 		}
 		$body.scroll();
 	}
@@ -230,14 +230,14 @@ $(() => {
 			}
 		}
 	}
-    function setSync($td, sync) {
+	function setSync($td, sync) {
 		$td.text(sync);
 		if (!trustKeyFrame) return;
-        if (SmiEditor.findSync(sync, kfs, false)) {
-            $td.addClass("keyframe");
-        } else {
-            $td.removeClass("keyframe");
-        }
+		if (SmiEditor.findSync(sync, kfs, false)) {
+			$td.addClass("keyframe");
+		} else {
+			$td.removeClass("keyframe");
+		}
 	}
 	function moveSync(direction, isOffset=false) {
 		const $tr = frameSyncs[selected];
@@ -251,7 +251,7 @@ $(() => {
 		
 		$tr.data({ offset: offset });
 		data.$frames.css({ left: "calc(50% - " + (offset * 98) + "px)" });
-
+		
 		setSync($tr.find("td.sync"), fs[index]);
 	}
 	
@@ -299,11 +299,11 @@ $(() => {
 		const next = origLines.slice(origin.end).join("\n");
 		
 		// 교체 및 종료
-        const text = (prev ? prev + "\n" : "") + result.toTxt() + (next ? "\n" + next : "");
+		const text = (prev ? prev + "\n" : "") + result.toTxt() + (next ? "\n" + next : "");
 		const lines = text.split("\n");
 		// 현재 커서 위치를 기반으로 다시 맞춤
 		const selectedLine = origin.tab.input.val().substring(0, origin.tab.input[0].selectionEnd).split("\n").length;
-        const cursor = text.split("\n").slice(0, selectedLine - 1).join("\n").length + 1;
+		const cursor = text.split("\n").slice(0, selectedLine - 1).join("\n").length + 1;
 		origin.tab.setText(text, [cursor]);
 	}
 	
@@ -356,19 +356,31 @@ $(() => {
 				moveSync(0, true);
 				break;
 			}
+			case 81: { // Q
+				if (!shiftKey && ctrlKey && !altKey) {
+					origin.tab.moveToSync(-2000);
+				}
+				break;
+			}
 		}
 	}).on("keydown", "input[name=mode]", function(e) {
 		// 모드 선택 후에도 방향키 조작은 원래대로 동작해야 함
 		e.preventDefault();
 	});
 	
+	function refreshImages($imgs) {
+		$imgs.each(function () {
+			const $img = $(this);
+			const img = $img.data("img");
+			if (img) {
+				$img.attr({ src: "../../temp/thumbnails/" + fileSeq + "_" + img + M[mode] + ".jpg" });
+			}
+		});
+	}
 	function showFrames($tr) {
 		const $frames = $tr.data("$frames");
-		$frames.find("img").each(function () {
-			const $img = $(this);
-            $img.attr({ src: "../../temp/thumbnails/" + fileSeq + "_" + $img.data("img") + M[mode] + ".jpg" });
-		});
-        $tr.find("td:eq(0)").append($frames);
+		refreshImages($frames.find("img"));
+		$tr.find("td:eq(0)").append($frames);
 	}
 	function hideFrames($tr) {
 		const $frames = $tr.data("$frames");
@@ -426,10 +438,7 @@ $(() => {
 		return false;
 	}).on("click", "input[name=mode]", function() {
 		mode = $("input[name=mode]:checked").val();
-		$tbody.find("img").each(function() {
-			const $img = $(this);
-			$img.attr({ src: "../../temp/thumbnails/" + fileSeq + "_" + $img.data("img") + M[mode] + ".jpg" });
-		});
+		refreshImages($tbody.find("img"));
 		for (let i = 1; i <= 3; i++) {
 			if (i == mode) {
 				$body.addClass("mode" + i);
@@ -441,11 +450,11 @@ $(() => {
 	
 	$("#btnApply").on("click", function() {
 		apply();
-    });
-    $("#btnSet").on("click", function () {
-        apply();
-        window.close();
-    });
+	});
+	$("#btnSet").on("click", function () {
+		apply();
+		window.close();
+	});
 	
 	// 페이지 벗어날 경우 렌더링 취소
 	window.onunload = function () {
