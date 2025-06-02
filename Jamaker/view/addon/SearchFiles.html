@@ -132,7 +132,7 @@ $(() => {
 			const line = lines[i];
 			if (line.indexOf(query) < 0) continue;
 			
-			const $line = $("<li>").text(line).data({ line: i });
+			const $line = $("<li>").addClass("line").text(line).data({ line: i });
 			$ol.append($line.html("Line " + (i + 1) + ": " + $line.html().split(query).join("<b>" + query + "</b>")));
 		}
 		

@@ -9,6 +9,8 @@ using System.Diagnostics;
 using Jamaker.addon;
 using System.Reflection;
 using System.Threading;
+using Jamaker.Properties;
+using System.Xml.Linq;
 
 namespace Jamaker
 {
@@ -734,7 +736,32 @@ namespace Jamaker
 
         public void SearchFiles(string dir, string query)
         {
-            Console.WriteLine($"{dir} / {query}");
+            DirectoryInfo di = new DirectoryInfo(dir);
+            if (di.Exists)
+            {
+                FileInfo[] files = di.GetFiles();
+                foreach (FileInfo file in files)
+                {
+                    if (file.Name.ToUpper().EndsWith(".SMI"))
+                    {
+                        try
+                        {
+                            StreamReader sr = new StreamReader(file.FullName, Encoding.UTF8);
+                            string text = sr.ReadToEnd();
+                            sr.Close();
+
+                            if (text.IndexOf(query) >= 0)
+                            {
+                                Script("afterFound", new object[] { file.Name, text });
+                            }
+                        }
+                        catch (Exception e2)
+                        {
+                            Console.WriteLine(e2);
+                        }
+                    }
+                }
+            }
         }
         #endregion
 
