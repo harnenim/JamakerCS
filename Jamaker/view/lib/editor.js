@@ -111,6 +111,9 @@ window.Tab = function(text, path) {
 		hold.inputPreset.focus();
 	});
 };
+window.getCurrentTab = function() {
+	return tabs.length ? tabs[tab] : null;
+}
 Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	if (!info) {
 		info = {

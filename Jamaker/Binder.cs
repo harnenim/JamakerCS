@@ -138,6 +138,8 @@ namespace Jamaker
         public void LoadAddonSetting(string path) { _.LoadAddonSetting(path); }
         public void SaveAddonSetting(string path, string text) { _.SaveAddonSetting(path, text); }
 
+        public void SearchFiles(string dir, string query) { _.SearchFiles(dir, query); }
+
         // viewer/finder opener 못 쓰게 될 경우 고려
         public void UpdateViewerSetting() { _.UpdateViewerSetting(); }
         public void UpdateViewerLines(string lines) { _.UpdateViewerLines(lines); }

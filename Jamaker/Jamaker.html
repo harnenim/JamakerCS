@@ -95,6 +95,8 @@ Binder.prototype.setAfterInitAddon = function(func) { this._.setAfterInitAddon(f
 Binder.prototype.loadAddonSetting = function(path) { this._.loadAddonSetting(path); }
 Binder.prototype.saveAddonSetting = function(path, text) { this._.saveAddonSetting(path, text); }
 
+Binder.prototype.searchFiles = function(dir, query) { alert("C#에서 동작합니다."); };
+
 // viewer/finder opener 못 쓰게 될 경우 고려
 Binder.prototype.updateViewerSetting  = function() { this._.updateViewerSetting(); };
 Binder.prototype.updateViewerLines = function(lines) { this._.updateViewerLines(lines); };
@@ -573,7 +575,7 @@ window.MB = 9;
 		// C#에선 addon 로딩되면 eval 실행
 	}
 	editor.loadAddonSetting = function(path) {
-		$.ajax({"url" : "view/addon/" + path
+		$.ajax({"url" : "setting/addon_" + path
 			,	"dataType": "text"
 			,	"success": (setting) => {
 					editor.mainView.contentWindow.afterLoadAddonSetting(setting.split("\r\n").join("\n"));
@@ -783,7 +785,11 @@ window.MB = 9;
 					const cmdRen = "ren \"{from}\" \"{to}\"".split("{from}").join(from).split("{to}").join(to);
 				}
 				
-				editor.script("afterRenderThumbnails", [begin, end, flag]);
+				editor.script("startRenderThumbnails", [begin, end, flag]);
+				setTimeout(() => {
+					editor.script("startCompareThumbnails", [begin, end, flag]);
+					//editor.script("afterRenderThumbnails", [begin, end, flag]);
+				}, 100);
 			}
 		}, 1);
 		

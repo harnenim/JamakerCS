@@ -731,6 +731,11 @@ namespace Jamaker
             }
             Script("afterSaveAddonSetting");
         }
+
+        public void SearchFiles(string dir, string query)
+        {
+            Console.WriteLine($"{dir} / {query}");
+        }
         #endregion
 
         #region 메뉴

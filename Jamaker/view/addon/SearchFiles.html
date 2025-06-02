@@ -1,0 +1,225 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>여러 파일에서 찾기</title>
+	<script src="../lib/jquery-3.2.1.min.js"></script>
+	<script src="../lib/SubtitleObject.js"></script>
+	<script src="../lib/popup.js"></script>
+	<script src="../lib/SmiEditor.js"></script>
+	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
+	<script>
+windowName = "addon";
+
+const FILE = "SearchFiles.txt";
+
+$(() => {
+	const $form = $("form");
+	const $results = $("#results");
+	const $viewer = $("#viewer");
+	const $inputDir = $("#inputDir");
+	const $dirCurrent = $("#dirCurrent");
+	const $inputQuery = $("#inputQuery");
+	const $dlLastDirs = $("#dlLastDirs");
+	const $dlLastQuerys = $("#dlLastQuerys");
+	
+	const smiPath = opener.getCurrentTab().path;
+	if (smiPath) {
+		const dirs = smiPath.split("/").join("\\").split("\\");
+		$dirCurrent.text(dirs.slice(0, dirs.length - 1).join("\\"));
+        $("#labelCurrent input[name=dir]").click();
+	} else {
+		$dirCurrent.text("(없음)");
+		$("#labelCurrent").addClass("disabled");
+		$("#labelCurrent input[name=dir]").attr("disabled", true);
+		$("#labelInput   input[name=dir]").click();
+	}
+	
+	const lastDirs = [];
+	const lastQuerys = [];
+	// <datalist> 다시 그리기
+	function refreshDatalist($dl, list) {
+		$dl.empty();
+		for (let i = 0; i < list.length; i++) {
+			const item = list[i];
+			$dl.append($("<option>").attr({ label: item, value: item }));
+		}
+	}
+	// 항목 입력 시 목록 갱신
+	function updateDatalist($dl, list, item) {
+		const index = list.indexOf(item);
+		if (index == 0) return;
+		
+		if (index > 0) {
+			list.splice(index, 1);
+			$dl.prepend($dl.children()[index]);
+		} else {
+			$dl.prepend($("<option>").attr({ label: item, value: item }));
+		}
+		list.splice(0, 0, item);
+		if (list.length > 20) {
+			list.length = 20;
+			let last = null;
+			while (last = $dl.children()[20]) {
+				$(last).remove();
+			}
+		}
+	}
+	// 설정 저장
+	function saveLast() {
+		saveAddonSetting(FILE, lastDirs.join("\n") + "\n\n" + lastQuerys.join("\n"));
+	}
+	
+	// 설정 저장된 것 가져오기
+	if (loadAddonSetting) {
+		loadAddonSetting(FILE, (text) => {
+			const lines = text.split("\n");
+			
+			let i = 0;
+			for (; i < lines.length; i++) {
+				const line = lines[i];
+				if (line) {
+					lastDirs.push(line);
+				} else {
+					i++;
+					break;
+				}
+			}
+			for (; i < lines.length; i++) {
+				const line = lines[i];
+				if (line) {
+					lastQuerys.push(line);
+				} else {
+					break;
+				}
+			}
+			
+			refreshDatalist($dlLastDirs, lastDirs);
+			refreshDatalist($dlLastQuerys, lastQuerys);
+			
+			if (lastDirs.length) $("#inputDir").val(lastDirs[0]);
+		});
+	}
+	
+	let query = "test";
+	let dir = "";
+	$form.on("submit", function() {
+		query = $inputQuery.val();
+		if (!query) {
+			alert("검색어를 입력해 주세요.");
+			return false;
+		}
+		dir = ($("input[name=dir]:checked").val() == "current") ? $dirCurrent.text() : $inputDir.val();
+		
+		updateDatalist($dlLastDirs, lastDirs, dir);
+		updateDatalist($dlLastQuerys, lastQuerys, query);
+		saveLast();
+		
+		$results.empty();
+		opener.binder.searchFiles(dir, query);
+		
+		return false;
+	});
+	
+	opener.afterFound = function(name, text) {
+		const $file = $("<li>").addClass("file").data({ text: text });
+		const $ol = $("<ol>");
+		$file.append($("<h3>").text(name)).append($ol);
+		
+		const lines = text.split("\n");
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			if (line.indexOf(query) < 0) continue;
+			
+			const $line = $("<li>").text(line).data({ line: i });
+			$ol.append($line.html("Line " + (i + 1) + ": " + $line.html().split(query).join("<b>" + query + "</b>")));
+		}
+		
+		$results.append($file);
+	}
+	
+	$results.on("click", "li.line", function() {
+		const $line = $(this);
+		const $file = $line.parent().parent();
+		const text = $file.data("text");
+		const line = $line.data("line");
+		const cursor = text.split("\n").slice(0, line).join("\n").length + 1;
+		$viewer.text(text);
+		$viewer[0].selectionStart = $viewer[0].selectionEnd = cursor;
+		//$viewer.scrollTop((line + 0.5) * 20 - ($viewer.height() / 2));
+		$viewer.scrollTop((line - 1.5) * 20);
+		$viewer.focus();
+	});
+});
+	</script>
+	<style>
+form { height: 60px; }
+form > * { height: 20px; }
+label {
+	display: block;
+	width: 100%;
+}
+label.disabled {
+	color: #888;
+}
+label > input[type=radio] { width: 20px; }
+label > span.label { display: inline-block; width: 70px; }
+label > input[type=text] { width: calc(100% - 90px); }
+#inputQuery { width: calc(100% - 50px); }
+button[type=submit] { width: 50px; }
+
+#results {
+	height: calc(50% - 30px);
+	overflow-y: scroll;
+	border-top: 1px solid #000;
+}
+#results * {
+	width: 100%;
+}
+#results h3,
+#results li.line {
+	white-space: pre;
+	text-overflow: ellipsis;
+	overflow-x: hidden;
+}
+#results h3 {
+	background: #D5FFD5;
+	color: #017D00;
+	font-size: 14px;
+	padding: 0 4px;
+}
+#results li.line {
+	padding: 0 4px 0 14px;
+	cursor: pointer;
+}
+#results li.line:hover {
+	background: #E8E8FF;
+}
+
+#viewer {
+	height: calc(50% - 30px);
+	width: 100%;
+	white-space: pre;
+	line-height: 20px;
+}
+	</style>
+</head>
+<body class="mode1">
+	<form>
+		<label id="labelCurrent">
+			<input type="radio" name="dir" value="current" accesskey="1"
+			/><span class="label">현재 폴더: </span><span id="dirCurrent"></span>
+		</label>
+		<label id="labelInput">
+			<input type="radio" name="dir" value="input" accesskey="2"
+			/><span class="label">직접 입력: </span><input type="text" id="inputDir" placeholder="폴더 경로" autocomplete="off" list="dlLastDirs" />
+		</label>
+		<div><input type="text" id="inputQuery" placeholder="검색어" autocomplete="off" list="dlLastQuerys" /><button type="submit">검색</button></div>
+			<datalist id="dlLastDirs"></datalist>
+			<datalist id="dlLastQuerys"></datalist>
+	</form>
+	<ol id="results"></ol>
+	<textarea id="viewer" readonly></textarea>
+</body>
+</html>
