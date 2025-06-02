@@ -1,6 +1,7 @@
 SmiEditor.highlightText = (text, state=null) => {
 	const previewLine = $("<span>").data({ state: state });
-	if (state == null && text.toUpperCase().startsWith("<SYNC ")) {
+	if ((state == null || state == '!') && text.toUpperCase().startsWith("<SYNC ")) {
+		state = null; // 주석이었어도 싱크 줄에 오면 끊어줌
 		previewLine.addClass("hljs-sync");
 	}
 	
