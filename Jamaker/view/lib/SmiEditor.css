@@ -92,6 +92,7 @@
 }
 .hold-style-area > div > button {
 	position: absolute;
+	background: transparent;
 	border: 0;
 	cursor: pointer;
 }
@@ -229,7 +230,6 @@
 	top: calc(20px * 0.5);
 	left: calc(20px * 0.5);
 	right: calc(20px * 0.5);
-	height: calc(20px * 3 + 2px);
 	border-radius: calc(20px * 0.4);
 	padding: calc(20px * 0.5);
 }
