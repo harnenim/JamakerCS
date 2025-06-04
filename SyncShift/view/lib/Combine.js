@@ -25,6 +25,7 @@ window.Combine = {
 	
 	const LOG = false;
 	const NEW = true;
+	const FIX_LINES = false;
 	
 	// 다중 결합에 대해 중간 싱크 처리를 위한 부분
 	Subtitle.SyncType.combinedNormal = 4;
@@ -648,10 +649,14 @@ window.Combine = {
 							}
 							
 							// 줄 높이 맞춰주기
-							// TODO: 글씨 크기 있을 때 지원 필요? ... 그룹 범위 내에서 크기 바뀐다면 대처가 불가능할 듯?
-							// RUBY 태그 있을 때도 유지 안 됨
-							for (let k = sync[LINES]; k < group.maxLines[i]; k++) {
-								sync[TEXT] = "<b>　</b><br>" + sync[TEXT];
+							// TODO: 글씨 크기 있을 때 지원 필요? ... 그룹 범위 내에서 크기 바뀐다면 대처하기 어려울 듯?
+							// TODO: 이게 자막을 플레이어 하단이 아닌 상단에 놔도 문제없으라고 공백 윗줄을 채우는 건데... 그냥 뺄까?
+							// TODO: 공백줄을 넣어주면 3개 이상 결합 시 공백줄 위로만 쌓이게 되는 문제가 있음
+							// TODO: 아예 그룹 내에서도 줄 높이가 가변이어야 하나...?
+							if (FIX_LINES) {
+								for (let k = sync[LINES]; k < group.maxLines[i]; k++) {
+									sync[TEXT] = "<b>　</b><br>" + sync[TEXT];
+								}
 							}
 						}
 					}
@@ -1015,7 +1020,8 @@ window.Combine = {
 							}
 							
 							// 줄 높이 맞춰주기
-							// TODO: 글씨 크기 있을 때 지원 필요? ... 그룹 범위 내에서 크기 바뀐다면 대처하기 어려울 듯?
+							// TODO: 글씨 크기 있을 때 지원 필요? ... 그룹 범위 내에서 크기 바뀐다면 대처가 불가능할 듯?
+							// RUBY 태그 있을 때도 유지 안 됨
 							for (let k = sync[LINES]; k < group.maxLines[i]; k++) {
 								sync[TEXT] = "<b>　</b><br>" + sync[TEXT];
 							}
@@ -1109,7 +1115,8 @@ window.Combine = {
 		for (let gi = 0; gi < groups.length; gi++) {
 			const group = groups[gi];
 			const forEmpty = [[], []];
-			for (let i = 0; i < 2; i++) {
+			// TODO: 윗줄은 안 채워주는 게 나으려나?
+			for (let i = (FIX_LINES ? 1 : 0); i < 2; i++) {
 				for (let j = 0; j < group.maxLines[i]; j++) {
 					forEmpty[i].push("<b>　</b>");
 				}
@@ -1117,6 +1124,7 @@ window.Combine = {
 			}
 
 			// 프레임 단위로 볼 때 싱크 뭉친 부분 확인
+			// TODO: 이걸 그룹 내에서가 아니라, 최종본에서 하는 게 맞을 것 같기도...?
 			if (window.SmiEditor && SmiEditor.video && SmiEditor.video.fs && SmiEditor.video.fs.length) {
 				const fs = SmiEditor.video.fs;
 				for (let i = group.lines.length - 1; i > 0; i--) {
@@ -1155,7 +1163,8 @@ window.Combine = {
 				} else if (group.lower.length == 0) {
 					lines.push(line[UPPER] ? line[UPPER][TEXT] : "&nbsp;");
 				} else {
-					lines.push((line[UPPER] ? line[UPPER][TEXT] : forEmpty[0]) + "<br>" + (line[LOWER] ? line[LOWER][TEXT] : forEmpty[1]));
+					const upper = (line[UPPER] ? line[UPPER][TEXT] : forEmpty[0]);
+					lines.push((upper ? upper + "<br>" : "") + (line[LOWER] ? line[LOWER][TEXT] : forEmpty[1]));
 				}
 				if (line[ETIME] < 99999999) {
 					let syncLine = getSyncLine(lastSync = line[ETIME], line[ETYPE]);
@@ -1241,7 +1250,7 @@ if (Subtitle && Subtitle.SmiFile) {
 			
 			if ((lines[0] == "<!-- Style" || lines[0] == "<!-- Preset")
 			 && lines[2] == "-->") {
-				holds[i].style = lines[1].trim();
+				holds[i].style = Subtitle.SmiFile.parseStyle(lines[1].trim());
 				holds[i].text = lines.slice(3).join("\n");
 			}
 		}
@@ -1324,7 +1333,10 @@ if (Subtitle && Subtitle.SmiFile) {
 				const holdText = hold.input ? hold.input.val() : hold.text; // .text 동기화 안 끝났을 가능성 고려, 현재 값 다시 불러옴
 				let text = holdText;
 				if (hold.style) {
-					text = "<!-- Style\n" + hold.style + "\n-->\n" + text;
+					const style = Subtitle.SmiFile.toSaveStyle(hold.style);
+					if (style) {
+						text = "<!-- Style\n" + style + "\n-->\n" + text;
+					}
 				}
 				result[hold.resultIndex = (hi + 1)] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + text.split("<").join("<​").split(">").join("​>") + "\n-->";
 				hold.imported = false;
@@ -1337,7 +1349,11 @@ if (Subtitle && Subtitle.SmiFile) {
 				
 				// 스타일 적용 필요하면 내포 홀드 처리 하지 않음
 				if (hold.style) {
-					continue;
+					style = Subtitle.SmiFile.toSaveStyle(hold.style);
+					if (style) {
+						text = "<!-- Style\n" + style + "\n-->\n" + text;
+						continue;
+					}
 				}
 				
 				// 내용물 없으면 내포 홀드 아님
@@ -1489,7 +1505,10 @@ if (Subtitle && Subtitle.SmiFile) {
 				const holdText = hold.input ? hold.input.val() : hold.text;
 				let text = holdText;
 				if (hold.style) {
-					text = "<!-- Style\n" + hold.style + "\n-->\n" + text;
+					const style = Subtitle.SmiFile.toSaveStyle(hold.style);
+					if (style) {
+						text = "<!-- Style\n" + style + "\n-->\n" + text;
+					}
 				}
 				const smi = holdSmis[hi] = new Subtitle.SmiFile(text);
 				if (withNormalize) {
