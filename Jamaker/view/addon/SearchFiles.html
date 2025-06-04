@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-	<title>여러 파일에서 찾기</title>
+	<title>여러 SMI 파일에서 찾기</title>
 	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/SubtitleObject.js"></script>
 	<script src="../lib/popup.js"></script>
@@ -128,12 +128,19 @@ $(() => {
 		$file.append($("<h3>").text(name)).append($ol);
 		
 		const lines = text.split("\n");
+		let offset = 0;
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			if (line.indexOf(query) < 0) continue;
+			const index = line.indexOf(query);
+			if (index < 0) {
+				offset += line.length + 1;
+				continue;
+			}
 			
-			const $line = $("<li>").addClass("line").text(line).data({ line: i });
+			const $line = $("<li>").addClass("line").text(line).data({ line: i, pos: offset + index });
 			$ol.append($line.html("Line " + (i + 1) + ": " + $line.html().split(query).join("<b>" + query + "</b>")));
+			
+			offset += line.length + 1;
 		}
 		
 		$results.append($file);
@@ -144,13 +151,15 @@ $(() => {
 		const $file = $line.parent().parent();
 		const text = $file.data("text");
 		const line = $line.data("line");
-		const cursor = text.split("\n").slice(0, line).join("\n").length + 1;
+		const cursor = $line.data("pos");
 		$viewer.text(text);
-		$viewer[0].selectionStart = $viewer[0].selectionEnd = cursor;
-		//$viewer.scrollTop((line + 0.5) * 20 - ($viewer.height() / 2));
+		$viewer[0].selectionStart = cursor;
+		$viewer[0].selectionEnd = cursor + query.length;
 		$viewer.scrollTop((line - 1.5) * 20);
 		$viewer.focus();
 	});
+	
+	$inputQuery.focus();
 });
 	</script>
 	<style>
@@ -207,19 +216,20 @@ button[type=submit] { width: 50px; }
 </head>
 <body class="mode1">
 	<form>
-		<label id="labelCurrent">
+		<label id="labelCurrent" title="Alt+1">
 			<input type="radio" name="dir" value="current" accesskey="1"
 			/><span class="label">현재 폴더: </span><span id="dirCurrent"></span>
 		</label>
-		<label id="labelInput">
+		<label id="labelInput" title="Alt+2">
 			<input type="radio" name="dir" value="input" accesskey="2"
 			/><span class="label">직접 입력: </span><input type="text" id="inputDir" placeholder="폴더 경로" autocomplete="off" list="dlLastDirs" />
 		</label>
-		<div><input type="text" id="inputQuery" placeholder="검색어" autocomplete="off" list="dlLastQuerys" /><button type="submit">검색</button></div>
+		<div><input type="text" id="inputQuery" accesskey="f" title="Alt+F"
+				placeholder="검색어" autocomplete="off" list="dlLastQuerys" /><button type="submit">검색</button></div>
 			<datalist id="dlLastDirs"></datalist>
 			<datalist id="dlLastQuerys"></datalist>
 	</form>
 	<ol id="results"></ol>
-	<textarea id="viewer" readonly></textarea>
+	<textarea id="viewer"></textarea>
 </body>
 </html>
