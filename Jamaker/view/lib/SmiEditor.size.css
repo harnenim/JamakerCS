@@ -94,18 +94,14 @@ label, #showFps {
 	height: 20px;
 }
 
-.hold-style-area > div {
+.hold-style-area > form {
 	top: calc(20px * 0.5);
 	left: calc(20px * 0.5);
 	right: calc(20px * 0.5);
 	border-radius: calc(20px * 0.4);
 	padding: calc(20px * 0.5);
 }
-.hold-style-area > div > input {
-	width: calc(100% - 20px * 1.5);
-	height: 20px;
-}
-.hold-style-area > div > button {
+.hold-style-area > form > button.btn-close-preset {
 	top: calc(20px * 0.5);
 	right: calc(20px * 0.5);
 	width: calc(20px * 1.5);
@@ -118,6 +114,19 @@ label, #showFps {
 	width: calc(20px + 2px);
 	height: calc(20px + 2px);
 }
+.hold-style fieldset {
+	padding: calc(20px * 0.2);
+}
+.hold-style label,
+.hold-style div.label {
+	min-width: calc(20px * 6.5);
+}
+.hold-style span {
+	width: calc(20px * 3);
+}
+.hold-style input[type=text]   { width: calc(20px * 5); }
+.hold-style input[type=number] { width: calc(20px * 2.5); text-align: right; }
+.hold-style input[type=color]  { height: 20px; }
 
 .custom-scrollbar ::-webkit-scrollbar,
 .custom-scrollbar ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }

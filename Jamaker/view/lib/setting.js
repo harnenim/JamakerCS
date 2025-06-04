@@ -190,8 +190,10 @@ window.DEFAULT_SETTING =
 		,	'9': '/* 색상태그 시작 */\n' + 'editor.inputText("<font color=\\"#aaaaaa\\">")'
 		,	'0': '/* 색상태그 종료 */\n' + 'editor.inputText("</font>")'
 		,	'D': '/* 줄 삭제 */\n' + 'editor.deleteLine();'
+		,	'G': '/* 여러 파일에서 찾기 실행 */\n' + 'openAddon("SearchFiles");'
 		,	'M': '/* 화면 싱크 매니저 실행 */\n' + 'openAddon("SyncManager");'
 		,	'Q': '/* 현재 위치 재생 */\n' + 'editor.moveToSync(-2000);'
+		,	'T': '/* 홀드 추가 */\n' + 'editor.owner.addHold();'
 		}
 	,	withAlts:
 		{	't': '/* 일괄 싱크 입력 */\n' + 'editor.reSyncPrompt();'

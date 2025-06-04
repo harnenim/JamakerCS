@@ -7,7 +7,7 @@ html, body,
 #tabSelector > .th.selected,
 .hold-selector > .selector.selected,
 .hold-selector > .selector:hover,
-.hold-style-area > div,
+.hold-style-area > form,
 button {
 	background: [background];
 }
@@ -76,7 +76,7 @@ body, input, button,
 .hold-selector > .selector.not-saved {
 	border-color: [notSaved];
 }
-.hold-style-area > div {
+.hold-style-area > form {
 	border-color: [tabBorder];
 }
 

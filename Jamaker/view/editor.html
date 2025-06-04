@@ -28,9 +28,86 @@
 	--><label title="현재 재생 위치로 커서가 자동으로 이동합니다."><input type="checkbox" id="checkAutoFindSync" />검수모드</label><!--
 	--><label id="forFrameSync" class="for-frame-sync disabled" title="화면 싱크를 가급적 키프레임에 맞춰줍니다.\nOTT 영상에선 맞지 않는 경우가 많습니다."
 		><input type="checkbox" id="checkTrustKeyframe" disabled /><span>키프레임 신뢰</span></label><!--
-	 -><span class="for-frame-sync" id="showFps"></span><!--
 --></div>
 	<div id="tabSelector"><div class="th" id="btnNewTab">＋</div></div>
 	<div id="editor"></div>
+	<form id="holdStylePreset" class="hold-style">
+		<button type="button" class="btn-close-preset"></button>
+		<fieldset class="hold-style-smi">
+			<legend>홀드 기본 스타일</legend>
+			<label><span>글꼴  </span><input type="text" name="Fontname" placeholder="맑은 고딕" /></label>
+			<label><span>기본색</span><input type="color" name="PrimaryColour" value="#FFFFFF" /></label>
+			<br />
+			<label style="font-style: italic;"><input type="checkbox" name="Italic" /> 기울임</label>
+			<label style="text-decoration: underline;"><input type="checkbox" name="Underline" /> 밑줄</label>
+			<label style="text-decoration: line-through;"><input type="checkbox" name="StrikeOut" /> 취소선</label>
+		</fieldset>
+		<fieldset class="hold-style-ass">
+			<legend>ASS 변환용 스타일</legend>
+			<label><span>크기  </span><input type="number" name="Fontsize" value="80" />px</label>
+			<label style="font-weight: bold;"><input type="checkbox" name="Bold" checked="checked" /> 굵게</label>
+			<br />
+			<label><span>투명도</span><input type="range" name="PrimaryOpaicty"   min="0" max="255" step="1" value="255" /></label>
+			<br />
+			<br />
+			<label><span>보조색</span><input type="color" name="SecondaryColour" value="#FF0000" /></label><br />
+			<label><span>　　　</span><input type="range" name="SecondaryOpaicty" min="0" max="255" step="1" value="255" /></label>
+			<br />
+			<label><span>윤곽선</span><input type="color" name="OutlineColour"   value="#000000" /><input type="number" name="Outline" value="4" />px</label><br />
+			<label><span>　　　</span><input type="range" name="OutlineOpaicty"   min="0" max="255" step="1" value="63" /></label>
+			<br />
+			<label><span>그림자</span><input type="color" name="BackColour"      value="#000000"><input type="number" name="Shadow" value="0" />px</label><br />
+			<label><span>　　　</span><input type="range" name="BackOpaicty"      min="0" max="255" step="1" value="255" /></label>
+			<br />
+			<label><span>fscx: </span><input type="number" name="ScaleX" value="100" />%</label>
+			<label><span>fscy: </span><input type="number" name="ScaleY" value="100" />%</label>
+			<label><span>자간: </span><input type="number" name="Spacing" value="0" />%</label>
+			<br />
+			<label><span>회전: </span><input type="number" name="Angle" value="0" />º</label>
+			<label><span>뭐더라</span><input type="number" name="BorderStyle" value="1" /></label>
+			<br />
+			<div class="label"><span>위치: </span>
+				<table class="hold-style-alignment">
+					<colgroup>
+						<col style="width: 50px;" />
+						<col style="width: 50px;" />
+						<col />
+						<col style="width: 50px;" />
+						<col style="width: 50px;" />
+					</colgroup>
+					<tbody>
+						<tr>
+							<td rowspan="3"><label>↔<br />
+								<input type="number" name="MarginL" value="64" />px
+							</label></td>
+							<td><label><input type="radio" name="Alignment" value="7" />↖</label></td>
+							<td><label><input type="radio" name="Alignment" value="8" />↑</label></td>
+							<td><label><input type="radio" name="Alignment" value="9" />↗</label></td>
+							<td rowspan="3"><label>↔<br />
+								<input type="number" name="MarginR" value="64" />px
+							</label></td>
+						</tr>
+						<tr>
+							<td><label><input type="radio" name="Alignment" value="4" />←</label></td>
+							<td><label><input type="radio" name="Alignment" value="5" />중앙</label></td>
+							<td><label><input type="radio" name="Alignment" value="6" />→</label></td>
+						</tr>
+						<tr>
+							<td><label><input type="radio" name="Alignment" value="1" />↙</label></td>
+							<td><label><input type="radio" name="Alignment" value="2" checked />↓</label></td>
+							<td><label><input type="radio" name="Alignment" value="3" />↘</label></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td colspan="3"><label>↕
+								<input type="number" name="MarginV" value="40" />px
+							</label></td>
+							<td></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</fieldset>
+	</form>
 </body>
 </html>

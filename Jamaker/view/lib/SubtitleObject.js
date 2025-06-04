@@ -3062,6 +3062,106 @@ Subtitle.SmiFile.prototype.fromSync = function(syncs) {
 	return this;
 }
 
+const DefaultStyle = {
+		Fontname: ""
+	,	Fontsize: 80
+	,	PrimaryColour  : "#FFFFFF"
+	,	SecondaryColour: "#FF0000"
+	,	OutlineColour  : "#000000"
+	,	BackColour     : "#000000"
+	,	PrimaryOpaicty  : 255
+	,	SecondaryOpaicty: 255
+	,	OutlineOpaicty  : 255
+	,	BackOpaicty     : 255
+	,	Bold     : true
+	,	Italic   : false
+	,	Underline: false
+	,	StrikeOut: false
+	,	ScaleX: 100
+	,	ScaleY: 100
+	,	Spacing: 0
+	,	Angle: 0
+	,	BorderStyle: 1
+	,	Outline: 4
+	,	Shadow: 0
+	,	Alignment: 2
+	,	MarginL: 64
+	,	MarginR: 64
+	,	MarginV: 40
+	,	Encoding: 1
+};
+Subtitle.SmiFile.parseStyle = function(comment) {
+	const style = JSON.parse(JSON.stringify(DefaultStyle));
+	if (comment.startsWith("<")) {
+		// 홀드 스타일 초기 문법
+		const attr = Subtitle.Smi.toAttr(comment)[0];
+		if (attr.fn) style.Fontname = attr.fn;
+		if (attr.fc) style.PrimaryColour = "#" + attr.fc;
+		if (attr.i) style.Italic = true;
+		if (attr.u) style.Underline = true;
+		if (attr.s) style.StrikeOut = true;
+	} else {
+		// 홀드 스타일 현행 문법
+		const infoStyle = comment.split(",");
+		if (infoStyle.length == 5) {
+			// 기본 스타일
+			style.Fontname      = infoStyle[0];
+			style.PrimaryColour = infoStyle[1];
+			style.Italic    = (infoStyle[2] == 1);
+			style.Underline = (infoStyle[3] == 1);
+			style.StrikeOut = (infoStyle[4] == 1);
+			
+		} else {
+			// ASS 변환용 스타일 포함
+			style.Fontname = infoStyle[0];
+			style.Fontsize = infoStyle[1];
+			{ let fc = infoStyle[2]; style.PrimaryColour   = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.PrimaryOpaicty   = Number('0x'+fc[8]+fc[9]); }
+			{ let fc = infoStyle[3]; style.SecondaryColour = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.SecondaryOpaicty = Number('0x'+fc[8]+fc[9]); }
+			{ let fc = infoStyle[4]; style.OutlineColour   = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.OutlineOpaicty   = Number('0x'+fc[8]+fc[9]); }
+			{ let fc = infoStyle[5]; style.BackColour      = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.BackOpaicty      = Number('0x'+fc[8]+fc[9]); }
+			style.Bold      = (infoStyle[6] != 0);
+			style.Italic    = (infoStyle[7] != 0);
+			style.Underline = (infoStyle[8] != 0);
+			style.StrikeOut = (infoStyle[9] != 0);
+			style.ScaleX      = Number(infoStyle[10]);
+			style.ScaleY      = Number(infoStyle[11]);
+			style.Spacing     = Number(infoStyle[12]);
+			style.Angle       = Number(infoStyle[13]);
+			style.BorderStyle = Number(infoStyle[14]);
+			style.Outline     = Number(infoStyle[15]);
+			style.Shadow      = Number(infoStyle[16]);
+			style.Alignment   = Number(infoStyle[17]);
+			style.MarginL     = Number(infoStyle[18]);
+			style.MarginR     = Number(infoStyle[19]);
+			style.MarginV     = Number(infoStyle[20]);
+			style.Encoding    = Number(infoStyle[21]);
+		}
+	}
+	return style;
+}
+Subtitle.SmiFile.styleToSmi = function(style) {
+	let opener = "";
+	let closer = "";
+	
+	{
+		const font = [];
+		if (style.Fontname) {
+			font.push("face=\"" + style.Fontname + "\"");
+		}
+		if (style.PrimaryColour != DefaultStyle.PrimaryColour) {
+			font.push("color=\"" + style.PrimaryColour + "\"");
+		}
+		if (font.length) {
+			opener = "<font " + font.join(" ") + ">";
+			closer = "</font>";
+		}
+	}
+	if (style.Italic   ) { opener = opener + "<i>"; closer = "</i>" + closer; }
+	if (style.Underline) { opener = opener + "<u>"; closer = "</u>" + closer; }
+	if (style.StrikeOut) { opener = opener + "<s>"; closer = "</s>" + closer; }
+	
+	return [opener, closer];
+}
 Subtitle.SmiFile.prototype.normalize = function(withComment=false, fps=23.976) {
 	const smis = [];
 	smis.push(...this.body);
@@ -3072,18 +3172,7 @@ Subtitle.SmiFile.prototype.normalize = function(withComment=false, fps=23.976) {
 		if (lines.length >= 3
 		 && (lines[0] == "<!-- Style" || lines[0] == "<!-- Preset") // 처음 개발할 때 혼용함...
 		 && lines[2] == "-->") {
-			const comment = lines[1].trim();
-			preset = ["", ""];
-			let tags = comment.split("<");
-			for (let j = 1; j < tags.length; j++) {
-				const tag = tags[j];
-				if (tag.indexOf(">") > 0) {
-					const inTag = tag.substring(0, tag.indexOf(">"));
-					const tagName = inTag.split(" ")[0].split("\t")[0];
-					preset[0] += "<" + inTag + ">";
-					preset[1] = "</" + tagName + ">" + preset[1];
-				}
-			}
+			preset = Subtitle.SmiFile.styleToSmi(Subtitle.SmiFile.parseStyle(lines[1].trim()));
 		}
 	}
 	

@@ -2845,11 +2845,12 @@ SmiEditor.Viewer = {
 						for (let i = 0; i < holds.length; i++) {
 							if (holds[i].style) {
 								// 홀드 스타일 있을 경우 넣어줌
-								const style = holds[i].style;
+								const tag = Subtitle.SmiFile.styleToSmi(holds[i].style);
 								const holdLines = JSON.parse(JSON.stringify(holds[i].lines));
 								for (let j = 0; j < holdLines.length; j++) {
+									if (holdLines[j].TYPE) continue; // 싱크 줄은 건너뜀
 									if (holdLines[j].TEXT.split("&nbsp;").join("").trim()) { // 공백 싱크는 제외
-										holdLines[j].TEXT = style + holdLines[j].TEXT; // 닫는 태그는 그냥 브라우저한테 맡김
+										holdLines[j].TEXT = Subtitle.Smi.fromAttr(Subtitle.Smi.toAttr(tag[0] + holdLines[j].TEXT + tag[1], false));
 									}
 								}
 								lines.push(holdLines);

@@ -9,6 +9,66 @@ let autoSaveTemp = null;
 
 let autoFindSync = false;
 
+const styleForSmi = ["Fontname","PrimaryColour","Italic","Underline","StrikeOut"];
+const styleForAss = ["Fontsize","SecondaryColour","OutlineColour","BackColour","PrimaryOpaicty","SecondaryOpaicty","OutlineOpaicty","BackOpaicty","Bold","ScaleX","ScaleY","Spacing","Angle","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV"];
+
+SmiEditor.prototype.styleToSave = function() {
+	if (!this.style) return "";
+	const style = this.style;
+	
+	let forSmi = false;
+	for (let i = 0; i < styleForSmi.length; i++) {
+		const name = styleForSmi[i];
+		if (this.style[name] != DefaultStyle[name]) {
+			forSmi = true;
+			break;
+		}
+	}
+	let forAss = false;
+	for (let i = 0; i < styleForAss.length; i++) {
+		const name = styleForAss[i];
+		if (this.style[name] != DefaultStyle[name]) {
+			forAss = true;
+			break;
+		}
+	}
+	const result = [];
+	if (forAss) {
+		result.push(style.Fontname);
+		result.push(style.Fontsize);
+		{ let fc = style.PrimaryColour   + (256 + PrimaryOpaicty  ).toString(16).substring(1); result.push("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
+		{ let fc = style.SecondaryColour + (256 + SecondaryOpaicty).toString(16).substring(1); result.push("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
+		{ let fc = style.OutlineColour   + (256 + OutlineOpaicty  ).toString(16).substring(1); result.push("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
+		{ let fc = style.BackColour      + (256 + BackOpaicty     ).toString(16).substring(1); result.push("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
+		result.push(style.Bold      ? 1 : 0);
+		result.push(style.Italic    ? 1 : 0);
+		result.push(style.Underline ? 1 : 0);
+		result.push(style.StrikeOut ? 1 : 0);
+		result.push(style.ScaleX     );
+		result.push(style.ScaleY     );
+		result.push(style.Spacing    );
+		result.push(style.Angle      );
+		result.push(style.BorderStyle);
+		result.push(style.Outline    );
+		result.push(style.Shadow     );
+		result.push(style.Alignment  );
+		result.push(style.MarginL    );
+		result.push(style.MarginR    );
+		result.push(style.MarginV    );
+		result.push(style.Encoding   );
+		
+	} else if (forSmi) {
+		// 기본 스타일
+		result.push(style.Fontname);
+		result.push(style.PrimaryColour);
+		result.push(style.Italic    ? 1 : 0);
+		result.push(style.Underline ? 1 : 0);
+		result.push(style.StrikeOut ? 1 : 0);
+	}
+	
+	return result.join(",");
+}
+
 // C# 쪽에서 호출
 function refreshTime(now, fr) {
 	if (time != now) {
@@ -108,7 +168,6 @@ window.Tab = function(text, path) {
 	this.area.on("click", ".btn-hold-style", function(e) {
 		const hold = $(this).data("hold");
 		hold.styleArea.show();
-		hold.inputPreset.focus();
 	});
 };
 window.getCurrentTab = function() {
@@ -129,7 +188,9 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	hold.selector.attr({ title: hold.name });
 	hold.owner = this;
 	hold.pos   = hold.savedPos   = info.pos;
-	hold.style = hold.savedStyle = (info.style ? info.style : "");
+	
+	const style = hold.style = (info.style ? info.style : JSON.parse(JSON.stringify(DefaultStyle)));
+	hold.savedStyle = hold.styleToSave();
 	hold.tempSavedText = info.text;
 	hold.updateTimeRange();
 	
@@ -148,40 +209,97 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 		
 		hold.area.append($("<button type='button' class='btn-hold-style' title='홀드 공통 스타일 설정'>").data({ hold: hold }));
 		hold.area.append(hold.styleArea = $("<div class='hold-style-area'>"));
-		const area = $("<div>");
-		hold.styleArea.append(area);
-		
-		hold.inputPreset = $("<input type='text' spellcheck='false' class='input-hold-preset' placeholder='홀드 공통 스타일 태그 입력' />");
-		const inputEnd = $("<input type='text' spellcheck=false' class='input-hold-preset-end' placeholder='종료 태그는 자동으로 생성됩니다.' disabled />");
-		const btnClose = $("<button type='button' class='btn-close-preset'>");
-		area.append(hold.inputPreset).append(inputEnd).append(btnClose);
-		
-		hold.inputPreset.on("input propertychange", function() {
-			hold.style = $(this).val();
-			hold.afterChangeSaved(hold.isSaved());
-
-			let presetEnd = "";
-			let tags = hold.style.split("<");
-			for (let j = 1; j < tags.length; j++) {
-				const tag = tags[j];
-				if (tag.indexOf(">") > 0) {
-					const inTag = tag.substring(0, tag.indexOf(">"));
-					const tagName = inTag.split(" ")[0].split("\t")[0];
-					presetEnd = "</" + tagName + ">" + presetEnd;
+		/*
+		{
+			const area = $("<div>");
+			hold.styleArea.append(area);
+			
+			hold.inputPreset = $("<input type='text' spellcheck='false' class='input-hold-preset' placeholder='홀드 공통 스타일 태그 입력' />");
+			const inputEnd = $("<input type='text' spellcheck=false' class='input-hold-preset-end' placeholder='종료 태그는 자동으로 생성됩니다.' disabled />");
+			const btnClose = $("<button type='button' class='btn-close-preset'>");
+			area.append(hold.inputPreset).append(inputEnd).append(btnClose);
+			
+			hold.inputPreset.on("input propertychange", function() {
+				hold.style = $(this).val();
+				hold.afterChangeSaved(hold.isSaved());
+	
+				let presetEnd = "";
+				let tags = hold.style.split("<");
+				for (let j = 1; j < tags.length; j++) {
+					const tag = tags[j];
+					if (tag.indexOf(">") > 0) {
+						const inTag = tag.substring(0, tag.indexOf(">"));
+						const tagName = inTag.split(" ")[0].split("\t")[0];
+						presetEnd = "</" + tagName + ">" + presetEnd;
+					}
 				}
-			}
-			inputEnd.val(presetEnd);
-		}).on("keydown", function(e) {
-			if (e.keyCode == 27 // Esc
-			 || e.keyCode == 13 // Enter
-			) {
-				btnClose.click();
-			}
-		}).val(hold.style).trigger("input");
-		
-		btnClose.on("click", function() {
-			hold.styleArea.hide();
-		});
+				inputEnd.val(presetEnd);
+			}).on("keydown", function(e) {
+				if (e.keyCode == 27 // Esc
+				 || e.keyCode == 13 // Enter
+				) {
+					btnClose.click();
+				}
+			}).val(hold.style).trigger("input");
+			
+			btnClose.on("click", function() {
+				hold.styleArea.hide();
+				if (SmiEditor.Viewer.window) {
+					SmiEditor.Viewer.refresh();
+				}
+			});
+		}
+		*/
+		{
+			const area = SmiEditor.stylePreset.clone();
+			hold.styleArea.append(area);
+			
+			area.find("input[name=Fontname]     ").val(style.Fontname);
+			area.find("input[name=PrimaryColour]").val(style.PrimaryColour);
+			area.find("input[name=Italic]   ").prop("checked", style.Italic);
+			area.find("input[name=Underline]").prop("checked", style.Underline);
+			area.find("input[name=StrikeOut]").prop("checked", style.StrikeOut);
+			
+			area.find("input[name=Fontsize]").val(style.Fontsize);
+			area.find("input[name=Bold]    ").prop("checked", style.Bold);
+			area.find("input[name=SecondaryColour]").val(style.SecondaryColour);
+			area.find("input[name=OutlineColour]  ").val(style.OutlineColour  );
+			area.find("input[name=BackColour]     ").val(style.BackColour     );
+			area.find("input[name=PrimaryOpacity]  ").val(style.SecondaryOpaicty);
+			area.find("input[name=SecondaryOpacity]").val(style.SecondaryOpaicty);
+			area.find("input[name=OutlineOpacity]  ").val(style.OutlineOpaicty  );
+			area.find("input[name=BackOpacity]     ").val(style.BackOpaicty     );
+			area.find("input[name=ScaleX]     ").val(style.ScaleX     );
+			area.find("input[name=ScaleY]     ").val(style.ScaleY     );
+			area.find("input[name=Spacing]    ").val(style.Spacing    );
+			area.find("input[name=Angle]      ").val(style.Angle      );
+			area.find("input[name=BorderStyle]").val(style.BorderStyle);
+			area.find("input[name=Outline]    ").val(style.Outline    );
+			area.find("input[name=Shadow]     ").val(style.Shadow     );
+			area.find("input[name=Alignment][value=" + style.Alignment + "]").click();
+			area.find("input[name=MarginL]").val(style.MarginL);
+			area.find("input[name=MarginR]").val(style.MarginR);
+			area.find("input[name=MarginV]").val(style.MarginV);
+			
+			area.on("input propertychange", "input[type=text], input[type=number]", function() {
+				console.log(hold);
+				const $input = $(this);
+				const name = $input.attr("name");
+				hold.style[name] = area.find("input[name=" + name + "]").val();
+				hold.afterChangeSaved(hold.isSaved());
+				
+			}).on("click", "input[type=radio]", function() {
+				hold.style.Alignment = $(this).val();
+				hold.afterChangeSaved(hold.isSaved());
+			});
+			
+			area.find(".btn-close-preset").on("click", function() {
+				hold.styleArea.hide();
+				if (SmiEditor.Viewer.window) {
+					SmiEditor.Viewer.refresh();
+				}
+			});
+		}
 	}
 	
 	this.holdArea.append(hold.area);
@@ -495,7 +613,7 @@ Tab.prototype.getAssText = function() {
 SmiEditor.prototype.isSaved = function() {
 	return (this.savedName  == this.name )
 		&& (this.savedPos   == this.pos  )
-		&& (this.savedStyle == this.style)
+		&& (this.savedStyle == this.styleToSave())
 		&& (this.saved == this.input.val());
 };
 SmiEditor.prototype.onChangeSaved = function(saved) {
@@ -617,6 +735,13 @@ function setDefault(target, dflt) {
 
 // C# 쪽에서 호출
 function init(jsonSetting, isBackup=true) {
+	{
+		const holdStylePreset = $("#holdStylePreset");
+		SmiEditor.stylePreset = holdStylePreset.clone();
+		SmiEditor.stylePreset.attr({ id: null });
+		holdStylePreset.remove();
+	}
+	
 	try {
 		setting = JSON.parse(jsonSetting);
 		if (typeof setting != "object") {
@@ -1401,7 +1526,7 @@ function afterSaveFile(path) {
 		hold.saved = hold.input.val();
 		hold.savedPos = hold.pos;
 		hold.savedName = hold.name;
-		hold.savedStyle = hold.style;
+		hold.savedStyle = hold.styleToSave();
 	}
 	currentTab.path = path;
 	const title = path ? ((path.length > 14) ? ("..." + path.substring(path.length - 14, path.length - 4)) : path.substring(0, path.length - 4)) : "새 문서";

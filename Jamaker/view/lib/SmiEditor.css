@@ -86,17 +86,17 @@
 	background: #7f7f7f7f;
 	display: none;
 }
-.hold-style-area > div {
+.hold-style-area > form {
 	position: absolute;
 	border: 1px solid #000;
 }
-.hold-style-area > div > button {
+.hold-style-area > form > button.btn-close-preset {
 	position: absolute;
 	background: transparent;
 	border: 0;
 	cursor: pointer;
 }
-.hold-style-area > div > button:after {
+.hold-style-area > form > button.btn-close-preset:after {
 	content: "×";
 }
 
@@ -250,3 +250,34 @@
 	width: calc(20px + 2px);
 	height: calc(20px + 2px);
 }
+
+#holdStylePreset {
+	display: none;
+}
+.hold-style fieldset {
+	padding: calc(20px * 0.2);
+	border: 1px solid #aaa;
+}
+.hold-style label,
+.hold-style div.label {
+	display: inline-block;
+	margin: 0;
+	min-width: calc(20px * 6.5);
+}
+.hold-style span {
+	display: inline-block;
+	width: calc(20px * 3);
+}
+.hold-style-alignment {
+	display: inline-block;
+	border-collapse: collapse;
+	text-align: center;
+}
+.hold-style-alignment td {
+	border: 1px solid #aaa;
+}
+.hold-style .hold-style-alignment label {
+	min-width: 0;
+}
+.hold-style input[type=number] { text-align: right; }
+.hold-style input[type=range]  { width: 300px; }

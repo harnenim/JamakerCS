@@ -1250,7 +1250,7 @@ if (Subtitle && Subtitle.SmiFile) {
 			
 			if ((lines[0] == "<!-- Style" || lines[0] == "<!-- Preset")
 			 && lines[2] == "-->") {
-				holds[i].style = lines[1].trim();
+				holds[i].style = Subtitle.SmiFile.parseStyle(lines[1].trim());
 				holds[i].text = lines.slice(3).join("\n");
 			}
 		}
@@ -1333,7 +1333,10 @@ if (Subtitle && Subtitle.SmiFile) {
 				const holdText = hold.input ? hold.input.val() : hold.text; // .text 동기화 안 끝났을 가능성 고려, 현재 값 다시 불러옴
 				let text = holdText;
 				if (hold.style) {
-					text = "<!-- Style\n" + hold.style + "\n-->\n" + text;
+					const style = hold.styleToSave();
+					if (style) {
+						text = "<!-- Style\n" + style + "\n-->\n" + text;
+					}
 				}
 				result[hold.resultIndex = (hi + 1)] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + text.split("<").join("<​").split(">").join("​>") + "\n-->";
 				hold.imported = false;
@@ -1346,7 +1349,11 @@ if (Subtitle && Subtitle.SmiFile) {
 				
 				// 스타일 적용 필요하면 내포 홀드 처리 하지 않음
 				if (hold.style) {
-					continue;
+					style = hold.styleToSave();
+					if (style) {
+						text = "<!-- Style\n" + style + "\n-->\n" + text;
+						continue;
+					}
 				}
 				
 				// 내용물 없으면 내포 홀드 아님
@@ -1498,7 +1505,10 @@ if (Subtitle && Subtitle.SmiFile) {
 				const holdText = hold.input ? hold.input.val() : hold.text;
 				let text = holdText;
 				if (hold.style) {
-					text = "<!-- Style\n" + hold.style + "\n-->\n" + text;
+					const style = hold.styleToSave();
+					if (style) {
+						text = "<!-- Style\n" + style + "\n-->\n" + text;
+					}
 				}
 				const smi = holdSmis[hi] = new Subtitle.SmiFile(text);
 				if (withNormalize) {
