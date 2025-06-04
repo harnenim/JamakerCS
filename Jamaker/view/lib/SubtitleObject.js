@@ -3069,10 +3069,10 @@ const DefaultStyle = {
 	,	SecondaryColour: "#FF0000"
 	,	OutlineColour  : "#000000"
 	,	BackColour     : "#000000"
-	,	PrimaryOpaicty  : 255
-	,	SecondaryOpaicty: 255
-	,	OutlineOpaicty  : 255
-	,	BackOpaicty     : 255
+	,	PrimaryOpacity  : 255
+	,	SecondaryOpacity: 255
+	,	OutlineOpacity  : 255
+	,	BackOpacity     : 255
 	,	Bold     : true
 	,	Italic   : false
 	,	Underline: false
@@ -3081,15 +3081,68 @@ const DefaultStyle = {
 	,	ScaleY: 100
 	,	Spacing: 0
 	,	Angle: 0
-	,	BorderStyle: 1
+	,	BorderStyle: false
 	,	Outline: 4
 	,	Shadow: 0
 	,	Alignment: 2
 	,	MarginL: 64
 	,	MarginR: 64
 	,	MarginV: 40
-	,	Encoding: 1
 };
+Subtitle.SmiFile.toSaveStyle = function(style) {
+	if (!style) return "";
+	
+	let forSmi = false;
+	for (let i = 0; i < styleForSmi.length; i++) {
+		const name = styleForSmi[i];
+		if (style[name] != DefaultStyle[name]) {
+			forSmi = true;
+			break;
+		}
+	}
+	let forAss = false;
+	for (let i = 0; i < styleForAss.length; i++) {
+		const name = styleForAss[i];
+		if (style[name] != DefaultStyle[name]) {
+			forAss = true;
+			break;
+		}
+	}
+	const result = [];
+	if (forAss) {
+		result.push(style.Fontname ? style.Fontname : "맑은 고딕");
+		result.push(style.Fontsize);
+		{ let fc = style.PrimaryColour   + (511 - style.PrimaryOpacity  ).toString(16).substring(1); result.push("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
+		{ let fc = style.SecondaryColour + (511 - style.SecondaryOpacity).toString(16).substring(1); result.push("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
+		{ let fc = style.OutlineColour   + (511 - style.OutlineOpacity  ).toString(16).substring(1); result.push("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
+		{ let fc = style.BackColour      + (511 - style.BackOpacity     ).toString(16).substring(1); result.push("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
+		result.push(style.Bold      ? -1 : 0);
+		result.push(style.Italic    ? -1 : 0);
+		result.push(style.Underline ? -1 : 0);
+		result.push(style.StrikeOut ? -1 : 0);
+		result.push(style.ScaleX     );
+		result.push(style.ScaleY     );
+		result.push(style.Spacing    );
+		result.push(style.Angle      );
+		result.push(style.BorderStyle ? 3 : 1);
+		result.push(style.Outline    );
+		result.push(style.Shadow     );
+		result.push(style.Alignment  );
+		result.push(style.MarginL    );
+		result.push(style.MarginR    );
+		result.push(style.MarginV    );
+		
+	} else if (forSmi) {
+		// 기본 스타일
+		result.push(style.Fontname);
+		result.push(style.PrimaryColour);
+		result.push(style.Italic    ? 1 : 0);
+		result.push(style.Underline ? 1 : 0);
+		result.push(style.StrikeOut ? 1 : 0);
+	}
+	
+	return result.join(",");
+}
 Subtitle.SmiFile.parseStyle = function(comment) {
 	const style = JSON.parse(JSON.stringify(DefaultStyle));
 	if (comment.startsWith("<")) {
@@ -3115,26 +3168,25 @@ Subtitle.SmiFile.parseStyle = function(comment) {
 			// ASS 변환용 스타일 포함
 			style.Fontname = infoStyle[0];
 			style.Fontsize = infoStyle[1];
-			{ let fc = infoStyle[2]; style.PrimaryColour   = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.PrimaryOpaicty   = Number('0x'+fc[8]+fc[9]); }
-			{ let fc = infoStyle[3]; style.SecondaryColour = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.SecondaryOpaicty = Number('0x'+fc[8]+fc[9]); }
-			{ let fc = infoStyle[4]; style.OutlineColour   = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.OutlineOpaicty   = Number('0x'+fc[8]+fc[9]); }
-			{ let fc = infoStyle[5]; style.BackColour      = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.BackOpaicty      = Number('0x'+fc[8]+fc[9]); }
+			{ let fc = infoStyle[2]; style.PrimaryColour   = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.PrimaryOpacity   = 255 - Number('0x'+fc[8]+fc[9]); }
+			{ let fc = infoStyle[3]; style.SecondaryColour = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.SecondaryOpacity = 255 - Number('0x'+fc[8]+fc[9]); }
+			{ let fc = infoStyle[4]; style.OutlineColour   = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.OutlineOpacity   = 255 - Number('0x'+fc[8]+fc[9]); }
+			{ let fc = infoStyle[5]; style.BackColour      = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.BackOpacity      = 255 - Number('0x'+fc[8]+fc[9]); }
 			style.Bold      = (infoStyle[6] != 0);
 			style.Italic    = (infoStyle[7] != 0);
 			style.Underline = (infoStyle[8] != 0);
 			style.StrikeOut = (infoStyle[9] != 0);
-			style.ScaleX      = Number(infoStyle[10]);
-			style.ScaleY      = Number(infoStyle[11]);
-			style.Spacing     = Number(infoStyle[12]);
-			style.Angle       = Number(infoStyle[13]);
-			style.BorderStyle = Number(infoStyle[14]);
-			style.Outline     = Number(infoStyle[15]);
-			style.Shadow      = Number(infoStyle[16]);
-			style.Alignment   = Number(infoStyle[17]);
-			style.MarginL     = Number(infoStyle[18]);
-			style.MarginR     = Number(infoStyle[19]);
-			style.MarginV     = Number(infoStyle[20]);
-			style.Encoding    = Number(infoStyle[21]);
+			style.ScaleX    = Number(infoStyle[10]);
+			style.ScaleY    = Number(infoStyle[11]);
+			style.Spacing   = Number(infoStyle[12]);
+			style.Angle = Number(infoStyle[13]);
+			style.BorderStyle = ((Number(infoStyle[14]) & 2) != 0);
+			style.Outline   = Number(infoStyle[15]);
+			style.Shadow    = Number(infoStyle[16]);
+			style.Alignment = Number(infoStyle[17]);
+			style.MarginL   = Number(infoStyle[18]);
+			style.MarginR   = Number(infoStyle[19]);
+			style.MarginV   = Number(infoStyle[20]);
 		}
 	}
 	return style;

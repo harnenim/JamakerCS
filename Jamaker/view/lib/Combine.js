@@ -1333,7 +1333,7 @@ if (Subtitle && Subtitle.SmiFile) {
 				const holdText = hold.input ? hold.input.val() : hold.text; // .text 동기화 안 끝났을 가능성 고려, 현재 값 다시 불러옴
 				let text = holdText;
 				if (hold.style) {
-					const style = hold.styleToSave();
+					const style = Subtitle.SmiFile.toSaveStyle(hold.style);
 					if (style) {
 						text = "<!-- Style\n" + style + "\n-->\n" + text;
 					}
@@ -1349,7 +1349,7 @@ if (Subtitle && Subtitle.SmiFile) {
 				
 				// 스타일 적용 필요하면 내포 홀드 처리 하지 않음
 				if (hold.style) {
-					style = hold.styleToSave();
+					style = Subtitle.SmiFile.toSaveStyle(hold.style);
 					if (style) {
 						text = "<!-- Style\n" + style + "\n-->\n" + text;
 						continue;
@@ -1505,7 +1505,7 @@ if (Subtitle && Subtitle.SmiFile) {
 				const holdText = hold.input ? hold.input.val() : hold.text;
 				let text = holdText;
 				if (hold.style) {
-					const style = hold.styleToSave();
+					const style = Subtitle.SmiFile.toSaveStyle(hold.style);
 					if (style) {
 						text = "<!-- Style\n" + style + "\n-->\n" + text;
 					}

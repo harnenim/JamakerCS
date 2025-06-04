@@ -281,3 +281,9 @@
 }
 .hold-style input[type=number] { text-align: right; }
 .hold-style input[type=range]  { width: 300px; }
+.hold-style-alignment tr:first-child td:not(:first-child):not(:last-child) {
+	border-width: 1px 0 0;
+}
+.hold-style-alignment tr:not(:first-child):not(:last-child) td {
+	border: 0;
+}
