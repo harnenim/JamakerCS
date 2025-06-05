@@ -128,8 +128,11 @@ label, #showFps {
 .hold-style fieldset {
 	padding: calc(20px * 0.2);
 }
-.hold-style label,
-.hold-style div.label {
+.hold-style-smi label {
+	min-width: calc(20px * 4);
+}
+.hold-style-ass label,
+.hold-style-ass div.label {
 	min-width: calc(20px * 6.5);
 }
 .hold-style span {

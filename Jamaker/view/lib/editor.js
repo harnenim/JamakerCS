@@ -278,11 +278,11 @@ SmiEditor.prototype.refreshStyle = function() {
 	
 	this.$preview.find(".hold-style-preview-main").css(css);
 	
-	css["-webkit-text-stroke"] = style.Outline + "px " + style.OutlineColour + (256 + style.OutlineOpacity).toString(16).substring(1);
+	css["-webkit-text-stroke"] = (style.Outline * 3) + "px " + style.OutlineColour + (256 + style.OutlineOpacity).toString(16).substring(1);
 	this.$preview.find(".hold-style-preview-outline").css(css);
 
 	css.color = style.BackColour + (256 + style.BackOpacity).toString(16).substring(1);
-	css["-webkit-text-stroke"] = style.Outline + "px " + style.BackColour + (256 + style.BackOpacity).toString(16).substring(1);
+	css["-webkit-text-stroke"] = (style.Outline * 3) + "px " + style.BackColour + (256 + style.BackOpacity).toString(16).substring(1);
 	css.top = css.left = "calc(50% + " + style.Shadow + "px)";
 	this.$preview.find(".hold-style-preview-shadow").css(css);
 	
