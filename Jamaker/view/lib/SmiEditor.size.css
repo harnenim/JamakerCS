@@ -143,6 +143,7 @@ label, #showFps {
 .hold-style input[type=color] { height: calc(20px + 2px); }
 .hold-style input[type=text]   { width: calc(20px * 5); }
 .hold-style input[type=number] { width: calc(20px * 2.5); text-align: right; }
+.hold-style input[type=text].color { width: calc(20px * 3); }
 
 .custom-scrollbar ::-webkit-scrollbar,
 .custom-scrollbar ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }

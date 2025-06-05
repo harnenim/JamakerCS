@@ -179,16 +179,16 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			const $preview = hold.$preview = area.find(".hold-style-preview");
 			
 			area.find("input[name=Fontname]     ").val(style.Fontname);
-			area.find("input[name=PrimaryColour]").val(style.PrimaryColour);
+			area.find("input[name=PrimaryColour]").val(style.PrimaryColour).next().val(style.PrimaryColour);
 			area.find("input[name=Italic]   ").prop("checked", style.Italic);
 			area.find("input[name=Underline]").prop("checked", style.Underline);
 			area.find("input[name=StrikeOut]").prop("checked", style.StrikeOut);
 			
 			area.find("input[name=Fontsize]").val(style.Fontsize);
 			area.find("input[name=Bold]    ").prop("checked", style.Bold);
-			area.find("input[name=SecondaryColour]").val(style.SecondaryColour);
-			area.find("input[name=OutlineColour]  ").val(style.OutlineColour  );
-			area.find("input[name=BackColour]     ").val(style.BackColour     );
+			area.find("input[name=SecondaryColour]").val(style.SecondaryColour).next().val(style.SecondaryColour);
+			area.find("input[name=OutlineColour]  ").val(style.OutlineColour  ).next().val(style.OutlineColour  );
+			area.find("input[name=BackColour]     ").val(style.BackColour     ).next().val(style.BackColour     );
 			area.find("input[name=PrimaryOpacity]  ").val(style.PrimaryOpacity  );
 			area.find("input[name=SecondaryOpacity]").val(style.SecondaryOpacity);
 			area.find("input[name=OutlineOpacity]  ").val(style.OutlineOpacity  );
@@ -206,26 +206,41 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			area.find("input[name=MarginV]").val(style.MarginV);
 			
 			area.on("input propertychange", "input[type=text], input[type=color]", function () {
-				const $input = $(this);
+				let $input = $(this);
 				if ($input.hasClass("hold-style-preview-color")) {
 					$preview.css({ background: $input.val() });
 					return;
 				}
+				if ($input.hasClass("color")) {
+					const color = $input.val();
+					if (color.startsWith("#") && color.length == 7) {
+						if (isFinite("0x" + color.substring(1))) {
+							$input = $input.prev().val(color);
+						} else {
+							return;
+						}
+					} else {
+						return;
+					}
+				}
+				if ($input.attr("type") == "color") {
+					$input.next().val($input.val());
+				}
 				const name = $input.attr("name");
-				const value = hold.style[name] = $input.val();;
+				hold.style[name] = $input.val();
 				hold.refreshStyle();
 				
 			}).on("input propertychange", "input[type=number], input[type=range]", function () {
 				const $input = $(this);
 				const name = $input.attr("name");
-				const value = hold.style[name] = Number($input.val());
+				hold.style[name] = Number($input.val());
 				hold.refreshStyle();
 				
 				
 			}).on("change", "input[type=checkbox]", function () {
 				const $input = $(this);
 				const name = $input.attr("name");
-				const value = hold.style[name] = $input.prop("checked");;
+				hold.style[name] = $input.prop("checked");
 				hold.refreshStyle();
 				
 			}).on("change", "input[type=radio]", function () {
