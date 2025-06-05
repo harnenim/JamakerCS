@@ -3179,7 +3179,7 @@ Subtitle.SmiFile.parseStyle = function(comment) {
 			style.ScaleX    = Number(infoStyle[10]);
 			style.ScaleY    = Number(infoStyle[11]);
 			style.Spacing   = Number(infoStyle[12]);
-			style.Angle = Number(infoStyle[13]);
+			style.Angle     = Number(infoStyle[13]);
 			style.BorderStyle = ((Number(infoStyle[14]) & 2) != 0);
 			style.Outline   = Number(infoStyle[15]);
 			style.Shadow    = Number(infoStyle[16]);

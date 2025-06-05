@@ -28,7 +28,7 @@ $(() => {
 	if (smiPath) {
 		const dirs = smiPath.split("/").join("\\").split("\\");
 		$dirCurrent.text(dirs.slice(0, dirs.length - 1).join("\\"));
-        $("#labelCurrent input[name=dir]").click();
+		$("#labelCurrent input[name=dir]").click();
 	} else {
 		$dirCurrent.text("(없음)");
 		$("#labelCurrent").addClass("disabled");

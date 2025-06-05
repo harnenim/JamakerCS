@@ -1116,33 +1116,11 @@ window.Combine = {
 			const group = groups[gi];
 			const forEmpty = [[], []];
 			// TODO: 윗줄은 안 채워주는 게 나으려나?
-			for (let i = (FIX_LINES ? 1 : 0); i < 2; i++) {
+			for (let i = 0; i < 2; i++) {
 				for (let j = 0; j < group.maxLines[i]; j++) {
 					forEmpty[i].push("<b>　</b>");
 				}
 				forEmpty[i] = forEmpty[i].join("<br>");
-			}
-
-			// 프레임 단위로 볼 때 싱크 뭉친 부분 확인
-			// TODO: 이걸 그룹 내에서가 아니라, 최종본에서 하는 게 맞을 것 같기도...?
-			if (window.SmiEditor && SmiEditor.video && SmiEditor.video.fs && SmiEditor.video.fs.length) {
-				const fs = SmiEditor.video.fs;
-				for (let i = group.lines.length - 1; i > 0; i--) {
-					const line = group.lines[i];
-					if (line[ETYPE] == Subtitle.SyncType.frame) {
-						// 중간싱크로 인해 화면싱크가 밀리는지 확인
-						const startIndex = SmiEditor.findSyncIndex(line[STIME], fs);
-						const endIndex   = SmiEditor.findSyncIndex(line[ETIME], fs);
-						if (endIndex != null && startIndex == endIndex) {
-							// 현재 대사 건너뛰기
-							line[STIME] = -1;
-
-							// 이전 대사 종료싱크 늦추기
-							const prev = group.lines[--i];
-							prev[ETIME] = line[ETIME];
-						}
-					}
-				}
 			}
 			
 			for (let i = 0; i < group.lines.length; i++) {
@@ -1163,8 +1141,35 @@ window.Combine = {
 				} else if (group.lower.length == 0) {
 					lines.push(line[UPPER] ? line[UPPER][TEXT] : "&nbsp;");
 				} else {
-					const upper = (line[UPPER] ? line[UPPER][TEXT] : forEmpty[0]);
-					lines.push((upper ? upper + "<br>" : "") + (line[LOWER] ? line[LOWER][TEXT] : forEmpty[1]));
+					if (FIX_LINES) {
+						// 위쪽 공백줄 채우기
+						const upper = (line[UPPER] ? line[UPPER][TEXT] : forEmpty[0]);
+						lines.push((upper ? upper + "<br>" : "") + (line[LOWER] ? line[LOWER][TEXT] : forEmpty[1]));
+						
+					} else {
+						// 위쪽 채우지 않기
+						if (line[UPPER]) {
+							let text = line[UPPER][TEXT];
+							// 중간 공백줄 채우기
+							for (let j = (line[LOWER] ? line[LOWER][LINES] : 0); j < group.maxLines[1]; j++) {
+								text += "<br><b>　</b>";
+							}
+							// 아랫줄 있으면 넣기
+							if (line[LOWER]) {
+								text += "<br>" + line[LOWER][TEXT];
+							}
+							lines.push(text);
+							
+						} else {
+							if (line[LOWER]) {
+								// 아랫줄만 있을 때
+								lines.push(line[LOWER][TEXT]);
+								
+							} else {
+								// 그룹 내에서 둘 다 없을 수는 없음
+							}
+						}
+					}
 				}
 				if (line[ETIME] < 99999999) {
 					let syncLine = getSyncLine(lastSync = line[ETIME], line[ETYPE]);
@@ -1233,6 +1238,13 @@ if (Subtitle && Subtitle.SmiFile) {
 					body[i - 1].text = smi.text;
 					body.splice(i, 1);
 				}
+			}
+		}
+		{	// 메인 홀드 ASS 변환용 스타일 확인
+			const footer = holds[0].footer.split("\n<!-- Style\n");
+			if (footer.length > 1) {
+				holds[0].style = Subtitle.SmiFile.parseStyle(footer[1].split("\n")[0].trim());
+				holds[0].footer = footer[0];
 			}
 		}
 		holds[0].text = holds[0].toTxt().trim();
@@ -1317,6 +1329,12 @@ if (Subtitle && Subtitle.SmiFile) {
 			}
 		}
 		//console.log(JSON.parse(JSON.stringify(body)));
+		{	// 메인 홀드 스타일 저장
+			const style = Subtitle.SmiFile.toSaveStyle(origHolds[0].style);
+			if (style) {
+				main.footer += "\n<!-- Style\n" + style + "\n-->";
+			}
+		}
 		
 		withCombine = withCombine && origHolds.length > 1;
 		
@@ -1351,7 +1369,7 @@ if (Subtitle && Subtitle.SmiFile) {
 				if (hold.style) {
 					style = Subtitle.SmiFile.toSaveStyle(hold.style);
 					if (style) {
-						text = "<!-- Style\n" + style + "\n-->\n" + text;
+						//text = "<!-- Style\n" + style + "\n-->\n" + text;
 						continue;
 					}
 				}
@@ -1595,6 +1613,9 @@ if (Subtitle && Subtitle.SmiFile) {
 				// 원칙상 normalized.result를 다뤄야 맞을 것 같지만...
 				main.body = main.body.slice(0, mainBegin).concat(combined.body).concat(main.body.slice(mainEnd));
 			}
+
+			// TODO: 최종본에서 그룹 단위 윗줄 채워줄까?
+
 			// 임시 중간 싱크 정상화
 			for (let i = 0; i < main.body.length; i++) {
 				const smi = main.body[i];
@@ -1604,6 +1625,28 @@ if (Subtitle && Subtitle.SmiFile) {
 					smi.syncType = Subtitle.SyncType.frame;
 				} else if (smi.syncType == Subtitle.SyncType.combinedInner) {
 					smi.syncType = Subtitle.SyncType.inner;
+				}
+			}
+			
+			// 프레임 단위로 볼 때 싱크 뭉친 부분 확인
+			if (window.SmiEditor && SmiEditor.video && SmiEditor.video.fs && SmiEditor.video.fs.length) {
+				const fs = SmiEditor.video.fs;
+				let next = null;
+				for (let i = main.body.length - 1; i > 0; i--) {
+					const smi = main.body[i];
+					if (next) {
+						if (next.syncType == Subtitle.SyncType.frame) {
+							// 1프레임 미만 중간싱크로 인해 화면싱크가 밀리는지 확인
+							const startIndex = SmiEditor.findSyncIndex(smi .start, fs);
+							const endIndex   = SmiEditor.findSyncIndex(next.start, fs);
+							if (endIndex != null && startIndex == endIndex) {
+								// 현재 대사 건너뛰기
+								main.body.splice(i, 1);
+								continue;
+							}
+						}
+					}
+					next = smi;
 				}
 			}
 			

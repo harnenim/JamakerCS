@@ -30,34 +30,11 @@ function setSetting(jsonSetting) {
 	style.html("#viewer {\nfont-size: calc(" + setting.viewer.size + "vw / 5.86);\n" + setting.viewer.css + "}");
 }
 let lines = [[],[],[]];
-let presets = [];
 let viewer = null;
 let viewers = [];
 // TODO: 사실 window.open이 아닌 별도 창을 띄울 경우를 위해 변수 공유 안 하고 이렇게 받은 거였는데...
 function setLines(newLines) {
 	lines = JSON.parse(newLines);
-	if (lines.length == 0) {
-		lines.push([]);
-		presets.push(["", ""]);
-	} else {
-		for (let i = 0; i < lines.length; i++) {
-			const preset = presets[i] = ["", ""];
-			if ((lines[i][0].TEXT == "<!-- Preset")
-			 && (lines[i][2].TEXT == "-->")
-			) {
-				let tags = lines[i][1].TEXT.split("<");
-				for (let j = 1; j < tags.length; j++) {
-					const tag = tags[j];
-					if (tag.indexOf(">") > 0) {
-						const inTag = tag.substring(0, tag.indexOf(">"));
-						const tagName = inTag.split(" ")[0].split("\t")[0];
-						preset[0] += "<" + inTag + ">";
-						preset[1] = "</" + tagName + ">" + preset[1];
-					}
-				}
-			}
-		}
-	}
 	normalizedLines.length = 0;
 	
 	let receiveTime = time;
@@ -174,7 +151,7 @@ function refreshTime(receiveTime, withoutTitle) {
 				showLines[j] = line + "<span style='opacity: 0;'>-</span>";
 			}
 		}
-		showText[hold] = presets[hold].join(showLines.join("<br>"));
+		showText[hold] = showLines.join("<br>");
 		
 		// 정규화 자동 적용
 		if ((showLines.length < 16) // 싱크 안 찍은 줄에 fade 같은 게 들어가면 연산량 과도해질 수 있음
