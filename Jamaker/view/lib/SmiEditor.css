@@ -137,6 +137,12 @@
 	opacity: 0.3;
 	transition: 0.2s;
 }
+.hold.main .btn-hold-style {
+	display: none;
+}
+.tab.ass .hold.main .btn-hold-style {
+	display: block;
+}
 .btn-hold-style:hover {
 	opacity: 1;
 }
@@ -226,37 +232,46 @@
 	height: 20px;
 }
 
-.hold-style-area > div {
-	top: calc(20px * 0.5);
-	left: calc(20px * 0.5);
-	right: calc(20px * 0.5);
-	border-radius: calc(20px * 0.4);
-	padding: calc(20px * 0.5);
-}
-.hold-style-area > div > input {
-	width: calc(100% - 20px * 1.5);
-	height: 20px;
-}
-.hold-style-area > div > button {
-	top: calc(20px * 0.5);
-	right: calc(20px * 0.5);
-	width: calc(20px * 1.5);
-	height: calc(20px * 2);
-	font-size: calc(20px * 1.5);
-	padding-bottom: calc(20px * 0.5);
-}
-.btn-hold-style {
-	right: calc(20px * 0.8 + 1px);
-	width: calc(20px + 2px);
-	height: calc(20px + 2px);
-}
-
 #holdStylePreset {
 	display: none;
+}
+.hold-style-preview {
+	position: relative;
+	height: 200px;
+	border: 1px solid #000;
+	white-space: pre;
+	text-align: center;
+	overflow: hidden;
+}
+.hold-style-preview > * {
+	position: absolute;
+}
+.hold-style-preview > div {
+	top: 50%;
+	left: 50%;
+	width: 1000%;
+	height: 100px;
+	line-height: 100px;
+	margin: -50px -500%;
+}
+.hold-style-preview-color {
+	right: 0;
+	bottom: 0;
+}
+.hold-style-setting {
+	height: calc(100% - 200px);
+	overflow-y: scroll;
 }
 .hold-style fieldset {
 	padding: calc(20px * 0.2);
 	border: 1px solid #aaa;
+}
+.hold.main .hold-style-smi,
+.hold-style-ass {
+	display: none;
+}
+.tab.ass .hold-style-ass {
+	display: block;
 }
 .hold-style label,
 .hold-style div.label {

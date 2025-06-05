@@ -94,12 +94,20 @@ label, #showFps {
 	height: 20px;
 }
 
-.hold-style-area > form {
+.hold .hold-style-area > form {
 	top: calc(20px * 0.5);
 	left: calc(20px * 0.5);
 	right: calc(20px * 0.5);
+	height: calc(100% - 20px);
+	max-height: calc(20px * 3 + 233px);
 	border-radius: calc(20px * 0.4);
 	padding: calc(20px * 0.5);
+}
+.tab.ass .hold .hold-style-area > form {
+	max-height: calc(20px * 15 + 355px);
+}
+.tab.ass .hold.main .hold-style-area > form {
+	max-height: calc(20px * 12 + 355px);
 }
 .hold-style-area > form > button.btn-close-preset {
 	top: calc(20px * 0.5);
@@ -114,6 +122,9 @@ label, #showFps {
 	width: calc(20px + 2px);
 	height: calc(20px + 2px);
 }
+.hold-style-preview {
+	margin-right: calc(20px * 2);
+}
 .hold-style fieldset {
 	padding: calc(20px * 0.2);
 }
@@ -124,9 +135,11 @@ label, #showFps {
 .hold-style span {
 	width: calc(20px * 3);
 }
+.hold-style input[type=text],
+.hold-style input[type=number],
+.hold-style input[type=color] { height: calc(20px + 2px); }
 .hold-style input[type=text]   { width: calc(20px * 5); }
 .hold-style input[type=number] { width: calc(20px * 2.5); text-align: right; }
-.hold-style input[type=color]  { height: 20px; }
 
 .custom-scrollbar ::-webkit-scrollbar,
 .custom-scrollbar ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }

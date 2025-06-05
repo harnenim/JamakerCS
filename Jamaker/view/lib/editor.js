@@ -138,7 +138,26 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	hold.updateTimeRange();
 	
 	if (isMain) {
+		hold.area.addClass("main");
 		hold.selector.addClass("selected");
+		const tab = this;
+		hold.afterRender = function() {
+			const match = /<sami( [^>]*)*>/gi.exec(this.text);
+			if (match && match[1]) {
+				const attrs = match[1].toUpperCase().split(" ");
+				for (let i = 0; i < attrs.length; i++) {
+					if (attrs[i] == "ASS") {
+						if (!tab.withAss) {
+							tab.withAss = true;
+							tab.area.addClass("ass");
+						}
+						return;
+					}
+				}
+			}
+			tab.withAss = false;
+			tab.area.removeClass("ass");
+		}
 		
 	} else {
 		const btnArea = $("<div class='area-btn-hold'>");
@@ -149,12 +168,15 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 		// 홀드 생성 직후에 숨기면 스크롤바 렌더링이 문제 생김
 		// 최초 로딩 시 메인 홀드만 보이는 상태에서 사용상 문제는 없음
 		//hold.area.hide();
-		
+	}
+	{
 		hold.area.append($("<button type='button' class='btn-hold-style' title='홀드 공통 스타일 설정'>").data({ hold: hold }));
 		hold.area.append(hold.styleArea = $("<div class='hold-style-area'>"));
 		{
 			const area = SmiEditor.stylePreset.clone();
 			hold.styleArea.append(area);
+			
+			const $preview = hold.$preview = area.find(".hold-style-preview");
 			
 			area.find("input[name=Fontname]     ").val(style.Fontname);
 			area.find("input[name=PrimaryColour]").val(style.PrimaryColour);
@@ -185,24 +207,39 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			
 			area.on("input propertychange", "input[type=text], input[type=color]", function () {
 				const $input = $(this);
+				if ($input.hasClass("hold-style-preview-color")) {
+					$preview.css({ background: $input.val() });
+					return;
+				}
 				const name = $input.attr("name");
-				hold.style[name] = $input.val();
-				hold.afterChangeSaved(hold.isSaved());
+				const value = hold.style[name] = $input.val();;
+				hold.refreshStyle();
+				
 			}).on("input propertychange", "input[type=number], input[type=range]", function () {
 				const $input = $(this);
 				const name = $input.attr("name");
-				hold.style[name] = Number($input.val());
-				hold.afterChangeSaved(hold.isSaved());
+				const value = hold.style[name] = Number($input.val());
+				hold.refreshStyle();
+				
+				
 			}).on("change", "input[type=checkbox]", function () {
 				const $input = $(this);
 				const name = $input.attr("name");
-				hold.style[name] = $input.prop("checked");
-				hold.afterChangeSaved(hold.isSaved());
+				const value = hold.style[name] = $input.prop("checked");;
+				hold.refreshStyle();
+				
 			}).on("change", "input[type=radio]", function () {
 				hold.style.Alignment = $(this).val();
-				hold.afterChangeSaved(hold.isSaved());
-
+				hold.refreshStyle();
+				
+			}).on("keyup", function() {
+				const $main = $preview.find(".hold-style-preview-main");
+				const text = $main.text();
+				$preview.find(".hold-style-preview-outline, .hold-style-preview-shadow").text(text);
+				if ($main.children().length) $main.text(text);
 			});
+			$preview.find(".hold-style-preview-outline, .hold-style-preview-shadow").text($preview.find(".hold-style-preview-main").text());
+			hold.refreshStyle();
 			
 			area.find(".btn-close-preset").on("click", function() {
 				hold.styleArea.hide();
@@ -219,6 +256,37 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 		this.selectHold(hold);
 	}
 	this.onChangeSaved();
+}
+SmiEditor.prototype.refreshStyle = function() {
+	const style = this.style;
+	
+	const css = {};
+	css.fontFamily = style.Fontname ? (style.Fontname.startsWith("@") ? style.Fontname.substring(1) : style.Fontname) : "맑은 고딕";
+	css.color = style.PrimaryColour + (256 + style.PrimaryOpacity).toString(16).substring(1);
+	css.fontStyle = style.Italic ? "italic" : "";
+	{	const deco = [];
+		if (style.Underline) deco.push("underline");
+		if (style.StrikeOut) deco.push("line-through");
+		css.textDecoration = deco.join(" ");
+	}
+	css.fontSize = style.Fontsize + "px";
+	css.fontWeight = style.Bold ? "bold" : "";
+	
+	css.transform = "scale(" + (style.ScaleX / 200) + "," + (style.ScaleY / 200) + ")";
+	css.letterSpacing = (style.Fontsize * style.Spacing / 100) + "px";
+	css.rotate = -style.Angle + "deg";
+	
+	this.$preview.find(".hold-style-preview-main").css(css);
+	
+	css["-webkit-text-stroke"] = style.Outline + "px " + style.OutlineColour + (256 + style.OutlineOpacity).toString(16).substring(1);
+	this.$preview.find(".hold-style-preview-outline").css(css);
+
+	css.color = style.BackColour + (256 + style.BackOpacity).toString(16).substring(1);
+	css["-webkit-text-stroke"] = style.Outline + "px " + style.BackColour + (256 + style.BackOpacity).toString(16).substring(1);
+	css.top = css.left = "calc(50% + " + style.Shadow + "px)";
+	this.$preview.find(".hold-style-preview-shadow").css(css);
+	
+	this.afterChangeSaved(this.isSaved());
 }
 Tab.prototype.updateHoldSelector = function() {
 	if (this.holds.length <= 1) {
@@ -928,6 +996,17 @@ function init(jsonSetting, isBackup=true) {
 			// WinKey 최우선 처리
 			winKeyStatus[e.keyCode - 91] = true;
 			return;
+		}
+		if (e.keyCode == 27) {
+			if (SmiEditor.selected) {
+				const hold = SmiEditor.selected;
+				if (hold.styleArea.css("display") != "none") {
+					hold.styleArea.hide();
+					if (SmiEditor.Viewer.window) {
+						SmiEditor.Viewer.refresh();
+					}
+				}
+			}
 		}
 	}).on("keyup", function (e) {
 		if (winKeyStatus[0] || winKeyStatus[1]) {

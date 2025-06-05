@@ -1890,6 +1890,9 @@ SmiEditor.prototype.render = function(range=null) {
 				} else {
 					self.input.addClass("disable-scroll-x scrollLeft scrollRight");
 				}
+				if (self.afterRender) {
+					self.afterRender();
+				}
 			}
 			if (self.needToRender) {
 				// 렌더링 대기열 있으면 재실행
