@@ -531,6 +531,8 @@ window.Combine = {
 									if (closeAttr) {
 										// 종료 태그 붙이기
 										padsAttrs.push(closeAttr);
+									} else {
+										padsAttrs.push(new Subtitle.Attr()); // 종료태그 필수
 									}
 									width = getAttrWidth(padsAttrs, checker, withFontSize);
 									if (LOG) console.log(padsAttrs, width);
@@ -544,8 +546,9 @@ window.Combine = {
 								width = lastWidth;
 								if (LOG) console.log(padsAttrs, width);
 							}
-								
+							
 							sync[TEXT] = Subtitle.Smi.fromAttr(padsAttrs).split("\n").join("<br>");
+							console.log(sync[TEXT]);
 								
 						} else {
 							sync[TEXT] = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
