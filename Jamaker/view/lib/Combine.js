@@ -178,6 +178,7 @@ window.Combine = {
 				// 팟플레이어 폰트 크기 보정
 				attr.fs = attr.fs * 586 / 456;
 			}
+			attr.furigana = null;
 			cAttrs.push(attr);
 		}
 		const width = checker.html(Subtitle.Smi.fromAttr(cAttrs, Combine.defaultSize).split("\n").join("<br>")).width();
