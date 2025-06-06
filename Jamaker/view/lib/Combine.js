@@ -198,7 +198,6 @@ window.Combine = {
 		return Combine.checker.show();
 	}
 	
-	const syncLines = { basic: {}, frame: {}, range: {} };
 	function getSyncLine(sync, type) {
 		let line = null;
 		if (window.SmiEditor) {
@@ -347,6 +346,9 @@ window.Combine = {
 						// 줄 길이 채워주기
 						const sync = list[j];
 						const attrs = sync[ATTRS];
+						if (LOG) {
+							console.log(sync);
+						}
 
 						let pad = "";
 						if (sync[WIDTH] < group.maxWidth && sync[SIZED] < group.maxSized) {
@@ -394,7 +396,7 @@ window.Combine = {
 										}
 									}
 								}
-									
+
 								const attrLines = attrText.split("\n");
 								if (attrLines.length > 1) {
 									// 속성 안에 줄바꿈이 있었으면 분리 후 진행
@@ -413,12 +415,16 @@ window.Combine = {
 										
 									for (let l = 1; l < attrLines.length; l++) {
 										attr = new Subtitle.Attr(attr, attrLines[l], true);
-										if ((l == attrLines.length - 1) && (attr.text.split("​").join("").length == 0)) {
+										const isEmptyAttr = (attr.text.split("​").join("").trim().length == 0);
+										if ((l == attrLines.length - 1) && isEmptyAttr) {
 											// 마지막 줄바꿈 후에 내용 없으면 건너뜀
 											trimedLines.push(trimedLine = { attrs: [], isEmpty: true });
 										} else {
 											attr.splitted = wasClear; // 재결합 대상
-											trimedLines.push(trimedLine = { attrs: [attr], isEmpty: (attr.text.split("　").join("").trim().length == 0) });
+											trimedLines.push(trimedLine = { attrs: [attr], isEmpty: isEmptyAttr });
+											if (!isEmptyAttr) {
+												isEmpty = false;
+											}
 										}
 									}
 										
@@ -432,8 +438,10 @@ window.Combine = {
 									}
 								}
 							}
-							//console.log(attrs, trimedLines);
-								
+							if (LOG) {
+								console.log(attrs, trimedLines, isEmpty);
+							}
+
 							if (!isEmpty) {
 								const br = new Subtitle.Attr(null, "\n");
 								do {
