@@ -108,8 +108,8 @@ $(() => {
 				} else if (lastFade == 1) {
 					// 페이드인 종료 이미지 어둡게
 					flag = "d";
-                }
-                $tr.data({ index: frameSyncs.length, $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
+				}
+				$tr.data({ index: frameSyncs.length, $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
 
 				for (let j = -RANGE; j < RANGE; j++) {
 					const imgIndex = frameIndex + j;
@@ -129,31 +129,31 @@ $(() => {
 		}
 	}
 
-    function renderThumbnails() {
-        const renderList = [];
+	function renderThumbnails() {
+		const renderList = [];
 		let renderGroup = { end: -11 };
 
 		$tbody.find("tr.fs").each(function () {
 			const $tr = $(this);
 			const data = $tr.data();
 
-            const begin = data.offset + (data.frameIndex < RANGE ? 0 : data.frameIndex - RANGE);
-            const end   = data.offset + (data.frameIndex + RANGE > fs.length ? fs.length : data.frameIndex + RANGE);
+			const begin = data.offset + (data.frameIndex < RANGE ? 0 : data.frameIndex - RANGE);
+			const end   = data.offset + (data.frameIndex + RANGE > fs.length ? fs.length : data.frameIndex + RANGE);
 
-            if ((renderGroup.flag == data.flag) && (fs[begin] < fs[renderGroup.end] + 500)) {
-                // 렌더링에 필요한 프레임이 앞쪽과 500ms 이내로 이어질 때
-                renderGroup.end = end;
+			if ((renderGroup.flag == data.flag) && (fs[begin] < fs[renderGroup.end] + 500)) {
+				// 렌더링에 필요한 프레임이 앞쪽과 500ms 이내로 이어질 때
+				renderGroup.end = end;
 
-            } else {
-                renderList.push(renderGroup = {
+			} else {
+				renderList.push(renderGroup = {
 						flag: data.flag
-                    ,	time: fs[begin] + 1 // 반올림되거나 한 경우 고려해서 +1ms
-                    ,	begin: begin
-                    ,	end: end
-                });
-            }
+					,	time: fs[begin] + 1 // 반올림되거나 한 경우 고려해서 +1ms
+					,	begin: begin
+					,	end: end
+				});
+			}
 
-            for (let j = data.offset - RANGE; j < data.offset + RANGE; j++) {
+			for (let j = data.offset - RANGE; j < data.offset + RANGE; j++) {
 				const imgIndex = data.frameIndex + j;
 				const cName = "img" + imgIndex + data.flag;
 				if (data.$frames.find("." + cName).length == 0) {
@@ -163,27 +163,27 @@ $(() => {
 					}
 					data.$frames.append($img);
 				}
-            }
+			}
 		});
 		if (renderList.length == 0) {
 			return false;
 		}
 
-        // 이미지 렌더링 요청
-        let params = [];
-        for (let i = 0; i < renderList.length; i++) {
-            const group = renderList[i];
-            // [ 시작시간, 종료시간, 시작인덱스, 종료인덱스, 플래그 ]
-            params.push([group.time, fs[group.end] + 1 - group.time, group.begin, group.end, group.flag].join(","));
+		// 이미지 렌더링 요청
+		let params = [];
+		for (let i = 0; i < renderList.length; i++) {
+			const group = renderList[i];
+			// [ 시작시간, 종료시간, 시작인덱스, 종료인덱스, 플래그 ]
+			params.push([group.time, fs[group.end] + 1 - group.time, group.begin, group.end, group.flag].join(","));
 		}
 		opener.binder.renderThumbnails(SmiEditor.video.path, params.join("\n"));
 		return true;
 	}
-    if (!renderThumbnails()) {
-        alert("작업 대상이 없습니다.");
-        window.close();
-        return;
-    }
+	if (!renderThumbnails()) {
+		alert("작업 대상이 없습니다.");
+		window.close();
+		return;
+	}
 	
 	let fileSeq = 0;
 	opener.setThumbnailsFileSeq = function(thumbnailsFileSeq) {
