@@ -1312,10 +1312,13 @@ namespace Jamaker
                                 else
                                 {
                                     // 앞 프레임이 없음 = 첫 번째 이미지, 그냥 복사
+                                    // ... 조절 후 재렌더링 기능 추가해보니, 이건 비워두는 게 맞을 듯함
                                     try
                                     {
+                                        /*
                                         File.Copy(img1, img2);
                                         File.Copy(img1, img3);
+                                        */
                                         bLast = new Bitmap(img1);
                                     } catch (Exception e) { Console.WriteLine(e); }
                                 }

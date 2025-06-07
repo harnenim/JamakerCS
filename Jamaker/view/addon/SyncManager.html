@@ -109,7 +109,7 @@ $(() => {
 					// 페이드인 종료 이미지 어둡게
 					flag = "d";
 				}
-				$tr.data({ index: frameSyncs.length, $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
+				$tr.data({ index: frameSyncs.length - 1, $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
 
 				for (let j = -RANGE; j < RANGE; j++) {
 					const imgIndex = frameIndex + j;
@@ -309,12 +309,12 @@ $(() => {
 		const prev = origLines.slice(0, origin.start).join("\n");
 		const next = origLines.slice(origin.end).join("\n");
 		
-		// 교체 및 종료
+		// 에디터에 적용
 		const text = (prev ? prev + "\n" : "") + result.toTxt() + (next ? "\n" + next : "");
-		const lines = text.split("\n");
 		// 현재 커서 위치를 기반으로 다시 맞춤
 		const selectedLine = origin.tab.input.val().substring(0, origin.tab.input[0].selectionEnd).split("\n").length;
 		const cursor = text.split("\n").slice(0, selectedLine - 1).join("\n").length + 1;
+		origin.tab.history.log();
 		origin.tab.setText(text, [cursor]);
 	}
 	
