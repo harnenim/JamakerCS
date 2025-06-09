@@ -548,7 +548,6 @@ window.Combine = {
 							}
 							
 							sync[TEXT] = Subtitle.Smi.fromAttr(padsAttrs).split("\n").join("<br>");
-							console.log(sync[TEXT]);
 								
 						} else {
 							sync[TEXT] = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
@@ -1157,7 +1156,7 @@ if (Subtitle && Subtitle.SmiFile) {
 							}
 						}
 
-						maxLine = 0;
+						maxLine = line;
 						begin = i;
 					}
 				}
