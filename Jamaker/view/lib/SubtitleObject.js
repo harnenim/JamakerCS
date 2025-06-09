@@ -2262,7 +2262,7 @@ Subtitle.Smi.fromAttr = (attrs, fontSize=0) => { // fontSize를 넣으면 html�
 			}
 			next += "<RT><RP>(</RP>" + Subtitle.Smi.fromAttr([attr.furigana, new Subtitle.Attr()]) + "<RP>)</RP></RT></RUBY>";
 			
-			text += fontStart + prev + attr.text + next + fontEnd;
+			text += prev + fontStart + attr.text + fontEnd + next;
 			
 		} else if (last.furigana) {
 			// 앞쪽에 <RUBY> 태그 있었을 때
