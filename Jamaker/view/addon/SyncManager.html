@@ -242,7 +242,7 @@ $(() => {
 		}
 	}
 	function setSync($td, sync) {
-		$td.text(sync);
+		$td.text(sync == 0 ? 1 : sync);
 		if (!trustKeyFrame) return;
 		if (SmiEditor.findSync(sync, kfs, false)) {
 			$td.addClass("keyframe");
