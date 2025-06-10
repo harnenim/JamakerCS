@@ -1231,6 +1231,7 @@ function setSetting(setting, initial=false) {
 	}
 	
 	Combine.css = setting.viewer.css;
+	DefaultStyle.Fontsize = Number(setting.viewer.size) * 4;
 	
 	binder.setMenus(setting.menu);
 	
@@ -1467,24 +1468,29 @@ function saveFile(asNew, isExport) {
 				currentTab.selectHold(hold);
 				return;
 			}
+			const saveStyle = Subtitle.SmiFile.toSaveStyle(hold.style);
 			if (typeof styles[hold.name] == "string") {
-				if (hold.style != styles[hold.name]) {
-					alert("같은 이름의 홀드끼리 스타일이 일치하지 않습니다.\n임의로 이름을 변경합니다.");
+				if (hold.style != saveStyle) {
+					const from = hold.name;
+					let to = null;
 					for (let j = 1; ; j++) {
-						let holdName = hold.name + j;
-						if (typeof styles[holdName] == "undefined") {
-							hold.selector.find(".hold-name > span").text(hold.owner.holds.indexOf(hold) + "." + (hold.name = holdName));
-							hold.selector.attr({ title: hold.name });
-							hold.afterChangeSaved(hold.isSaved());
-							styles[hold.name] = hold.style;
+						to = hold.name + j;
+						if (typeof styles[to] == "undefined") {
 							break;
 						}
 					}
+					alert("같은 이름의 홀드끼리 스타일이 일치하지 않습니다.\n임의로 이름을 변경합니다.\n" + from + " -> " + to);
+					hold.name = to;
+					hold.selector.find(".hold-name > span").text(hold.owner.holds.indexOf(hold) + "." + hold.name);
+					hold.selector.attr({ title: hold.name });
+					hold.afterChangeSaved(hold.isSaved());
+					styles[hold.name] = saveStyle;
 				}
 			} else {
-				styles[hold.name] = hold.style;
+				styles[hold.name] = saveStyle;
 			}
 		}
+		console.log(styles);
 		
 		// TODO: ASS 저장용 스타일 지정돼 있는지 확인 및 추가
 	}

@@ -19,6 +19,7 @@ $(() => {
 	if (!editor) {
 		alert("작업 대상이 없습니다.");
 	}
+	DefaultStyle.Fontsize = opener.Subtitle.DefaultStyle.Fontsize;
 	
 	{
 		let start = 0;
@@ -46,8 +47,15 @@ $(() => {
 	$("#btnExport").on("click", function() {
 		const holds = Subtitle.SmiFile.textToHolds($("#input").val());
 		const outputs = [];
+		const assFile = new Subtitle.AssFile2();
+		
 		for (let h = 0; h < holds.length; h++) {
 			const hold = holds[h];
+			console.log(hold);
+			let name = h == 0 ? "Default" : hold.name;
+			
+			assFile.addStyle(name, hold.style ? hold.style : DefaultStyle);
+			
 			const input = hold.body ? hold : new Subtitle.SmiFile(hold.text);
 			{
 				if (opener && opener.SmiEditor && opener.SmiEditor.sync && opener.SmiEditor.sync.frame) {
@@ -66,8 +74,9 @@ $(() => {
 					}
 				}
 			}
-			const ass = new Subtitle.AssFile().fromSync(input.toSync());
-			const lines = ass.toTxt().split("\n");
+			const eventPart = Subtitle.AssPart.fromSync(input.toSync(), name);
+			const lines = eventPart.toTxt().split("\n");
+			/*
 			for (let i = 0; i < lines.length; i++) {
 				const line = lines[i].split("\r")[0].split(",");
 				if (line.length > 9) {
@@ -96,6 +105,7 @@ $(() => {
 						} else {
 							line[3] = hold.name + type;
 						}
+						line[3] = hold.name;
 					}
 					if (overlapCount) {
 						// RUBY 태그 둘 이상 존재
@@ -140,9 +150,13 @@ $(() => {
 					}
 				}
 			}
+			*/
 			outputs.push(lines.join("\n"));
+			assFile.getEvents().body.push(...eventPart.body);
 		}
+// 		$("#output").val(outputs.join("\n").split("\n\n").join("\n"));
 		$("#output").val(outputs.join("\n").split("\n\n").join("\n"));
+		$("#output").val(assFile.toTxt());
 	});
 });
 	</script>
@@ -190,6 +204,9 @@ label[for=pos] {
 	<input type="text" id="pos" value="\pos(960,1040)" />
 	<button id="btnExport">＞</button>
 	<textarea id="output">이곳의 결과물은 완성본이 아니며, Aegisub에 복사한 후 추가 작업이 필요합니다.
-화면 싱크를 사용한 경우 Default가 아닌 （］,［）,［］로 분류됩니다.</textarea>
+</textarea>
+<!--
+화면 싱크를 사용한 경우 Default가 아닌 （］,［）,［］로 분류됩니다.
+-->
 </body>
 </html>
