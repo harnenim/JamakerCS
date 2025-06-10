@@ -2192,8 +2192,9 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 	for (let i = range[0]; i < range[1]; i++) {
 		const line = lines[i];
 		if ((line.TYPE == TYPE.FRAME) || (!frameSyncOnly && (line.TYPE == TYPE.BASIC))) {
-			const sync = SmiEditor.findSync(line.SYNC + add, SmiEditor.video.fs);
+			let sync = SmiEditor.findSync(line.SYNC + add, SmiEditor.video.fs);
 			if (sync != null) {
+				if (sync == 0) sync = 1;
 				line.TEXT = SmiEditor.makeSyncLine((line.SYNC = sync), line.TYPE);
 
 				//const colSync = $(colSyncs[i]);
