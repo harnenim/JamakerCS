@@ -766,7 +766,7 @@ if (Subtitle && Subtitle.SmiFile) {
 				holds[0].footer = footer[0];
 			}
 		}
-		holds[0].text = holds[0].toTxt().trim();
+		holds[0].text = holds[0].toText().trim();
 		
 		for (let i = 1; i < normalized.length; i++) {
 			// 내포된 홀드는 종료싱크가 빠졌을 수 있음
@@ -774,10 +774,10 @@ if (Subtitle && Subtitle.SmiFile) {
 			if (hold.next && !hold.body[hold.body.length - 1].isEmpty()) {
 				hold.body.push(new Subtitle.Smi(hold.next.start, hold.next.syncType, "&nbsp;"));
 			}
-			holds[i].text = hold.toTxt().trim();
+			holds[i].text = hold.toText().trim();
 		}
 		for (let i = normalized.length; i < holds.length; i++) {
-			const lines = (holds[i].text = new Subtitle.SmiFile(holds[i].text).antiNormalize()[0].toTxt().trim()).split("\n");
+			const lines = (holds[i].text = new Subtitle.SmiFile(holds[i].text).antiNormalize()[0].toText().trim()).split("\n");
 			
 			if ((lines[0] == "<!-- Style" || lines[0] == "<!-- Preset")
 			 && lines[2] == "-->") {
@@ -1126,8 +1126,8 @@ if (Subtitle && Subtitle.SmiFile) {
 				const sliced = new Subtitle.SmiFile();
 				sliced.body = main.body.slice(mainBegin, mainEnd);
 
-				const slicedText = sliced.toTxt().trim();
-				const combineText = smi.toTxt().trim();
+				const slicedText = sliced.toText().trim();
+				const combineText = smi.toText().trim();
 				const combined = new Subtitle.SmiFile(((hold.pos < 0) ? Combine.combine(slicedText, combineText) : Combine.combine(combineText, slicedText)).join("\n"));
 				// 원칙상 normalized.result를 다뤄야 맞을 것 같지만...
 				main.body = main.body.slice(0, mainBegin).concat(combined.body).concat(main.body.slice(mainEnd));
@@ -1278,14 +1278,14 @@ if (Subtitle && Subtitle.SmiFile) {
 						}
 					}
 					origin.body = originBody.slice(log.from[0], log.from[1]);
-					let comment = origin.toTxt().trim();
+					let comment = origin.toText().trim();
 					
 					main.body[log.to[0]].text = "<!-- End=" + log.end + "\n" + (comment.split("<").join("<​").split(">").join("​>")) + "\n-->\n" + main.body[log.to[0]].text;
 				}
 			}
 		}
 		if (withComment) {
-			result[0] = main.toTxt();
+			result[0] = main.toText();
 			for (let i = 1; i < result.length; i++) {
 				if (result[i].length == 0) {
 					result.splice(i--, 1);
@@ -1297,7 +1297,7 @@ if (Subtitle && Subtitle.SmiFile) {
 			for (let i = 0; i < main.body.length; i++) {
 				main.body[i].text = main.body[i].text.split("\n").join("");
 			}
-			return main.toTxt();
+			return main.toText();
 		}
 	}
 }

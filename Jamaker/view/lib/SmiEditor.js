@@ -3114,10 +3114,10 @@ SmiEditor.prototype.normalize = function() {
 	const text = this.getTransformText();
 	if (text) {
 		const smi = new Subtitle.SmiFile();
-		const input = smi.fromTxt(text).body;
+		const input = smi.fromText(text).body;
 		Subtitle.Smi.normalize(input, false, SmiEditor.video.FR / 1000);
 		smi.body = input;
-		SmiEditor.afterTransform(smi.toTxt().trim());
+		SmiEditor.afterTransform(smi.toText().trim());
 	}
 };
 SmiEditor.prototype.fillSync = function() {
@@ -3142,10 +3142,10 @@ SmiEditor.fillSync = (text) => {
 	}
 
 	const smi = new Subtitle.SmiFile();
-	const input = smi.fromTxt(lines.join("\n")).body;
+	const input = smi.fromText(lines.join("\n")).body;
 	Subtitle.Smi.fillEmptySync(input);
 	smi.body = input;
-	return smi.toTxt().trim();
+	return smi.toText().trim();
 };
 
 // 자동완성에 닫는 태그 추가

@@ -1772,7 +1772,7 @@ function doExit() {
 }
 
 function srt2smi(text) {
-	return new Subtitle.SmiFile().fromSync(new Subtitle.SrtFile(text).toSync()).toTxt();
+	return new Subtitle.SmiFile().fromSync(new Subtitle.SrtFile(text).toSync()).toText();
 }
 
 /**

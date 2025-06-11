@@ -31,7 +31,7 @@ $(() => {
 			end   = editor.text.substring(0, range[1]).split("\n").length;
 			const smiFile = new Subtitle.SmiFile(linesToText(editor.lines.slice(start, end)));
 			smiFile.body = Subtitle.Smi.normalize(smiFile.body).result;
-			$("#input").val(smiFile.toTxt());
+			$("#input").val(smiFile.toText());
 		} else {
 			// 블록 지정이 없을 경우: 모든 홀드 가져오기
 			$("#input").val(editor.owner.getSaveText(false));
@@ -51,7 +51,6 @@ $(() => {
 		
 		for (let h = 0; h < holds.length; h++) {
 			const hold = holds[h];
-			console.log(hold);
 			let name = h == 0 ? "Default" : hold.name;
 			
 			assFile.addStyle(name, hold.style ? hold.style : DefaultStyle);
@@ -75,7 +74,7 @@ $(() => {
 				}
 			}
 			const eventPart = Subtitle.AssPart.fromSync(input.toSync(), name);
-			const lines = eventPart.toTxt().split("\n");
+			const lines = eventPart.toText().split("\n");
 			/*
 			for (let i = 0; i < lines.length; i++) {
 				const line = lines[i].split("\r")[0].split(",");
@@ -156,7 +155,7 @@ $(() => {
 		}
 // 		$("#output").val(outputs.join("\n").split("\n\n").join("\n"));
 		$("#output").val(outputs.join("\n").split("\n\n").join("\n"));
-		$("#output").val(assFile.toTxt());
+		$("#output").val(assFile.toText());
 	});
 });
 	</script>

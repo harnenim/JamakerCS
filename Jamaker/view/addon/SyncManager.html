@@ -310,7 +310,7 @@ $(() => {
 		const next = origLines.slice(origin.end).join("\n");
 		
 		// 에디터에 적용
-		const text = (prev ? prev + "\n" : "") + result.toTxt() + (next ? "\n" + next : "");
+		const text = (prev ? prev + "\n" : "") + result.toText() + (next ? "\n" + next : "");
 		// 현재 커서 위치를 기반으로 다시 맞춤
 		const selectedLine = origin.tab.input.val().substring(0, origin.tab.input[0].selectionEnd).split("\n").length;
 		const cursor = text.split("\n").slice(0, selectedLine - 1).join("\n").length + 1;
