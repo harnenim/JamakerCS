@@ -2162,36 +2162,49 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 			case "B":
 				// 원래 텍스트 비었으면 군더더기 없이 하려고 했는데
 				// 태그 여닫은 순서는 기억하는 게 좋을 것 같음
-				/*
+				// ... 아닌가?
 				if (last.text.length > 0) {
 					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
 				}
-				*/
-				result.push(last = new Subtitle.Attr());
-				if (keepTags) last.tagString = tagString;
 				Subtitle.Smi.setStyle(last, status.setB(true));
 				break;
 			case "I":
-				result.push(last = new Subtitle.Attr());
-				if (keepTags) last.tagString = tagString;
+				if (last.text.length > 0) {
+					result.push(last = new Subtitle.Attr());
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setI(true));
 				break;
 			case "U":
-				result.push(last = new Subtitle.Attr());
-				if (keepTags) last.tagString = tagString;
+				if (last.text.length > 0) {
+					result.push(last = new Subtitle.Attr());
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setU(true));
 				break;
 			case "S":
-				result.push(last = new Subtitle.Attr());
-				if (keepTags) last.tagString = tagString;
+				if (last.text.length > 0) {
+					result.push(last = new Subtitle.Attr());
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setS(true));
 				break;
 			case "FONT":
-				result.push(last = new Subtitle.Attr());
-				if (keepTags) last.tagString = tagString;
+				if (last.text.length > 0) {
+					result.push(last = new Subtitle.Attr());
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				{
 					const attrs = [];
 					for (let name in tag.attrs) {
@@ -2201,19 +2214,27 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 				}
 				break;
 			case "RUBY":
-				result.push(last = new Subtitle.Attr());
-				if (keepTags) last.tagString = tagString;
+				if (last.text.length > 0) {
+					result.push(last = new Subtitle.Attr());
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status);
 				ruby = last;
 				break;
 			case "RT":
-				last = new Subtitle.Attr();
-				if (keepTags) last.tagString = tagString;
+				if (last.text.length > 0) {
+					last = new Subtitle.Attr(); // 후리가나는 상위 리스트에 넣지 않음
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status);
 				furigana = last;
 				break;
 			case "RP":
-				last = new Subtitle.Attr();
+				last = new Subtitle.Attr(); // 후리가나는 상위 리스트에 넣지 않음
 				Subtitle.Smi.setStyle(last, status);
 				break;
 			case "BR":
@@ -2226,33 +2247,57 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 	function closeTag(tagName) {
 		switch (tagName.toUpperCase()) {
 			case "B":
-				result.push(last = new Subtitle.Attr());
-				if (keepTags) last.tagString = tagString;
+				if (last.text.length > 0) {
+					result.push(last = new Subtitle.Attr());
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setB(false));
 				break;
 			case "I":
-				result.push(last = new Subtitle.Attr());
-				if (keepTags) last.tagString = tagString;
+				if (last.text.length > 0) {
+					result.push(last = new Subtitle.Attr());
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setI(false));
 				break;
 			case "U":
-				result.push(last = new Subtitle.Attr());
-				if (keepTags) last.tagString = tagString;
+				if (last.text.length > 0) {
+					result.push(last = new Subtitle.Attr());
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setU(false));
 				break;
 			case "S":
-				result.push(last = new Subtitle.Attr());
-				if (keepTags) last.tagString = tagString;
+				if (last.text.length > 0) {
+					result.push(last = new Subtitle.Attr());
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setS(false));
 				break;
 			case "FONT":
-				result.push(last = new Subtitle.Attr());
-				if (keepTags) last.tagString = tagString;
+				if (last.text.length > 0) {
+					result.push(last = new Subtitle.Attr());
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status.setFont(null));
 				break;
 			case "RUBY":
-				result.push(last = new Subtitle.Attr());
-				if (keepTags) last.tagString = tagString;
+				if (last.text.length > 0) {
+					result.push(last = new Subtitle.Attr());
+					if (keepTags) last.tagString = tagString;
+				} else {
+					if (keepTags) last.tagString += tagString;
+				}
 				Subtitle.Smi.setStyle(last, status);
 				break;
 			case "RT":
@@ -2639,27 +2684,25 @@ Subtitle.Smi.fromAttrs = (attrs, fontSize=0) => { // fontSize를 넣으면 html�
 	
 	return text;
 }
-Subtitle.Smi.fromAttrs2 = (attrs, fontSize=0, checkRuby=true) => { // fontSize를 넣으면 html로 % 크기 출력
+Subtitle.Smi.fromAttrs = (attrs, fontSize = 0, checkRuby=true, checkFont=true) => { // fontSize를 넣으면 html로 % 크기 출력
 	let text = "";
 
-	// TODO: <br><b>　</b><br><b>　</b> -> <br><b>　<br>　</b> 뭉치는 현상 확인 필요
-	
 	// 후리가나 먼저 처리
 	let rubyEnd = 0;
 	if (checkRuby) {
 		for (let i = 0; i < attrs.length; i++) {
 			const attr = attrs[i];
-			
+
 			if (attr.furigana) {
 				// 후리가나 달리기 이전 부분 처리
 				text += Subtitle.Smi.fromAttrs(attrs.slice(rubyEnd, i));
-				
+
 				// 후리가나 처리
 				const subAttrs = [attr.clone()];
 				for (; i < attrs.length; i++) {
 					if (attr.furigana == attrs[i].furigana) {
 						const subAttr = attrs[i].clone();
-						subAttr.furigana= null;
+						subAttr.furigana = null;
 						subAttrs.push(subAttr);
 					} else {
 						rubyEnd = i;
@@ -2671,23 +2714,58 @@ Subtitle.Smi.fromAttrs2 = (attrs, fontSize=0, checkRuby=true) => { // fontSize�
 			}
 		}
 	}
-	
+
 	// 후리가나 이후 나머지 (일반적으로 여기만 돌아감)
+	// <FONT> 태그 바깥 쪽 정크 덜 생기도록 잡아주기
+	// ...이게 아닌가? 필요 없나? 아래에 잘못 짠 게 문제였나?
+	if (checkFont && false) {
+		{
+			let fc = null;
+			let fAttrs = [];
+			let fLength = 0;
+			for (let i = rubyEnd; i < attrs.length; i++) {
+				const attr = attrs[i];
+				if (attr.fc != fc) {
+					if (fLength == 0) {
+						for (let j = 0; j < fAttrs.length; j++) {
+							fAttrs.fc = null;
+						}
+					}
+					fc = attr.fc;
+					fAttrs = [];
+					fLength = 0;
+				}
+				fAttrs.push(attr);
+				fLength += attr.text.length;
+			}
+		}
+	}
 	for (let i = rubyEnd; i < attrs.length; i++) {
 		const attr = attrs[i];
 		
 		// 가장 바깥에서 감쌀 수 있는 태그 찾기
-		let bLen      = 0; if (attr.b     ) for (bLen      = 1; i + bLen      < attrs.length; bLen++     ) { if (!attrs[i + bLen     ]) break; }
-		let iLen      = 0; if (attr.i     ) for (iLen      = 1; i + iLen      < attrs.length; iLen++     ) { if (!attrs[i + iLen     ]) break; }
-		let uLen      = 0; if (attr.u     ) for (uLen      = 1; i + uLen      < attrs.length; uLen++     ) { if (!attrs[i + uLen     ]) break; }
-		let sLen      = 0; if (attr.s     ) for (sLen      = 1; i + sLen      < attrs.length; sLen++     ) { if (!attrs[i + sLen     ]) break; }
-		let fsLen     = 0; if (attr.fs    ) for (fsLen     = 1; i + fsLen     < attrs.length; fsLen++    ) { if (!attrs[i + fsLen    ]) break; }
-		let fnLen     = 0; if (attr.fn    ) for (fnLen     = 1; i + fnLen     < attrs.length; fnLen++    ) { if (!attrs[i + fnLen    ]) break; }
-		let fcLen     = 0; if (attr.fc    ) for (fcLen     = 1; i + fcLen     < attrs.length; fcLen++    ) { if (!attrs[i + fcLen    ]) break; }
-		let fadeLen   = 0; if (attr.fade  ) for (fadeLen   = 1; i + fadeLen   < attrs.length; fadeLen++  ) { if (!attrs[i + fadeLen  ]) break; }
-		let shakeLen  = 0; if (attr.shake ) for (shakeLen  = 1; i + shakeLen  < attrs.length; shakeLen++ ) { if (!attrs[i + shakeLen ]) break; }
-		let typingLen = 0; if (attr.typing) for (typingLen = 1; i + typingLen < attrs.length; typingLen++) { if (!attrs[i + typingLen]) break; }
-		
+		let bLen      = 0; if (attr.b     ) for (bLen      = 1; i + bLen      < attrs.length; bLen++     ) { if (!attrs[i + bLen     ].b) break; }
+		let iLen      = 0; if (attr.i     ) for (iLen      = 1; i + iLen      < attrs.length; iLen++     ) { if (!attrs[i + iLen     ].i) break; }
+		let uLen      = 0; if (attr.u     ) for (uLen      = 1; i + uLen      < attrs.length; uLen++     ) { if (!attrs[i + uLen     ].u) break; }
+		let sLen      = 0; if (attr.s     ) for (sLen      = 1; i + sLen      < attrs.length; sLen++     ) { if (!attrs[i + sLen     ].s) break; }
+		let fcLen = 0;
+		/*
+		if (attr.fc) {
+			for (let j = attrs.length - 1; j >= i; j--) {
+				if (attrs[j].fc == attr.fc) {
+					fcLen = j + 1 - i;
+					break;
+				}
+			}
+		}
+		*/
+		let fsLen     = 0; if (attr.fs    ) for (fsLen     = 1; i + fsLen     < attrs.length; fsLen++    ) { if (!attrs[i + fsLen    ].fs) break; }
+		let fnLen     = 0; if (attr.fn    ) for (fnLen     = 1; i + fnLen     < attrs.length; fnLen++    ) { if (!attrs[i + fnLen    ].fn) break; }
+		let fcLen     = 0; if (attr.fc    ) for (fcLen     = 1; i + fcLen     < attrs.length; fcLen++    ) { if (!attrs[i + fcLen    ].fc) break; }
+		let fadeLen   = 0; if (attr.fade  ) for (fadeLen   = 1; i + fadeLen   < attrs.length; fadeLen++  ) { if (!attrs[i + fadeLen  ].fade) break; }
+		let shakeLen  = 0; if (attr.shake ) for (shakeLen  = 1; i + shakeLen  < attrs.length; shakeLen++ ) { if (!attrs[i + shakeLen ].shake) break; }
+		let typingLen = 0; if (attr.typing) for (typingLen = 1; i + typingLen < attrs.length; typingLen++) { if (!attrs[i + typingLen].typing) break; }
+
 		let len = 1;
 		let tag = null;
 		let font = [];
@@ -2731,7 +2809,7 @@ Subtitle.Smi.fromAttrs2 = (attrs, fontSize=0, checkRuby=true) => { // fontSize�
 				case "FONT": {
 					opener = "<FONT";
 
-					// TODO: 정말 <FONT> 태그를 생성해야 하는 유의미한 값인지 내용물 재확인 필요
+					// TODO: 정말 <FONT> 태그를 생성해야 하는 유의미한 값인지 내용물 재확인 필요?
 
 					for (let k = 0; k < font.length; k++) {
 						const key = font[k];
@@ -2764,7 +2842,7 @@ Subtitle.Smi.fromAttrs2 = (attrs, fontSize=0, checkRuby=true) => { // fontSize�
 				}
 			}
 
-			text += opener + Subtitle.Smi.fromAttrs(subAttrs, fontSize, false) + closer;
+			text += opener + Subtitle.Smi.fromAttrs(subAttrs, fontSize, false, false) + closer;
 			
 		} else {
 			// 태그 모두 상위에서 처리하고 텍스트만 남음
