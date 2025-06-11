@@ -757,6 +757,7 @@ Subtitle.Attr = function(old, text="", withTagString=false) {
 		this.fs   = old.fs;
 		this.fn   = old.fn;
 		this.fc   = old.fc;
+		this.ass  = old.ass;
 		this.fade = old.fade;
 		this.shake = old.shake;
 		this.typing = old.typing;
@@ -771,6 +772,7 @@ Subtitle.Attr = function(old, text="", withTagString=false) {
 		this.fs   = 0;	// FontSize
 		this.fn   = ""; // FontName
 		this.fc   = ""; // Fontcolor
+		this.ass  = null;
 		this.fade = 0;
 		this.shake = null;
 		this.typing = null;
@@ -783,6 +785,18 @@ Subtitle.Attr.TypingAttr = function(mode, start, end) {
 	this.start  = start ? start : 0;
 	this.end	= end   ? end   : 0;
 }
+
+Subtitle.Attr.prototype.clone = function(withText=true) {
+	return new Subtitle.Attr(this, withText ? this.text : "");
+}
+
+// ASS 그대로 쓸 속성만 넣음
+Subtitle.Attr.junkAss = function(ass) {
+	const attr = new Subtitle.Attr();
+	attr.ass = ass;
+	return attr;
+}
+
 Subtitle.Attr.prototype.getWidth = function() {
 	const css = Subtitle.Width.DEFAULT_FONT;
 	if (this.fs) css.fontSize   = this.fs;
@@ -872,6 +886,15 @@ Subtitle.Attr.toHtml = (attrs) => {
 	}
 	return result;
 }
+
+Subtitle.Attr.toText = (attrs) => {
+	let result = "";
+	for (let i = 0; i < attrs.length; i++) {
+		result += attrs[i].text;
+	}
+	return result;
+}
+
 
 
 
@@ -1035,7 +1058,7 @@ Subtitle.Ass.prototype.toAttrs = function() {
 }
 Subtitle.Ass.prototype.fromAttr = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
 Subtitle.Ass.prototype.fromAttrs = function(attrs) {
-	this.text = Subtitle.Ass.fromAttr(attrs);
+	this.text = (this.texts = Subtitle.Ass.fromAttrs(attrs))[0];
 	return this;
 }
 Subtitle.Ass.fromAttr = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
@@ -1166,7 +1189,176 @@ Subtitle.Ass.fromAttrs = function(attrs) {
 		}
 	}
 	
-	return lines.join("\\N").split("}{").join("");
+	return [lines.join("\\N").split("}{").join("")];
+}
+Subtitle.Ass.fromAttrs = (attrs, checkFurigana=true, checkAss=true) => {
+	if (checkFurigana) {
+		let hasFurigana = false;
+		for (let i = 0; i < attrs.length; i++) {
+			if (attrs[i].furigana) {
+				hasFurigana = true;
+				break;
+			}
+		}
+		if (hasFurigana) {
+			let line = { attrs: [] };
+			const lines = [line];
+			for (let i = 0; i < attrs.length; i++) {
+				const attr = attrs[i];
+				if (attr.text.indexOf("\n") < 0) {
+					line.attrs.push(attr);
+					
+				} else {
+					const text = attr.text.split("\n");
+					let newAttr = attr.clone();
+					newAttr.text = text[0];
+					line.attrs.push(newAttr);
+					
+					for (let j = 1; j < text.length; j++) {
+						newAttr = attr.clone();
+						newAttr.text = text[j];
+						lines.push(line = { attrs: [newAttr] });
+					}
+				}
+			}
+			
+			let count = 0;
+			for (let i = 0; i < lines.length; i++) {
+				line = lines[i];
+				line.furigana = [];
+				for (let j = 0; j < line.attrs.length; j++) {
+					if (line.attrs[j].furigana) {
+						const furigana = [];
+						if (j > 0) {
+							furigana.push(Subtitle.Attr.junkAss("{\\fscy50\\bord0\\1a&HFF&}"));
+							furigana.push(...line.attrs.slice(0, j));
+							furigana.push(Subtitle.Attr.junkAss("{\\1a\\bord\\fscx50}"));
+						} else {
+							furigana.push(Subtitle.Attr.junkAss("{\\fscy50\\fscx50}"));
+						}
+						
+						furigana.push(line.attrs[j].furigana);
+						
+						if (j < line.attrs.length - 1) {
+							const closer = new Subtitle.Attr(line.attrs[j]);
+							furigana.push(Subtitle.Attr.junkAss("{\\fscx\\bord0\\1a&HFF&}"));
+							furigana.push(...line.attrs.slice(j + 1));
+							furigana.push(Subtitle.Attr.junkAss("{\\1a\\bord\\fscy}\\N"));
+						} else {
+							furigana.push(Subtitle.Attr.junkAss("{\\fscx\\fscy}\\N"));
+						}
+						line.furigana.push(furigana);
+					}
+				}
+				count = Math.max(count, line.furigana.length);
+			}
+			
+			const texts = [];
+			for (let c = 0; c < count; c++) {
+				const combined = [];
+				for (let i = 0; i < lines.length; i++) {
+					if (i > 0) {
+						combined.push(Subtitle.Attr.junkAss("\\N"));
+					}
+					line = lines[i];
+					if (line.furigana.length) {
+						if (c < line.furigana.length) {
+							combined.push(...line.furigana[c]);
+						} else {
+							combined.push(Subtitle.Attr.junkAss("{\\fscy50\\fscx50}　{\\fscx\\fscy}\\N"));
+						}
+					}
+					if (c == 0) {
+						combined.push(...line.attrs);
+					} else {
+						combined.push(Subtitle.Attr.junkAss("{\\bord0\\1a&HFF&}"));
+						combined.push(...line.attrs);
+						combined.push(Subtitle.Attr.junkAss("{\\1a\\bord}"));
+					}
+				}
+				texts.push(Subtitle.Ass.fromAttrs(combined, false)[0]);
+			}
+			return texts;
+		}
+	}
+	
+	// TODO: 페이드 효과 있을 경우
+	// 페이드 인/아웃 - 아래에서 처리 가능
+	// 색상to색상인 경우 - 겹치는 객체 만들어서 처리해야 함
+	
+	let text = "";
+	
+	// ASS 변환용 속성 먼저 처리
+	let assEnd = 0;
+	if (checkAss) {
+		for (let i = 0; i < attrs.length; i++) {
+			const attr = attrs[i];
+			
+			if (typeof attr.ass == "string") {
+				// ASS 속성 이전 부분 처리
+				text += Subtitle.Ass.fromAttrs(attrs.slice(assEnd, i), false, false);
+				
+				// ASS 속성 처리
+				for (; i < attrs.length; i++) {
+					if (attr.ass != attrs[i].ass) {
+						assEnd = i;
+						i--; // 다음 루프에 ++ 됨
+						break;
+					}
+				}
+				if (i == attrs.length) {
+					// ASS 속성 이후 내용물 없음
+					// 속성 채워주는 것도 무의미
+					assEnd = i;
+				} else {
+					text += attr.ass;
+				}
+			}
+		}
+	}
+	
+	// ASS 변환용 속성 없는 부분
+	let last = new Subtitle.Attr();
+	for (let i = assEnd; i < attrs.length; i++) {
+		const attr = attrs[i];
+		
+		if (!last.b && attr.b) text += "{\\b1}";
+		else if (last.b && !attr.b) text += "{\\b}";
+		
+		if (!last.i && attr.i) text += "{\\i1}";
+		else if (last.i && !attr.i) text += "{\\i}";
+		
+		if (!last.u && attr.u) text += "{\\u1}";
+		else if (last.u && !attr.u) text += "{\\u}";
+		
+		if (!last.s && attr.s) text += "{\\s1}";
+		else if (last.s && !attr.s) text += "{\\s}";
+		
+		if (last.fn != attr.fn) text += "{\\fn" + attr.fn + "}";
+		
+		if (attr.fc.length == 15 && attr.fc[0] == '#' && attr.fc[7] == '~' && attr.fc[8] == '#') {
+			// 그라데이션 분할
+			const cFrom = attr.fc.substring(0,  7);
+			const cTo   = attr.fc.substring(8, 15);
+			const color = new Subtitle.Smi.Color(cTo, cFrom); // TODO: Smi 객체에 기생하지 않아야 함...
+			
+			let attrText = "";
+			for (let k = 0; k < attr.text.length; k++) {
+				attrText += "{\\c" + Subtitle.Ass.colorFromAttr(color.get(k, attr.text.length - 1)) + "}" + attr.text[k];
+			}
+			
+		} else {
+			if (last.fc != attr.fc) {
+				text += "{\\c" + Subtitle.Ass.colorFromAttr(attr.fc) + "}";
+			}
+		}
+		
+		text += attr.text;
+		
+		last = attr;
+	}
+	
+	return [text.split("\n").join("\\N").split("}{").join("")];
 }
 
 Subtitle.Ass.prototype.toSync = function() {
@@ -1263,6 +1455,12 @@ Subtitle.AssFile.prototype.fromSync = function(syncs, checkFrame=true) {
 	for (let i = 0; i < syncs.length; i++) {
 		const sync = new Subtitle.Ass().fromSync(syncs[i], checkFrame);
 		this.body.push(sync);
+		
+		if (sync.texts) {
+			for (let j = 1; j < sync.texts.length; j++) {
+				this.body.push(new Subtitle.Ass(sync.start, sync.end, sync.style, sync.texts[j]));
+			}
+		}
 	}
 	return this;
 }
@@ -1287,7 +1485,7 @@ Subtitle.AssEvent.prototype.fromSync = function(sync) {
 	this.Start = sync.start / 10;
 	this.End   = sync.end   / 10;
 	this.Style = sync.style ? sync.style : "Default";
-	this.Text = Subtitle.Ass.fromAttr(sync.text);
+	this.Text = (this.texts = Subtitle.Ass.fromAttrs(sync.text))[0];
 	return this;
 }
 
@@ -1325,14 +1523,6 @@ Subtitle.AssPart.prototype.toText = function() {
 		}
 	}
 	return result.join("\n");
-}
-Subtitle.AssPart.fromSync = function(syncs, style) {
-	const part = new Subtitle.AssPart("Events");
-	for (let i = 0; i < syncs.length; i++) {
-		syncs[i].style = style;
-		part.body.push(new Subtitle.AssEvent().fromSync(syncs[i], false));
-	}
-	return part;
 }
 Subtitle.AssPart.StylesFormat = ["Name", "Fontname", "Fontsize", "PrimaryColour", "SecondaryColour", "OutlineColour", "BackColour", "Bold", "Italic", "Underline", "StrikeOut", "ScaleX", "ScaleY", "Spacing", "Angle", "BorderStyle", "Outline", "Shadow", "Alignment", "MarginL", "MarginR", "MarginV", "Encoding"];
 Subtitle.AssPart.EventsFormat = ["Layer", "Start", "End", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
@@ -1426,6 +1616,56 @@ Subtitle.AssFile2.prototype.fromText = function(text) {
 	}
 	return this;
 }
+Subtitle.AssFile2.prototype.addFromSync = function(syncs, styleName) {
+	let playResX = 1920;
+	let playResY = 1080;
+	const infoPart = this.getInfo();
+	for (let i = 0; i < infoPart.body.length; i++) {
+		const info = infoPart.body[i];
+		switch (info.key) {
+			case "PlayResX": playResX = Number(info.value); break;
+			case "PlayResY": playResY = Number(info.value); break;
+		}
+	}
+
+	let x = 0;
+	let y = 0;
+	const stylesPart = this.getStyles();
+	for (let i = 0; i < stylesPart.body.length; i++) {
+		const style = stylesPart.body[i];
+		if (style.Name == styleName) {
+			switch (style.Alignment % 3) {
+				case 0: x = style.MarginL; break;
+				case 1: x = playResX - style.MarginR; break;
+				case 2: x = (playResX + style.MarginL - style.MarginR) / 2; break;
+			}
+			switch (Math.floor((style.Alignment - 1) / 3)) {
+				case 0: y = playResY - style.MarginV; break;
+				case 1: y = playResY / 2; break;
+				case 2: y = style.MarginV; break;
+			}
+		}
+	}
+	
+	// 후리가나 등 겹치는 항목을 생성할 경우 위치 고정
+	const pos = "{\\pos(" + x + "," + y + ")}";
+	
+	const part = this.getEvents();
+	for (let i = 0; i < syncs.length; i++) {
+		const sync = syncs[i];
+		sync.style = styleName;
+		
+		const event = new Subtitle.AssEvent().fromSync(sync, false);
+		
+		if (event.texts && event.texts.length > 1) {
+			for (let j = 0; j < event.texts.length; j++) {
+				part.body.push(new Subtitle.AssEvent(event.Start, event.End, event.Style, pos + event.texts[j], j));
+			}
+		} else {
+			part.body.push(event);
+		}
+	}
+}
 Subtitle.AssFile2.prototype.toSync = function() {
 	let part = null;
 	for (let i = 0; i < this.parts.length; i++) {
@@ -1452,6 +1692,9 @@ Subtitle.AssFile2.prototype.getPart = function(name) {
 	const part = new Subtitle.AssPart(name, Subtitle.AssPart.EventsFormat);
 	this.parts.push(part);
 	return part;
+}
+Subtitle.AssFile2.prototype.getInfo = function() {
+	return this.getPart("ScriptInfo");
 }
 Subtitle.AssFile2.prototype.getStyles = function() {
 	return this.getPart("V4+ Styles");
@@ -1691,6 +1934,7 @@ Subtitle.Smi.Status = function() {
 	this.fs = [];
 	this.fn = [];
 	this.fc = [];
+	this.ass = [];
 	this.fade = [];
 	this.shake = [];
 	this.typing = [];
@@ -1734,6 +1978,10 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 					
 				case "color":
 					this.fc.push(sToAttrColor(attrs[i][1]));
+					break;
+					
+				case "ass":
+					this.ass.push(attrs[i][1]);
 					break;
 					
 				case "fade":
@@ -1859,6 +2107,9 @@ Subtitle.Smi.Status.prototype.setFont = function(attrs) {
 				case "color":
 					this.fc.pop();
 					break;
+				case "ass":
+					this.ass.pop();
+					break;
 				case "fade":
 					this.fade.pop();
 					break;
@@ -1882,6 +2133,7 @@ Subtitle.Smi.setStyle = (attr, status) => {
 	attr.fs = (status.fs.length > 0) ? status.fs[status.fs.length - 1] : 0;
 	attr.fn = (status.fn.length > 0) ? status.fn[status.fn.length - 1] : "";
 	attr.fc = (status.fc.length > 0) ? status.fc[status.fc.length - 1] : "";
+	attr.ass = (status.ass.length > 0) ? status.ass[status.ass.length - 1] : null;
 	attr.fade = (status.fade.length > 0) ? status.fade[status.fade.length - 1] : 0;
 	attr.shake = (status.shake.length > 0) ? status.shake[status.shake.length - 1] : null;
 	attr.typing = (status.typing.length > 0) ? status.typing[status.typing.length - 1] : null;
@@ -2384,7 +2636,143 @@ Subtitle.Smi.fromAttrs = (attrs, fontSize=0) => { // fontSize를 넣으면 html�
 		}
 		last = attr;
 	}
-	a.remove();
+	
+	return text;
+}
+Subtitle.Smi.fromAttrs2 = (attrs, fontSize=0, checkRuby=true) => { // fontSize를 넣으면 html로 % 크기 출력
+	let text = "";
+
+	// TODO: <br><b>　</b><br><b>　</b> -> <br><b>　<br>　</b> 뭉치는 현상 확인 필요
+	
+	// 후리가나 먼저 처리
+	let rubyEnd = 0;
+	if (checkRuby) {
+		for (let i = 0; i < attrs.length; i++) {
+			const attr = attrs[i];
+			
+			if (attr.furigana) {
+				// 후리가나 달리기 이전 부분 처리
+				text += Subtitle.Smi.fromAttrs(attrs.slice(rubyEnd, i));
+				
+				// 후리가나 처리
+				const subAttrs = [attr.clone()];
+				for (; i < attrs.length; i++) {
+					if (attr.furigana == attrs[i].furigana) {
+						const subAttr = attrs[i].clone();
+						subAttr.furigana= null;
+						subAttrs.push(subAttr);
+					} else {
+						rubyEnd = i;
+						i--; // 다음 루프에 ++ 됨
+						break;
+					}
+				}
+				text += "<RUBY>" + Subtitle.Smi.fromAttrs(subAttrs, fontSize, false) + "<RT><RP>(</RP>" + Subtitle.Smi.fromAttrs([attr.furigana], fontSize, false) + "<RP>)</RP></RT></RUBY>";
+			}
+		}
+	}
+	
+	// 후리가나 이후 나머지 (일반적으로 여기만 돌아감)
+	for (let i = rubyEnd; i < attrs.length; i++) {
+		const attr = attrs[i];
+		
+		// 가장 바깥에서 감쌀 수 있는 태그 찾기
+		let bLen      = 0; if (attr.b     ) for (bLen      = 1; i + bLen      < attrs.length; bLen++     ) { if (!attrs[i + bLen     ]) break; }
+		let iLen      = 0; if (attr.i     ) for (iLen      = 1; i + iLen      < attrs.length; iLen++     ) { if (!attrs[i + iLen     ]) break; }
+		let uLen      = 0; if (attr.u     ) for (uLen      = 1; i + uLen      < attrs.length; uLen++     ) { if (!attrs[i + uLen     ]) break; }
+		let sLen      = 0; if (attr.s     ) for (sLen      = 1; i + sLen      < attrs.length; sLen++     ) { if (!attrs[i + sLen     ]) break; }
+		let fsLen     = 0; if (attr.fs    ) for (fsLen     = 1; i + fsLen     < attrs.length; fsLen++    ) { if (!attrs[i + fsLen    ]) break; }
+		let fnLen     = 0; if (attr.fn    ) for (fnLen     = 1; i + fnLen     < attrs.length; fnLen++    ) { if (!attrs[i + fnLen    ]) break; }
+		let fcLen     = 0; if (attr.fc    ) for (fcLen     = 1; i + fcLen     < attrs.length; fcLen++    ) { if (!attrs[i + fcLen    ]) break; }
+		let fadeLen   = 0; if (attr.fade  ) for (fadeLen   = 1; i + fadeLen   < attrs.length; fadeLen++  ) { if (!attrs[i + fadeLen  ]) break; }
+		let shakeLen  = 0; if (attr.shake ) for (shakeLen  = 1; i + shakeLen  < attrs.length; shakeLen++ ) { if (!attrs[i + shakeLen ]) break; }
+		let typingLen = 0; if (attr.typing) for (typingLen = 1; i + typingLen < attrs.length; typingLen++) { if (!attrs[i + typingLen]) break; }
+		
+		let len = 1;
+		let tag = null;
+		let font = [];
+		if (sLen      >= len) { len = sLen     ; tag = "S"; }
+		if (uLen      >= len) { len = uLen     ; tag = "U"; }
+		if (iLen      >= len) { len = iLen     ; tag = "I"; }
+		if (bLen      >= len) { len = bLen     ; tag = "B"; }
+		if (fsLen     >= len) { len = fsLen    ; tag = "FONT"; font.push("fs") }
+		if (fnLen     >= len) { len = fnLen    ; tag = "FONT"; (fnLen     > len) ? (font = ["fn"    ]) : font.push("fn"    ); }
+		if (fcLen     >= len) { len = fcLen    ; tag = "FONT"; (fcLen     > len) ? (font = ["fc"    ]) : font.push("fc"    ); }
+		if (fadeLen   >= len) { len = fadeLen  ; tag = "FONT"; (fadeLen   > len) ? (font = ["fade"  ]) : font.push("fade"  ); }
+		if (shakeLen  >= len) { len = shakeLen ; tag = "FONT"; (shakeLen  > len) ? (font = ["shake" ]) : font.push("shake" ); }
+		if (typingLen >= len) { len = typingLen; tag = "FONT"; (typingLen > len) ? (font = ["typing"]) : font.push("typing"); }
+		
+		const subAttrs = [];
+		for (let j = 0; j < len; j++) {
+			subAttrs.push(attrs[i + j].clone());
+		}
+		
+		if (tag) {
+			let opener = "<" + tag + ">";
+			let closer = "</" + tag + ">";
+			
+			switch (tag) {
+				case "S": {
+					for (let j = 0; j < len; j++) { subAttrs[j].s = false; }
+					break;
+				}
+				case "U": {
+					for (let j = 0; j < len; j++) { subAttrs[j].u = false; }
+					break;
+				}
+				case "I": {
+					for (let j = 0; j < len; j++) { subAttrs[j].i = false; }
+					break;
+				}
+				case "B": {
+					for (let j = 0; j < len; j++) { subAttrs[j].b = false; }
+					break;
+				}
+				case "FONT": {
+					opener = "<FONT";
+
+					// TODO: 정말 <FONT> 태그를 생성해야 하는 유의미한 값인지 내용물 재확인 필요
+
+					for (let k = 0; k < font.length; k++) {
+						const key = font[k];
+						switch (key) {
+							case "fs"    : {
+								if (fontSize) {
+									opener += " style=\"font-size: " + (attr.fs / fontSize * 100) + "%;\"";
+								} else {
+									opener += " size=\"" + attr.fs + "\"";
+								}
+								break;
+							}
+							case "fn"    : { opener += " face=\""   + attr.fn + "\""; break; }
+							case "fc"    : { opener += " color=\""  + Subtitle.Smi.colorFromAttr(attr.fc) + "\""; break; }
+							case "fade"  : { opener += " fade=\""   + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\""; break; }
+							case "shake" : { opener += " shake=\""  + attr.shake.ms + "," + attr.shake.size + "\""; break; }
+							case "typing": { opener += " typing=\"" + Typing.Mode.toString[attr.typing.mode] + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString[attr.typing.cursor] + "\""; break; }
+						}
+					}
+					opener += ">";
+					
+					for (let j = 0; j < len; j++) {
+						for (let k = 0; k < font.length; k++) {
+							if (attr[font[k]] == subAttrs[j][font[k]]) {
+								subAttrs[j][font[k]] = null;
+							}
+						}
+					}
+					break;
+				}
+			}
+
+			text += opener + Subtitle.Smi.fromAttrs(subAttrs, fontSize, false) + closer;
+			
+		} else {
+			// 태그 모두 상위에서 처리하고 텍스트만 남음
+			text += attr.text;
+		}
+		
+		i = i + len - 1;
+	}
 	
 	return text;
 }

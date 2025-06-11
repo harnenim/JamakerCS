@@ -73,9 +73,8 @@ $(() => {
 					}
 				}
 			}
-			const eventPart = Subtitle.AssPart.fromSync(input.toSync(), name);
-			const lines = eventPart.toText().split("\n");
 			/*
+			const lines = eventPart.toText().split("\n");
 			for (let i = 0; i < lines.length; i++) {
 				const line = lines[i].split("\r")[0].split(",");
 				if (line.length > 9) {
@@ -149,12 +148,24 @@ $(() => {
 					}
 				}
 			}
-			*/
 			outputs.push(lines.join("\n"));
+			*/
+			/*
+			const eventPart = Subtitle.AssPart.fromSync(input.toSync(), name);
 			assFile.getEvents().body.push(...eventPart.body);
+			*/
+			assFile.addFromSync(input.toSync(), name);
 		}
 // 		$("#output").val(outputs.join("\n").split("\n\n").join("\n"));
-		$("#output").val(outputs.join("\n").split("\n\n").join("\n"));
+//		$("#output").val(outputs.join("\n").split("\n\n").join("\n"));
+		assFile.getEvents().body.sort((a,b) => {
+			let cmp = a.Start - b.Start;
+			if (cmp == 0) {
+				cmp = a.Layer - b.Layer;
+			}
+			return cmp;
+		});
+		console.log(assFile);
 		$("#output").val(assFile.toText());
 	});
 });
