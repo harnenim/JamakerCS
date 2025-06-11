@@ -2748,8 +2748,8 @@ Subtitle.Smi.fromAttrs = (attrs, fontSize = 0, checkRuby=true, checkFont=true) =
 		let iLen      = 0; if (attr.i     ) for (iLen      = 1; i + iLen      < attrs.length; iLen++     ) { if (!attrs[i + iLen     ].i) break; }
 		let uLen      = 0; if (attr.u     ) for (uLen      = 1; i + uLen      < attrs.length; uLen++     ) { if (!attrs[i + uLen     ].u) break; }
 		let sLen      = 0; if (attr.s     ) for (sLen      = 1; i + sLen      < attrs.length; sLen++     ) { if (!attrs[i + sLen     ].s) break; }
-		let fcLen = 0;
 		/*
+		let fcLen = 0;
 		if (attr.fc) {
 			for (let j = attrs.length - 1; j >= i; j--) {
 				if (attrs[j].fc == attr.fc) {
