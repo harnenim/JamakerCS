@@ -589,7 +589,7 @@ function apply() {
 								
 								syncEnd = shiftSync(syncEnd);
 								if (comment.length > 6 && comment.substring(0, 6).toUpperCase() == "<SYNC ") {
-									comment = shiftHold(new Subtitle.SmiFile(comment)).toTxt().trim();
+									comment = shiftHold(new Subtitle.SmiFile(comment)).toText().trim();
 								}
 								comment = comment.trim().split("<").join("<​").split(">").join("​>");
 								item.text = "<!-- End=" + syncEnd + "\n" + comment + "\n-->\n" + afterComment;
@@ -672,7 +672,7 @@ function apply() {
 				holds.push({
 						pos : holdInfo.pos
 					,	name: holdInfo.name
-					,	text: hold.toTxt()
+					,	text: hold.toText()
 					,	start: hold.body.length ? hold.body[0].start : 999999999
 				});
 			}
@@ -689,7 +689,7 @@ function apply() {
 				const srt = new Subtitle.Srt(shiftSync(item.start), shiftSync(item.end), item.text);
 				target.body.push(srt);
 			}
-			operation.output = target.toTxt();
+			operation.output = target.toText();
 			refreshPreview(true);
 			break;
 		}
@@ -795,7 +795,7 @@ function apply() {
 				}
 			}
 			
-			operation.output = target.toTxt();
+			operation.output = target.toText();
 			refreshPreview(true);
 			break;
 		}

@@ -107,7 +107,7 @@ function optimize() {
 		item.start = optimizeSync(smiSync(item.start));
 		item.end   = optimizeSync(smiSync(item.end  ));
 	}
-	const result = ass.toTxt();
+	const result = ass.toText();
 	$result.val(result);
 }
 function smiSync(assSync) {

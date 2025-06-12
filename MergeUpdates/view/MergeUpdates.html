@@ -534,8 +534,8 @@ $(() => {
 
 		$targetAftFrames.val("");
 		SmiEditor.selected.render();
-		$targetAftUpdate.val(targetAftUpdate.toTxt());
-		$targetAftFrames.val(targetAftFrames.toTxt());
+		$targetAftUpdate.val(targetAftUpdate.toText());
+		$targetAftFrames.val(targetAftFrames.toText());
 		SmiEditor.selected.render();
 
 		if (frameChanged) {
@@ -564,7 +564,7 @@ $(() => {
 			}
 		}
 
-		const result = targetAftFinish.toTxt();
+		const result = targetAftFinish.toText();
 		$targetAftFinish.val(result);
 
 		binder.save($("#outputPath").val(), $("#outputName").val(), result);
