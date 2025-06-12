@@ -379,6 +379,10 @@ $(() => {
 		e.preventDefault();
 	});
 	
+	$tbody.on("load", "image", function() {
+		// 이미지 로딩 성공 후엔 추가 갱신 없도록 함
+		$(this).data({ img: null });
+	});
 	function refreshImages($imgs) {
 		$imgs.each(function () {
 			const $img = $(this);
