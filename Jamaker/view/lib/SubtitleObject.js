@@ -1471,9 +1471,6 @@ Subtitle.AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkA
 	// 일부 페이드 인/아웃 - 겹치는 객체 만들어서 처리해야 함
 	// 색상to색상인 경우 - 겹치는 객체 만들어서 처리해야 함
 	if (checkFade) {
-		let hasFade = false;
-		let hasElse = false;
-		
 		let count = 0;
 		const baseAttrs = [];
 		for (let i = 0; i < attrs.length; i++) {
@@ -1487,151 +1484,136 @@ Subtitle.AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkA
 		if (count) {
 			const texts = [];
 
-			count = 0;
-			const fdInAttrs = [Subtitle.Attr.junkAss("{\\fad([FADE_LENGTH],0)}")];
-			let wasFade = false;
-			for (let i = 0; i < attrs.length; i++) {
-				const attr = new Subtitle.Attr(attrs[i], attrs[i].text);
-				const base = baseAttrs[i];
-				if (attr.fade == 1) {
-					count++;
-					if (!wasFade) {
-						// 페이드 대상 원본 투명화
-						base.hide = true;
-						// 페이드 대상 활성화
-						if (i > 0) {
-							fdInAttrs.push(Subtitle.Attr.junkAss("{\\1a\\bord}"));
+			{	// 페이드 인
+				count = 0;
+				const fadeAttrs = [Subtitle.Attr.junkAss("{\\fad([FADE_LENGTH],0)}")];
+				let wasFade = false;
+				for (let i = 0; i < attrs.length; i++) {
+					const attr = new Subtitle.Attr(attrs[i], attrs[i].text);
+					const base = baseAttrs[i];
+					if (attr.fade == 1) {
+						count++;
+						if (!wasFade) {
+							// 페이드 대상 원본 투명화
+							base.hide = true;
+							// 페이드 대상 활성화
+							if (i > 0) {
+								fadeAttrs.push(Subtitle.Attr.junkAss("{\\1a\\bord}"));
+							}
+							wasFade = true;
 						}
-						wasFade = true;
-					}
 
-				} else {
-					if (wasFade || i == 0) {
-						// 페이드 비대상 비활성화
-						fdInAttrs.push(Subtitle.Attr.junkAss("{\\bord0\\1a&HFF&}"));
-						wasFade = false;
-					}
-				}
-				attr.fade = 0;
-				fdInAttrs.push(attr);
-			}
-			if (count) {
-				texts.push(...Subtitle.Ass.fromAttrs(fdInAttrs, false, false));
-			}
-
-			count = 0;
-			const fdOtAttrs = [Subtitle.Attr.junkAss("{\\fad(0,[FADE_LENGTH])}")];
-			wasFade = false;
-			for (let i = 0; i < attrs.length; i++) {
-				const attr = new Subtitle.Attr(attrs[i], attrs[i].text);
-				const base = baseAttrs[i];
-				if (attr.fade == -1) {
-					count++;
-					if (!wasFade) {
-						// 페이드 대상 원본 투명화
-						base.hide = true;
-						// 페이드 대상 활성화
-						if (i > 0) {
-							fdOtAttrs.push(Subtitle.Attr.junkAss("{\\1a\\bord}"));
+					} else {
+						if (wasFade || i == 0) {
+							// 페이드 비대상 비활성화
+							fadeAttrs.push(Subtitle.Attr.junkAss("{\\bord0\\1a&HFF&}"));
+							wasFade = false;
 						}
-						wasFade = true;
 					}
-
-				} else {
-					if (wasFade || i == 0) {
-						// 페이드 비대상 비활성화
-						fdOtAttrs.push(Subtitle.Attr.junkAss("{\\bord0\\1a&HFF&}"));
-						wasFade = false;
-					}
+					attr.fade = 0;
+					fadeAttrs.push(attr);
 				}
-				attr.fade = 0;
-				fdOtAttrs.push(attr);
-			}
-			if (count) {
-				texts.push(...Subtitle.Ass.fromAttrs(fdOtAttrs, false, false));
-			}
-
-			let wasHide = false;
-			console.log(baseAttrs);
-			for (let i = 0; i < baseAttrs.length; i++) {
-				const attr = baseAttrs[i];
-				if (!wasHide && attr.hide) {
-					attr.text = "{\\bord0\\1a&HFF&}" + attr.text;
-					wasHide = true;
-				} else if (wasHide && !attr.hide) {
-					attr.text = "{\\1a\\bord}" + attr.text;
-					wasHide = false;
+				if (count) {
+					texts.push(...Subtitle.Ass.fromAttrs(fadeAttrs, false, false));
 				}
 			}
 
-			texts.push(...Subtitle.Ass.fromAttrs(baseAttrs, false, false));
+			{	// 페이드 아웃
+				count = 0;
+				const fadeAttrs = [Subtitle.Attr.junkAss("{\\fad(0,[FADE_LENGTH])}")];
+				let wasFade = false;
+				for (let i = 0; i < attrs.length; i++) {
+					const attr = new Subtitle.Attr(attrs[i], attrs[i].text);
+					const base = baseAttrs[i];
+					if (attr.fade == -1) {
+						count++;
+						if (!wasFade) {
+							// 페이드 대상 원본 투명화
+							base.hide = true;
+							// 페이드 대상 활성화
+							if (i > 0) {
+								fadeAttrs.push(Subtitle.Attr.junkAss("{\\1a\\bord}"));
+							}
+							wasFade = true;
+						}
+
+					} else {
+						if (wasFade || i == 0) {
+							// 페이드 비대상 비활성화
+							fadeAttrs.push(Subtitle.Attr.junkAss("{\\bord0\\1a&HFF&}"));
+							wasFade = false;
+						}
+					}
+					attr.fade = 0;
+					fadeAttrs.push(attr);
+				}
+				if (count) {
+					texts.push(...Subtitle.Ass.fromAttrs(fadeAttrs, false, false));
+				}
+			}
+
+			{	// 페이드와 무관하게 보이는 내용물
+				let wasHide = false;
+				for (let i = 0; i < baseAttrs.length; i++) {
+					const attr = baseAttrs[i];
+					if (!wasHide && attr.hide) {
+						attr.text = "{\\bord0\\1a&HFF&}" + attr.text;
+						wasHide = true;
+					} else if (wasHide && !attr.hide) {
+						attr.text = "{\\1a\\bord}" + attr.text;
+						wasHide = false;
+					}
+				}
+
+				texts.push(...Subtitle.Ass.fromAttrs(baseAttrs, false, false));
+			}
+
+			{	// 색상 페이드는 위를 덮어야 해서 더 나중에 추가함
+				count = 0;
+				const fadeAttrs = [Subtitle.Attr.junkAss("{\\fad([FADE_LENGTH],0)\\bord0}")];
+				let wasFade = false;
+				for (let i = 0; i < attrs.length; i++) {
+					const attr = new Subtitle.Attr(attrs[i], attrs[i].text);
+					let isFade = false;
+					if (typeof attr.fade == "string" && attr.fade[0] == "#") {
+						if (attr.fade.length == 7) {
+							// 색상 페이드
+							isFade = true;
+							attr.fc = attr.fade.substring(1);
+
+						} else if (attr.fade.length == 15 && attr.fade[7] == "~" && attr.fade[8] == "#") {
+							// 그라데이션 페이드
+							isFade = true;
+							attr.fc = attr.fade;
+						}
+					}
+					if (isFade) {
+						count++;
+						if (!wasFade) {
+							// 페이드 대상 활성화
+							if (i > 0) {
+								fadeAttrs.push(Subtitle.Attr.junkAss("{\\1a}"));
+							}
+							wasFade = true;
+						}
+
+					} else {
+						if (wasFade || i == 0) {
+							// 페이드 비대상 비활성화
+							fadeAttrs.push(Subtitle.Attr.junkAss("{\\1a&HFF&}"));
+							wasFade = false;
+						}
+					}
+					attr.fade = 0;
+					fadeAttrs.push(attr);
+				}
+				if (count) {
+					texts.push(...Subtitle.Ass.fromAttrs(fadeAttrs, false, false));
+				}
+			}
 
 			return texts;
 		}
-		
-		/*
-		const texts = [];
-		let base = null;
-		
-		// 페이드인 확인
-		let fades = [];
-		for (let i = 0; i < attrs.length; i++) {
-			const attr = attrs[i];
-			if (attr.fade == 1) {
-				fades.push(i);
-			}
-		}
-		if (fades.length) {
-			base = [];
-			fade = [];
-			for (let i = 0; i < attrs.length; i++) {
-				const attr = attrs[i];
-				const b = new Subtitle.Attr(attr);
-				b.fade = 
-			}
-		}
-		
-		
-		for (let i = 0; i < attrs.length; i++) {
-			const attr = attrs[i];
-			
-			let isFade = false;
-			if (attr.fade == 0) {
-				// 대부분 여기서 넘기기
-			} else {
-				if ()
-				if (attr.fade == 1) {
-					hasFade = isFade = true;
-				} else if (attr.fade == -1) {
-					hasFade = isFade = true;
-				} else if (typeof attr.fade == "string" && attr.fade[0] == "#") {
-					// 이걸 지원해야 할까...?
-					if (attr.fade.length == 7) {
-						
-					} else if (attr.fade.length == 15) {
-						
-					}
-				}
-			}
-			if (!isFade) {
-				// 페이드 범위가 아닌 내용물 체크
-				if (!hasElse) {
-					hasElse = (attr.text.split("　").join("").split("​").join("").trim().length > 0);
-				}
-			}
-		}
-		
-		if (hasFade && hasElse) {
-			// TODO: 페이드 범위만 투명하게 생성
-			const baseAttrs = [];
-			for (let i = 0; i < attrs.length; i++) {
-				const attr = attrs[i];
-			}
-			
-			
-			// TODO: 페이드 범위 이외에는 투명하게 생성
-		}
-		*/
 	}
 	
 	let text = "";
@@ -1697,6 +1679,7 @@ Subtitle.AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkA
 			for (let k = 0; k < attr.text.length; k++) {
 				attrText += "{\\c" + color.ass(k, attr.text.length - 1) + "}" + attr.text[k];
 			}
+			attr.text = attrText;
 			
 		} else {
 			if (last.fc != attr.fc) {
@@ -3862,7 +3845,7 @@ Subtitle.SmiFile.prototype.fromSync = function(syncs) {
 
 const DefaultStyle = Subtitle.DefaultStyle = {
 		Fontname: ""
-	,	Fontsize: 72
+	,	Fontsize: 80
 	,	PrimaryColour  : "#FFFFFF"
 	,	SecondaryColour: "#FF0000"
 	,	OutlineColour  : "#000000"

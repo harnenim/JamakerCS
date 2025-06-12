@@ -1231,7 +1231,7 @@ function setSetting(setting, initial=false) {
 	}
 	
 	Combine.css = setting.viewer.css;
-	DefaultStyle.Fontsize = Number(setting.viewer.size) * 4;
+	DefaultStyle.Fontsize = Number(setting.viewer.size) / 18 * 80;
 	
 	binder.setMenus(setting.menu);
 	
