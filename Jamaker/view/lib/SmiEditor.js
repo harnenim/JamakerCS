@@ -2849,6 +2849,8 @@ SmiEditor.Viewer = {
 						for (let i = 0; i < holds.length; i++) {
 							if (holds[i].style) {
 								// 홀드 스타일 있을 경우 반영
+								// TODO: 성능 부하가 얼마나 되지?
+								//       미리보기 쪽에서 필요 시 렌더링?
 								const tag = Subtitle.SmiFile.styleToSmi(holds[i].style);
 								const holdLines = JSON.parse(JSON.stringify(holds[i].lines));
 								for (let j = 0; j < holdLines.length; j++) {

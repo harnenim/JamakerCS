@@ -644,28 +644,6 @@ Subtitle.SyncAttr = function(start, end, startType, endType, text) {
 	this.endType   = endType   ? endType   : Subtitle.SyncType.normal;
 	this.text = text ? text : null;
 }
-/*
-	public interface ISubtitleObject<SObj>
-	{
-		string ToTxt();
-		string ColorToAttr(string soColor);
-		string ColorFromAttr(string attrColor);
-
-		List<Attr> ToAttr();
-		SObj FromAttr(List<Attr> attrs);
-
-		SyncAttr ToSync();
-		SObj FromSync(SyncAttr sync);
-	}
-	public interface ISubtitleFile<SObj, FObj>
-	{
-		string ToTxt();
-		FObj FromTxt(string txt);
-
-		List<SyncAttr> ToSync();
-		FObj FromSync(List<SyncAttr> sync);
-	}
-*/
 Subtitle.Width =
 {	DEFAULT_FONT: { fontFamily: "맑은 고딕", fontSize: 72 }
 /*
@@ -773,7 +751,7 @@ Subtitle.Attr = function(old, text="", withTagString=false) {
 		this.fn   = ""; // FontName
 		this.fc   = ""; // Fontcolor
 		this.ass  = null;
-		this.fade = 0;
+		this.fade = 0; // 형식> in: 1 / out: -1 / #ABCDEF / #ABCDEF~#FEDCBA
 		this.shake = null;
 		this.typing = null;
 		this.tagString = null;
@@ -895,6 +873,81 @@ Subtitle.Attr.toText = (attrs) => {
 	return result;
 }
 
+Subtitle.Color = function(target, color, index=0) {
+	this.index = index; // 페이드 index가 아니라, 속성의 index를 변칙적으로 사용 중...
+	
+	if (color.length == 7 && color[0] == "#") {
+		color = color.substring(1);
+	}
+	// 16진수 맞는지 확인
+	if (isFinite("0x" + color)) {
+		this.r = this.tr = Subtitle.Color.v(color.substring(0, 2));
+		this.g = this.tg = Subtitle.Color.v(color.substring(2, 4));
+		this.b = this.tb = Subtitle.Color.v(color.substring(4, 6));
+	} else {
+		this.r = this.tr = 255;
+		this.g = this.tg = 255;
+		this.b = this.tb = 255;
+	}
+	
+	if (target == 1) {
+		this.r = this.g = this.b = 0;
+	} else if (target == -1) {
+		this.tr = this.tg = this.tb = 0;
+	} else {
+		if (target.length == 7 && target[0] == "#") {
+			target = target.substring(1);
+		}
+		// 16진수 맞는지 확인
+		if (isFinite("0x" + target)) {
+			this.tr = Subtitle.Color.v(target.substring(0, 2));
+			this.tg = Subtitle.Color.v(target.substring(2, 4));
+			this.tb = Subtitle.Color.v(target.substring(4, 6));
+		}
+	}
+}
+Subtitle.Color.v = (c) => {
+	if (c.length == 1) {
+		if (c >= '0' && c <= '9')
+			return c.charCodeAt() - 48
+		if (c >= 'a' && c <= 'z')
+			return c.charCodeAt() - 87;
+		if (c >= 'A' && c <= 'Z')
+			return c.charCodeAt() - 55;
+		return 0;
+		
+	} else {
+		let v = 0;
+		for (let i = 0; i < c.length; i++) {
+			v = v * 16 + Subtitle.Color.v(c[i]);
+		}
+		return v;
+	}
+}
+Subtitle.Color.c = (v) => {
+	return v < 10 ? String.fromCharCode(v + 48) : String.fromCharCode(v + 55);
+}
+Subtitle.Color.hex = (v) => {
+	return "" + Subtitle.Color.c(v / 16) + Subtitle.Color.c(v % 16);
+}
+Subtitle.Color.prototype.getColor = function(value, total) {
+	return [
+		(Math.ceil(((this.r * (total - value)) + (this.tr * value)) / total))
+	,	(Math.ceil(((this.g * (total - value)) + (this.tg * value)) / total))
+    ,	(Math.ceil(((this.b * (total - value)) + (this.tb * value)) / total))
+    ];
+}
+Subtitle.Color.prototype.get = function(value, total) {
+	const color = this.getColor(value, total);
+	return Subtitle.Color.hex(color[0]) + Subtitle.Color.hex(color[1]) + Subtitle.Color.hex(color[2]);
+}
+Subtitle.Color.prototype.smi = function(value, total) {
+	return "#" + this.get(value, total);
+}
+Subtitle.Color.prototype.ass = function(value, total) {
+	const color = this.getColor(value, total);
+	return "&H" + Subtitle.Color.hex(color[2]) + Subtitle.Color.hex(color[1]) + Subtitle.Color.hex(color[0]) + "&";
+}
 
 
 
@@ -996,7 +1049,7 @@ Subtitle.Ass.prototype.toAttrs = function() {
 					tag = attrString.substring(tagStart, tagEnd);
 
 					if (tag[0] == "c" || tag.substring(0,2) == "1c") {
-						if (last.text.length > 0) {
+						if (last.ass || last.text.length > 0) {
 							result.push((last = new Subtitle.Attr(last)));
 						}
 						if (tag[0] == "c") {
@@ -1008,25 +1061,25 @@ Subtitle.Ass.prototype.toAttrs = function() {
 							last.fc = "";
 						}
 					} else if (tag.substring(0,2) == "fn") {
-						if (last.text.length > 0) {
+						if (last.ass || last.text.length > 0) {
 							result.push((last = new Subtitle.Attr(last)));
 						}
 						last.fn = (tag.length > 2) ? tag.substring(2) : "";
 						
 					} else if (tag[0] == "b") {
-						if (last.text.length > 0) {
+						if (last.ass || last.text.length > 0) {
 							result.push((last = new Subtitle.Attr(last)));
 						}
 						last.b = (tag.length >= 2 && tag[1] == '1');
 						
 					} else if (tag[0] == "u") {
-						if (last.text.length > 0) {
+						if (last.ass || last.text.length > 0) {
 							result.push((last = new Subtitle.Attr(last)));
 						}
 						last.u = (tag.length >= 2 && tag[1] == '1');
 						
 					} else if (tag[0] == "i") {
-						if (last.text.length > 0) {
+						if (last.ass || last.text.length > 0) {
 							result.push((last = new Subtitle.Attr(last)));
 						}
 						last.i = (tag.length >= 2 && tag[1] == '1');
@@ -1087,17 +1140,17 @@ Subtitle.Ass.fromAttrs = function(attrs) {
 			// 그라데이션 분할
 			const cFrom = attr.fc.substring(0,  7);
 			const cTo   = attr.fc.substring(8, 15);
-			const color = new Subtitle.Smi.Color(cTo, cFrom); // TODO: Smi 객체에 기생하지 않아야 함...
+			const color = new Subtitle.Color(cTo, cFrom);
 			
 			let attrText = "";
 			for (let k = 0; k < attr.text.length; k++) {
-				attrText += "{\\c" + Subtitle.Ass.colorFromAttr(color.get(k, attr.text.length - 1)) + "}" + attr.text[k];
+				attrText += "{\\c" + color.ass(k, attr.text.length - 1) + "}" + attr.text[k];
 			}
 
 			if (attr.furigana) {
 				let furigana = "";
 				for (let k = 0; k < attr.furigana.text.length; k++) {
-					furigana += "{\\c" + Subtitle.Ass.colorFromAttr(color.get(k, attr.furigana.text.length - 1)) + "}" + attr.furigana.text[k];
+					furigana += "{\\c" + color.ass(k, attr.furigana.text.length - 1) + "}" + attr.furigana.text[k];
 				}
 				text += "[" + attrText + "|" + furigana.split("]").join("\\]") + "]";
 				
@@ -1191,7 +1244,135 @@ Subtitle.Ass.fromAttrs = function(attrs) {
 	
 	return [lines.join("\\N").split("}{").join("")];
 }
-Subtitle.Ass.fromAttrs = (attrs, checkFurigana=true, checkAss=true) => {
+
+Subtitle.Ass.prototype.toSync = function() {
+	return new Subtitle.SyncAttr(
+			start * 10
+		,	end * 10
+		,	(this.style.StartsWith("［") ? Subtitle.SyncType.frame : Subtitle.SyncType.normal)
+		,	(this.style.EndsWith  ("］") ? Subtitle.SyncType.frame : Subtitle.SyncType.normal)
+		,	this.toAttrs()
+	);
+}
+Subtitle.Ass.prototype.fromSync = function(sync, checkFrame=true) {
+	this.start = sync.start / 10;
+	this.end   = sync.end   / 10;
+	this.style = 
+		( (!checkFrame || (sync.startType == Subtitle.SyncType.normal && sync.endType == Subtitle.SyncType.normal))
+			? sync.style ? sync.style : "Default"
+			: ( (sync.startType == Subtitle.SyncType.frame ? "［" : "（")
+			  + (sync.endType   == Subtitle.SyncType.frame ? "］" : "）")
+			)
+		);
+	this.fromAttrs(sync.text);
+	return this;
+}
+
+Subtitle.AssFile = function(text) {
+	this.header = "";
+	this.body = [];
+	if (text) {
+		this.fromText(text);
+	}
+}
+Subtitle.AssFile.prototype.toTxt = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
+Subtitle.AssFile.prototype.toText = function() {
+	let result = this.header.split("\r\n").join("\n");
+	for (let i = 0; i < this.body.length; i++) {
+		result += this.body[i].toText() + "\n";
+	}
+	return result;
+}
+Subtitle.AssFile.prototype.fromTxt = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
+Subtitle.AssFile.prototype.fromText = function(text) {
+	this.header = "";
+	this.body = [];
+	
+	const lines = text.split("\r\n").join("\n").split('\n');
+	
+	const header = [];
+	let canBeHeader = true;
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i];
+		
+		if (line.substring(0,9) == ("Dialogue:")) {
+			canBeHeader = false;
+			const cols = line.substring(9).trim().split(',');
+			const ass = new Subtitle.Ass(
+				Subtitle.Ass.time2Int(cols[1])
+			,	Subtitle.Ass.time2Int(cols[2])
+			,	cols[3]
+			,	cols[9]
+			);
+			for (let j = 10; j < cols.length; j++) {
+				ass.text += "," + cols[j];
+			}
+			this.body.push(ass);
+			
+		} else if (canBeHeader) {
+			if (line.substring(0,7) == ("Format:")) {
+				//canBeHeader = false;
+				const cols = line.substring(7).trim().split(',');
+				Subtitle.Ass.cols = [];
+				for (let j = 0; j < cols.length; j++) {
+					Subtitle.Ass.cols.push(cols[j].trim());
+				}
+				
+			}
+			header.push(line);
+		}
+	}
+	this.header = header.join("\n") + "\n";
+
+	return this;
+}
+Subtitle.AssFile.prototype.toSync = function() {
+	const result = [];
+	for (let i = 0; i < this.body.length; i++) {
+		result.push(this.body[i].toSync());
+	}
+	return result;
+}
+
+Subtitle.AssFile.prototype.fromSync = function(syncs, checkFrame=true) {
+	this.body = [];
+	for (let i = 0; i < syncs.length; i++) {
+		const sync = new Subtitle.Ass().fromSync(syncs[i], checkFrame);
+		this.body.push(sync);
+		
+		if (sync.texts) {
+			for (let j = 1; j < sync.texts.length; j++) {
+				this.body.push(new Subtitle.Ass(sync.start, sync.end, sync.style, sync.texts[j]));
+			}
+		}
+	}
+	return this;
+}
+
+
+
+
+Subtitle.AssEvent = function(start, end, style, text, layer=0) {
+	this.key = "Dialogue";
+	this.Layer = layer;
+	this.Start = start;
+	this.End = end;
+	this.Style = style;
+	this.Name = "";
+	this.MarginL = 0;
+	this.MarginR = 0;
+	this.MarginV = 0;
+	this.Effect = "";
+	this.Text = text;
+}
+Subtitle.AssEvent.prototype.fromSync = function(sync, style) {
+	this.Start = sync.start / 10;
+	this.End   = sync.end   / 10;
+	this.Style = sync.style ? sync.style : "Default";
+	this.Text = (this.texts = Subtitle.Ass.fromAttrs(sync.text))[0];
+	return this;
+}
+Subtitle.AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) => {
 	if (checkFurigana) {
 		let hasFurigana = false;
 		for (let i = 0; i < attrs.length; i++) {
@@ -1282,9 +1463,96 @@ Subtitle.Ass.fromAttrs = (attrs, checkFurigana=true, checkAss=true) => {
 		}
 	}
 	
+	// TODO: 타이핑 효과 있을 경우
+	// TODO: 흔들기 효과 있을 경우
+	// 위의 두 가지는 smi에서 normalize 해서 보내주는 게?
+	
 	// TODO: 페이드 효과 있을 경우
-	// 페이드 인/아웃 - 아래에서 처리 가능
+	// 전체 페이드 인/아웃 - 아래에서 처리 가능
+	// 일부 페이드 인/아웃 - 겹치는 객체 만들어서 처리해야 함
 	// 색상to색상인 경우 - 겹치는 객체 만들어서 처리해야 함
+	if (checkFade) {
+		let hasFade = false;
+		let hasElse = false;
+		
+		let count = 0;
+		const base = [];
+		for (let i = 0; i < attrs.length; i++) {
+			const attr = new Subtitle.Attr(attrs[i]);
+			if (attr.fade != 0) count++;
+			attr.fade = 0;
+			base.push(attr);
+		}
+		
+		if (count) {
+			count = 0;
+			
+		}
+		
+		/*
+		const texts = [];
+		let base = null;
+		
+		// 페이드인 확인
+		let fades = [];
+		for (let i = 0; i < attrs.length; i++) {
+			const attr = attrs[i];
+			if (attr.fade == 1) {
+				fades.push(i);
+			}
+		}
+		if (fades.length) {
+			base = [];
+			fade = [];
+			for (let i = 0; i < attrs.length; i++) {
+				const attr = attrs[i];
+				const b = new Subtitle.Attr(attr);
+				b.fade = 
+			}
+		}
+		
+		
+		for (let i = 0; i < attrs.length; i++) {
+			const attr = attrs[i];
+			
+			let isFade = false;
+			if (attr.fade == 0) {
+				// 대부분 여기서 넘기기
+			} else {
+				if ()
+				if (attr.fade == 1) {
+					hasFade = isFade = true;
+				} else if (attr.fade == -1) {
+					hasFade = isFade = true;
+				} else if (typeof attr.fade == "string" && attr.fade[0] == "#") {
+					// 이걸 지원해야 할까...?
+					if (attr.fade.length == 7) {
+						
+					} else if (attr.fade.length == 15) {
+						
+					}
+				}
+			}
+			if (!isFade) {
+				// 페이드 범위가 아닌 내용물 체크
+				if (!hasElse) {
+					hasElse = (attr.text.split("　").join("").split("​").join("").trim().length > 0);
+				}
+			}
+		}
+		
+		if (hasFade && hasElse) {
+			// TODO: 페이드 범위만 투명하게 생성
+			const baseAttrs = [];
+			for (let i = 0; i < attrs.length; i++) {
+				const attr = attrs[i];
+			}
+			
+			
+			// TODO: 페이드 범위 이외에는 투명하게 생성
+		}
+		*/
+	}
 	
 	let text = "";
 	
@@ -1296,7 +1564,7 @@ Subtitle.Ass.fromAttrs = (attrs, checkFurigana=true, checkAss=true) => {
 			
 			if (typeof attr.ass == "string") {
 				// ASS 속성 이전 부분 처리
-				text += Subtitle.Ass.fromAttrs(attrs.slice(assEnd, i), false, false);
+				text += Subtitle.Ass.fromAttrs(attrs.slice(assEnd, i), false, false, false);
 				
 				// ASS 속성 처리
 				for (; i < attrs.length; i++) {
@@ -1322,17 +1590,20 @@ Subtitle.Ass.fromAttrs = (attrs, checkFurigana=true, checkAss=true) => {
 	for (let i = assEnd; i < attrs.length; i++) {
 		const attr = attrs[i];
 		
-		if (!last.b && attr.b) text += "{\\b1}";
-		else if (last.b && !attr.b) text += "{\\b}";
+		if (attr.fade ==  1) text += "{\\fad([FADE_LENGTH],0)}";
+		if (attr.fade == -1) text += "{\\fad(0,[FADE_LENGTH])}";
 		
-		if (!last.i && attr.i) text += "{\\i1}";
-		else if (last.i && !attr.i) text += "{\\i}";
+		if      (!last.b &&  attr.b) text += "{\\b1}";
+		else if ( last.b && !attr.b) text += "{\\b}";
 		
-		if (!last.u && attr.u) text += "{\\u1}";
-		else if (last.u && !attr.u) text += "{\\u}";
+		if      (!last.i &&  attr.i) text += "{\\i1}";
+		else if ( last.i && !attr.i) text += "{\\i}";
 		
-		if (!last.s && attr.s) text += "{\\s1}";
-		else if (last.s && !attr.s) text += "{\\s}";
+		if      (!last.u &&  attr.u) text += "{\\u1}";
+		else if ( last.u && !attr.u) text += "{\\u}";
+		
+		if      (!last.s &&  attr.s) text += "{\\s1}";
+		else if ( last.s && !attr.s) text += "{\\s}";
 		
 		if (last.fn != attr.fn) text += "{\\fn" + attr.fn + "}";
 		
@@ -1340,11 +1611,11 @@ Subtitle.Ass.fromAttrs = (attrs, checkFurigana=true, checkAss=true) => {
 			// 그라데이션 분할
 			const cFrom = attr.fc.substring(0,  7);
 			const cTo   = attr.fc.substring(8, 15);
-			const color = new Subtitle.Smi.Color(cTo, cFrom); // TODO: Smi 객체에 기생하지 않아야 함...
+			const color = new Subtitle.Color(cTo, cFrom);
 			
 			let attrText = "";
 			for (let k = 0; k < attr.text.length; k++) {
-				attrText += "{\\c" + Subtitle.Ass.colorFromAttr(color.get(k, attr.text.length - 1)) + "}" + attr.text[k];
+				attrText += "{\\c" + color.ass(k, attr.text.length - 1) + "}" + attr.text[k];
 			}
 			
 		} else {
@@ -1360,133 +1631,61 @@ Subtitle.Ass.fromAttrs = (attrs, checkFurigana=true, checkAss=true) => {
 	
 	return [text.split("\n").join("\\N").split("}{").join("")];
 }
+Subtitle.Ass.fromAttrs = Subtitle.AssEvent.fromAttrs;
 
-Subtitle.Ass.prototype.toSync = function() {
-	return new Subtitle.SyncAttr(
-			start * 10
-		,	end * 10
-		,	(this.style.StartsWith("［") ? Subtitle.SyncType.frame : Subtitle.SyncType.normal)
-		,	(this.style.EndsWith  ("］") ? Subtitle.SyncType.frame : Subtitle.SyncType.normal)
-		,	this.toAttrs()
-	);
-}
-Subtitle.Ass.prototype.fromSync = function(sync, checkFrame=true) {
-	this.start = sync.start / 10;
-	this.end   = sync.end   / 10;
-	this.style = 
-		( (!checkFrame || (sync.startType == Subtitle.SyncType.normal && sync.endType == Subtitle.SyncType.normal))
-			? sync.style ? sync.style : "Default"
-			: ( (sync.startType == Subtitle.SyncType.frame ? "［" : "（")
-			  + (sync.endType   == Subtitle.SyncType.frame ? "］" : "）")
-			)
-		);
-	this.fromAttrs(sync.text);
-	return this;
-}
-
-Subtitle.AssFile = function(text) {
-	this.header = "";
-	this.body = [];
-	if (text) {
-		this.fromText(text);
-	}
-}
-Subtitle.AssFile.prototype.toTxt = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
-Subtitle.AssFile.prototype.toText = function() {
-	let result = this.header.split("\r\n").join("\n");
-	for (let i = 0; i < this.body.length; i++) {
-		result += this.body[i].toText() + "\n";
-	}
-	return result;
-}
-Subtitle.AssFile.prototype.fromTxt = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
-Subtitle.AssFile.prototype.fromText = function(text) {
-	this.header = "";
-	this.body = [];
+Subtitle.AssEvent.fromSync = function(sync, style=null) {
+	const events = [];
+	const start = sync.start / 10;
+	const end   = sync.end   / 10;
 	
-	const lines = text.split("\r\n").join("\n").split('\n');
-	
-	const header = [];
-	let canBeHeader = true;
-	for (let i = 0; i < lines.length; i++) {
-		const line = lines[i];
-		
-		if (line.substring(0,9) == ("Dialogue:")) {
-			canBeHeader = false;
-			const cols = line.trim().split(',');
-			const ass = new Subtitle.Ass(
-				Subtitle.Ass.time2Int(cols[1])
-			,	Subtitle.Ass.time2Int(cols[2])
-			,	cols[3]
-			,	cols[9]
-			);
-			for (let j = 10; j < cols.length; j++) {
-				ass.text += "," + cols[j];
-			}
-			this.body.push(ass);
-			
-		} else if (canBeHeader) {
-			if (line.substring(0,7) == ("Format:")) {
-				//canBeHeader = false;
-				const cols = line.trim().split(',');
-				Subtitle.Ass.cols = [];
-				for (let j = 0; j < cols.length; j++) {
-					Subtitle.Ass.cols.push(cols[j].trim());
+	let attrs = sync.text;
+	if (attrs[0].comment) {
+		const comment = attrs[0].comment;
+		if (comment.startsWith("<!-- ASS\n")) {
+			const lines = comment.substring(9, comment.length - 3).trim().split("\n");
+			for (let i = 0; i < lines.length; i++) {
+				const cols = lines[i].trim().split(",");
+				const ass = new Subtitle.AssEvent(start, end, cols[3], cols[9], cols[0]);
+				for (let j = 3; j < 9; j++) {
+					ass[Subtitle.Ass.cols[j]] = cols[j];
 				}
-				
-			}
-			header.push(line);
-		}
-	}
-	this.header = header.join("\n") + "\n";
-
-	return this;
-}
-Subtitle.AssFile.prototype.toSync = function() {
-	const result = [];
-	for (let i = 0; i < this.body.length; i++) {
-		result.push(this.body[i].toSync());
-	}
-	return result;
-}
-
-Subtitle.AssFile.prototype.fromSync = function(syncs, checkFrame=true) {
-	this.body = [];
-	for (let i = 0; i < syncs.length; i++) {
-		const sync = new Subtitle.Ass().fromSync(syncs[i], checkFrame);
-		this.body.push(sync);
-		
-		if (sync.texts) {
-			for (let j = 1; j < sync.texts.length; j++) {
-				this.body.push(new Subtitle.Ass(sync.start, sync.end, sync.style, sync.texts[j]));
+				for (let j = 10; j < cols.length; j++) {
+					ass.Text += "," + cols[j];
+				}
+				events.push(ass);
 			}
 		}
 	}
-	return this;
-}
-
-
-
-
-Subtitle.AssEvent = function(start, end, style, text, layer=0) {
-	this.key = "Dialogue";
-	this.Layer = layer;
-	this.Start = start;
-	this.End = end;
-	this.Style = style;
-	this.Name = "";
-	this.MarginL = 0;
-	this.MarginR = 0;
-	this.MarginV = 0;
-	this.Effect = "";
-	this.Text = text;
-}
-Subtitle.AssEvent.prototype.fromSync = function(sync) {
-	this.Start = sync.start / 10;
-	this.End   = sync.end   / 10;
-	this.Style = sync.style ? sync.style : "Default";
-	this.Text = (this.texts = Subtitle.Ass.fromAttrs(sync.text))[0];
-	return this;
+	
+	const texts = Subtitle.AssEvent.fromAttrs(attrs);
+	for (let i = 0; i < texts.length; i++) {
+		let text = texts[i];
+		if (text.indexOf("[FADE_LENGTH]") > 0) {
+			text = text.split("[FADE_LENGTH]").join(sync.end - sync.start);
+		}
+		if ((text.indexOf("\\pos(") < 0) && style && style.pos) {
+			let x = style.pos[0];
+			let y = style.pos[1];
+			
+			// RUBY 태그 등을 두 줄 이상으로 나눴으면 pos 같게 고정 필요
+			let moved = (texts.length > 1);
+			
+			if (Math.floor((style.Alignment - 1) / 3) == 0) {
+				// 아래쪽에 줄 쌓았을 경우 pos 태그로 변형
+				while (text.endsWith("\\N{\\b1}　{\\b}") || text.endsWith("\\N{\\i1}　{\\i}")) {
+					moved = true;
+					y -= style.Fontsize * 1.5;
+					text = text.substring(0, text.length - 12);
+				}
+			}
+			
+			if (moved) {
+				text = ("{\\pos(" + x + "," + y + ")}" + text).split("}{").join("");
+			}
+		}
+		events.push(new Subtitle.AssEvent(start, end, sync.style, text, i));
+	}
+	return events;
 }
 
 Subtitle.AssPart = function(name, format=null, body=[]) {
@@ -1628,42 +1827,30 @@ Subtitle.AssFile2.prototype.addFromSync = function(syncs, styleName) {
 		}
 	}
 
-	let x = 0;
-	let y = 0;
-	const stylesPart = this.getStyles();
-	for (let i = 0; i < stylesPart.body.length; i++) {
-		const style = stylesPart.body[i];
-		if (style.Name == styleName) {
-			switch (style.Alignment % 3) {
-				case 0: x = style.MarginL; break;
-				case 1: x = playResX - style.MarginR; break;
-				case 2: x = (playResX + style.MarginL - style.MarginR) / 2; break;
-			}
-			switch (Math.floor((style.Alignment - 1) / 3)) {
-				case 0: y = playResY - style.MarginV; break;
-				case 1: y = playResY / 2; break;
-				case 2: y = style.MarginV; break;
-			}
+	const style = (typeof styleName == "string") ? this.getStyle(styleName) : styleName;
+	if (style) {
+		let x = 0;
+		let y = 0;
+		switch (style.Alignment % 3) {
+			case 0: x = style.MarginL; break;
+			case 1: x = playResX - style.MarginR; break;
+			case 2: x = (playResX + style.MarginL - style.MarginR) / 2; break;
 		}
+		switch (Math.floor((style.Alignment - 1) / 3)) {
+			case 0: y = playResY - style.MarginV; break;
+			case 1: y = playResY / 2; break;
+			case 2: y = style.MarginV; break;
+		}
+		// 후리가나 등 겹치는 항목을 생성할 경우 위치 고정
+		style.pos = [x, y];
 	}
 	
-	// 후리가나 등 겹치는 항목을 생성할 경우 위치 고정
-	const pos = "{\\pos(" + x + "," + y + ")}";
 	
 	const part = this.getEvents();
 	for (let i = 0; i < syncs.length; i++) {
 		const sync = syncs[i];
 		sync.style = styleName;
-		
-		const event = new Subtitle.AssEvent().fromSync(sync, false);
-		
-		if (event.texts && event.texts.length > 1) {
-			for (let j = 0; j < event.texts.length; j++) {
-				part.body.push(new Subtitle.AssEvent(event.Start, event.End, event.Style, pos + event.texts[j], j));
-			}
-		} else {
-			part.body.push(event);
-		}
+		part.body.push(...Subtitle.AssEvent.fromSync(sync, style));
 	}
 }
 Subtitle.AssFile2.prototype.toSync = function() {
@@ -1702,14 +1889,34 @@ Subtitle.AssFile2.prototype.getStyles = function() {
 Subtitle.AssFile2.prototype.getEvents = function() {
 	return this.getPart("Events");
 }
+Subtitle.AssFile2.prototype.getStyle = function(name) {
+	const stylesPart = this.getStyles();
+	for (let i = 0; i < stylesPart.body.length; i++) {
+		const style = stylesPart.body[i];
+		if (style.Name == name) {
+			return style;
+		}
+	}
+	return null;
+}
 Subtitle.AssFile2.prototype.addStyle = function(name, style) {
 	style = JSON.parse(JSON.stringify(style));
 	style.key = "Style";
 	style.Name = name;
+	style.Encoding = 1;
+	
+	if (!style.Fontname) style.Fontname = "맑은 고딕";
+	style.Bold        = style.Bold        ? -1 : 0;
+	style.Italic      = style.Italic      ? -1 : 0;
+	style.Underline   = style.Underline   ? -1 : 0;
+	style.StrikeOut   = style.StrikeOut   ? -1 : 0;
+	style.BorderStyle = style.BorderStyle ?  3 : 1;
+	
 	{ let fc = style.PrimaryColour   + (511 - style.PrimaryOpacity  ).toString(16).substring(1); style.PrimaryColour   = ("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
 	{ let fc = style.SecondaryColour + (511 - style.SecondaryOpacity).toString(16).substring(1); style.SecondaryColour = ("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
 	{ let fc = style.OutlineColour   + (511 - style.OutlineOpacity  ).toString(16).substring(1); style.OutlineColour   = ("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
 	{ let fc = style.BackColour      + (511 - style.BackOpacity     ).toString(16).substring(1); style.BackColour      = ("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
+	
 	this.getStyles().body.push(style);
 }
 
@@ -1934,7 +2141,7 @@ Subtitle.Smi.Status = function() {
 	this.fs = [];
 	this.fn = [];
 	this.fc = [];
-	this.ass = [];
+	this.ass = []; // ASS 변환 시에만 쓰이는 속성
 	this.fade = [];
 	this.shake = [];
 	this.typing = [];
@@ -2163,7 +2370,7 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 				// 원래 텍스트 비었으면 군더더기 없이 하려고 했는데
 				// 태그 여닫은 순서는 기억하는 게 좋을 것 같음
 				// ... 아닌가?
-				if (last.text.length > 0) {
+				if (last.ass || last.text.length > 0) {
 					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2172,7 +2379,7 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 				Subtitle.Smi.setStyle(last, status.setB(true));
 				break;
 			case "I":
-				if (last.text.length > 0) {
+				if (last.ass || last.text.length > 0) {
 					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2181,7 +2388,7 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 				Subtitle.Smi.setStyle(last, status.setI(true));
 				break;
 			case "U":
-				if (last.text.length > 0) {
+				if (last.ass || last.text.length > 0) {
 					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2190,7 +2397,7 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 				Subtitle.Smi.setStyle(last, status.setU(true));
 				break;
 			case "S":
-				if (last.text.length > 0) {
+				if (last.ass || last.text.length > 0) {
 					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2199,7 +2406,7 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 				Subtitle.Smi.setStyle(last, status.setS(true));
 				break;
 			case "FONT":
-				if (last.text.length > 0) {
+				if (last.ass || last.text.length > 0) {
 					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2214,7 +2421,7 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 				}
 				break;
 			case "RUBY":
-				if (last.text.length > 0) {
+				if (last.ass || last.text.length > 0) {
 					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2224,7 +2431,7 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 				ruby = last;
 				break;
 			case "RT":
-				if (last.text.length > 0) {
+				if (last.ass || last.text.length > 0) {
 					last = new Subtitle.Attr(); // 후리가나는 상위 리스트에 넣지 않음
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2247,7 +2454,7 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 	function closeTag(tagName) {
 		switch (tagName.toUpperCase()) {
 			case "B":
-				if (last.text.length > 0) {
+				if (last.ass || last.text.length > 0) {
 					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2256,7 +2463,7 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 				Subtitle.Smi.setStyle(last, status.setB(false));
 				break;
 			case "I":
-				if (last.text.length > 0) {
+				if (last.ass || last.text.length > 0) {
 					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2265,7 +2472,7 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 				Subtitle.Smi.setStyle(last, status.setI(false));
 				break;
 			case "U":
-				if (last.text.length > 0) {
+				if (last.ass || last.text.length > 0) {
 					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2274,7 +2481,7 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 				Subtitle.Smi.setStyle(last, status.setU(false));
 				break;
 			case "S":
-				if (last.text.length > 0) {
+				if (last.ass || last.text.length > 0) {
 					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2283,7 +2490,7 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 				Subtitle.Smi.setStyle(last, status.setS(false));
 				break;
 			case "FONT":
-				if (last.text.length > 0) {
+				if (last.ass || last.text.length > 0) {
 					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2292,7 +2499,7 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 				Subtitle.Smi.setStyle(last, status.setFont(null));
 				break;
 			case "RUBY":
-				if (last.text.length > 0) {
+				if (last.ass || last.text.length > 0) {
 					result.push(last = new Subtitle.Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2316,6 +2523,7 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 		tagString = null;
 	}
 	
+	let commentStart = 0;
 	for (let pos = 0; pos < text.length; pos++) {
 		const c = text[pos];
 		if (tagString) tagString += c;
@@ -2505,6 +2713,12 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 			}
 			case '!': { // 주석
 				if ((pos + 3 <= text.length) && (text.substring(pos, pos+3) == "-->")) {
+					if (commentStart == 0) {
+						// 주석은 첫 항목이어야 함
+						last.comment = text.substring(0, pos + 3);
+						result.push(last = new Subtitle.Attr());
+						last.tagString = "";
+					}
 					state = null;
 					pos += 2;
 				}
@@ -2515,6 +2729,7 @@ Subtitle.Smi.toAttrs = (text, keepTags=true) => {
 					case '<': {
 						if ((pos + 4 <= text.length) && (text.substring(pos, pos+4) == "<!--")) {
 							// 주석 시작
+							commentStart = pos;
 							state = '!';
 							pos += 3;
 						} else {
@@ -2684,19 +2899,19 @@ Subtitle.Smi.fromAttrs = (attrs, fontSize=0) => { // fontSize를 넣으면 html�
 	
 	return text;
 }
-Subtitle.Smi.fromAttrs = (attrs, fontSize = 0, checkRuby=true, checkFont=true) => { // fontSize를 넣으면 html로 % 크기 출력
+Subtitle.Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true) => { // fontSize를 넣으면 html로 % 크기 출력
 	let text = "";
-
+	
 	// 후리가나 먼저 처리
 	let rubyEnd = 0;
 	if (checkRuby) {
 		for (let i = 0; i < attrs.length; i++) {
 			const attr = attrs[i];
-
+			
 			if (attr.furigana) {
 				// 후리가나 달리기 이전 부분 처리
 				text += Subtitle.Smi.fromAttrs(attrs.slice(rubyEnd, i));
-
+				
 				// 후리가나 처리
 				const subAttrs = [attr.clone()];
 				for (; i < attrs.length; i++) {
@@ -2714,7 +2929,7 @@ Subtitle.Smi.fromAttrs = (attrs, fontSize = 0, checkRuby=true, checkFont=true) =
 			}
 		}
 	}
-
+	
 	// 후리가나 이후 나머지 (일반적으로 여기만 돌아감)
 	// <FONT> 태그 바깥 쪽 정크 덜 생기도록 잡아주기
 	// ...이게 아닌가? 필요 없나? 아래에 잘못 짠 게 문제였나?
@@ -2748,20 +2963,61 @@ Subtitle.Smi.fromAttrs = (attrs, fontSize = 0, checkRuby=true, checkFont=true) =
 		let iLen      = 0; if (attr.i     ) for (iLen      = 1; i + iLen      < attrs.length; iLen++     ) { if (!attrs[i + iLen     ].i) break; }
 		let uLen      = 0; if (attr.u     ) for (uLen      = 1; i + uLen      < attrs.length; uLen++     ) { if (!attrs[i + uLen     ].u) break; }
 		let sLen      = 0; if (attr.s     ) for (sLen      = 1; i + sLen      < attrs.length; sLen++     ) { if (!attrs[i + sLen     ].s) break; }
-		/*
-		let fcLen = 0;
-		if (attr.fc) {
-			for (let j = attrs.length - 1; j >= i; j--) {
-				if (attrs[j].fc == attr.fc) {
-					fcLen = j + 1 - i;
+		let fsLen = 0;
+		if (attr.fs) {
+			fsLen = 1;
+			let tLen = 0;
+			for (let j = 0; i + j < attrs.length; j++) {
+				const sAttr = attrs[i + j];
+				if (!sAttr.fs) {
+					// 속성이 사라지면 끊기
+					if (tLen == 0) {
+						// 실제 쓰인 게 없으면 무시
+						fsLen = 0;
+					}
 					break;
 				}
+				if (sAttr.fs == attr.fs) {
+					// 속성이 같은 게 있으면 감싸지는 걸로 처리
+					fsLen = j + 1;
+				}
+				// 실제로 해당 속성이 쓰인 문자열 길이 확인
+				tLen += sAttr.text.length;
 			}
 		}
-		*/
+		let fnLen = 0;
+		if (attr.fn) {
+			fnLen = 1;
+			let tLen = 0;
+			for (let j = 0; i + j < attrs.length; j++) {
+				const sAttr = attrs[i + j];
+				if (!sAttr.fn) {
+					if (tLen == 0) fnLen = 0;
+					break;
+				}
+				if (sAttr.fn == attr.fn) fnLen = j + 1;
+				tLen += sAttr.text.length;
+			}
+		}
+		let fcLen = 0;
+		if (attr.fc) {
+			fcLen = 1;
+			let tLen = 0;
+			for (let j = 0; i + j < attrs.length; j++) {
+				const sAttr = attrs[i + j];
+				if (!sAttr.fc) {
+					if (tLen == 0) fcLen = 0;
+					break;
+				}
+				if (sAttr.fc == attr.fc) fcLen = j + 1;
+				tLen += sAttr.text.length;
+			}
+		}
+		/*
 		let fsLen     = 0; if (attr.fs    ) for (fsLen     = 1; i + fsLen     < attrs.length; fsLen++    ) { if (!attrs[i + fsLen    ].fs) break; }
 		let fnLen     = 0; if (attr.fn    ) for (fnLen     = 1; i + fnLen     < attrs.length; fnLen++    ) { if (!attrs[i + fnLen    ].fn) break; }
 		let fcLen     = 0; if (attr.fc    ) for (fcLen     = 1; i + fcLen     < attrs.length; fcLen++    ) { if (!attrs[i + fcLen    ].fc) break; }
+		*/
 		let fadeLen   = 0; if (attr.fade  ) for (fadeLen   = 1; i + fadeLen   < attrs.length; fadeLen++  ) { if (!attrs[i + fadeLen  ].fade) break; }
 		let shakeLen  = 0; if (attr.shake ) for (shakeLen  = 1; i + shakeLen  < attrs.length; shakeLen++ ) { if (!attrs[i + shakeLen ].shake) break; }
 		let typingLen = 0; if (attr.typing) for (typingLen = 1; i + typingLen < attrs.length; typingLen++) { if (!attrs[i + typingLen].typing) break; }
@@ -2841,7 +3097,7 @@ Subtitle.Smi.fromAttrs = (attrs, fontSize = 0, checkRuby=true, checkFont=true) =
 					break;
 				}
 			}
-
+			
 			text += opener + Subtitle.Smi.fromAttrs(subAttrs, fontSize, false, false) + closer;
 			
 		} else {
@@ -2869,68 +3125,8 @@ Subtitle.Smi.getLineWidth = (text) => {
 	return Subtitle.Width.getWidth(Subtitle.Smi.toAttrs(text));
 }
 
-Subtitle.Smi.Color = function(target, color, index=0) {
-	this.index = index; // 페이드 index가 아니라, 속성의 index를 변칙적으로 사용 중...
-	
-	if (color.length == 7 && color[0] == "#") {
-		color = color.substring(1);
-	}
-	// 16진수 맞는지 확인
-	if (isFinite("0x" + color)) {
-		this.r = this.tr = Subtitle.Smi.Color.v(color.substring(0, 2));
-		this.g = this.tg = Subtitle.Smi.Color.v(color.substring(2, 4));
-		this.b = this.tb = Subtitle.Smi.Color.v(color.substring(4, 6));
-	} else {
-		this.r = this.tr = 255;
-		this.g = this.tg = 255;
-		this.b = this.tb = 255;
-	}
-	
-	if (target == 1) {
-		this.r = this.g = this.b = 0;
-	} else if (target == -1) {
-		this.tr = this.tg = this.tb = 0;
-	} else {
-		if (target.length == 7 && target[0] == "#") {
-			target = target.substring(1);
-		}
-		// 16진수 맞는지 확인
-		if (isFinite("0x" + target)) {
-			this.tr = Subtitle.Smi.Color.v(target.substring(0, 2));
-			this.tg = Subtitle.Smi.Color.v(target.substring(2, 4));
-			this.tb = Subtitle.Smi.Color.v(target.substring(4, 6));
-		}
-	}
-}
-Subtitle.Smi.Color.v = (c) => {
-	if (c.length == 1) {
-		if (c >= '0' && c <= '9')
-			return c.charCodeAt() - 48
-		if (c >= 'a' && c <= 'z')
-			return c.charCodeAt() - 87;
-		if (c >= 'A' && c <= 'Z')
-			return c.charCodeAt() - 55;
-		return 0;
-		
-	} else {
-		let v = 0;
-		for (let i = 0; i < c.length; i++) {
-			v = v * 16 + Subtitle.Smi.Color.v(c[i]);
-		}
-		return v;
-	}
-}
-Subtitle.Smi.Color.c = (v) => {
-	return v < 10 ? String.fromCharCode(v + 48) : String.fromCharCode(v + 55);
-}
-Subtitle.Smi.Color.hex = (v) => {
-	return "" + Subtitle.Smi.Color.c(v / 16) + Subtitle.Smi.Color.c(v % 16);
-}
-Subtitle.Smi.Color.prototype.get = function(value, total) {
-	return Subtitle.Smi.Color.hex(Math.ceil(((this.r * (total - value)) + (this.tr * value)) / total))
-	     + Subtitle.Smi.Color.hex(Math.ceil(((this.g * (total - value)) + (this.tg * value)) / total))
-	     + Subtitle.Smi.Color.hex(Math.ceil(((this.b * (total - value)) + (this.tb * value)) / total));
-}
+Subtitle.Smi.Color = Subtitle.Color;
+
 Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 	const origin = new Subtitle.SmiFile();
 	origin.body = smis;
@@ -2989,7 +3185,7 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				
 				const cFrom = gc ? attr.fc.substring(0,  7) : (attr.fc ? attr.fc : "#ffffff");
 				const cTo   = gc ? attr.fc.substring(8, 15) : (attr.fc ? attr.fc : "#ffffff");
-				const color = new Subtitle.Smi.Color(cTo, cFrom);
+				const color = new Subtitle.Color(cTo, cFrom);
 				
 				const newAttrs = [];
 				for (let k = 0; k < attr.text.length; k++) {
@@ -3001,9 +3197,9 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				if (gf) {
 					const fFrom = attr.fade.substring(0,  7);
 					const fTo   = attr.fade.substring(8, 15);
-					const fColor = new Subtitle.Smi.Color(fTo, fFrom);
+					const fColor = new Subtitle.Color(fTo, fFrom);
 					for (let k = 0; k < newAttrs.length; k++) {
-						newAttrs[k].fade = "#" + fColor.get(k, newAttrs.length - 1);
+						newAttrs[k].fade = fColor.smi(k, newAttrs.length - 1);
 					}
 				}
 				const after = attrs.slice(j + 1);
@@ -3089,13 +3285,13 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 					const attr = attrs[j];
 					attr.tagString = null;
 					if (attr.fade != 0) {
-						fadeColors.push(new Subtitle.Smi.Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
+						fadeColors.push(new Subtitle.Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
 						attr.fade = 0;
 					}
 					if (attr.furigana) {
 						const furi = attr.furigana;
 						if (furi.fade != 0) {
-							fadeColors.push(new Subtitle.Smi.Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
+							fadeColors.push(new Subtitle.Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
 							furi.fade = 0;
 						}
 					}
@@ -3243,13 +3439,13 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				for (let j = 0; j < attrs.length; j++) {
 					const attr = attrs[j];
 					if (attr.fade != 0) {
-						fadeColors.push(new Subtitle.Smi.Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
+						fadeColors.push(new Subtitle.Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
 						attr.fade = 0;
 					}
 					if (attr.furigana) {
 						const furi = attr.furigana;
 						if (furi.fade != 0) {
-							fadeColors.push(new Subtitle.Smi.Color( furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
+							fadeColors.push(new Subtitle.Color( furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
 							furi.fade = 0;
 						}
 					}
@@ -3262,6 +3458,7 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			smis.splice(i, 1);
 			
 			// 10ms 미만 간격이면 팟플레이어에서 겹쳐서 나오므로 적절히 건너뛰기
+			// TODO: ... 현재는 holdsToText 거칠 경우 뭉치는 것 교정해줄 듯?
 			const countLimit = Math.min(count, Math.floor((end - start) / 10));
 			let realJ = 0;
 			
@@ -3337,13 +3534,13 @@ Subtitle.Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				const attr = attrs[j];
 				attr.tagString = null;
 				if (attr.fade != 0) {
-					fadeColors.push(new Subtitle.Smi.Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
+					fadeColors.push(new Subtitle.Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
 					attr.fade = 0;
 				}
 				if (attr.furigana) {
 					const furi = attr.furigana;
 					if (furi.fade != 0) {
-						fadeColors.push(new Subtitle.Smi.Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
+						fadeColors.push(new Subtitle.Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
 						furi.fade = 0;
 					}
 				}
@@ -3537,6 +3734,9 @@ Subtitle.SmiFile.prototype.toSync = function() {
 	const result = [];
 
 	if (this.body.length > 0) {
+		// TODO: normalize 작업 필요??
+		// 단순 페이드는 예외 처리
+		
 		let i = 0;
 		let last = null;
 		for (; i + 1 < this.body.length; i++) {
