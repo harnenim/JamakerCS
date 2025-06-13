@@ -1865,7 +1865,7 @@ Subtitle.AssEvent.fromSync = function(sync, style=null) {
 				const shift = minLeft - minRight;
 				if (shift) {
 					// 모든 줄에 공통으로 한쪽에 여백이 있을 경우 좌우 이동
-					x += style.Fontsize * shift / 3;
+					x += style.Fontsize * shift / 6;
 					moved = true;
 				}
 			}
