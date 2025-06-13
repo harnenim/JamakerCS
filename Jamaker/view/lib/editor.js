@@ -562,6 +562,8 @@ Tab.prototype.toAss = function() {
 	const assFile = new Subtitle.AssFile2();
 
 	const holds = this.holds;
+	let mainSyncs = null;
+	const syncs = [];
 	for (let h = 0; h < holds.length; h++) {
 		const hold = holds[h];
 		const name = (h == 0) ? "Default" : hold.name;
@@ -591,8 +593,33 @@ Tab.prototype.toAss = function() {
 				}
 			}
 		}
-		assFile.addFromSync(input.toSync(), name);
+		syncs.push(input.toSyncs());
+		if (h == 0) {
+			mainSyncs = syncs[0];
+		} else {
+			assFile.addFromSync(syncs[h], name);
+		}
 	}
+	for (let h = 1; h < holds.length; h++) {
+		if (holds[h].pos > 0) continue;
+
+		// 메인 홀드보다 아래에 깔린 내용일 경우, 겹치는 메인 홀드의 내용물이 기본적으로 위로 올라가도록 함
+		const holdSyncs = syncs[h];
+		let mi = 0;
+		for (let i = 0; i < holdSyncs.length; i++) {
+			const sync = holdSyncs[i];
+			while (mi < mainSyncs.length && mainSyncs[mi].end < sync.start) {
+				mi++;
+			}
+			while (mi < mainSyncs.length && mainSyncs[mi].start < sync.end) {
+				mainSyncs[mi].bottom
+					= (mainSyncs[mi].bottom ? mainSyncs[mi].bottom : 0)
+					+ sync.getTextOnly().split("\n").length;
+				mi++;
+			}
+		}
+	}
+	assFile.addFromSync(mainSyncs, "Default");
 	assFile.getEvents().body.sort((a, b) => {
 		let cmp = a.Start - b.Start;
 		if (cmp == 0) {
@@ -1849,7 +1876,7 @@ function doExit() {
 }
 
 function srt2smi(text) {
-	return new Subtitle.SmiFile().fromSync(new Subtitle.SrtFile(text).toSync()).toText();
+	return new Subtitle.SmiFile().fromSync(new Subtitle.SrtFile(text).toSyncs()).toText();
 }
 
 /**

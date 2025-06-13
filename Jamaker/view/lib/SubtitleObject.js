@@ -642,8 +642,17 @@ Subtitle.SyncAttr = function(start, end, startType, endType, text, origin=null) 
 	this.end   = end   ? end   : 35999999;
 	this.startType = startType ? startType : Subtitle.SyncType.normal;
 	this.endType   = endType   ? endType   : Subtitle.SyncType.normal;
-	this.text = text ? text : null;
+	this.text = text ? text : null; // 이것도 옛날에 왜 text라고 했지... attrs 같은 걸로 할걸...
 	this.origin = origin;
+}
+Subtitle.SyncAttr.prototype.getTextOnly = function () {
+	if (!this.text) return "";
+
+	let text = "";
+	for (let i = 0; i < this.text.length; i++) {
+		text += this.text[i].text;
+	}
+	return text;
 }
 Subtitle.Width =
 {	DEFAULT_FONT: { fontFamily: "맑은 고딕", fontSize: 72 }
@@ -1327,7 +1336,8 @@ Subtitle.AssFile.prototype.fromText = function(text) {
 
 	return this;
 }
-Subtitle.AssFile.prototype.toSync = function() {
+Subtitle.AssFile.prototype.toSync = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
+Subtitle.AssFile.prototype.toSyncs = function() {
 	const result = [];
 	for (let i = 0; i < this.body.length; i++) {
 		result.push(this.body[i].toSync());
@@ -1335,7 +1345,9 @@ Subtitle.AssFile.prototype.toSync = function() {
 	return result;
 }
 
-Subtitle.AssFile.prototype.fromSync = function(syncs, checkFrame=true) {
+
+Subtitle.AssFile.prototype.fromSync = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
+Subtitle.AssFile.prototype.fromSyncs = function(syncs, checkFrame=true) {
 	this.body = [];
 	for (let i = 0; i < syncs.length; i++) {
 		const sync = new Subtitle.Ass().fromSync(syncs[i], checkFrame);
@@ -1732,9 +1744,15 @@ Subtitle.AssEvent.fromSync = function(sync, style=null) {
 		if (style && style.pos) {
 			let x = style.pos[0];
 			let y = style.pos[1];
-			
+
 			// RUBY 태그 등을 레이어 둘 이상으로 나눴으면 pos 같게 고정 필요
 			let moved = (texts.length > 1);
+
+			// 메인홀드 내용 중 다른 홀드랑 겹쳐서 기본적으로 올려야 하는 내용물
+			if (sync.bottom) {
+				y -= sync.bottom * style.Fontsize * 1.1;
+				moved = true;
+			}
 			
 			// 아래쪽에 공백줄 쌓아서 위로 올린 경우
 			while (text.endsWith("\\N{\\b1}　{\\b0}") || text.endsWith("\\N{\\i1}　{\\i0}")) {
@@ -2017,8 +2035,9 @@ Subtitle.AssFile2.prototype.fromText = function(text) {
 		}
 	}
 	return this;
-}
-Subtitle.AssFile2.prototype.addFromSync = function(syncs, styleName) {
+	}
+Subtitle.AssFile2.prototype.addFromSync = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
+Subtitle.AssFile2.prototype.addFromSyncs = function(syncs, styleName) {
 	let playResX = 1920;
 	let playResY = 1080;
 	const infoPart = this.getInfo();
@@ -2056,7 +2075,8 @@ Subtitle.AssFile2.prototype.addFromSync = function(syncs, styleName) {
 		part.body.push(...Subtitle.AssEvent.fromSync(sync, style));
 	}
 }
-Subtitle.AssFile2.prototype.toSync = function() {
+Subtitle.AssFile2.prototype.toSync = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
+Subtitle.AssFile2.prototype.toSyncs = function() {
 	let part = null;
 	for (let i = 0; i < this.parts.length; i++) {
 		if (this.parts[i].name == "Events") {
@@ -3934,7 +3954,8 @@ Subtitle.SmiFile.prototype.fromText = function(text) {
 	return this;
 }
 
-Subtitle.SmiFile.prototype.toSync = function() {
+Subtitle.SmiFile.prototype.toSync = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
+Subtitle.SmiFile.prototype.toSyncs = function() {
 	const result = [];
 
 	if (this.body.length > 0) {
@@ -3959,8 +3980,9 @@ Subtitle.SmiFile.prototype.toSync = function() {
 	}
 
 	return result;
-}
-Subtitle.SmiFile.prototype.fromSync = function(syncs) {
+	}
+Subtitle.SmiFile.prototype.fromSync = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
+Subtitle.SmiFile.prototype.fromSyncs = function(syncs) {
 	const smis = [];
 
 	if (syncs.length > 0) {
@@ -4465,7 +4487,8 @@ Subtitle.SrtFile.prototype.fromText = function(text) {
 	return this;
 }
 
-Subtitle.SrtFile.prototype.toSync = function() {
+Subtitle.SrtFile.prototype.toSync = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
+Subtitle.SrtFile.prototype.toSyncs = function() {
 	const result = [];
 	for (let i = 0; i < this.body.length; i++) {
 		result.push(this.body[i].toSync());
@@ -4473,7 +4496,8 @@ Subtitle.SrtFile.prototype.toSync = function() {
 	return result;
 }
 
-Subtitle.SrtFile.prototype.fromSync = function(syncs) {
+Subtitle.SrtFile.prototype.fromSync = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
+Subtitle.SrtFile.prototype.fromSyncs = function(syncs) {
 	this.body = [];
 	for (let i = 0; i < syncs.length; i++) {
 		this.body.push(new Subtitle.Srt().fromSync(syncs[i]));

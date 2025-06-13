@@ -78,7 +78,7 @@ $(() => {
 					}
 				}
 			}
-			assFile.addFromSync(input.toSync(), name);
+			assFile.addFromSync(input.toSyncs(), name);
 		}
 		assFile.getEvents().body.sort((a,b) => {
 			let cmp = a.Start - b.Start;
