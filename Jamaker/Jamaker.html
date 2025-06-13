@@ -971,7 +971,7 @@ window.MB = 9;
 			if (isSmi) {
 				editor.script("afterSaveFile", [path]);
 			} else {
-				
+				editor.script("afterSaveAssFile", [path]);
 			}
 		} else {
 			editor.saveWithDialog(text, isSmi);
@@ -980,7 +980,7 @@ window.MB = 9;
 	editor.saveWithDialog = async function(text, isSmi) {
 		const fileBuffer = await window.showSaveFilePicker({
 			types: [
-				{ description: "SAMI", accept:{ "text/sami": [".smi"] } }
+				{ description: "SAMI", accept: (isSmi ? { "text/sami": [".smi"] } : { "text/ass": [".ass"] }) }
 			]
 		});
 		if (fileBuffer) {

@@ -46,14 +46,19 @@ $(() => {
 	}
 	$("#btnExport").on("click", function() {
 		const holds = Subtitle.SmiFile.textToHolds($("#input").val());
-		const outputs = [];
 		const assFile = new Subtitle.AssFile2();
 		
 		for (let h = 0; h < holds.length; h++) {
 			const hold = holds[h];
-			let name = h == 0 ? "Default" : hold.name;
+			const name = h == 0 ? "Default" : hold.name;
+			const style = hold.style ? hold.style : DefaultStyle;
+
+			if (style.Fontsize == 0) {
+				// 크기 0은 ASS 변환 대상 제외
+				continue;
+			}
 			
-			assFile.addStyle(name, hold.style ? hold.style : DefaultStyle);
+			assFile.addStyle(name, style, hold);
 			
 			const input = hold.body ? hold : new Subtitle.SmiFile(hold.text);
 			{
