@@ -518,7 +518,8 @@ Tab.prototype.replaceBeforeSave = function() {
 		}
 	}
 }
-Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
+Tab.prototype.getSaveText = function (withCombine = true, withComment = true) {
+	// TODO: ASS Script Info도 생성해야 함
 	return Subtitle.SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment, SmiEditor.video.FR / 1000);
 }
 Tab.prototype.onChangeSaved = function(hold) {
@@ -601,7 +602,12 @@ Tab.prototype.toAss = function() {
 		}
 	}
 	for (let h = 1; h < holds.length; h++) {
-		if (holds[h].pos > 0) continue;
+		const hold = holds[h];
+		// 메인 홀드보다 위쪽이면 건너뜀
+		if (hold.pos > 0) continue;
+
+		// 정렬 위치가 중앙 하단이 아니면 건너뜀
+		if (hold.style && hold.style.Alignment != 2) continue;
 
 		// 메인 홀드보다 아래에 깔린 내용일 경우, 겹치는 메인 홀드의 내용물이 기본적으로 위로 올라가도록 함
 		const holdSyncs = syncs[h];
@@ -1649,7 +1655,7 @@ function openNewTab(text, path, forVideo) {
 	
 	_for_video_ = forVideo;
 	(tab.th = th).data("tab", tab).click();
-	
+
 	if (path && path.indexOf(":")) { // 웹버전에선 온전한 파일 경로를 얻지 못해 콜론 없음
 		let withAss = false;
 		{
@@ -1665,13 +1671,13 @@ function openNewTab(text, path, forVideo) {
 			}
 		}
 		if (withAss) {
-			let assPath = path + ".ass";
-			if (path.toUpperCase().endsWith(".SMI")) {
-				assPath = path.substring(0, path.length - 4) + ".ass";
-			} else if (path.toUpperCase().endsWith(".SAMI")) {
-				assPath = path.substring(0, path.length - 5) + ".ass";
+			// 이미 자막에 해당하는 동영상 정보를 가져왔었으면 ASS 파일 읽기 수행
+			// TODO: ASS Script Info에 동영상 파일 이름을 따로 넣어야 할 듯함
+			//       맞지 않는 영상일 경우 수행하지 않아야 함
+			if (SmiEditor.video.path) {
+				let assPath = SmiEditor.video.path.substring(0, SmiEditor.video.path.lastIndexOf(".")) + ".ass";
+				binder.loadAssFile(assPath);
 			}
-			binder.loadAssFile(assPath, tabs.length - 1);
 		}
 	}
 	
@@ -1687,110 +1693,32 @@ function confirmLoadVideo(path) {
 }
 
 // C# 쪽에서 호출
-function loadAssFile(path, text, target=-1) {
-	if (target < 0) {
-		// 탭이 지정 안 된 경우..는 없어야 맞음
-		target = tab;
-	}
-	const currentTab = tabs[target];
-	if (!currentTab) return;
-	
-	// SMI -> ASS 변환 결과
-	const genFile = currentTab.toAss();
-	
-	// 따로 불러온 ASS 파일
-	const assFile = new Subtitle.AssFile2(text);
-	assFile.getEvents().body.sort((a,b) => {
-		let cmp = a.Start - b.Start;
-		if (cmp == 0) {
-			cmp = a.Layer - b.Layer;
-		}
-		return cmp;
-	});
-	
-	console.log(genFile);
-	console.log(assFile);
-	
-	// TODO:
-	// 불일치 부분 확인 및 보정
-	{	// 홀드 스타일과 ASS 스타일 비교
-		const styles = {};
-		let part = genFile.getStyles();
-		for (let i = 0; i < part.body.length; i++) {
-			const style = part.body[i];
-			styles[style.Name] = style;
-		}
-		part = assFile.getStyles();
-		for (let i = 0; i < part.body.length; i++) {
-			const style = part.body[i];
-			const genStyle = styles[style.Name];
-			if (genStyle) {
-				for (let j = 0; j < part.format.length; j++) {
-					const f = part.format[j];
-					if (style[f] != genStyle[f]) {
-						console.log("홀드 스타일 변경 필요", f, genStyle, style);
-					}
-				}
-			} else {
-				console.log("별도로 추가해야 함", style);
-				// TODO: 홀드 UI와는 별도의 UI에 표현
-			}
-		}
-	}
-	{	// 홀드 스크립트와 ASS 스크립트 비교
-		
-		// TODO: 1:1 - 결과물이 다른 경우
-		//       <font> 태그 추가해서 구현 시도
-		//       완전히 불일치 시 내용 전체를 <font ass="ass내용"> 태그로 감싸게 됨 <- 이렇게만 하는 게 구현은 제일 쉬움
-		
-		// TODO: 1:0 - SMI엔 있는데 ASS엔 없는 경우
-		//       <font ass="">내용물</font> 자동 반영
-		
-		// TODO: 1:N - SMI와 동일한 싱크에 ASS 자막 여러 개 있는 경우
-		//       해당 대사에 <!-- ASS 주석으로 추가
-		
-		// TODO: 0:1 - SMI에 아예 없고, ASS에서 추가한 부분일 경우
-		//       홀드 UI와는 별도의 UI에 표현
-		//       문서 하단에 <!-- ASS 주석으로 추가
-		//       해당 부분에 ASS 화면 싱크 매니저 지원 필요
-		//       currentTab.assFile = new Subtitle.AssFile2(); <- 나중에 정리되면 2 떼는 쪽으로
-		
-		// ASS에만 있는 부분은 기본적으로 화면 싱크로 간주
-		// 이걸 원하는 게 아닐 경우, SMI로 제작하고
-		// 내용물을 모두 <font ass="내용물"></font> 안에 넣는 식으로 제작하면 됨
-		// 같은 홀드로 뺀 음성 대사라면 시간이 겹쳐서 SMI에서 문제되진 않을 것
-		
-		// 오프닝/엔딩을 SMI와 ASS가 따로 놀게 만든 경우엔?
-		// 화면 싱크로 빠질 부분도 아니고, 모두 태그로 감싸기도 애매한데?
-	}
-	
-}
-
-// C# 쪽에서 호출
 function setVideo(path) {
-	if (SmiEditor.video.path != path) {
-		SmiEditor.video.path = path;
-		SmiEditor.video.fs = [];
-		SmiEditor.video.kfs = [];
-		$("#forFrameSync").addClass("disabled");
-		$("#checkTrustKeyframe").attr({ disabled: true });
+	if (SmiEditor.video.path == path) return;
+	
+	SmiEditor.video.path = path;
+	SmiEditor.video.fs = [];
+	SmiEditor.video.kfs = [];
+	$("#forFrameSync").addClass("disabled");
+	$("#checkTrustKeyframe").attr({ disabled: true });
 
-		// 동영상 파일이 열려있을 때만 프레임 분석 진행
-		const ext = path.toLowerCase();
-		if (ext.endsWith(".avi")
-		 || ext.endsWith(".mp4")
-		 || ext.endsWith(".mkv")
-		 || ext.endsWith(".ts")
-		 || ext.endsWith(".m2ts")
-		) {
-			SmiEditor.video.isAudio = false;
-			binder.requestFrames(path);
-		} else {
-			// 오디오 파일을 불러온 경우 ms 단위 싱크로 동작
-			SmiEditor.video.isAudio = true;
-			SmiEditor.video.FR = 1000000;
-			SmiEditor.video.FL = 1;
-		}
+	// 동영상 파일이 열려있을 때만 프레임 분석 진행
+	const ext = path.toLowerCase();
+	if (ext.endsWith(".avi")
+	 || ext.endsWith(".mp4")
+	 || ext.endsWith(".mkv")
+	 || ext.endsWith(".wmv")
+	 || ext.endsWith(".ts")
+	 || ext.endsWith(".m2ts")
+	) {
+		SmiEditor.video.isAudio = false;
+		binder.requestFrames(path);
+
+	} else {
+		// 오디오 파일을 불러온 경우 ms 단위 싱크로 동작
+		SmiEditor.video.isAudio = true;
+		SmiEditor.video.FR = 1000000;
+		SmiEditor.video.FL = 1;
 	}
 }
 // C# 쪽에서 호출
@@ -1850,6 +1778,94 @@ function afterLoadFkfFile(buffer) {
 			holds[j].refreshKeyframe();
 		}
 	}
+
+	// 프레임값까지 가져온 후에 ASS 파일 읽기 수행
+	if (SmiEditor.video.path.indexOf(":")) { // 웹버전에선 온전한 파일 경로를 얻지 못해 콜론 없음
+		if (tabs.length && tabs[tab].withAss) {
+			let assPath = SmiEditor.video.path.substring(0, SmiEditor.video.path.lastIndexOf(".")) + ".ass";
+			binder.loadAssFile(assPath, tab);
+		}
+	}
+}
+
+// C# 쪽에서 호출
+function loadAssFile(path, text, target=-1) {
+	if (target < 0) {
+		// 탭이 지정 안 된 경우..는 없어야 맞음
+		target = tab;
+	}
+	const currentTab = tabs[target];
+	if (!currentTab) return;
+
+	// SMI -> ASS 변환 결과
+	const genFile = currentTab.toAss();
+
+	// 따로 불러온 ASS 파일
+	const assFile = new Subtitle.AssFile2(text);
+	assFile.getEvents().body.sort((a, b) => {
+		let cmp = a.Start - b.Start;
+		if (cmp == 0) {
+			cmp = a.Layer - b.Layer;
+		}
+		return cmp;
+	});
+
+	console.log(genFile);
+	console.log(assFile);
+
+	// TODO:
+	// 불일치 부분 확인 및 보정
+	{	// 홀드 스타일과 ASS 스타일 비교
+		const styles = {};
+		let part = genFile.getStyles();
+		for (let i = 0; i < part.body.length; i++) {
+			const style = part.body[i];
+			styles[style.Name] = style;
+		}
+		part = assFile.getStyles();
+		for (let i = 0; i < part.body.length; i++) {
+			const style = part.body[i];
+			const genStyle = styles[style.Name];
+			if (genStyle) {
+				for (let j = 0; j < part.format.length; j++) {
+					const f = part.format[j];
+					if (style[f] != genStyle[f]) {
+						console.log("홀드 스타일 변경 필요", f, genStyle, style);
+					}
+				}
+			} else {
+				console.log("별도로 추가해야 함", style);
+				// TODO: 홀드 UI와는 별도의 UI에 표현
+			}
+		}
+	}
+	{	// 홀드 스크립트와 ASS 스크립트 비교
+
+		// TODO: 1:1 - 결과물이 다른 경우
+		//       <font> 태그 추가해서 구현 시도
+		//       완전히 불일치 시 내용 전체를 <font ass="ass내용"> 태그로 감싸게 됨 <- 이렇게만 하는 게 구현은 제일 쉬움
+
+		// TODO: 1:0 - SMI엔 있는데 ASS엔 없는 경우
+		//       <font ass="">내용물</font> 자동 반영
+
+		// TODO: 1:N - SMI와 동일한 싱크에 ASS 자막 여러 개 있는 경우
+		//       해당 대사에 <!-- ASS 주석으로 추가
+
+		// TODO: 0:1 - SMI에 아예 없고, ASS에서 추가한 부분일 경우
+		//       홀드 UI와는 별도의 UI에 표현
+		//       문서 하단에 <!-- ASS 주석으로 추가
+		//       해당 부분에 ASS 화면 싱크 매니저 지원 필요
+		//       currentTab.assFile = new Subtitle.AssFile2(); <- 나중에 정리되면 2 떼는 쪽으로
+
+		// ASS에만 있는 부분은 기본적으로 화면 싱크로 간주
+		// 이걸 원하는 게 아닐 경우, SMI로 제작하고
+		// 내용물을 모두 <font ass="내용물"></font> 안에 넣는 식으로 제작하면 됨
+		// 같은 홀드로 뺀 음성 대사라면 시간이 겹쳐서 SMI에서 문제되진 않을 것
+
+		// 오프닝/엔딩을 SMI와 ASS가 따로 놀게 만든 경우엔?
+		// 화면 싱크로 빠질 부분도 아니고, 모두 태그로 감싸기도 애매한데?
+	}
+
 }
 
 // 종료 전 C# 쪽에서 호출
