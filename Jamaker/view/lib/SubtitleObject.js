@@ -1884,7 +1884,10 @@ Subtitle.AssEvent.fromSync = function(sync, style=null) {
 				if (shift) {
 					// 모든 줄에 공통으로 한쪽에 여백이 있을 경우 좌우 이동
 					x += style.Fontsize * shift / 6;
-					moved = true;
+					if (sync.style.Alignment % 3 == 2) {
+						// 가운데 정렬일 때만 실제 태그에 반영
+						moved = true;
+					}
 				}
 			}
 			
