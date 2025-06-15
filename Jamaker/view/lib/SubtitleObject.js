@@ -4139,7 +4139,7 @@ Subtitle.SmiFile.styleToSmi = function(style) {
 	let opener = "";
 	let closer = "";
 	
-	{
+	if (style) {
 		const font = [];
 		if (style.Fontname) {
 			font.push("face=\"" + style.Fontname + "\"");
