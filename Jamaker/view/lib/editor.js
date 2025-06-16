@@ -9,9 +9,6 @@ let autoSaveTemp = null;
 
 let autoFindSync = false;
 
-const styleForSmi = ["Fontname","PrimaryColour","Italic","Underline","StrikeOut"];
-const styleForAss = ["Fontsize","SecondaryColour","OutlineColour","BackColour","PrimaryOpacity","SecondaryOpacity","OutlineOpacity","BackOpacity","Bold","ScaleX","ScaleY","Spacing","Angle","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV"];
-
 // C# 쪽에서 호출
 function refreshTime(now, fr) {
 	if (time != now) {

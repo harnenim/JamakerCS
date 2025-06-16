@@ -637,6 +637,10 @@ window.Subtitle = {
 	}
 ,	$tmp: $("<a>")
 };
+
+const styleForSmi = Subtitle.styleForSmi = ["Fontname","PrimaryColour","Italic","Underline","StrikeOut"];
+const styleForAss = Subtitle.styleForAss = ["Fontsize","SecondaryColour","OutlineColour","BackColour","PrimaryOpacity","SecondaryOpacity","OutlineOpacity","BackOpacity","Bold","ScaleX","ScaleY","Spacing","Angle","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV"];
+
 Subtitle.SyncAttr = function(start, end, startType, endType, text, origin=null) {
 	this.start = start ? start : 0;
 	this.end   = end   ? end   : 35999999;
@@ -1744,10 +1748,10 @@ Subtitle.AssEvent.fromSync = function(sync, style=null) {
 		if (style && style.pos) {
 			let x = style.pos[0];
 			let y = style.pos[1];
-
+			
 			// RUBY 태그 등을 레이어 둘 이상으로 나눴으면 pos 같게 고정 필요
 			let moved = (texts.length > 1);
-
+			
 			// 메인홀드 내용 중 다른 홀드랑 겹쳐서 기본적으로 올려야 하는 내용물
 			if (sync.bottom) {
 				y -= sync.bottom * style.Fontsize * 1.1;
@@ -1928,7 +1932,7 @@ Subtitle.AssPart.prototype.toText = function() {
 			const value = [];
 			for (let j = 0; j < this.format.length; j++) {
 				const key = this.format[j];
-				if (key == "Start" || key == "End") {
+				if ((key == "Start" || key == "End") && isFinite(item[key])) {
 					value.push(Subtitle.Ass.int2Time(item[key]));
 				} else {
 					value.push(item[key]);
@@ -2038,7 +2042,7 @@ Subtitle.AssFile2.prototype.fromText = function(text) {
 		}
 	}
 	return this;
-	}
+}
 Subtitle.AssFile2.prototype.addFromSync = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
 Subtitle.AssFile2.prototype.addFromSyncs = function(syncs, styleName) {
 	let playResX = 1920;
@@ -3983,7 +3987,7 @@ Subtitle.SmiFile.prototype.toSyncs = function() {
 	}
 
 	return result;
-	}
+}
 Subtitle.SmiFile.prototype.fromSync = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
 Subtitle.SmiFile.prototype.fromSyncs = function(syncs) {
 	const smis = [];
@@ -4051,13 +4055,17 @@ Subtitle.SmiFile.toSaveStyle = function(style) {
 	for (let i = 0; i < styleForAss.length; i++) {
 		const name = styleForAss[i];
 		if (style[name] != DefaultStyle[name]) {
+			if (name == "Fontsize" && style.Fontsize == 0) {
+				// 글씨크기 0은 ASS 출력 제외를 위한 속성
+				continue;
+			}
 			forAss = true;
 			break;
 		}
 	}
 	const result = [];
 	if (forAss) {
-		result.push(style.Fontname ? style.Fontname : "맑은 고딕");
+		result.push(style.Fontname);
 		result.push(style.Fontsize);
 		{ let fc = style.PrimaryColour   + (511 - style.PrimaryOpacity  ).toString(16).substring(1); result.push("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
 		{ let fc = style.SecondaryColour + (511 - style.SecondaryOpacity).toString(16).substring(1); result.push("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }

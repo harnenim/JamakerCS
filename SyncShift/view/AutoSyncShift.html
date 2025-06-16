@@ -674,6 +674,7 @@ function apply() {
 					,	name: holdInfo.name
 					,	text: hold.toText()
 					,	start: hold.body.length ? hold.body[0].start : 999999999
+					,	style: holdInfo.style
 				});
 			}
 			const withCombine = !$("#chkCombine").prop("checked");

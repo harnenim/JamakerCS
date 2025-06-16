@@ -374,7 +374,7 @@ window.Combine = {
 							let lastAttrs;
 							let lastWidth;
 							let closeAttr = null;
-								
+							
 							// 좌우 여백 붙이기 전 줄 단위로 분리 및 기존 Zero-Width-Space 삭제
 							let wasClear = false;
 							let trimedLine = { attrs: [], isEmpty: true };
@@ -442,7 +442,7 @@ window.Combine = {
 							if (LOG) {
 								console.log(attrs, trimedLines, isEmpty);
 							}
-
+							
 							if (!isEmpty) {
 								const br = new Subtitle.Attr(null, "\n");
 								do {
@@ -793,7 +793,7 @@ if (Subtitle && Subtitle.SmiFile) {
 		const match = /<body( [^>]*)*>/gi.exec(this.header);
 		return match && (match[0].indexOf("split") > 0);
 	}
-	Subtitle.SmiFile.holdsToText = (origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) => {
+	Subtitle.SmiFile.holdsToTexts = (origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) => {
 		const result = [];
 		let logs = [];
 		let originBody = [];
@@ -957,21 +957,28 @@ if (Subtitle && Subtitle.SmiFile) {
 							}
 						}
 					}
-				} else if (withCombine) {
-					// 메인 홀드 없으면 서로 겹치지만 않으면 내포 홀드 처리
-					// TODO: 둘 중 하나가 다른 하나에 이중 내포 되는 경우 처리 필요?
-					let hasImport = false;
-					for (let j = 0; j < imports.length; j++) {
-						if (hold.start < imports[j][1].end) {
-							hasImport = true;
-							break;
+					
+				} else {
+					// 메인 홀드가 비어있음
+					hold.afterMain = true;
+					
+					if (withCombine) {
+						// 메인 홀드 없으면 서로 겹치지만 않으면 내포 홀드 처리
+						// TODO: 둘 중 하나가 다른 하나에 이중 내포 되는 경우 처리 필요?
+						
+						let hasImport = false;
+						for (let j = 0; j < imports.length; j++) {
+							if (hold.start < imports[j][1].end) {
+								hasImport = true;
+								break;
+							}
 						}
-					}
-					if (!hasImport) {
-						// 내포 홀드는 결합 대상에서 제외
-						imports.push([0, hold, holdBody]);
-						result[hold.resultIndex] = "";
-						hold.imported = true;
+						if (!hasImport) {
+							// 내포 홀드는 결합 대상에서 제외
+							imports.push([0, hold, holdBody]);
+							result[hold.resultIndex] = "";
+							hold.imported = true;
+						}
 					}
 				}
 			}
@@ -1042,7 +1049,7 @@ if (Subtitle && Subtitle.SmiFile) {
 				const holdText = hold.input ? hold.input.val() : hold.text;
 				let text = holdText;
 				if (hold.style) {
-					const style = Subtitle.SmiFile.toSaveStyle(hold.style);
+					const style = (typeof hold.style == "string") ? hold.style : Subtitle.SmiFile.toSaveStyle(hold.style);
 					if (style) {
 						text = "<!-- Style\n" + style + "\n-->\n" + text;
 					}
@@ -1291,14 +1298,17 @@ if (Subtitle && Subtitle.SmiFile) {
 					result.splice(i--, 1);
 				}
 			}
-			return result.join("\n");
+			return result;
 			
 		} else {
 			for (let i = 0; i < main.body.length; i++) {
 				main.body[i].text = main.body[i].text.split("\n").join("");
 			}
-			return main.toText();
+			return [main.toText()];
 		}
+	}
+	Subtitle.SmiFile.holdsToText = (origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) => {
+		return Subtitle.SmiFile.holdsToTexts(origHolds, withNormalize, withCombine, withComment, fps).join("\n");
 	}
 }
 $(() => {
