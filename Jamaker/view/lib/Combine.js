@@ -145,11 +145,11 @@ window.Combine = {
 		// RUBY태그 없애고 계산
 		return checker.html(html.split("<RT").join("<!--RT").split("</RT>").join("</RT-->")).text();
 	}
-	function isClear(attr) {
+	function isClear(attr, br=null) {
 		// 공백문자가 들어가도 무관한 속성
 		return !attr.u
 		    && !attr.s
-		    && !attr.fs
+		    && (br ? (br.fs == attr.fs) : !attr.fs)
 		    && !attr.fn
 		    && !attr.typing // 타이핑 같은 건 결합 전에 사라져야 함
 		    && !attr.furigana;
@@ -350,7 +350,25 @@ window.Combine = {
 						if (LOG) {
 							console.log(sync);
 						}
-
+						
+						// 전체가 기본보다 작은 글씨로 감싸여 있을 경우
+						// 과도한 줄바꿈 크기가 생기지 않도록 공백문자도 작게 넣어주기
+						let maxFs = 0;
+						for (let k = 0; k < attrs.length; k++) {
+							const attr = attrs[k];
+							if (attr.text) {
+								if (!attr.text.split("　").join("").split("​").join("").trim()) {
+									continue;
+								}
+								if (attr.fs) {
+									maxFs = Math.max(maxFs, attr.fs);
+								} else {
+									maxFs = Combine.defaultSize;
+									break;
+								}
+							}
+						}
+						
 						let pad = "";
 						if (sync[WIDTH] < group.maxWidth && sync[SIZED] < group.maxSized) {
 							// 여백을 붙여서 제일 적절한 값 찾기
@@ -374,6 +392,7 @@ window.Combine = {
 							let lastAttrs;
 							let lastWidth;
 							let closeAttr = null;
+							const br = new Subtitle.Attr(null, "\n");
 							
 							// 좌우 여백 붙이기 전 줄 단위로 분리 및 기존 Zero-Width-Space 삭제
 							let wasClear = false;
@@ -404,7 +423,7 @@ window.Combine = {
 									attr.text = attrLines[0];
 									if (attr.text) {
 										trimedLine.attrs.push(attr);
-										wasClear = isClear(attr);
+										wasClear = isClear(attr, br);
 									} else {
 										// 첫 줄바꿈 전에 내용 없으면 건너뜀
 										wasClear = false;
@@ -433,7 +452,7 @@ window.Combine = {
 									if (attr.text) {
 										trimedLine.attrs.push(attr);
 									}
-									wasClear = isClear(attr);
+									wasClear = isClear(attr, br);
 									if (trimedLine.isEmpty && attr.text.split("　").join("").trim().length) {
 										trimedLine.isEmpty = isEmpty = false;
 									}
@@ -444,7 +463,11 @@ window.Combine = {
 							}
 							
 							if (!isEmpty) {
-								const br = new Subtitle.Attr(null, "\n");
+								// 전체가 기본보다 작은 글씨로 감싸여 있을 경우
+								// 과도한 줄바꿈 크기가 생기지 않도록 공백문자도 작게 넣어주기
+								if (maxFs < Combine.defaultSize) {
+									br.fs = maxFs;
+								}
 								do {
 									lastPad = pad;
 									lastAttrs = padsAttrs;
@@ -468,7 +491,7 @@ window.Combine = {
 											} else if (trimedLine.attrs.length == 1) {
 												// 해당 줄에 속성이 하나일 때
 												let attr = trimedLine.attrs[0];
-												if (isClear(attr)) {
+												if (isClear(attr, br)) {
 													// 속성에 공백문자 포함
 													if (attr.splitted) {
 														// 재결합 대상
@@ -482,9 +505,9 @@ window.Combine = {
 													}
 												} else {
 													// 속성 밖에 공백문자 추가
-													padsAttrs.push(new Subtitle.Attr(null, "​" + pad));
+													padsAttrs.push(new Subtitle.Attr(br, "​" + pad));
 													padsAttrs.push(attr);
-													padsAttrs.push(new Subtitle.Attr(null, pad + "​"));
+													padsAttrs.push(new Subtitle.Attr(br, pad + "​"));
 												}
 													
 											} else {
@@ -492,7 +515,7 @@ window.Combine = {
 													
 												// 처음 속성
 												let attr = trimedLine.attrs[0];
-												if (isClear(attr)) {
+												if (isClear(attr, br)) {
 													// 속성에 공백문자 포함
 													if (attr.splitted) {
 														// 재결합 대상
@@ -506,7 +529,7 @@ window.Combine = {
 													}
 												} else {
 													// 속성 밖에 공백문자 추가
-													padsAttrs.push(new Subtitle.Attr(null, "​" + pad));
+													padsAttrs.push(new Subtitle.Attr(br, "​" + pad));
 													padsAttrs.push(attr);
 												}
 													
@@ -517,13 +540,13 @@ window.Combine = {
 													
 												// 마지막 속성
 												attr = trimedLine.attrs[trimedLine.attrs.length - 1];
-												if (isClear(attr)) {
+												if (isClear(attr, br)) {
 													// 속성에 공백문자 포함
 													padsAttrs.push(new Subtitle.Attr(attr, attr.text + pad + "​", true));
 												} else {
 													// 속성 밖에 공백문자 포함
 													padsAttrs.push(attr);
-													padsAttrs.push(new Subtitle.Attr(null, pad + "​"));
+													padsAttrs.push(new Subtitle.Attr(br, pad + "​"));
 												}
 											}
 										}
