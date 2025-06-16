@@ -2851,61 +2851,15 @@ SmiEditor.Viewer = {
 								// 홀드 스타일 있을 경우 반영
 								// TODO: 성능 부하가 얼마나 되지?
 								//       미리보기 쪽에서 필요 시 렌더링?
-								// TODO: 수정된 영역만 업데이트하는 게 제일 좋긴 한데...
 								const tag = Subtitle.SmiFile.styleToSmi(holds[i].style);
-								const holdLines = holds[i].lines;
-								const newLines = []; // 싱크 내 줄바꿈 뭉쳐서 보냄
-								let lineBegins = 0;
-								let lineEnds = 0;
+								const holdLines = JSON.parse(JSON.stringify(holds[i].lines));
 								for (let j = 0; j < holdLines.length; j++) {
-									if (holdLines[j].TEXT.toUpperCase().indexOf("</BODY>") >= 0) {
-										// 문서 끝
-										lineEnds = j;
-										break;
-									}
-									if (holdLines[j].TYPE) {
-										// 이전에 쌓인 텍스트 처리
-										if (lineBegins < j) {
-											const texts = [];
-											let pass = 0;
-											for (let k = lineBegins; k < j; k++) {
-												const hText = holdLines[k].TEXT;
-												texts.push(hText);
-												if (hText.toLowerCase().endsWith("<br>")) {
-													pass++;
-												}
-											}
-											// 3줄 넘어가면 줄바꿈 살림
-											const text = texts.join((texts.length - pass > 3) ? "<br>" : "");
-
-											if (text.split("&nbsp;").join("").trim()) { // 공백 싱크는 제외
-												newLines.push({ SYNC: 0, TYPE: null, TEXT: Subtitle.Smi.fromAttr(Subtitle.Smi.toAttr(tag[0] + text + tag[1], false)).split("\n").join("<br>") })
-											}
-										}
-										// 싱크 줄은 그냥 그대로
-										newLines.push(holdLines[j]);
-										lineBegins = j + 1;
-										continue;
+									if (holdLines[j].TYPE) continue; // 싱크 줄은 건너뜀
+									if (holdLines[j].TEXT.split("&nbsp;").join("").trim()) { // 공백 싱크는 제외
+										holdLines[j].TEXT = Subtitle.Smi.fromAttr(Subtitle.Smi.toAttr(tag[0] + holdLines[j].TEXT + tag[1], false)).split("\n").join("<br>");
 									}
 								}
-								if (lineBegins < lineEnds) {
-									const texts = [];
-									let pass = 0;
-									for (let k = lineBegins; k < lineEnds; k++) {
-										const hText = holdLines[k].TEXT;
-										texts.push(hText);
-										if (hText.toLowerCase().endsWith("<br>")) {
-											pass++;
-										}
-									}
-									// 3줄 넘어가면 줄바꿈 살림
-									const text = texts.join((texts.length - pass > 3) ? "<br>" : "");
-
-									if (text.split("&nbsp;").join("").trim()) { // 공백 싱크는 제외
-										newLines.push({ SYNC: 0, TYPE: null, TEXT: Subtitle.Smi.fromAttr(Subtitle.Smi.toAttr(tag[0] + text + tag[1], false)).split("\n").join("<br>") })
-									}
-								}
-								lines.push(newLines);
+								lines.push(holdLines);
 							} else {
 								lines.push(holds[i].lines);
 							}

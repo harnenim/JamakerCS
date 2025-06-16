@@ -8,6 +8,7 @@ html, body,
 .hold-selector > .selector.selected,
 .hold-selector > .selector:hover,
 .hold-style-area > form,
+.hold-ass-area > form,
 button {
 	background: [background];
 }
@@ -30,6 +31,7 @@ button {
 #tabSelector,
 #tabSelector > .th,
 .hold-style-area > form,
+.hold-ass-area > form,
 input, button {
 	border-color: [tabBorder];
 }

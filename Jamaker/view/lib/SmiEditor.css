@@ -80,23 +80,27 @@
 	border: 0;
 	padding: 0;
 }
-.hold-style-area {
+.hold-style-area,
+.hold-ass-area {
 	left: 0;
 	right: 0;
 	background: #7f7f7f7f;
 	display: none;
 }
-.hold-style-area > form {
+.hold-style-area > form,
+.hold-ass-area > form {
 	position: absolute;
 	border: 1px solid #000;
 }
-.hold-style-area > form > button.btn-close-preset {
+.hold-style-area > form > button.btn-close-preset,
+.hold-ass-area > form > button.btn-close-preset {
 	position: absolute;
 	background: transparent;
 	border: 0;
 	cursor: pointer;
 }
-.hold-style-area > form > button.btn-close-preset:after {
+.hold-style-area > form > button.btn-close-preset:after,
+.hold-ass-area > form > button.btn-close-preset:after {
 	content: "×";
 }
 
@@ -131,23 +135,24 @@
 	border-style: dotted;
 }
 
-.btn-hold-style {
+.btn-hold-style,
+.btn-hold-ass {
 	position: absolute;
 	top: 0;
 	opacity: 0.3;
 	transition: 0.2s;
 }
-.hold.main .btn-hold-style {
+.hold.main .btn-hold-style,
+.hold.main .btn-hold-ass {
 	display: none;
 }
-.tab.ass .hold.main .btn-hold-style {
+.tab.ass .hold.main .btn-hold-style,
+.tab.ass .hold.main .btn-hold-ass {
 	display: block;
 }
-.btn-hold-style:hover {
+.btn-hold-style:hover,
+.btn-hold-ass:hover {
 	opacity: 1;
-}
-.btn-hold-style:after {
-	content: "۞";
 }
 
 .hljs-color {
@@ -232,7 +237,8 @@
 	height: 20px;
 }
 
-#holdStylePreset {
+#holdStylePreset,
+#holdAssPreset {
 	display: none;
 }
 .hold-style-preview {
@@ -301,4 +307,12 @@
 }
 .hold-style-alignment tr:not(:first-child):not(:last-child) td {
 	border: 0;
+}
+.hold-ass-script {
+    position: relative;
+    width: 100%;
+    top: 40px;
+    height: calc(100% - 40px);
+    white-space: pre;
+    resize: none;
 }

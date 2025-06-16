@@ -94,7 +94,8 @@ label, #showFps {
 	height: 20px;
 }
 
-.hold .hold-style-area > form {
+.hold .hold-style-area > form,
+.hold .hold-ass-area > form {
 	top: calc(20px * 0.5);
 	left: calc(20px * 0.5);
 	right: calc(20px * 0.5);
@@ -103,13 +104,16 @@ label, #showFps {
 	border-radius: calc(20px * 0.4);
 	padding: calc(20px * 0.5);
 }
-.tab.ass .hold .hold-style-area > form {
+.tab.ass .hold .hold-style-area > form,
+.tab.ass .hold .hold-ass-area > form {
 	max-height: calc(20px * 15 + 355px);
 }
-.tab.ass .hold.main .hold-style-area > form {
+.tab.ass .hold.main .hold-style-area > form,
+.tab.ass .hold.main .hold-ass-area > form {
 	max-height: calc(20px * 12 + 355px);
 }
-.hold-style-area > form > button.btn-close-preset {
+.hold-style-area > form > button.btn-close-preset,
+.hold-ass-area > form > button.btn-close-preset {
 	top: calc(20px * 0.5);
 	right: calc(20px * 0.5);
 	width: calc(20px * 1.5);
@@ -117,10 +121,14 @@ label, #showFps {
 	font-size: calc(20px * 1.5);
 	padding-bottom: calc(20px * 0.5);
 }
-.btn-hold-style {
+.btn-hold-style,
+.btn-hold-ass {
 	right: calc(20px * 0.8 + 1px);
-	width: calc(20px + 2px);
+	width: calc(20px * 3 + 2px);
 	height: calc(20px + 2px);
+}
+.btn-hold-ass {
+	top: calc(20px + 1px);
 }
 .hold-style-preview {
 	margin-right: calc(20px * 2);
@@ -144,6 +152,10 @@ label, #showFps {
 .hold-style input[type=text]   { width: calc(20px * 5); }
 .hold-style input[type=number] { width: calc(20px * 2.5); text-align: right; }
 .hold-style input[type=text].color { width: calc(20px * 3); }
+.hold-ass-script {
+    top: calc(20px * 2);
+    height: calc(100% - 20px * 2);
+}
 
 .custom-scrollbar ::-webkit-scrollbar,
 .custom-scrollbar ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }

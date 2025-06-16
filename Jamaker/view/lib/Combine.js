@@ -782,31 +782,94 @@ if (Subtitle && Subtitle.SmiFile) {
 				}
 			}
 		}
-		{	// 메인 홀드 ASS 변환용 스타일 확인
-			const footer = holds[0].footer.split("\n<!-- Style\n");
+		{	// 메인 홀드 ASS 변환용 스타일: footer 확인
+			let footer = holds[0].footer.split("\n<!-- Style\n"); // <!-- Style이 두 번 있는 경우는 오류로, 상정하지 않음
 			if (footer.length > 1) {
-				holds[0].style = Subtitle.SmiFile.parseStyle(footer[1].split("\n")[0].trim());
-				holds[0].footer = footer[0];
+				const styleEnd = footer[1].indexOf("\n-->");
+				if (styleEnd > 0) {
+					holds[0].style = Subtitle.SmiFile.parseStyle(footer[1].substring(0, styleEnd).trim());
+					footer = footer[0] + footer[1].substring(styleEnd + 4); // 뒤에 추가로 주석 남아있을 수 있음
+				} else {
+					footer = footer[0];
+				}
+			} else {
+				footer = footer[0];
 			}
+			footer = footer.split("\n<!-- ASS\n"); // <!-- ASS가 두 번 있는 경우는 오류로, 상정하지 않음
+			if (footer.length > 1) {
+				const assEnd = footer[1].indexOf("\n-->");
+				if (assEnd > 0) {
+					holds[0].ass = footer[1].substring(0, assEnd).trim();
+					footer = footer[0] + footer[1].substring(assEnd + 4); // 뒤에 추가로 주석 남아있을 수 있음
+				} else {
+					footer = footer[0];
+				}
+			} else {
+				footer = footer[0];
+			}
+			
+			holds[0].footer = footer;
 		}
 		holds[0].text = holds[0].toText().trim();
 		
 		for (let i = 1; i < normalized.length; i++) {
+			// 내포 홀드는 ASS 추가 스크립트 영역 없음
+			// ... 그냥 홀드마다가 아니라 메인 홀드 주석에 몰아주는 게 나을 듯?
+			
 			// 내포된 홀드는 종료싱크가 빠졌을 수 있음
 			const hold = holds[i];
 			if (hold.next && !hold.body[hold.body.length - 1].isEmpty()) {
 				hold.body.push(new Subtitle.Smi(hold.next.start, hold.next.syncType, "&nbsp;"));
 			}
 			holds[i].text = hold.toText().trim();
+			
+			// ASS 출력 제외 확인
+			const names = holds[i].name.split("|");
+			let ignoreAss = false;
+			if (names.length > 1) {
+				holds[i].name = names[0];
+				ignoreAss = (names[1] == "X");
+			}
+			if (ignoreAss) {
+				const style = JSON.parse(JSON.stringify(DefaultStyle));
+				style.Fontsize = 0;
+				holds[i].style = style;
+			}
 		}
 		for (let i = normalized.length; i < holds.length; i++) {
-			const lines = (holds[i].text = new Subtitle.SmiFile(holds[i].text).antiNormalize()[0].toText().trim()).split("\n");
-			
+			const hold = new Subtitle.SmiFile(holds[i].text).antiNormalize()[0];
+			let text = (holds[i].text = hold.toText().trim());
+			let lines = text.split("\n");
+
+			// ASS 출력 제외 확인
+			const names = holds[i].name.split("|");
+			let ignoreAss = false;
+			if (names.length > 1) {
+				holds[i].name = names[0];
+				ignoreAss = (names[1] == "X");
+			}
+			// 홀드 스타일: header 확인
 			if ((lines[0] == "<!-- Style" || lines[0] == "<!-- Preset")
 			 && lines[2] == "-->") {
 				holds[i].style = Subtitle.SmiFile.parseStyle(lines[1].trim());
-				holds[i].text = lines.slice(3).join("\n");
+				text = (lines = lines.slice(3)).join("\n");
+			} else if (ignoreAss) {
+				const style = JSON.parse(JSON.stringify(DefaultStyle));
+				style.Fontsize = 0;
+				holds[i].style = style;
 			}
+			/*
+			if ((lines[0] == "<!-- ASS")) {
+				for (let j = 1; j < lines.length; j++) {
+					if (lines[j] == "-->") {
+						holds[i].ass = lines.slice(1, j).join("\n");
+						text = (lines = lines.slice(j + 1)).join("\n");
+						break;
+					}
+				}
+			}
+			*/
+			holds[i].text = text;
 		}
 		return holds;
 	}
@@ -892,13 +955,14 @@ if (Subtitle && Subtitle.SmiFile) {
 				const hold = holdsWithoutMain[hi];
 				const holdText = hold.input ? hold.input.val() : hold.text; // .text 동기화 안 끝났을 가능성 고려, 현재 값 다시 불러옴
 				let text = holdText;
+				hold.exportName = hold.name;
 				if (hold.style) {
 					const style = Subtitle.SmiFile.toSaveStyle(hold.style);
 					if (style) {
 						text = "<!-- Style\n" + style + "\n-->\n" + text;
 					}
 				}
-				result[hold.resultIndex = (hi + 1)] = "<!-- Hold=" + hold.pos + "|" + hold.name + "\n" + text.split("<").join("<​").split(">").join("​>") + "\n-->";
+				result[hold.resultIndex = (hi + 1)] = "<!-- Hold=" + hold.pos + "|" + hold.exportName + "\n" + text.split("<").join("<​").split(">").join("​>") + "\n-->";
 				hold.imported = false;
 				hold.afterMain = false;
 				
@@ -908,11 +972,16 @@ if (Subtitle && Subtitle.SmiFile) {
 				}
 				
 				// 스타일 적용 필요하면 내포 홀드 처리 하지 않음
+				// TODO: 오프닝/엔딩을 내포 홀드 처리하면서 ASS 출력에서 제외하려면...?
 				if (hold.style) {
 					style = Subtitle.SmiFile.toSaveStyle(hold.style);
 					if (style) {
 						//text = "<!-- Style\n" + style + "\n-->\n" + text;
 						continue;
+					}
+					if (hold.style.Fontsize == 0) {
+						// ASS 출력 제외
+						hold.exportName += "|X";
 					}
 				}
 				
@@ -1023,7 +1092,7 @@ if (Subtitle && Subtitle.SmiFile) {
 					holdEnd++;
 				}
 				if (withComment) {
-					importBody[0].text = "<!-- End=" + holdEnd + "\nHold=" + hold.pos + "|" + hold.name + "\n-->\n" + importBody[0].text;
+					importBody[0].text = "<!-- End=" + holdEnd + "\nHold=" + hold.pos + "|" + hold.exportName + "\n-->\n" + importBody[0].text;
 				}
 				main.body = main.body.slice(0, (removePrev ? index - 1 : index)).concat(importBody).concat(main.body.slice(index));
 			}

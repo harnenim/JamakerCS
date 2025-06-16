@@ -229,7 +229,6 @@ const window_open = function(url, name, options, opener) {
 		
 		// 실행 5초 후 동영상 불러온 것처럼 실행
 		setTimeout(() => {
-			this.script("setVideoInfo", [1920, 1080, 23976]);
 			this.script("eval", ["for (let i = 0; i < 200000; i++) { SmiEditor.video.fs.push(Math.round(i * SmiEditor.video.FL)); }"]);
 		}, 2000);
 	};

@@ -30,8 +30,48 @@ window.Tab = function(text, path) {
 	this.path = path;
 	
 	{	const holds = Subtitle.SmiFile.textToHolds(text);
-		for (let i = 0; i < holds.length; i++) {
-			this.addHold(holds[i], i == 0, i == 0);
+		let assFile = null;
+		{
+			const hold = holds[0];
+			if (hold.ass) {
+				assFile = new Subtitle.AssFile2(hold.ass);
+				console.log(assFile);
+			}
+			hold.ass = [];
+		}
+		for (let i = 1; i < holds.length; i++) {
+			holds[i].ass = [];
+		}
+		if (assFile) {
+			const list = assFile.getEvents().body;
+			const additionals = [];
+			for (let i = 0; i < list.length; i++) {
+				const item = list[i];
+				if (item.Style == "Default") {
+					holds[0].ass.push(item);
+				} else {
+					let found = false;
+					for (let j = 1; j < holds.length; j++) {
+						if (item.Style == holds[j].name) {
+							holds[j].ass.push(item);
+							found = true;
+							break;
+						}
+					}
+					if (!found) {
+						additionals.push(item);
+					}
+				}
+			}
+			assFile.getEvents().body = additionals;
+			
+			console.log(assFile);
+			console.log(holds);
+		}
+		
+		this.addHold(holds[0], true, true);
+		for (let i = 1; i < holds.length; i++) {
+			this.addHold(holds[i], false, false);
 		}
 	}
 	this.savedHolds = this.holds.slice(0);
@@ -98,6 +138,9 @@ window.Tab = function(text, path) {
 	this.area.on("click", ".btn-hold-style", function(e) {
 		const hold = $(this).data("hold");
 		hold.styleArea.show();
+	}).on("click", ".btn-hold-ass", function(e) {
+		const hold = $(this).data("hold");
+		hold.assArea.show();
 	});
 };
 window.getCurrentTab = function() {
@@ -121,6 +164,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	
 	const style = hold.style = (info.style ? info.style : JSON.parse(JSON.stringify(DefaultStyle)));
 	hold.savedStyle = Subtitle.SmiFile.toSaveStyle(style);
+	hold.savedAss = hold.ass = info.ass;
 	hold.tempSavedText = info.text;
 	hold.updateTimeRange();
 	
@@ -157,7 +201,9 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 		//hold.area.hide();
 	}
 	{
-		hold.area.append($("<button type='button' class='btn-hold-style' title='홀드 공통 스타일 설정'>").data({ hold: hold }));
+		hold.area.append($("<button type='button' class='btn-hold-style' title='홀드 공통 스타일 설정'>").text("스타일").data({ hold: hold }));
+		hold.area.append($("<button type='button' class='btn-hold-ass' title='ASS 출력에만 쓰이는 스크립트'>").text("ASS용").data({ hold: hold }));
+		
 		hold.area.append(hold.styleArea = $("<div class='hold-style-area'>"));
 		{
 			const area = SmiEditor.stylePreset.clone();
@@ -249,6 +295,28 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 				if (SmiEditor.Viewer.window) {
 					SmiEditor.Viewer.refresh();
 				}
+			});
+		}
+		
+		hold.area.append(hold.assArea = $("<div class='hold-ass-area'>"));
+		{
+			const area = SmiEditor.assPreset.clone();
+			hold.assArea.append(area);
+			
+			console.log(hold);
+			console.log(hold.ass);
+			const part = new Subtitle.AssPart("Events", Subtitle.AssPart.EventsFormat);
+			part.body = hold.ass;
+			let ass = part.toText().split("\n").slice(2).join("\n");
+			console.log(ass);
+			area.find("textarea.hold-ass-script").val(ass);
+			
+			area.on("input propertychange", "textarea", function () {
+				let $input = $(this);
+			});
+			
+			area.find(".btn-close-preset").on("click", function() {
+				hold.assArea.hide();
 			});
 		}
 	}
@@ -762,6 +830,11 @@ function init(jsonSetting, isBackup=true) {
 		SmiEditor.stylePreset = holdStylePreset.clone();
 		SmiEditor.stylePreset.attr({ id: null });
 		holdStylePreset.remove();
+		
+		const holdAssPreset = $("#holdAssPreset");
+		SmiEditor.assPreset = holdAssPreset.clone();
+		SmiEditor.assPreset.attr({ id: null });
+		holdAssPreset.remove();
 	}
 	
 	try {
@@ -1715,17 +1788,14 @@ function setVideo(path) {
 	}
 }
 function setVideoInfo(w=1920, h=1080, fr=23976) {
-	SmiEditor.video.width = w;
-	SmiEditor.video.height = h;
-	if (fr == 23975) {
-		fr = 23975.7; // 일부 영상 버그
-		// TODO: 지금 fps가 필요한가...?
-	}
-	SmiEditor.video.FL = 1000000 / (SmiEditor.video.FR = fr);
-	if (showFps == null) {
-		showFps = $("#showFps");
-	}
-	showFps.text((Math.floor(fr*10+0.5)/10000) + " fps");
+		if (fr == 23975) {
+			fr = 23975.7; // 일부 영상 버그
+		}
+		SmiEditor.video.FL = 1000000 / (SmiEditor.video.FR = fr);
+		if (showFps == null) {
+			showFps = $("#showFps");
+		}
+		showFps.text((Math.floor(fr*10+0.5)/10000) + " fps");
 }
 // C# 쪽에서 호출
 function loadFkf(fkfName) {
