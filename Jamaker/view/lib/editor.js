@@ -10,22 +10,12 @@ let autoSaveTemp = null;
 let autoFindSync = false;
 
 // C# 쪽에서 호출
-function refreshTime(now, fr) {
+function refreshTime(now) {
 	if (time != now) {
 		time = now;
 		if (autoFindSync && tabs.length && tabs[tab]) {
 			tabs[tab].holds[tabs[tab].hold].findSync();
 		}
-	}
-	if (!SmiEditor.video.isAudio && fr) {
-		if (fr == 23975) {
-			fr = 23975.7; // 일부 영상 버그
-		}
-		SmiEditor.video.FL = 1000000 / (SmiEditor.video.FR = fr);
-		if (showFps == null) {
-			showFps = $("#showFps");
-		}
-		showFps.text((Math.floor(fr*10+0.5)/10000) + " fps");
 	}
 }
 let showFps = null;
@@ -515,7 +505,7 @@ Tab.prototype.replaceBeforeSave = function() {
 		}
 	}
 }
-Tab.prototype.getSaveText = function (withCombine = true, withComment = true) {
+Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 	// TODO: ASS Script Info도 생성해야 함
 	return Subtitle.SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment, SmiEditor.video.FR / 1000);
 }
@@ -569,6 +559,7 @@ Tab.prototype.toAss = function() {
 		
 		if (style.Fontsize == 0) {
 			// 크기 0은 ASS 변환 대상 제외
+			syncs.push([]);
 			continue;
 		}
 		
@@ -576,6 +567,7 @@ Tab.prototype.toAss = function() {
 		
 		const input = hold.body ? hold : new Subtitle.SmiFile(hold.text);
 		{	// ASS 자막은 SMI와 싱크 타이밍이 미묘하게 달라서 보정 필요
+			// TODO: 팟플레이어 최신버전 오면서 보정치가 다 틀어졌는데...?
 			if (SmiEditor.sync && SmiEditor.sync.frame) {
 				if (SmiEditor.video.fs.length) {
 					for (let i = 0; i < input.body.length; i++) {
@@ -667,6 +659,10 @@ SmiEditor.prototype.rename = function() {
 	prompt("홀드 이름 변경", (input) => {
 		if (!input) {
 			alert("잘못된 입력입니다.");
+			return;
+		}
+		if (input.indexOf("|") >= 0) {
+			alert("구분자는 입력할 수 없습니다.");
 			return;
 		}
 		hold.selector.find(".hold-name > span").text(hold.owner.holds.indexOf(hold) + "." + (hold.name = input));
@@ -1341,7 +1337,7 @@ function refreshPaddingBottom() {
 	// 에디터 하단 여백 재조정
 	const holdTop = tabs.length ? Number(tabs[tab].area.find(".holds").css("top").split("px")[0]) : 0;
 	const padding = $("#editor").height() - holdTop - LH;
-	const append = "\n#editor textarea { padding-bottom: " + (padding - 2 - SB) + "px; }"
+	const append = "\n#editor .input textarea { padding-bottom: " + (padding - 2 - SB) + "px; }"
 	             + "\n.hold > .col-sync > div:first-child { height: " + (padding - 1) + "px; }";
 	let $style = $("#stylePaddingBottom");
 	if (!$style.length) {
@@ -1652,7 +1648,7 @@ function openNewTab(text, path, forVideo) {
 	
 	_for_video_ = forVideo;
 	(tab.th = th).data("tab", tab).click();
-
+	
 	if (path && path.indexOf(":")) { // 웹버전에선 온전한 파일 경로를 얻지 못해 콜론 없음
 		let withAss = false;
 		{
@@ -1710,13 +1706,26 @@ function setVideo(path) {
 	) {
 		SmiEditor.video.isAudio = false;
 		binder.requestFrames(path);
-
+		
 	} else {
 		// 오디오 파일을 불러온 경우 ms 단위 싱크로 동작
 		SmiEditor.video.isAudio = true;
 		SmiEditor.video.FR = 1000000;
 		SmiEditor.video.FL = 1;
 	}
+}
+function setVideoInfo(w=1920, h=1080, fr=23976) {
+	SmiEditor.video.width = w;
+	SmiEditor.video.height = h;
+	if (fr == 23975) {
+		fr = 23975.7; // 일부 영상 버그
+		// TODO: 지금 fps가 필요한가...?
+	}
+	SmiEditor.video.FL = 1000000 / (SmiEditor.video.FR = fr);
+	if (showFps == null) {
+		showFps = $("#showFps");
+	}
+	showFps.text((Math.floor(fr*10+0.5)/10000) + " fps");
 }
 // C# 쪽에서 호출
 function loadFkf(fkfName) {
@@ -1793,10 +1802,10 @@ function loadAssFile(path, text, target=-1) {
 	}
 	const currentTab = tabs[target];
 	if (!currentTab) return;
-
+	
 	// SMI -> ASS 변환 결과
 	const genFile = currentTab.toAss();
-
+	
 	// 따로 불러온 ASS 파일
 	const assFile = new Subtitle.AssFile2(text);
 	assFile.getEvents().body.sort((a, b) => {
@@ -1806,10 +1815,10 @@ function loadAssFile(path, text, target=-1) {
 		}
 		return cmp;
 	});
-
+	
 	console.log(genFile);
 	console.log(assFile);
-
+	
 	// TODO:
 	// 불일치 부분 확인 및 보정
 	{	// 홀드 스타일과 ASS 스타일 비교
@@ -1837,28 +1846,28 @@ function loadAssFile(path, text, target=-1) {
 		}
 	}
 	{	// 홀드 스크립트와 ASS 스크립트 비교
-
+		
 		// TODO: 1:1 - 결과물이 다른 경우
 		//       <font> 태그 추가해서 구현 시도
 		//       완전히 불일치 시 내용 전체를 <font ass="ass내용"> 태그로 감싸게 됨 <- 이렇게만 하는 게 구현은 제일 쉬움
-
+		
 		// TODO: 1:0 - SMI엔 있는데 ASS엔 없는 경우
 		//       <font ass="">내용물</font> 자동 반영
-
+		
 		// TODO: 1:N - SMI와 동일한 싱크에 ASS 자막 여러 개 있는 경우
 		//       해당 대사에 <!-- ASS 주석으로 추가
-
+		
 		// TODO: 0:1 - SMI에 아예 없고, ASS에서 추가한 부분일 경우
 		//       홀드 UI와는 별도의 UI에 표현
 		//       문서 하단에 <!-- ASS 주석으로 추가
 		//       해당 부분에 ASS 화면 싱크 매니저 지원 필요
 		//       currentTab.assFile = new Subtitle.AssFile2(); <- 나중에 정리되면 2 떼는 쪽으로
-
+		
 		// ASS에만 있는 부분은 기본적으로 화면 싱크로 간주
 		// 이걸 원하는 게 아닐 경우, SMI로 제작하고
 		// 내용물을 모두 <font ass="내용물"></font> 안에 넣는 식으로 제작하면 됨
 		// 같은 홀드로 뺀 음성 대사라면 시간이 겹쳐서 SMI에서 문제되진 않을 것
-
+		
 		// 오프닝/엔딩을 SMI와 ASS가 따로 놀게 만든 경우엔?
 		// 화면 싱크로 빠질 부분도 아니고, 모두 태그로 감싸기도 애매한데?
 	}

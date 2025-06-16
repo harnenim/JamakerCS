@@ -229,6 +229,7 @@ const window_open = function(url, name, options, opener) {
 		
 		// 실행 5초 후 동영상 불러온 것처럼 실행
 		setTimeout(() => {
+			this.script("setVideoInfo", [1920, 1080, 23976]);
 			this.script("eval", ["for (let i = 0; i < 200000; i++) { SmiEditor.video.fs.push(Math.round(i * SmiEditor.video.FL)); }"]);
 		}, 2000);
 	};
@@ -239,9 +240,8 @@ const window_open = function(url, name, options, opener) {
 			/*
 			 * C#에선 초기화 여부 체크하는 등의 코드가 들어감
 			 */
-			const fps  = this.player.getFps();
 			const time = this.player.getTime();
-			editor.script("refreshTime", [time, fps]);
+			editor.script("refreshTime", [time]);
 			editor.updateViewerTime(time);
 		}
 	}

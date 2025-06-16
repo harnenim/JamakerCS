@@ -129,9 +129,8 @@ namespace Jamaker
                 {   // 플레이어 살아있음
                     if (player.initialOffset.top + 100 < player.initialOffset.bottom)
                     {   // 유효
-                        int fps = player.GetFps();
                         int time = player.GetTime();
-                        Script("refreshTime", new object[] { time, fps });
+                        Script("refreshTime", new object[] { time });
                         UpdateViewerTime(time);
 
                         if (++refreshPlayerIndex % 100 == 0)
@@ -1043,6 +1042,58 @@ namespace Jamaker
                 try
                 {
                     FileInfo info = new FileInfo(path);
+
+                    // TODO: setVideoInfo
+                    {
+                        string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
+                        
+                        Process proc = new Process();
+                        proc.StartInfo.UseShellExecute = false;
+                        proc.StartInfo.CreateNoWindow = true;
+                        proc.StartInfo.RedirectStandardOutput = true;
+                        proc.StartInfo.RedirectStandardError = true;
+                        proc.StartInfo.FileName = Path.Combine(exePath, "ffprobe.exe");
+                        proc.StartInfo.Arguments = $"-v error -select_streams v -show_entries stream=width,height,r_frame_rate \"{path}\"";
+                        proc.Start();
+                        proc.BeginErrorReadLine();
+                        
+                        StreamReader sr = new StreamReader(proc.StandardOutput.BaseStream);
+                        string line;
+                        int width = 1920;
+                        int height = 1080;
+                        int fr = 0;
+                        while ((line = sr.ReadLine()) != null)
+                        {
+                            try
+                            {
+                                if (line.StartsWith("width="))
+                                {
+                                    width = int.Parse(line.Substring(6));
+                                }
+                                else if (line.StartsWith("height="))
+                                {
+                                    height = int.Parse(line.Substring(7));
+                                }
+                                else if (line.StartsWith("r_frame_rate="))
+                                {
+                                    string[] strFrs = line.Substring(13).Split('/');
+                                    if (strFrs.Length > 1)
+                                    {
+                                        fr = (int)Math.Round(double.Parse(strFrs[0]) / double.Parse(strFrs[1]) * 1000);
+                                    } else
+                                    {
+                                        fr = (int)Math.Round(double.Parse(strFrs[0]));
+                                    }
+                                }
+                            }
+                            catch (Exception) { }
+                        }
+                        proc.Close();
+
+                        Console.WriteLine($"setVideoInfo: {width}, {height}, {fr}");
+                        Script("setVideoInfo", new object[] { width, height, fr });
+                    }
+
                     string fkfName = $"{info.Name.Substring(0, info.Name.Length - info.Extension.Length)}.{info.Length}.fkf";
 
                     // 기존에 있으면 가져오기
