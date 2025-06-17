@@ -30,7 +30,24 @@
 		><input type="checkbox" id="checkTrustKeyframe" disabled /><span>키프레임 신뢰</span></label><!--
 --></div>
 	<div id="tabSelector"><div class="th" id="btnNewTab">＋</div></div>
-	<div id="editor"></div>
+	<div id="editor">
+		<div id="tabPreset" class="tab">
+			<div class="hold-selector"></div>
+			<div class="holds"></div>
+			<div class="tab-ass-back"></div>
+			<form class="tab-ass-area">
+				<div class="tab-ass-styles">
+					<span>[V4+ Styles]</span>
+					<textarea></textarea>
+				</div>
+				<div class="tab-ass-script">
+					<span>[Events]</span>
+					<textarea></textarea>
+				</div>
+			</form>
+			<button type="button" class="tab-ass-btn">ASS용</button>
+		</div>
+	</div>
 	<form id="holdStylePreset" class="hold-style">
 		<button type="button" class="btn-close-preset"></button>
 		<div class="hold-style-preview" style="background: #888;">
@@ -51,7 +68,13 @@
 			</fieldset>
 			<fieldset class="hold-style-ass">
 				<legend>ASS 변환용 스타일</legend>
-				<label><span>크기  </span><input type="number" name="Fontsize" value="80" />px (0이면 변환 대상에서 제외)　</label>
+				<div class="hold-style-output"><span>출력</span>
+					<label><input type="radio" name="output" value="3" checked />SMI+ASS</label>
+					<label><input type="radio" name="output" value="1" />SMI만</label>
+					<label><input type="radio" name="output" value="2" />ASS만</label>
+				</div>
+				<br />
+				<label><span>크기  </span><input type="number" name="Fontsize" value="80" />px</label>
 				<label><input type="checkbox" name="Bold" checked="checked" /> 굵게</label>
 				<br />
 				<label><span>투명도</span><input type="range" name="PrimaryOpacity"   min="0" max="255" step="1" value="255" /></label>
@@ -121,6 +144,7 @@
 	</form>
 	<form id="holdAssPreset" class="hold-ass">
 		<button type="button" class="btn-close-preset"></button>
+		<span class="hold-ass-events">[Events]</span>
 		<textarea class="hold-ass-script"></textarea>
 	</form>
 </body>

@@ -38,6 +38,7 @@
 	border-width: 1px 0 0 1px;
 	overflow: hidden;
 }
+textarea,
 .highlight-textarea > * {
 	white-space: pre;
 }
@@ -243,7 +244,7 @@
 }
 .hold-style-preview {
 	position: relative;
-	height: 200px;
+	height: 150px;
 	border: 1px solid #000;
 	white-space: pre;
 	text-align: center;
@@ -265,7 +266,7 @@
 	bottom: 0;
 }
 .hold-style-setting {
-	height: calc(100% - 200px);
+	height: calc(100% - 150px);
 	overflow-y: scroll;
 }
 .hold-style fieldset {
@@ -315,4 +316,77 @@
     height: calc(100% - 40px);
     white-space: pre;
     resize: none;
+}
+
+.tab-ass-back {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: #7f7f7f33;
+	display: none;
+	z-index:9999;
+}
+.tab-ass-btn {
+	position: absolute;
+	top: calc(100% - 20px);
+	left: 0;
+	height: calc(20px + 1px);
+	border-width: 1px 1px 0 0;
+	transition: 0.3s;
+	display: none;
+	z-index:9999;
+}
+.tab.ass .tab-ass-btn {
+	display: block;
+}
+.tab-ass-btn:after {
+	content: "▲";
+}
+.tab-ass-area {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	width: 100%;
+	height: calc(100% - 20px);
+	border-top: 1px solid #aaa;
+	padding: calc(20px * 0.4);
+	transition: 0.3s;
+	z-index:9999;
+}
+.tab.edit-ass .tab-ass-back {
+	display: block;
+}
+.tab.edit-ass .tab-ass-btn {
+	top: 0;
+}
+.tab.edit-ass .tab-ass-btn:after {
+	content: "▼";
+}
+.tab.edit-ass .tab-ass-area {
+	top: 20px;
+}
+.tab-ass-styles {
+	height: 30%;
+}
+.tab-ass-script {
+	height: 70%;
+}
+.tab-ass-area span {
+	display: block;
+	height: calc(20px * 1.5);
+	line-height: calc(20px * 1.5);
+	font-size: calc(20px * 0.7);
+}
+.tab-ass-area textarea {
+	width: 100%;
+	height: calc(100% - 20px * 2);
+	resize: none;
+}
+
+.hold-ass-events {
+	display: block;
+	position: absolute;
+	line-height: calc(20px * 2);
 }

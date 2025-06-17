@@ -21,9 +21,9 @@ function refreshTime(now) {
 let showFps = null;
 
 window.Tab = function(text, path) {
-	this.holdSelector = $("<div class='hold-selector'>");
-	this.holdArea = $("<div class='holds'>");
-	this.area = $("<div class='tab'>").append(this.holdSelector).append(this.holdArea);
+	this.area = SmiEditor.tabPreset.clone();
+	this.holdSelector = this.area.find(".hold-selector");
+	this.holdArea = this.area.find(".holds");
 	this.holds = [];
 	this.hold = 0;
 	this.lastHold = 1;
@@ -35,7 +35,6 @@ window.Tab = function(text, path) {
 			const hold = holds[0];
 			if (hold.ass) {
 				assFile = new Subtitle.AssFile2(hold.ass);
-				console.log(assFile);
 			}
 			hold.ass = [];
 		}
@@ -67,6 +66,9 @@ window.Tab = function(text, path) {
 			
 			console.log(assFile);
 			console.log(holds);
+			
+			this.area.find(".tab-ass-styles textarea").val(assFile.getStyles().toText().split("\n").slice(2).join("\n"));
+			this.area.find(".tab-ass-script textarea").val(assFile.getEvents().toText().split("\n").slice(2).join("\n"));
 		}
 		
 		this.addHold(holds[0], true, true);
@@ -202,7 +204,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	}
 	{
 		hold.area.append($("<button type='button' class='btn-hold-style' title='홀드 공통 스타일 설정'>").text("스타일").data({ hold: hold }));
-		hold.area.append($("<button type='button' class='btn-hold-ass' title='ASS 출력에만 쓰이는 스크립트'>").text("ASS용").data({ hold: hold }));
+		hold.area.append($("<button type='button' class='btn-hold-ass' title='ASS 저장에만 쓰이는 추가 스크립트'>").text("ASS용").data({ hold: hold }));
 		
 		hold.area.append(hold.styleArea = $("<div class='hold-style-area'>"));
 		{
@@ -216,7 +218,8 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			area.find("input[name=Italic]   ").prop("checked", style.Italic);
 			area.find("input[name=Underline]").prop("checked", style.Underline);
 			area.find("input[name=StrikeOut]").prop("checked", style.StrikeOut);
-			
+
+			area.find("input[name=output][value=" + style.output + "]").click();
 			area.find("input[name=Fontsize]").val(style.Fontsize);
 			area.find("input[name=Bold]    ").prop("checked", style.Bold);
 			area.find("input[name=SecondaryColour]").val(style.SecondaryColour).next().val(style.SecondaryColour);
@@ -278,7 +281,8 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 				hold.refreshStyle();
 				
 			}).on("change", "input[type=radio]", function () {
-				hold.style.Alignment = $(this).val();
+				const $input = $(this);
+				hold.style[$input.attr("name")] = $input.val();
 				hold.refreshStyle();
 				
 			}).on("keyup", function() {
@@ -303,13 +307,14 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			const area = SmiEditor.assPreset.clone();
 			hold.assArea.append(area);
 			
-			console.log(hold);
-			console.log(hold.ass);
 			const part = new Subtitle.AssPart("Events", Subtitle.AssPart.EventsFormat);
-			part.body = hold.ass;
-			let ass = part.toText().split("\n").slice(2).join("\n");
-			console.log(ass);
-			area.find("textarea.hold-ass-script").val(ass);
+			if (hold.ass) {
+				part.body = hold.ass;
+				let ass = part.toText().split("\n").slice(2).join("\n");
+				area.find("textarea.hold-ass-script").val(ass);
+			} else {
+				hold.ass = part.body;
+			}
 			
 			area.on("input propertychange", "textarea", function () {
 				let $input = $(this);
@@ -574,8 +579,21 @@ Tab.prototype.replaceBeforeSave = function() {
 	}
 }
 Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
-	// TODO: ASS Script Info도 생성해야 함
-	return Subtitle.SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment, SmiEditor.video.FR / 1000);
+	// ASS 추가 내용 footer에 넣어주기
+	// TODO: 여기서 textarea 가져올 게 아니라, 그 전에 작업이 이뤄졌어야 함
+	const styles = this.area.find(".tab-ass-styles textarea").val();
+	const script = this.area.find(".tab-ass-script textarea").val();
+	let assText = "[V4+ Styles]\nFormat: " + Subtitle.AssPart.StylesFormat.join(",") + "\n" + styles
+	            + "\n\n[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(",") + "\n" + script;
+	for (let h = 0; h < this.holds.length; h++) {
+		const hold = this.holds[h];
+		assText += "\n" + hold.assArea.find("textarea.hold-ass-script").val();
+	}
+	
+	let text = Subtitle.SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment, SmiEditor.video.FR / 1000);
+	text += "\n<!-- ASS\n" + assText + "\n-->";
+	
+	return text;
 }
 Tab.prototype.onChangeSaved = function(hold) {
 	if (this.isSaved()) {
@@ -607,7 +625,7 @@ Tab.prototype.isSaved = function() {
 	return true;
 }
 
-Tab.prototype.toAss = function() {
+Tab.prototype.toAss = function(additionalText=null) {
 	function optimizeSync(sync) { // TODO: SubtitleObject.js 쪽으로 옮기는 게 나은가?
 		return Math.floor((findSync(sync) - 15) / 10);
 	}
@@ -615,7 +633,7 @@ Tab.prototype.toAss = function() {
 		return SmiEditor.findSync(sync, SmiEditor.video.fs);
 	}
 
-	const assFile = new Subtitle.AssFile2();
+	const assFile = new Subtitle.AssFile2(null, SmiEditor.video.width, SmiEditor.video.height);
 
 	const holds = this.holds;
 	let mainSyncs = null;
@@ -625,8 +643,8 @@ Tab.prototype.toAss = function() {
 		const name = (h == 0) ? "Default" : hold.name;
 		const style = hold.style ? hold.style : DefaultStyle;
 		
-		if (style.Fontsize == 0) {
-			// 크기 0은 ASS 변환 대상 제외
+		if ((style.output & 0b10) == 0) {
+			// ASS 변환 대상 제외
 			syncs.push([]);
 			continue;
 		}
@@ -655,8 +673,14 @@ Tab.prototype.toAss = function() {
 		if (h == 0) {
 			mainSyncs = syncs[0];
 		} else {
-			assFile.addFromSync(syncs[h], name);
+			assFile.addFromSyncs(syncs[h], name);
 		}
+		
+		// textarea에서 다시 가져와야 함
+		// TODO: 여기가 아니라 전 단계에서 이뤄져야 함
+		const scripts = hold.assArea.find("textarea.hold-ass-script").val();
+		hold.ass = new Subtitle.AssFile2("[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(",") + "\n" + scripts).getEvents().body;
+		assFile.getEvents().body.push(...hold.ass);
 	}
 	for (let h = 1; h < holds.length; h++) {
 		const hold = holds[h];
@@ -683,6 +707,20 @@ Tab.prototype.toAss = function() {
 		}
 	}
 	assFile.addFromSync(mainSyncs, "Default");
+	
+	{
+		// TODO: 여기가 아니라 전 단계에서 가져와야 함
+		if (!additionalText) {
+			const styles = this.area.find(".tab-ass-styles textarea").val();
+			const script = this.area.find(".tab-ass-script textarea").val();
+			additionalText = "[V4+ Styles]\nFormat: " + Subtitle.AssPart.StylesFormat.join(",") + "\n" + styles
+			               + "\n\n[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(",") + "\n" + script;
+		}
+		const additional = new Subtitle.AssFile2(additionalText);
+		assFile.getStyles().body.push(...additional.getStyles().body);
+		assFile.getEvents().body.push(...additional.getEvents().body);
+	}
+	
 	assFile.getEvents().body.sort((a, b) => {
 		let cmp = a.Start - b.Start;
 		if (cmp == 0) {
@@ -690,10 +728,11 @@ Tab.prototype.toAss = function() {
 		}
 		return cmp;
 	});
+	console.log(assFile);
 	return assFile;
 }
-Tab.prototype.getAssText = function() {
-	return this.toAss().toText();
+Tab.prototype.getAssText = function(additionalText) {
+	return this.toAss().toText(additionalText);
 }
 
 SmiEditor.prototype.isSaved = function() {
@@ -826,6 +865,11 @@ function setDefault(target, dflt) {
 // C# 쪽에서 호출
 function init(jsonSetting, isBackup=true) {
 	{
+		const tabPreset = $("#tabPreset");
+		SmiEditor.tabPreset = tabPreset.clone();
+		SmiEditor.tabPreset.attr({ id: null });
+		tabPreset.remove();
+		
 		const holdStylePreset = $("#holdStylePreset");
 		SmiEditor.stylePreset = holdStylePreset.clone();
 		SmiEditor.stylePreset.attr({ id: null });
@@ -1095,6 +1139,13 @@ function init(jsonSetting, isBackup=true) {
 				closingTab = null;
 			}, 1);
 		});
+	});
+
+	$("#editor").on("click", "button.tab-ass-btn", function() {
+		const $btn = $(this);
+		$btn.parents(".tab").toggleClass("edit-ass");
+	}).on("keydown", ".tab-ass-area", function(e) {
+		e.stopPropagation();
 	});
 	
 	// ::-webkit-scrollbar에 대해 CefSharp에서 커서 모양이 안 바뀜
@@ -1608,7 +1659,6 @@ function saveFile(asNew, isExport) {
 		confirm("싱크 오류가 있습니다.\n저장하시겠습니까?", function() {
 			binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path, true);
 			if (withAss) {
-//				currentTab.getAssText();
 				binder.save(currentTab.getAssText(), assPath, false);
 			}
 			
@@ -1624,7 +1674,6 @@ function saveFile(asNew, isExport) {
 	} else {
 		binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path, true);
 		if (withAss) {
-//			currentTab.getAssText();
 			binder.save(currentTab.getAssText(), assPath, false);
 		}
 	}
@@ -1787,17 +1836,22 @@ function setVideo(path) {
 		SmiEditor.video.FL = 1;
 	}
 }
+// C# 쪽에서 호출 - requestFrames
 function setVideoInfo(w=1920, h=1080, fr=23976) {
-		if (fr == 23975) {
-			fr = 23975.7; // 일부 영상 버그
-		}
-		SmiEditor.video.FL = 1000000 / (SmiEditor.video.FR = fr);
-		if (showFps == null) {
-			showFps = $("#showFps");
-		}
-		showFps.text((Math.floor(fr*10+0.5)/10000) + " fps");
+	SmiEditor.video.width = w;
+	SmiEditor.video.height = h;
+	
+	// TODO: fps 관련은 이제 날리는 게 맞나...?
+	if (fr == 23975) {
+		fr = 23975.7; // 일부 영상 버그
+	}
+	SmiEditor.video.FL = 1000000 / (SmiEditor.video.FR = fr);
+	if (showFps == null) {
+		showFps = $("#showFps");
+	}
+	showFps.text((Math.round(fr*10)/10000) + " fps");
 }
-// C# 쪽에서 호출
+// C# 쪽에서 호출 - requestFrames
 function loadFkf(fkfName) {
 	// C# 파일 객체를 js 쪽에 전달할 수 없으므로, 정해진 경로의 파일을 ajax 형태로 가져옴
 	const req = new XMLHttpRequest();

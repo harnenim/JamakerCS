@@ -9,6 +9,7 @@ html, body,
 .hold-selector > .selector:hover,
 .hold-style-area > form,
 .hold-ass-area > form,
+.tab-ass-area,
 button {
 	background: [background];
 }
@@ -32,26 +33,30 @@ button {
 #tabSelector > .th,
 .hold-style-area > form,
 .hold-ass-area > form,
+.tab-ass-area,
 input, button {
 	border-color: [tabBorder];
 }
 /* 홀드/에디터 테두리 색 */
 .hold-selector,
 .hold-selector > .selector,
-.highlight-textarea {
+.highlight-textarea,
+.tab-ass-area textarea {
 	border-color: [border];
 }
 
 /* 에디터 배경 색 */
 input,
 .highlight-textarea.nonactive > textarea,
+.tab-ass-area textarea,
 .fr > .fhead,
 .fr > .fhead > button {
 	background: [editor];
 }
 /* 기본 글씨 색 */
 body, input, button,
-.hljs.nonactive textarea {
+.hljs.nonactive textarea,
+.tab-ass-area {
 	color: [text];
 	caret-color: [text];
 }

@@ -100,17 +100,20 @@ label, #showFps {
 	left: calc(20px * 0.5);
 	right: calc(20px * 0.5);
 	height: calc(100% - 20px);
-	max-height: calc(20px * 3 + 233px);
 	border-radius: calc(20px * 0.4);
 	padding: calc(20px * 0.5);
 }
-.tab.ass .hold .hold-style-area > form,
-.tab.ass .hold .hold-ass-area > form {
-	max-height: calc(20px * 15 + 355px);
+.hold .hold-style-area > form {
+	max-height: calc(20px * 3 + 233px);
 }
-.tab.ass .hold.main .hold-style-area > form,
-.tab.ass .hold.main .hold-ass-area > form {
-	max-height: calc(20px * 12 + 355px);
+.hold .hold-style-area > form {
+	max-height: calc(20px * 3 + 183px);
+}
+.tab.ass .hold .hold-style-area > form {
+	max-height: calc(20px * 16.5 + 305px);
+}
+.tab.ass .hold.main .hold-style-area > form  {
+	max-height: calc(20px * 13.5 + 305px);
 }
 .hold-style-area > form > button.btn-close-preset,
 .hold-ass-area > form > button.btn-close-preset {
@@ -143,6 +146,9 @@ label, #showFps {
 .hold-style-ass div.label {
 	min-width: calc(20px * 6.5);
 }
+.hold-style-ass .hold-style-output label {
+	min-width: calc(20px * 4);
+}
 .hold-style span {
 	width: calc(20px * 3);
 }
@@ -155,6 +161,30 @@ label, #showFps {
 .hold-ass-script {
     top: calc(20px * 2);
     height: calc(100% - 20px * 2);
+}
+
+.tab-ass-btn {
+	top: calc(100% - 20px);
+	height: calc(20px + 1px);
+}
+.tab-ass-area {
+	height: calc(100% - 20px);
+	padding: calc(20px * 0.4);
+}
+.tab.edit-ass .tab-ass-area {
+	top: 20px;
+}
+.tab-ass-area span {
+	height: calc(20px * 1.5);
+	line-height: calc(20px * 1.5);
+	font-size: calc(20px * 0.7);
+}
+.tab-ass-area textarea {
+	height: calc(100% - 20px * 2);
+}
+
+.hold-ass-events {
+	line-height: calc(20px * 2);
 }
 
 .custom-scrollbar ::-webkit-scrollbar,
