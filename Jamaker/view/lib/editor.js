@@ -581,17 +581,33 @@ Tab.prototype.replaceBeforeSave = function() {
 Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 	// ASS 추가 내용 footer에 넣어주기
 	// TODO: 여기서 textarea 가져올 게 아니라, 그 전에 작업이 이뤄졌어야 함
-	const styles = this.area.find(".tab-ass-styles textarea").val();
-	const script = this.area.find(".tab-ass-script textarea").val();
-	let assText = "[V4+ Styles]\nFormat: " + Subtitle.AssPart.StylesFormat.join(",") + "\n" + styles
-	            + "\n\n[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(",") + "\n" + script;
+	let assTexts = [];
+	let styles = "";
+	{
+		styles = this.area.find(".tab-ass-styles textarea").val();
+		if (styles) {
+			assTexts.push("[V4+ Styles]\nFormat: " + Subtitle.AssPart.StylesFormat.join(",") + "\n" + styles);
+		}
+	}
+	let scripts = "";
+	{
+		const script = this.area.find(".tab-ass-script textarea").val();
+		if (script) {
+			scripts = "[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(",") + "\n" + script;
+		}
+	}
 	for (let h = 0; h < this.holds.length; h++) {
 		const hold = this.holds[h];
-		assText += "\n" + hold.assArea.find("textarea.hold-ass-script").val();
+		const script = hold.assArea.find("textarea.hold-ass-script").val();
+		if (script) {
+			scripts += "\n" + script;
+		}
 	}
 	
 	let text = Subtitle.SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment, SmiEditor.video.FR / 1000);
-	text += "\n<!-- ASS\n" + assText + "\n-->";
+	if (styles || scripts) {
+		text += "\n<!-- ASS\n" + assTexts.join("\n\n") + "\n-->";
+	}
 	
 	return text;
 }
