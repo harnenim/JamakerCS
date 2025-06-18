@@ -255,7 +255,9 @@ window.Combine = {
 				const ls = (li < lowerSyncs.length) ? lowerSyncs[li] : [99999999, 99999999, null, 0];
 				if (us[STIME] < ls[STIME]) { // 위가 바뀜
 					if (group
-						&& (   ((us[STYPE] == Subtitle.SyncType.inner) || (us[STYPE] > 3)) // 중간 싱크
+						&& (   (   (us[STYPE] == Subtitle.SyncType.inner) // 중간 싱크
+						        || (us[STYPE] == Subtitle.SyncType.combinedInner)
+						       )
 						    || (group.lower.length && (group.lower[group.lower.length - 1][ETIME] > us[STIME]))
 						)
 					) { // 그룹 유지
@@ -277,7 +279,9 @@ window.Combine = {
 						
 				} else if (ls[STIME] < us[STIME]) { // 아래가 바뀜
 					if (group
-						&& (  ((ls[STYPE] == Subtitle.SyncType.inner) || (ls[STYPE] > 3)) // 중간 싱크
+						&& (   (   (ls[STYPE] == Subtitle.SyncType.inner) // 중간 싱크
+						        || (ls[STYPE] == Subtitle.SyncType.combinedInner)
+						       )
 						    || (group.upper.length && (group.upper[group.upper.length - 1][ETIME] > ls[STIME]))
 						)
 					) { // 그룹 유지
@@ -298,7 +302,8 @@ window.Combine = {
 					li++;
 						
 				} else { // 둘이 같이 바뀜
-					if ((us[STYPE] == Subtitle.SyncType.inner) || (us[STYPE] > 3) || (ls[STYPE] == Subtitle.SyncType.inner) || (ls[STYPE] > 3)) {
+					if ((us[STYPE] == Subtitle.SyncType.inner) || (us[STYPE] == Subtitle.SyncType.combinedInner)
+					 || (ls[STYPE] == Subtitle.SyncType.inner) || (ls[STYPE] == Subtitle.SyncType.combinedInner)) {
 						// 하나라도 중간 싱크 - 그룹 유지
 						group.upper.push(us);
 						group.lower.push(ls);
