@@ -165,14 +165,18 @@ label, #showFps {
 
 .tab-ass-btn {
 	top: calc(100% - 20px);
-	height: calc(20px + 1px);
+	height: 20px;
 }
 .tab-ass-area {
-	height: calc(100% - 20px);
-	padding: calc(20px * 0.4);
+	padding: 0 calc(20px * 0.4);
+}
+.tab.edit-ass .tab-ass-btn {
+	height: calc(20px + 1px);
 }
 .tab.edit-ass .tab-ass-area {
 	top: 20px;
+	padding: calc(20px * 0.4);
+	height: calc(100% - 20px);
 }
 .tab-ass-area span {
 	height: calc(20px * 1.5);

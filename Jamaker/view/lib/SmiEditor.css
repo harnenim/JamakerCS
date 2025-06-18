@@ -332,7 +332,7 @@ textarea,
 	position: absolute;
 	top: calc(100% - 20px);
 	left: 0;
-	height: calc(20px + 1px);
+	height: 20px;
 	border-width: 1px 1px 0 0;
 	transition: 0.3s;
 	display: none;
@@ -349,9 +349,9 @@ textarea,
 	top: 100%;
 	left: 0;
 	width: 100%;
-	height: calc(100% - 20px);
-	border-top: 1px solid #aaa;
-	padding: calc(20px * 0.4);
+	height: 0;
+	border-top: 0 solid #aaa;
+	padding: 0 calc(20px * 0.4);
 	transition: 0.3s;
 	z-index:9999;
 }
@@ -360,18 +360,29 @@ textarea,
 }
 .tab.edit-ass .tab-ass-btn {
 	top: 0;
+	height: calc(20px + 1px);
 }
 .tab.edit-ass .tab-ass-btn:after {
 	content: "▼";
 }
 .tab.edit-ass .tab-ass-area {
 	top: 20px;
+	border-top-width: 1px;
+	padding: calc(20px * 0.4);
+	height: calc(100% - 20px);
 }
 .tab-ass-styles {
 	height: 30%;
 }
 .tab-ass-script {
 	height: 70%;
+}
+.tab-ass-area > div {
+	/* 이게 없으면 최초 로딩 시 하단 여백 생김 */
+	display: none;
+}
+.tab.edit-ass .tab-ass-area > div {
+	display: block;
 }
 .tab-ass-area span {
 	display: block;

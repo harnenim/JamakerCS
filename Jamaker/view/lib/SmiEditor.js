@@ -1462,6 +1462,8 @@ SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 		this.history.log();
 		this.render([lineNo, this.lines.length]);
 	}
+	
+	return originSync;
 }
 /*
 mode:
@@ -2878,10 +2880,10 @@ SmiEditor.Viewer = {
 											}
 											// <br> 뒤의 줄바꿈은 일단 제거
 											texts = texts.join("\n").split(/<br>\n/gi).join("<br>").split("\n");
-
+											
 											// 3줄 넘어가면 줄바꿈 살림
 											const text = texts.join((texts.length - pass > 3) ? "<br>" : "");
-
+											
 											if (text.split("&nbsp;").join("").trim()) { // 공백 싱크는 제외
 												newLines.push({ SYNC: 0, TYPE: null, TEXT: Subtitle.Smi.fromAttr(Subtitle.Smi.toAttr(tag[0] + text + tag[1], false)).split("\n").join("<br>") })
 											}

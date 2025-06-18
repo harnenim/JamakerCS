@@ -1164,11 +1164,25 @@ if (Subtitle && Subtitle.SmiFile) {
 				if (withNormalize) {
 					smi.normalize(false);
 				}
-
+				{	// 실질 내용물 없으면 공백으로 변환 후 처리
+					for (let i = 0; i < smi.body.length; i++) {
+						let syncText = smi.body[i].text;
+						if (syncText.startsWith("<!--")) {
+							const endComment = syncText.indexOf("-->");
+							if (endComment > 0) {
+								syncText = syncText.substring(endComment + 3).trim();
+							}
+						}
+						if (syncText.split("&nbsp;").join("").trim().length == 0) {
+							smi.body[i].text = "&nbsp;";
+						}
+					}
+				}
+				
 				if (smi.body.length == 0) {
 					continue;
 				}
-
+				
 				// 메인에서 홀드와 겹치는 영역 찾기
 				let mainBegin = 0;
 				let mainEnd = 0;

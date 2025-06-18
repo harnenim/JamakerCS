@@ -1938,10 +1938,13 @@ Subtitle.AssPart.prototype.set = function(key, value) {
 	}
 }
 Subtitle.AssPart.prototype.toTxt = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
-Subtitle.AssPart.prototype.toText = function() {
-	const result = ['[' + this.name + ']'];
-	if (this.format) {
-		result.push("Format: " + this.format.join(", "));
+Subtitle.AssPart.prototype.toText = function(withHeader=true) {
+	const result = [];
+	if (withHeader) {
+		result.push('[' + this.name + ']');
+		if (this.format) {
+			result.push("Format: " + this.format.join(", "));
+		}
 	}
 	for (let i = 0; i < this.body.length; i++) {
 		const item = this.body[i];
