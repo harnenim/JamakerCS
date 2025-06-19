@@ -222,6 +222,13 @@ window.Combine = {
 				last[ETYPE] = smi.syncType;
 				last = null;
 			}
+			if (smi.text.startsWith("<!--")) {
+				// 결합 전 주석 제거
+				let commentEnd = smi.text.indexOf("-->\n");
+				if (commentEnd > 0) {
+					smi.text = smi.text.substring(commentEnd + 4);
+				}
+			}
 			if (smi.text.split("&nbsp;").join("").trim()) {
 				const lineCount = smi.text.split(/<br>/gi).length;
 					

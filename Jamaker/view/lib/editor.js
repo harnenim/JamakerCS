@@ -1824,7 +1824,7 @@ function openNewTab(text, path, forVideo) {
 			//       맞지 않는 영상일 경우 수행하지 않아야 함
 			if (SmiEditor.video.path) {
 				let assPath = SmiEditor.video.path.substring(0, SmiEditor.video.path.lastIndexOf(".")) + ".ass";
-				binder.loadAssFile(assPath);
+				binder.loadAssFile(assPath, tabs.length - 1);
 			}
 		}
 	}
@@ -2150,6 +2150,15 @@ function loadAssFile(path, text, target=-1) {
 				if (origin.origin && origin.origin.origin) {
 					// SMI 기반
 					const smi = origin.origin.origin;
+					let smiText = smi.text;
+					let assComment = "";
+					if (smiText.startsWith("<!-- ASS\n")) {
+						const endComment = smiText.indexOf("-->\n");
+						if (endComment > 0) {
+							assComment = smiText.substring(0, endComment + 4);
+							smiText = smiText.substring(endComment + 4);
+						}
+					}
 					
 					const prepends = [];
 					let addCount = targets.length - origins.length;
@@ -2169,6 +2178,7 @@ function loadAssFile(path, text, target=-1) {
 						let replaced = false;
 						for (; i < origins.length; i++) {
 							if (origins[i].Text != targets[addCount + i].Text) {
+								assComment = "";
 								replaced = true;
 								break;
 							}
@@ -2268,11 +2278,11 @@ function loadAssFile(path, text, target=-1) {
 							
 							if (canReplace) {
 								smi.fromAttrs(sync.text);
-								smi.text = '<FONT ass="{\\' + newPrev.join("\\") + '}"></FONT>' + smi.text;
+								smiText = '<FONT ass="{\\' + newPrev.join("\\") + '}"></FONT>' + smiText;
 								if (requireNext) {
 									// 뒤쪽에 추가 내용 필요
 									const next = targetText.substring(originText.length);
-									smi.text = smi.text + '<FONT ass="' + next + '"></FONT>';
+									smiText = smiText + '<FONT ass="' + next + '"></FONT>';
 								}
 								replaced = false;
 							} else {
@@ -2290,8 +2300,8 @@ function loadAssFile(path, text, target=-1) {
 								for (i = 0; i < targets.length; i++) {
 									newText += [targets[i].Layer, "", "", targets[i].Style, targets[i].Name, targets[i].MarginL, targets[i].MarginR, targets[i].MarginV, targets[i].Effect, targets[i].Text].join(",") + "\n";
 								}
-								newText += "END\n-->\n" + smi.text;
-								smi.text = newText;
+								newText += "END\n-->\n" + smiText;
+								smiText = newText;
 								
 								
 							} else if (addCount > 0) {
@@ -2300,13 +2310,14 @@ function loadAssFile(path, text, target=-1) {
 								for (i = 0; i < prepends.length; i++) {
 									newText += [prepends[i].Layer, "", "", prepends[i].Style, prepends[i].Name, prepends[i].MarginL, prepends[i].MarginR, prepends[i].MarginV, prepends[i].Effect, prepends[i].Text].join(",") + "\n";
 								}
-								newText += "-->\n" + smi.text;
-								smi.text = newText;
+								newText += "-->\n" + smiText;
+								smiText = newText;
 								
 							} else {
 								// 변환 결과 그대로 - 동작 X
 							}
 						}
+						smi.text = assComment + smiText;
 					}
 				} else {
 					// ASS 독자 내용
