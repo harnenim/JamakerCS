@@ -43,7 +43,7 @@ window.Tab = function(text, path) {
 		}
 		if (assFile) {
 			const list = assFile.getEvents().body;
-			const additionals = [];
+			const appends = [];
 			for (let i = 0; i < list.length; i++) {
 				const item = list[i];
 				if (item.Style == "Default") {
@@ -58,17 +58,18 @@ window.Tab = function(text, path) {
 						}
 					}
 					if (!found) {
-						additionals.push(item);
+						appends.push(item);
 					}
 				}
 			}
-			assFile.getEvents().body = additionals;
+			assFile.getEvents().body = appends;
 			
 			console.log(assFile);
 			console.log(holds);
 			
-			this.area.find(".tab-ass-styles textarea").val(assFile.getStyles().toText().split("\n").slice(2).join("\n"));
-			this.area.find(".tab-ass-script textarea").val(assFile.getEvents().toText().split("\n").slice(2).join("\n"));
+			// TODO: ASS 에디터 만드는 게 좋을 듯함
+			this.area.find(".tab-ass-styles textarea").val(assFile.getStyles().toText(false));
+			this.area.find(".tab-ass-script textarea").val(assFile.getEvents().toText(false));
 		}
 		
 		this.addHold(holds[0], true, true);
@@ -310,7 +311,8 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			const part = new Subtitle.AssPart("Events", Subtitle.AssPart.EventsFormat);
 			if (hold.ass) {
 				part.body = hold.ass;
-				let ass = part.toText().split("\n").slice(2).join("\n");
+				let ass = part.toText(false);
+				// TODO: ASS 에디터 만드는 게 좋을 듯함
 				area.find("textarea.hold-ass-script").val(ass);
 			} else {
 				hold.ass = part.body;
@@ -363,6 +365,13 @@ SmiEditor.prototype.refreshStyle = function() {
 	this.$preview.find(".hold-style-preview-shadow").css(css);
 	
 	this.afterChangeSaved(this.isSaved());
+}
+SmiEditor.prototype._reSync = SmiEditor.prototype.reSync;
+SmiEditor.prototype.reSync = function(sync, limitRange=false) {
+	const originSync = this._reSync(sync, limitRange);
+	if (!originSync) return;
+	
+	// TODO: ASS 에디터도 싱크 이동
 }
 Tab.prototype.updateHoldSelector = function() {
 	if (this.holds.length <= 1) {
@@ -578,38 +587,47 @@ Tab.prototype.replaceBeforeSave = function() {
 		}
 	}
 }
-Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
-	// ASS 추가 내용 footer에 넣어주기
-	// TODO: 여기서 textarea 가져올 게 아니라, 그 전에 작업이 이뤄졌어야 함
+Tab.prototype.getAdditioinalToAss = function() {
 	let assTexts = [];
+	
 	let styles = "";
 	{
-		styles = this.area.find(".tab-ass-styles textarea").val();
+		styles = this.assStyles = this.area.find(".tab-ass-styles textarea").val();
 		if (styles) {
-			assTexts.push("[V4+ Styles]\nFormat: " + Subtitle.AssPart.StylesFormat.join(",") + "\n" + styles);
+			styles = "[V4+ Styles]\nFormat: " + Subtitle.AssPart.StylesFormat.join(",") + "\n" + styles
+			assTexts.push(styles);
 		}
 	}
-	let scripts = "";
+	
+	let scripts = [];
 	{
-		const script = this.area.find(".tab-ass-script textarea").val();
-		if (script) {
-			scripts = "[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(",") + "\n" + script;
+		for (let h = 0; h < this.holds.length; h++) {
+			const hold = this.holds[h];
+			// TODO: ASS 에디터 만드는 게 좋을 듯함
+			const script = hold.assScript = hold.assArea.find("textarea.hold-ass-script").val();
+			if (script) {
+				scripts.push(script);
+			}
+		}
+		{	// 홀드에 없는 추가 내용
+			// TODO: ASS 에디터 만드는 게 좋을 듯함
+			const script = this.area.find(".tab-ass-script textarea").val();
+			if (script) {
+				scripts.push(script);
+			}
+		}
+		if (scripts.length) {
+			scripts = "[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(",") + "\n" + (this.assScript = scripts.join("\n"));
+			assTexts.push(scripts);
+		} else {
+			this.assScript = scripts = "";
 		}
 	}
-	for (let h = 0; h < this.holds.length; h++) {
-		const hold = this.holds[h];
-		const script = hold.assArea.find("textarea.hold-ass-script").val();
-		if (script) {
-			scripts += "\n" + script;
-		}
-	}
-	
-	let text = Subtitle.SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment, SmiEditor.video.FR / 1000);
-	if (styles || scripts) {
-		text += "\n<!-- ASS\n" + assTexts.join("\n\n") + "\n-->";
-	}
-	
-	return text;
+	return (styles || scripts) ? ("\n<!-- ASS\n" + (this.assText = assTexts.join("\n\n")) + "\n-->") : "";
+}
+Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
+	return Subtitle.SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment, SmiEditor.video.FR / 1000)
+		+ this.getAdditioinalToAss(); // ASS 추가 내용 footer에 넣어주기
 }
 Tab.prototype.onChangeSaved = function(hold) {
 	if (this.isSaved()) {
@@ -641,16 +659,16 @@ Tab.prototype.isSaved = function() {
 	return true;
 }
 
-Tab.prototype.toAss = function(additionalText=null) {
-	function optimizeSync(sync) { // TODO: SubtitleObject.js 쪽으로 옮기는 게 나은가?
-		return Math.floor((findSync(sync) - 15) / 10);
-	}
-	function findSync(sync) {
-		return SmiEditor.findSync(sync, SmiEditor.video.fs);
-	}
-
+Tab.prototype.toAss = function() {
 	const assFile = new Subtitle.AssFile2(null, SmiEditor.video.width, SmiEditor.video.height);
-
+	
+	const appendText = "[V4+ Styles]\nFormat: " + Subtitle.AssPart.StylesFormat.join(",") + "\n" + this.assStyles
+	                 + "\n\n[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(",") + "\n" + this.assScript;
+	const append = new Subtitle.AssFile2(appendText);
+	
+	// ASS에서 추가한 내용은 대사가 아닌 배경 -> 뒤에 깔릴 가능성이 높으므로 먼저 추가
+	assFile.getEvents().body.push(...append.getEvents().body);
+	
 	const holds = this.holds;
 	let mainSyncs = null;
 	const syncs = [];
@@ -662,41 +680,18 @@ Tab.prototype.toAss = function(additionalText=null) {
 		if ((style.output & 0b10) == 0) {
 			// ASS 변환 대상 제외
 			syncs.push([]);
+			hold.smiFile = null;
 			continue;
 		}
 		
 		assFile.addStyle(name, style, hold);
 		
-		const input = hold.body ? hold : new Subtitle.SmiFile(hold.text);
-		{	// ASS 자막은 SMI와 싱크 타이밍이 미묘하게 달라서 보정 필요
-			// TODO: 팟플레이어 최신버전 오면서 보정치가 다 틀어졌는데...?
-			if (SmiEditor.sync && SmiEditor.sync.frame) {
-				if (SmiEditor.video.fs.length) {
-					for (let i = 0; i < input.body.length; i++) {
-						const item = input.body[i];
-						item.start = optimizeSync(item.start) * 10;
-					}
-				} else {
-					const FL = SmiEditor.video.FL;
-					for (let i = 0; i < input.body.length; i++) {
-						const item = input.body[i];
-						item.start = Math.max(1, ((Math.round(item.start / FL) - 0.5) * FL));
-					}
-				}
-			}
-		}
-		syncs.push(input.toSyncs());
+		syncs.push((hold.smiFile = new Subtitle.SmiFile(hold.text)).toSyncs());
 		if (h == 0) {
 			mainSyncs = syncs[0];
 		} else {
 			assFile.addFromSyncs(syncs[h], name);
 		}
-		
-		// textarea에서 다시 가져와야 함
-		// TODO: 여기가 아니라 전 단계에서 이뤄져야 함
-		const scripts = hold.assArea.find("textarea.hold-ass-script").val();
-		hold.ass = new Subtitle.AssFile2("[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(",") + "\n" + scripts).getEvents().body;
-		assFile.getEvents().body.push(...hold.ass);
 	}
 	for (let h = 1; h < holds.length; h++) {
 		const hold = holds[h];
@@ -724,31 +719,53 @@ Tab.prototype.toAss = function(additionalText=null) {
 	}
 	assFile.addFromSync(mainSyncs, "Default");
 	
-	{
-		// TODO: 여기가 아니라 전 단계에서 가져와야 함
-		if (!additionalText) {
-			const styles = this.area.find(".tab-ass-styles textarea").val();
-			const script = this.area.find(".tab-ass-script textarea").val();
-			additionalText = "[V4+ Styles]\nFormat: " + Subtitle.AssPart.StylesFormat.join(",") + "\n" + styles
-			               + "\n\n[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(",") + "\n" + script;
+	// 홀드에 없는 스타일 추가
+	assFile.getStyles().body.push(...append.getStyles().body);
+	
+	const eventsBody = assFile.getEvents().body;
+	{	// ASS 자막은 SMI와 싱크 타이밍이 미묘하게 달라서 보정 필요
+		// TODO: 팟플레이어 최신버전 오면서 보정치가 다 틀어졌는데...?
+		
+		 // TODO: SubtitleObject.js 쪽으로 옮기는 게 나은가?
+		function smiSync(assSync) {
+			return assSync * 10 + SmiEditor.video.FL;
 		}
-		const additional = new Subtitle.AssFile2(additionalText);
-		assFile.getStyles().body.push(...additional.getStyles().body);
-		assFile.getEvents().body.push(...additional.getEvents().body);
+		function optimizeSync(sync) {
+			return Math.floor((findSync(sync) - 15) / 10);
+		}
+		function findSync(sync) {
+			return SmiEditor.findSync(sync, SmiEditor.video.fs);
+		}
+		
+		if (SmiEditor.sync && SmiEditor.sync.frame) {
+			if (SmiEditor.video.fs.length) {
+				for (let i = 0; i < eventsBody.length; i++) {
+					const item = eventsBody[i];
+					item.Start = optimizeSync(item.Start * 10 + 5);
+					item.End   = optimizeSync(item.End   * 10 + 5);
+				}
+			} else {
+				const FL = SmiEditor.video.FL;
+				for (let i = 0; i < eventsBody.length; i++) {
+					const item = eventsBody[i];
+					item.Start = Math.max(1, ((Math.round(item.Start * 10 / FL) - 0.5) * FL));
+					item.End   = Math.max(1, ((Math.round(item.End   * 10 / FL) - 0.5) * FL));
+				}
+			}
+		}
 	}
 	
-	assFile.getEvents().body.sort((a, b) => {
+	eventsBody.sort((a, b) => {
 		let cmp = a.Start - b.Start;
 		if (cmp == 0) {
 			cmp = a.Layer - b.Layer;
 		}
 		return cmp;
 	});
-	console.log(assFile);
 	return assFile;
 }
-Tab.prototype.getAssText = function(additionalText) {
-	return this.toAss().toText(additionalText);
+Tab.prototype.getAssText = function(appendText) {
+	return this.toAss().toText(appendText);
 }
 
 SmiEditor.prototype.isSaved = function() {
@@ -1944,11 +1961,13 @@ function loadAssFile(path, text, target=-1) {
 	if (!currentTab) return;
 	
 	// SMI -> ASS 변환 결과
-	const genFile = currentTab.toAss();
+	currentTab.getAdditioinalToAss();
+	const originFile = currentTab.toAss();
 	
 	// 따로 불러온 ASS 파일
-	const assFile = new Subtitle.AssFile2(text);
-	assFile.getEvents().body.sort((a, b) => {
+	const targetFile = new Subtitle.AssFile2(text);
+	// 시간 순 정렬 돌리고 시작
+	targetFile.getEvents().body.sort((a, b) => {
 		let cmp = a.Start - b.Start;
 		if (cmp == 0) {
 			cmp = a.Layer - b.Layer;
@@ -1956,19 +1975,25 @@ function loadAssFile(path, text, target=-1) {
 		return cmp;
 	});
 	
-	console.log(genFile);
-	console.log(assFile);
+	console.log(originFile);
+	console.log(targetFile);
 	
 	// TODO:
 	// 불일치 부분 확인 및 보정
-	{	// 홀드 스타일과 ASS 스타일 비교
+	const appendFile = new Subtitle.AssFile2();
+
+	// 홀드 스타일과 ASS 스타일 비교
+	let styleTexts = currentTab.area.find(".tab-ass-styles textarea").val();
+	styleTexts = styleTexts ? [styleTexts] : [];
+	{
 		const styles = {};
-		let part = genFile.getStyles();
+		let part = originFile.getStyles();
 		for (let i = 0; i < part.body.length; i++) {
 			const style = part.body[i];
 			styles[style.Name] = style;
 		}
-		part = assFile.getStyles();
+		const addPart = appendFile.getStyles();
+		part = targetFile.getStyles();
 		for (let i = 0; i < part.body.length; i++) {
 			const style = part.body[i];
 			const genStyle = styles[style.Name];
@@ -1977,27 +2002,29 @@ function loadAssFile(path, text, target=-1) {
 					const f = part.format[j];
 					if (style[f] != genStyle[f]) {
 						console.log("홀드 스타일 변경 필요", f, genStyle, style);
+						part.body[i] = styles[style.Name];
 					}
 				}
 			} else {
-				console.log("별도로 추가해야 함", style);
-				// TODO: 홀드 UI와는 별도의 UI에 표현
+				addPart.body.push(style);
 			}
 		}
+		styleTexts.push(addPart.toText(false));
 	}
-	{	// 홀드 스크립트와 ASS 스크립트 비교
+	
+	{	// TODO: 홀드 스크립트와 ASS 스크립트 비교
 		
-		// TODO: 1:1 - 결과물이 다른 경우
+		// 1:1 - 결과물이 다른 경우
 		//       <font> 태그 추가해서 구현 시도
-		//       완전히 불일치 시 내용 전체를 <font ass="ass내용"> 태그로 감싸게 됨 <- 이렇게만 하는 게 구현은 제일 쉬움
+		//       완전히 불일치 시 내용 전체를 무시 <- 이렇게만 하는 게 구현은 제일 쉬움
 		
-		// TODO: 1:0 - SMI엔 있는데 ASS엔 없는 경우
-		//       <font ass="">내용물</font> 자동 반영
+		// 1:0 - SMI엔 있는데 ASS엔 없는 경우
+		//       내용물 무시 자동 반영
 		
-		// TODO: 1:N - SMI와 동일한 싱크에 ASS 자막 여러 개 있는 경우
+		// 1:N - SMI와 동일한 싱크에 ASS 자막 여러 개 있는 경우
 		//       해당 대사에 <!-- ASS 주석으로 추가
 		
-		// TODO: 0:1 - SMI에 아예 없고, ASS에서 추가한 부분일 경우
+		// 0:1 - SMI에 아예 없고, ASS에서 추가한 부분일 경우
 		//       홀드 UI와는 별도의 UI에 표현
 		//       문서 하단에 <!-- ASS 주석으로 추가
 		//       해당 부분에 ASS 화면 싱크 매니저 지원 필요
@@ -2008,10 +2035,316 @@ function loadAssFile(path, text, target=-1) {
 		// 내용물을 모두 <font ass="내용물"></font> 안에 넣는 식으로 제작하면 됨
 		// 같은 홀드로 뺀 음성 대사라면 시간이 겹쳐서 SMI에서 문제되진 않을 것
 		
-		// 오프닝/엔딩을 SMI와 ASS가 따로 놀게 만든 경우엔?
-		// 화면 싱크로 빠질 부분도 아니고, 모두 태그로 감싸기도 애매한데?
-	}
+		const originEvents = originFile.getEvents().body;
+		const targetEvents = targetFile.getEvents().body;
+		const appendEvents = appendFile.getEvents().body;
+		
+		//*
+		function optimizeSync(sync) { // TODO: SubtitleObject.js 쪽으로 옮기는 게 나은가?
+			return Math.floor((findSync(sync) - 15) / 10);
+		}
+		function findSync(sync) {
+			return SmiEditor.findSync(sync, SmiEditor.video.fs);
+		}
+		for (let i = 0; i < targetEvents.length; i++) {
+			targetEvents[i].Start = optimizeSync(targetEvents[i].Start * 10 + 5);
+			targetEvents[i].End   = optimizeSync(targetEvents[i].End   * 10 + 5);
+		}
+		//*/
+		for (let i = 0; i < targetEvents.length; i++) {
+			let assText = targetEvents[i].Text.split("}{").join("");
 
+			// 뒤쪽에 붙은 군더더기 종료태그 삭제
+			let removed = false;
+			while (assText.endsWith("}")) {
+				let end = assText.lastIndexOf("{");
+				if (end > 0) {
+					const tag = assText.substring(end);
+					assText = assText.substring(0, end);
+					if (tag.indexOf("\\fad") > 0
+					 || tag.indexOf("\\pos") > 0
+					 || tag.indexOf("\\mov") > 0
+					 || tag.indexOf("\\clip") > 0) {
+						// 종료태그가 아닌 전체적으로 쓰이는 태그일 경우 앞으로 이동
+						if (assText.startsWith("{")) {
+							end = assText.indexOf("}");
+							if (end > 0) { // 없을 리는 없음
+								assText = assText.substring(0, end) + tag.substring(1) + assText.substring(end + 1);
+							}
+						} else {
+							assText = tag + assText;
+						}
+					}
+					removed = true;
+				} else {
+					break;
+				}
+			}
+			if (removed) {
+				assText += "​"; // 군더더기 태그 삭제한 대신 Zero-width-space로 끝맺음
+			}
+			targetEvents[i].Text = assText;
+		}
+		
+		let oi = 0; let ti = 0;
+		let count = 0;
+		while (oi < originEvents.length && ti < targetEvents.length) {
+			const tEvent = targetEvents[ti];
+			while ((oi < originEvents.length) && (originEvents[oi].Start < tEvent.Start)) {
+				// ASS 출력 제외 대상
+				const o = originEvents[oi].origin.origin;
+				o.text = "<!-- ASS\nEND\n-->\n" + o.text;
+				count++;
+				oi++;
+			}
+			if ((oi >= originEvents.length) || (originEvents[oi].Start > tEvent.Start)) {
+				// 일치하는 게 없으면 추가 내용
+				appendEvents.push(tEvent);
+				ti++;
+				continue;
+			}
+			// Start 싱크가 일치할 경우
+			const origins = [];
+			const origins2 = [];
+			const targets = [tEvent];
+			for (let i = oi; i < originEvents.length; i++) {
+				if (originEvents[i].Start != tEvent.Start) continue;
+				if (originEvents[i].End   != tEvent.End  ) continue;
+				// 싱크 일치하는 것 확인
+				origins2.push(originEvents[i]);
+				if (originEvents[i].Style = tEvent.Style) {
+					// Style까지 일치하는 것 확인
+					origins.push(originEvents[i]);
+				}
+			}
+			for (let i = ti + 1; i < targetEvents.length; i++) {
+				if (targetEvents[i].Start != tEvent.Start) continue;
+				if (targetEvents[i].End   != tEvent.End  ) continue;
+				if (targetEvents[i].Style != tEvent.Style) continue;
+				// Style까지 일치하는 것 확인
+				targets.push(targetEvents[i]);
+			}
+			
+			// TODO: 일치하는 게 없으면 싱크는 일치하지만 스타일 다른 것 찾기
+			
+			if (origins.length == 0) {
+				// 일치하는 게 없으면 추가 내용
+				appendEvents.push(...targets);
+				ti += targets.length;
+				continue;
+			}
+			
+			let modified = (origins.length != targets.length);
+			if (!modified) {
+				// 개수가 그대로면 결과물 검사
+				for (let i = 0; i < origins.length; i++) {
+					if (origins[i].Text != targets[i].Text) {
+						modified = true;
+						break;
+					}
+				}
+			}
+			if (modified) {
+				// 수정 내역이 존재
+				const origin = origins[origins.length - 1];
+				if (origin.origin && origin.origin.origin) {
+					// SMI 기반
+					const smi = origin.origin.origin;
+					
+					const prepends = [];
+					let addCount = targets.length - origins.length;
+					for (let i = 0; i < addCount; i++) {
+						prepends.push(targets[i]);
+					}
+					if (addCount >= 0) {
+						let i = 0;
+						for (; i < origins.length; i++) {
+							if (origins[i].origin) {
+								break;
+							}
+							prepends.push(targets[addCount + i]);
+						}
+						let generatedCount = origins.length - i;
+						
+						let replaced = false;
+						for (; i < origins.length; i++) {
+							if (origins[i].Text != targets[addCount + i].Text) {
+								replaced = true;
+								break;
+							}
+						}
+						
+						let completed = false;
+						if (replaced && generatedCount == 1) {
+							// 일부 태그만 추가해서 결과물 가능한지 확인
+							let originText = origin.Text;
+							let originPrev = [];
+							if (originText.startsWith("{")) {
+								const end = originText.indexOf("}");
+								if (end > 0) {
+									originPrev = originText.substring(1, end).split("\\");
+									originText = originText.substring(end + 1);
+								}
+							}
+							let targetText = targets[targets.length - 1].Text;
+							let targetPrev = [];
+							if (targetText.startsWith("{")) {
+								const end = targetText.indexOf("}");
+								if (end > 0) {
+									targetPrev = targetText.substring(1, end).split("\\");
+									targetText = targetText.substring(end + 1);
+								}
+							}
+							const sync = origin.origin;
+							let canReplace = false;
+							let requireNext = false;
+							const newPrev = [];
+							
+							if (targetText.startsWith(originText)) {
+								// 앞쪽에 붙은 ASS 전용 태그 삭제
+								for (let j = 0; j < sync.text.length; j++) {
+									if (sync.text[j].ass) {
+										sync.text[j].ass = null;
+									} else {
+										break;
+									}
+								}
+								let regenAss = Subtitle.AssEvent.fromSync(sync);
+								regenAss = regenAss[regenAss.length - 1]; // 여기까지 오려면 반드시 1개 생성돼야 함
+								originPrev = [];
+								if (regenAss.Text.startsWith("{")) {
+									const end = regenAss.Text.indexOf("}");
+									if (end > 0) {
+										originPrev = regenAss.Text.substring(1, end).split("\\");
+									}
+								}
+								for (let j = 1; j < targetPrev.length; j++) {
+									const tag = targetPrev[j];
+									let generated = false;
+									for (let k = 1; k < originPrev.length; k++) {
+										if (tag == originPrev[k]) {
+											generated = true;
+											break;
+										}
+									}
+									if (!generated) {
+										newPrev.push(tag);
+									}
+								}
+								if (newPrev.length) {
+									canReplace = true;
+									requireNext = (targetText != originText);
+								} else {
+									// 태그 추가로 완성되지 않음
+								}
+								
+							} else {
+								// 중간 내용물이 바뀐 경우 확인
+								const add = targetText.length - originText.length
+								let eqs = 0;
+								for (; eqs < originText.length; eqs++) {
+									if (targetText[eqs] != originText[eqs]) {
+										break;
+									}
+								}
+								let eqe = originText.length;
+								for (; eqe > eqs; eqe--) {
+									if (targetText[eqe - 1 + add] != originText[eqe - 1]) {
+										break;
+									}
+								}
+								if (add < 0) {
+									eqe = Math.max(eqe, eqs - add);
+								}
+								console.log([originText.substring(0, eqs), originText.substring(eqs, eqe), originText.substring(eqe), targetText.substring(eqs, eqe + add)]);
+								
+								if ((eqe - eqs) < (originText.length / 5)) {
+									let pos = 0;
+									for (let j = 0; j < sync.text.length; j++) {
+										console.log(sync.text[j]);
+									}
+								}
+							}
+							
+							if (canReplace) {
+								smi.fromAttrs(sync.text);
+								smi.text = '<FONT ass="{\\' + newPrev.join("\\") + '}"></FONT>' + smi.text;
+								if (requireNext) {
+									// 뒤쪽에 추가 내용 필요
+									const next = targetText.substring(originText.length);
+									smi.text = smi.text + '<FONT ass="' + next + '"></FONT>';
+								}
+								replaced = false;
+							} else {
+								// 태그 추가로 해결되지 않음
+							}
+						}
+						
+						if (!completed) {
+							if (replaced) {
+								// 기본 내용도 달라짐 - 전체를 신규 내용으로 덮어쓰기
+								
+								// TODO: 내용 상세 비교 최적화는??
+								
+								let newText = "<!-- ASS\n";
+								for (i = 0; i < targets.length; i++) {
+									newText += [targets[i].Layer, "", "", targets[i].Style, targets[i].Name, targets[i].MarginL, targets[i].MarginR, targets[i].MarginV, targets[i].Effect, targets[i].Text].join(",") + "\n";
+								}
+								newText += "END\n-->\n" + smi.text;
+								smi.text = newText;
+								
+								
+							} else if (addCount > 0) {
+								// 기본 내용은 동일, 위에 주석만 추가
+								let newText = "<!-- ASS\n";
+								for (i = 0; i < prepends.length; i++) {
+									newText += [prepends[i].Layer, "", "", prepends[i].Style, prepends[i].Name, prepends[i].MarginL, prepends[i].MarginR, prepends[i].MarginV, prepends[i].Effect, prepends[i].Text].join(",") + "\n";
+								}
+								newText += "-->\n" + smi.text;
+								smi.text = newText;
+								
+							} else {
+								// 변환 결과 그대로 - 동작 X
+							}
+						}
+					}
+				} else {
+					// ASS 독자 내용
+					console.log("ASS 독자 내용", targets);
+				}
+				count++;
+			}
+			
+			oi += origins.length;
+			ti += targets.length;
+		}
+		while (ti < targetEvents.length) {
+			// 일치하는 게 없으면 추가 내용
+			appendEvents.push(targetEvents[ti]);
+			ti++;
+		}
+		
+		if (count > 0) {
+			confirm("ASS 자막 수정 내역이 있습니다. 적용하시겠습니까?", () => {
+				for (let i = 0; i < currentTab.holds.length; i++) {
+					const hold = currentTab.holds[i];
+					if (!hold.smiFile) continue;
+					
+					const smiText = hold.smiFile.toText();
+					hold.input.val(smiText);
+					hold.setCursor(0);
+					hold.scrollToCursor();
+					hold.render();
+				}
+				
+				currentTab.area.find(".tab-ass-styles textarea").val(styleTexts.join("\n"));
+				currentTab.area.find(".tab-ass-script textarea").val(appendFile.getEvents().toText(false));
+				
+			}, () => {
+				
+			});
+		}
+	}
 }
 
 // 종료 전 C# 쪽에서 호출

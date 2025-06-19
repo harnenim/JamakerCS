@@ -1719,11 +1719,17 @@ Subtitle.AssEvent.fromSync = function(sync, style=null) {
 	
 	let attrs = sync.text;
 	if (attrs[0].comment) {
+		// 주석에서 추가 내용 확인
 		const comment = attrs[0].comment;
 		if (comment.startsWith("<!-- ASS\n")) {
 			const lines = comment.substring(9, comment.length - 3).trim().split("\n");
 			for (let i = 0; i < lines.length; i++) {
-				const cols = lines[i].trim().split(",");
+				const line = lines[i].trim();
+				if (line == "END") {
+					// 남은 내용물은 활용하지 않음
+					return events;
+				}
+				const cols = line.split(",");
 				const ass = new Subtitle.AssEvent(start, end, cols[3], cols[9], cols[0]);
 				for (let j = 3; j < 9; j++) {
 					ass[Subtitle.Ass.cols[j]] = cols[j];
@@ -1904,6 +1910,13 @@ Subtitle.AssEvent.fromSync = function(sync, style=null) {
 			}
 		}
 		if (text = text.split("}{").join("")) {
+			// 뒤쪽에 붙은 군더더기 종료태그 삭제
+			while (text.endsWith("}")) {
+				let end = text.lastIndexOf("{");
+				if (end > 0) {
+					text = text.substring(0, end);
+				}
+			}
 			const ass = new Subtitle.AssEvent(start, end, sync.style, text, i);
 			ass.origin = sync;
 			events.push(ass);
