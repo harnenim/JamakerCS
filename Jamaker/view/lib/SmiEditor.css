@@ -144,7 +144,8 @@ textarea,
 	transition: 0.2s;
 }
 .hold.main .btn-hold-style,
-.btn-hold-ass {
+.btn-hold-ass,
+.hold.main .hold-style-ass .hold-style-output {
 	display: none;
 }
 .tab.ass .hold.main .btn-hold-style,
@@ -303,12 +304,31 @@ textarea,
 }
 .hold-style input[type=number] { text-align: right; }
 .hold-style input[type=range]  { width: 300px; }
+/*
 .hold-style-alignment tr:first-child td:not(:first-child):not(:last-child) {
 	border-width: 1px 0 0;
 }
 .hold-style-alignment tr:not(:first-child):not(:last-child) td {
 	border: 0;
 }
+*/
+.hold-style-alignment td {
+	border-width: 1px;
+}
+.hold-style-alignment tr:first-child td:first-child {
+	border: 0;
+}
+.hold-style-alignment tr:not(:first-child) td.arrow {
+	border-top: 0;
+}
+.hold-style-alignment td.arrow {
+	border-right: 0;
+	border-bottom: 0;
+}
+.hold-style-alignment td.arrow+td.arrow {
+	border-left: 0;
+}
+
 .hold-ass-script {
     position: relative;
     width: 100%;

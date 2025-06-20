@@ -969,6 +969,8 @@ Subtitle.Color.prototype.ass = function(value, total) {
 
 // SubtitleObjectAss.cs
 
+// TODO: 첫 단추를 얘만 1ms가 아닌 10ms 단위로 잡아서 더 복잡해진 것 같은데... 엎을까...
+
 Subtitle.Ass = function(start, end, style, text) {
 	this.start = start;
 	this.end   = end;
@@ -1369,11 +1371,12 @@ Subtitle.AssFile.prototype.fromSyncs = function(syncs, checkFrame=true) {
 
 
 
+//TODO: 첫 단추를 얘만 1ms가 아닌 10ms 단위로 잡아서 더 복잡해진 것 같은데... 엎을까...
 Subtitle.AssEvent = function(start, end, style, text, layer=0) {
 	this.key = "Dialogue";
 	this.Layer = layer;
-	this.Start = start;
-	this.End = end;
+	this.Start = Subtitle.AssEvent.toAssTime(this.start = start);
+	this.End   = Subtitle.AssEvent.toAssTime(this.end   = end  );
 	this.Style = style;
 	this.Name = "";
 	this.MarginL = 0;
@@ -1382,9 +1385,30 @@ Subtitle.AssEvent = function(start, end, style, text, layer=0) {
 	this.Effect = "";
 	this.Text = text;
 }
+Subtitle.AssEvent.toAssTime = (time) => {
+	const h = Math.floor( time / 3600000);
+	const m = Math.floor( time /   60000) % 60;
+	const s = Math.floor( time /    1000) % 60;
+	const ds= Math.floor((time % 1000) / 10);
+	const result = h + ":" + intPadding(m) + ":" + intPadding(s) + "." + intPadding(ds);
+	return result;
+}
+Subtitle.AssEvent.fromAssTime = (assTime) => {
+	const vs = assTime.split(':');
+	const result = ((Number(vs[0]) * 360000) + (Number(vs[1]) * 6000) + (Number(vs[2].split(".").join("")))) * 10;
+	return result;
+}
+function intPadding(value, length = 2) {
+	value = "" + value;
+	while (value.length < length) {
+		value = "0" + value;
+	}
+	return value;
+}
+
 Subtitle.AssEvent.prototype.fromSync = function(sync, style) {
-	this.Start = sync.start / 10;
-	this.End   = sync.end   / 10;
+	this.Start = Subtitle.AssEvent.toAssTime(this.start = sync.start);
+	this.End   = Subtitle.AssEvent.toAssTime(this.end   = sync.end  );
 	this.Style = sync.style ? sync.style : "Default";
 	this.Text = (this.texts = Subtitle.Ass.fromAttrs(sync.text))[0];
 	return this;
@@ -1712,10 +1736,29 @@ Subtitle.AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkA
 }
 Subtitle.Ass.fromAttrs = Subtitle.AssEvent.fromAttrs;
 
+// 뒤쪽에 붙은 군더더기 종료태그 삭제
+Subtitle.AssEvent.prototype.clearEnds = function() {
+	let text = this.Text;
+	while (text.endsWith("}")) {
+		if (text.endsWith("{}")) {
+			// 의도적으로 넣은 것
+			break;
+		}
+		let end = text.lastIndexOf("{");
+		if (end > 0) {
+			text = text.substring(0, end);
+		} else {
+			// {로 시작 - 의도적으로 넣은 것
+			break;
+		}
+	}
+	return this.Text = text;
+}
+
 Subtitle.AssEvent.fromSync = function(sync, style=null) {
 	const events = sync.events = [];
-	const start = sync.start / 10;
-	const end   = sync.end   / 10;
+	const start = sync.start;
+	const end   = sync.end;
 	
 	let attrs = sync.text;
 	if (attrs[0].comment) {
@@ -1747,7 +1790,7 @@ Subtitle.AssEvent.fromSync = function(sync, style=null) {
 	for (let i = 0; i < texts.length; i++) {
 		let text = texts[i];
 		if (text.indexOf("[FADE_LENGTH]") > 0) {
-			text = text.split("[FADE_LENGTH]").join(sync.end - sync.start);
+			text = text.split("[FADE_LENGTH]").join(end - start);
 		}
 		
 		// ASS에선 필요 없는 공백문자 군더더기 제거
@@ -1832,6 +1875,10 @@ Subtitle.AssEvent.fromSync = function(sync, style=null) {
 					while (line.endsWith("}")) {
 						const tagBegin = line.lastIndexOf("{");
 						if (tagBegin > 0) {
+							if (line.endsWith("{}")) {
+								// 의도적으로 넣은 것
+								break;
+							}
 							const tag = line.substring(tagBegin);
 							if (tag == "{\\ass0}") {
 								// ASS 전용 태그 강제 지정한 부분
@@ -1910,13 +1957,6 @@ Subtitle.AssEvent.fromSync = function(sync, style=null) {
 			}
 		}
 		if (text = text.split("}{").join("")) {
-			// 뒤쪽에 붙은 군더더기 종료태그 삭제
-			while (text.endsWith("}")) {
-				let end = text.lastIndexOf("{");
-				if (end > 0) {
-					text = text.substring(0, end);
-				}
-			}
 			const ass = new Subtitle.AssEvent(start, end, sync.style, text, i);
 			ass.origin = sync;
 			events.push(ass);
@@ -1970,11 +2010,13 @@ Subtitle.AssPart.prototype.toText = function(withHeader=true) {
 			const value = [];
 			for (let j = 0; j < this.format.length; j++) {
 				const key = this.format[j];
-				if ((key == "Start" || key == "End") && isFinite(item[key])) {
-					value.push(Subtitle.Ass.int2Time(item[key]));
-				} else {
-					value.push(item[key]);
+				if (!item[key]) {
+					switch (key) {
+						case "Start": item.Start = Subtitle.AssEvent.fromAssTime(item.start); break;
+						case "End"  : item.End   = Subtitle.AssEvent.fromAssTime(item.end  ); break;
+					}
 				}
+				value.push(item[key]);
 			}
 			result.push(item.key + ": " + value.join(","));
 		} else {
@@ -2049,22 +2091,39 @@ Subtitle.AssFile2.prototype.fromText = function(text) {
 					value[part.format.length - 1] = value.slice(part.format.length - 1).join(",");
 					value.length = part.format.length;
 				}
-				const item = { key: key };
 				if (part.name == "Events") {
 					// 형 변환 필요?
 				}
 				const isStyle = part.name == "V4+ Styles";
 				const isEvent = part.name == "Events";
 				
+				const item = isEvent ? new Subtitle.AssEvent() : {};
+				item.key = key;
+				
 				for (let j = 0; j < part.format.length; j++) {
 					const key = part.format[j];
 					let v = value[j];
 					if (isStyle && isFinite(v)) {
 						v = Number(v);
-					} else if (isEvent && (key == "Start" || key == "End") && !isFinite(v)) {
-						v = Subtitle.Ass.time2Int(v);
 					}
 					item[key] = v;
+					
+					if (isEvent) {
+						switch (key) {
+							case "Start": item.start = Subtitle.AssEvent.fromAssTime(v); break;
+							case "End": item.end   = Subtitle.AssEvent.fromAssTime(v); break;
+						}
+						if (isFinite(v)) {
+							switch (key) {
+								case "Layer":
+								case "MarginL":
+								case "MarginR":
+								case "MarginV":
+									item[key] = Number(item[key]);
+									break;
+							}
+						}
+					}
 				}
 				part.body.push(item);
 				
