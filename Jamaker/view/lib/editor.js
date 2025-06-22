@@ -1650,7 +1650,7 @@ function saveFile(asNew, isExport) {
 			}
 			const saveStyle = Subtitle.SmiFile.toSaveStyle(hold.style);
 			if (typeof styles[hold.name] == "string") {
-				if (hold.style != saveStyle) {
+				if (styles[hold.name] != saveStyle) {
 					const from = hold.name;
 					let to = null;
 					for (let j = 1; ; j++) {
