@@ -1043,7 +1043,6 @@ namespace Jamaker
                 {
                     FileInfo info = new FileInfo(path);
 
-                    // TODO: setVideoInfo
                     {
                         string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
                         
@@ -1193,18 +1192,25 @@ namespace Jamaker
                         bool isCompleted = true;
                         for (int index = 0; index < (end - begin); index++)
                         {
+                            Console.WriteLine($"index: {index}");
                             if (!File.Exists($"{dir}/{fileSeq}_{begin + index}{flag}.jpg"))
                             {
+                                Console.WriteLine("no img");
                                 isCompleted = false;
                                 break;
                             }
+                            // 0일 땐 비교값 계산 없음
+                            if (index == 0) continue;
+
                             if (!File.Exists($"{dir}/{fileSeq}_{begin + index}{flag}_.jpg"))
                             {
+                                Console.WriteLine("no img _");
                                 isCompleted = false;
                                 break;
                             }
                             if (!File.Exists($"{dir}/{fileSeq}_{begin + index}{flag}~.jpg"))
                             {
+                                Console.WriteLine("no img ~");
                                 isCompleted = false;
                                 break;
                             }
