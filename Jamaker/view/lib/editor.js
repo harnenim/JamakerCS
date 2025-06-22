@@ -673,6 +673,7 @@ Tab.prototype.toAss = function() {
 	const holds = this.holds;
 	let mainSyncs = null;
 	const syncs = [];
+	const styles = {};
 	for (let h = 0; h < holds.length; h++) {
 		const hold = holds[h];
 		const name = (h == 0) ? "Default" : hold.name;
@@ -684,8 +685,13 @@ Tab.prototype.toAss = function() {
 			hold.smiFile = null;
 			continue;
 		}
-		
-		assFile.addStyle(name, style, hold);
+
+		if (styles[name]) {
+			// 이미 추가함
+		} else {
+			assFile.addStyle(name, style, hold);
+			styles[name] = style;
+		}
 		
 		syncs.push((hold.smiFile = new Subtitle.SmiFile(hold.text)).toSyncs());
 		if (h == 0) {
@@ -753,6 +759,7 @@ Tab.prototype.toAss = function() {
 		}
 		
 		for (let i = 0; i < eventsBody.length; i++) {
+			console.log(eventsBody[i]);
 			eventsBody[i].clearEnds();
 		}
 	}
@@ -2120,8 +2127,12 @@ function loadAssFile(path, text, target=-1) {
 			const tEvent = targetEvents[ti];
 			while ((oi < originEvents.length) && (originEvents[oi].Start < tEvent.Start)) {
 				// ASS 출력 제외 대상
-				const o = originEvents[oi].origin.origin;
-				o.text = "<!-- ASS\nEND\n-->\n" + o.text;
+				if (originEvents[oi].origin) {
+					const o = originEvents[oi].origin.origin;
+					o.text = "<!-- ASS\nEND\n-->\n" + o.text;
+				} else {
+					// origin이 없었으면 기존에 ASS 전용으로 넣었던 건데 삭제 대상
+				}
 				count++;
 				oi++;
 			}
