@@ -1773,6 +1773,10 @@ Subtitle.AssEvent.fromSync = function(sync, style=null) {
 					return events;
 				}
 				const cols = line.split(",");
+				if (cols[1]) { // 축약 표현
+					cols.splice(1,0,"","");
+					cols.splice(4,0,"",0,0,0,"");
+				}
 				const ass = new Subtitle.AssEvent(start, end, cols[3], cols[9], cols[0]);
 				for (let j = 3; j < 9; j++) {
 					ass[Subtitle.Ass.cols[j]] = cols[j];
@@ -2109,18 +2113,21 @@ Subtitle.AssFile2.prototype.fromText = function(text) {
 					item[key] = v;
 					
 					if (isEvent) {
-						switch (key) {
-							case "Start": item.start = Subtitle.AssEvent.fromAssTime(v); break;
-							case "End": item.end   = Subtitle.AssEvent.fromAssTime(v); break;
-						}
 						if (isFinite(v)) {
 							switch (key) {
 								case "Layer":
+								case "Start":
+								case "End":
 								case "MarginL":
 								case "MarginR":
 								case "MarginV":
-									item[key] = Number(item[key]);
+									item[key] = Number(v);
 									break;
+							}
+						} else {
+							switch (key) {
+								case "Start": item.start = Subtitle.AssEvent.fromAssTime(v); break;
+								case "End"  : item.end   = Subtitle.AssEvent.fromAssTime(v); break;
 							}
 						}
 					}

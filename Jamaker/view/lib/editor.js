@@ -214,34 +214,6 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			
 			const $preview = hold.$preview = area.find(".hold-style-preview");
 			
-			area.find("input[name=Fontname]     ").val(style.Fontname);
-			area.find("input[name=PrimaryColour]").val(style.PrimaryColour).next().val(style.PrimaryColour);
-			area.find("input[name=Italic]   ").prop("checked", style.Italic);
-			area.find("input[name=Underline]").prop("checked", style.Underline);
-			area.find("input[name=StrikeOut]").prop("checked", style.StrikeOut);
-
-			area.find("input[name=output][value=" + style.output + "]").click();
-			area.find("input[name=Fontsize]").val(style.Fontsize);
-			area.find("input[name=Bold]    ").prop("checked", style.Bold);
-			area.find("input[name=SecondaryColour]").val(style.SecondaryColour).next().val(style.SecondaryColour);
-			area.find("input[name=OutlineColour]  ").val(style.OutlineColour  ).next().val(style.OutlineColour  );
-			area.find("input[name=BackColour]     ").val(style.BackColour     ).next().val(style.BackColour     );
-			area.find("input[name=PrimaryOpacity]  ").val(style.PrimaryOpacity  );
-			area.find("input[name=SecondaryOpacity]").val(style.SecondaryOpacity);
-			area.find("input[name=OutlineOpacity]  ").val(style.OutlineOpacity  );
-			area.find("input[name=BackOpacity]     ").val(style.BackOpacity     );
-			area.find("input[name=ScaleX]     ").val(style.ScaleX     );
-			area.find("input[name=ScaleY]     ").val(style.ScaleY     );
-			area.find("input[name=Spacing]    ").val(style.Spacing    );
-			area.find("input[name=Angle]      ").val(style.Angle      );
-			area.find("input[name=BorderStyle]").prop("checked", style.BorderStyle);
-			area.find("input[name=Outline]    ").val(style.Outline    );
-			area.find("input[name=Shadow]     ").val(style.Shadow     );
-			area.find("input[name=Alignment][value=" + style.Alignment + "]").click();
-			area.find("input[name=MarginL]").val(style.MarginL);
-			area.find("input[name=MarginR]").val(style.MarginR);
-			area.find("input[name=MarginV]").val(style.MarginV);
-			
 			area.on("input propertychange", "input[type=text], input[type=color]", function () {
 				let $input = $(this);
 				if ($input.hasClass("hold-style-preview-color")) {
@@ -293,7 +265,6 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 				if ($main.children().length) $main.text(text);
 			});
 			$preview.find(".hold-style-preview-outline, .hold-style-preview-shadow").text($preview.find(".hold-style-preview-main").text());
-			hold.refreshStyle();
 			
 			area.find(".btn-close-preset").on("click", function() {
 				hold.styleArea.hide();
@@ -301,6 +272,8 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 					SmiEditor.Viewer.refresh();
 				}
 			});
+			
+			hold.setStyle(style);
 		}
 		
 		hold.area.append(hold.assArea = $("<div class='hold-ass-area'>"));
@@ -334,6 +307,40 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 		this.selectHold(hold);
 	}
 	this.onChangeSaved();
+}
+SmiEditor.prototype.setStyle = function(style) {
+	this.style = style;
+	const area = this.styleArea.find(".hold-style");
+	
+	area.find("input[name=Fontname]     ").val(style.Fontname);
+	area.find("input[name=PrimaryColour]").val(style.PrimaryColour).next().val(style.PrimaryColour);
+	area.find("input[name=Italic]   ").prop("checked", style.Italic);
+	area.find("input[name=Underline]").prop("checked", style.Underline);
+	area.find("input[name=StrikeOut]").prop("checked", style.StrikeOut);
+
+	area.find("input[name=output][value=" + style.output + "]").click();
+	area.find("input[name=Fontsize]").val(style.Fontsize);
+	area.find("input[name=Bold]    ").prop("checked", style.Bold);
+	area.find("input[name=SecondaryColour]").val(style.SecondaryColour).next().val(style.SecondaryColour);
+	area.find("input[name=OutlineColour]  ").val(style.OutlineColour  ).next().val(style.OutlineColour  );
+	area.find("input[name=BackColour]     ").val(style.BackColour     ).next().val(style.BackColour     );
+	area.find("input[name=PrimaryOpacity]  ").val(style.PrimaryOpacity  );
+	area.find("input[name=SecondaryOpacity]").val(style.SecondaryOpacity);
+	area.find("input[name=OutlineOpacity]  ").val(style.OutlineOpacity  );
+	area.find("input[name=BackOpacity]     ").val(style.BackOpacity     );
+	area.find("input[name=ScaleX]     ").val(style.ScaleX     );
+	area.find("input[name=ScaleY]     ").val(style.ScaleY     );
+	area.find("input[name=Spacing]    ").val(style.Spacing    );
+	area.find("input[name=Angle]      ").val(style.Angle      );
+	area.find("input[name=BorderStyle]").prop("checked", style.BorderStyle);
+	area.find("input[name=Outline]    ").val(style.Outline    );
+	area.find("input[name=Shadow]     ").val(style.Shadow     );
+	area.find("input[name=Alignment][value=" + style.Alignment + "]").click();
+	area.find("input[name=MarginL]").val(style.MarginL);
+	area.find("input[name=MarginR]").val(style.MarginR);
+	area.find("input[name=MarginV]").val(style.MarginV);
+	
+	this.refreshStyle();
 }
 SmiEditor.prototype.refreshStyle = function() {
 	const style = this.style;
@@ -759,7 +766,6 @@ Tab.prototype.toAss = function() {
 		}
 		
 		for (let i = 0; i < eventsBody.length; i++) {
-			console.log(eventsBody[i]);
 			eventsBody[i].clearEnds();
 		}
 	}
@@ -1570,16 +1576,22 @@ function newFile() {
 }
 
 function openFile(path, text, forVideo) {
-	// C#에서 파일 열 동안 canOpenNewTab 결과가 달라질 리는 없겠지만, 일단은 바깥에서 감싸주기
-	runIfCanOpenNewTab(() => {
-		if (text) {
-			// 새 탭 열기
-			openNewTab(text, path, forVideo);
-		} else {
-			// C#에서 파일 열기 대화상자 실행
-			binder.openFile();
-		}
-	});
+	if (path && path.toLowerCase().endsWith(".ass")) {
+		// 연동 ASS 파일 열기
+		loadAssFile(path, text);
+		
+	} else {
+		// C#에서 파일 열 동안 canOpenNewTab 결과가 달라질 리는 없겠지만, 일단은 바깥에서 감싸주기
+		runIfCanOpenNewTab(() => {
+			if (text) {
+				// 새 탭 열기
+				openNewTab(text, path, forVideo);
+			} else {
+				// C#에서 파일 열기 대화상자 실행
+				binder.openFile();
+			}
+		});
+	}
 }
 function openFileForVideo(path, text) {
 	runIfCanOpenNewTab(() => {
@@ -1633,7 +1645,8 @@ function saveFile(asNew, isExport) {
 		}
 	}
 	
-	let withAss = false;
+	let withAss = currentTab.withAss;
+	/*
 	if (!isExport) { // SMI 내보내기 시엔 ASS 저장할 필요 없음
 		const match = /<sami( [^>]*)*>/gi.exec(currentTab.holds[0].text);
 		if (match && match[1]) {
@@ -1646,6 +1659,7 @@ function saveFile(asNew, isExport) {
 			}
 		}
 	}
+	*/
 	if (withAss) {
 		const styles = { "Default": Subtitle.SmiFile.toSaveStyle(currentTab.holds[0].style) };
 		for (let i = 1; i < currentTab.holds.length; i++) {
@@ -1681,7 +1695,7 @@ function saveFile(asNew, isExport) {
 	
 	let assPath = "";
 	if (withAss) {
-		/*
+		//*
 		if (path) {
 			if (path.indexOf("\\") > 0 || path.indexOf("/") >= 0) {
 				// 웹샘플 파일명이면 여기로 못 들어옴
@@ -1697,7 +1711,7 @@ function saveFile(asNew, isExport) {
 		} else {
 			alert("최초 SMI 파일 생성 시엔 ASS 파일이 생성되지 않습니다.");
 		}
-		*/
+		/*/
 		// SMI 파일이 아닌 영상 파일 경로 기반으로
 		if (SmiEditor.video.path) {
 			const index = SmiEditor.video.path.lastIndexOf(".");
@@ -1710,11 +1724,12 @@ function saveFile(asNew, isExport) {
 			// 웹샘플에서 이미 저장한 적 있을 경우
 			assPath = currentTab.assPath;
 		}
+		*/
 	}
 	if (syncError) {
 		confirm("싱크 오류가 있습니다.\n저장하시겠습니까?", function() {
 			binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path, true);
-			if (withAss) {
+			if (withAss && assPath) {
 				binder.save(currentTab.getAssText(), assPath, false);
 			}
 			
@@ -1729,7 +1744,7 @@ function saveFile(asNew, isExport) {
 		});
 	} else {
 		binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path, true);
-		if (withAss) {
+		if (withAss && assPath) {
 			binder.save(currentTab.getAssText(), assPath, false);
 		}
 	}
@@ -1841,6 +1856,7 @@ function openNewTab(text, path, forVideo) {
 				}
 			}
 		}
+		/* 수동 읽기로 전환
 		if (withAss) {
 			// 이미 자막에 해당하는 동영상 정보를 가져왔었으면 ASS 파일 읽기 수행
 			// TODO: ASS Script Info에 동영상 파일 이름을 따로 넣어야 할 듯함
@@ -1850,6 +1866,7 @@ function openNewTab(text, path, forVideo) {
 				binder.loadAssFile(assPath, tabs.length - 1);
 			}
 		}
+		*/
 	}
 	
 	return tab;
@@ -1964,7 +1981,9 @@ function afterLoadFkfFile(buffer) {
 			holds[j].refreshKeyframe();
 		}
 	}
-
+	
+	// ASS 파일 읽기는 수동으로 하는 쪽으로
+	/*
 	// 프레임값까지 가져온 후에 ASS 파일 읽기 수행
 	if (SmiEditor.video.path.indexOf(":")) { // 웹버전에선 온전한 파일 경로를 얻지 못해 콜론 없음
 		if (tabs.length && tabs[tab].withAss) {
@@ -1972,6 +1991,7 @@ function afterLoadFkfFile(buffer) {
 			binder.loadAssFile(assPath, tab);
 		}
 	}
+	*/
 }
 
 // C# 쪽에서 호출
@@ -1981,7 +2001,10 @@ function loadAssFile(path, text, target=-1) {
 		target = tab;
 	}
 	const currentTab = tabs[target];
-	if (!currentTab) return;
+	if (!currentTab || !currentTab.withAss) {
+		alert("연동용 자막 파일이 열려있어야 ASS 파일을 읽을 수 있습니다.");
+		return;
+	}
 	
 	// SMI -> ASS 변환 결과
 	currentTab.getAdditioinalToAss();
@@ -2023,18 +2046,69 @@ function loadAssFile(path, text, target=-1) {
 		}
 		const addPart = appendFile.getStyles();
 		part = targetFile.getStyles();
+		console.log(part);
 		for (let i = 0; i < part.body.length; i++) {
 			const style = part.body[i];
 			const genStyle = styles[style.Name];
 			if (genStyle) {
+				console.log("SMI에서 해당하는 홀드가 있음");
+				let styleChanged = false;
 				for (let j = 0; j < part.format.length; j++) {
 					const f = part.format[j];
 					if (style[f] != genStyle[f]) {
-						console.log("홀드 스타일 변경 필요", f, genStyle, style);
-						part.body[i] = styles[style.Name];
+						console.log("홀드 스타일 변경 됨", f, genStyle, style);
+						styleChanged = true;
+						break;
+					}
+				}
+				if (styleChanged) {
+					part.body[i] = styles[style.Name];
+					
+					// 기존 스타일 가져오기
+					let holdStyle = null;
+					for (let h = 0; h < currentTab.holds.length; h++) {
+						const hold = currentTab.holds[h];
+						if (hold.name == style.Name) {
+							holdStyle = JSON.parse(JSON.stringify(hold.style));
+							break;
+						}
+					}
+					// 여기서 없을 수는 없음
+					if (holdStyle) {
+						// output은 유지
+						holdStyle.Fontname    = style.Fontname   ;
+						holdStyle.Fontsize    = style.Fontsize   ;
+						holdStyle.Bold        = style.Bold      != 0;
+						holdStyle.Italic      = style.Italic    != 0;
+						holdStyle.Underline   = style.Underline != 0;
+						holdStyle.StrikeOut   = style.StrikeOut != 0;
+						holdStyle.ScaleX      = style.ScaleX     ;
+						holdStyle.ScaleY      = style.ScaleY     ;
+						holdStyle.Spacing     = style.Spacing    ;
+						holdStyle.Angle       = style.Angle      ;
+						holdStyle.BorderStyle = (style.BorderStyle & 2) != 0;
+						holdStyle.Outline     = style.Outline    ;
+						holdStyle.Shadow      = style.Shadow     ;
+						holdStyle.Alignment   = style.Alignment  ;
+						holdStyle.MarginL     = style.MarginL    ;
+						holdStyle.MarginR     = style.MarginR    ;
+						holdStyle.MarginV     = style.MarginV    ;
+						{ let fc = style.PrimaryColour  ; holdStyle.PrimaryColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.PrimaryOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
+						{ let fc = style.SecondaryColour; holdStyle.SecondaryColour = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.SecondaryOpacity = 255 - Number('0x'+fc[2]+fc[3]); }
+						{ let fc = style.OutlineColour  ; holdStyle.OutlineColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.OutlineOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
+						{ let fc = style.BackColour     ; holdStyle.BackColour      = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.BackOpacity      = 255 - Number('0x'+fc[2]+fc[3]); }
+						
+						// 해당 홀드 스타일 적용
+						for (let h = 0; h < currentTab.holds.length; h++) {
+							const hold = currentTab.holds[h];
+							if (hold.name == style.Name) {
+								hold.setStyle(holdStyle);
+							}
+						}
 					}
 				}
 			} else {
+				console.log("SMI에서 해당하는 홀드가 없음");
 				addPart.body.push(style);
 			}
 		}
@@ -2046,25 +2120,24 @@ function loadAssFile(path, text, target=-1) {
 	{	// TODO: 홀드 스크립트와 ASS 스크립트 비교
 		
 		// 1:1 - 결과물이 다른 경우
-		//       <font> 태그 추가해서 구현 시도
-		//       완전히 불일치 시 내용 전체를 무시 <- 이렇게만 하는 게 구현은 제일 쉬움
+		//       <font ass="~~"> 태그 추가해서 구현 시도 - 어느 정도 한계 존재 
+		//       내용 불일치 시 SMI용 내용 전체 무시하고 <!-- ASS 주석으로 대체 - 이렇게만 하는 게 구현은 쉬움
 		
 		// 1:0 - SMI엔 있는데 ASS엔 없는 경우
-		//       내용물 무시 자동 반영
+		//       변환 시 내용물 무시하는 명령어 자동 반영
 		
 		// 1:N - SMI와 동일한 싱크에 ASS 자막 여러 개 있는 경우
 		//       해당 대사에 <!-- ASS 주석으로 추가
+		//       마지막 줄에 대해서만 1:1 변환 적용 가능한지 확인
 		
-		// 0:1 - SMI에 아예 없고, ASS에서 추가한 부분일 경우
-		//       홀드 UI와는 별도의 UI에 표현
-		//       문서 하단에 <!-- ASS 주석으로 추가
-		//       해당 부분에 ASS 화면 싱크 매니저 지원 필요
+		// 0:N - SMI에 아예 없고, ASS에서 추가한 부분일 경우
+		//       에디터와 별도의 UI에 표현
+		//       문서 끝에 <!-- ASS 주석으로 추가
+		//       해당 부분에 대해서도 화면 싱크 매니저 지원 필요
 		//       currentTab.assFile = new Subtitle.AssFile2(); <- 나중에 정리되면 2 떼는 쪽으로
 		
-		// ASS에만 있는 부분은 기본적으로 화면 싱크로 간주
-		// 이걸 원하는 게 아닐 경우, SMI로 제작하고
-		// 내용물을 모두 <font ass="내용물"></font> 안에 넣는 식으로 제작하면 됨
-		// 같은 홀드로 뺀 음성 대사라면 시간이 겹쳐서 SMI에서 문제되진 않을 것
+		// ASS에만 있는 부분은 기본적으로 화면 싱크로 간주?
+		// 같은 홀드로 뺀 음성 대사라면 시간이 겹칠 리 없으니 SMI에서 문제되진 않을 것
 		
 		const originEvents = originFile.getEvents().body;
 		const targetEvents = targetFile.getEvents().body;
@@ -2123,7 +2196,7 @@ function loadAssFile(path, text, target=-1) {
 		
 		let oi = 0; let ti = 0;
 		let count = 0;
-		while (oi < originEvents.length && ti < targetEvents.length) {
+		while (ti < targetEvents.length) {
 			const tEvent = targetEvents[ti];
 			while ((oi < originEvents.length) && (originEvents[oi].Start < tEvent.Start)) {
 				// ASS 출력 제외 대상
@@ -2131,16 +2204,10 @@ function loadAssFile(path, text, target=-1) {
 					const o = originEvents[oi].origin.origin;
 					o.text = "<!-- ASS\nEND\n-->\n" + o.text;
 				} else {
-					// origin이 없었으면 기존에 ASS 전용으로 넣었던 건데 삭제 대상
+					// origin이 없었으면 기존에 ASS 전용으로 넣었던 것이므로 삭제 대상
 				}
 				count++;
 				oi++;
-			}
-			if ((oi >= originEvents.length) || (originEvents[oi].Start > tEvent.Start)) {
-				// 일치하는 게 없으면 추가 내용
-				appendEvents.push(tEvent);
-				ti++;
-				continue;
 			}
 			// Start 싱크가 일치할 경우
 			let origins = [];
@@ -2194,7 +2261,7 @@ function loadAssFile(path, text, target=-1) {
 				
 				oStyles.push(...tStyles);
 				for (let s = 0; s < oStyles.length; s++) {
-					const style = oStyles[s];
+					const style = (oStyles[s] == "Default") ? "메인" : oStyles[s];
 					
 					for (let h = 0; h < currentTab.holds.length; h++) {
 						const hold = currentTab.holds[h];
@@ -2203,17 +2270,19 @@ function loadAssFile(path, text, target=-1) {
 						if (!canImport) continue;
 						
 						const body = hold.smiFile.body;
-						let replaceFrom;
-						let replaceTo;
+						let replaceFrom = 0;
+						let replaceTo = 0;
 						
 						if (canImport) {
 							// 스타일에 맞는 홀드 찾음
-							for (let i = 0; i < body.length; i++) {
+							let i = 0;
+							for (; i < body.length; i++) {
 								if (start < body[i].start) { // 다음 싱크에 도달
 									if (i == 0 || body[i-1].isEmpty()) {
 										// 직전이 공백 싱크임
 										replaceFrom = replaceTo = i;
 									} else {
+										// 공백 아니면 겹칠 수 없음
 										canImport = false;
 									}
 									break;
@@ -2224,22 +2293,33 @@ function loadAssFile(path, text, target=-1) {
 										replaceFrom = i;
 										replaceTo = i + 1;
 									} else {
+										// 공백 아니면 겹칠 수 없음
 										canImport = false;
 									}
 									break;
 								}
 							}
+							if (i == body.length) {
+								// 끝까지 돌았으면 겹치는 싱크 없음
+								replaceFrom = replaceTo = i;
+							}
 						}
 						
 						if (canImport) {
 							if (end > body[replaceTo]) {
+								// 다음 싱크와 겹침
 								canImport = false;
 							}
 						}
 						if (canImport) {
 							let newText = "<!-- ASS\n";
 							for (i = 0; i < targets.length; i++) {
-								newText += [targets[i].Layer, "", "", targets[i].Style, targets[i].Name, targets[i].MarginL, targets[i].MarginR, targets[i].MarginV, targets[i].Effect, targets[i].Text].join(",") + "\n";
+								const item = targets[i];
+								if (item.Name == "" && item.MarginL == 0 && item.MarginR == 0 && item.MarginV == 0 && item.Effect == "") {
+									newText += [item.Layer, item.Style, item.Text].join(",") + "\n";
+								} else {
+									newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
+								}
 							}
 							newText += "END\n-->";
 							console.log("ASS 전용 SMI 싱크 생성", newText);
@@ -2254,7 +2334,7 @@ function loadAssFile(path, text, target=-1) {
 								// 신규 싱크 추가 - SMI에 없던 것이므로 화면 싱크로 예측 진행
 								newSmis.push(new Subtitle.Smi(start, Subtitle.SyncType.frame, newText));
 							}
-							if (end < body[replaceTo].start) {
+							if ((body.length == 0) || (replaceTo >= body.length) || end < body[replaceTo].start) {
 								// 공백 싱크 추가
 								newSmis.push(new Subtitle.Smi(end, Subtitle.SyncType.frame, "&nbsp;"));
 							}
@@ -2271,6 +2351,7 @@ function loadAssFile(path, text, target=-1) {
 				if (!imported) {
 					console.log("ASS 전용 스크립트로 처리", targets);
 					appendEvents.push(...targets);
+					count++;
 				}
 				oi += origins.length;
 				ti += targets.length;
@@ -2347,7 +2428,11 @@ function loadAssFile(path, text, target=-1) {
 							
 							let completed = false;
 							if (replaced && generatedCount == 1) {
-								// 일부 태그만 추가해서 결과물 가능한지 확인
+								let canReplace = false;
+								const sync = origin.origin;
+								let requireNext = false;
+								const newPrev = [];
+								
 								let originText = origin.Text;
 								let originPrev = [];
 								if (originText.startsWith("{")) {
@@ -2366,86 +2451,97 @@ function loadAssFile(path, text, target=-1) {
 										targetText = targetText.substring(end + 1);
 									}
 								}
-								const sync = origin.origin;
-								let canReplace = false;
-								let requireNext = false;
-								const newPrev = [];
-
-								/*
-								const beginIndex = targetText.indexOf(originText);
-								if (beginIndex >= 0) {
-									// TODO: 원본 smi에서 substring 가능해야 함
-									originText = originText.substring(beginIndex)
-								*/
-								if (targetText.startsWith(originText)) {
-									// 앞쪽에 붙은 ASS 전용 태그 삭제
-									for (let j = 0; j < sync.text.length; j++) {
-										if (sync.text[j].ass) {
-											sync.text[j].ass = null;
-										} else {
-											break;
-										}
-									}
-									let regenAss = Subtitle.AssEvent.fromSync(sync);
-									regenAss = regenAss[regenAss.length - 1]; // 여기까지 오려면 반드시 1개 생성돼야 함
-									originPrev = [];
-									if (regenAss.Text.startsWith("{")) {
-										const end = regenAss.Text.indexOf("}");
-										if (end > 0) {
-											originPrev = regenAss.Text.substring(1, end).split("\\");
-										}
-									}
-									for (let j = 1; j < targetPrev.length; j++) {
-										const tag = targetPrev[j];
-										let generated = false;
-										for (let k = 1; k < originPrev.length; k++) {
-											if (tag == originPrev[k]) {
-												generated = true;
+								
+								// 스타일이 일치할 때만 확인
+								let tStyle = targets[targets.length - 1].Style;
+								if (tStyle == "Default") tStyle = "메인";
+								if (origin.Style == tStyle) {
+									// 일부 태그만 추가해서 결과물 가능한지 확인
+									/*
+									const beginIndex = targetText.indexOf(originText);
+									if (beginIndex >= 0) {
+										// TODO: 원본 SMI에서 수정할 위치를 역산해서 수정해야 함
+										originText = originText.substring(beginIndex)
+									*/
+									if (targetText.startsWith(originText)) { // TODO: 이걸 하기 전에 ASS 테그 뗐어야 하나...?
+										// 앞쪽에 붙은 ASS 전용 태그 삭제
+										for (let j = 0; j < sync.text.length; j++) {
+											if (sync.text[j].ass) {
+												sync.text[j].ass = null;
+											} else {
 												break;
 											}
 										}
-										if (!generated) {
-											newPrev.push(tag);
+										// ASS 변환 결과물 재생성
+										let regenAss = Subtitle.AssEvent.fromSync(sync);
+										regenAss = regenAss[regenAss.length - 1]; // 여기까지 오려면 반드시 1개 생성돼야 함
+										
+										// SMI 태그에서 생성된 ASS 태그
+										originPrev = [];
+										if (regenAss.Text.startsWith("{")) {
+											const end = regenAss.Text.indexOf("}");
+											if (end > 0) {
+												originPrev = regenAss.Text.substring(1, end).split("\\");
+											}
 										}
-									}
-									if (newPrev.length) {
-										canReplace = true;
-										requireNext = (targetText != originText);
+										// 만들어져야 하는 ASS 태그 중에
+										for (let j = 1; j < targetPrev.length; j++) {
+											const tag = targetPrev[j];
+											let generated = false;
+											// 이미 SMI에서 만들어졌는지 확인
+											for (let k = 1; k < originPrev.length; k++) {
+												if (tag == originPrev[k]) {
+													generated = true;
+													break;
+												}
+											}
+											if (!generated) {
+												// 만들어졌으면 제외
+												newPrev.push(tag);
+											}
+										}
+										if (newPrev.length) {
+											// 추가할 태그 있음
+											requireNext = (targetText != originText); // 뒤쪽에 추가로 붙일 내용이 있는지 확인
+											canReplace = true; // 원본에 ASS용 태그 붙인 형태로 생성 가능
+										} else {
+											// 태그 추가로 완성할 수 없음
+										}
+										
 									} else {
-										// 태그 추가로 완성되지 않음
-									}
-									
-								} else {
-									// TODO: 중간 내용물이 바뀐 경우 확인
-									// 한 군데만 찾음 - 두 군데 이상 건드려야 하면 그냥 덮어씌우는 게 나을 듯함
-									const add = targetText.length - originText.length
-									let eqs = 0;
-									for (; eqs < originText.length; eqs++) {
-										if (targetText[eqs] != originText[eqs]) {
-											break;
+										// TODO: 중간 내용물이 바뀐 경우 확인
+										// 한 군데만 찾음 - 두 군데 이상 건드려야 하면 그냥 덮어씌우는 게 나을 듯함
+										const add = targetText.length - originText.length
+										let eqs = 0;
+										for (; eqs < originText.length; eqs++) {
+											if (targetText[eqs] != originText[eqs]) {
+												break;
+											}
 										}
-									}
-									let eqe = originText.length;
-									for (; eqe > eqs; eqe--) {
-										if (targetText[eqe - 1 + add] != originText[eqe - 1]) {
-											break;
+										let eqe = originText.length;
+										for (; eqe > eqs; eqe--) {
+											if (targetText[eqe - 1 + add] != originText[eqe - 1]) {
+												break;
+											}
 										}
-									}
-									if (add < 0) {
-										eqe = Math.max(eqe, eqs - add);
-									}
-									console.log([originText.substring(0, eqs), originText.substring(eqs, eqe), originText.substring(eqe), targetText.substring(eqs, eqe + add)]);
-									
-									// TODO: 이게 돌아가려면 ASS 결과물이 아닌, 원본 SMI에서 수정할 위치를 역산해서 수정해야 함
-									if ((eqe - eqs) < (originText.length / 5)) {
-										let pos = 0;
-										for (let j = 0; j < sync.text.length; j++) {
-											console.log(sync.text[j]);
+										if (add < 0) {
+											eqe = Math.max(eqe, eqs - add);
+										}
+										console.log([originText.substring(0, eqs), originText.substring(eqs, eqe), originText.substring(eqe), targetText.substring(eqs, eqe + add)]);
+										
+										// TODO: 이게 돌아가려면 ASS 결과물이 아닌, 원본 SMI에서 수정할 위치를 역산해서 수정해야 함
+										if ((eqe - eqs) < (originText.length / 5)) {
+											let pos = 0;
+											for (let j = 0; j < sync.text.length; j++) {
+												// attrs로 만들었어야 했는데 text라 좀 헷갈림
+												console.log(sync.text[j]);
+											}
 										}
 									}
 								}
 								
 								if (canReplace) {
+									// 원본에 ASS용 태그 붙인 형태로 생성 가능
 									smi.fromAttrs(sync.text);
 									smiText = '<FONT ass="{\\' + newPrev.join("\\") + '}"></FONT>' + smiText;
 									if (requireNext) {
@@ -2464,7 +2560,12 @@ function loadAssFile(path, text, target=-1) {
 									// 기본 내용도 달라짐 - 전체를 신규 내용으로 덮어쓰기
 									let newText = "<!-- ASS\n";
 									for (i = 0; i < targets.length; i++) {
-										newText += [targets[i].Layer, "", "", targets[i].Style, targets[i].Name, targets[i].MarginL, targets[i].MarginR, targets[i].MarginV, targets[i].Effect, targets[i].Text].join(",") + "\n";
+										const item = targets[i];
+										if (item.Name == "" && item.MarginL == 0 && item.MarginR == 0 && item.MarginV == 0 && item.Effect == "") {
+											newText += [item.Layer, item.Style, item.Text].join(",") + "\n";
+										} else {
+											newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
+										}
 									}
 									newText += "END\n-->\n" + smiText;
 									smiText = newText;
@@ -2474,7 +2575,12 @@ function loadAssFile(path, text, target=-1) {
 									// 기본 내용은 동일, 위에 주석만 추가
 									let newText = "<!-- ASS\n";
 									for (i = 0; i < prepends.length; i++) {
-										newText += [prepends[i].Layer, "", "", prepends[i].Style, prepends[i].Name, prepends[i].MarginL, prepends[i].MarginR, prepends[i].MarginV, prepends[i].Effect, prepends[i].Text].join(",") + "\n";
+										const item = prepends[i];
+										if (item.Name == "" && item.MarginL == 0 && item.MarginR == 0 && item.MarginV == 0 && item.Effect == "") {
+											newText += [item.Layer, item.Style, item.Text].join(",") + "\n";
+										} else {
+											newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
+										}
 									}
 									newText += "-->\n" + smiText;
 									smiText = newText;
@@ -2498,11 +2604,25 @@ function loadAssFile(path, text, target=-1) {
 				ti += targets.length;
 			}
 		}
+		while (oi < originEvents.length) {
+			// ASS 출력 제외 대상
+			if (originEvents[oi].origin) {
+				const o = originEvents[oi].origin.origin;
+				o.text = "<!-- ASS\nEND\n-->\n" + o.text;
+			} else {
+				// origin이 없었으면 기존에 ASS 전용으로 넣었던 것이므로 삭제 대상
+			}
+			count++;
+			oi++;
+		}
+		/*
 		while (ti < targetEvents.length) {
 			// 일치하는 게 없으면 추가 내용
 			appendEvents.push(targetEvents[ti]);
 			ti++;
+			count++;
 		}
+		*/
 		
 		if (count > 0) {
 			confirm("ASS 자막 수정 내역이 있습니다. 적용하시겠습니까?", () => {
@@ -2562,6 +2682,7 @@ function loadAssFile(path, text, target=-1) {
 			}, () => {
 				// TODO: 적용 안 하면 어쩔?
 				// 기존 ASS 파일 .bak 파일이라도 만들?
+				// ... 영상 불러오면 자동으로 가져오려고 했는데, 수동으로 가져온다면 필요 없을지도?
 			});
 		}
 	}

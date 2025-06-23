@@ -886,7 +886,7 @@ namespace Jamaker
             {
                 foreach (string strFile in droppedFiles)
                 {
-                    if (strFile.ToUpper().EndsWith(".SMI") || strFile.ToUpper().EndsWith(".SRT"))
+                    if (strFile.ToUpper().EndsWith(".SMI") || strFile.ToUpper().EndsWith(".SRT") || strFile.ToUpper().EndsWith(".ASS"))
                     {
                         LoadFile(strFile);
                         break;
@@ -927,7 +927,7 @@ namespace Jamaker
             }
             else
             {
-                OpenFileDialog dialog = new OpenFileDialog{ Filter = "지원되는 자막 파일|*.smi;*.srt" };
+                OpenFileDialog dialog = new OpenFileDialog{ Filter = "지원되는 자막 파일|*.smi;*.srt;*.ass" };
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
                     LoadFile(dialog.FileName);
