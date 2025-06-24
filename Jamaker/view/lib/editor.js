@@ -68,6 +68,7 @@ window.Tab = function(text, path) {
 			console.log(holds);
 			
 			// TODO: ASS 에디터 만드는 게 좋을 듯함
+			// 싱크를 어떻게 조절할지?
 			this.area.find(".tab-ass-styles textarea").val(assFile.getStyles().toText(false));
 			this.area.find(".tab-ass-script textarea").val(assFile.getEvents().toText(false));
 		}
@@ -373,13 +374,25 @@ SmiEditor.prototype.refreshStyle = function() {
 	
 	this.afterChangeSaved(this.isSaved());
 }
+
+// TODO: 비홀드 ASS 에디터는 어떻게 동작하지...?
+
+SmiEditor.prototype._insertSync = SmiEditor.prototype.insertSync;
+SmiEditor.prototype.insertSync = function(mode=0) {
+	// TODO: 커서가 ASS 에디터인지 확인
+	
+	this._insertSync(mode);
+}
 SmiEditor.prototype._reSync = SmiEditor.prototype.reSync;
 SmiEditor.prototype.reSync = function(sync, limitRange=false) {
+	// TODO: 커서가 ASS 에디터인지 확인
+	
 	const originSync = this._reSync(sync, limitRange);
 	if (!originSync) return;
 	
 	// TODO: ASS 에디터도 싱크 이동
 }
+
 Tab.prototype.updateHoldSelector = function() {
 	if (this.holds.length <= 1) {
 		this.area.removeClass("with-hold");
@@ -1710,6 +1723,7 @@ function saveFile(asNew, isExport) {
 			}
 		} else {
 			alert("최초 SMI 파일 생성 시엔 ASS 파일이 생성되지 않습니다.");
+			withAss = false;
 		}
 		/*/
 		// SMI 파일이 아닌 영상 파일 경로 기반으로
@@ -1729,7 +1743,7 @@ function saveFile(asNew, isExport) {
 	if (syncError) {
 		confirm("싱크 오류가 있습니다.\n저장하시겠습니까?", function() {
 			binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path, true);
-			if (withAss && assPath) {
+			if (withAss) {
 				binder.save(currentTab.getAssText(), assPath, false);
 			}
 			
@@ -1744,7 +1758,7 @@ function saveFile(asNew, isExport) {
 		});
 	} else {
 		binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path, true);
-		if (withAss && assPath) {
+		if (withAss) {
 			binder.save(currentTab.getAssText(), assPath, false);
 		}
 	}
@@ -2037,8 +2051,8 @@ function loadAssFile(path, text, target=-1) {
 	// 홀드 스타일과 ASS 스타일 비교
 	let styleTexts = currentTab.area.find(".tab-ass-styles textarea").val();
 	styleTexts = styleTexts ? [styleTexts] : [];
+	const styles = {}; // 아래에서도 필요해짐
 	{
-		const styles = {};
 		let part = originFile.getStyles();
 		for (let i = 0; i < part.body.length; i++) {
 			const style = part.body[i];
@@ -2259,6 +2273,7 @@ function loadAssFile(path, text, target=-1) {
 				const start = SmiEditor.findSync(targets[0].start, SmiEditor.video.fs);
 				const end   = SmiEditor.findSync(targets[0].end  , SmiEditor.video.fs);
 				
+				// 스타일에 해당하는 기존 홀드에 넣을 수 있는지 확인
 				oStyles.push(...tStyles);
 				for (let s = 0; s < oStyles.length; s++) {
 					const style = (oStyles[s] == "Default") ? "메인" : oStyles[s];
@@ -2312,6 +2327,8 @@ function loadAssFile(path, text, target=-1) {
 							}
 						}
 						if (canImport) {
+							// 공백 싱크 자리에 넣을 수 있음
+							console.log("공백 싱크 자리에 넣을 수 있음");
 							let newText = "<!-- ASS\n";
 							for (i = 0; i < targets.length; i++) {
 								const item = targets[i];
@@ -2335,7 +2352,7 @@ function loadAssFile(path, text, target=-1) {
 								newSmis.push(new Subtitle.Smi(start, Subtitle.SyncType.frame, newText));
 							}
 							if ((body.length == 0) || (replaceTo >= body.length) || end < body[replaceTo].start) {
-								// 공백 싱크 추가
+								// 다음 싱크와 떨어져 있으면 공백 싱크 추가
 								newSmis.push(new Subtitle.Smi(end, Subtitle.SyncType.frame, "&nbsp;"));
 							}
 							hold.smiFile.body = body.slice(0, replaceFrom).concat(newSmis).concat(body.slice(replaceTo));
@@ -2392,6 +2409,7 @@ function loadAssFile(path, text, target=-1) {
 					if (origin.origin && origin.origin.origin) {
 						// SMI 기반
 						const smi = origin.origin.origin;
+						console.log("SMI 기반", smi);
 						let smiText = smi.text;
 						let assComment = "";
 						if (smiText.startsWith("<!-- ASS\n")) {
@@ -2407,7 +2425,9 @@ function loadAssFile(path, text, target=-1) {
 						for (let i = 0; i < addCount; i++) {
 							prepends.push(targets[i]);
 						}
+						// 1:N이든 N:M이든 일단 ASS 출력물이 더 많음
 						if (addCount >= 0) {
+							// SMI에 기반한 결과물 개수 확인
 							let i = 0;
 							for (; i < origins.length; i++) {
 								if (origins[i].origin) {
@@ -2417,6 +2437,7 @@ function loadAssFile(path, text, target=-1) {
 							}
 							let generatedCount = origins.length - i;
 							
+							// SMI에 기반한 결과물만 가지고 일치 여부 확인
 							let replaced = false;
 							for (; i < origins.length; i++) {
 								if (origins[i].Text != targets[addCount + i].Text) {
@@ -2454,7 +2475,6 @@ function loadAssFile(path, text, target=-1) {
 								
 								// 스타일이 일치할 때만 확인
 								let tStyle = targets[targets.length - 1].Style;
-								if (tStyle == "Default") tStyle = "메인";
 								if (origin.Style == tStyle) {
 									// 일부 태그만 추가해서 결과물 가능한지 확인
 									/*
@@ -2463,9 +2483,11 @@ function loadAssFile(path, text, target=-1) {
 										// TODO: 원본 SMI에서 수정할 위치를 역산해서 수정해야 함
 										originText = originText.substring(beginIndex)
 									*/
-									if (targetText.startsWith(originText)) { // TODO: 이걸 하기 전에 ASS 테그 뗐어야 하나...?
+									
+									if (targetText.startsWith(originText)) {
 										// 앞쪽에 붙은 ASS 전용 태그 삭제
 										for (let j = 0; j < sync.text.length; j++) {
+											// 옛날에 attrs로 만들었어야 했는데, text로 해버려서 좀 헷갈림...
 											if (sync.text[j].ass) {
 												sync.text[j].ass = null;
 											} else {
@@ -2473,10 +2495,10 @@ function loadAssFile(path, text, target=-1) {
 											}
 										}
 										// ASS 변환 결과물 재생성
-										let regenAss = Subtitle.AssEvent.fromSync(sync);
+										let regenAss = Subtitle.AssEvent.fromSync(sync, styles[origin.origin.style]);
 										regenAss = regenAss[regenAss.length - 1]; // 여기까지 오려면 반드시 1개 생성돼야 함
 										
-										// SMI 태그에서 생성된 ASS 태그
+										// 순수 SMI 태그에서 생성된 ASS 태그
 										originPrev = [];
 										if (regenAss.Text.startsWith("{")) {
 											const end = regenAss.Text.indexOf("}");
@@ -2484,31 +2506,45 @@ function loadAssFile(path, text, target=-1) {
 												originPrev = regenAss.Text.substring(1, end).split("\\");
 											}
 										}
-										// 만들어져야 하는 ASS 태그 중에
-										for (let j = 1; j < targetPrev.length; j++) {
-											const tag = targetPrev[j];
-											let generated = false;
-											// 이미 SMI에서 만들어졌는지 확인
-											for (let k = 1; k < originPrev.length; k++) {
-												if (tag == originPrev[k]) {
-													generated = true;
-													break;
+										if (originPrev.length) {
+											// 만들어져야 하는 ASS 태그 중에
+											let regenOriginCount = 0;
+											for (let j = 1; j < targetPrev.length; j++) {
+												const tag = targetPrev[j];
+												let generated = false;
+												// 이미 SMI에서 만들어졌는지 확인
+												for (let k = 1; k < originPrev.length; k++) {
+													if (tag == originPrev[k]) {
+														regenOriginCount++;
+														generated = true;
+														break;
+													}
+												}
+												if (!generated) {
+													// 만들어졌으면 제외
+													newPrev.push(tag);
 												}
 											}
-											if (!generated) {
-												// 만들어졌으면 제외
-												newPrev.push(tag);
+											if (newPrev.length) {
+												// ASS 전용으로 추가할 태그 있음
+												requireNext = (targetText != originText); // 뒤쪽에 추가로 붙일 내용이 있는지 확인
+												canReplace = true; // 원본에 ASS용 태그 붙인 형태로 생성 가능
+											} else {
+												// 태그 추가만으로 완성할 수 없음
+												// 아래에서 완전히 ASS 전용 스크립트로 대체
+												// & 위에서 ass 제거한 것도 어차피 불용 태그
 											}
-										}
-										if (newPrev.length) {
-											// 추가할 태그 있음
+										} else {
+											// 순수 SMI에선 앞쪽에 붙은 게 없을 때
+											if (targetPrev.length) {
+												newPrev.push(...targetPrev.slice(1));
+											}
 											requireNext = (targetText != originText); // 뒤쪽에 추가로 붙일 내용이 있는지 확인
 											canReplace = true; // 원본에 ASS용 태그 붙인 형태로 생성 가능
-										} else {
-											// 태그 추가로 완성할 수 없음
 										}
 										
 									} else {
+										/* 일단 기각
 										// TODO: 중간 내용물이 바뀐 경우 확인
 										// 한 군데만 찾음 - 두 군데 이상 건드려야 하면 그냥 덮어씌우는 게 나을 듯함
 										const add = targetText.length - originText.length
@@ -2527,27 +2563,42 @@ function loadAssFile(path, text, target=-1) {
 										if (add < 0) {
 											eqe = Math.max(eqe, eqs - add);
 										}
-										console.log([originText.substring(0, eqs), originText.substring(eqs, eqe), originText.substring(eqe), targetText.substring(eqs, eqe + add)]);
 										
 										// TODO: 이게 돌아가려면 ASS 결과물이 아닌, 원본 SMI에서 수정할 위치를 역산해서 수정해야 함
-										if ((eqe - eqs) < (originText.length / 5)) {
+										console.log("수정할 영역 비중:", ((eqe - eqs) / originText.length));
+										if ((eqe - eqs) < (originText.length / 5)) { // 80% 이상 원본 그대로
 											let pos = 0;
 											for (let j = 0; j < sync.text.length; j++) {
-												// attrs로 만들었어야 했는데 text라 좀 헷갈림
+												// ASS 변환 시 공백문자 제거 등이 돌아가기 전 원본임
 												console.log(sync.text[j]);
 											}
+											if (sync.text.length == 1) {
+												// 원본에서 속성이 하나일 때만 확인함
+												const lines = sync.text[0].text.split("\n");
+												const part1 = originText.substring(0, eqs).split("\\N");
+												const part2 = originText.substring(eqe);
+												const partFrom = originText.substring(eqs, eqe);
+												const partTo = targetText.substring(eqs, eqe + add);
+												
+												console.log(lines, part1, part2, partFrom, partTo);
+											}
+											// ......... 버릴까
 										}
+										*/
 									}
 								}
 								
 								if (canReplace) {
 									// 원본에 ASS용 태그 붙인 형태로 생성 가능
 									smi.fromAttrs(sync.text);
-									smiText = '<FONT ass="{\\' + newPrev.join("\\") + '}"></FONT>' + smiText;
+									if (newPrev.length) {
+										// 앞쪽에 추가 내용 필요
+										smiText = '<FONT ass="{\\' + newPrev.join("\\") + '}"></FONT>\n' + smiText;
+									}
 									if (requireNext) {
 										// 뒤쪽에 추가 내용 필요
 										const next = targetText.substring(originText.length);
-										smiText = smiText + '<FONT ass="' + next + '"></FONT>';
+										smiText = smiText + '\n<FONT ass="' + next + '"></FONT>';
 									}
 									replaced = false;
 								} else {
@@ -2615,7 +2666,7 @@ function loadAssFile(path, text, target=-1) {
 			count++;
 			oi++;
 		}
-		/*
+		/* 위쪽 루프에서 ti가 끝까지 돌아가게 만듦
 		while (ti < targetEvents.length) {
 			// 일치하는 게 없으면 추가 내용
 			appendEvents.push(targetEvents[ti]);
