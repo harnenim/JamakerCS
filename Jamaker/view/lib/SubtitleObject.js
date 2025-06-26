@@ -1978,7 +1978,7 @@ Subtitle.AssPart.prototype.get = function(key) {
 	if (this.format) return null;
 	for (let i = 0; i < this.body.length; i++) {
 		if (this.body[i].key == key) {
-			return this.body[i];
+			return this.body[i].value;
 		}
 	}
 	return null;
@@ -2031,6 +2031,19 @@ Subtitle.AssPart.prototype.toText = function(withHeader=true) {
 }
 Subtitle.AssPart.StylesFormat = ["Name", "Fontname", "Fontsize", "PrimaryColour", "SecondaryColour", "OutlineColour", "BackColour", "Bold", "Italic", "Underline", "StrikeOut", "ScaleX", "ScaleY", "Spacing", "Angle", "BorderStyle", "Outline", "Shadow", "Alignment", "MarginL", "MarginR", "MarginV", "Encoding"];
 Subtitle.AssPart.EventsFormat = ["Layer", "Start", "End", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
+
+Subtitle.AssEvent.prototype.toText = function(format=Subtitle.AssPart.EventsFormat) {
+	const value = [];
+	for (let j = 0; j < format.length; j++) {
+		const key = format[j];
+		if (key) {
+			value.push(this[key]);
+		} else {
+			value.push("");
+		}
+	}
+	return value.join(",");
+}
 
 Subtitle.AssFile2 = function(text, width=1920, height=1080) {
 	this.parts = [];
@@ -2214,9 +2227,7 @@ Subtitle.AssFile2.prototype.getPart = function(name) {
 			return this.parts[i];
 		}
 	}
-	const part = new Subtitle.AssPart(name, Subtitle.AssPart.EventsFormat);
-	this.parts.push(part);
-	return part;
+	return null;
 }
 Subtitle.AssFile2.prototype.getInfo = function() {
 	return this.getPart("Script Info");
@@ -2225,7 +2236,12 @@ Subtitle.AssFile2.prototype.getStyles = function() {
 	return this.getPart("V4+ Styles");
 }
 Subtitle.AssFile2.prototype.getEvents = function() {
-	return this.getPart("Events");
+	let part = this.getPart("Events");
+	if (part == null) {
+		part = new Subtitle.AssPart(name, Subtitle.AssPart.EventsFormat);
+		this.parts.push(part);
+	}
+	return part;
 }
 Subtitle.AssFile2.prototype.getStyle = function(name) {
 	const stylesPart = this.getStyles();

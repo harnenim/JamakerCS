@@ -88,6 +88,10 @@ textarea,
 	background: #7f7f7f7f;
 	display: none;
 }
+.hold.style .hold-style-area,
+.hold.ass .hold-ass-area {
+	display: block;
+}
 .hold-style-area > form,
 .hold-ass-area > form {
 	position: absolute;
@@ -420,4 +424,12 @@ textarea,
 	display: block;
 	position: absolute;
 	line-height: calc(20px * 2);
+}
+
+div.hold-ass-script {
+	position: absolute;
+	top: calc(20px * 2.5);
+	left: calc(20px / 2);
+	width: calc(100% - 20px);
+	height: calc(100% - 20px * 3);
 }

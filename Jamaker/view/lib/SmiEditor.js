@@ -1181,7 +1181,17 @@ SmiEditor.activateKeyEvent = function() {
 				
 				if (f) {
 					e.preventDefault();
-					if (!hasFocus && editor) editor.input.focus();
+					// 에디터로 포커스 이동
+					if (!hasFocus && editor) {
+						// TODO: 순수 SmiEditor 기능이 아닌 건 다른 곳으로 빼는 게 좋을 듯함...
+						if (editor.area.hasClass("style")) {
+							// 스타일 편집 중일 때 포커스 해제 방지
+						} else if (editor.area.hasClass("ass")) {
+							// ASS 편집 중일 때 포커스 해제 방지
+						} else {
+							editor.input.focus();
+						}
+					}
 					
 					const type = typeof f;
 					if (type == "function") {
@@ -1653,7 +1663,7 @@ SmiEditor.prototype.insertBR = function() {
 	this.history.log();
 	this.render();
 }
-SmiEditor.prototype.moveToSync = function(add) {
+SmiEditor.prototype.moveToSync = function(add=0) {
 	if (typeof add != "number") {
 		add = 0;
 	}

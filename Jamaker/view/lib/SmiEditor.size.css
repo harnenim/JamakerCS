@@ -198,6 +198,21 @@ label, #showFps {
 	line-height: calc(20px * 2);
 }
 
+div.hold-ass-script {
+	top: calc(20px * 2.5);
+	left: calc(20px / 2);
+	width: calc(100% - 20px);
+	height: calc(100% - 20px * 3);
+}
+.ass-editor .item {
+	height: calc(20px * 2.5);
+}
+.ass-editor .item input[name=start]      { width: calc(20px * 4); }
+.ass-editor .item input[name=startFrame] { left: calc(20px * 4); width: 20px; }
+.ass-editor .item input[name=end]        { width: calc(20px * 4); }
+.ass-editor .item input[name=endFrame]   { left: calc(20px * 4); width: 20px; }
+.ass-editor .item textarea[name=text]    { left: calc(20px * 5); }
+
 .custom-scrollbar ::-webkit-scrollbar,
 .custom-scrollbar ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }
 .custom-scrollbar ::-webkit-scrollbar-button:end { background-position-y: calc(20px * 0.8 + 1px); }

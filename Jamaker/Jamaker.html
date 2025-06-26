@@ -141,14 +141,17 @@ const window_open = function(url, name, options, opener) {
 		switch (ext.toLowerCase()) {
 			case ".smi":
 			case ".srt":
+			case ".ass":
 			case ".txt": {
 				await editor.loadFile(file);
 				break;
 			}
+			/*
 			case ".ass": {
 				await editor.loadAssFile(file);
 				break;
 			}
+			*/
 			case ".fkf": {
 				await editor.script("loadFkfFile", [file]);
 				break;
@@ -705,7 +708,7 @@ window.MB = 9;
 	let afterGetString = () => {};
 	
 	editor.openFile = async function() {
-		const fileBuffer = await window.showOpenFilePicker({ types: [ { description: "지원되는 자막 파일", accept:{ "text/sami": [".smi"], "text/srt" : [".srt"] } } ] });
+		const fileBuffer = await window.showOpenFilePicker({ types: [ { description: "지원되는 자막 파일", accept:{ "text/sami": [".smi"], "text/srt" : [".srt"], "text/ass" : [".ass"] } } ] });
 		if (fileBuffer && fileBuffer[0]) {
 			editor.loadFile(fileBuffer[0]);
 		}
