@@ -1785,7 +1785,7 @@ Subtitle.AssEvent.fromSync = function(sync, style=null) {
 					}
 				} else {
 					cols[9] = cols.slice(8).join(",");
-					cols.length = 9;
+					cols.length = 10;
 				}
 				const ass = new Subtitle.AssEvent(start, end, cols[3], cols[9], cols[0]);
 				for (let j = 3; j < 9; j++) {
