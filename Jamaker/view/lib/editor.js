@@ -557,7 +557,7 @@ SmiEditor.prototype.setLine = function(text, selection) {
 	this._setLine(text, selection);
 }
 SmiEditor.prototype._inputText = SmiEditor.prototype.inputText;
-SmiEditor.prototype.inputText = (text) => {
+SmiEditor.prototype.inputText = function(text) {
 	if (this.area.hasClass("style")
 	 || this.area.hasClass("ass")) {
 		alert("SMI 에디터 모드가 아닙니다.");
