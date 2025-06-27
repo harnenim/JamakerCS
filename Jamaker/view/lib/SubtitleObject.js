@@ -1784,7 +1784,7 @@ Subtitle.AssEvent.fromSync = function(sync, style=null) {
 						cols = [0, "", "", (style ? style.Name : "?"), "", 0, 0, 0, "", line];
 					}
 				} else {
-					cols[9] = cols.slice(8).join(",");
+					cols[9] = cols.slice(9).join(",");
 					cols.length = 10;
 				}
 				const ass = new Subtitle.AssEvent(start, end, cols[3], cols[9], cols[0]);
