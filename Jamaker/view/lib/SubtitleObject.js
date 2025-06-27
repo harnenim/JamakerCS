@@ -1775,7 +1775,7 @@ Subtitle.AssEvent.fromSync = function(sync, style=null) {
 				}
 				let cols = line.split(",");
 				if (cols.length == 1 || cols[1] || cols[2]) { // 풀사이즈면 싱크값이 비어있어야 함
-					if (cols.length > 4) {
+					if (cols.length > 2) {
 						// 축약 표현
 						cols = [cols[0], "", "", cols[1], "", 0, 0, 0, "", cols.slice(2).join(",")];
 						
