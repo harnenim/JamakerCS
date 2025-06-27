@@ -455,3 +455,15 @@ healthchecksdb
 /SamiReplacer/view/lib/Combine.js
 /SamiReplacer/view/lib/jquery-3.2.1.min.js
 /SamiReplacer/view/lib/SubtitleObject.js
+/MakeFkf/view/lib/AssEditor.css
+/MakeFkf/view/lib/AssEditor.js
+/MergeUpdates/view/lib/AssEditor.css
+/MergeUpdates/view/lib/AssEditor.js
+/OptimizeAssSync/view/lib/AssEditor.css
+/OptimizeAssSync/view/lib/AssEditor.js
+/SamiReplacer/view/lib/AssEditor.css
+/SamiReplacer/view/lib/AssEditor.js
+/SyncShift/view/lib/AssEditor.js
+/SyncShift/view/lib/AssEditor.css
+/TextReplacer/view/lib/AssEditor.css
+/TextReplacer/view/lib/AssEditor.js
