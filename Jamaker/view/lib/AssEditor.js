@@ -1,11 +1,12 @@
+// TODO: 일단 여기 적었는데, editor.js 등에서 쓸 방안을 강구하는 게?
 let FormatToEdit = ["Layer", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
 let FormatToSave = ["Layer", "", "", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
 let FormatSimple = ["Layer", "Style", "Text"];
 
 window.AssEditor = function(view, events=[], frameSyncs=null) {
 	this.view = (view ? view : (view = $("<div>"))).addClass("ass-editor").data({ obj: this });
+	this.savedSyncs = [];
 	this.setEvents(events, frameSyncs);
-	this.savedSyncs = this.syncs;
 	this.update();
 }
 AssEditor.prototype.setEvents = function(events=[], frameSyncs=null) {
@@ -15,8 +16,11 @@ AssEditor.prototype.setEvents = function(events=[], frameSyncs=null) {
 	this.savedSyncs = this.syncs;
 }
 AssEditor.prototype.addEvents = function(events=[], frameSyncs=null) {
-	function findSync(sync) {
-		return SmiEditor.findSync(sync, SmiEditor.video.fs);
+	function findFrameSync(sync) {
+		// 영상 정보 불러오기 전이면 프레임 싱크 보정은 안 돌아감
+		sync += 15;
+		const found = SmiEditor.findSync(sync, SmiEditor.video.fs); // SmiEditor 의존성은 좀 안 내키지만...
+		return found ? found : sync;
 	}
 	
 	const syncs = this.syncs = this.syncs.slice(0);
@@ -25,8 +29,8 @@ AssEditor.prototype.addEvents = function(events=[], frameSyncs=null) {
 	for (let i = 0; i < events.length; i++) {
 		const item = events[i];
 		// ASS 시간이 아닌 SMI 시간으로 관리
-		item.start = findSync(item.start + 15);
-		item.end   = findSync(item.end   + 15);
+		item.start = findFrameSync(item.start);
+		item.end   = findFrameSync(item.end  );
 		const script = item.toText(FormatToEdit);
 		
 		if (item.start == last.start && item.end == last.end) {
@@ -66,13 +70,17 @@ AssEditor.prototype.addEvents = function(events=[], frameSyncs=null) {
 	
 	this.update();
 }
-AssEditor.prototype.update = function() {
-	if (this.syncs != this.savedSyncs) {
+AssEditor.prototype.update = function () {
+	if (this.syncs.length != this.savedSyncs.length) {
 		this.isSaved = false;
 	} else {
 		let isSaved = true;
 		for (let i = 0; i < this.syncs.length; i++) {
 			const sync = this.syncs[i];
+			if (sync != this.savedSyncs[i]) {
+				isSaved = false;
+				break;
+			}
 			if (!sync.isSaved) {
 				isSaved = false;
 				break;

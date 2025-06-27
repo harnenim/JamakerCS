@@ -29,6 +29,8 @@ window.Tab = function(text, path) {
 	this.lastHold = 1;
 	this.path = path;
 	
+	const tab = this;
+	
 	{	const holds = Subtitle.SmiFile.textToHolds(text);
 		let assFile = null;
 		{
@@ -41,6 +43,19 @@ window.Tab = function(text, path) {
 		for (let i = 1; i < holds.length; i++) {
 			holds[i].ass = [];
 		}
+		const assHold = tab.assHold = new SmiEditor();
+		{
+			assHold.assEditor = new AssEditor(tab.area.find("div.tab-ass-script > div"));
+			assHold.assEditor.onUpdate = function() {
+				if (this.isSaved) {
+					tab.area.find(".tab-ass-btn").removeClass("not-saved");
+				} else {
+					tab.area.find(".tab-ass-btn").addClass("not-saved");
+				}
+				tab.onChangeSaved();
+			};
+		}
+		
 		let frameSyncs = [];
 		if (assFile) {
 			const list = assFile.getEvents().body;
@@ -68,10 +83,7 @@ window.Tab = function(text, path) {
 			console.log(assFile);
 			console.log(holds);
 			
-			// TODO: ASS 에디터 만드는 게 좋을 듯함
-			// 싱크를 어떻게 조절할지?
 			this.area.find(".tab-ass-styles textarea").val(assFile.getStyles().toText(false));
-			this.area.find(".tab-ass-script textarea").val(assFile.getEvents().toText(false));
 			
 			const info = assFile.getInfo();
 			if (info) {
@@ -80,6 +92,8 @@ window.Tab = function(text, path) {
 					frameSyncs = strFrameSyncs.split(",");
 				}
 			}
+			assHold.assEditor.setEvents(appends, frameSyncs);
+			assHold.assEditor.update();
 		}
 		
 		holds[0].frameSyncs = frameSyncs;
@@ -91,7 +105,6 @@ window.Tab = function(text, path) {
 	}
 	this.savedHolds = this.holds.slice(0);
 	
-	const tab = this;
 	this.holdSelector.on("click", ".selector", function() {
 		tab.selectHold($(this).data("hold"));
 		
@@ -304,10 +317,6 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 				hold.afterChangeSaved(hold.isSaved());
 			};
 			
-			area.on("input propertychange", "textarea", function () {
-				let $input = $(this);
-			});
-			
 			area.find(".btn-close-preset").on("click", function() {
 				hold.area.removeClass("ass");
 			});
@@ -389,6 +398,25 @@ SmiEditor.prototype.refreshStyle = function() {
 
 // TODO: 비홀드 ASS 에디터는 어떻게 동작하지...?
 
+SmiEditor.prototype._historyForward = SmiEditor.prototype.historyForward;
+SmiEditor.prototype.historyForward = function(e) {
+	if (this.area.hasClass("style")
+	 || this.area.hasClass("ass")) {
+		// 스타일/ASS 편집기에선 기본 동작
+		return;
+	}
+	this.history.forward();
+}
+SmiEditor.prototype._historyBack = SmiEditor.prototype.historyBack;
+SmiEditor.prototype.historyBack = function(e) {
+	if (this.area.hasClass("style")
+	 || this.area.hasClass("ass")) {
+		// 스타일/ASS 편집기에선 기본 동작
+		return;
+	}
+	this.history.back();
+}
+
 SmiEditor.prototype._insertSync = SmiEditor.prototype.insertSync;
 SmiEditor.prototype.insertSync = function(mode=0) {
 	// 스타일 편집일 때 무시
@@ -428,6 +456,7 @@ SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 		console.log("ASS 편집일 때 동작");
 		// TODO: ASS 에디터에 대해서만 동작?
 		// 이거 자체를 쓸 일이 있나?
+		alert("ASS 에디터에선 사용하실 수 없습니다.");
 		return;
 	}
 	
@@ -443,13 +472,11 @@ SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 		const item = this.assEditor.syncs[i];
 		const start = Number(item.inputStart.val());
 		const end   = Number(item.inputEnd  .val());
-		console.log(end, originSync);
 		if (end >= originSync) {
-			console.log(end, originSync, sync);
-			item.inputEnd.val(end - originSync + sync);
-			console.log(item.inputEnd.val());
+			const add = sync - originSync
+			item.inputEnd.val(end + add);
 			if (start >= originSync) {
-				item.inputStart.val(start - originSync + sync);
+				item.inputStart.val(start + add);
 			}
 			item.update();
 		}
@@ -488,6 +515,64 @@ SmiEditor.prototype.moveToSync = function(add=0) {
 	}
 	
 	this._moveToSync(add);
+}
+SmiEditor.prototype._getText = SmiEditor.prototype.getText;
+SmiEditor.prototype.getText = function(forced) {
+	if (this.area.hasClass("style")
+	 || this.area.hasClass("ass")) {
+		if (!forced) {
+			alert("SMI 에디터 모드가 아닙니다.");
+			throw new Error("SMI 에디터 모드 아님");
+			return;
+		}
+	}
+	return this._getText();
+}
+SmiEditor.prototype._setText = SmiEditor.prototype.setText;
+SmiEditor.prototype.setText = function(text, selection) {
+	if (this.area.hasClass("style")
+	 || this.area.hasClass("ass")) {
+		alert("SMI 에디터 모드가 아닙니다.");
+		return;
+	}
+	this._setText(text, selection);
+}
+SmiEditor.prototype._getLine = SmiEditor.prototype.getLine;
+SmiEditor.prototype.getLine = function() {
+	if (this.area.hasClass("style")
+	 || this.area.hasClass("ass")) {
+		alert("SMI 에디터 모드가 아닙니다.");
+		throw new Error("SMI 에디터 모드 아님");
+		return;
+	}
+	return this._getLine();
+}
+SmiEditor.prototype._setLine = SmiEditor.prototype.setLine;
+SmiEditor.prototype.setLine = function(text, selection) {
+	if (this.area.hasClass("style")
+	 || this.area.hasClass("ass")) {
+		alert("SMI 에디터 모드가 아닙니다.");
+		return;
+	}
+	this._setLine(text, selection);
+}
+SmiEditor.prototype._inputText = SmiEditor.prototype.inputText;
+SmiEditor.prototype.inputText = (text) => {
+	if (this.area.hasClass("style")
+	 || this.area.hasClass("ass")) {
+		alert("SMI 에디터 모드가 아닙니다.");
+		return;
+	}
+	this._inputText(text);
+}
+SmiEditor.prototype._tagging = SmiEditor.prototype.tagging;
+SmiEditor.prototype.tagging = function(input, standCursor) {
+	if (this.area.hasClass("style")
+	 || this.area.hasClass("ass")) {
+		alert("SMI 에디터 모드가 아닙니다.");
+		return;
+	}
+	this._tagging(input, standCursor);
 }
 
 Tab.prototype.updateHoldSelector = function() {
@@ -741,7 +826,7 @@ Tab.prototype.getAdditioinalToAss = function() {
 	{
 		styles = this.assStyles = this.area.find(".tab-ass-styles textarea").val();
 		if (styles) {
-			styles = "[V4+ Styles]\nFormat: " + Subtitle.AssPart.StylesFormat.join(",") + "\n" + styles
+			styles = "[V4+ Styles]\nFormat: " + Subtitle.AssPart.StylesFormat.join(", ") + "\n" + styles
 			assTexts.push(styles);
 		}
 	}
@@ -756,14 +841,13 @@ Tab.prototype.getAdditioinalToAss = function() {
 			}
 		}
 		{	// 홀드에 없는 추가 내용
-			// TODO: ASS 에디터 만드는 게 좋을 듯함
-			const script = this.area.find(".tab-ass-script textarea").val();
+			const script = this.assHold.assEditor.toText();
 			if (script) {
 				scripts.push(script);
 			}
 		}
 		if (scripts.length) {
-			scripts = "[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(",") + "\n" + (this.assScript = scripts.join("\n"));
+			scripts = "[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(", ") + "\n" + (this.assScript = scripts.join("\n"));
 			assTexts.push(scripts);
 		} else {
 			this.assScript = scripts = "";
@@ -801,15 +885,14 @@ Tab.prototype.isSaved = function() {
 			return false;
 		}
 	}
-	
-	return true;
+	return this.assHold.assEditor.isSaved;
 }
 
 Tab.prototype.toAss = function() {
 	const assFile = new Subtitle.AssFile2(null, SmiEditor.video.width, SmiEditor.video.height);
 	
-	const appendText = "[V4+ Styles]\nFormat: " + Subtitle.AssPart.StylesFormat.join(",") + "\n" + this.assStyles
-	                 + "\n\n[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(",") + "\n" + this.assScript;
+	const appendText = "[V4+ Styles]\nFormat: " + Subtitle.AssPart.StylesFormat.join(", ") + "\n" + this.assStyles
+	                 + "\n\n[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(", ") + "\n" + this.assScript;
 	const append = new Subtitle.AssFile2(appendText);
 	
 	// ASS에서 추가한 내용은 대사가 아닌 배경 -> 뒤에 깔릴 가능성이 높으므로 먼저 추가
@@ -1332,9 +1415,15 @@ function init(jsonSetting, isBackup=true) {
 
 	$("#editor").on("click", "button.tab-ass-btn", function() {
 		const $btn = $(this);
-		$btn.parents(".tab").toggleClass("edit-ass");
-	}).on("keydown", ".tab-ass-area", function(e) {
-		e.stopPropagation();
+		const $tab = $btn.parents(".tab");
+		const currentTab = tabs[tab];
+		if ($tab.hasClass("edit-ass")) {
+			$tab.removeClass("edit-ass");
+			SmiEditor.selected = currentTab.holds[currentTab.hold];
+		} else {
+			$tab.addClass("edit-ass");
+			(SmiEditor.selected = currentTab.assHold).input.focus();
+		}
 	});
 	
 	// ::-webkit-scrollbar에 대해 CefSharp에서 커서 모양이 안 바뀜
@@ -1353,14 +1442,22 @@ function init(jsonSetting, isBackup=true) {
 			winKeyStatus[e.keyCode - 91] = true;
 			return;
 		}
-		if (e.keyCode == 27) {
+		if (e.keyCode == 27) { // ESC
 			if (SmiEditor.selected) {
 				const hold = SmiEditor.selected;
-				if (hold.styleArea.css("display") != "none") {
-					hold.styleArea.hide();
-					if (SmiEditor.Viewer.window) {
-						SmiEditor.Viewer.refresh();
+				if (hold.styleArea) {
+					// 일반 SMI 홀드
+					if (hold.area.hasClass("style")) {
+						hold.area.removeClass("style");
+						if (SmiEditor.Viewer.window) {
+							SmiEditor.Viewer.refresh();
+						}
+					} else if (hold.area.hasClass("ass")) {
+						hold.area.removeClass("ass");
 					}
+				} else {
+					// ASS 추가 편집 전용 홀드
+					tabs[tab].area.find("button.tab-ass-btn").click();
 				}
 			}
 		}
@@ -2331,9 +2428,11 @@ function loadAssFile(path, text, target=-1) {
 					break;
 				}
 			}
+			/*
 			if (removed) {
 				assText += "​"; // 군더더기 태그 삭제한 대신 Zero-width-space로 끝맺음
 			}
+			*/
 			targetEvents[i].Text = assText;
 		}
 		
@@ -2410,7 +2509,7 @@ function loadAssFile(path, text, target=-1) {
 					for (let h = 0; h < currentTab.holds.length; h++) {
 						const hold = currentTab.holds[h];
 						
-						let canImport = (hold.name == style);
+						let canImport = (hold.name == style) && hold.smiFile; // ASS 출력 제외 홀드에는 넣을 수 없음
 						if (!canImport) continue;
 						
 						const body = hold.smiFile.body;
@@ -2849,8 +2948,24 @@ function loadAssFile(path, text, target=-1) {
 				}
 				appendEvents.body = appends;
 				
-				// TODO: ASS 에디터 만드는 게 좋을 듯함
-				currentTab.area.find(".tab-ass-script textarea").val(appendEvents.toText(false));
+				/*
+				// TODO: SMI에서 화면 싱크인 것 뽑아오기... 필요한가?
+				// 일단 안 넣어주면 모두 화면 싱크로 처리되는 중
+				const totalFrameSyncs = [];
+				for (let h = 0; h < currentTab.holds.length; h++) {
+					const lines = currentTab.holds[h].lines;
+					for (let i = 0; i < lines.length; i++) {
+						const line = lines[i];
+						if (line.TYPE == TYPE.FRAME) {
+							
+						}
+					}
+				}
+				*/
+				
+				currentTab.assHold.assEditor.setEvents(appendEvents.body);
+				
+				// 각 홀드 ASS 에디터
 				for (let h = 0; h < holds.length; h++) {
 					const hold = holds[h];
 					hold.assEditor.setEvents(hold.ass);

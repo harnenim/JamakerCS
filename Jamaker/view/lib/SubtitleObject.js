@@ -1506,6 +1506,7 @@ Subtitle.AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkA
 	// TODO: 타이핑 효과 있을 경우
 	// TODO: 흔들기 효과 있을 경우
 	// 위의 두 가지는 smi에서 normalize 해서 보내주는 게?
+	// ... 그런데 이건 나중에 연동 비교가 제대로 되나?
 	
 	// 페이드 효과 있을 경우
 	// 일부 페이드 인/아웃 - 겹치는 객체 만들어서 처리해야 함
@@ -1772,17 +1773,23 @@ Subtitle.AssEvent.fromSync = function(sync, style=null) {
 					// 남은 내용물은 활용하지 않음
 					return events;
 				}
-				const cols = line.split(",");
-				if (cols[1]) { // 축약 표현
-					cols.splice(1,0,"","");
-					cols.splice(4,0,"",0,0,0,"");
+				let cols = line.split(",");
+				if (cols.length == 1 || cols[1] || cols[2]) { // 풀사이즈면 싱크값이 비어있어야 함
+					if (cols.length > 4) {
+						// 축약 표현
+						cols = [cols[0], "", "", cols[1], "", 0, 0, 0, "", cols.slice(2).join(",")];
+						
+					} else {
+						// 임의로 텍스트만 쓴 경우
+						cols = [0, "", "", (style ? style.Name : "?"), "", 0, 0, 0, "", line];
+					}
+				} else {
+					cols[9] = cols.slice(8).join(",");
+					cols.length = 9;
 				}
 				const ass = new Subtitle.AssEvent(start, end, cols[3], cols[9], cols[0]);
 				for (let j = 3; j < 9; j++) {
 					ass[Subtitle.Ass.cols[j]] = cols[j];
-				}
-				for (let j = 10; j < cols.length; j++) {
-					ass.Text += "," + cols[j];
 				}
 				ass.origin = sync;
 				events.push(ass);
@@ -1985,14 +1992,13 @@ Subtitle.AssPart.prototype.get = function(key) {
 }
 Subtitle.AssPart.prototype.set = function(key, value) {
 	if (this.format) return;
-	
-	let item = this.get(key);
-	if (item) {
-		item.value = value;
-	} else {
-		item = { key: key, value: value };
-		this.body.push(item);
+	for (let i = 0; i < this.body.length; i++) {
+		if (this.body[i].key == key) {
+			this.body[i].value = value;
+			return;
+		}
 	}
+	this.body.push({ key: key, value: value });
 }
 Subtitle.AssPart.prototype.toTxt = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
 Subtitle.AssPart.prototype.toText = function(withHeader=true) {
@@ -2233,7 +2239,12 @@ Subtitle.AssFile2.prototype.getInfo = function() {
 	return this.getPart("Script Info");
 }
 Subtitle.AssFile2.prototype.getStyles = function() {
-	return this.getPart("V4+ Styles");
+	let part = this.getPart("V4+ Styles");
+	if (part == null) {
+		part = new Subtitle.AssPart(name, Subtitle.AssPart.StylesFormat);
+		this.parts.push(part);
+	}
+	return part;
 }
 Subtitle.AssFile2.prototype.getEvents = function() {
 	let part = this.getPart("Events");

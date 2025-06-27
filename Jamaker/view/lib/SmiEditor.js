@@ -368,8 +368,8 @@ SmiEditor.setSetting = (setting) => {
 		// 예약 단축키
 		SmiEditor.withCtrls["F"] = "/* 찾기           */ SmiEditor.Finder.open();";
 		SmiEditor.withCtrls["H"] = "/* 바꾸기         */ SmiEditor.Finder.openChange();";
-		SmiEditor.withCtrls["Y"] = "/* 다시 실행      */ editor.history.forward();";
-		SmiEditor.withCtrls["Z"] = "/* 실행 취소      */ editor.history.back();";
+		SmiEditor.withCtrls["Y"] = "/* 다시 실행      */ editor.historyForward();";
+		SmiEditor.withCtrls["Z"] = "/* 실행 취소      */ editor.historyBack();";
 		SmiEditor.withCtrls.reserved += "FHYZ";
 		
 		// 설정값 반영
@@ -1181,13 +1181,14 @@ SmiEditor.activateKeyEvent = function() {
 				
 				if (f) {
 					e.preventDefault();
+					
 					// 에디터로 포커스 이동
 					if (!hasFocus && editor) {
 						// TODO: 순수 SmiEditor 기능이 아닌 건 다른 곳으로 빼는 게 좋을 듯함...
 						if (editor.area.hasClass("style")) {
-							// 스타일 편집 중일 때 포커스 해제 방지
+							// 스타일 편집 중일 때 포커스 이동 방지
 						} else if (editor.area.hasClass("ass")) {
-							// ASS 편집 중일 때 포커스 해제 방지
+							// ASS 편집 중일 때 포커스 이동 방지
 						} else {
 							editor.input.focus();
 						}
@@ -1216,6 +1217,13 @@ SmiEditor.activateKeyEvent = function() {
 		}
 	});
 };
+
+SmiEditor.prototype.historyForward = function() {
+	this.history.forward();
+}
+SmiEditor.prototype.historyBack = function() {
+	this.history.back();
+}
 
 SmiEditor.prototype.getCursor = function() {
 	return [this.input[0].selectionStart, this.input[0].selectionEnd];

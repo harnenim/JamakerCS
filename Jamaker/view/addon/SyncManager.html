@@ -14,9 +14,10 @@ windowName = "addon";
 
 // 초기 상태 기억
 // TODO: 경우에 따라 opener 분리 필요
-const tab = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
-const origin = tab ? tab.getText() : null;
-if (tab) {
+// TODO: 현재 홀드가 아닌 문서 전체에 대해 동작시킬까...?
+const hold = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
+const origin = hold ? hold.getText(true) : null;
+if (hold) {
 	SmiEditor.video = opener.SmiEditor.video;
 }
 const RANGE = 10; // 현재 싱크 전후로 렌더링할 범위
@@ -34,29 +35,45 @@ $(() => {
 		window.close();
 		return;
 	}
+	if (hold.area.hasClass("style")) {
+		alert("스타일 편집기를 닫으셔야 합니다.");
+		window.close();
+		return;
+	}
 	const fs = SmiEditor.video.fs;
 	const kfs = SmiEditor.video.kfs;
 	const trustKeyFrame = opener.SmiEditor.trustKeyFrame;
 	
-	origin.tab = tab;
-	origin.lines = tab.lines;
+	origin.hold = hold;
+	origin.lines = hold.lines;
 	origin.start = 0;
 	origin.end = 0;
+	
+	console.log(hold.area);
 
-	// 선택 범위만 작업
-	if (origin.selection[0] != origin.selection[1]) {
-		origin.start = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
-		origin.end   = origin.text.substring(0, origin.selection[1]).split("\n").length;
+	if (hold.area.hasClass("ass")) {
+		// ASS만 작업
+		origin.assBody = origin.hold.assEditor.syncs;
+		
 	} else {
-		origin.end = origin.text.split("\n").length;
+		if (origin.selection[0] != origin.selection[1]) {
+			// 선택 범위만 작업
+			origin.start = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
+			origin.end   = origin.text.substring(0, origin.selection[1]).split("\n").length;
+		} else {
+			// 전체 작업
+			origin.end = origin.text.split("\n").length;
+			origin.assBody = origin.hold.assEditor.syncs;
+		}
 	}
 	
 	const lines = origin.lines.slice(origin.start, origin.end);
 	for (let i = 0; i < lines.length; i++) {
 		lines[i] = lines[i].TEXT;
 	}
-	origin.file = new Subtitle.SmiFile(lines.join("\n"));
-	if (!origin.file.body.length) {
+	origin.smiFile = new Subtitle.SmiFile(lines.join("\n"));
+	if (!origin.smiFile.body.length
+	 && !origin.assBody.length) {
 		alert("작업 대상이 없습니다.");
 		window.close();
 		return;
@@ -67,13 +84,27 @@ $(() => {
 	const $framesStorage = $("<div>"); // 객체 remove 하면 data가 날아가서 여기에 보관함
 	const frameSyncs = [];
 	
-	$("#editor thead").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origin.file.header.split("\n").join(""))));
-	$("#editor tfoot").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origin.file.footer.split("\n").join(""))));
+	const $thead = $("#editor thead").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origin.smiFile.header.split("\n").join(""))));
+	const $tfoot = $("#editor tfoot").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origin.smiFile.footer.split("\n").join(""))));
+	
+	function setFrames($frames, frameIndex, flag) {
+		for (let j = -RANGE; j < RANGE; j++) {
+			const imgIndex = frameIndex + j;
+			const $img = $("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j });
+			if (trustKeyFrame && SmiEditor.findSync(fs[imgIndex], kfs, false)) {
+				$img.addClass("keyframe");
+			}
+			$frames.append($img);
+		}
+	}
 
-	{
+	let lastIndex = -1;
+	let count = 0;
+	if (origin.smiFile.body) {
+		// SMI
 		let lastFade = 0;
-		for (let i = 0; i < origin.file.body.length; i++) {
-			const smi = origin.file.body[i];
+		for (let i = 0; i < origin.smiFile.body.length; i++) {
+			const smi = origin.smiFile.body[i];
 			const attrs = smi.toAttr();
 			let fade = 0;
 			for (let j = 0; j < attrs.length; j++) {
@@ -83,16 +114,16 @@ $(() => {
 					break;
 				}
 			}
-
+			
 			const $tr = $("<tr>").data({ smi: smi });
+			
 			if (smi.syncType == Subtitle.SyncType.frame) {
 				const frameIndex = SmiEditor.findSyncIndex(smi.start, fs);
 				const $frames = $("<div>").addClass("frames");
 				const $sync = $("<td>").addClass("sync");
 				setSync($sync, fs[frameIndex]);
 				$framesStorage.append($frames);
-				$tr.addClass("fs").append($("<td>")).append($sync).append($("<td>").text(smi.text.split("\n").join("")));
-				$tbody.append($tr);
+				$tr.addClass("fs").append($("<td>")).append($sync);
 				frameSyncs.push($tr);
 
 				let flag = "";
@@ -109,8 +140,10 @@ $(() => {
 					// 페이드인 종료 이미지 어둡게
 					flag = "d";
 				}
-				$tr.data({ index: frameSyncs.length - 1, $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
-
+				$tr.data({ index: (lastIndex = frameSyncs.length - 1), $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
+				count = 0;
+				
+				/*
 				for (let j = -RANGE; j < RANGE; j++) {
 					const imgIndex = frameIndex + j;
 					const $img = $("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j });
@@ -119,16 +152,83 @@ $(() => {
 					}
 					$frames.append($img);
 				}
+				*/
+				setFrames($frames, frameIndex, flag);
 
 			} else {
-				$tr.append($("<td>").html("&nbsp;")).append($("<td>").addClass("sync").text(smi.syncType == Subtitle.SyncType.inner ? "~" : smi.start)).append($("<td>").text(smi.text.split("\n").join("")))
-				$tbody.append($tr);
+				$tr.append($("<td>")).append($("<td>").addClass("sync").text(smi.syncType == Subtitle.SyncType.inner ? "~" : smi.start));
+				$tr.data({ index: lastIndex + (++count / 1000) }); // 1000개를 넘어갈 일은 없을 것
 			}
+			$tbody.append($tr.append($("<td>").text(smi.text.split("\n").join(""))));
 
 			lastFade = fade;
 		}
 	}
+	if (origin.assBody) {
+		// ASS
+		$tbody.append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text("&nbsp;")).data({ index: lastIndex + (++count / 1000) }));
+		
+		for (let i = 0; i < origin.assBody.length; i++) {
+			const ass = origin.assBody[i];
+			let start = ass.inputStart.val();
+			let end   = ass.inputEnd  .val();
+			
+			{	// start
+				const $tr = $("<tr>").data({ ass: ass, type: "start" });
+				
+				if (ass.checkStart.prop("checked")) {
+					const frameIndex = SmiEditor.findSyncIndex(start, fs);
+					const $frames = $("<div>").addClass("frames");
+					const $sync = $("<td>").addClass("sync");
+					setSync($sync, fs[frameIndex]);
+					$framesStorage.append($frames);
+					$tr.addClass("fs").append($("<td>")).append($sync);
+					frameSyncs.push($tr);
+					
+					// TODO: 페이드는?
+					let flag = "";
+					
+					$tr.data({ index: (lastIndex = frameSyncs.length - 1), $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
+					count = 0;
+					
+					setFrames($frames, frameIndex, flag);
+					
+				} else {
+					$tr.append($("<td>")).append($("<td>").addClass("sync").text(start));
+					$tr.data({ index: lastIndex + (++count / 1000) }); // 1000개를 넘어갈 일은 없을 것
+				}
+				$tbody.append($tr.append($("<td>").attr({ rowspan: 2 }).text(ass.inputText.val())));
+			}
+			
+			{	// end
+				const $tr = $("<tr>").data({ ass: ass, type: "end" });
 
+				if (ass.checkEnd.prop("checked")) {
+					const frameIndex = SmiEditor.findSyncIndex(end, fs);
+					const $frames = $("<div>").addClass("frames");
+					const $sync = $("<td>").addClass("sync");
+					setSync($sync, fs[frameIndex]);
+					$framesStorage.append($frames);
+					$tr.addClass("fs").append($("<td>")).append($sync);
+					frameSyncs.push($tr);
+					
+					// TODO: 페이드는?
+					let flag = "";
+					
+					$tr.data({ index:(lastIndex = frameSyncs.length - 1), $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
+					count = 0;
+					
+					setFrames($frames, frameIndex, flag);
+					
+				} else {
+					$tr.append($("<td>")).append($("<td>").addClass("sync").text(end));
+					$tr.data({ index: lastIndex + (++count / 1000) }); // 1000개를 넘어갈 일은 없을 것
+				}
+				$tbody.append($tr);
+			}
+		}
+	}
+	
 	function renderThumbnails() {
 		const renderList = [];
 		let renderGroup = { end: -11 };
@@ -222,12 +322,15 @@ $(() => {
 	}
 	
 	let selected = -1;
-	function select(index) {
+	function select(index, $tr=null) {
 		if (selected == index) return;
 		
-		const $tr = frameSyncs[selected = index];
+		selected = index;
+		if ($tr == null) {
+			$tr = frameSyncs[selected];
+		}
 		
-		$tbody.find("tr.fs.selected").removeClass("selected");
+		$tbody.find("tr.selected").removeClass("selected");
 		$tr.addClass("selected");
 		
 		const offset = $tr.offset();
@@ -270,12 +373,27 @@ $(() => {
 		const smis = [];
 		$tbody.find("tr").each(function() {
 			const $tr = $(this);
-			const smi = $tr.data("smi");
-			if ($tr.hasClass("fs")) {
-				smi.start = Number($tr.find(".sync").text());
+			const data = $tr.data();
+			if (data.smi) {
+				if ($tr.hasClass("fs")) {
+					data.smi.start = Number($tr.find(".sync").text());
+				}
+				smis.push(data.smi);
+			} else if (data.ass && $tr.hasClass("fs")) {
+				const sync = Number($tr.find(".sync").text());
+				if (data.type == "start") {
+					data.ass.inputStart.val(sync);
+				} else if (data.type == "end") {
+					data.ass.inputEnd.val(sync);
+				}
+				data.ass.update();
 			}
-			smis.push(smi);
 		});
+		
+		if (!smis.length) {
+			// SMI 내역 없음 = ASS 편집
+			return;
+		}
 		
 		// 중간 싱크 재계산
 		let startIndex = -1;
@@ -300,8 +418,8 @@ $(() => {
 		}
 		
 		const result = new Subtitle.SmiFile();
-		result.header = origin.file.header;
-		result.footer = origin.file.footer;
+		result.header = origin.smiFile.header;
+		result.footer = origin.smiFile.footer;
 		result.body = smis;
 		
 		// 해당 줄 앞뒤 전체 선택되도록 조정
@@ -312,14 +430,15 @@ $(() => {
 		// 에디터에 적용
 		const text = (prev ? prev + "\n" : "") + result.toText() + (next ? "\n" + next : "");
 		// 현재 커서 위치를 기반으로 다시 맞춤
-		const selectedLine = origin.tab.input.val().substring(0, origin.tab.input[0].selectionEnd).split("\n").length;
+		const selectedLine = origin.hold.input.val().substring(0, origin.hold.input[0].selectionEnd).split("\n").length;
 		const cursor = text.split("\n").slice(0, selectedLine - 1).join("\n").length + 1;
-		origin.tab.history.log();
-		origin.tab.setText(text, [cursor]);
+		origin.hold.history.log();
+		origin.hold.setText(text, [cursor]);
 	}
 	
-	$tbody.on("click", "tr.fs", function(e) {
-		select($(this).data("index"));
+	$tbody.on("click", "tr", function(e) {
+		const $tr = $(this);
+		select($tr.data("index"), $tr);
 		
 	}).on("dblclick", "tr.fs", function(e) {
 		// 에디터 해당 싱크로 이동
@@ -340,7 +459,11 @@ $(() => {
 					break;
 				}
 				if (selected > 0) {
-					select(selected - 1);
+					if (selected % 1) {
+						select(Math.floor(selected));
+					} else {
+						select(selected - 1);
+					}
 				}
 				break;
 			}
@@ -351,7 +474,11 @@ $(() => {
 					break;
 				}
 				if (selected < frameSyncs.length - 1) {
-					select(selected + 1);
+					if (selected % 1) {
+						select(Math.ceil(selected));
+					} else {
+						select(selected + 1);
+					}
 				}
 				break;
 			}
@@ -369,7 +496,7 @@ $(() => {
 			}
 			case 81: { // Q
 				if (!shiftKey && ctrlKey && !altKey) {
-					origin.tab.moveToSync(-2000);
+					origin.hold.moveToSync(-2000);
 				}
 				break;
 			}
@@ -438,8 +565,8 @@ $(() => {
 	
 	$("#formShift").on("submit", function() {
 		const shift = Number($("#inputShift").val());
-		for (let i = 0; i < origin.file.body.length; i++) {
-			const smi = origin.file.body[i];
+		for (let i = 0; i < origin.smiFile.body.length; i++) {
+			const smi = origin.smiFile.body[i];
 			if (smi.syncType == Subtitle.SyncType.frame) {
 				const frameIndex = SmiEditor.findSyncIndex(smi.start, fs);
 				const shiftIndex = SmiEditor.findSyncIndex(smi.start + shift, fs);
@@ -500,7 +627,7 @@ body {
 	height: 57px;
 	color: #000;
 }
-#editor tr.fs.selected td {
+#editor tr.selected td {
 	background: #ffc;
 }
 #editor td {
@@ -536,6 +663,7 @@ body {
 	width: 98px;
 	height: 56px;
 	cursor: pointer;
+	transition: 0.2s;
 }
 #editor .frame.keyframe {
 	border-left-color: #f88;
@@ -566,6 +694,7 @@ body:not(.mode1) #editor .frames {
 }
 body:not(.mode1) .frameChecker.left  { left: calc(35% - 49.5px); }
 body:not(.mode1) .frameChecker.right { left: calc(35% + 48.5px); }
+body:not(.mode1) .frame:first-child { margin-left: 98px; }
 #formShift, #btnApply, #btnSet {
 	position: fixed;
 	opacity: 0.5;

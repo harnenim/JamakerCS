@@ -541,13 +541,13 @@ function apply() {
 			const target = operation.target = new Subtitle.SmiFile();
 			target.header = origin.header;
 			target.footer = origin.footer;
-
+			
 			let ki = 0;
 			function shiftHold(hold) {
 				for (let i = 0; i < hold.body.length; i++) {
 					const smi = hold.body[i];
 					const index = getShiftIndex(smi.start);
-					smi.start = shiftSync(smi.start);
+					smi.start = shiftSync(smi.start, index);
 
 					if (withKf && (smi.syncType == Subtitle.SyncType.frame)) {
 						const shift =	shifts[index];
@@ -665,6 +665,32 @@ function apply() {
 				}
 			}
 			
+			let assFoot = "";
+			if (operation.input[0].ass) {
+				const ass = new Subtitle.AssFile2(operation.input[0].ass);
+				
+				const assInfo = ass.getInfo();
+				if (assInfo) {
+					let frameSyncs = assInfo.get("FrameSyncs");
+					if (frameSyncs) {
+						frameSyncs = frameSyncs.split(",");
+						for (let i = 0; i < frameSyncs.length; i++) {
+							frameSyncs[i] = Subtitle.AssEvent.toAssTime(shiftSync(Subtitle.AssEvent.fromAssTime(frameSyncs[i])));
+						}
+						assInfo.set("FrameSyncs", frameSyncs.join(","));
+					}
+				}
+				
+				const assBody = ass.getEvents().body;
+				for (let i = 0; i < assBody.length; i++) {
+					const item = assBody[i];
+					item.Start = Subtitle.AssEvent.toAssTime(shiftSync(item.start));
+					item.End   = Subtitle.AssEvent.toAssTime(shiftSync(item.end  ));
+				}
+				
+				assFoot = "\n<!-- ASS\n" + ass.toText() + "\n-->";
+			}
+			
 			const holds = [];
 			for (let hi = 0; hi < operation.input.length; hi++) {
 				const holdInfo = operation.input[hi];
@@ -678,7 +704,7 @@ function apply() {
 				});
 			}
 			const withCombine = !$("#chkCombine").prop("checked");
-			operation.output = Subtitle.SmiFile.holdsToText(holds, withCombine, withCombine);
+			operation.output = Subtitle.SmiFile.holdsToText(holds, withCombine, withCombine) + assFoot;
 			refreshPreview(true);
 			break;
 		}

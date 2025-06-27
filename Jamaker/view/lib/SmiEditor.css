@@ -414,7 +414,8 @@ textarea,
 	line-height: calc(20px * 1.5);
 	font-size: calc(20px * 0.7);
 }
-.tab-ass-area textarea {
+.tab-ass-area textarea,
+.tab-ass-script > div {
 	width: 100%;
 	height: calc(100% - 20px * 2);
 	resize: none;

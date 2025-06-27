@@ -443,6 +443,7 @@ namespace Jamaker
             if (originVideoFile == null || targetVideoFile == null)
             {
                 Script("alert", "파일을 선택해주세요.");
+                return;
             }
 
             ShowProcessing("작업 중");

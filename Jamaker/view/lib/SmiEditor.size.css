@@ -190,7 +190,8 @@ label, #showFps {
 	line-height: calc(20px * 1.5);
 	font-size: calc(20px * 0.7);
 }
-.tab-ass-area textarea {
+.tab-ass-area textarea,
+.tab-ass-script > div {
 	height: calc(100% - 20px * 2);
 }
 
@@ -205,12 +206,19 @@ div.hold-ass-script {
 	height: calc(100% - 20px * 3);
 }
 .ass-editor .item {
-	height: calc(20px * 2.5);
+	height: calc(20px * 3.5);
 }
-.ass-editor .item input[name=start]      { width: calc(20px * 4); }
-.ass-editor .item input[name=startFrame] { left: calc(20px * 4); width: 20px; }
-.ass-editor .item input[name=end]        { width: calc(20px * 4); }
-.ass-editor .item input[name=endFrame]   { left: calc(20px * 4); width: 20px; }
+.ass-editor .item input[name=start],
+.ass-editor .item input[name=startFrame]  { top: 0; }
+.ass-editor .item input[name=end],
+.ass-editor .item input[name=endFrame] { bottom: calc(20px * 0.9); }
+.ass-editor .item input[name=start],
+.ass-editor .item input[name=end]     { width: calc(20px * 4 - 2px); }
+.ass-editor .item input[name=startFrame],
+.ass-editor .item input[name=endFrame] { left: calc(20px * 4 - 2px);
+	width: calc(20px + 2px);
+	height: calc(20px + 2px);
+}
 .ass-editor .item textarea[name=text]    { left: calc(20px * 5); }
 
 .custom-scrollbar ::-webkit-scrollbar,
