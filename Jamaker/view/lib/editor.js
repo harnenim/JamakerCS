@@ -894,6 +894,7 @@ Tab.prototype.toAss = function() {
 	const appendText = "[V4+ Styles]\nFormat: " + Subtitle.AssPart.StylesFormat.join(", ") + "\n" + this.assStyles
 	                 + "\n\n[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(", ") + "\n" + this.assScript;
 	const append = new Subtitle.AssFile2(appendText);
+	const appendedLength = append.getEvents().body.length;
 	
 	// ASS에서 추가한 내용은 대사가 아닌 배경 -> 뒤에 깔릴 가능성이 높으므로 먼저 추가
 	// 완벽한 순서는 보장 못 함...
@@ -942,7 +943,7 @@ Tab.prototype.toAss = function() {
 		let mi = 0;
 		for (let i = 0; i < holdSyncs.length; i++) {
 			const sync = holdSyncs[i];
-			while (mi < mainSyncs.length && mainSyncs[mi].end < sync.start) {
+			while (mi < mainSyncs.length && mainSyncs[mi].end <= sync.start) {
 				mi++;
 			}
 			while (mi < mainSyncs.length && mainSyncs[mi].start < sync.end) {
@@ -961,28 +962,30 @@ Tab.prototype.toAss = function() {
 	const eventsBody = assFile.getEvents().body;
 	{	// ASS 자막은 SMI와 싱크 타이밍이 미묘하게 달라서 보정 필요
 		// TODO: 팟플레이어 최신버전 오면서 보정치가 다 틀어졌는데...?
-		
-		 // TODO: SubtitleObject.js 쪽으로 옮기는 게 나은가?
+
+		// TODO: SubtitleObject.js 쪽으로 옮기는 게 나은가?
+		/* 최초 ASS 생성 시엔 필요 없을 듯
 		function optimizeSync(sync) {
-			return (findSync(sync + 5) - 15);
+			return (findSync(sync + 8) - 15);
 		}
+		*/
 		function findSync(sync) {
 			return SmiEditor.findSync(sync, SmiEditor.video.fs);
 		}
 		
 		if (SmiEditor.sync && SmiEditor.sync.frame) {
 			if (SmiEditor.video.fs.length) {
-				for (let i = 0; i < eventsBody.length; i++) {
+				for (let i = appendedLength; i < eventsBody.length; i++) {
 					const item = eventsBody[i];
-					item.Start = Subtitle.AssEvent.toAssTime(item.start = optimizeSync(Subtitle.AssEvent.fromAssTime(item.Start)));
-					item.End   = Subtitle.AssEvent.toAssTime(item.end   = optimizeSync(Subtitle.AssEvent.fromAssTime(item.End  )));
+					item.Start = Subtitle.AssEvent.toAssTime(item.start = item.start - 15);
+					item.End   = Subtitle.AssEvent.toAssTime(item.end   = item.end   - 15);
 				}
 			} else {
 				const FL = SmiEditor.video.FL;
-				for (let i = 0; i < eventsBody.length; i++) {
+				for (let i = appendedLength; i < eventsBody.length; i++) {
 					const item = eventsBody[i];
-					item.Start = Math.max(1, ((Math.round(item.start / FL) - 0.5) * FL));
-					item.End   = Math.max(1, ((Math.round(item.end   / FL) - 0.5) * FL));
+					item.Start = Math.max(1, ((Math.round(item.start / FL) - 0.5) * FL) - 15);
+					item.End   = Math.max(1, ((Math.round(item.end   / FL) - 0.5) * FL) - 15);
 				}
 			}
 		}
@@ -2385,10 +2388,28 @@ function loadAssFile(path, text, target=-1) {
 		
 		//*
 		function optimizeSync(sync) { // TODO: SubtitleObject.js 쪽으로 옮기는 게 나은가?
-			return (findSync(sync + 5) - 15);
+			return (findSync(sync) - 15);
 		}
+		/*
 		function findSync(sync) {
 			return SmiEditor.findSync(sync, SmiEditor.video.fs);
+		}
+		*/
+		const aegisubSyncs = [0];
+		for (let i = 1; i < SmiEditor.video.fs.length; i++) {
+			let bfr = SmiEditor.video.fs[i - 1];
+			let now = SmiEditor.video.fs[i];
+			//aegisubSyncs.push((bfr * 2 + now) / 3);
+			aegisubSyncs.push(Math.floor((bfr + now) / 20) * 10);
+		}
+		function findSync(sync) {
+			let i = 0;
+			for (; i < aegisubSyncs.length; i++) {
+				if (sync < aegisubSyncs[i]) {
+					return SmiEditor.video.fs[i - 1];
+				}
+			}
+			return 999999999;
 		}
 		for (let i = 0; i < targetEvents.length; i++) {
 			targetEvents[i].Start = Subtitle.AssEvent.toAssTime(targetEvents[i].start = optimizeSync(Subtitle.AssEvent.fromAssTime(targetEvents[i].Start)));
