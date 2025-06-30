@@ -112,8 +112,8 @@ label, #showFps {
 .tab.ass .hold.main .hold-style-area > form  {
 	max-height: calc(20px * 18 + 176px);
 }
-.hold-style-area > form > button.btn-close-preset,
-.hold-ass-area > form > button.btn-close-preset {
+.hold-style-area > form > button.btn-close-popup,
+.hold-ass-area > form > button.btn-close-popup {
 	top: calc(20px * 0.5);
 	right: calc(20px * 0.5);
 	width: calc(20px * 1.5);
@@ -219,7 +219,8 @@ div.hold-ass-script {
 	width: calc(20px + 2px);
 	height: calc(20px + 2px);
 }
-.ass-editor .item textarea[name=text]    { left: calc(20px * 5); }
+.ass-editor .item textarea[name=text]    { left: calc(20px * 5); right: 20px; }
+.ass-editor .item button { bottom: calc(20px * 0.9); width: 20px; }
 
 .custom-scrollbar ::-webkit-scrollbar,
 .custom-scrollbar ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }

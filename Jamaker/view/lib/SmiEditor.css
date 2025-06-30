@@ -97,15 +97,15 @@ textarea,
 	position: absolute;
 	border: 1px solid #000;
 }
-.hold-style-area > form > button.btn-close-preset,
-.hold-ass-area > form > button.btn-close-preset {
+.hold-style-area > form > button.btn-close-popup,
+.hold-ass-area > form > button.btn-close-popup {
 	position: absolute;
 	background: transparent;
 	border: 0;
 	cursor: pointer;
 }
-.hold-style-area > form > button.btn-close-preset:after,
-.hold-ass-area > form > button.btn-close-preset:after {
+.hold-style-area > form > button.btn-close-popup:after,
+.hold-ass-area > form > button.btn-close-popup:after {
 	content: "×";
 }
 

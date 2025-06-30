@@ -291,7 +291,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			});
 			$preview.find(".hold-style-preview-outline, .hold-style-preview-shadow").text($preview.find(".hold-style-preview-main").text());
 			
-			area.find(".btn-close-preset").on("click", function() {
+			area.find(".btn-close-popup").on("click", function() {
 				hold.area.removeClass("style");
 				if (SmiEditor.Viewer.window) {
 					SmiEditor.Viewer.refresh();
@@ -317,8 +317,12 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 				hold.afterChangeSaved(hold.isSaved());
 			};
 			
-			area.find(".btn-close-preset").on("click", function() {
+			area.find(".btn-close-popup").on("click", function() {
 				hold.area.removeClass("ass");
+			});
+			area.find("span.hold-ass-events button").on("click", function() {
+				const sync = SmiEditor.getSyncTime("!"); // 가중치 없는 현재 싱크로 넣음
+				hold.assEditor.addEvents([ new Subtitle.AssEvent(sync, sync, name, "") ]);
 			});
 		}
 	}

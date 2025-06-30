@@ -50,8 +50,14 @@ input,
 .highlight-textarea.nonactive > textarea,
 .tab-ass-area textarea,
 .fr > .fhead,
-.fr > .fhead > button {
+.fr > .fhead > button,
+.ass-editor .item.focus input,
+.ass-editor .item.focus textarea {
 	background: [editor];
+}
+.ass-editor .item input,
+.ass-editor .item textarea {
+	background: [editor]7f;
 }
 /* 기본 글씨 색 */
 body, input, button,

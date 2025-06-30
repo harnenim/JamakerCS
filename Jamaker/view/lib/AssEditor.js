@@ -8,22 +8,37 @@ window.AssEditor = function(view, events=[], frameSyncs=null) {
 	this.savedSyncs = [];
 	this.setEvents(events, frameSyncs);
 	this.update();
+	
+	const self = this;
+	this.view.on("input propertychange", "input, textarea", function() {
+		$(this).parent().data("obj").update();
+	}).on("focus", "input, textarea", function() {
+		view.find(".item.focus").removeClass("focus");
+		$(this).parent().addClass("focus");
+	}).on("click", "button", function() {
+		const item = $(this).parent();
+		confirm("삭제하시겠습니까?", function() {
+			self.removeEvent(item.data("obj"));
+		});
+	});
 }
 AssEditor.prototype.setEvents = function(events=[], frameSyncs=null) {
 	this.syncs = [];
 	this.view.empty();
-	this.addEvents(events, frameSyncs);
-	this.savedSyncs = this.syncs;
+	this.addEvents(events, frameSyncs, false);
+	this.savedSyncs = this.syncs.slice(0);
 }
-AssEditor.prototype.addEvents = function(events=[], frameSyncs=null) {
+AssEditor.prototype.addEvents = function(events=[], frameSyncs=null, withUpdate=true) {
 	function findFrameSync(sync) {
 		// 영상 정보 불러오기 전이면 프레임 싱크 보정은 안 돌아감
 		sync += 15;
-		const found = SmiEditor.findSync(sync, SmiEditor.video.fs); // SmiEditor 의존성은 좀 안 내키지만...
-		return found ? found : sync;
+		// SmiEditor 의존성은 좀 안 내키지만...
+		// TODO: SubtitleObject.video 뺄 예정
+		return SmiEditor.video.fs.length ? SmiEditor.findSync(sync, SmiEditor.video.fs) : sync;
 	}
 	
 	const syncs = this.syncs = this.syncs.slice(0);
+	const editor = this;
 	
 	let last = { start: -1, end: -1, scripts: [] };
 	for (let i = 0; i < events.length; i++) {
@@ -40,7 +55,12 @@ AssEditor.prototype.addEvents = function(events=[], frameSyncs=null) {
 		} else {
 			// 기존 싱크 그룹 추가
 			if (last.scripts.length) {
-				syncs.push(new AssEditor.Item(last));
+				const item = new AssEditor.Item(last);
+				syncs.push(item);
+				this.view.append(item.view);
+				item.onUpdate = function() {
+					editor.update();
+				}
 			}
 			
 			// 새 싱크 그룹 생성
@@ -53,24 +73,27 @@ AssEditor.prototype.addEvents = function(events=[], frameSyncs=null) {
 	}
 	if (last.scripts.length) {
 		// 마지막 싱크 그룹
-		syncs.push(new AssEditor.Item(last));
-	}
-	syncs.sort((a, b) => {
-		return Number(a.inputStart.val()) - Number(b.inputStart.val());
-	});
-	
-	const editor = this;
-	
-	for (let i = 0; i < syncs.length; i++) {
-		this.view.append(syncs[i].view);
-		syncs[i].onUpdate = function() {
+		const item = new AssEditor.Item(last);
+		syncs.push(item);
+		this.view.append(item.view);
+		item.onUpdate = function() {
 			editor.update();
 		}
 	}
 	
-	this.update();
+	if (withUpdate) {
+		this.update();
+	}
 }
-AssEditor.prototype.update = function () {
+AssEditor.prototype.removeEvent = function(item) {
+	const index = this.syncs.indexOf(item);
+	if (index >= 0) {
+		const item = this.syncs.splice(index, 1)[0];
+		item.view.remove();
+		this.update();
+	}
+}
+AssEditor.prototype.update = function() {
 	if (this.syncs.length != this.savedSyncs.length) {
 		this.isSaved = false;
 	} else {
@@ -87,6 +110,31 @@ AssEditor.prototype.update = function () {
 			}
 		}
 		this.isSaved = isSaved;
+	}
+	{
+		const sorts = this.syncs.slice(0);
+		sorts.sort((a, b) => {
+			let c = a.start - b.start;
+			if (c == 0) {
+				c = a.end - b.end;
+			}
+			return c;
+		});
+		let sorted = true;
+		for (let i = 0; i < sorts.length; i++) {
+			if (sorts[i] != this.syncs[i]) {
+				sorted = false;
+				break;
+			}
+		}
+		if (!sorted) {
+			const input = this.view.find(":focus");
+			this.sycns = sorts;
+			for (let i = 0; i < sorts.length; i++) {
+				this.view.append(sorts[i].view);
+			}
+			input.focus();
+		}
 	}
 	if (this.onUpdate) {
 		this.onUpdate();
@@ -142,18 +190,16 @@ AssEditor.Item = function(info) {
 	view.append(this.inputEnd   = $("<input>").attr({ type: "number"  , name: "end"        }).val(info.end));
 	view.append(this.checkEnd   = $("<input>").attr({ type: "checkbox", name: "endFrame"  , title: "종료싱크 화면 맞춤" }).prop("checked", info.endFrame  ));
 	view.append(this.inputText  = $("<textarea>").attr({ name: "text", spellcheck: "false" }).val(info.scripts.join("\n")));
+	view.append(this.btnDelete  = $("<button>").attr({ type: "button" }).text("×"));
 	
 	const item = this;
-	this.view.on("input propertychange", "input, textarea", function() {
-		item.update();
-	});
 	this.savedText = this.getText();
 	this.isSaved = true;
 	return this;
 }
 AssEditor.Item.prototype.getText = function() {
-	const start = Subtitle.AssEvent.toAssTime(Number(this.inputStart.val()) - 15);
-	const end   = Subtitle.AssEvent.toAssTime(Number(this.inputEnd  .val()) - 15);
+	const start = Subtitle.AssEvent.toAssTime((this.start = Number(this.inputStart.val())) - 15);
+	const end   = Subtitle.AssEvent.toAssTime((this.end   = Number(this.inputEnd  .val())) - 15);
 	const sync = "," + start + "," + end;
 	const lines = this.inputText.val().split("\n");
 	for (let i = 0; i < lines.length; i++) {
