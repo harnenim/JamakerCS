@@ -11,6 +11,7 @@
 	<script>
 let sw = 0;
 let fs = [];
+let aegisubSyncs = [0];
 let HFL = 41.7;
 
 function drop(x, y) {
@@ -88,6 +89,14 @@ function afterLoadFkfFile(buffer) {
 	HFL = fs[fs.length - 1] / fs.length / 2
 	
 	$labelVideo.removeClass("disabled");
+	
+	// Aegisub에서 싱크 찍을 때 찍히는 싱크 -> 버림을 하면서 빨리 나오는 경우가 발생함
+	aegisubSyncs = [0]
+	for (let i = 1; i < fs.length; i++) {
+		let bfr = fs[i - 1];
+		let now = fs[i];
+		aegisubSyncs.push(Math.floor((bfr + now) / 20) * 10);
+	}
 }
 
 function optimize() {
@@ -114,31 +123,17 @@ function smiSync(assSync) {
 	return assSync * 10 + HFL;
 }
 function optimizeSync(sync) {
+	// 팟플레이어에서 실제 의도한 프레임에 출력되도록 시간값 재계산
 	return Math.floor((findSync(sync) - 15) / 10);
 }
-function findSync(sync, findNear=true, from=0, to=-1) {
-	if (fs.length == 0) return null;
-	if (to < 0) to = fs.length;
-	if (from + 1 == to) {
-		if (to < fs.length) {
-			const dist0 = sync - fs[from];
-			const dist1 = fs[to] - sync;
-			if (dist0 <= dist1) {
-				return (findNear || (dist0 == 0)) ? fs[from] : null;
-			} else {
-				return (findNear || (dist1 == 0)) ? fs[to] : null;
-			}
-		} else {
-			// 동영상 길이 넘어가서 프레임 정보가 없는 싱크
-			return findNear ? sync : null;
+function findSync(sync) {
+	let i = 0;
+	for (; i < aegisubSyncs.length; i++) {
+		if (sync < aegisubSyncs[i]) {
+			return fs[i - 1];
 		}
 	}
-	const mid = from + Math.floor((to - from) / 2);
-	if (fs[mid] < sync) {
-		return findSync(sync, findNear, mid, to);
-	} else {
-		return findSync(sync, findNear, from, mid);
-	}
+	return 999999999;
 }
 
 function save() {
