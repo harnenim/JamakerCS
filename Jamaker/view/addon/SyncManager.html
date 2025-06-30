@@ -230,18 +230,28 @@ $(() => {
 	}
 	
 	function renderThumbnails() {
+		const datas = [];
+		$tbody.find("tr.fs").each(function() {
+			const $tr = $(this);
+			datas.push($tr.data());
+		});
+		// ASS 지원하면서 정렬 기능이 필요해짐
+		datas.sort((a, b) => {
+			return a.frameIndex - b.frameIndex;
+		});
+		
 		const renderList = [];
 		let renderGroup = { end: -11 };
-
-		$tbody.find("tr.fs").each(function () {
-			const $tr = $(this);
-			const data = $tr.data();
+		
+		for (let i = 0; i < datas.length; i++) {
+			const data = datas[i];
 
 			const begin = data.offset + (data.frameIndex < RANGE ? 0 : data.frameIndex - RANGE);
 			const end   = data.offset + (data.frameIndex + RANGE > fs.length ? fs.length : data.frameIndex + RANGE);
 
-			if ((renderGroup.flag == data.flag) && (fs[begin] < fs[renderGroup.end] + 500)) {
-				// 렌더링에 필요한 프레임이 앞쪽과 500ms 이내로 이어질 때
+			if ((renderGroup.flag == data.flag)
+			 && (fs[begin] < fs[renderGroup.end] + 500) // 렌더링에 필요한 프레임이 앞쪽과 500ms 이내로 이어질 때
+			) {
 				renderGroup.end = end;
 
 			} else {
@@ -264,7 +274,7 @@ $(() => {
 					data.$frames.append($img);
 				}
 			}
-		});
+		};
 		if (renderList.length == 0) {
 			return false;
 		}

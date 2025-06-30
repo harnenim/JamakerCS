@@ -2,7 +2,6 @@ window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 	this.ta = ta;
 	this.sets = sets ? sets : [];
 	this.onSelect = onSelect;
-	this.resize();
 	if (this.sets[0]) {
 		// 일반 단어 자동완성은 정렬해서 표시
 		this.sets[0][1].sort();
@@ -11,7 +10,7 @@ window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 	}
 	
 	if (!AutoCompleteTextarea.view) {
-		AutoCompleteTextarea.view = $("<ol class='act-select'>").css(this.font).hide().on("click", "li", function() {
+		AutoCompleteTextarea.view = $("<ol class='act-select'>").hide().on("click", "li", function() {
 			const act = AutoCompleteTextarea.opened;
 			act.input($(this));
 			act.close();
@@ -21,8 +20,7 @@ window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 		});
 		$("body").append(AutoCompleteTextarea.view);
 	}
-	
-	this.LH = Number(this.font["line-height"].split("px")[0]);
+	this.resize();
 	this.SB = 16; // 스크롤바 폭 계산하는 걸 만드는 게?
 
 	this.pos = 0;	// 입력 시작 위치
@@ -71,6 +69,8 @@ AutoCompleteTextarea.prototype.resize = function() {
 		,	"font-weight": font.fontWeight
 		,	"line-height": font.lineHeight
 	};
+	AutoCompleteTextarea.view.css(this.font);
+	this.LH = Number(this.font["line-height"].split("px")[0]);
 }
 // 선택
 AutoCompleteTextarea.prototype.select = function(index) {
@@ -86,6 +86,7 @@ AutoCompleteTextarea.prototype.select = function(index) {
 // 열기
 AutoCompleteTextarea.prototype.open = function(list) {
 	if (list.length) {
+		this.resize();
 		this.list = list;
 		this.lis = [];
 		AutoCompleteTextarea.view.empty();
