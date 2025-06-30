@@ -981,6 +981,8 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 	{	// ASS 자막은 SMI와 싱크 타이밍이 미묘하게 달라서 보정 필요
 
 		// TODO: SubtitleObject.js 쪽으로 옮기는 게 나은가?
+		// TODO: SmiEditor.video 자체를 통째로 Subtitle.video로 옮기기
+		// TODO: Subtitle.findSync, AssEvent.optimizeSync 정도로 재구현? 
 		/* 최초 ASS 생성 시엔 필요 없을 듯
 		function optimizeSync(sync) {
 			return (findSync(sync + 8) - 15);
@@ -996,6 +998,10 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 					const item = eventsBody[i];
 					item.Start = Subtitle.AssEvent.toAssTime(item.start = item.start - 15);
 					item.End   = Subtitle.AssEvent.toAssTime(item.end   = item.end   - 15);
+					
+					// ASS 전용 스크립트와 비교를 위함
+					item.start = Math.floor(item.start / 10) * 10;
+					item.end   = Math.floor(item.end   / 10) * 10;
 				}
 			} else {
 				const FL = SmiEditor.video.FL;
@@ -1003,6 +1009,10 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 					const item = eventsBody[i];
 					item.Start = Math.max(1, ((Math.round(item.start / FL) - 0.5) * FL) - 15);
 					item.End   = Math.max(1, ((Math.round(item.end   / FL) - 0.5) * FL) - 15);
+					
+					// ASS 전용 스크립트와 비교를 위함
+					item.start = Math.floor(item.start / 10) * 10;
+					item.end   = Math.floor(item.end   / 10) * 10;
 				}
 			}
 		}
@@ -1011,14 +1021,58 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			eventsBody[i].clearEnds();
 		}
 	}
-	
-	eventsBody.sort((a, b) => {
-		let cmp = a.start - b.start;
-		if (cmp == 0) {
-			cmp = a.Layer - b.Layer;
+
+	// 원래의 스크립트 순서를 기준으로, 시간이 겹치는 걸 기준으로 레이어 재부여
+	let forLayers = [];
+	for (let i = 0; i < eventsBody.length; i++) {
+		let item = eventsBody[i];
+		let forLayer = forLayers[item.Layer];
+		if (!forLayer) {
+			forLayers[item.Layer] = forLayer = [];
 		}
-		return cmp;
-	});
+		forLayer.push(item);
+	}
+	let checkeds = [];
+	for (let l = 0; l < forLayers.length; l++) {
+		let forLayer = forLayers[l];
+		if (!forLayer) continue;
+		for (let i = 0; i < forLayer.length; i++) {
+			const item = forLayer[i];
+			let maxLayer = -1;
+			for (let j = 0; j < checkeds.length; j++) {
+				const checked = checkeds[j];
+				if (item.start < checked.end && checked.start < item.end) {
+					maxLayer = Math.max(maxLayer, checked.Layer);
+				}
+			}
+			item.Layer = maxLayer + 1;
+			checkeds.push(item);
+		}
+	}
+	
+	// TODO: ASS 에디터에 레이어 재계산치 반영 가능한가...?
+	
+	if (orderByEndSync) {
+		// 레이어 보장된 상태에서 종료싱크까지 정렬
+		eventsBody.sort((a, b) => {
+			let cmp = a.start - b.start;
+			if (cmp == 0) {
+				cmp = a.end - b.end;
+			}
+			return cmp;
+		});
+	} else {
+		// 저장 시엔 레이어 순으로 정렬
+		console.log("저장 시엔 레이어 순으로 정렬");
+		eventsBody.sort((a, b) => {
+			let cmp = a.start - b.start;
+			if (cmp == 0) {
+				cmp = a.Layer - b.Layer;
+			}
+			return cmp;
+		});
+		console.log(eventsBody);
+	}
 	return assFile;
 }
 
@@ -2265,20 +2319,75 @@ function loadAssFile(path, text, target=-1) {
 	
 	// SMI -> ASS 변환 결과
 	currentTab.getAdditioinalToAss();
-	const originFile = currentTab.toAss();
+	const originFile = currentTab.toAss(true);
 	
 	// 따로 불러온 ASS 파일
 	const targetFile = currentTab.loadedAssFile = new Subtitle.AssFile2(text);
 	{
-		const targetBody = targetFile.getEvents().body;
-		for (let i = 0; i < targetBody.length; i++) {
-			targetBody[i].clearEnds();
+		const targetEvents = targetFile.getEvents().body;
+		for (let i = 0; i < targetEvents.length; i++) {
+			targetEvents[i].clearEnds();
 		}
+		
+		// 싱크 프레임 단위 정규화 먼저 진행
+		function optimizeSync(sync) { // TODO: SubtitleObject.js 쪽으로 옮기는 게 나은가?
+			return (findSync(sync) - 15);
+		}
+		const aegisubSyncs = [0];
+		for (let i = 1; i < SmiEditor.video.fs.length; i++) {
+			let bfr = SmiEditor.video.fs[i - 1];
+			let now = SmiEditor.video.fs[i];
+			aegisubSyncs.push(Math.floor((bfr + now) / 20) * 10);
+		}
+		function findSync(sync) {
+			let i = 0;
+			for (; i < aegisubSyncs.length; i++) {
+				if (sync < aegisubSyncs[i]) {
+					return SmiEditor.video.fs[i - 1];
+				}
+			}
+			return 999999999;
+		}
+		for (let i = 0; i < targetEvents.length; i++) {
+			targetEvents[i].Start = Subtitle.AssEvent.toAssTime(targetEvents[i].start = optimizeSync(Subtitle.AssEvent.fromAssTime(targetEvents[i].Start)));
+			targetEvents[i].End   = Subtitle.AssEvent.toAssTime(targetEvents[i].end   = optimizeSync(Subtitle.AssEvent.fromAssTime(targetEvents[i].End  )));
+		}
+		
+		// 원래의 스크립트 순서를 기준으로, 시간이 겹치는 걸 기준으로 레이어 재부여
+		{
+			let forLayers = [];
+			for (let i = 0; i < targetEvents.length; i++) {
+				let item = targetEvents[i];
+				let forLayer = forLayers[item.Layer];
+				if (!forLayer) {
+					forLayers[item.Layer] = forLayer = [];
+				}
+				forLayer.push(item);
+			}
+			let checkeds = [];
+			for (let l = 0; l < forLayers.length; l++) {
+				let forLayer = forLayers[l];
+				if (!forLayer) continue;
+				for (let i = 0; i < forLayer.length; i++) {
+					const item = forLayer[i];
+					let maxLayer = -1;
+					for (let j = 0; j < checkeds.length; j++) {
+						const checked = checkeds[j];
+						if (item.start < checked.end && checked.start < item.end) {
+							maxLayer = Math.max(maxLayer, checked.Layer);
+						}
+					}
+					item.Layer = maxLayer + 1;
+					checkeds.push(item);
+				}
+			}
+		}
+		
 		// 시간 순 정렬 돌리고 시작
-		targetBody.sort((a, b) => {
+		targetEvents.sort((a, b) => {
 			let cmp = a.start - b.start;
 			if (cmp == 0) {
-				cmp = a.Layer - b.Layer;
+				cmp = a.end - b.end;
 			}
 			return cmp;
 		});
@@ -2400,36 +2509,6 @@ function loadAssFile(path, text, target=-1) {
 		const targetEvents = targetFile.getEvents().body;
 		const appendEvents = appendFile.getEvents().body;
 		
-		//*
-		function optimizeSync(sync) { // TODO: SubtitleObject.js 쪽으로 옮기는 게 나은가?
-			return (findSync(sync) - 15);
-		}
-		/*
-		function findSync(sync) {
-			return SmiEditor.findSync(sync, SmiEditor.video.fs);
-		}
-		*/
-		const aegisubSyncs = [0];
-		for (let i = 1; i < SmiEditor.video.fs.length; i++) {
-			let bfr = SmiEditor.video.fs[i - 1];
-			let now = SmiEditor.video.fs[i];
-			//aegisubSyncs.push((bfr * 2 + now) / 3);
-			aegisubSyncs.push(Math.floor((bfr + now) / 20) * 10);
-		}
-		function findSync(sync) {
-			let i = 0;
-			for (; i < aegisubSyncs.length; i++) {
-				if (sync < aegisubSyncs[i]) {
-					return SmiEditor.video.fs[i - 1];
-				}
-			}
-			return 999999999;
-		}
-		for (let i = 0; i < targetEvents.length; i++) {
-			targetEvents[i].Start = Subtitle.AssEvent.toAssTime(targetEvents[i].start = optimizeSync(Subtitle.AssEvent.fromAssTime(targetEvents[i].Start)));
-			targetEvents[i].End   = Subtitle.AssEvent.toAssTime(targetEvents[i].end   = optimizeSync(Subtitle.AssEvent.fromAssTime(targetEvents[i].End  )));
-		}
-		//*/
 		for (let i = 0; i < targetEvents.length; i++) {
 			let assText = targetEvents[i].Text.split("}{").join("");
 
@@ -2463,11 +2542,13 @@ function loadAssFile(path, text, target=-1) {
 					break;
 				}
 			}
-			/*
 			if (removed) {
-				assText += "​"; // 군더더기 태그 삭제한 대신 Zero-width-space로 끝맺음
+				// ASS 자막 결과물에선 Zero-width-space가 공간을 차지하는 것 같음...
+				//assText += "​"; // 군더더기 태그 삭제한 대신 Zero-width-space로 끝맺음
+				if (assText.endsWith(" ") || assText.endsWith("　")) {
+					assText += "{}";
+				}
 			}
-			*/
 			targetEvents[i].Text = assText;
 		}
 		
@@ -2872,6 +2953,13 @@ function loadAssFile(path, text, target=-1) {
 							if (!completed) {
 								if (replaced) {
 									// 기본 내용도 달라짐 - 전체를 신규 내용으로 덮어쓰기
+									if (smiText.startsWith("<!-- ASS\n")) {
+										// 원래 ASS 변환용 주석이 있었을 경우 삭제
+										const commentEnd = smiText.indexOf("\n-->"); // "\n-->\n"으로 할 경우, SMI 내용물이 아예 없는 경우 못 잡아냄
+										if (commentEnd > 0) {
+											smiText = smiText.substring(commentEnd + 4).trim();
+										}
+									}
 									let newText = "<!-- ASS\n";
 									for (i = 0; i < targets.length; i++) {
 										const item = targets[i];
@@ -2881,7 +2969,8 @@ function loadAssFile(path, text, target=-1) {
 											newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
 										}
 									}
-									newText += "END\n-->\n" + smiText;
+									newText += "END\n-->";
+									if (smiText) newText += "\n" + smiText;
 									smiText = newText;
 									
 									
@@ -2939,7 +3028,7 @@ function loadAssFile(path, text, target=-1) {
 		*/
 		
 		if (count > 0) {
-			confirm("ASS 자막 수정 내역이 있습니다. 적용하시겠습니까?", () => {
+			confirm("ASS 자막 수정 내역이 있습니다. 적용하시겠습니까?\n\n올바른 동영상 파일이 열려있어야 정상적인 결과를 얻을 수 있습니다.", () => {
 				for (let i = 0; i < currentTab.holds.length; i++) {
 					const hold = currentTab.holds[i];
 					if (!hold.smiFile) continue;

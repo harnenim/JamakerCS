@@ -1284,6 +1284,8 @@ Subtitle.Ass.prototype.fromSync = function(sync, checkFrame=true) {
 	return this;
 }
 
+// TODO: 옛날에 처음 개발할 때 너무 간이로 스크립트 파싱만 보고 개발했음...
+// AssFile2 객체 정리되면 이쪽은 제거하고 대체하는 방향으로
 Subtitle.AssFile = function(text) {
 	this.header = "";
 	this.body = [];
@@ -1386,6 +1388,7 @@ Subtitle.AssEvent = function(start, end, style, text, layer=0) {
 	this.Text = text;
 }
 Subtitle.AssEvent.toAssTime = (time) => {
+	if (time < 0) time = 0;
 	const h = Math.floor( time / 3600000);
 	const m = Math.floor( time /   60000) % 60;
 	const s = Math.floor( time /    1000) % 60;
