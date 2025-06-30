@@ -113,14 +113,11 @@ function optimize() {
 	const ass = new Subtitle.AssFile(origin);
 	for (let i = 0; i < ass.body.length; i++) {
 		const item = ass.body[i];
-		item.start = optimizeSync(smiSync(item.start));
-		item.end   = optimizeSync(smiSync(item.end  ));
+		item.start = optimizeSync(item.start * 10);
+		item.end   = optimizeSync(item.end   * 10);
 	}
 	const result = ass.toText();
 	$result.val(result);
-}
-function smiSync(assSync) {
-	return assSync * 10 + HFL;
 }
 function optimizeSync(sync) {
 	// 팟플레이어에서 실제 의도한 프레임에 출력되도록 시간값 재계산
