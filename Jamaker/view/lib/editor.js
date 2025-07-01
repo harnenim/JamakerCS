@@ -2670,7 +2670,32 @@ function loadAssFile(path, text, target=-1) {
 				if (!imported) {
 					console.log("ASS 전용 스크립트로 처리", targets);
 					appendEvents.push(...targets);
-					count++;
+					
+					// 수정 내역이 있을 때만 카운트
+					let updated = false;
+					if (origins.length != targets.length) {
+						updated = true;
+						
+					} else {
+						for (let i = 0; i < origins.length; i++) {
+							const o = origins[i];
+							const t = targets[i];
+							["Layer", "Start", "End", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
+							if (o.Start   != t.Start  ) { updated = true; break; }
+							if (o.End     != t.End    ) { updated = true; break; }
+							if (o.Style   != t.Style  ) { updated = true; break; }
+							if (o.Name    != t.Name   ) { updated = true; break; }
+							if (o.MarginL != t.MarginL) { updated = true; break; }
+							if (o.MarginR != t.MarginR) { updated = true; break; }
+							if (o.MarginV != t.MarginV) { updated = true; break; }
+							if (o.Effect  != t.Effect ) { updated = true; break; }
+							if (o.Text    != t.Text   ) { updated = true; break; }
+						}
+					}
+					
+					if (updated) {
+						count++;
+					}
 				}
 				oi += origins.length;
 				ti += targets.length;
@@ -2715,10 +2740,11 @@ function loadAssFile(path, text, target=-1) {
 						let smiText = smi.text;
 						let assComment = "";
 						if (smiText.startsWith("<!-- ASS\n")) {
-							const endComment = smiText.indexOf("-->\n");
-							if (endComment > 0) {
-								assComment = smiText.substring(0, endComment + 4);
-								smiText = smiText.substring(endComment + 4);
+							// 원래 ASS 변환용 주석이 있었을 경우 삭제
+							const commentEnd = smiText.indexOf("\n-->"); // "\n-->\n"으로 할 경우, SMI 내용물이 아예 없는 경우 못 잡아냄
+							if (commentEnd > 0) {
+								assComment = smiText.substring(0, commentEnd + 4);
+								smiText = smiText.substring(commentEnd + 4).trim();
 							}
 						}
 						
@@ -2950,7 +2976,7 @@ function loadAssFile(path, text, target=-1) {
 									// 변환 결과 그대로 - 동작 X
 								}
 							}
-							smi.text = assComment + smiText;
+							smi.text = (assComment ? assComment + "\n" + smiText : smiText);
 						}
 					} else {
 						// ASS 독자 내용
@@ -2969,6 +2995,13 @@ function loadAssFile(path, text, target=-1) {
 			// ASS 출력 제외 대상
 			if (originEvents[oi].origin) {
 				const o = originEvents[oi].origin.origin;
+				if (o.text.startsWith("<!-- ASS\n")) {
+					// 원래 ASS 변환용 주석이 있었을 경우 삭제
+					const commentEnd = o.text.indexOf("\n-->");
+					if (commentEnd > 0) {
+						o.text = o.text.substring(commentEnd + 4).trim();
+					}
+				}
 				o.text = "<!-- ASS\nEND\n-->\n" + o.text;
 			} else {
 				// origin이 없었으면 기존에 ASS 전용으로 넣었던 것이므로 삭제 대상
