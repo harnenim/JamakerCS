@@ -158,7 +158,7 @@ function refreshTime(receiveTime, withoutTitle) {
 		 && nextSyncLine
 		 && setting.saveWithNormalize
 		) {
-			let toNormalize = new Subtitle.SmiFile(lines[hold][indexes[hold]].TEXT + "\n" + showText[hold] + "\n" + nextSyncLine.TEXT);
+			let toNormalize = new SmiFile(lines[hold][indexes[hold]].TEXT + "\n" + showText[hold] + "\n" + nextSyncLine.TEXT);
 			toNormalize.normalize();
 			//if (toNormalize.body.length > 2) { // 그라데이션만 적용된 경우 싱크 개수가 늘지 않음
 				normalizedLines[hold] = toNormalize.body.slice(0, toNormalize.body.length - 1);

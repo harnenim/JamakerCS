@@ -198,8 +198,8 @@ AssEditor.Item = function(info) {
 	return this;
 }
 AssEditor.Item.prototype.getText = function() {
-	const start = Subtitle.AssEvent.toAssTime((this.start = Number(this.inputStart.val())) - 15);
-	const end   = Subtitle.AssEvent.toAssTime((this.end   = Number(this.inputEnd  .val())) - 15);
+	const start = AssEvent.toAssTime((this.start = Number(this.inputStart.val())) - 15);
+	const end   = AssEvent.toAssTime((this.end   = Number(this.inputEnd  .val())) - 15);
 	const sync = "," + start + "," + end;
 	const lines = this.inputText.val().split("\n");
 	for (let i = 0; i < lines.length; i++) {
@@ -220,10 +220,10 @@ AssEditor.Item.prototype.update = function() {
 AssEditor.Item.prototype.getFrameSyncs = function() {
 	const syncs = [];
 	if (this.checkStart.prop("checked")) {
-		syncs.push(Subtitle.AssEvent.toAssTime(Number(this.inputStart.val()) - 15));
+		syncs.push(AssEvent.toAssTime(Number(this.inputStart.val()) - 15));
 	}
 	if (this.checkEnd.prop("checked")) {
-		syncs.push(Subtitle.AssEvent.toAssTime(Number(this.inputEnd  .val()) - 15));
+		syncs.push(AssEvent.toAssTime(Number(this.inputEnd  .val()) - 15));
 	}
 	return syncs;
 }

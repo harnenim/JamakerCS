@@ -31,12 +31,12 @@ window.Tab = function(text, path) {
 	
 	const tab = this;
 	
-	{	const holds = Subtitle.SmiFile.textToHolds(text);
+	{	const holds = SmiFile.textToHolds(text);
 		let assFile = null;
 		{
 			const hold = holds[0];
 			if (hold.ass) {
-				assFile = new Subtitle.AssFile2(hold.ass);
+				assFile = new AssFile(hold.ass);
 			}
 			hold.ass = [];
 		}
@@ -44,17 +44,15 @@ window.Tab = function(text, path) {
 			holds[i].ass = [];
 		}
 		const assHold = tab.assHold = new SmiEditor();
-		{
-			assHold.assEditor = new AssEditor(tab.area.find("div.tab-ass-script > div"));
-			assHold.assEditor.onUpdate = function() {
-				if (this.isSaved) {
-					tab.area.find(".tab-ass-btn").removeClass("not-saved");
-				} else {
-					tab.area.find(".tab-ass-btn").addClass("not-saved");
-				}
-				tab.onChangeSaved();
-			};
-		}
+		assHold.assEditor = new AssEditor(tab.area.find("div.tab-ass-script > div"));
+		assHold.assEditor.onUpdate = function() {
+			if (this.isSaved) {
+				tab.area.find(".tab-ass-btn").removeClass("not-saved");
+			} else {
+				tab.area.find(".tab-ass-btn").addClass("not-saved");
+			}
+			tab.onChangeSaved();
+		};
 		
 		let frameSyncs = [];
 		if (assFile) {
@@ -191,7 +189,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	hold.pos   = hold.savedPos   = info.pos;
 	
 	const style = hold.style = (info.style ? info.style : JSON.parse(JSON.stringify(DefaultStyle)));
-	hold.savedStyle = Subtitle.SmiFile.toSaveStyle(style);
+	hold.savedStyle = SmiFile.toSaveStyle(style);
 	hold.savedAss = hold.ass = info.ass;
 	hold.tempSavedText = info.text;
 	hold.updateTimeRange();
@@ -306,7 +304,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			const area = SmiEditor.assPreset.clone();
 			hold.assArea.append(area);
 			
-			const part = new Subtitle.AssPart("Events", Subtitle.AssPart.EventsFormat);
+			const part = new AssPart("Events", AssPart.EventsFormat);
 			if (hold.ass) {
 				part.body = hold.ass;
 			} else {
@@ -322,7 +320,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			});
 			area.find("span.hold-ass-events button").on("click", function() {
 				const sync = SmiEditor.getSyncTime("!"); // 가중치 없는 현재 싱크로 넣음
-				hold.assEditor.addEvents([ new Subtitle.AssEvent(sync, sync, name, "") ]);
+				hold.assEditor.addEvents([ new AssEvent(sync, sync, name, "") ]);
 			});
 		}
 	}
@@ -830,7 +828,7 @@ Tab.prototype.getAdditioinalToAss = function() {
 	{
 		styles = this.assStyles = this.area.find(".tab-ass-styles textarea").val();
 		if (styles) {
-			styles = "[V4+ Styles]\nFormat: " + Subtitle.AssPart.StylesFormat.join(", ") + "\n" + styles
+			styles = "[V4+ Styles]\nFormat: " + AssPart.StylesFormat.join(", ") + "\n" + styles
 			assTexts.push(styles);
 		}
 	}
@@ -851,7 +849,7 @@ Tab.prototype.getAdditioinalToAss = function() {
 			}
 		}
 		if (scripts.length) {
-			scripts = "[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(", ") + "\n" + (this.assScript = scripts.join("\n"));
+			scripts = "[Events]\nFormat: " + AssPart.EventsFormat.join(", ") + "\n" + (this.assScript = scripts.join("\n"));
 			assTexts.push(scripts);
 		} else {
 			this.assScript = scripts = "";
@@ -860,7 +858,7 @@ Tab.prototype.getAdditioinalToAss = function() {
 	return (styles || scripts) ? ("\n<!-- ASS\n" + (this.assText = assTexts.join("\n\n")) + "\n-->") : "";
 }
 Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
-	return Subtitle.SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment, SmiEditor.video.FR / 1000)
+	return SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment, SmiEditor.video.FR / 1000)
 		+ this.getAdditioinalToAss(); // ASS 추가 내용 footer에 넣어주기
 }
 Tab.prototype.onChangeSaved = function(hold) {
@@ -910,12 +908,12 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 		assFile.getStyles().body.length = 0;
 		assFile.getEvents().body.length = 0;
 	} else {
-		assFile = new Subtitle.AssFile2(null, SmiEditor.video.width, SmiEditor.video.height);
+		assFile = new AssFile(null, SmiEditor.video.width, SmiEditor.video.height);
 	}
 	
-	const appendText = "[V4+ Styles]\nFormat: " + Subtitle.AssPart.StylesFormat.join(", ") + "\n" + this.assStyles
-	                 + "\n\n[Events]\nFormat: " + Subtitle.AssPart.EventsFormat.join(", ") + "\n" + this.assScript;
-	const append = new Subtitle.AssFile2(appendText);
+	const appendText = "[V4+ Styles]\nFormat: " + AssPart.StylesFormat.join(", ") + "\n" + this.assStyles
+	                 + "\n\n[Events]\nFormat: " + AssPart.EventsFormat.join(", ") + "\n" + this.assScript;
+	const append = new AssFile(appendText);
 	const appendedLength = append.getEvents().body.length;
 	
 	// ASS에서 추가한 내용은 대사가 아닌 배경 -> 뒤에 깔릴 가능성이 높으므로 먼저 추가
@@ -945,7 +943,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			styles[name] = style;
 		}
 		
-		syncs.push((hold.smiFile = new Subtitle.SmiFile(hold.text)).toSyncs());
+		syncs.push((hold.smiFile = new SmiFile(hold.text)).toSyncs());
 		if (h == 0) {
 			mainSyncs = syncs[0];
 		} else {
@@ -1000,8 +998,8 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			if (SmiEditor.video.fs.length) {
 				for (let i = appendedLength; i < eventsBody.length; i++) {
 					const item = eventsBody[i];
-					item.Start = Subtitle.AssEvent.toAssTime(item.start = item.start - 15);
-					item.End   = Subtitle.AssEvent.toAssTime(item.end   = item.end   - 15);
+					item.Start = AssEvent.toAssTime(item.start = item.start - 15);
+					item.End   = AssEvent.toAssTime(item.end   = item.end   - 15);
 					
 					// ASS 전용 스크립트와 비교를 위함
 					item.start = Math.floor(item.start / 10) * 10;
@@ -1083,7 +1081,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 SmiEditor.prototype.isSaved = function() {
 	return (this.savedName  == this.name )
 		&& (this.savedPos   == this.pos  )
-		&& (this.savedStyle == Subtitle.SmiFile.toSaveStyle(this.style))
+		&& (this.savedStyle == SmiFile.toSaveStyle(this.style))
 		&& (this.saved == this.input.val()
 		&& (this.assEditor && this.assEditor.isSaved)
 	);
@@ -1974,7 +1972,7 @@ function saveFile(asNew, isExport) {
 	}
 	*/
 	if (withAss) {
-		const styles = { "Default": Subtitle.SmiFile.toSaveStyle(currentTab.holds[0].style) };
+		const styles = { "Default": SmiFile.toSaveStyle(currentTab.holds[0].style) };
 		for (let i = 1; i < currentTab.holds.length; i++) {
 			const hold = currentTab.holds[i];
 			if (hold.name.indexOf(",") >= 0) {
@@ -1982,7 +1980,7 @@ function saveFile(asNew, isExport) {
 				currentTab.selectHold(hold);
 				return;
 			}
-			const saveStyle = Subtitle.SmiFile.toSaveStyle(hold.style);
+			const saveStyle = SmiFile.toSaveStyle(hold.style);
 			if (typeof styles[hold.name] == "string") {
 				if (styles[hold.name] != saveStyle) {
 					const from = hold.name;
@@ -2080,7 +2078,7 @@ function afterSaveFile(path) {
 		hold.saved = hold.input.val();
 		hold.savedPos = hold.pos;
 		hold.savedName = hold.name;
-		hold.savedStyle = Subtitle.SmiFile.toSaveStyle(hold.style);
+		hold.savedStyle = SmiFile.toSaveStyle(hold.style);
 		hold.assEditor.setSaved();
 	}
 	currentTab.path = path;
@@ -2326,7 +2324,7 @@ function loadAssFile(path, text, target=-1) {
 	const originFile = currentTab.toAss(true);
 	
 	// 따로 불러온 ASS 파일
-	const targetFile = currentTab.loadedAssFile = new Subtitle.AssFile2(text);
+	const targetFile = currentTab.loadedAssFile = new AssFile(text);
 	{
 		const targetEvents = targetFile.getEvents().body;
 		for (let i = 0; i < targetEvents.length; i++) {
@@ -2353,8 +2351,8 @@ function loadAssFile(path, text, target=-1) {
 			return 999999999;
 		}
 		for (let i = 0; i < targetEvents.length; i++) {
-			targetEvents[i].Start = Subtitle.AssEvent.toAssTime(targetEvents[i].start = optimizeSync(Subtitle.AssEvent.fromAssTime(targetEvents[i].Start)));
-			targetEvents[i].End   = Subtitle.AssEvent.toAssTime(targetEvents[i].end   = optimizeSync(Subtitle.AssEvent.fromAssTime(targetEvents[i].End  )));
+			targetEvents[i].Start = AssEvent.toAssTime(targetEvents[i].start = optimizeSync(AssEvent.fromAssTime(targetEvents[i].Start)));
+			targetEvents[i].End   = AssEvent.toAssTime(targetEvents[i].end   = optimizeSync(AssEvent.fromAssTime(targetEvents[i].End  )));
 		}
 		
 		// 원래의 스크립트 순서를 기준으로, 시간이 겹치는 걸 기준으로 레이어 재부여
@@ -2402,7 +2400,7 @@ function loadAssFile(path, text, target=-1) {
 	
 	// TODO:
 	// 불일치 부분 확인 및 보정
-	const appendFile = new Subtitle.AssFile2();
+	const appendFile = new AssFile();
 
 	// 홀드 스타일과 ASS 스타일 비교
 	let styleTexts = currentTab.area.find(".tab-ass-styles textarea").val();
@@ -2697,11 +2695,11 @@ function loadAssFile(path, text, target=-1) {
 								newSmis.push(smi);
 							} else {
 								// 신규 싱크 추가 - SMI에 없던 것이므로 화면 싱크로 예측 진행
-								newSmis.push(new Subtitle.Smi(start, Subtitle.SyncType.frame, newText));
+								newSmis.push(new Smi(start, SyncType.frame, newText));
 							}
 							if ((body.length == 0) || (replaceTo >= body.length) || end < body[replaceTo].start) {
 								// 다음 싱크와 떨어져 있으면 공백 싱크 추가
-								newSmis.push(new Subtitle.Smi(end, Subtitle.SyncType.frame, "&nbsp;"));
+								newSmis.push(new Smi(end, SyncType.frame, "&nbsp;"));
 							}
 							hold.smiFile.body = body.slice(0, replaceFrom).concat(newSmis).concat(body.slice(replaceTo));
 							imported = true;
@@ -2843,7 +2841,7 @@ function loadAssFile(path, text, target=-1) {
 											}
 										}
 										// ASS 변환 결과물 재생성
-										let regenAss = Subtitle.AssEvent.fromSync(sync, styles[origin.origin.style]);
+										let regenAss = AssEvent.fromSync(sync, styles[origin.origin.style]);
 										regenAss = regenAss[regenAss.length - 1]; // 여기까지 오려면 반드시 1개 생성돼야 함
 										
 										// 순수 SMI 태그에서 생성된 ASS 태그
@@ -3132,7 +3130,7 @@ function doExit() {
 }
 
 function srt2smi(text) {
-	return new Subtitle.SmiFile().fromSync(new Subtitle.SrtFile(text).toSyncs()).toText();
+	return new SmiFile().fromSync(new SrtFile(text).toSyncs()).toText();
 }
 
 /**

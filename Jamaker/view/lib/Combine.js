@@ -26,24 +26,24 @@ window.Combine = {
 	const LOG = false;
 	
 	// 다중 결합에 대해 중간 싱크 처리를 위한 부분
-	Subtitle.SyncType.combinedNormal = 4;
-	Subtitle.SyncType.combinedFrame  = 5;
-	Subtitle.SyncType.combinedInner  = 6;
-	Subtitle.Smi.TypeParser[Subtitle.SyncType.combinedNormal] = "\t\t";
-	Subtitle.Smi.TypeParser[Subtitle.SyncType.combinedFrame ] = " \t\t";
-	Subtitle.Smi.TypeParser[Subtitle.SyncType.combinedInner ] = "\t\t\t";
-	Subtitle.Smi._getSyncType = Subtitle.Smi.getSyncType;
-	Subtitle.Smi.getSyncType = function(syncLine) {
+	SyncType.combinedNormal = 4;
+	SyncType.combinedFrame  = 5;
+	SyncType.combinedInner  = 6;
+	Smi.TypeParser[SyncType.combinedNormal] = "\t\t";
+	Smi.TypeParser[SyncType.combinedFrame ] = " \t\t";
+	Smi.TypeParser[SyncType.combinedInner ] = "\t\t\t";
+	Smi._getSyncType = Smi.getSyncType;
+	Smi.getSyncType = function(syncLine) {
 		if (syncLine.endsWith("\t\t>")) {
 			switch (syncLine[syncLine.length - 4]) {
 				case '\t':
-					return Subtitle.SyncType.combinedInner;
+					return SyncType.combinedInner;
 				case ' ':
-					return Subtitle.SyncType.combinedFrame;
+					return SyncType.combinedFrame;
 			}
-			return Subtitle.SyncType.combinedNormal;
+			return SyncType.combinedNormal;
 		}
-		return Subtitle.Smi._getSyncType(syncLine);
+		return Smi._getSyncType(syncLine);
 	}
 	
 	if (!window.Line) {
@@ -172,7 +172,7 @@ window.Combine = {
 	function getAttrWidth(attrs, checker, withFs=false) {
 		const cAttrs = [];
 		for (let i = 0; i < attrs.length; i++) {
-			const attr = new Subtitle.Attr(attrs[i], attrs[i].text.split("&nbsp;").join(" "), true);
+			const attr = new Attr(attrs[i], attrs[i].text.split("&nbsp;").join(" "), true);
 			attr.fs = ((withFs && attr.fs) ? attr.fs : Combine.defaultSize);
 			if (attr.fn && attr.fn != "맑은 고딕") {
 				// 팟플레이어 폰트 크기 보정
@@ -181,7 +181,7 @@ window.Combine = {
 			attr.furigana = null;
 			cAttrs.push(attr);
 		}
-		const width = checker.html(Subtitle.Smi.fromAttr(cAttrs, Combine.defaultSize).split("\n").join("<br>")).width();
+		const width = checker.html(Smi.fromAttr(cAttrs, Combine.defaultSize).split("\n").join("<br>")).width();
 		if (LOG) console.log(width, attrs);
 		return width;
 	}
@@ -204,14 +204,14 @@ window.Combine = {
 		if (window.SmiEditor) {
 			line = SmiEditor.makeSyncLine(sync, type + 1);
 		} else {
-			line = "<Sync Start=" + sync + "><P Class=KRCC" + Subtitle.Smi.TypeParser[type] + ">";
+			line = "<Sync Start=" + sync + "><P Class=KRCC" + Smi.TypeParser[type] + ">";
 		}
 		return line;
 	}
 	
 	function parse(text, checker) {
-		const smis = new Subtitle.SmiFile(text).body;
-		smis.push(new Subtitle.Smi(99999999, Subtitle.SyncType.normal, "&nbsp;"));
+		const smis = new SmiFile(text).body;
+		smis.push(new Smi(99999999, SyncType.normal, "&nbsp;"));
 						
 		const syncs = [];
 		let last = null;
@@ -262,8 +262,8 @@ window.Combine = {
 				const ls = (li < lowerSyncs.length) ? lowerSyncs[li] : [99999999, 99999999, null, 0];
 				if (us[STIME] < ls[STIME]) { // 위가 바뀜
 					if (group
-						&& (   (   (us[STYPE] == Subtitle.SyncType.inner) // 중간 싱크
-						        || (us[STYPE] == Subtitle.SyncType.combinedInner)
+						&& (   (   (us[STYPE] == SyncType.inner) // 중간 싱크
+						        || (us[STYPE] == SyncType.combinedInner)
 						       )
 						    || (group.lower.length && (group.lower[group.lower.length - 1][ETIME] > us[STIME]))
 						)
@@ -286,8 +286,8 @@ window.Combine = {
 						
 				} else if (ls[STIME] < us[STIME]) { // 아래가 바뀜
 					if (group
-						&& (   (   (ls[STYPE] == Subtitle.SyncType.inner) // 중간 싱크
-						        || (ls[STYPE] == Subtitle.SyncType.combinedInner)
+						&& (   (   (ls[STYPE] == SyncType.inner) // 중간 싱크
+						        || (ls[STYPE] == SyncType.combinedInner)
 						       )
 						    || (group.upper.length && (group.upper[group.upper.length - 1][ETIME] > ls[STIME]))
 						)
@@ -309,8 +309,8 @@ window.Combine = {
 					li++;
 						
 				} else { // 둘이 같이 바뀜
-					if ((us[STYPE] == Subtitle.SyncType.inner) || (us[STYPE] == Subtitle.SyncType.combinedInner)
-					 || (ls[STYPE] == Subtitle.SyncType.inner) || (ls[STYPE] == Subtitle.SyncType.combinedInner)) {
+					if ((us[STYPE] == SyncType.inner) || (us[STYPE] == SyncType.combinedInner)
+					 || (ls[STYPE] == SyncType.inner) || (ls[STYPE] == SyncType.combinedInner)) {
 						// 하나라도 중간 싱크 - 그룹 유지
 						group.upper.push(us);
 						group.lower.push(ls);
@@ -391,7 +391,7 @@ window.Combine = {
 								if (sync[WIDTH] > groupMaxWidth) {
 									// 크기 조절 안 했을 때의 폭을 이미 넘어섰으면 작업 안 함
 									if (LOG) console.log("width over");
-									sync[TEXT] = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
+									sync[TEXT] = Smi.fromAttr(attrs).split("\n").join("<br>");
 									continue;
 								}
 								*/
@@ -404,7 +404,7 @@ window.Combine = {
 							let lastAttrs;
 							let lastWidth;
 							let closeAttr = null;
-							const br = new Subtitle.Attr(null, "\n");
+							const br = new Attr(null, "\n");
 							
 							// 좌우 여백 붙이기 전 줄 단위로 분리 및 기존 Zero-Width-Space 삭제
 							let wasClear = false;
@@ -412,7 +412,7 @@ window.Combine = {
 							const trimedLines = [trimedLine];
 							for (let k = 0; k < attrs.length; k++) {
 								const attrText = attrs[k].text.split("​").join("");
-								let attr = new Subtitle.Attr(attrs[k], attrText, true);
+								let attr = new Attr(attrs[k], attrText, true);
 									
 								if (attrText.length == 0) {
 									// 내용물 없는 속성 무시
@@ -446,7 +446,7 @@ window.Combine = {
 									}
 										
 									for (let l = 1; l < attrLines.length; l++) {
-										attr = new Subtitle.Attr(attr, attrLines[l], true);
+										attr = new Attr(attr, attrLines[l], true);
 										const isEmptyAttr = (attr.text.split("​").join("").trim().length == 0);
 										if ((l == attrLines.length - 1) && isEmptyAttr) {
 											// 마지막 줄바꿈 후에 내용 없으면 건너뜀
@@ -509,17 +509,17 @@ window.Combine = {
 														// 재결합 대상
 														padsAttrs.pop(); // 미리 추가한 줄바꿈 제거
 														const lastAttr = padsAttrs.pop();
-														attr = new Subtitle.Attr(attr, lastAttr.text + "\n​" + pad + attr.text + pad + "​", true);
+														attr = new Attr(attr, lastAttr.text + "\n​" + pad + attr.text + pad + "​", true);
 														padsAttrs.push(attr);
 													} else {
-														attr = new Subtitle.Attr(attr, "​" + pad + attr.text + pad + "​", true);
+														attr = new Attr(attr, "​" + pad + attr.text + pad + "​", true);
 														padsAttrs.push(attr);
 													}
 												} else {
 													// 속성 밖에 공백문자 추가
-													padsAttrs.push(new Subtitle.Attr(br, "​" + pad));
+													padsAttrs.push(new Attr(br, "​" + pad));
 													padsAttrs.push(attr);
-													padsAttrs.push(new Subtitle.Attr(br, pad + "​"));
+													padsAttrs.push(new Attr(br, pad + "​"));
 												}
 													
 											} else {
@@ -533,15 +533,15 @@ window.Combine = {
 														// 재결합 대상
 														padsAttrs.pop(); // 미리 추가한 줄바꿈 제거
 														const lastAttr = padsAttrs.pop();
-														attr = new Subtitle.Attr(attr, lastAttr.text + "\n​" + pad + attr.text, true);
+														attr = new Attr(attr, lastAttr.text + "\n​" + pad + attr.text, true);
 														padsAttrs.push(attr);
 													} else {
-														attr = new Subtitle.Attr(attr, "​" + pad + attr.text, true);
+														attr = new Attr(attr, "​" + pad + attr.text, true);
 														padsAttrs.push(attr);
 													}
 												} else {
 													// 속성 밖에 공백문자 추가
-													padsAttrs.push(new Subtitle.Attr(br, "​" + pad));
+													padsAttrs.push(new Attr(br, "​" + pad));
 													padsAttrs.push(attr);
 												}
 													
@@ -554,11 +554,11 @@ window.Combine = {
 												attr = trimedLine.attrs[trimedLine.attrs.length - 1];
 												if (isClear(attr, br)) {
 													// 속성에 공백문자 포함
-													padsAttrs.push(new Subtitle.Attr(attr, attr.text + pad + "​", true));
+													padsAttrs.push(new Attr(attr, attr.text + pad + "​", true));
 												} else {
 													// 속성 밖에 공백문자 포함
 													padsAttrs.push(attr);
-													padsAttrs.push(new Subtitle.Attr(br, pad + "​"));
+													padsAttrs.push(new Attr(br, pad + "​"));
 												}
 											}
 										}
@@ -567,7 +567,7 @@ window.Combine = {
 										// 종료 태그 붙이기
 										padsAttrs.push(closeAttr);
 									} else {
-										padsAttrs.push(new Subtitle.Attr()); // 종료태그 필수
+										padsAttrs.push(new Attr()); // 종료태그 필수
 									}
 									width = getAttrWidth(padsAttrs, checker, withFontSize);
 									if (LOG) console.log(padsAttrs, width);
@@ -582,10 +582,10 @@ window.Combine = {
 								if (LOG) console.log(padsAttrs, width);
 							}
 							
-							sync[TEXT] = Subtitle.Smi.fromAttr(padsAttrs).split("\n").join("<br>");
+							sync[TEXT] = Smi.fromAttr(padsAttrs).split("\n").join("<br>");
 								
 						} else {
-							sync[TEXT] = Subtitle.Smi.fromAttr(attrs).split("\n").join("<br>");
+							sync[TEXT] = Smi.fromAttr(attrs).split("\n").join("<br>");
 						}
 					}
 				}
@@ -744,8 +744,8 @@ window.Combine = {
 	}
 }
 
-if (Subtitle && Subtitle.SmiFile) {
-	Subtitle.SmiFile.textToHolds = (text) => {
+if (SmiFile) {
+	SmiFile.textToHolds = (text) => {
 		const texts = text.split("\r\n").join("\n").split("\n<!-- Hold=");
 		let holds = [{ text: texts[0] }];
 		for (let i = 1; i < texts.length; i++) {
@@ -779,7 +779,7 @@ if (Subtitle && Subtitle.SmiFile) {
 		}
 		
 		// SMI 파일 역정규화
-		const normalized = new Subtitle.SmiFile(holds[0].text).antiNormalize();
+		const normalized = new SmiFile(holds[0].text).antiNormalize();
 		normalized[0].pos = 0;
 		normalized[0].name = "메인";
 		holds = normalized.concat(holds.slice(1));
@@ -788,7 +788,7 @@ if (Subtitle && Subtitle.SmiFile) {
 			const body = holds[0].body;
 			for (let i = 1; i < body.length; i++) {
 				const smi = body[i];
-				if (smi.syncType == Subtitle.SyncType.split) {
+				if (smi.syncType == SyncType.split) {
 					body[i - 1].text = smi.text;
 					body.splice(i, 1);
 				}
@@ -799,7 +799,7 @@ if (Subtitle && Subtitle.SmiFile) {
 			if (footer.length > 1) {
 				const styleEnd = footer[1].indexOf("\n-->");
 				if (styleEnd > 0) {
-					holds[0].style = Subtitle.SmiFile.parseStyle(footer[1].substring(0, styleEnd).trim());
+					holds[0].style = SmiFile.parseStyle(footer[1].substring(0, styleEnd).trim());
 					footer = footer[0] + footer[1].substring(styleEnd + 4); // 뒤에 추가로 주석 남아있을 수 있음
 				} else {
 					footer = footer[0];
@@ -831,7 +831,7 @@ if (Subtitle && Subtitle.SmiFile) {
 			// 내포된 홀드는 종료싱크가 빠졌을 수 있음
 			const hold = holds[i];
 			if (hold.next && !hold.body[hold.body.length - 1].isEmpty()) {
-				hold.body.push(new Subtitle.Smi(hold.next.start, hold.next.syncType, "&nbsp;"));
+				hold.body.push(new Smi(hold.next.start, hold.next.syncType, "&nbsp;"));
 			}
 			holds[i].text = hold.toText().trim();
 			
@@ -852,7 +852,7 @@ if (Subtitle && Subtitle.SmiFile) {
 			holds[i].style = style;
 		}
 		for (let i = normalized.length; i < holds.length; i++) {
-			const hold = new Subtitle.SmiFile(holds[i].text).antiNormalize()[0];
+			const hold = new SmiFile(holds[i].text).antiNormalize()[0];
 			let text = (holds[i].text = hold.toText().trim());
 			let lines = text.split("\n");
 
@@ -871,7 +871,7 @@ if (Subtitle && Subtitle.SmiFile) {
 			// 홀드 스타일: header 확인
 			{	let style = null;
 				if ((lines[0] == "<!-- Style" || lines[0] == "<!-- Preset") && lines[2] == "-->") {
-					style = holds[i].style = Subtitle.SmiFile.parseStyle(lines[1].trim());
+					style = holds[i].style = SmiFile.parseStyle(lines[1].trim());
 					text = (lines = lines.slice(3)).join("\n");
 				} else {
 					style = JSON.parse(JSON.stringify(DefaultStyle));
@@ -896,17 +896,17 @@ if (Subtitle && Subtitle.SmiFile) {
 	}
 	
 	// TODO: <BODY split> 형식일 때 동작 - 기능이 필요할까...? 일단 개발 보류
-	Subtitle.SmiFile.prototype.isWithSplit = function() {
+	SmiFile.prototype.isWithSplit = function() {
 		const match = /<body( [^>]*)*>/gi.exec(this.header);
 		return match && (match[0].indexOf("split") > 0);
 	}
-	Subtitle.SmiFile.holdsToTexts = (origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) => {
+	SmiFile.holdsToTexts = (origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) => {
 		const result = [];
 		let logs = [];
 		let originBody = [];
 		
 		// .text 동기화 안 끝났을 가능성 고려, 현재 값 다시 불러옴
-		const main = new Subtitle.SmiFile(origHolds[0].input ? origHolds[0].input.val() : origHolds[0].text);
+		const main = new SmiFile(origHolds[0].input ? origHolds[0].input.val() : origHolds[0].text);
 		if (main.isWithSplit()) { // 메인 홀드 이외에도 지원이 필요한가...?
 			// 대사 사이 1프레임 공백 싱크 생성
 			const body = main.body;
@@ -936,13 +936,13 @@ if (Subtitle && Subtitle.SmiFile) {
 					
 					if (before) {
 						// 대사끼리 붙어있을 때 1프레임 공백 싱크 생성
-						const splitted = new Subtitle.Smi((smi.start + add), Subtitle.SyncType.split, (before = smi.text));
+						const splitted = new Smi((smi.start + add), SyncType.split, (before = smi.text));
 						body.splice(++i, 0, splitted);
 						smi.text = "&nbsp;";
 						/*
-					} else if (smi.syncType == Subtitle.SyncType.frame) { // TODO: 설정으로 on/off? <BODY> 태그 플래그로?
+					} else if (smi.syncType == SyncType.frame) { // TODO: 설정으로 on/off? <BODY> 태그 플래그로?
 						// 대사 사이 싱크가 화면 싱크일 때
-						const splitted = new Subtitle.Smi((smi.start + add), Subtitle.SyncType.split, (before = smi.text));
+						const splitted = new Smi((smi.start + add), SyncType.split, (before = smi.text));
 						body.splice(++i, 0, splitted);
 						smi.text = "&nbsp;";
 						
@@ -956,7 +956,7 @@ if (Subtitle && Subtitle.SmiFile) {
 		}
 		//console.log(JSON.parse(JSON.stringify(body)));
 		{	// 메인 홀드 스타일 저장
-			const style = Subtitle.SmiFile.toSaveStyle(origHolds[0].style);
+			const style = SmiFile.toSaveStyle(origHolds[0].style);
 			if (style) {
 				main.footer += "\n<!-- Style\n" + style + "\n-->";
 			}
@@ -978,7 +978,7 @@ if (Subtitle && Subtitle.SmiFile) {
 				let text = holdText;
 				hold.exportName = hold.name;
 				if (hold.style) {
-					const style = Subtitle.SmiFile.toSaveStyle(hold.style);
+					const style = SmiFile.toSaveStyle(hold.style);
 					if (style) {
 						text = "<!-- Style\n" + style + "\n-->\n" + text;
 					}
@@ -1004,7 +1004,7 @@ if (Subtitle && Subtitle.SmiFile) {
 						continue;
 					}
 					// 스타일 적용 필요하면 내포 홀드 처리하지 않음
-					style = Subtitle.SmiFile.toSaveStyle(hold.style);
+					style = SmiFile.toSaveStyle(hold.style);
 					if (style) {
 						//text = "<!-- Style\n" + style + "\n-->\n" + text;
 						continue;
@@ -1012,7 +1012,7 @@ if (Subtitle && Subtitle.SmiFile) {
 				}
 				
 				// 내용물 없으면 내포 홀드 아님
-				const holdBody = new Subtitle.SmiFile(holdText).body;
+				const holdBody = new SmiFile(holdText).body;
 				if (holdBody.length == 0) {
 					continue;
 				}
@@ -1167,12 +1167,12 @@ if (Subtitle && Subtitle.SmiFile) {
 				const holdText = hold.input ? hold.input.val() : hold.text;
 				let text = holdText;
 				if (hold.style) {
-					const style = (typeof hold.style == "string") ? hold.style : Subtitle.SmiFile.toSaveStyle(hold.style);
+					const style = (typeof hold.style == "string") ? hold.style : SmiFile.toSaveStyle(hold.style);
 					if (style) {
 						text = "<!-- Style\n" + style + "\n-->\n" + text;
 					}
 				}
-				const smi = holdSmis[hi] = new Subtitle.SmiFile(text);
+				const smi = holdSmis[hi] = new SmiFile(text);
 				if (withNormalize) {
 					smi.normalize(false);
 				}
@@ -1221,10 +1221,10 @@ if (Subtitle && Subtitle.SmiFile) {
 					} else {
 						// 중간 싱크는 함께 결합돼야 함
 						while (mainBegin >= 0) {
-							if ((main.body[mainBegin].syncType == Subtitle.SyncType.inner)
-								|| (main.body[mainBegin].syncType == Subtitle.SyncType.combinedNormal)
-								|| (main.body[mainBegin].syncType == Subtitle.SyncType.combinedFrame)
-								|| (main.body[mainBegin].syncType == Subtitle.SyncType.combinedInner)
+							if ((main.body[mainBegin].syncType == SyncType.inner)
+								|| (main.body[mainBegin].syncType == SyncType.combinedNormal)
+								|| (main.body[mainBegin].syncType == SyncType.combinedFrame)
+								|| (main.body[mainBegin].syncType == SyncType.combinedInner)
 							) {
 								mainBegin--;
 							} else {
@@ -1262,12 +1262,12 @@ if (Subtitle && Subtitle.SmiFile) {
 				}
 
 				// 홀드 결합
-				const sliced = new Subtitle.SmiFile();
+				const sliced = new SmiFile();
 				sliced.body = main.body.slice(mainBegin, mainEnd);
 
 				const slicedText = sliced.toText().trim();
 				const combineText = smi.toText().trim();
-				const combined = new Subtitle.SmiFile(((hold.pos < 0) ? Combine.combine(slicedText, combineText) : Combine.combine(combineText, slicedText)).join("\n"));
+				const combined = new SmiFile(((hold.pos < 0) ? Combine.combine(slicedText, combineText) : Combine.combine(combineText, slicedText)).join("\n"));
 				// 원칙상 normalized.result를 다뤄야 맞을 것 같지만...
 				main.body = main.body.slice(0, mainBegin).concat(combined.body).concat(main.body.slice(mainEnd));
 			}
@@ -1278,9 +1278,9 @@ if (Subtitle && Subtitle.SmiFile) {
 				for (let i = 0; i < main.body.length; i++) {
 					const smi = main.body[i];
 					const line = smi.text.split("<br>").length;
-					if (smi.syncType == Subtitle.SyncType.combinedNormal
-					 || smi.syncType == Subtitle.SyncType.combinedFrame
-					 || smi.syncType == Subtitle.SyncType.combinedInner) {
+					if (smi.syncType == SyncType.combinedNormal
+					 || smi.syncType == SyncType.combinedFrame
+					 || smi.syncType == SyncType.combinedInner) {
 						maxLine = Math.max(maxLine, line);
 
 					} else {
@@ -1304,12 +1304,12 @@ if (Subtitle && Subtitle.SmiFile) {
 			{	// 임시 중간 싱크 정상화
 				for (let i = 0; i < main.body.length; i++) {
 					const smi = main.body[i];
-					if (smi.syncType == Subtitle.SyncType.combinedNormal) {
-						smi.syncType = Subtitle.SyncType.normal;
-					} else if (smi.syncType == Subtitle.SyncType.combinedFrame) {
-						smi.syncType = Subtitle.SyncType.frame;
-					} else if (smi.syncType == Subtitle.SyncType.combinedInner) {
-						smi.syncType = Subtitle.SyncType.inner;
+					if (smi.syncType == SyncType.combinedNormal) {
+						smi.syncType = SyncType.normal;
+					} else if (smi.syncType == SyncType.combinedFrame) {
+						smi.syncType = SyncType.frame;
+					} else if (smi.syncType == SyncType.combinedInner) {
+						smi.syncType = SyncType.inner;
 					}
 				}
 			}
@@ -1321,7 +1321,7 @@ if (Subtitle && Subtitle.SmiFile) {
 				for (let i = main.body.length - 1; i > 0; i--) {
 					const smi = main.body[i];
 					if (next) {
-						if (next.syncType == Subtitle.SyncType.frame) {
+						if (next.syncType == SyncType.frame) {
 							// 1프레임 미만 중간싱크로 인해 화면싱크가 밀리는지 확인
 							const startIndex = SmiEditor.findSyncIndex(smi .start, fs);
 							const endIndex   = SmiEditor.findSyncIndex(next.start, fs);
@@ -1406,7 +1406,7 @@ if (Subtitle && Subtitle.SmiFile) {
 					});
 				}
 				
-				const origin = new Subtitle.SmiFile();
+				const origin = new SmiFile();
 				for (let i = 0; i < logs.length; i++) {
 					const log = logs[i];
 					if (!log.end) {
@@ -1439,14 +1439,14 @@ if (Subtitle && Subtitle.SmiFile) {
 			return [main.toText()];
 		}
 	}
-	Subtitle.SmiFile.holdsToText = (origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) => {
-		return Subtitle.SmiFile.holdsToTexts(origHolds, withNormalize, withCombine, withComment, fps).join("\n");
+	SmiFile.holdsToText = (origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) => {
+		return SmiFile.holdsToTexts(origHolds, withNormalize, withCombine, withComment, fps).join("\n");
 	}
 }
 $(() => {
 	if (window.SmiEditor) {
-		TIDs[5] = Subtitle.Smi.TypeParser[4];
-		TIDs[6] = Subtitle.Smi.TypeParser[5];
-		TIDs[7] = Subtitle.Smi.TypeParser[6];
+		TIDs[5] = Smi.TypeParser[4];
+		TIDs[6] = Smi.TypeParser[5];
+		TIDs[7] = Smi.TypeParser[6];
 	}
 });

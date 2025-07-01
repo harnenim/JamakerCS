@@ -2873,7 +2873,7 @@ SmiEditor.Viewer = {
 								// TODO: 성능 부하가 얼마나 되지?
 								//       미리보기 쪽에서 필요 시 렌더링?
 								// TODO: 수정된 영역만 업데이트하는 게 제일 좋긴 한데...
-								const tag = Subtitle.SmiFile.styleToSmi(holds[i].style);
+								const tag = SmiFile.styleToSmi(holds[i].style);
 								const holdLines = holds[i].lines;
 								const newLines = []; // 싱크 내 줄바꿈 뭉쳐서 보냄
 								let lineBegins = 0;
@@ -2903,7 +2903,7 @@ SmiEditor.Viewer = {
 											const text = texts.join((texts.length - pass > 3) ? "<br>" : "");
 											
 											if (text.split("&nbsp;").join("").trim()) { // 공백 싱크는 제외
-												newLines.push({ SYNC: 0, TYPE: null, TEXT: Subtitle.Smi.fromAttr(Subtitle.Smi.toAttr(tag[0] + text + tag[1], false)).split("\n").join("<br>") })
+												newLines.push({ SYNC: 0, TYPE: null, TEXT: Smi.fromAttr(Smi.toAttr(tag[0] + text + tag[1], false)).split("\n").join("<br>") })
 											}
 										}
 										// 싱크 줄은 그냥 그대로
@@ -2926,7 +2926,7 @@ SmiEditor.Viewer = {
 									const text = texts.join((texts.length - pass > 3) ? "<br>" : "");
 
 									if (text.split("&nbsp;").join("").trim()) { // 공백 싱크는 제외
-										newLines.push({ SYNC: 0, TYPE: null, TEXT: Subtitle.Smi.fromAttr(Subtitle.Smi.toAttr(tag[0] + text + tag[1], false)).split("\n").join("<br>") })
+										newLines.push({ SYNC: 0, TYPE: null, TEXT: Smi.fromAttr(Smi.toAttr(tag[0] + text + tag[1], false)).split("\n").join("<br>") })
 									}
 								}
 								lines.push(newLines);
@@ -3185,9 +3185,9 @@ SmiEditor.afterTransform = (result) => { // 주로 C#에서 호출
 SmiEditor.prototype.normalize = function() {
 	const text = this.getTransformText();
 	if (text) {
-		const smi = new Subtitle.SmiFile();
+		const smi = new SmiFile();
 		const input = smi.fromText(text).body;
-		Subtitle.Smi.normalize(input, false, SmiEditor.video.FR / 1000);
+		Smi.normalize(input, false, SmiEditor.video.FR / 1000);
 		smi.body = input;
 		SmiEditor.afterTransform(smi.toText().trim());
 	}
@@ -3213,9 +3213,9 @@ SmiEditor.fillSync = (text) => {
 		}
 	}
 
-	const smi = new Subtitle.SmiFile();
+	const smi = new SmiFile();
 	const input = smi.fromText(lines.join("\n")).body;
-	Subtitle.Smi.fillEmptySync(input);
+	Smi.fillEmptySync(input);
 	smi.body = input;
 	return smi.toText().trim();
 };
