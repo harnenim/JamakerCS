@@ -1101,6 +1101,12 @@ SmiEditor.prototype.rename = function() {
 			alert("구분자는 입력할 수 없습니다.");
 			return;
 		}
+		if (input == "메인"
+		 || input == "Default"
+		) {
+			alert("예약어입니다.");
+			return;
+		}
 		hold.selector.find(".hold-name > span").text(hold.owner.holds.indexOf(hold) + "." + (hold.name = input));
 		hold.selector.attr({ title: hold.name });
 		hold.afterChangeSaved(hold.isSaved());
@@ -2351,6 +2357,7 @@ function loadAssFile(path, text, target=-1) {
 	let styleTexts = currentTab.area.find(".tab-ass-styles textarea").val();
 	styleTexts = styleTexts ? [styleTexts] : [];
 	const styles = {}; // 아래에서도 필요해짐
+	let styleCount = 0;
 	{
 		let part = originFile.getStyles();
 		for (let i = 0; i < part.body.length; i++) {
@@ -2378,10 +2385,11 @@ function loadAssFile(path, text, target=-1) {
 					part.body[i] = styles[style.Name];
 					
 					// 기존 스타일 가져오기
+					const styleName = (style.Name == "Default") ? "메인" : style.Name;
 					let holdStyle = null;
 					for (let h = 0; h < currentTab.holds.length; h++) {
 						const hold = currentTab.holds[h];
-						if (hold.name == style.Name) {
+						if (hold.name == styleName) {
 							holdStyle = JSON.parse(JSON.stringify(hold.style));
 							break;
 						}
@@ -2412,17 +2420,20 @@ function loadAssFile(path, text, target=-1) {
 						{ let fc = style.BackColour     ; holdStyle.BackColour      = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.BackOpacity      = 255 - Number('0x'+fc[2]+fc[3]); }
 						
 						// 해당 홀드 스타일 적용
+						// 같은 이름의 홀드가 여러 개일 수 있음
 						for (let h = 0; h < currentTab.holds.length; h++) {
 							const hold = currentTab.holds[h];
-							if (hold.name == style.Name) {
+							if (hold.name == styleName) {
 								hold.setStyle(holdStyle);
 							}
 						}
 					}
+					styleCount++;
 				}
 			} else {
 				console.log("SMI에서 해당하는 홀드가 없음");
 				addPart.body.push(style);
+				styleCount++;
 			}
 		}
 		if (addPart.body.length) {
@@ -3047,6 +3058,12 @@ function loadAssFile(path, text, target=-1) {
 				// 기존 ASS 파일 .bak 파일이라도 만들?
 				// ... 영상 불러오면 자동으로 가져오려고 했는데, 수동으로 가져온다면 필요 없을지도?
 			});
+		} else {
+			if (styleCount) {
+				alert("자막 스타일 변경사항이 있습니다.");
+			} else {
+				alert("ASS 자막에 특별한 수정사항이 없습니다.");
+			}
 		}
 	}
 }
