@@ -530,11 +530,17 @@ $(() => {
 		});
 	}
 	function showFrames($tr) {
+		const showing = $tr.hasClass("showing");
 		const $frames = $tr.data("$frames");
 		refreshImages($frames.find("img"));
-		$tr.find("td:eq(0)").append($frames);
+		if (!showing) {
+			$tr.addClass("showing").find("td:eq(0)").append($frames);
+		}
 	}
 	function hideFrames($tr) {
+		if ($tr.hasClass("showing")) {
+			$tr.removeClass("showing");
+		}
 		const $frames = $tr.data("$frames");
 		$framesStorage.append($frames);
 	}
