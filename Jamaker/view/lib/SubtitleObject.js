@@ -3579,7 +3579,408 @@ Smi.getLineWidth = (text) => {
 
 Smi.Color = Subtitle.Color;
 
-Smi.normalize = (smis, withComment=false, fps=23.976) => {
+Smi.prototype.normalize = function(end, withFadeOnly=false, withComment=false, fps=null) {
+	if (fps == null) {
+		fps = Subtitle.video.FR / 1000;
+	}
+	
+	const smi = this;
+	const smiText = this.text;
+	const attrs = this.toAttrs();
+	
+	// 그라데이션 먼저 글자 단위 분해
+	let hasGradation = false;
+	for (let j = 0; j < attrs.length; j++) {
+		const attr = attrs[j];
+		
+		const gc = (attr.fc.length == 15)
+			&& (attr.fc[0] == '#')
+			&& (attr.fc[7] == '~')
+			&& (attr.fc[8] == '#');
+		const gf = (attr.fade.length == 15)
+			&& (attr.fade[0] == '#')
+			&& (attr.fade[7] == '~')
+			&& (attr.fade[8] == '#');
+		
+		if (gc || gf) {
+			hasGradation = true;
+			
+			const cFrom = gc ? attr.fc.substring(0,  7) : (attr.fc ? attr.fc : "#ffffff");
+			const cTo   = gc ? attr.fc.substring(8, 15) : (attr.fc ? attr.fc : "#ffffff");
+			const color = new Color(cTo, cFrom);
+			
+			const newAttrs = [];
+			for (let k = 0; k < attr.text.length; k++) {
+				const newAttr = new Attr(attr);
+				newAttr.fc = color.get(k, attr.text.length - 1);
+				newAttr.text = attr.text[k];
+				newAttrs.push(newAttr);
+			}
+			if (gf) {
+				const fFrom = attr.fade.substring(0,  7);
+				const fTo   = attr.fade.substring(8, 15);
+				const fColor = new Color(fTo, fFrom);
+				for (let k = 0; k < newAttrs.length; k++) {
+					newAttrs[k].fade = fColor.smi(k, newAttrs.length - 1);
+				}
+			}
+			const after = attrs.slice(j + 1);
+			
+			attrs.length = j;
+			attrs.push(...newAttrs);
+			attrs.push(...after);
+			j += newAttrs.length - 1;
+			smi.fromAttrs(attrs);
+		}
+	}
+	
+	let hasFade = false;
+	let hasTyping = false;
+	let shakeRange = null;
+	for (let j = 0; j < attrs.length; j++) {
+		const attr = attrs[j];
+		if (attr.fade != 0) {
+			hasFade = true;
+		}
+		if (attr.typing) {
+			hasTyping = true;
+		}
+		if (attr.shake) {
+			// 흔들기는 연속된 그룹으로 처리
+			if (!shakeRange) {
+				shakeRange = [j, j+1];
+			} else if (shakeRange[1] == j) {
+				shakeRange[1]++;
+			}
+		}
+	}
+
+	const smis = [];
+	if (shakeRange) {
+		// 흔들기는 한 싱크에 하나만 가능
+		const shake = attrs[shakeRange[0]].shake;
+		for (let j = shakeRange[0]; j < shakeRange[1]; j++) {
+			attrs[j].shake = null;
+			if (attrs[j].furigana) {
+				attrs[j].furigana.shake = null;
+			}
+		}
+		attrs[shakeRange[0]  ].text = "{SL}" + attrs[shakeRange[0]].text;
+		attrs[shakeRange[1]-1].text = attrs[shakeRange[1]-1].text + "{SR}";
+		for (let j = shakeRange[0]; j < shakeRange[1]; j++) {
+			if (attrs[j].text.indexOf("\n") >= 0) {
+				attrs[j].text = attrs[j].text.split("\n").join("{SR}\n{\SL}");
+			}
+		}
+		
+		const start = smi.start;
+		const count = Math.floor(((end - start) / shake.ms) + 0.5);
+		
+		let j = shakeRange[0] - 1;
+		for (; j >= 0; j--) {
+			const text = attrs[j].text;
+			const brIndex = text.lastIndexOf("\n");
+			if (brIndex >= 0) {
+				attrs[j].text = text.substring(0, brIndex + 1) + "{ST}" + text.substring(brIndex + 1);
+				break;
+			}
+		}
+		if (j < 0) {
+			attrs[0].text = "{ST}" + attrs[0].text;
+		}
+		for (j = shakeRange[1]; j < attrs.length; j++) {
+			const text = attrs[j].text;
+			const brIndex = text.indexOf("\n");
+			if (brIndex >= 0) {
+				attrs[j].text = text.substring(0, brIndex) + "{SB}" + text.substring(brIndex);
+				break;
+			}
+		}
+		if (j >= attrs.length) {
+			attrs[attrs.length - 1].text = attrs[attrs.length - 1].text + "{SB}";
+		}
+		
+		// 페이드 효과 추가 처리
+		const fadeColors = [];
+		if (hasFade) {
+			for (let j = 0; j < attrs.length; j++) {
+				const attr = attrs[j];
+				attr.tagString = null;
+				if (attr.fade != 0) {
+					fadeColors.push(new Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
+					attr.fade = 0;
+				}
+				if (attr.furigana) {
+					const furi = attr.furigana;
+					if (furi.fade != 0) {
+						fadeColors.push(new Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
+						furi.fade = 0;
+					}
+				}
+			}
+			if (fadeColors.length == 0) {
+				return [smi];
+			}
+		} else {
+			// 페이드 없어도 tagString은 빼줘야 함
+			for (let j = 0; j < attrs.length; j++) {
+				attrs[j].tagString = null;
+			}
+		}
+		
+		// 좌우로 흔들기
+		// 플레이어에서 사이즈 미지원해도 좌우로는 흔들리도록
+		const LRmin = "<font size=\"" + (3 * shake.size) + "\"></font>";
+		const LRmid = "<font size=\"" + (3 * shake.size) + "\"> </font>";
+		const LRmax = "<font size=\"" + (3 * shake.size) + "\">  </font>";
+		
+		// 상하로 흔들기
+		// 플레이어에서 사이즈 미지원하면 상하로 흔들리지 않음
+		// size 0은 리스크가 있으므로 +1
+		const TBmin = "<font size=\"" + (0 * shake.size + 1) + "\">　</font>";
+		const TBmid = "<font size=\"" + (1 * shake.size + 1) + "\">　</font>";
+		const TBmax = "<font size=\"" + (2 * shake.size + 1) + "\">　</font>";
+		
+		for (let j = 0; j < count; j++) {
+			/*
+			 * ５０３
+			 * ２※６
+			 * ７４１
+			 */
+			const step = j % 8;
+			
+			// 페이드 효과 추가 처리
+			for (let k = 0; k < fadeColors.length; k++) {
+				const color = fadeColors[k];
+				((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1 + 2 * j, 2 * count);
+			}
+			let text = Smi.fromAttrs(attrs).split("\n").join("<br>");
+			
+			// 좌우로 흔들기
+			switch (step) {
+				case 2:
+				case 5:
+				case 7:
+					text = text.split("{SL}").join(LRmin).split("{SR}").join(LRmax);
+					break;
+				case 0:
+				case 4:
+					text = text.split("{SL}").join(LRmid).split("{SR}").join(LRmid);
+					break;
+				default:
+					text = text.split("{SL}").join(LRmax).split("{SR}").join(LRmin);
+			}
+			
+			// 상하로 흔들기
+			switch (step) {
+				case 0:
+				case 3:
+				case 5:
+					text = text.split("{ST}").join(TBmin + "<br>").split("{SB}").join("<br>" + TBmax);
+					break;
+				case 2:
+				case 6:
+					text = text.split("{ST}").join(TBmid + "<br>").split("{SB}").join("<br>" + TBmid);
+					break;
+				default:
+					text = text.split("{ST}").join(TBmax + "<br>").split("{SB}").join("<br>" + TBmin);
+			}
+			
+			smis.push(new Smi((start * (count - j) + end * (j)) / count, (j == 0 ? smi.syncType : SyncType.inner), text));
+		}
+		if (withComment) {
+			smis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[0].text;
+		}
+
+	} else if (hasTyping) {
+		// 타이핑은 한 싱크에 하나만 가능
+		let attrIndex = -1;
+		let attr = null;
+		let isLastAttr = false;
+		for (let j = 0; j < attrs.length; j++) {
+			if (!attr) {
+				// 타이핑 찾기 전
+				if (attrs[j].typing != null) {
+					attr = attrs[(attrIndex = j)];
+					let remains = "";
+					for (let k = j + 1; k < attrs.length; k++) {
+						remains += attrs[k].text;
+					}
+					isLastAttr = (remains.length == 0) || (remains[0] == "\n");
+					if (!isLastAttr) {
+						let length = 0;
+						for (let k = j + 1; k < attrs.length; k++) {
+							length += attrs[k].text.length;
+						}
+						isLastAttr = (length == 0);
+					}
+				}
+			} else {
+				// 타이핑 찾은 후 나머지에 대해 타이핑 제거
+				attrs[j].typing = null;
+			}
+			// 태그 원본도 신뢰할 수 없음
+			attrs[j].tagString = null;
+		}
+		if (attr == null) {
+			return [smi];
+		}
+		
+		const types = Typing.toType(attr.text, attr.typing.mode, attr.typing.cursor);
+		const widths = [];
+		{	const attrTexts = attr.text.split("\n");
+			for (let j = 0; j < attrTexts.length; j++) {
+				widths.push(Smi.getLineWidth(attrTexts[j]));
+			}
+		}
+
+		const start = smi.start;
+		const count = types.length - attr.typing.end - attr.typing.start;
+		
+		if (count < 1) {
+			return [smi];
+		}
+
+		const typingStart = attr.typing.start;
+		attr.typing = null;
+
+		// 페이드 효과 추가 처리
+		const fadeColors = [];
+		if (hasFade) {
+			for (let j = 0; j < attrs.length; j++) {
+				const attr = attrs[j];
+				if (attr.fade != 0) {
+					fadeColors.push(new Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
+					attr.fade = 0;
+				}
+				if (attr.furigana) {
+					const furi = attr.furigana;
+					if (furi.fade != 0) {
+						fadeColors.push(new Color( furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
+						furi.fade = 0;
+					}
+				}
+			}
+			if (fadeColors.length == 0) {
+				return [smi];
+			}
+		}
+		
+		// 10ms 미만 간격이면 팟플레이어에서 겹쳐서 나오므로 적절히 건너뛰기
+		// TODO: ... 현재는 holdsToText 거칠 경우 뭉치는 것 교정해줄 듯?
+		const countLimit = Math.min(count, Math.floor((end - start) / 10));
+		let realJ = 0;
+		
+		for (let j = 0; j < count; j++) {
+			const sync = (start * (count - j) + end * (j)) / count;
+			const limitSync = (countLimit < count) ? ((start * (countLimit - realJ) + end * (realJ)) / countLimit) : sync;
+			if (sync < limitSync) {
+				continue;
+			}
+			
+			const textLines = types[j + typingStart].split("\n");
+			const text = textLines.join("<br>");
+			{
+				const attrTextLines = [];
+				for (let k = 0; k < widths.length; k++) {
+					if (k < textLines.length - 1) {
+						// 건너뛰기
+					} else if (k == textLines.length - 1) {
+						attrTextLines.push(Subtitle.Width.getAppendToTarget(Smi.getLineWidth(textLines[k]), widths[k]));
+					} else {
+						attrTextLines.push(Subtitle.Width.getAppendToTarget(0, widths[k]));
+					}
+				}
+				attr.text = attrTextLines.join("​\n​");
+				if (isLastAttr) {
+					attr.text += "​";
+				}
+			}
+			const newAttrs = new Smi(null, null, text).toAttrs(false);
+			for (let k = 0; k < newAttrs.length; k++) {
+				newAttrs[k].b = attr.b;
+				newAttrs[k].i = attr.i;
+				newAttrs[k].s = attr.s;
+				newAttrs[k].fc = attr.fc;
+				newAttrs[k].fn = attr.fn;
+				newAttrs[k].fs = attr.fs;
+			}
+			
+			// 페이드 효과 추가 처리
+			for (let k = 0; k < fadeColors.length; k++) {
+				const color = fadeColors[k];
+				((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1 + 2 * j, 2 * count);
+			}
+			
+			const tAttrs = attrs.slice(0, attrIndex);
+			tAttrs.push(...newAttrs);
+			tAttrs.push(attr);
+			tAttrs.push(...attrs.slice(attrIndex + 1));
+			
+			smis.push(new Smi(limitSync, (j == 0 ? smi.syncType : SyncType.inner)).fromAttrs(tAttrs));
+			realJ++;
+		}
+		if (withComment) {
+			smis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[0].text;
+		}
+		
+	} else if (withFadeOnly && hasFade) {
+		const start = smi.start;
+		const count = Math.round((end - start) * fps / 1000);
+		
+		const fadeColors = [];
+		for (let j = 0; j < attrs.length; j++) {
+			const attr = attrs[j];
+			attr.tagString = null;
+			if (attr.fade != 0) {
+				fadeColors.push(new Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
+				attr.fade = 0;
+			}
+			if (attr.furigana) {
+				const furi = attr.furigana;
+				if (furi.fade != 0) {
+					fadeColors.push(new Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
+					furi.fade = 0;
+				}
+			}
+		}
+		if (fadeColors.length == 0) {
+			return [smi];
+		}
+		
+		for (let j = 0; j < fadeColors.length; j++) {
+			const color = fadeColors[j];
+			((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1, 2 * count);
+		}
+		smis.push(new Smi(start).fromAttrs(attrs));
+		
+		for (let j = 1; j < count; j++) {
+			for (let k = 0; k < fadeColors.length; k++) {
+				const color = fadeColors[k];
+				((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1 + 2 * j, 2 * count);
+			}
+			smis.push(new Smi((start * (count - j) + end * j) / count, SyncType.inner).fromAttrs(attrs));
+		}
+		if (withComment) {
+			smis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[0].text;
+		}
+		
+	} else {
+		if (hasGradation) {
+			// 주석 추가
+			if (withComment) {
+				this.text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + this.text;
+			}
+		}
+		smis.push(this);
+	}
+	
+	return smis;
+}
+Smi.normalize = (smis, withComment=false, fps=null) => {
+	if (fps == null) {
+		fps = Subtitle.video.FR / 1000;
+	}
 	const origin = new SmiFile();
 	origin.body = smis;
 	origin.fromText(origin.toText());
@@ -3613,6 +4014,33 @@ Smi.normalize = (smis, withComment=false, fps=23.976) => {
 	}
 	
 	for (let i = 0; i < smis.length - 1; i++) {
+		const start = smis[i].start;
+		const end = smis[i + 1].start;
+		const nSmis = smis[i].normalize(end, true, withComment, fps);
+		
+		if (nSmis.length > 1) {
+			const nextSmis = smis.slice(i + 1);
+			smis.length = i;
+			smis.push(...nSmis);
+			smis.push(...nextSmis);
+			
+			// TODO: 다시 보니 combine 작업 있으면 logs 날리나...?
+			// 이거 없어도 주석 처리는 해버리는 것 같은데...?
+			result.logs.push({
+				from: [i - added, i - added + 1]
+			,	to  : [i, i + nSmis.length]
+			,	start: start
+			,	end: end
+			});
+			const add = nSmis.length - 1;
+			i += add;
+			added += add;
+			
+		} else {
+			smis[i] = nSmis[0];
+		}
+		
+		/*
 		const smi = smis[i];
 		const smiText = smi.text;
 		
@@ -3771,13 +4199,13 @@ Smi.normalize = (smis, withComment=false, fps=23.976) => {
 			const TBmid = "<font size=\"" + (1 * shake.size + 1) + "\">　</font>";
 			const TBmax = "<font size=\"" + (2 * shake.size + 1) + "\">　</font>";
 			
-			smis.splice(i, 1);
+			const newSmis = [];
 			for (let j = 0; j < count; j++) {
 				/*
 				 * ５０３
 				 * ２※６
 				 * ７４１
-				 */
+				 * /
 				const step = j % 8;
 				
 				// 페이드 효과 추가 처리
@@ -3817,11 +4245,18 @@ Smi.normalize = (smis, withComment=false, fps=23.976) => {
 						text = text.split("{ST}").join(TBmax + "<br>").split("{SB}").join("<br>" + TBmin);
 				}
 				
-				smis.splice(i + j, 0, new Smi((start * (count - j) + end * (j)) / count, (j == 0 ? smi.syncType : SyncType.inner), text));
+//				smis.splice(i + j, 0, new Smi((start * (count - j) + end * (j)) / count, (j == 0 ? smi.syncType : SyncType.inner), text));
+				newSmis.push(new Smi((start * (count - j) + end * (j)) / count, (j == 0 ? smi.syncType : SyncType.inner), text));
 			}
 			if (withComment) {
-				smis[i].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[i].text;
+				newSmis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + newSmis[0].text;
 			}
+			
+			const nextSmis = smis.slice(i + 1);
+			smis.length = i;
+			smis.push(...newSmis);
+			smis.push(...nextSmis);
+			
 			result.logs.push({
 					from: [i - added, i - added + 1]
 				,	to  : [i, i + count]
@@ -3907,13 +4342,12 @@ Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				}
 			}
 			
-			smis.splice(i, 1);
-			
 			// 10ms 미만 간격이면 팟플레이어에서 겹쳐서 나오므로 적절히 건너뛰기
 			// TODO: ... 현재는 holdsToText 거칠 경우 뭉치는 것 교정해줄 듯?
 			const countLimit = Math.min(count, Math.floor((end - start) / 10));
 			let realJ = 0;
 			
+			const newSmis = [];
 			for (let j = 0; j < count; j++) {
 				const sync = (start * (count - j) + end * (j)) / count;
 				const limitSync = (countLimit < count) ? ((start * (countLimit - realJ) + end * (realJ)) / countLimit) : sync;
@@ -3960,12 +4394,18 @@ Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				tAttrs.push(attr);
 				tAttrs.push(...attrs.slice(attrIndex + 1));
 				
-				smis.splice(i + realJ, 0, new Smi(limitSync, (j == 0 ? smi.syncType : SyncType.inner)).fromAttrs(tAttrs));
+				newSmis.push(new Smi(limitSync, (j == 0 ? smi.syncType : SyncType.inner)).fromAttrs(tAttrs));
 				realJ++;
 			}
 			if (withComment) {
-				smis[i].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[i].text;
+				newSmis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + newSmis[0].text;
 			}
+			
+			const nextSmis = smis.slice(i + 1);
+			smis.length = i;
+			smis.push(...newSmis);
+			smis.push(...nextSmis);
+			
 			result.logs.push({
 					from: [i - added, i - added + 1]
 				,	to  : [i, i + count]
@@ -4006,16 +4446,25 @@ Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1, 2 * count);
 			}
 			smi.fromAttrs(attrs);
+			
+			const newSmis = [smi];
 			for (let j = 1; j < count; j++) {
 				for (let k = 0; k < fadeColors.length; k++) {
 					const color = fadeColors[k];
 					((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1 + 2 * j, 2 * count);
 				}
-				smis.splice(i + j, 0, new Smi((start * (count - j) + end * j) / count, SyncType.inner).fromAttrs(attrs));
+				//smis.splice(i + j, 0, new Smi((start * (count - j) + end * j) / count, SyncType.inner).fromAttrs(attrs));
+				newSmis.push(new Smi((start * (count - j) + end * j) / count, SyncType.inner).fromAttrs(attrs));
 			}
 			if (withComment) {
-				smis[i].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[i].text;
+				newSmis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + newSmis[0].text;
 			}
+			
+			const nextSmis = smis.slice(i + 1);
+			smis.length = i;
+			smis.push(...newSmis);
+			smis.push(...nextSmis);
+			
 			result.logs.push({
 					from: [i - added, i - added + 1]
 				,	to  : [i, i + count]
@@ -4033,6 +4482,7 @@ Smi.normalize = (smis, withComment=false, fps=23.976) => {
 				smi.text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smi.text;
 			}
 		}
+		*/
 	}
 	
 	return result;
@@ -4189,6 +4639,7 @@ SmiFile.prototype.toSyncs = function() {
 	if (this.body.length > 0) {
 		// TODO: normalize 작업 필요??
 		// 단순 페이드는 예외 처리
+		// origin은 어떻게?
 		
 		let i = 0;
 		let last = null;
@@ -4196,11 +4647,28 @@ SmiFile.prototype.toSyncs = function() {
 			if (this.body[i].text.split("&nbsp;").join("").length == 0) {
 				continue;
 			}
-
+			
+			const item = this.body[i];
+			const next = this.body[i + 1];
+			const end = (next.start) > 0 ? next.start : 0;
+			const normalized = item.normalize(end);
+			for (let j = 0; j < normalized.length - 1; j++) {
+				const sync = normalized[j].toSync();
+				sync.end = normalized[j + 1].start;
+				sync.endType = normalized[j + 1].syncType;
+				sync.origin = this.body[i];
+				result.push(sync);
+			}
+			last = normalized[normalized.length - 1].toSync();
+			last.end = end;
+			last.endType = next.syncType;
+			result.push(last);
+			/*
 			last = this.body[i].toSync();
 			last.end = (this.body[i + 1].start > 0 ? this.body[i + 1].start : 0);
 			last.endType = this.body[i + 1].syncType;
 			result.push(last);
+			*/
 		}
 		if (this.body[i].text.split("&nbsp;").join("").length > 0) {
 			result.push(last = this.body[i].toSync());
