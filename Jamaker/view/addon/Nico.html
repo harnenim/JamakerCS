@@ -7,6 +7,7 @@
 	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/popup.js"></script>
 	<script src="../lib/setting.js"></script>
+	<script src="../lib/SubtitleObject.js"></script>
 	<script src="../lib/SmiEditor.js"></script>
 	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
 	<style>
@@ -27,8 +28,8 @@ let FL = 1000000 / FR;
 $(() => {
 	if (opener) {
 		setting = opener.setting;
-		FR = opener.SmiEditor.video.FR;
-		FL = opener.SmiEditor.video.FL;
+		FR = opener.Subtitle.video.FR;
+		FL = opener.Subtitle.video.FL;
 	}
 });
 

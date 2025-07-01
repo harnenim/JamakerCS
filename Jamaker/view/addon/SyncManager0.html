@@ -17,7 +17,7 @@ windowName = "addon";
 const tab = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
 const origin = tab ? tab.getText() : null;
 if (tab) {
-	SmiEditor.video = opener.SmiEditor.video;
+	Subtitle.video = opener.Subtitle.video;
 }
 
 function smi2assTime(ms) {
@@ -164,7 +164,7 @@ function splitOrigin() {
 	}
 	
 	// Aegisub용으로 반프레임 보정
-	const add = Math.floor((SmiEditor.video.FL / 2) + 0.5);
+	const add = Math.floor((Subtitle.video.FL / 2) + 0.5);
 	
 	let requiredEnd = false;
 	// 역순으로 탐색: 종료싱크보단 시작싱크가 화면싱크인 걸 먼저 탐색
@@ -208,7 +208,7 @@ function splitOrigin() {
 
 function frameAssToSmi() {
 	// Aegisub용으로 반프레임 보정
-	const add = Math.floor((SmiEditor.video.FL / 2) + 0.5);
+	const add = Math.floor((Subtitle.video.FL / 2) + 0.5);
 	
 	const origLines = $("#originFrameAss").val().split("\n").sort(); // 순서 섞어서 작업한 것 시간 순 정렬
 	let last = 0;

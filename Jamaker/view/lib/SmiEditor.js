@@ -131,7 +131,7 @@ Line.prototype.render = function(index, last={ sync: 0, state: null }) {
 			} else {
 				typeCss = " normal";
 			}
-			if (SmiEditor.findSync(sync, SmiEditor.video.kfs, false)) {
+			if (Subtitle.findSync(sync, Subtitle.video.kfs, false)) {
 				typeCss += " keyframe";
 			}
 		}
@@ -409,58 +409,13 @@ SmiEditor.PlayerAPI = {
 SmiEditor.limitKeyFrame = 200;
 SmiEditor.trustKeyFrame = false;
 SmiEditor.followKeyFrame = false;
-SmiEditor.video = {
-		path: null
-	,	FR: 23976 // 기본값 23.976fps
-	,	FL: 1000000 / 23976
-	,	fs: []
-	,	kfs: []
-}
-SmiEditor.findSync = (sync, fs=[], findNear=true, from=0, to=-1) => {
-	if (fs.length == 0) return null;
-	if (to < 0) {
-		// 최초 파라미터 없이 탐색 시작일 때
-		to = fs.length;
-		if (sync > fs[to - 1]) {
-			// 마지막 프레임보다 뒤쪽 싱크일 때
-			return findNear ? fs[to - 1] : null;
-		}
-	}
-	if (from + 1 == to) {
-		const dist0 = sync - fs[from];
-		const dist1 = fs[to] - sync;
-		if (dist0 <= dist1) {
-			return (findNear || (dist0 == 0)) ? fs[from] : null;
-		} else {
-			return (findNear || (dist1 == 0)) ? fs[to] : null;
-		}
-	}
-	const mid = from + Math.floor((to - from) / 2);
-	if (fs[mid] < sync) {
-		return SmiEditor.findSync(sync, fs, findNear, mid, to);
-	} else {
-		return SmiEditor.findSync(sync, fs, findNear, from, mid);
-	}
-}
-SmiEditor.findSyncIndex = (sync, fs=[], from=0, to=-1) => {
-	if (fs.length == 0) return null;
-	if (to < 0) to = fs.length;
-	if (from + 1 == to) {
-		const dist0 = sync - fs[from];
-		const dist1 = fs[to] - sync;
-		if (dist0 <= dist1) {
-			return from;
-		} else {
-			return to;
-		}
-	}
-	const mid = from + Math.floor((to - from) / 2);
-	if (fs[mid] < sync) {
-		return SmiEditor.findSyncIndex(sync, fs, mid, to);
-	} else {
-		return SmiEditor.findSyncIndex(sync, fs, from, mid);
-	}
-}
+
+// TODO: SmiEditor에서 Subtitle로 옮기는 중. 레거시 호환으로 남겨둠
+// SMI와 무관한 부분에서 종속성이 자꾸 발생함
+SmiEditor.video = Subtitle.video;
+SmiEditor.findSync = Subtitle.findSync;
+SmiEditor.findSyncIndex = Subtitle.findSyncIndex;
+
 SmiEditor.getSyncTime = (sync, forKeyFrame=false, output={}) => { /* output: 리턴값은 숫자여야 하는데, 키프레임 상태값 반환이 필요해져서 C# out처럼 만듦 */
 	if (!sync) {
 		sync = (time + SmiEditor.sync.weight);
@@ -472,9 +427,9 @@ SmiEditor.getSyncTime = (sync, forKeyFrame=false, output={}) => { /* output: 리
 		let adjustSync = null;
 		if (SmiEditor.trustKeyFrame // 키프레임 신뢰
 		 && (forKeyFrame || SmiEditor.followKeyFrame) // 화면 싱크, 혹은 키프레임 따라가게 설정된 경우
-		 && SmiEditor.video.kfs.length > 2
+		 && Subtitle.video.kfs.length > 2
 		) {
-			adjustSync = SmiEditor.findSync(sync, SmiEditor.video.kfs);
+			adjustSync = Subtitle.findSync(sync, Subtitle.video.kfs);
 			const dist = Math.abs(adjustSync - sync);
 			if (dist > SmiEditor.limitKeyFrame) { // 기준치 넘어가면 키프레임에 맞춘 게 아니라고 간주
 				adjustSync = null;
@@ -482,8 +437,8 @@ SmiEditor.getSyncTime = (sync, forKeyFrame=false, output={}) => { /* output: 리
 				output.keyframe = true;
 			}
 		}
-		if (adjustSync == null && SmiEditor.video.fs.length > 2) { // 프레임 싱크
-			adjustSync = SmiEditor.findSync(sync, SmiEditor.video.fs);
+		if (adjustSync == null && Subtitle.video.fs.length > 2) { // 프레임 싱크
+			adjustSync = Subtitle.findSync(sync, Subtitle.video.fs);
 			const dist = Math.abs(adjustSync - sync);
 			if (dist > SmiEditor.limitKeyFrame) { // 기준치 넘어가면 프레임 정보가 잘못된 걸로 간주
 				adjustSync = null;
@@ -492,7 +447,7 @@ SmiEditor.getSyncTime = (sync, forKeyFrame=false, output={}) => { /* output: 리
 		if (adjustSync) { // 보정 완료
 			sync = adjustSync;
 		} else { // FPS 기반 보정
-			sync = Math.floor(Math.floor((sync / SmiEditor.video.FL) + 0.5) * SmiEditor.video.FL);
+			sync = Math.floor(Math.floor((sync / Subtitle.video.FL) + 0.5) * Subtitle.video.FL);
 		}
 		sync = Math.max(1, sync); // 0 이하는 허용하지 않음
 	}
@@ -2197,7 +2152,7 @@ SmiEditor.prototype.moveSyncLine = function(lineIndex, toForward) {
  * add: 과거 반프레임 보정치 안 넣었던 것들을 위해 추가
  */
 SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
-	if (!SmiEditor.video.fs.length) {
+	if (!Subtitle.video.fs.length) {
 		return;
 	}
 	const lines = JSON.parse(JSON.stringify(this.lines.slice(0)));
@@ -2213,7 +2168,7 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 	for (let i = range[0]; i < range[1]; i++) {
 		const line = lines[i];
 		if ((line.TYPE == TYPE.FRAME) || (!frameSyncOnly && (line.TYPE == TYPE.BASIC))) {
-			let sync = SmiEditor.findSync(line.SYNC + add, SmiEditor.video.fs);
+			let sync = Subtitle.findSync(line.SYNC + add, Subtitle.video.fs);
 			if (sync != null) {
 				if (sync == 0) sync = 1;
 				line.TEXT = SmiEditor.makeSyncLine((line.SYNC = sync), line.TYPE);
@@ -2227,7 +2182,7 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 				colSync.find("span").html(h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms + "<br />");
 				
 				// 키프레임 됐을 때 업데이트
-				const kSync = SmiEditor.findSync(line.SYNC, SmiEditor.video.kfs);
+				const kSync = Subtitle.findSync(line.SYNC, Subtitle.video.kfs);
 				if (kSync == sync) {
 					colSync.addClass("keyframe");
 				}
@@ -2278,7 +2233,7 @@ SmiEditor.prototype.refreshKeyframe = function() {
 	for (let i = 0; i < this.lines.length; i++) {
 		const line = this.lines[i];
 		if (line.TYPE == TYPE.BASIC || line.TYPE == TYPE.FRAME) {
-			if (SmiEditor.findSync(line.SYNC, SmiEditor.video.kfs, false)) {
+			if (Subtitle.findSync(line.SYNC, Subtitle.video.kfs, false)) {
 				line.LEFT.addClass("keyframe");
 			} else {
 				line.LEFT.removeClass("keyframe");
@@ -3187,7 +3142,7 @@ SmiEditor.prototype.normalize = function() {
 	if (text) {
 		const smi = new SmiFile();
 		const input = smi.fromText(text).body;
-		Smi.normalize(input, false, SmiEditor.video.FR / 1000);
+		Smi.normalize(input, false, Subtitle.video.FR / 1000);
 		smi.body = input;
 		SmiEditor.afterTransform(smi.toText().trim());
 	}

@@ -7,7 +7,6 @@
 	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/SubtitleObject.js"></script>
 	<script src="../lib/popup.js"></script>
-	<script src="../lib/SmiEditor.js"></script>
 	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
 	<script>
 windowName = "addon";
@@ -18,7 +17,7 @@ windowName = "addon";
 const hold = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
 const origin = hold ? hold.getText(true) : null;
 if (hold) {
-	SmiEditor.video = opener.SmiEditor.video;
+	Subtitle.video = opener.Subtitle.video;
 }
 const RANGE = 10; // 현재 싱크 전후로 렌더링할 범위
 let mode = 1;
@@ -30,7 +29,7 @@ $(() => {
 		window.close();
 		return;
 	}
-	if (!SmiEditor || !SmiEditor.video || !SmiEditor.video.fs || !SmiEditor.video.fs.length) {
+	if (!Subtitle.video.fs.length) {
 		alert("영상 프레임 정보가 없습니다.");
 		window.close();
 		return;
@@ -40,8 +39,8 @@ $(() => {
 		window.close();
 		return;
 	}
-	const fs = SmiEditor.video.fs;
-	const kfs = SmiEditor.video.kfs;
+	const fs = Subtitle.video.fs;
+	const kfs = Subtitle.video.kfs;
 	const trustKeyFrame = opener.SmiEditor.trustKeyFrame;
 	
 	origin.hold = hold;
@@ -91,7 +90,7 @@ $(() => {
 		for (let j = -RANGE; j < RANGE; j++) {
 			const imgIndex = frameIndex + j;
 			const $img = $("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j });
-			if (trustKeyFrame && SmiEditor.findSync(fs[imgIndex], kfs, false)) {
+			if (trustKeyFrame && Subtitle.findSync(fs[imgIndex], kfs, false)) {
 				$img.addClass("keyframe");
 			}
 			$frames.append($img);
@@ -118,7 +117,7 @@ $(() => {
 			const $tr = $("<tr>").data({ smi: smi });
 			
 			if (smi.syncType == Subtitle.SyncType.frame) {
-				const frameIndex = SmiEditor.findSyncIndex(smi.start, fs);
+				const frameIndex = Subtitle.findSyncIndex(smi.start, fs);
 				const $frames = $("<div>").addClass("frames");
 				const $sync = $("<td>").addClass("sync");
 				setSync($sync, fs[frameIndex]);
@@ -143,16 +142,6 @@ $(() => {
 				$tr.data({ index: (lastIndex = frameSyncs.length - 1), $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
 				count = 0;
 				
-				/*
-				for (let j = -RANGE; j < RANGE; j++) {
-					const imgIndex = frameIndex + j;
-					const $img = $("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j });
-					if (trustKeyFrame && SmiEditor.findSync(fs[imgIndex], kfs, false)) {
-						$img.addClass("keyframe");
-					}
-					$frames.append($img);
-				}
-				*/
 				setFrames($frames, frameIndex, flag);
 
 			} else {
@@ -177,7 +166,7 @@ $(() => {
 				const $tr = $("<tr>").data({ ass: ass, type: "start" });
 				
 				if (ass.checkStart.prop("checked")) {
-					const frameIndex = SmiEditor.findSyncIndex(start, fs);
+					const frameIndex = Subtitle.findSyncIndex(start, fs);
 					const $frames = $("<div>").addClass("frames");
 					const $sync = $("<td>").addClass("sync");
 					setSync($sync, fs[frameIndex]);
@@ -204,7 +193,7 @@ $(() => {
 				const $tr = $("<tr>").data({ ass: ass, type: "end" });
 
 				if (ass.checkEnd.prop("checked")) {
-					const frameIndex = SmiEditor.findSyncIndex(end, fs);
+					const frameIndex = Subtitle.findSyncIndex(end, fs);
 					const $frames = $("<div>").addClass("frames");
 					const $sync = $("<td>").addClass("sync");
 					setSync($sync, fs[frameIndex]);
@@ -268,7 +257,7 @@ $(() => {
 				const cName = "img" + imgIndex + data.flag;
 				if (data.$frames.find("." + cName).length == 0) {
 					const $img = $("<img>").addClass("frame " + cName).css({ left: (j * 98) }).data({ index: imgIndex, offset: j });
-					if (trustKeyFrame && SmiEditor.findSync(fs[imgIndex], kfs, false)) {
+					if (trustKeyFrame && Subtitle.findSync(fs[imgIndex], kfs, false)) {
 						$img.addClass("keyframe");
 					}
 					data.$frames.append($img);
@@ -286,7 +275,7 @@ $(() => {
 			// [ 시작시간, 종료시간, 시작인덱스, 종료인덱스, 플래그 ]
 			params.push([group.time, fs[group.end] + 1 - group.time, group.begin, group.end, group.flag].join(","));
 		}
-		opener.binder.renderThumbnails(SmiEditor.video.path, params.join("\n"));
+		opener.binder.renderThumbnails(Subtitle.video.path, params.join("\n"));
 		return true;
 	}
 	if (!renderThumbnails()) {
@@ -357,7 +346,7 @@ $(() => {
 	function setSync($td, sync) {
 		$td.text(sync == 0 ? 1 : sync);
 		if (!trustKeyFrame) return;
-		if (SmiEditor.findSync(sync, kfs, false)) {
+		if (Subtitle.findSync(sync, kfs, false)) {
 			$td.addClass("keyframe");
 		} else {
 			$td.removeClass("keyframe");
@@ -584,8 +573,8 @@ $(() => {
 		for (let i = 0; i < origin.smiFile.body.length; i++) {
 			const smi = origin.smiFile.body[i];
 			if (smi.syncType == Subtitle.SyncType.frame) {
-				const frameIndex = SmiEditor.findSyncIndex(smi.start, fs);
-				const shiftIndex = SmiEditor.findSyncIndex(smi.start + shift, fs);
+				const frameIndex = Subtitle.findSyncIndex(smi.start, fs);
+				const shiftIndex = Subtitle.findSyncIndex(smi.start + shift, fs);
 				const offset = shiftIndex - frameIndex;
 				const $tr = $tbody.find("tr:eq(" + i + ")");
 				$tr.data({ offset: offset });

@@ -34,7 +34,7 @@ AssEditor.prototype.addEvents = function(events=[], frameSyncs=null, withUpdate=
 		sync += 15;
 		// SmiEditor 의존성은 좀 안 내키지만...
 		// TODO: SubtitleObject.video 뺄 예정
-		return SmiEditor.video.fs.length ? SmiEditor.findSync(sync, SmiEditor.video.fs) : sync;
+		return Subtitle.video.fs.length ? Subtitle.findSync(sync, Subtitle.video.fs) : sync;
 	}
 	
 	const syncs = this.syncs = this.syncs.slice(0);

@@ -19,6 +19,7 @@ $(() => {
 	if (!editor) {
 		alert("작업 대상이 없습니다.");
 	}
+	Subtitle.video = opener.Subtitle.video;
 	DefaultStyle.Fontsize = opener.Subtitle.DefaultStyle.Fontsize;
 	
 	{
@@ -38,12 +39,6 @@ $(() => {
 		}
 	}
 	
-	function optimizeSync(sync) { // TODO: SubtitleObject.js 쪽으로 옮기는 게 나은가?
-		return Math.floor((findSync(sync) - 15) / 10);
-	}
-	function findSync(sync) {
-		return opener.SmiEditor.findSync(sync, opener.SmiEditor.video.fs);
-	}
 	$("#btnExport").on("click", function() {
 		const holds = Subtitle.SmiFile.textToHolds($("#input").val());
 		const assFile = new Subtitle.AssFile2();
@@ -63,14 +58,14 @@ $(() => {
 			const input = hold.body ? hold : new Subtitle.SmiFile(hold.text);
 			{
 				if (opener && opener.SmiEditor && opener.SmiEditor.sync && opener.SmiEditor.sync.frame) {
-					if (opener.SmiEditor.video.fs.length) {
-						const fs = opener.SmiEditor.video.fs;
+					if (opener.Subtitle.video.fs.length) {
+						const fs = opener.Subtitle.video.fs;
 						for (let i = 0; i < input.body.length; i++) {
 							const item = input.body[i];
-							item.start = optimizeSync(item.start) * 10;
+							item.start = AssEvent.optimizeSync(item.start);
 						}
 					} else {
-						const FL = opener.SmiEditor.video.FL;
+						const FL = opener.Subtitle.video.FL;
 						for (let i = 0; i < input.body.length; i++) {
 							const item = input.body[i];
 							item.start = Math.max(1, ((Math.round(item.start / FL) - 0.5) * FL));

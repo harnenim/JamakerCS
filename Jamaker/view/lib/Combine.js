@@ -1315,16 +1315,16 @@ if (SmiFile) {
 			}
 			
 			// 프레임 단위로 볼 때 싱크 뭉친 부분 확인
-			if (window.SmiEditor && SmiEditor.video && SmiEditor.video.fs && SmiEditor.video.fs.length) {
-				const fs = SmiEditor.video.fs;
+			if (Subtitle.video.fs.length) {
+				const fs = Subtitle.video.fs;
 				let next = null;
 				for (let i = main.body.length - 1; i > 0; i--) {
 					const smi = main.body[i];
 					if (next) {
 						if (next.syncType == SyncType.frame) {
 							// 1프레임 미만 중간싱크로 인해 화면싱크가 밀리는지 확인
-							const startIndex = SmiEditor.findSyncIndex(smi .start, fs);
-							const endIndex   = SmiEditor.findSyncIndex(next.start, fs);
+							const startIndex = Subtitle.findSyncIndex(smi .start, fs);
+							const endIndex   = Subtitle.findSyncIndex(next.start, fs);
 							if (endIndex != null && startIndex == endIndex) {
 								// 현재 대사 건너뛰기
 								main.body.splice(i, 1);

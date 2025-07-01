@@ -7,6 +7,7 @@
 	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/popup.js"></script>
 	<script src="../lib/setting.js"></script>
+	<script src="../lib/SubtitleObject.js"></script>
 	<script src="../lib/SmiEditor.js"></script>
 	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
 	<script>
@@ -200,7 +201,7 @@ $(() => {
 		end   = editor.text.substring(0, range[1]).split("\n").length;
 	}
 	$("#input").val(linesToText(editor.lines.slice(start, end)));
-	$("#inputSpeed").val(opener.SmiEditor.video.FR / 1000);
+	$("#inputSpeed").val(opener.Subtitle.video.FR / 1000);
 	
 	const textareas = $("#input,#output").on("scroll", function() {
 		textareas.scrollTop($(this).scrollTop());

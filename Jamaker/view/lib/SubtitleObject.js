@@ -638,6 +638,60 @@ window.Subtitle = {
 ,	$tmp: $("<a>")
 };
 window.SyncType = Subtitle.SyncType;
+Subtitle.video = {
+		path: null
+	,	FR: 23976 // 기본값 23.976fps
+	,	FL: 1000000 / 23976
+	,	fs: []
+	,	kfs: []
+}
+Subtitle.findSync = (sync, fs=null, findNear=true, from=0, to=-1) => {
+	if (fs == null) fs = Subtitle.video.fs;
+	if (fs.length == 0) return null;
+	if (to < 0) {
+		// 최초 파라미터 없이 탐색 시작일 때
+		to = fs.length;
+		if (sync > fs[to - 1]) {
+			// 마지막 프레임보다 뒤쪽 싱크일 때
+			return findNear ? fs[to - 1] : null;
+		}
+	}
+	if (from + 1 == to) {
+		const dist0 = sync - fs[from];
+		const dist1 = fs[to] - sync;
+		if (dist0 <= dist1) {
+			return (findNear || (dist0 == 0)) ? fs[from] : null;
+		} else {
+			return (findNear || (dist1 == 0)) ? fs[to] : null;
+		}
+	}
+	const mid = from + Math.floor((to - from) / 2);
+	if (fs[mid] < sync) {
+		return Subtitle.findSync(sync, fs, findNear, mid, to);
+	} else {
+		return Subtitle.findSync(sync, fs, findNear, from, mid);
+	}
+}
+Subtitle.findSyncIndex = (sync, fs=null, from=0, to=-1) => {
+	if (fs == null) fs = Subtitle.video.fs;
+	if (fs.length == 0) return null;
+	if (to < 0) to = fs.length;
+	if (from + 1 == to) {
+		const dist0 = sync - fs[from];
+		const dist1 = fs[to] - sync;
+		if (dist0 <= dist1) {
+			return from;
+		} else {
+			return to;
+		}
+	}
+	const mid = from + Math.floor((to - from) / 2);
+	if (fs[mid] < sync) {
+		return Subtitle.findSyncIndex(sync, fs, mid, to);
+	} else {
+		return Subtitle.findSyncIndex(sync, fs, from, mid);
+	}
+}
 
 const styleForSmi = Subtitle.styleForSmi = ["Fontname","PrimaryColour","Italic","Underline","StrikeOut"];
 const styleForAss = Subtitle.styleForAss = ["Fontsize","SecondaryColour","OutlineColour","BackColour","PrimaryOpacity","SecondaryOpacity","OutlineOpacity","BackOpacity","Bold","ScaleX","ScaleY","Spacing","Angle","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV"];
@@ -1408,6 +1462,33 @@ function intPadding(value, length = 2) {
 		value = "0" + value;
 	}
 	return value;
+}
+
+//팟플레이어에서 실제 의도한 프레임에 출력되도록 시간값 재계산
+AssEvent.optimizeSync = function(sync) {
+	const fs = Subtitle.video.fs;
+	let aegisubSyncs = Subtitle.video.aegisubSyncs;
+	if (!aegisubSyncs) {
+		// Aegisub에서 싱크 찍을 때 찍히는 싱크 -> 버림을 하면서 빨리 나오는 경우가 발생함
+		aegisubSyncs = [0];
+		for (let i = 1; i < fs.length; i++) {
+			let bfr = fs[i - 1];
+			let now = fs[i];
+			aegisubSyncs.push(Math.floor((bfr + now) / 20) * 10);
+		}
+		Subtitle.video.aegisubSyncs = aegisubSyncs;
+	}
+	let i = 0;
+	for (; i < aegisubSyncs.length; i++) {
+		if (sync < aegisubSyncs[i]) {
+			return fs[i - 1];
+		}
+	}
+	return 999999999;
+}
+AssEvent.prototype.optimizeSync = function() {
+	this.Start = AssEvent.toAssTime((this.start = AssEvent.optimizeSync(this.start)) - 15);
+	this.End   = AssEvent.toAssTime((this.end   = AssEvent.optimizeSync(this.end  )) - 15);
 }
 
 AssEvent.prototype.fromSync = function(sync, style) {
@@ -3496,7 +3577,7 @@ Smi.getLineWidth = (text) => {
 	return Subtitle.Width.getWidth(Smi.toAttrs(text));
 }
 
-Smi.Color = Color;
+Smi.Color = Subtitle.Color;
 
 Smi.normalize = (smis, withComment=false, fps=23.976) => {
 	const origin = new SmiFile();
@@ -4311,7 +4392,7 @@ SmiFile.styleToSmi = function(style) {
 	
 	return [opener, closer];
 }
-SmiFile.prototype.normalize = function(withComment=false, fps=23.976) {
+SmiFile.prototype.normalize = function(withComment=false, fps=null) {
 	const smis = [];
 	smis.push(...this.body);
 
@@ -4354,7 +4435,7 @@ SmiFile.prototype.normalize = function(withComment=false, fps=23.976) {
 		}
 	}
 	
-	const result = Smi.normalize(smis, withComment, fps);
+	const result = Smi.normalize(smis, withComment, (fps ? fps : Subtitle.video.FR / 1000));
 	this.body = result.result;
 	return result;
 }
