@@ -11,7 +11,7 @@ window.AssEditor = function(view, events=[], frameSyncs=null) {
 	
 	const self = this;
 	this.view.on("input propertychange", "input, textarea", function() {
-		$(this).parent().data("obj").update();
+		$(this).parent().data("obj").update(true);
 	}).on("focus", "input, textarea", function() {
 		view.find(".item.focus").removeClass("focus");
 		$(this).parent().addClass("focus");
@@ -29,14 +29,6 @@ AssEditor.prototype.setEvents = function(events=[], frameSyncs=null) {
 	this.savedSyncs = this.syncs.slice(0);
 }
 AssEditor.prototype.addEvents = function(events=[], frameSyncs=null, withUpdate=true) {
-	function findFrameSync(sync) {
-		// 영상 정보 불러오기 전이면 프레임 싱크 보정은 안 돌아감
-		sync += 15;
-		// SmiEditor 의존성은 좀 안 내키지만...
-		// TODO: SubtitleObject.video 뺄 예정
-		return Subtitle.video.fs.length ? Subtitle.findSync(sync, Subtitle.video.fs) : sync;
-	}
-	
 	const syncs = this.syncs = this.syncs.slice(0);
 	const editor = this;
 	
@@ -44,8 +36,8 @@ AssEditor.prototype.addEvents = function(events=[], frameSyncs=null, withUpdate=
 	for (let i = 0; i < events.length; i++) {
 		const item = events[i];
 		// ASS 시간이 아닌 SMI 시간으로 관리
-		item.start = findFrameSync(item.start);
-		item.end   = findFrameSync(item.end  );
+		item.start = Subtitle.findSync(item.start + 15);
+		item.end   = Subtitle.findSync(item.end   + 15);
 		const script = item.toText(FormatToEdit);
 		
 		if (item.start == last.start && item.end == last.end) {
@@ -65,8 +57,8 @@ AssEditor.prototype.addEvents = function(events=[], frameSyncs=null, withUpdate=
 			
 			// 새 싱크 그룹 생성
 			last = {
-					start: item.start, startFrame: (frameSyncs == null ? true : frameSyncs.indexOf(item.Start) >= 0)
-				,	end  : item.end  , endFrame  : (frameSyncs == null ? true : frameSyncs.indexOf(item.End  ) >= 0)
+					Start: item.Start, start: item.start, startFrame: (frameSyncs == null ? true : frameSyncs.indexOf(item.Start) >= 0)
+				,	End  : item.End  , end  : item.end  , endFrame  : (frameSyncs == null ? true : frameSyncs.indexOf(item.End  ) >= 0)
 				,	scripts: [script]
 			};
 		}
@@ -182,6 +174,11 @@ AssEditor.prototype.setSaved = function() {
 	}
 	this.isSaved = true;
 }
+AssEditor.prototype.refreshSyncs = function() {
+	for (let i = 0; i < this.syncs.length; i++) {
+		this.syncs[i].refreshSyncs();
+	}
+}
 
 AssEditor.Item = function(info) {
 	const view = this.view = $("<div>").addClass("item").data({ obj: this });
@@ -193,14 +190,18 @@ AssEditor.Item = function(info) {
 	view.append(this.btnDelete  = $("<button>").attr({ type: "button" }).text("×"));
 	
 	const item = this;
+	this.Start = info.Start;
+	this.End   = info.End;
 	this.savedText = this.getText();
 	this.isSaved = true;
 	return this;
 }
-AssEditor.Item.prototype.getText = function() {
-	const start = AssEvent.toAssTime((this.start = Number(this.inputStart.val())) - 15);
-	const end   = AssEvent.toAssTime((this.end   = Number(this.inputEnd  .val())) - 15);
-	const sync = "," + start + "," + end;
+AssEditor.Item.prototype.getText = function(onInput=false) {
+	if (onInput) {
+		this.Start = AssEvent.toAssTime((this.start = Number(this.inputStart.val())) - 15);
+		this.End   = AssEvent.toAssTime((this.end   = Number(this.inputEnd  .val())) - 15);
+	}
+	const sync = "," + this.Start + "," + this.End;
 	const lines = this.inputText.val().split("\n");
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
@@ -211,8 +212,8 @@ AssEditor.Item.prototype.getText = function() {
 	}
 	return this.text = lines.join("\n");
 }
-AssEditor.Item.prototype.update = function() {
-	this.isSaved = (this.getText() == this.savedText);
+AssEditor.Item.prototype.update = function(onInput=false) {
+	this.isSaved = (this.getText(onInput) == this.savedText);
 	if (this.onUpdate) {
 		this.onUpdate();
 	}
@@ -229,4 +230,8 @@ AssEditor.Item.prototype.getFrameSyncs = function() {
 }
 AssEditor.Item.prototype.setSaved = function() {
 	this.savedText = this.getText();
+}
+AssEditor.Item.prototype.refreshSyncs = function() {
+	this.inputStart.val(this.start = Subtitle.findSync(AssEvent.fromAssTime(this.Start) + 15));
+	this.inputEnd  .val(this.end   = Subtitle.findSync(AssEvent.fromAssTime(this.End  ) + 15));
 }

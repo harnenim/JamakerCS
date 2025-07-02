@@ -2280,6 +2280,7 @@ function afterSetFkf() {
 		const holds = tabs[i].holds;
 		for (let j = 0; j < holds.length; j++) {
 			holds[j].refreshKeyframe();
+			holds[j].assEditor.refreshSyncs();
 		}
 	}
 }
@@ -2310,7 +2311,10 @@ function loadAssFile(path, text, target=-1) {
 		
 		// 싱크 프레임 단위 정규화 먼저 진행
 		for (let i = 0; i < targetEvents.length; i++) {
-			targetEvents[i].optimizeSync();
+			const t = targetEvents[i];
+			t.oStart = t.Start;
+			t.oEnd   = t.End;
+			t.optimizeSync();
 		}
 		
 		// 원래의 스크립트 순서를 기준으로, 시간이 겹치는 걸 기준으로 레이어 재부여
@@ -3052,6 +3056,11 @@ function loadAssFile(path, text, target=-1) {
 				const appends = [];
 				for (let i = 0; i < list.length; i++) {
 					const item = list[i];
+					
+					// 프레임 보정하기 전 값 가져옴
+					item.start = AssEvent.fromAssTime(item.Start = item.oStart);
+					item.end   = AssEvent.fromAssTime(item.End   = item.oEnd  );
+					
 					if (item.Style == "Default") {
 						holds[0].ass.push(item);
 					} else {
