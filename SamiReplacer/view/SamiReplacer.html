@@ -54,12 +54,12 @@ let hasNewFrameSync = false;
 const matches = [];
 
 function replace(index, text) {
-	const holds = Subtitle.SmiFile.textToHolds(text);
+	const holds = SmiFile.textToHolds(text);
 	
 	let changed = 0;
 	for (let hi = 0; hi < holds.length; hi++) {
 		const hold = holds[hi];
-		const originSmi = new Subtitle.SmiFile(hold.text);
+		const originSmi = new SmiFile(hold.text);
 		let isChanged = false;
 	
 		let i = 0;
@@ -76,7 +76,7 @@ function replace(index, text) {
 						break;
 					}
 	
-					if ((originSmi.body[i + shiftIndex].syncType == Subtitle.SyncType.normal) &&
+					if ((originSmi.body[i + shiftIndex].syncType == SyncType.normal) &&
 						(originSmi.body[i + shiftIndex].start != originRange[shiftIndex].start + shiftTime)
 					) {
 						isCorrect = false;
@@ -94,7 +94,7 @@ function replace(index, text) {
 		if (isChanged) {
 			changed++;
 			
-			const targetSmi = new Subtitle.SmiFile();
+			const targetSmi = new SmiFile();
 			targetSmi.header = originSmi.header;
 			targetSmi.footer = originSmi.footer;
 	
@@ -102,16 +102,16 @@ function replace(index, text) {
 				targetSmi.body.push(originSmi.body[k]);
 			}
 			for (let k = 0; k < targetRange.length; k++) {
-				if (targetRange[k].syncType == Subtitle.SyncType.frame && matches[k] >= 0) {
+				if (targetRange[k].syncType == SyncType.frame && matches[k] >= 0) {
 					console.log([i, k, matches[k]].join(","));
 					console.log((i + matches[k]) + " / " + originSmi.body.length)
-					targetSmi.body.push(new Subtitle.Smi(
+					targetSmi.body.push(new Smi(
 							originSmi.body[i + matches[k]].start
 						,	targetRange[k].syncType
 						,	targetRange[k].text
 					));
 				} else {
-					targetSmi.body.push(new Subtitle.Smi(
+					targetSmi.body.push(new Smi(
 							targetRange[k].start + shiftTime
 						,	targetRange[k].syncType
 						,	targetRange[k].text
@@ -128,7 +128,7 @@ function replace(index, text) {
 	}
 	
 	if (changed) {
-		text = Subtitle.SmiFile.holdsToText(holds); // 여기서 fps 값 가져오긴 어렵나...
+		text = SmiFile.holdsToText(holds); // 여기서 fps 값 가져오긴 어렵나...
 	} else {
 		text = null;
 	}
@@ -146,8 +146,8 @@ $(() => {
 			return;
 		}
 		const to = $("#vTo").val();
-		originRange = new Subtitle.SmiFile(from).body;
-		targetRange = new Subtitle.SmiFile(to  ).body;
+		originRange = new SmiFile(from).body;
+		targetRange = new SmiFile(to  ).body;
 		binder.compare(item.value);
 	}
 	
@@ -166,19 +166,19 @@ $(() => {
 			return;
 		}
 		const to = $("#vTo").val();
-		originRange = new Subtitle.SmiFile(from).body;
-		targetRange = new Subtitle.SmiFile(to  ).body;
+		originRange = new SmiFile(from).body;
+		targetRange = new SmiFile(to  ).body;
 		hasNewFrameSync = false;
 		matches.length = 0;
 		let i = 0;
 		for (let j = 0; j < targetRange.length; j++) {
-			if (targetRange[j].syncType != Subtitle.SyncType.frame) continue;
+			if (targetRange[j].syncType != SyncType.frame) continue;
 
 			while (i < originRange.length && originRange[i].start < targetRange[j].start) i++;
 
 			if (i >= originRange.length) break;
 
-			if (originRange[i].syncType != Subtitle.SyncType.frame) {
+			if (originRange[i].syncType != SyncType.frame) {
 				// 목표 화면 싱크가 원본 화면 싱크와 겹치지 않으면 -1
 				matches[j] = -1;
 				hasNewFrameSync = true;

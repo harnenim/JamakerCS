@@ -1838,6 +1838,10 @@ AssEvent.prototype.clearEnds = function() {
 			break;
 		}
 	}
+	// 공백문자로 끝날 경우 잡아줘야 함
+	if (text.endsWith(" ") || text.endsWith("　")) {
+		text += "{}";
+	}
 	return this.Text = text;
 }
 
@@ -3219,6 +3223,7 @@ Smi.prototype.fromAttrs = function(attrs) {
 	return this;
 }
 Smi.fromAttr = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
+// fromAttrs 재개발해서 여기 안 탐
 Smi.fromAttrs = (attrs, fontSize=0) => { // fontSize를 넣으면 html로 % 크기 출력
 	let text = "";
 	

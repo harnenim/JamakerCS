@@ -330,6 +330,9 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	this.onChangeSaved();
 }
 SmiEditor.prototype.setStyle = function(style) {
+	if (style.Fontname == "맑은 고딕") {
+		style.Fontname = "";
+	}
 	this.style = style;
 	const area = this.styleArea.find(".hold-style");
 	
@@ -2262,6 +2265,10 @@ function afterLoadFkfFile(buffer) {
 	}
 	Subtitle.video.fs  = vfs;
 	Subtitle.video.kfs = kfs;
+	afterSetFkf();
+}
+// 웹샘플에서 필요해서 분리
+function afterSetFkf() {
 	Subtitle.video.aegisubSyncs = null
 	
 	// 키프레임 신뢰 기능 활성화
