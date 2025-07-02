@@ -3218,8 +3218,15 @@ Smi.prototype.toAttrs = function(keepTags=true) {
 	return Smi.toAttrs(this.text, keepTags);
 }
 Smi.prototype.fromAttr = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
-Smi.prototype.fromAttrs = function(attrs) {
-	this.text = Smi.fromAttrs(attrs).split("\n").join("<br>");
+Smi.prototype.fromAttrs = function(attrs, forConvert=false) {
+	let text = "";
+	// 주석 살려야 되는지 확인
+	if (forConvert && attrs[0].comment) {
+		// 주석에 줄바꿈 있을 수 있어서 따로 처리해줘야 함
+		text = attrs[0].comment;
+	}
+	text += Smi.fromAttrs(attrs, 0, true, true, forConvert).split("\n").join("<br>");
+	this.text = text;
 	return this;
 }
 Smi.fromAttr = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
@@ -3356,7 +3363,7 @@ Smi.fromAttrs = (attrs, fontSize=0) => { // fontSize를 넣으면 html로 % 크�
 	
 	return text;
 }
-Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true) => { // fontSize를 넣으면 html로 % 크기 출력
+Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true, forConvert=false) => { // fontSize를 넣으면 html로 % 크기 출력
 	let text = "";
 	
 	// 후리가나 먼저 처리
@@ -3367,7 +3374,7 @@ Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true) => { // font
 			
 			if (attr.furigana) {
 				// 후리가나 달리기 이전 부분 처리
-				text += Smi.fromAttrs(attrs.slice(rubyEnd, i));
+				text += Smi.fromAttrs(attrs.slice(rubyEnd, i), 0, true, true, forConvert);
 				
 				// 후리가나 처리
 				const subAttrs = [attr.clone()];
@@ -3382,7 +3389,7 @@ Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true) => { // font
 						break;
 					}
 				}
-				text += "<RUBY>" + Smi.fromAttrs(subAttrs, fontSize, false) + "<RT><RP>(</RP>" + Smi.fromAttrs([attr.furigana], fontSize, false) + "<RP>)</RP></RT></RUBY>";
+				text += "<RUBY>" + Smi.fromAttrs(subAttrs, fontSize, false, true, forConvert) + "<RT><RP>(</RP>" + Smi.fromAttrs([attr.furigana], fontSize, false, true, forConvert) + "<RP>)</RP></RT></RUBY>";
 			}
 		}
 	}
@@ -3470,6 +3477,21 @@ Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true) => { // font
 				tLen += sAttr.text.length;
 			}
 		}
+		let useAss = false;
+		let assLen = 0;
+		if (forConvert && attr.ass) {
+			useAss = true;
+			assLen = 1;
+			let tLen = 0;
+			for (let j = 0; i + j < attrs.length; j++) {
+				const sAttr = attrs[i + j];
+				if (!sAttr.ass) {
+					break;
+				}
+				if (sAttr.ass == attr.ass) assLen = j + 1;
+				tLen += sAttr.text.length;
+			}
+		}
 		/*
 		let fsLen     = 0; if (attr.fs    ) for (fsLen     = 1; i + fsLen     < attrs.length; fsLen++    ) { if (!attrs[i + fsLen    ].fs) break; }
 		let fnLen     = 0; if (attr.fn    ) for (fnLen     = 1; i + fnLen     < attrs.length; fnLen++    ) { if (!attrs[i + fnLen    ].fn) break; }
@@ -3478,20 +3500,30 @@ Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true) => { // font
 		let fadeLen   = 0; if (attr.fade  ) for (fadeLen   = 1; i + fadeLen   < attrs.length; fadeLen++  ) { if (!attrs[i + fadeLen  ].fade) break; }
 		let shakeLen  = 0; if (attr.shake ) for (shakeLen  = 1; i + shakeLen  < attrs.length; shakeLen++ ) { if (!attrs[i + shakeLen ].shake) break; }
 		let typingLen = 0; if (attr.typing) for (typingLen = 1; i + typingLen < attrs.length; typingLen++) { if (!attrs[i + typingLen].typing) break; }
-
-		let len = 1;
+		
+		let len = 0;
+		let limit = 1;
 		let tag = null;
 		let font = [];
-		if (sLen      >= len) { len = sLen     ; tag = "S"; }
-		if (uLen      >= len) { len = uLen     ; tag = "U"; }
-		if (iLen      >= len) { len = iLen     ; tag = "I"; }
-		if (bLen      >= len) { len = bLen     ; tag = "B"; }
-		if (fsLen     >= len) { len = fsLen    ; tag = "FONT"; font.push("fs") }
-		if (fnLen     >= len) { len = fnLen    ; tag = "FONT"; (fnLen     > len) ? (font = ["fn"    ]) : font.push("fn"    ); }
-		if (fcLen     >= len) { len = fcLen    ; tag = "FONT"; (fcLen     > len) ? (font = ["fc"    ]) : font.push("fc"    ); }
-		if (fadeLen   >= len) { len = fadeLen  ; tag = "FONT"; (fadeLen   > len) ? (font = ["fade"  ]) : font.push("fade"  ); }
-		if (shakeLen  >= len) { len = shakeLen ; tag = "FONT"; (shakeLen  > len) ? (font = ["shake" ]) : font.push("shake" ); }
-		if (typingLen >= len) { len = typingLen; tag = "FONT"; (typingLen > len) ? (font = ["typing"]) : font.push("typing"); }
+		if (sLen      >= limit) { limit = len = sLen     ; tag = "S"; }
+		if (uLen      >= limit) { limit = len = uLen     ; tag = "U"; }
+		if (iLen      >= limit) { limit = len = iLen     ; tag = "I"; }
+		if (bLen      >= limit) { limit = len = bLen     ; tag = "B"; }
+		if (fsLen     >= limit) { limit = len = fsLen    ; tag = "FONT"; font.push("fs") }
+		if (fnLen     >= limit) { limit = len = fnLen    ; tag = "FONT"; (fnLen     > len) ? (font = ["fn"    ]) : font.push("fn"    ); }
+		if (fcLen     >= limit) { limit = len = fcLen    ; tag = "FONT"; (fcLen     > len) ? (font = ["fc"    ]) : font.push("fc"    ); }
+		if (fadeLen   >= limit) { limit = len = fadeLen  ; tag = "FONT"; (fadeLen   > len) ? (font = ["fade"  ]) : font.push("fade"  ); }
+		if (shakeLen  >= limit) { limit = len = shakeLen ; tag = "FONT"; (shakeLen  > len) ? (font = ["shake" ]) : font.push("shake" ); }
+		if (typingLen >= limit) { limit = len = typingLen; tag = "FONT"; (typingLen > len) ? (font = ["typing"]) : font.push("typing"); }
+		if (len == 0) {
+			if (useAss) {
+				limit = len = assLen;
+				tag = "FONT";
+				(assLen > len) ? (font = ["ass"]) : font.push("ass");
+			} else {
+				len = 1;
+			}
+		}
 		
 		const subAttrs = [];
 		for (let j = 0; j < len; j++) {
@@ -3540,6 +3572,7 @@ Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true) => { // font
 							case "fade"  : { opener += " fade=\""   + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\""; break; }
 							case "shake" : { opener += " shake=\""  + attr.shake.ms + "," + attr.shake.size + "\""; break; }
 							case "typing": { opener += " typing=\"" + Typing.Mode.toString[attr.typing.mode] + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString[attr.typing.cursor] + "\""; break; }
+							case "ass"   : { opener += " ass=\""    + attr.ass + "\""; break; }
 						}
 					}
 					opener += ">";
@@ -3555,7 +3588,7 @@ Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true) => { // font
 				}
 			}
 			
-			text += opener + Smi.fromAttrs(subAttrs, fontSize, false, false) + closer;
+			text += opener + Smi.fromAttrs(subAttrs, fontSize, false, false, forConvert) + closer;
 			
 		} else {
 			// 태그 모두 상위에서 처리하고 텍스트만 남음
@@ -3584,7 +3617,8 @@ Smi.getLineWidth = (text) => {
 
 Smi.Color = Subtitle.Color;
 
-Smi.prototype.normalize = function(end, withFadeOnly=false, withComment=false, fps=null) {
+// 여기선 forConvert를 앞으로 가져옴
+Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps=null) {
 	if (fps == null) {
 		fps = Subtitle.video.FR / 1000;
 	}
@@ -3635,7 +3669,7 @@ Smi.prototype.normalize = function(end, withFadeOnly=false, withComment=false, f
 			attrs.push(...newAttrs);
 			attrs.push(...after);
 			j += newAttrs.length - 1;
-			smi.fromAttrs(attrs);
+			smi.fromAttrs(attrs, forConvert);
 		}
 	}
 	
@@ -3922,14 +3956,14 @@ Smi.prototype.normalize = function(end, withFadeOnly=false, withComment=false, f
 			tAttrs.push(attr);
 			tAttrs.push(...attrs.slice(attrIndex + 1));
 			
-			smis.push(new Smi(limitSync, (j == 0 ? smi.syncType : SyncType.inner)).fromAttrs(tAttrs));
+			smis.push(new Smi(limitSync, (j == 0 ? smi.syncType : SyncType.inner)).fromAttrs(tAttrs, forConvert));
 			realJ++;
 		}
 		if (withComment) {
 			smis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[0].text;
 		}
 		
-	} else if (withFadeOnly && hasFade) {
+	} else if (!forConvert && hasFade) {
 		const start = smi.start;
 		const count = Math.round((end - start) * fps / 1000);
 		
@@ -3982,7 +4016,8 @@ Smi.prototype.normalize = function(end, withFadeOnly=false, withComment=false, f
 	
 	return smis;
 }
-Smi.normalize = (smis, withComment=false, fps=null) => {
+// 여기선 forConvert를 뒤로 뺌
+Smi.normalize = (smis, withComment=false, fps=null, forConvert=false) => {
 	if (fps == null) {
 		fps = Subtitle.video.FR / 1000;
 	}
@@ -4021,7 +4056,7 @@ Smi.normalize = (smis, withComment=false, fps=null) => {
 	for (let i = 0; i < smis.length - 1; i++) {
 		const start = smis[i].start;
 		const end = smis[i + 1].start;
-		const nSmis = smis[i].normalize(end, true, withComment, fps);
+		const nSmis = smis[i].normalize(end, forConvert, withComment, fps);
 		
 		if (nSmis.length > 1) {
 			const nextSmis = smis.slice(i + 1);
@@ -4044,450 +4079,6 @@ Smi.normalize = (smis, withComment=false, fps=null) => {
 		} else {
 			smis[i] = nSmis[0];
 		}
-		
-		/*
-		const smi = smis[i];
-		const smiText = smi.text;
-		
-		const attrs = smi.toAttrs();
-		
-		// 그라데이션 먼저 글자 단위 분해
-		let hasGradation = false;
-		for (let j = 0; j < attrs.length; j++) {
-			const attr = attrs[j];
-			
-			const gc = (attr.fc.length == 15)
-				&& (attr.fc[0] == '#')
-				&& (attr.fc[7] == '~')
-				&& (attr.fc[8] == '#');
-			const gf = (attr.fade.length == 15)
-				&& (attr.fade[0] == '#')
-				&& (attr.fade[7] == '~')
-				&& (attr.fade[8] == '#');
-			
-			if (gc || gf) {
-				hasGradation = true;
-				
-				const cFrom = gc ? attr.fc.substring(0,  7) : (attr.fc ? attr.fc : "#ffffff");
-				const cTo   = gc ? attr.fc.substring(8, 15) : (attr.fc ? attr.fc : "#ffffff");
-				const color = new Color(cTo, cFrom);
-				
-				const newAttrs = [];
-				for (let k = 0; k < attr.text.length; k++) {
-					const newAttr = new Attr(attr);
-					newAttr.fc = color.get(k, attr.text.length - 1);
-					newAttr.text = attr.text[k];
-					newAttrs.push(newAttr);
-				}
-				if (gf) {
-					const fFrom = attr.fade.substring(0,  7);
-					const fTo   = attr.fade.substring(8, 15);
-					const fColor = new Color(fTo, fFrom);
-					for (let k = 0; k < newAttrs.length; k++) {
-						newAttrs[k].fade = fColor.smi(k, newAttrs.length - 1);
-					}
-				}
-				const after = attrs.slice(j + 1);
-				
-				attrs.length = j;
-				attrs.push(...newAttrs);
-				attrs.push(...after);
-				j += newAttrs.length - 1;
-				smi.fromAttrs(attrs);
-			}
-		}
-		
-		let hasFade = false;
-		let hasTyping = false;
-		let shakeRange = null;
-		for (let j = 0; j < attrs.length; j++) {
-			const attr = attrs[j];
-			if (attr.fade != 0) {
-				hasFade = true;
-			}
-			if (attr.typing) {
-				hasTyping = true;
-			}
-			if (attr.shake) {
-				// 흔들기는 연속된 그룹으로 처리
-				if (!shakeRange) {
-					shakeRange = [j, j+1];
-				} else if (shakeRange[1] == j) {
-					shakeRange[1]++;
-				}
-			}
-		}
-		
-		if (shakeRange) {
-			// 흔들기는 한 싱크에 하나만 가능
-			const shake = attrs[shakeRange[0]].shake;
-			for (let j = shakeRange[0]; j < shakeRange[1]; j++) {
-				attrs[j].shake = null;
-				if (attrs[j].furigana) {
-					attrs[j].furigana.shake = null;
-				}
-			}
-			attrs[shakeRange[0]  ].text = "{SL}" + attrs[shakeRange[0]].text;
-			attrs[shakeRange[1]-1].text = attrs[shakeRange[1]-1].text + "{SR}";
-			for (let j = shakeRange[0]; j < shakeRange[1]; j++) {
-				if (attrs[j].text.indexOf("\n") >= 0) {
-					attrs[j].text = attrs[j].text.split("\n").join("{SR}\n{\SL}");
-				}
-			}
-			
-			const start = smi.start;
-			const end = smis[i + 1].start;
-			const count = Math.floor(((end - start) / shake.ms) + 0.5);
-			
-			let j = shakeRange[0] - 1;
-			for (; j >= 0; j--) {
-				const text = attrs[j].text;
-				const brIndex = text.lastIndexOf("\n");
-				if (brIndex >= 0) {
-					attrs[j].text = text.substring(0, brIndex + 1) + "{ST}" + text.substring(brIndex + 1);
-					break;
-				}
-			}
-			if (j < 0) {
-				attrs[0].text = "{ST}" + attrs[0].text;
-			}
-			for (j = shakeRange[1]; j < attrs.length; j++) {
-				const text = attrs[j].text;
-				const brIndex = text.indexOf("\n");
-				if (brIndex >= 0) {
-					attrs[j].text = text.substring(0, brIndex) + "{SB}" + text.substring(brIndex);
-					break;
-				}
-			}
-			if (j >= attrs.length) {
-				attrs[attrs.length - 1].text = attrs[attrs.length - 1].text + "{SB}";
-			}
-			
-			// 페이드 효과 추가 처리
-			const fadeColors = [];
-			if (hasFade) {
-				for (let j = 0; j < attrs.length; j++) {
-					const attr = attrs[j];
-					attr.tagString = null;
-					if (attr.fade != 0) {
-						fadeColors.push(new Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
-						attr.fade = 0;
-					}
-					if (attr.furigana) {
-						const furi = attr.furigana;
-						if (furi.fade != 0) {
-							fadeColors.push(new Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
-							furi.fade = 0;
-						}
-					}
-				}
-				if (fadeColors.length == 0) {
-					continue;
-				}
-			} else {
-				// 페이드 없어도 tagString은 빼줘야 함
-				for (let j = 0; j < attrs.length; j++) {
-					attrs[j].tagString = null;
-				}
-			}
-			
-			// 좌우로 흔들기
-			// 플레이어에서 사이즈 미지원해도 좌우로는 흔들리도록
-			const LRmin = "<font size=\"" + (3 * shake.size) + "\"></font>";
-			const LRmid = "<font size=\"" + (3 * shake.size) + "\"> </font>";
-			const LRmax = "<font size=\"" + (3 * shake.size) + "\">  </font>";
-			
-			// 상하로 흔들기
-			// 플레이어에서 사이즈 미지원하면 상하로 흔들리지 않음
-			// size 0은 리스크가 있으므로 +1
-			const TBmin = "<font size=\"" + (0 * shake.size + 1) + "\">　</font>";
-			const TBmid = "<font size=\"" + (1 * shake.size + 1) + "\">　</font>";
-			const TBmax = "<font size=\"" + (2 * shake.size + 1) + "\">　</font>";
-			
-			const newSmis = [];
-			for (let j = 0; j < count; j++) {
-				/*
-				 * ５０３
-				 * ２※６
-				 * ７４１
-				 * /
-				const step = j % 8;
-				
-				// 페이드 효과 추가 처리
-				for (let k = 0; k < fadeColors.length; k++) {
-					const color = fadeColors[k];
-					((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1 + 2 * j, 2 * count);
-				}
-				let text = Smi.fromAttrs(attrs).split("\n").join("<br>");
-				
-				// 좌우로 흔들기
-				switch (step) {
-					case 2:
-					case 5:
-					case 7:
-						text = text.split("{SL}").join(LRmin).split("{SR}").join(LRmax);
-						break;
-					case 0:
-					case 4:
-						text = text.split("{SL}").join(LRmid).split("{SR}").join(LRmid);
-						break;
-					default:
-						text = text.split("{SL}").join(LRmax).split("{SR}").join(LRmin);
-				}
-				
-				// 상하로 흔들기
-				switch (step) {
-					case 0:
-					case 3:
-					case 5:
-						text = text.split("{ST}").join(TBmin + "<br>").split("{SB}").join("<br>" + TBmax);
-						break;
-					case 2:
-					case 6:
-						text = text.split("{ST}").join(TBmid + "<br>").split("{SB}").join("<br>" + TBmid);
-						break;
-					default:
-						text = text.split("{ST}").join(TBmax + "<br>").split("{SB}").join("<br>" + TBmin);
-				}
-				
-//				smis.splice(i + j, 0, new Smi((start * (count - j) + end * (j)) / count, (j == 0 ? smi.syncType : SyncType.inner), text));
-				newSmis.push(new Smi((start * (count - j) + end * (j)) / count, (j == 0 ? smi.syncType : SyncType.inner), text));
-			}
-			if (withComment) {
-				newSmis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + newSmis[0].text;
-			}
-			
-			const nextSmis = smis.slice(i + 1);
-			smis.length = i;
-			smis.push(...newSmis);
-			smis.push(...nextSmis);
-			
-			result.logs.push({
-					from: [i - added, i - added + 1]
-				,	to  : [i, i + count]
-				,	start: start
-				,	end: end
-			});
-			const add = count - 1;
-			i += add;
-			added += add;
-
-		} else if (hasTyping) {
-			// 타이핑은 한 싱크에 하나만 가능
-			let attrIndex = -1;
-			let attr = null;
-			let isLastAttr = false;
-			for (let j = 0; j < attrs.length; j++) {
-				if (!attr) {
-					// 타이핑 찾기 전
-					if (attrs[j].typing != null) {
-						attr = attrs[(attrIndex = j)];
-						let remains = "";
-						for (let k = j + 1; k < attrs.length; k++) {
-							remains += attrs[k].text;
-						}
-						isLastAttr = (remains.length == 0) || (remains[0] == "\n");
-						if (!isLastAttr) {
-							let length = 0;
-							for (let k = j + 1; k < attrs.length; k++) {
-								length += attrs[k].text.length;
-							}
-							isLastAttr = (length == 0);
-						}
-					}
-				} else {
-					// 타이핑 찾은 후 나머지에 대해 타이핑 제거
-					attrs[j].typing = null;
-				}
-				// 태그 원본도 신뢰할 수 없음
-				attrs[j].tagString = null;
-			}
-			if (attr == null) {
-				continue;
-			}
-			
-			const types = Typing.toType(attr.text, attr.typing.mode, attr.typing.cursor);
-			const widths = [];
-			{	const attrTexts = attr.text.split("\n");
-				for (let j = 0; j < attrTexts.length; j++) {
-					widths.push(Smi.getLineWidth(attrTexts[j]));
-				}
-			}
-
-			const start = smi.start;
-			const end = smis[i + 1].start;
-			const count = types.length - attr.typing.end - attr.typing.start;
-			
-			if (count < 1) {
-				continue;
-			}
-
-			const typingStart = attr.typing.start;
-			attr.typing = null;
-
-			// 페이드 효과 추가 처리
-			const fadeColors = [];
-			if (hasFade) {
-				for (let j = 0; j < attrs.length; j++) {
-					const attr = attrs[j];
-					if (attr.fade != 0) {
-						fadeColors.push(new Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
-						attr.fade = 0;
-					}
-					if (attr.furigana) {
-						const furi = attr.furigana;
-						if (furi.fade != 0) {
-							fadeColors.push(new Color( furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
-							furi.fade = 0;
-						}
-					}
-				}
-				if (fadeColors.length == 0) {
-					continue;
-				}
-			}
-			
-			// 10ms 미만 간격이면 팟플레이어에서 겹쳐서 나오므로 적절히 건너뛰기
-			// TODO: ... 현재는 holdsToText 거칠 경우 뭉치는 것 교정해줄 듯?
-			const countLimit = Math.min(count, Math.floor((end - start) / 10));
-			let realJ = 0;
-			
-			const newSmis = [];
-			for (let j = 0; j < count; j++) {
-				const sync = (start * (count - j) + end * (j)) / count;
-				const limitSync = (countLimit < count) ? ((start * (countLimit - realJ) + end * (realJ)) / countLimit) : sync;
-				if (sync < limitSync) {
-					continue;
-				}
-				
-				const textLines = types[j + typingStart].split("\n");
-				const text = textLines.join("<br>");
-				{
-					const attrTextLines = [];
-					for (let k = 0; k < widths.length; k++) {
-						if (k < textLines.length - 1) {
-							// 건너뛰기
-						} else if (k == textLines.length - 1) {
-							attrTextLines.push(Subtitle.Width.getAppendToTarget(Smi.getLineWidth(textLines[k]), widths[k]));
-						} else {
-							attrTextLines.push(Subtitle.Width.getAppendToTarget(0, widths[k]));
-						}
-					}
-					attr.text = attrTextLines.join("​\n​");
-					if (isLastAttr) {
-						attr.text += "​";
-					}
-				}
-				const newAttrs = new Smi(null, null, text).toAttrs(false);
-				for (let k = 0; k < newAttrs.length; k++) {
-					newAttrs[k].b = attr.b;
-					newAttrs[k].i = attr.i;
-					newAttrs[k].s = attr.s;
-					newAttrs[k].fc = attr.fc;
-					newAttrs[k].fn = attr.fn;
-					newAttrs[k].fs = attr.fs;
-				}
-				
-				// 페이드 효과 추가 처리
-				for (let k = 0; k < fadeColors.length; k++) {
-					const color = fadeColors[k];
-					((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1 + 2 * j, 2 * count);
-				}
-				
-				const tAttrs = attrs.slice(0, attrIndex);
-				tAttrs.push(...newAttrs);
-				tAttrs.push(attr);
-				tAttrs.push(...attrs.slice(attrIndex + 1));
-				
-				newSmis.push(new Smi(limitSync, (j == 0 ? smi.syncType : SyncType.inner)).fromAttrs(tAttrs));
-				realJ++;
-			}
-			if (withComment) {
-				newSmis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + newSmis[0].text;
-			}
-			
-			const nextSmis = smis.slice(i + 1);
-			smis.length = i;
-			smis.push(...newSmis);
-			smis.push(...nextSmis);
-			
-			result.logs.push({
-					from: [i - added, i - added + 1]
-				,	to  : [i, i + count]
-				,	start: start
-				,	end: end
-			});
-			const add = count - 1;
-			i += add;
-			added += add;
-			
-		} else if (hasFade) {
-			const start = smi.start;
-			const end = smis[i + 1].start;
-			const count = Math.round((end - start) * fps / 1000);
-			
-			const fadeColors = [];
-			for (let j = 0; j < attrs.length; j++) {
-				const attr = attrs[j];
-				attr.tagString = null;
-				if (attr.fade != 0) {
-					fadeColors.push(new Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
-					attr.fade = 0;
-				}
-				if (attr.furigana) {
-					const furi = attr.furigana;
-					if (furi.fade != 0) {
-						fadeColors.push(new Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
-						furi.fade = 0;
-					}
-				}
-			}
-			if (fadeColors.length == 0) {
-				continue;
-			}
-			
-			for (let j = 0; j < fadeColors.length; j++) {
-				const color = fadeColors[j];
-				((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1, 2 * count);
-			}
-			smi.fromAttrs(attrs);
-			
-			const newSmis = [smi];
-			for (let j = 1; j < count; j++) {
-				for (let k = 0; k < fadeColors.length; k++) {
-					const color = fadeColors[k];
-					((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1 + 2 * j, 2 * count);
-				}
-				//smis.splice(i + j, 0, new Smi((start * (count - j) + end * j) / count, SyncType.inner).fromAttrs(attrs));
-				newSmis.push(new Smi((start * (count - j) + end * j) / count, SyncType.inner).fromAttrs(attrs));
-			}
-			if (withComment) {
-				newSmis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + newSmis[0].text;
-			}
-			
-			const nextSmis = smis.slice(i + 1);
-			smis.length = i;
-			smis.push(...newSmis);
-			smis.push(...nextSmis);
-			
-			result.logs.push({
-					from: [i - added, i - added + 1]
-				,	to  : [i, i + count]
-				,	start: start
-				,	end: end
-			});
-			const add = count - 1;
-			i += add;
-			added += add;
-			
-		} else if (hasGradation) {
-			// 주석 추가
-			if (withComment) {
-				const end = smis[i + 1].start;
-				smi.text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smi.text;
-			}
-		}
-		*/
 	}
 	
 	return result;
@@ -4656,7 +4247,7 @@ SmiFile.prototype.toSyncs = function() {
 			const item = this.body[i];
 			const next = this.body[i + 1];
 			const end = (next.start) > 0 ? next.start : 0;
-			const normalized = item.normalize(end);
+			const normalized = item.normalize(end, true);
 			for (let j = 0; j < normalized.length - 1; j++) {
 				const sync = normalized[j].toSync();
 				sync.end = normalized[j + 1].start;
