@@ -282,6 +282,7 @@ textarea,
 .hold-style-ass {
 	display: none;
 }
+.tab.ass .hold.main .hold-style-smi,
 .tab.ass .hold-style-ass {
 	display: block;
 }

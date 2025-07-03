@@ -198,14 +198,14 @@ function setOriginSubtitleFile(path, text) {
 	{	const ext = path.substring(path.length - 4);
 		if (ext == ".smi") {
 			operation.type = "smi";
-			operation.origin = new Subtitle.SmiFile(text);
-			operation.input = Subtitle.SmiFile.textToHolds(text);
-			operation.target = new Subtitle.SmiFile();
+			operation.origin = new SmiFile(text);
+			operation.input = SmiFile.textToHolds(text);
+			operation.target = new SmiFile();
 			
 		} else if (ext == ".srt") {
 			operation.type = "srt";
-			operation.origin = new Subtitle.SrtFile(text);
-			operation.target = new Subtitle.SrtFile();
+			operation.origin = new SrtFile(text);
+			operation.target = new SrtFile();
 			
 		} else if (ext == ".ass") {
 			operation.type = "ass";
@@ -276,7 +276,7 @@ function refreshPreview(isTarget=false) {
 			let last = {};
 			for (let i = 0; i < originBody.length; i++) {
 				const item = originBody[i];
-				if (item.syncType == Subtitle.SyncType.inner) {
+				if (item.syncType == SyncType.inner) {
 					// 중간 싱크는 미리보기에서 생략
 					continue;
 				}
@@ -538,7 +538,7 @@ function apply() {
 	switch (operation.type) {
 		case "smi": {
 			const origin = operation.origin;
-			const target = operation.target = new Subtitle.SmiFile();
+			const target = operation.target = new SmiFile();
 			target.header = origin.header;
 			target.footer = origin.footer;
 			
@@ -549,7 +549,7 @@ function apply() {
 					const index = getShiftIndex(smi.start);
 					smi.start = shiftSync(smi.start, index);
 
-					if (withKf && (smi.syncType == Subtitle.SyncType.frame)) {
+					if (withKf && (smi.syncType == SyncType.frame)) {
 						const shift =	shifts[index];
 						if (shift.skipped == null || shift.fCount == 0 || shift.skipped.length == 0) {
 							continue;
@@ -589,7 +589,7 @@ function apply() {
 								
 								syncEnd = shiftSync(syncEnd);
 								if (comment.length > 6 && comment.substring(0, 6).toUpperCase() == "<SYNC ") {
-									comment = shiftHold(new Subtitle.SmiFile(comment)).toText().trim();
+									comment = shiftHold(new SmiFile(comment)).toText().trim();
 								}
 								comment = comment.trim().split("<").join("<​").split(">").join("​>");
 								item.text = "<!-- End=" + syncEnd + "\n" + comment + "\n-->\n" + afterComment;
@@ -597,11 +597,11 @@ function apply() {
 						}
 					}
 					const shiftIndex = getShiftIndex(item.start);
-					const smi = new Subtitle.Smi(shiftSync(item.start, shiftIndex), item.syncType, item.text);
+					const smi = new Smi(shiftSync(item.start, shiftIndex), item.syncType, item.text);
 					target.body.push(smi);
 					
 					// 화면 싱크 키프레임 대조
-					if (withKf && (smi.syncType == Subtitle.SyncType.frame)) {
+					if (withKf && (smi.syncType == SyncType.frame)) {
 						console.log("withKf: " + smi.start);
 	
 						const shift = shifts[shiftIndex];
@@ -637,7 +637,7 @@ function apply() {
 				let from = null;
 				for (let i = 0; i < target.body.length; i++) {
 					const item = target.body[i];
-					if (item.syncType == Subtitle.SyncType.inner) continue;
+					if (item.syncType == SyncType.inner) continue;
 					if (from == null) continue;
 					
 					const count = i - from.index;
@@ -668,24 +668,32 @@ function apply() {
 			let assFoot = "";
 			if (operation.input[0].ass) {
 				const ass = new Subtitle.AssFile2(operation.input[0].ass);
+				const events = ass.getEvents();
+				events.format[1]
 				
 				const assInfo = ass.getInfo();
 				if (assInfo) {
 					let frameSyncs = assInfo.get("FrameSyncs");
 					if (frameSyncs) {
 						frameSyncs = frameSyncs.split(",");
-						for (let i = 0; i < frameSyncs.length; i++) {
-							frameSyncs[i] = Subtitle.AssEvent.toAssTime(shiftSync(Subtitle.AssEvent.fromAssTime(frameSyncs[i])));
+						if (isFinite(frameSyncs[0])) {
+							for (let i = 0; i < frameSyncs.length; i++) {
+								frameSyncs[i] = shiftSync(Number(frameSyncs[i]));
+							}
+						} else {
+							for (let i = 0; i < frameSyncs.length; i++) {
+								frameSyncs[i] = shiftSync(Subtitle.AssEvent.fromAssTime(frameSyncs[i]));
+							}
 						}
 						assInfo.set("FrameSyncs", frameSyncs.join(","));
 					}
 				}
 				
-				const assBody = ass.getEvents().body;
+				const assBody = events.body;
 				for (let i = 0; i < assBody.length; i++) {
 					const item = assBody[i];
-					item.Start = Subtitle.AssEvent.toAssTime(shiftSync(item.start));
-					item.End   = Subtitle.AssEvent.toAssTime(shiftSync(item.end  ));
+					item.start = shiftSync(item.start);
+					item.end   = shiftSync(item.end  );
 				}
 				
 				assFoot = "\n<!-- ASS\n" + ass.toText() + "\n-->";
@@ -694,7 +702,7 @@ function apply() {
 			const holds = [];
 			for (let hi = 0; hi < operation.input.length; hi++) {
 				const holdInfo = operation.input[hi];
-				const hold = shiftHold(new Subtitle.SmiFile(holdInfo.text));
+				const hold = shiftHold(new SmiFile(holdInfo.text));
 				holds.push({
 						pos : holdInfo.pos
 					,	name: holdInfo.name
@@ -704,16 +712,16 @@ function apply() {
 				});
 			}
 			const withCombine = !$("#chkCombine").prop("checked");
-			operation.output = Subtitle.SmiFile.holdsToText(holds, withCombine, withCombine) + assFoot;
+			operation.output = SmiFile.holdsToText(holds, withCombine, withCombine) + assFoot;
 			refreshPreview(true);
 			break;
 		}
 		case "srt": {
 			const origin = operation.origin;
-			const target = operation.target = new Subtitle.SrtFile();
+			const target = operation.target = new SrtFile();
 			for (let i = 0; i < origin.body.length; i++) {
 				const item = origin.body[i];
-				const srt = new Subtitle.Srt(shiftSync(item.start), shiftSync(item.end), item.text);
+				const srt = new Srt(shiftSync(item.start), shiftSync(item.end), item.text);
 				target.body.push(srt);
 			}
 			operation.output = target.toText();

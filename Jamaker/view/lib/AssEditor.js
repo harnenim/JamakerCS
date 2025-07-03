@@ -1,8 +1,3 @@
-// TODO: 일단 여기 적었는데, editor.js 등에서 쓸 방안을 강구하는 게?
-let FormatToEdit = ["Layer", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
-let FormatToSave = ["Layer", "", "", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
-let FormatSimple = ["Layer", "Style", "Text"];
-
 window.AssEditor = function(view, events=[], frameSyncs=null) {
 	this.view = (view ? view : (view = $("<div>"))).addClass("ass-editor").data({ obj: this });
 	this.savedSyncs = [];
@@ -11,7 +6,7 @@ window.AssEditor = function(view, events=[], frameSyncs=null) {
 	
 	const self = this;
 	this.view.on("input propertychange", "input, textarea", function() {
-		$(this).parent().data("obj").update(true);
+		$(this).parent().data("obj").update();
 	}).on("focus", "input, textarea", function() {
 		view.find(".item.focus").removeClass("focus");
 		$(this).parent().addClass("focus");
@@ -22,6 +17,12 @@ window.AssEditor = function(view, events=[], frameSyncs=null) {
 		});
 	});
 }
+//TODO: 일단 여기 적었는데, editor.js 등에서 쓸 방안을 강구하는 게?
+AssEditor.FormatToEdit = ["Layer", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
+// 여기서 start/end는 소문자임
+AssEditor.FormatToSave = ["Layer", "start", "end", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
+AssEditor.FormatSimple = ["Layer", "Style", "Text"];
+
 AssEditor.prototype.setEvents = function(events=[], frameSyncs=null) {
 	this.syncs = [];
 	this.view.empty();
@@ -36,9 +37,7 @@ AssEditor.prototype.addEvents = function(events=[], frameSyncs=null, withUpdate=
 	for (let i = 0; i < events.length; i++) {
 		const item = events[i];
 		// ASS 시간이 아닌 SMI 시간으로 관리
-		item.start = Subtitle.findSync(item.start + 15);
-		item.end   = Subtitle.findSync(item.end   + 15);
-		const script = item.toText(FormatToEdit);
+		const script = item.toText(AssEditor.FormatToEdit);
 		
 		if (item.start == last.start && item.end == last.end) {
 			// 기존 싱크 그룹
@@ -57,8 +56,8 @@ AssEditor.prototype.addEvents = function(events=[], frameSyncs=null, withUpdate=
 			
 			// 새 싱크 그룹 생성
 			last = {
-					Start: item.Start, start: item.start, startFrame: (frameSyncs == null ? true : frameSyncs.indexOf(item.Start) >= 0)
-				,	End  : item.End  , end  : item.end  , endFrame  : (frameSyncs == null ? true : frameSyncs.indexOf(item.End  ) >= 0)
+					Start: item.Start, start: item.start, startFrame: (frameSyncs == null ? true : ((frameSyncs.indexOf(item.start) >= 0) || (frameSyncs.indexOf(item.Start) >= 0)))
+				,	End  : item.End  , end  : item.end  , endFrame  : (frameSyncs == null ? true : ((frameSyncs.indexOf(item.end  ) >= 0) || (frameSyncs.indexOf(item.End  ) >= 0)))
 				,	scripts: [script]
 			};
 		}
@@ -140,6 +139,14 @@ AssEditor.prototype.toText = function() {
 	}
 	return text.join("\n");
 }
+AssEditor.prototype.toAssText = function() {
+	let text = [];
+	for (let i = 0; i < this.syncs.length; i++) {
+		const sync = this.syncs[i];
+		text.push(sync.toAssText());
+	}
+	return text.join("\n");
+}
 AssEditor.prototype.getFrameSyncs = function() {
 	// 프레임 싱크 구해오기
 	const syncs = [];
@@ -174,11 +181,6 @@ AssEditor.prototype.setSaved = function() {
 	}
 	this.isSaved = true;
 }
-AssEditor.prototype.refreshSyncs = function() {
-	for (let i = 0; i < this.syncs.length; i++) {
-		this.syncs[i].refreshSyncs();
-	}
-}
 
 AssEditor.Item = function(info) {
 	const view = this.view = $("<div>").addClass("item").data({ obj: this });
@@ -196,12 +198,10 @@ AssEditor.Item = function(info) {
 	this.isSaved = true;
 	return this;
 }
-AssEditor.Item.prototype.getText = function(onInput=false) {
-	if (onInput) {
-		this.Start = AssEvent.toAssTime((this.start = Number(this.inputStart.val())) - 15);
-		this.End   = AssEvent.toAssTime((this.end   = Number(this.inputEnd  .val())) - 15);
-	}
-	const sync = "," + this.Start + "," + this.End;
+AssEditor.Item.prototype.getText = function() {
+	this.start = Number(this.inputStart.val());
+	this.end   = Number(this.inputEnd  .val());
+	const sync = "," + this.start + "," + this.end;
 	const lines = this.inputText.val().split("\n");
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
@@ -212,8 +212,8 @@ AssEditor.Item.prototype.getText = function(onInput=false) {
 	}
 	return this.text = lines.join("\n");
 }
-AssEditor.Item.prototype.update = function(onInput=false) {
-	this.isSaved = (this.getText(onInput) == this.savedText);
+AssEditor.Item.prototype.update = function() {
+	this.isSaved = (this.getText() == this.savedText);
 	if (this.onUpdate) {
 		this.onUpdate();
 	}
@@ -221,17 +221,27 @@ AssEditor.Item.prototype.update = function(onInput=false) {
 AssEditor.Item.prototype.getFrameSyncs = function() {
 	const syncs = [];
 	if (this.checkStart.prop("checked")) {
-		syncs.push(AssEvent.toAssTime(Number(this.inputStart.val()) - 15));
+		syncs.push(Number(this.inputStart.val()));
 	}
 	if (this.checkEnd.prop("checked")) {
-		syncs.push(AssEvent.toAssTime(Number(this.inputEnd  .val()) - 15));
+		syncs.push(Number(this.inputEnd  .val()));
 	}
 	return syncs;
 }
 AssEditor.Item.prototype.setSaved = function() {
 	this.savedText = this.getText();
 }
-AssEditor.Item.prototype.refreshSyncs = function() {
-	this.inputStart.val(this.start = Subtitle.findSync(AssEvent.fromAssTime(this.Start) + 15));
-	this.inputEnd  .val(this.end   = Subtitle.findSync(AssEvent.fromAssTime(this.End  ) + 15));
+AssEditor.Item.prototype.toAssText = function() {
+	this.Start = AssEvent.toAssTime(this.start = Number(this.inputStart.val()), true);
+	this.End   = AssEvent.toAssTime(this.end   = Number(this.inputEnd  .val()), true);
+	const sync = "," + this.Start + "," + this.End;
+	const lines = this.inputText.val().split("\n");
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i];
+		const index = line.indexOf(",");
+		if (index >= 0) {
+			lines[i] = "Dialogue: " + line.substring(0, index) + sync + line.substring(index);
+		}
+	}
+	return lines.join("\n");
 }

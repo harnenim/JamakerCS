@@ -44,6 +44,7 @@ window.Tab = function(text, path) {
 			holds[i].ass = [];
 		}
 		const assHold = tab.assHold = new SmiEditor();
+		assHold.isAssHold = true;
 		assHold.assEditor = new AssEditor(tab.area.find("div.tab-ass-script > div"));
 		assHold.assEditor.onUpdate = function() {
 			if (this.isSaved) {
@@ -56,7 +57,8 @@ window.Tab = function(text, path) {
 		
 		let frameSyncs = [];
 		if (assFile) {
-			const list = assFile.getEvents().body;
+			const events = assFile.getEvents();
+			const list = events.body;
 			const appends = [];
 			for (let i = 0; i < list.length; i++) {
 				const item = list[i];
@@ -76,7 +78,7 @@ window.Tab = function(text, path) {
 					}
 				}
 			}
-			assFile.getEvents().body = appends;
+			events.body = appends;
 			
 			this.area.find(".tab-ass-styles textarea").val(assFile.getStyles().toText(false));
 			
@@ -85,6 +87,11 @@ window.Tab = function(text, path) {
 				let strFrameSyncs = info.get("FrameSyncs");
 				if (strFrameSyncs) {
 					frameSyncs = strFrameSyncs.split(",");
+					if (isFinite(frameSyncs[0])) {
+						for (let i = 0; i < frameSyncs.length; i++) {
+							frameSyncs[i] = Number(frameSyncs[i]);
+						}
+					}
 				}
 			}
 			assHold.assEditor.setEvents(appends, frameSyncs);
@@ -425,7 +432,7 @@ SmiEditor.prototype.insertSync = function(mode=0) {
 	if (this.area.hasClass("style")) return;
 	
 	// ASS 편집일 때 동작
-	if (this.area.hasClass("ass")) {
+	if (this.isAssHold || this.area.hasClass("ass")) {
 		// 선택된 객체 찾기
 		const $item = $(document.activeElement).parents(".item");
 		if (!$item.length) return;
@@ -454,7 +461,7 @@ SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 	if (this.area.hasClass("style")) return;
 	
 	// ASS 편집일 때 동작
-	if (this.area.hasClass("ass")) {
+	if (this.isAssHold || this.area.hasClass("ass")) {
 		console.log("ASS 편집일 때 동작");
 		// TODO: ASS 에디터에 대해서만 동작?
 		// 이거 자체를 쓸 일이 있나?
@@ -491,7 +498,8 @@ SmiEditor.prototype.toggleSyncType = function() {
 	
 	// ASS 편집일 때 무시
 	if (this.area.hasClass("ass")) return;
-	
+
+	// SMI 에디터 동작
 	this._toggleSyncType();
 }
 SmiEditor.prototype._moveToSync = SmiEditor.prototype.moveToSync;
@@ -500,15 +508,12 @@ SmiEditor.prototype.moveToSync = function(add=0) {
 	if (this.area.hasClass("style")) return;
 
 	// ASS 편집일 때 동작
-	if (this.area.hasClass("ass")) {
+	if (this.isAssHold || this.area.hasClass("ass")) {
 		// 선택된 객체 찾기
 		const $item = $(document.activeElement).parents(".item");
 		if (!$item.length) return;
 		const item = $item.data("obj");
 		if (!item) return;
-		
-		console.log(item.inputStart.val(), add);
-		console.log(Number(item.inputStart.val()) + add);
 		
 		SmiEditor.PlayerAPI.play();
 		SmiEditor.PlayerAPI.moveTo(Number(item.inputStart.val()) + add);
@@ -516,6 +521,7 @@ SmiEditor.prototype.moveToSync = function(add=0) {
 		return;
 	}
 	
+	// SMI 에디터 동작
 	this._moveToSync(add);
 }
 SmiEditor.prototype._getText = SmiEditor.prototype.getText;
@@ -791,12 +797,10 @@ Tab.prototype.replaceBeforeSave = function() {
 		}
 	}
 }
-Tab.prototype.getAdditioinalToAss = function() {
-	let assTexts = [];
-	
+Tab.prototype.getAdditioinalToAss = function(forSmi=false) {
 	let frameSyncs = [];
 	{
-		let syncs = [];
+		let syncs = this.assHold.assEditor.getFrameSyncs();
 		for (let h = 0; h < this.holds.length; h++) {
 			const hold = this.holds[h];
 			syncs.push(...hold.assEditor.getFrameSyncs());
@@ -822,44 +826,52 @@ Tab.prototype.getAdditioinalToAss = function() {
 		}
 	}
 	let info = ["[Script Info]", "VideoInfo: " + Subtitle.video.path, "FrameSyncs: " + frameSyncs.join(",")].join("\n");
-	assTexts.push(info);
 	
-	let styles = "";
-	{
-		styles = this.assStyles = this.area.find(".tab-ass-styles textarea").val();
-		if (styles) {
-			styles = "[V4+ Styles]\nFormat: " + AssPart.StylesFormat.join(", ") + "\n" + styles
-			assTexts.push(styles);
-		}
-	}
+	let styles = this.area.find(".tab-ass-styles textarea").val();
 	
 	let scripts = [];
 	{
+		const func = forSmi ? "toText" : "toAssText";
 		for (let h = 0; h < this.holds.length; h++) {
 			const hold = this.holds[h];
-			const script = hold.assEditor.toText();
+			const script = hold.assEditor[func]();
 			if (script) {
 				scripts.push(script);
 			}
 		}
 		{	// 홀드에 없는 추가 내용
-			const script = this.assHold.assEditor.toText();
+			const script = this.assHold.assEditor[func]();
 			if (script) {
 				scripts.push(script);
 			}
 		}
-		if (scripts.length) {
-			scripts = "[Events]\nFormat: " + AssPart.EventsFormat.join(", ") + "\n" + (this.assScript = scripts.join("\n"));
-			assTexts.push(scripts);
-		} else {
-			this.assScript = scripts = "";
-		}
+		scripts = scripts.length ? scripts.join("\n") : "";
 	}
-	return (styles || scripts) ? ("\n<!-- ASS\n" + (this.assText = assTexts.join("\n\n")) + "\n-->") : "";
+	if (forSmi) {
+		if (styles || scripts) {
+			let assTexts = [info];
+			if (styles) {
+				assTexts.push("[V4+ Styles]\nFormat: " + AssPart.StylesFormat.join(", ") + "\n" + styles);
+			}
+			if (scripts) {
+				assTexts.push("[Events]\nFormat: " + AssEditor.FormatToSave.join(", ") + "\n" + scripts);
+			}
+			return "\n<!-- ASS\n" + assTexts.join("\n\n") + "\n-->";
+		} else {
+			return "";
+		}
+		
+	} else {
+		return {
+				info: info
+			,	styles: styles
+			,	script: scripts
+		};
+	}
 }
 Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 	return SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment, Subtitle.video.FR / 1000)
-		+ this.getAdditioinalToAss(); // ASS 추가 내용 footer에 넣어주기
+		+ this.getAdditioinalToAss(true); // ASS 추가 내용 footer에 넣어주기
 }
 Tab.prototype.onChangeSaved = function(hold) {
 	if (this.isSaved()) {
@@ -910,9 +922,9 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 	} else {
 		assFile = new AssFile(null, Subtitle.video.width, Subtitle.video.height);
 	}
-	
-	const appendText = "[V4+ Styles]\nFormat: " + AssPart.StylesFormat.join(", ") + "\n" + this.assStyles
-	                 + "\n\n[Events]\nFormat: " + AssPart.EventsFormat.join(", ") + "\n" + this.assScript;
+	const additional = this.getAdditioinalToAss();
+	const appendText = "[V4+ Styles]\nFormat: " + AssPart.StylesFormat.join(", ") + "\n" + additional.styles
+	                 + "\n\n[Events]\nFormat: " + AssPart.EventsFormat.join(", ") + "\n" + additional.script;
 	const append = new AssFile(appendText);
 	const appendedLength = append.getEvents().body.length;
 	
@@ -985,12 +997,13 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			if (Subtitle.video.fs.length) {
 				for (let i = appendedLength; i < eventsBody.length; i++) {
 					const item = eventsBody[i];
-					item.Start = AssEvent.toAssTime(item.start = Subtitle.findSync(item.start) - 15);
-					item.End   = AssEvent.toAssTime(item.end   = Subtitle.findSync(item.end  ) - 15);
-					
+					item.Start = AssEvent.toAssTime((item.start = Subtitle.findSync(item.start)) - 15);
+					item.End   = AssEvent.toAssTime((item.end   = Subtitle.findSync(item.end  )) - 15);
+					/*
 					// ASS 전용 스크립트와 비교를 위함
 					item.start = Math.floor(item.start / 10) * 10;
 					item.end   = Math.floor(item.end   / 10) * 10;
+					*/
 				}
 			} else {
 				const FL = Subtitle.video.FL;
@@ -998,10 +1011,11 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 					const item = eventsBody[i];
 					item.Start = Math.max(1, ((Math.round(item.start / FL) - 0.5) * FL) - 15);
 					item.End   = Math.max(1, ((Math.round(item.end   / FL) - 0.5) * FL) - 15);
-					
+					/*
 					// ASS 전용 스크립트와 비교를 위함
 					item.start = Math.floor(item.start / 10) * 10;
 					item.end   = Math.floor(item.end   / 10) * 10;
+					*/
 				}
 			}
 		}
@@ -1052,7 +1066,6 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 		});
 	} else {
 		// 저장 시엔 레이어 순으로 정렬
-		console.log("저장 시엔 레이어 순으로 정렬");
 		eventsBody.sort((a, b) => {
 			let cmp = a.start - b.start;
 			if (cmp == 0) {
@@ -1060,7 +1073,6 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			}
 			return cmp;
 		});
-		console.log(eventsBody);
 	}
 	return assFile;
 }
@@ -2280,7 +2292,6 @@ function afterSetFkf() {
 		const holds = tabs[i].holds;
 		for (let j = 0; j < holds.length; j++) {
 			holds[j].refreshKeyframe();
-			holds[j].assEditor.refreshSyncs();
 		}
 	}
 }
@@ -2298,7 +2309,6 @@ function loadAssFile(path, text, target=-1) {
 	}
 	
 	// SMI -> ASS 변환 결과
-	currentTab.getAdditioinalToAss();
 	const originFile = currentTab.toAss(true);
 	
 	// 따로 불러온 ASS 파일
@@ -2405,6 +2415,7 @@ function loadAssFile(path, text, target=-1) {
 							break;
 						}
 					}
+					console.log("기존 스타일 가져오기", holdStyle);
 					// 여기서 없을 수는 없음
 					if (holdStyle) {
 						// output은 유지
@@ -2742,7 +2753,7 @@ function loadAssFile(path, text, target=-1) {
 				}
 				if (modified) {
 					// 수정 내역이 존재
-					console.log("수정 내역이 존재");
+					console.log("수정 내역이 존재", origins, targets);
 					const origin = origins[origins.length - 1];
 					if (origin.origin && origin.origin.origin) {
 						// SMI 기반
@@ -3014,6 +3025,7 @@ function loadAssFile(path, text, target=-1) {
 					}
 				}
 				o.text = "<!-- ASS\nEND\n-->\n" + o.text;
+				console.log(o.text);
 			} else {
 				// origin이 없었으면 기존에 ASS 전용으로 넣었던 것이므로 삭제 대상
 			}
@@ -3057,9 +3069,8 @@ function loadAssFile(path, text, target=-1) {
 				for (let i = 0; i < list.length; i++) {
 					const item = list[i];
 					
-					// 프레임 보정하기 전 값 가져옴
-					item.start = AssEvent.fromAssTime(item.Start = item.oStart);
-					item.end   = AssEvent.fromAssTime(item.End   = item.oEnd  );
+					item.start = AssEvent.fromAssTime(item.Start = item.oStart, true);
+					item.end   = AssEvent.fromAssTime(item.End   = item.oEnd  , true);
 					
 					if (item.Style == "Default") {
 						holds[0].ass.push(item);

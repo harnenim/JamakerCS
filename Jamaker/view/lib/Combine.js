@@ -1212,7 +1212,7 @@ if (SmiFile) {
 					}
 					if (mainBegin == main.body.length) {
 						// 홀드 전체가 메인보다 뒤에 있음
-						// 위쪽 내포 홀드에서 처리돼서 여기 올 일 없어졌을 듯
+						// 위쪽 내포 홀드에서 처리돼서 여기 올 일 없어졌을 듯 <- 스타일 넣으면서 생겼을 듯?
 						main.body = main.body.concat(smi.body);
 						continue;
 					}
@@ -1255,7 +1255,7 @@ if (SmiFile) {
 					}
 					if (mainEnd == 0) {
 						// 홀드 전체가 메인보다 앞에 있음
-						// 위쪽 내포 홀드에서 처리돼서 여기 올 일 없어졌을 듯
+						// 위쪽 내포 홀드에서 처리돼서 여기 올 일 없어졌을 듯 <- 스타일 넣으면서 생겼을 듯?
 						main.body = smi.body.concat(main.body);
 						continue;
 					}

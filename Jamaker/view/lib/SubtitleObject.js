@@ -1442,7 +1442,8 @@ window.AssEvent = Subtitle.AssEvent = function(start, end, style, text, layer=0)
 	this.Effect = "";
 	this.Text = text;
 }
-AssEvent.toAssTime = (time) => {
+AssEvent.toAssTime = (time=0, fromFrameSync=false) => {
+	if (fromFrameSync) time -= 15;
 	if (time < 0) time = 0;
 	const h = Math.floor( time / 3600000);
 	const m = Math.floor( time /   60000) % 60;
@@ -1451,10 +1452,13 @@ AssEvent.toAssTime = (time) => {
 	const result = h + ":" + intPadding(m) + ":" + intPadding(s) + "." + intPadding(ds);
 	return result;
 }
-AssEvent.fromAssTime = (assTime) => {
+AssEvent.fromAssTime = (assTime, toFrameSync=false) => {
 	const vs = assTime.split(':');
-	const result = ((Number(vs[0]) * 360000) + (Number(vs[1]) * 6000) + (Number(vs[2].split(".").join("")))) * 10;
-	return result;
+	let time = ((Number(vs[0]) * 360000) + (Number(vs[1]) * 6000) + (Number(vs[2].split(".").join("")))) * 10;
+	if (toFrameSync) {
+		time = Subtitle.findSync(time + 15);
+	}
+	return time;
 }
 function intPadding(value, length = 2) {
 	value = "" + value;
@@ -2224,8 +2228,8 @@ AssFile.prototype.fromText = function(text) {
 						if (isFinite(v)) {
 							switch (key) {
 								case "Layer":
-								case "Start":
-								case "End":
+								case "start":
+								case "end":
 								case "MarginL":
 								case "MarginR":
 								case "MarginV":
@@ -2234,8 +2238,8 @@ AssFile.prototype.fromText = function(text) {
 							}
 						} else {
 							switch (key) {
-								case "Start": item.start = AssEvent.fromAssTime(v); break;
-								case "End"  : item.end   = AssEvent.fromAssTime(v); break;
+								case "Start": item.start = AssEvent.fromAssTime(v, true); break;
+								case "End"  : item.end   = AssEvent.fromAssTime(v, true); break;
 							}
 						}
 					}
@@ -2367,10 +2371,10 @@ AssFile.prototype.addStyle = function(name, style, origin=null) {
 	style.StrikeOut   = style.StrikeOut   ? -1 : 0;
 	style.BorderStyle = style.BorderStyle ?  3 : 1;
 	
-	{ let fc = style.PrimaryColour   + (511 - style.PrimaryOpacity  ).toString(16).substring(1).toUpperCase(); style.PrimaryColour   = ("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
-	{ let fc = style.SecondaryColour + (511 - style.SecondaryOpacity).toString(16).substring(1).toUpperCase(); style.SecondaryColour = ("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
-	{ let fc = style.OutlineColour   + (511 - style.OutlineOpacity  ).toString(16).substring(1).toUpperCase(); style.OutlineColour   = ("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
-	{ let fc = style.BackColour      + (511 - style.BackOpacity     ).toString(16).substring(1).toUpperCase(); style.BackColour      = ("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
+	{ let fc = (style.PrimaryColour   + (511 - style.PrimaryOpacity  ).toString(16).substring(1)).toUpperCase(); style.PrimaryColour   = ("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
+	{ let fc = (style.SecondaryColour + (511 - style.SecondaryOpacity).toString(16).substring(1)).toUpperCase(); style.SecondaryColour = ("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
+	{ let fc = (style.OutlineColour   + (511 - style.OutlineOpacity  ).toString(16).substring(1)).toUpperCase(); style.OutlineColour   = ("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
+	{ let fc = (style.BackColour      + (511 - style.BackOpacity     ).toString(16).substring(1)).toUpperCase(); style.BackColour      = ("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
 	
 	this.getStyles().body.push(style);
 }
@@ -3221,16 +3225,22 @@ Smi.prototype.fromAttr = // 처음에 함수명 잘못 지은 걸 레거시 호�
 Smi.prototype.fromAttrs = function(attrs, forConvert=false) {
 	let text = "";
 	// 주석 살려야 되는지 확인
-	if (forConvert && attrs[0].comment) {
+	if (forConvert) {
 		// 주석에 줄바꿈 있을 수 있어서 따로 처리해줘야 함
-		text = attrs[0].comment;
+		for (let i = 0; i < attrs.length; i++) {
+			if (attrs[i].comment) {
+				text += attrs[i].comment;
+			} else {
+				break;
+			}
+		}
 	}
 	text += Smi.fromAttrs(attrs, 0, true, true, forConvert).split("\n").join("<br>");
 	this.text = text;
 	return this;
 }
 Smi.fromAttr = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
-// fromAttrs 재개발해서 여기 안 탐
+// TODO: fromAttrs 재개발해서 여기 안 탐. 추후 삭제 조치
 Smi.fromAttrs = (attrs, fontSize=0) => { // fontSize를 넣으면 html로 % 크기 출력
 	let text = "";
 	
@@ -3510,11 +3520,11 @@ Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true, forConvert=f
 		if (iLen      >= limit) { limit = len = iLen     ; tag = "I"; }
 		if (bLen      >= limit) { limit = len = bLen     ; tag = "B"; }
 		if (fsLen     >= limit) { limit = len = fsLen    ; tag = "FONT"; font.push("fs") }
-		if (fnLen     >= limit) { limit = len = fnLen    ; tag = "FONT"; (fnLen     > len) ? (font = ["fn"    ]) : font.push("fn"    ); }
-		if (fcLen     >= limit) { limit = len = fcLen    ; tag = "FONT"; (fcLen     > len) ? (font = ["fc"    ]) : font.push("fc"    ); }
-		if (fadeLen   >= limit) { limit = len = fadeLen  ; tag = "FONT"; (fadeLen   > len) ? (font = ["fade"  ]) : font.push("fade"  ); }
-		if (shakeLen  >= limit) { limit = len = shakeLen ; tag = "FONT"; (shakeLen  > len) ? (font = ["shake" ]) : font.push("shake" ); }
-		if (typingLen >= limit) { limit = len = typingLen; tag = "FONT"; (typingLen > len) ? (font = ["typing"]) : font.push("typing"); }
+		if (fnLen     >= limit) { tag = "FONT"; (fnLen     > len) ? (font = ["fn"    ]) : font.push("fn"    ); limit = len = fnLen    ; }
+		if (fcLen     >= limit) { tag = "FONT"; (fcLen     > len) ? (font = ["fc"    ]) : font.push("fc"    ); limit = len = fcLen    ; }
+		if (fadeLen   >= limit) { tag = "FONT"; (fadeLen   > len) ? (font = ["fade"  ]) : font.push("fade"  ); limit = len = fadeLen  ; }
+		if (shakeLen  >= limit) { tag = "FONT"; (shakeLen  > len) ? (font = ["shake" ]) : font.push("shake" ); limit = len = shakeLen ; }
+		if (typingLen >= limit) { tag = "FONT"; (typingLen > len) ? (font = ["typing"]) : font.push("typing"); limit = len = typingLen; }
 		if (len == 0) {
 			if (useAss) {
 				limit = len = assLen;
@@ -4224,7 +4234,7 @@ SmiFile.prototype.fromText = function(text) {
 			}
 		}
 	}
-
+	
 	return this;
 }
 
@@ -4354,10 +4364,10 @@ SmiFile.toSaveStyle = function(style) {
 	if (forAss) {
 		result.push(style.Fontname);
 		result.push(style.Fontsize);
-		{ let fc = style.PrimaryColour   + (511 - style.PrimaryOpacity  ).toString(16).substring(1); result.push("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
-		{ let fc = style.SecondaryColour + (511 - style.SecondaryOpacity).toString(16).substring(1); result.push("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
-		{ let fc = style.OutlineColour   + (511 - style.OutlineOpacity  ).toString(16).substring(1); result.push("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
-		{ let fc = style.BackColour      + (511 - style.BackOpacity     ).toString(16).substring(1); result.push("&H"+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]+fc[7]+fc[8]); }
+		{ let fc = style.PrimaryColour   + (511 - style.PrimaryOpacity  ).toString(16).substring(1).toUpperCase(); result.push("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
+		{ let fc = style.SecondaryColour + (511 - style.SecondaryOpacity).toString(16).substring(1).toUpperCase(); result.push("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
+		{ let fc = style.OutlineColour   + (511 - style.OutlineOpacity  ).toString(16).substring(1).toUpperCase(); result.push("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
+		{ let fc = style.BackColour      + (511 - style.BackOpacity     ).toString(16).substring(1).toUpperCase(); result.push("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
 		result.push(style.Bold      ? -1 : 0);
 		result.push(style.Italic    ? -1 : 0);
 		result.push(style.Underline ? -1 : 0);
@@ -4410,10 +4420,10 @@ SmiFile.parseStyle = function(comment) {
 			// ASS 변환용 스타일 포함
 			style.Fontname = infoStyle[0];
 			style.Fontsize = infoStyle[1];
-			{ let fc = infoStyle[2]; style.PrimaryColour   = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.PrimaryOpacity   = 255 - Number('0x'+fc[8]+fc[9]); }
-			{ let fc = infoStyle[3]; style.SecondaryColour = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.SecondaryOpacity = 255 - Number('0x'+fc[8]+fc[9]); }
-			{ let fc = infoStyle[4]; style.OutlineColour   = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.OutlineOpacity   = 255 - Number('0x'+fc[8]+fc[9]); }
-			{ let fc = infoStyle[5]; style.BackColour      = '#'+fc[6]+fc[7]+fc[4]+fc[5]+fc[2]+fc[3]; style.BackOpacity      = 255 - Number('0x'+fc[8]+fc[9]); }
+			{ let fc = infoStyle[2]; style.PrimaryColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.PrimaryOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
+			{ let fc = infoStyle[3]; style.SecondaryColour = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.SecondaryOpacity = 255 - Number('0x'+fc[2]+fc[3]); }
+			{ let fc = infoStyle[4]; style.OutlineColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.OutlineOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
+			{ let fc = infoStyle[5]; style.BackColour      = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.BackOpacity      = 255 - Number('0x'+fc[2]+fc[3]); }
 			style.Bold      = (infoStyle[6] != 0);
 			style.Italic    = (infoStyle[7] != 0);
 			style.Underline = (infoStyle[8] != 0);
