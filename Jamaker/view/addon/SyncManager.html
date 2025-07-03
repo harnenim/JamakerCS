@@ -533,6 +533,9 @@ $(() => {
 		const $frames = $tr.data("$frames");
 		$framesStorage.append($frames);
 	}
+	$(window).on("resize", function(e) {
+		$("body").scroll();
+	});
 	$("body").on("scroll", function(e) {
 		let status = -1;
 		$("#editor tbody tr.fs").each(function() {

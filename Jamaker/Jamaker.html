@@ -609,15 +609,16 @@ window.MB = 9;
 			, "설정 import|Jamaker.importSetting()"
 			, "가상 프레임 시간 생성|prompt('fps 값을 입력해 주세요.', (fps) => {"
 				+ "if (isFinite(fps)) {"
-				+ "    SmiEditor.video.FL = 1000000 / (SmiEditor.video.FR = Math.round(fps * 1000));"
-				+ "    SmiEditor.video.fs.length = 0;"
+				+ "    Subtitle.video.FL = 1000000 / (Subtitle.video.FR = Math.round(fps * 1000));"
+				+ "    Subtitle.video.fs.length = 0;"
 				+ "    for (let i = 0; i < 200000; i++) {"
-				+ "        SmiEditor.video.fs.push(Math.round(i * SmiEditor.video.FL));"
+				+ "        Subtitle.video.fs.push(Math.round(i * Subtitle.video.FL));"
 				+ "    }"
+				+ "    afterSetFkf();"
 				+ "} else {"
 				+ "    alert('올바른 값이 아닙니다.');"
 				+ "}"
-			+ "}, SmiEditor.video.FR / 1000);"
+			+ "}, Subtitle.video.FR / 1000);"
 			]]);
 		editor.mainView.contentWindow.Jamaker = editor;
 		
