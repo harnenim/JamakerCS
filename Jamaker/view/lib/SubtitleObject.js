@@ -2064,7 +2064,9 @@ AssEvent.fromSync = function(sync, style=null) {
 			}
 		}
 		if (text = text.split("}{").join("")) {
-			const ass = new AssEvent(start, end, sync.style, text, minLayer + i);
+			//const ass = new AssEvent(start, end, sync.style, text, minLayer + i);
+			// SMI와 공통인 게 레이어 최상단이어야 함
+			const ass = new AssEvent(start, end, sync.style, text, 999);
 			ass.origin = sync;
 			events.push(ass);
 		}
