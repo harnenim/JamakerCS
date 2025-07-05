@@ -1485,10 +1485,12 @@ AssEvent.optimizeSync = function(sync) {
 	let i = 0;
 	for (; i < aegisubSyncs.length; i++) {
 		if (sync < aegisubSyncs[i]) {
+			// 싱크 위치 찾음
 			return fs[i - 1];
 		}
 	}
-	return 999999999;
+	// 마지막 싱크로 맞춰줌
+	return Subtitle.video.fs[i - 1];
 }
 AssEvent.prototype.optimizeSync = function() {
 	this.Start = AssEvent.toAssTime((this.start = AssEvent.optimizeSync(this.start)) - 15);
@@ -1591,11 +1593,6 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 			return texts;
 		}
 	}
-	
-	// TODO: 타이핑 효과 있을 경우
-	// TODO: 흔들기 효과 있을 경우
-	// 위의 두 가지는 smi에서 normalize 해서 보내주는 게?
-	// ... 그런데 이건 나중에 연동 비교가 제대로 되나?
 	
 	// 페이드 효과 있을 경우
 	// 일부 페이드 인/아웃 - 겹치는 객체 만들어서 처리해야 함
@@ -1797,7 +1794,9 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 		if      (!last.s &&  attr.s) text += "{\\s1}";
 		else if ( last.s && !attr.s) text += "{\\s0}";
 		
-		if (last.fn != attr.fn) text += "{\\fn" + attr.fn + "}";
+		if (last.fn != attr.fn) text += "{\\fn" + (attr.fn ? attr.fn : "") + "}";
+		
+		if (last.fs != attr.fs) text += "{\\fs" + (attr.fs ? (Math.round(attr.fs / 18 * 800) / 10) : "") + "}";
 		
 		if (attr.fc.length == 15 && attr.fc[0] == '#' && attr.fc[7] == '~' && attr.fc[8] == '#') {
 			// 그라데이션 분할
@@ -1853,6 +1852,7 @@ AssEvent.fromSync = function(sync, style=null) {
 	const events = sync.events = [];
 	const start = sync.start;
 	const end   = sync.end;
+	let minLayer = 0;
 	
 	let attrs = sync.text;
 	if (attrs[0].comment) {
@@ -1866,26 +1866,29 @@ AssEvent.fromSync = function(sync, style=null) {
 					// 남은 내용물은 활용하지 않음
 					return events;
 				}
+				let span = 1;
 				let cols = line.split(",");
-				if (cols.length == 1 || cols[1] || cols[2]) { // 풀사이즈면 싱크값이 비어있어야 함
-					if (cols.length > 2) {
-						// 축약 표현
-						cols = [cols[0], "", "", cols[1], "", 0, 0, 0, "", cols.slice(2).join(",")];
-						
-					} else {
-						// 임의로 텍스트만 쓴 경우
-						cols = [0, "", "", (style ? style.Name : "?"), "", 0, 0, 0, "", line];
-					}
+				if (cols.length == 1) {
+					// 임의로 텍스트만 쓴 경우
+					cols = [0, "", "", (style ? style.Name : "?"), "", 0, 0, 0, "", line];
+				} else if (cols[1]) { // 풀사이즈면 싱크값이 비어있어야 함
+					// 축약 표현
+					cols = [cols[0], "", "", cols[1], "", 0, 0, 0, "", cols.slice(2).join(",")];
 				} else {
 					cols[9] = cols.slice(9).join(",");
 					cols.length = 10;
+					if (cols[2] && isFinite(cols[2])) {
+						span = Number(cols[2]);
+					}
 				}
 				const ass = new AssEvent(start, end, cols[3], cols[9], cols[0]);
 				for (let j = 3; j < 9; j++) {
 					ass[Subtitle.Ass.cols[j]] = cols[j];
 				}
 				ass.origin = sync;
+				ass.span = span;
 				events.push(ass);
+				minLayer = Math.max(minLayer, cols[0]);
 			}
 		}
 	}
@@ -2061,7 +2064,7 @@ AssEvent.fromSync = function(sync, style=null) {
 			}
 		}
 		if (text = text.split("}{").join("")) {
-			const ass = new AssEvent(start, end, sync.style, text, i);
+			const ass = new AssEvent(start, end, sync.style, text, minLayer + i);
 			ass.origin = sync;
 			events.push(ass);
 		}
@@ -2299,7 +2302,15 @@ AssFile.prototype.addFromSyncs = function(syncs, styleName) {
 	for (let i = 0; i < syncs.length; i++) {
 		const sync = syncs[i];
 		sync.style = styleName;
-		part.body.push(...AssEvent.fromSync(sync, style));
+		const events = AssEvent.fromSync(sync, style);
+		for (let j = 0; j < events.length; j++) {
+			const event = events[j];
+			if (event.span > 1) {
+				const spanEnd = Math.min(i + event.span - 1, syncs.length - 1);
+				event.End = AssEvent.toAssTime(event.end = syncs[spanEnd].end);
+			}
+		}
+		part.body.push(...events);
 	}
 }
 AssFile.prototype.toSync = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함

@@ -825,7 +825,23 @@ Tab.prototype.getAdditioinalToAss = function(forSmi=false) {
 			frameSyncs.push(last = sync);
 		}
 	}
-	let info = ["[Script Info]", "VideoInfo: " + Subtitle.video.path, "FrameSyncs: " + frameSyncs.join(",")].join("\n");
+	let videoPath = Subtitle.video.path;
+	if (videoPath && this.path) {
+		// 상대경로로 바꿔줌
+		videoPath = videoPath.split("/").join("\\").split("\\");
+		let smiPath = this.path.split("/").join("\\").split("\\");
+		let i = 0;
+		for (; i < videoPath.length && smiPath.length; i++) {
+			if (videoPath[i] != smiPath[i]) {
+				break;
+			}
+		}
+		videoPath = videoPath.slice(i).join("\\");
+		for (; i < smiPath.length - 1; i++) {
+			videoPath = "..\\" + videoPath;
+		}
+	}
+	let info = ["[Script Info]", "VideoInfo: " + videoPath, "FrameSyncs: " + frameSyncs.join(",")].join("\n");
 	
 	let styles = this.area.find(".tab-ass-styles textarea").val();
 	
@@ -2681,6 +2697,7 @@ function loadAssFile(path, text, target=-1) {
 							}
 							hold.smiFile.body = body.slice(0, replaceFrom).concat(newSmis).concat(body.slice(replaceTo));
 							imported = true;
+							count++;
 							break;
 						}
 					}
@@ -2690,7 +2707,6 @@ function loadAssFile(path, text, target=-1) {
 				}
 				
 				if (!imported) {
-					console.log("ASS 전용 스크립트로 처리", targets);
 					appendEvents.push(...targets);
 					
 					// 수정 내역이 있을 때만 카운트
