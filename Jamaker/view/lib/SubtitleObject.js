@@ -2269,7 +2269,7 @@ AssFile.prototype.fromText = function(text) {
 	return this;
 }
 AssFile.prototype.addFromSync = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
-AssFile.prototype.addFromSyncs = function(syncs, styleName) {
+AssFile.prototype.addFromSyncs = function(syncs, styleName, syncTimes=[]) {
 	let playResX = 1920;
 	let playResY = 1080;
 	const infoPart = this.getInfo();
@@ -2301,15 +2301,32 @@ AssFile.prototype.addFromSyncs = function(syncs, styleName) {
 	
 	
 	const part = this.getEvents();
+	let ti = 0;
 	for (let i = 0; i < syncs.length; i++) {
 		const sync = syncs[i];
 		sync.style = styleName;
 		const events = AssEvent.fromSync(sync, style);
-		for (let j = 0; j < events.length; j++) {
-			const event = events[j];
-			if (event.span > 1) {
-				const spanEnd = Math.min(i + event.span - 1, syncs.length - 1);
-				event.End = AssEvent.toAssTime(event.end = syncs[spanEnd].end);
+		if (syncTimes.length) {
+			// 받아온 싱크값 기준으로 확장
+			for (; ti < syncTimes.length; ti++) {
+				if (syncTimes[ti] >= sync.start) {
+					break;
+				}
+			}
+			for (let j = 0; j < events.length; j++) {
+				const event = events[j];
+				if (event.span > 1) {
+					const spanEnd = Math.min(ti + event.span, syncTimes.length - 1);
+					event.End = AssEvent.toAssTime(event.end = syncTimes[spanEnd]);
+				}
+			}
+		} else {
+			for (let j = 0; j < events.length; j++) {
+				const event = events[j];
+				if (event.span > 1) {
+					const spanEnd = Math.min(i + event.span - 1, syncs.length - 1);
+					event.End = AssEvent.toAssTime(event.end = syncs[spanEnd].end);
+				}
 			}
 		}
 		part.body.push(...events);
@@ -4466,7 +4483,7 @@ SmiFile.styleToSmi = function(style) {
 			const fs = style.Fontname.startsWith("@") ? style.Fontname.substring(1) : style.Fontname;
 			font.push("face=\"" + fs + "\"");
 		}
-		if (style.PrimaryColour != DefaultStyle.PrimaryColour) {
+		if (style.PrimaryColour != DefaultStyle.PrimaryColour && style.PrimaryColour != "#000000") {
 			font.push("color=\"" + style.PrimaryColour + "\"");
 		}
 		if (font.length) {

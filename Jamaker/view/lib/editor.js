@@ -950,6 +950,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 	
 	const holds = this.holds;
 	let mainSyncs = null;
+	let mainSyncTimes = null;
 	const syncs = [];
 	const styles = {};
 	for (let h = 0; h < holds.length; h++) {
@@ -972,10 +973,16 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 		}
 		
 		syncs.push((hold.smiFile = new SmiFile(hold.text)).toSyncs());
+		const syncTimes = [];
+		const smis = hold.smiFile.body;
+		for (let i = 0; i < smis.length; i++) {
+			syncTimes.push(smis[i].start);
+		}
 		if (h == 0) {
 			mainSyncs = syncs[0];
+			mainSyncTimes = syncTimes;
 		} else {
-			assFile.addFromSyncs(syncs[h], name);
+			assFile.addFromSyncs(syncs[h], name, syncTimes);
 		}
 	}
 	for (let h = 1; h < holds.length; h++) {
@@ -1002,7 +1009,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			}
 		}
 	}
-	assFile.addFromSync(mainSyncs, "Default");
+	assFile.addFromSync(mainSyncs, "Default", mainSyncTimes);
 	
 	// 홀드에 없는 스타일 추가
 	assFile.getStyles().body.push(...append.getStyles().body);
