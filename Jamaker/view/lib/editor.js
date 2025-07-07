@@ -2401,14 +2401,18 @@ function loadAssFile(path, text, target=-1) {
 	let styleTexts = currentTab.area.find(".tab-ass-styles textarea").val();
 	styleTexts = styleTexts ? [styleTexts] : [];
 	const styles = {}; // 아래에서도 필요해짐
+	const changedStyles = [];
 	let styleCount = 0;
 	{
+		// SMI 홀드 기반으로 생성한 스타일
 		let part = originFile.getStyles();
 		for (let i = 0; i < part.body.length; i++) {
 			const style = part.body[i];
 			styles[style.Name] = style;
 		}
 		const addPart = appendFile.getStyles();
+		
+		// ASS 파일에서 가져온 스타일
 		part = targetFile.getStyles();
 		
 		for (let i = 0; i < part.body.length; i++) {
@@ -2421,68 +2425,15 @@ function loadAssFile(path, text, target=-1) {
 					const f = part.format[j];
 					if (style[f] != genStyle[f]) {
 						console.log("홀드 스타일 변경 됨", f, genStyle, style);
+						changedStyles.push(style);
 						styleChanged = true;
 						break;
 					}
 				}
-				if (styleChanged) {
-					part.body[i] = styles[style.Name];
-					
-					// 기존 스타일 가져오기
-					const styleName = (style.Name == "Default") ? "메인" : style.Name;
-					let holdStyle = null;
-					for (let h = 0; h < currentTab.holds.length; h++) {
-						const hold = currentTab.holds[h];
-						if (hold.name == styleName) {
-							holdStyle = JSON.parse(JSON.stringify(hold.style));
-							break;
-						}
-					}
-					console.log("기존 스타일 가져오기", holdStyle);
-					// 여기서 없을 수는 없음
-					if (holdStyle) {
-						// output은 유지
-						holdStyle.Fontname    = style.Fontname   ;
-						holdStyle.Fontsize    = style.Fontsize   ;
-						holdStyle.Bold        = style.Bold      != 0;
-						holdStyle.Italic      = style.Italic    != 0;
-						holdStyle.Underline   = style.Underline != 0;
-						holdStyle.StrikeOut   = style.StrikeOut != 0;
-						holdStyle.ScaleX      = style.ScaleX     ;
-						holdStyle.ScaleY      = style.ScaleY     ;
-						holdStyle.Spacing     = style.Spacing    ;
-						holdStyle.Angle       = style.Angle      ;
-						holdStyle.BorderStyle = (style.BorderStyle & 2) != 0;
-						holdStyle.Outline     = style.Outline    ;
-						holdStyle.Shadow      = style.Shadow     ;
-						holdStyle.Alignment   = style.Alignment  ;
-						holdStyle.MarginL     = style.MarginL    ;
-						holdStyle.MarginR     = style.MarginR    ;
-						holdStyle.MarginV     = style.MarginV    ;
-						{ let fc = style.PrimaryColour  ; holdStyle.PrimaryColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.PrimaryOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
-						{ let fc = style.SecondaryColour; holdStyle.SecondaryColour = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.SecondaryOpacity = 255 - Number('0x'+fc[2]+fc[3]); }
-						{ let fc = style.OutlineColour  ; holdStyle.OutlineColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.OutlineOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
-						{ let fc = style.BackColour     ; holdStyle.BackColour      = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.BackOpacity      = 255 - Number('0x'+fc[2]+fc[3]); }
-						
-						// 해당 홀드 스타일 적용
-						// 같은 이름의 홀드가 여러 개일 수 있음
-						for (let h = 0; h < currentTab.holds.length; h++) {
-							const hold = currentTab.holds[h];
-							if (hold.name == styleName) {
-								hold.setStyle(holdStyle);
-							}
-						}
-					}
-					styleCount++;
-				}
 			} else {
 				console.log("SMI에서 해당하는 홀드가 없음");
-				addPart.body.push(style);
-				styleCount++;
+				changedStyles.push(style);
 			}
-		}
-		if (addPart.body.length) {
-			styleTexts.push(addPart.toText(false));
 		}
 	}
 	
@@ -2567,6 +2518,7 @@ function loadAssFile(path, text, target=-1) {
 				} else {
 					// origin이 없었으면 기존에 ASS 전용으로 넣었던 것이므로 삭제 대상
 				}
+				console.log("count++ ASS 출력 제외 대상", originEvents[oi]);
 				count++;
 				oi++;
 			}
@@ -2707,6 +2659,7 @@ function loadAssFile(path, text, target=-1) {
 							}
 							hold.smiFile.body = body.slice(0, replaceFrom).concat(newSmis).concat(body.slice(replaceTo));
 							imported = true;
+							console.log("count++ ASS 전용 SMI 싱크 생성", targets);
 							count++;
 							break;
 						}
@@ -2742,6 +2695,7 @@ function loadAssFile(path, text, target=-1) {
 					}
 					
 					if (updated) {
+						console.log("count++ ASS 전용 스크립트로 처리", origins,targets);
 						count++;
 					}
 				}
@@ -3037,6 +2991,8 @@ function loadAssFile(path, text, target=-1) {
 						console.log("ASS 독자 내용", targets);
 						appendEvents.push(...targets);
 					}
+
+					console.log("count++ 수정 내역이 존재", targets);
 					count++;
 				}
 				
@@ -3061,6 +3017,7 @@ function loadAssFile(path, text, target=-1) {
 			} else {
 				// origin이 없었으면 기존에 ASS 전용으로 넣었던 것이므로 삭제 대상
 			}
+			console.log("count++ ASS 출력 제외 대상", originEvents[oi]);
 			count++;
 			oi++;
 		}
@@ -3073,82 +3030,143 @@ function loadAssFile(path, text, target=-1) {
 		}
 		*/
 		
-		if (count > 0) {
-			confirm("ASS 자막 수정 내역이 있습니다. 적용하시겠습니까?\n\n올바른 동영상 파일이 열려있어야 정상적인 결과를 얻을 수 있습니다.", () => {
-				for (let i = 0; i < currentTab.holds.length; i++) {
-					const hold = currentTab.holds[i];
-					if (!hold.smiFile) continue;
+		if (changedStyles.length > 0 || count > 0) {
+			let msg = "ASS 자막 수정 내역이 있습니다. 적용하시겠습니까?\n\n올바른 동영상 파일이 열려있어야 정상적인 결과를 얻을 수 있습니다.";
+			if (count == 0) {
+				msg = "ASS 자막 스타일 수정 내역이 있습니다. 적용하시겠습니까?";
+			}
+			confirm(msg, () => {
+				if (changedStyles.length) {
+					const addPart = appendFile.getStyles();
 					
-					const smiText = hold.smiFile.toText();
-					hold.input.val(smiText);
-					hold.setCursor(0);
-					hold.scrollToCursor();
-					hold.render();
+					for (let i = 0; i < changedStyles.length; i++) {
+						const style = changedStyles[i];
+						const genStyle = styles[style.Name];
+						if (genStyle) {
+							// 기존 스타일 가져오기
+							const styleName = (style.Name == "Default") ? "메인" : style.Name;
+							let holdStyle = null;
+							for (let h = 0; h < currentTab.holds.length; h++) {
+								const hold = currentTab.holds[h];
+								if (hold.name == styleName) {
+									holdStyle = JSON.parse(JSON.stringify(hold.style));
+									break;
+								}
+							}
+							console.log("기존 스타일 가져오기", holdStyle);
+							// 여기서 없을 수는 없음
+							if (holdStyle) {
+								// output은 유지
+								holdStyle.Fontname    = style.Fontname   ;
+								holdStyle.Fontsize    = style.Fontsize   ;
+								holdStyle.Bold        = style.Bold      != 0;
+								holdStyle.Italic      = style.Italic    != 0;
+								holdStyle.Underline   = style.Underline != 0;
+								holdStyle.StrikeOut   = style.StrikeOut != 0;
+								holdStyle.ScaleX      = style.ScaleX     ;
+								holdStyle.ScaleY      = style.ScaleY     ;
+								holdStyle.Spacing     = style.Spacing    ;
+								holdStyle.Angle       = style.Angle      ;
+								holdStyle.BorderStyle = (style.BorderStyle & 2) != 0;
+								holdStyle.Outline     = style.Outline    ;
+								holdStyle.Shadow      = style.Shadow     ;
+								holdStyle.Alignment   = style.Alignment  ;
+								holdStyle.MarginL     = style.MarginL    ;
+								holdStyle.MarginR     = style.MarginR    ;
+								holdStyle.MarginV     = style.MarginV    ;
+								{ let fc = style.PrimaryColour  ; holdStyle.PrimaryColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.PrimaryOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
+								{ let fc = style.SecondaryColour; holdStyle.SecondaryColour = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.SecondaryOpacity = 255 - Number('0x'+fc[2]+fc[3]); }
+								{ let fc = style.OutlineColour  ; holdStyle.OutlineColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.OutlineOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
+								{ let fc = style.BackColour     ; holdStyle.BackColour      = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.BackOpacity      = 255 - Number('0x'+fc[2]+fc[3]); }
+								
+								// 해당 홀드 스타일 적용
+								// 같은 이름의 홀드가 여러 개일 수 있음
+								for (let h = 0; h < currentTab.holds.length; h++) {
+									const hold = currentTab.holds[h];
+									if (hold.name == styleName) {
+										hold.setStyle(holdStyle);
+									}
+								}
+							}
+						} else {
+							console.log("SMI에서 해당하는 홀드가 없음");
+							addPart.body.push(style);
+						}
+					}
+					if (addPart.body.length) {
+						// 추가 스타일
+						styleTexts.push(addPart.toText(false));
+						currentTab.area.find(".tab-ass-styles textarea").val(styleTexts.join("\n"));
+					}
 				}
-				
-				// 추가 스타일
-				currentTab.area.find(".tab-ass-styles textarea").val(styleTexts.join("\n"));
-				
-				// 스크립트는 홀드별로 분할해서 넣어야 함
-				const holds = currentTab.holds;
-				for (let h = 0; h < holds.length; h++) {
-					holds[h].ass = [];
-				}
-				
-				const appendEvents = appendFile.getEvents();
-				const list = appendEvents.body;
-				const appends = [];
-				for (let i = 0; i < list.length; i++) {
-					const item = list[i];
+				if (count) {
+					for (let i = 0; i < currentTab.holds.length; i++) {
+						const hold = currentTab.holds[i];
+						if (!hold.smiFile) continue;
+						
+						const smiText = hold.smiFile.toText();
+						hold.input.val(smiText);
+						hold.setCursor(0);
+						hold.scrollToCursor();
+						hold.render();
+					}
 					
-					item.start = AssEvent.fromAssTime(item.Start = item.oStart, true);
-					item.end   = AssEvent.fromAssTime(item.End   = item.oEnd  , true);
+					// 스크립트는 홀드별로 분할해서 넣어야 함
+					const holds = currentTab.holds;
+					for (let h = 0; h < holds.length; h++) {
+						holds[h].ass = [];
+					}
 					
-					if (item.Style == "Default") {
-						holds[0].ass.push(item);
-					} else {
-						let found = false;
-						for (let h = 1; h < holds.length; h++) {
-							if (item.Style == holds[h].name) {
-								holds[h].ass.push(item);
-								found = true;
-								break;
+					const appendEvents = appendFile.getEvents();
+					const list = appendEvents.body;
+					const appends = [];
+					for (let i = 0; i < list.length; i++) {
+						const item = list[i];
+						
+						item.start = AssEvent.fromAssTime(item.Start = item.oStart, true);
+						item.end   = AssEvent.fromAssTime(item.End   = item.oEnd  , true);
+						
+						if (item.Style == "Default") {
+							holds[0].ass.push(item);
+						} else {
+							let found = false;
+							for (let h = 1; h < holds.length; h++) {
+								if (item.Style == holds[h].name) {
+									holds[h].ass.push(item);
+									found = true;
+									break;
+								}
+							}
+							if (!found) {
+								appends.push(item);
 							}
 						}
-						if (!found) {
-							appends.push(item);
+					}
+					appendEvents.body = appends;
+					
+					/*
+					// TODO: SMI에서 화면 싱크인 것 뽑아오기... 필요한가?
+					// 일단 안 넣어주면 모두 화면 싱크로 처리되는 중
+					const totalFrameSyncs = [];
+					for (let h = 0; h < currentTab.holds.length; h++) {
+						const lines = currentTab.holds[h].lines;
+						for (let i = 0; i < lines.length; i++) {
+							const line = lines[i];
+							if (line.TYPE == TYPE.FRAME) {
+								
+							}
 						}
 					}
-				}
-				appendEvents.body = appends;
-				
-				/*
-				// TODO: SMI에서 화면 싱크인 것 뽑아오기... 필요한가?
-				// 일단 안 넣어주면 모두 화면 싱크로 처리되는 중
-				const totalFrameSyncs = [];
-				for (let h = 0; h < currentTab.holds.length; h++) {
-					const lines = currentTab.holds[h].lines;
-					for (let i = 0; i < lines.length; i++) {
-						const line = lines[i];
-						if (line.TYPE == TYPE.FRAME) {
-							
-						}
+					*/
+					
+					currentTab.assHold.assEditor.setEvents(appendEvents.body);
+					
+					// 각 홀드 ASS 에디터
+					for (let h = 0; h < holds.length; h++) {
+						const hold = holds[h];
+						hold.assEditor.setEvents(hold.ass);
 					}
 				}
-				*/
-				
-				currentTab.assHold.assEditor.setEvents(appendEvents.body);
-				
-				// 각 홀드 ASS 에디터
-				for (let h = 0; h < holds.length; h++) {
-					const hold = holds[h];
-					hold.assEditor.setEvents(hold.ass);
-				}
-				
-			}, () => {
-				// TODO: 적용 안 하면 어쩔?
-				// 기존 ASS 파일 .bak 파일이라도 만들?
-				// ... 영상 불러오면 자동으로 가져오려고 했는데, 수동으로 가져온다면 필요 없을지도?
 			});
 		} else {
 			if (styleCount) {
