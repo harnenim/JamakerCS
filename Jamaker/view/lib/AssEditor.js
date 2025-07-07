@@ -176,8 +176,10 @@ AssEditor.prototype.getFrameSyncs = function() {
 	return result;
 }
 AssEditor.prototype.setSaved = function() {
+	this.savedSyncs = [];
 	for (let i = 0; i < this.syncs.length; i++) {
 		this.syncs[i].setSaved();
+		this.savedSyncs.push(this.syncs[i]);
 	}
 	this.isSaved = true;
 }
