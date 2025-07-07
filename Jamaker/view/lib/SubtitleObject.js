@@ -4463,7 +4463,8 @@ SmiFile.styleToSmi = function(style) {
 	if (style) {
 		const font = [];
 		if (style.Fontname) {
-			font.push("face=\"" + style.Fontname + "\"");
+			const fs = style.Fontname.startsWith("@") ? style.Fontname.substring(1) : style.Fontname;
+			font.push("face=\"" + fs + "\"");
 		}
 		if (style.PrimaryColour != DefaultStyle.PrimaryColour) {
 			font.push("color=\"" + style.PrimaryColour + "\"");
