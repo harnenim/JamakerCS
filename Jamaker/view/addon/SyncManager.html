@@ -104,13 +104,24 @@ $(() => {
 		let lastFade = 0;
 		for (let i = 0; i < origin.smiFile.body.length; i++) {
 			const smi = origin.smiFile.body[i];
-			const attrs = smi.toAttr();
 			let fade = 0;
-			for (let j = 0; j < attrs.length; j++) {
-				const attr = attrs[j];
-				if (attr.fade == -1 || attr.fade == 1) {
-					fade = attr.fade;
-					break;
+			if (smi.text.indexOf("\\fade(")) {
+				if (smi.text.indexOf("\\fade(0")) {
+					// ASS 페이드인
+					fade = 1;
+				} else {
+					// ASS 페이드아웃
+					fade = -1;
+				}
+			} else {
+				// SMI 페이드 여부 확인
+				const attrs = smi.toAttr();
+				for (let j = 0; j < attrs.length; j++) {
+					const attr = attrs[j];
+					if (attr.fade == -1 || attr.fade == 1) {
+						fade = attr.fade;
+						break;
+					}
 				}
 			}
 			
