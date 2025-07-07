@@ -2410,7 +2410,7 @@ function loadAssFile(path, text, target=-1) {
 		}
 		const addPart = appendFile.getStyles();
 		part = targetFile.getStyles();
-		console.log(part);
+		
 		for (let i = 0; i < part.body.length; i++) {
 			const style = part.body[i];
 			const genStyle = styles[style.Name];
@@ -2580,8 +2580,8 @@ function loadAssFile(path, text, target=-1) {
 			for (let i = oi; i < originEvents.length; i++) {
 				// 싱크 일치하는 것 확인
 				const event = originEvents[i];
-				if (event.Start != tEvent.Start) continue;
-				if (event.End   != tEvent.End  ) continue;
+				if (event.start != tEvent.start) continue;
+				if (event.end   != tEvent.end  ) continue;
 				origins.push(event);
 				
 				const style = event.Style;
@@ -2599,8 +2599,8 @@ function loadAssFile(path, text, target=-1) {
 			for (let i = ti; i < targetEvents.length; i++) {
 				// 싱크 일치하는 것 확인
 				const event = targetEvents[i];
-				if (event.Start != tEvent.Start) continue;
-				if (event.End   != tEvent.End  ) continue;
+				if (event.start != tEvent.start) continue;
+				if (event.end   != tEvent.end  ) continue;
 				targets.push(event);
 				
 				const style = event.Style;
@@ -2679,11 +2679,14 @@ function loadAssFile(path, text, target=-1) {
 							let newText = "<!-- ASS\n";
 							for (i = 0; i < targets.length; i++) {
 								const item = targets[i];
+								/* 축약 표현은 혼란만 가중되는 느낌
 								if (item.Name == "" && item.MarginL == 0 && item.MarginR == 0 && item.MarginV == 0 && item.Effect == "") {
 									newText += [item.Layer, item.Style, item.Text].join(",") + "\n";
 								} else {
 									newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
 								}
+								*/
+								newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
 							}
 							newText += "END\n-->";
 							console.log("ASS 전용 SMI 싱크 생성", newText);
@@ -2726,8 +2729,8 @@ function loadAssFile(path, text, target=-1) {
 							const o = origins[i];
 							const t = targets[i];
 							["Layer", "Start", "End", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
-							if (o.Start   != t.Start  ) { updated = true; break; }
-							if (o.End     != t.End    ) { updated = true; break; }
+							if (o.start   != t.start  ) { updated = true; break; }
+							if (o.end     != t.end    ) { updated = true; break; }
 							if (o.Style   != t.Style  ) { updated = true; break; }
 							if (o.Name    != t.Name   ) { updated = true; break; }
 							if (o.MarginL != t.MarginL) { updated = true; break; }
@@ -2992,11 +2995,14 @@ function loadAssFile(path, text, target=-1) {
 									let newText = "<!-- ASS\n";
 									for (i = 0; i < targets.length; i++) {
 										const item = targets[i];
+										/* 축약 표현은 혼란만 가중되는 느낌
 										if (item.Name == "" && item.MarginL == 0 && item.MarginR == 0 && item.MarginV == 0 && item.Effect == "") {
 											newText += [item.Layer, item.Style, item.Text].join(",") + "\n";
 										} else {
 											newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
 										}
+										*/
+										newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
 									}
 									newText += "END\n-->";
 									if (smiText) newText += "\n" + smiText;
@@ -3008,11 +3014,14 @@ function loadAssFile(path, text, target=-1) {
 									let newText = "<!-- ASS\n";
 									for (i = 0; i < prepends.length; i++) {
 										const item = prepends[i];
+										/*
 										if (item.Name == "" && item.MarginL == 0 && item.MarginR == 0 && item.MarginV == 0 && item.Effect == "") {
 											newText += [item.Layer, item.Style, item.Text].join(",") + "\n";
 										} else {
 											newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
 										}
+										*/
+										newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
 									}
 									newText += "-->\n" + smiText;
 									smiText = newText;
