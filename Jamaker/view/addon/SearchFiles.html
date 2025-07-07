@@ -21,6 +21,7 @@ $(() => {
 	const $inputDir = $("#inputDir");
 	const $dirCurrent = $("#dirCurrent");
 	const $inputQuery = $("#inputQuery");
+	const $dlSubDirs = $("#dlSubDirs");
 	const $dlLastDirs = $("#dlLastDirs");
 	const $dlLastQuerys = $("#dlLastQuerys");
 	
@@ -100,6 +101,25 @@ $(() => {
 			
 			if (lastDirs.length) $("#inputDir").val(lastDirs[0]);
 		});
+	}
+	
+	$inputDir.on("input propertychange", () => {
+		const value = $inputDir.val().split("/").join("\\");
+		if (value) {
+			$inputDir.attr({ list: "dlSubDirs" });
+			const index = value.lastIndexOf("\\");
+			if (index > 0) {
+				opener.binder.getSubDirs(value.substring(0, index));
+			} else {
+				$dlSubDirs.empty();
+			}
+		} else {
+			// 입력된 게 없으면 최근 사용한 목록
+			$inputDir.attr({ list: "dlLastDirs" });
+		}
+	});
+	opener.afterGetSubDirs = function(dirs) {
+		refreshDatalist($dlSubDirs, dirs.split("\n"));
 	}
 	
 	let query = "test";
@@ -226,6 +246,7 @@ button[type=submit] { width: 50px; }
 		</label>
 		<div><input type="text" id="inputQuery" accesskey="f" title="Alt+F"
 				placeholder="검색어" autocomplete="off" list="dlLastQuerys" /><button type="submit">검색</button></div>
+			<datalist id="dlSubDirs"></datalist>
 			<datalist id="dlLastDirs"></datalist>
 			<datalist id="dlLastQuerys"></datalist>
 	</form>

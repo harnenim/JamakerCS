@@ -95,6 +95,7 @@ Binder.prototype.setAfterInitAddon = function(func) { this._.setAfterInitAddon(f
 Binder.prototype.loadAddonSetting = function(path) { this._.loadAddonSetting(path); }
 Binder.prototype.saveAddonSetting = function(path, text) { this._.saveAddonSetting(path, text); }
 
+Binder.prototype.getSubDirs = function(dir) { console.log(dir); }
 Binder.prototype.searchFiles = function(dir, query) { alert("C#에서 동작합니다."); };
 
 // viewer/finder opener 못 쓰게 될 경우 고려

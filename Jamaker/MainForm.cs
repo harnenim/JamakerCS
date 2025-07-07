@@ -733,6 +733,24 @@ namespace Jamaker
             Script("afterSaveAddonSetting");
         }
 
+        public void GetSubDirs(string dir)
+        {
+            string dirs = "";
+            DirectoryInfo di = new DirectoryInfo(dir);
+            if (di.Exists)
+            {
+                DirectoryInfo[] subDirs = di.GetDirectories();
+                foreach (DirectoryInfo subDir in subDirs)
+                {
+                    if (dirs.Length > 0)
+                    {
+                        dirs += "\n";
+                    }
+                    dirs += subDir.FullName;
+                }
+            }
+            Script("afterGetSubDirs", dirs);
+        }
         public void SearchFiles(string dir, string query)
         {
             DirectoryInfo di = new DirectoryInfo(dir);
