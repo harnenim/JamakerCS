@@ -319,6 +319,16 @@ namespace Jamaker
 
                 double ratio = to - from;
 
+                // 비디오 스트림의 시작 시간을 빼줘야 함
+                double startTime = 0;
+                foreach(StreamAttr stream in streams)
+                {
+                    if (stream.type == "video")
+                    {
+                        startTime = stream.startTime;
+                    }
+                }
+
                 StreamReader sr = new StreamReader(proc.StandardOutput.BaseStream);
                 string line;
                 while ((line = sr.ReadLine()) != null)
@@ -326,7 +336,7 @@ namespace Jamaker
                     try
                     {
                         string[] values = line.Split(',');
-                        int time = (int) Math.Round(double.Parse(values[0]) * 1000);
+                        int time = (int) Math.Round((double.Parse(values[0]) - startTime) * 1000);
                         vfs.Add(time);
                         if (values[1].StartsWith("K"))
                         {
