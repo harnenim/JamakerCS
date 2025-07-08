@@ -2620,7 +2620,7 @@ function loadAssFile(path, text, target=-1) {
 						}
 						
 						if (canImport) {
-							if (end > body[replaceTo]) {
+							if (replaceTo < body.length && end > body[replaceTo].start) {
 								// 다음 싱크와 겹침
 								canImport = false;
 							}
@@ -3126,18 +3126,25 @@ function loadAssFile(path, text, target=-1) {
 						item.start = AssEvent.fromAssTime(item.Start = item.oStart, true);
 						item.end   = AssEvent.fromAssTime(item.End   = item.oEnd  , true);
 						
+						// TODO: 기존 SMI 홀드에 span 형태로 끼워넣을 수 있는지 확인
+						
+						// 별도 ASS 자막 형태로 추가
 						if (item.Style == "Default") {
+							// 메인 홀드
 							holds[0].ass.push(item);
+							
 						} else {
 							let found = false;
 							for (let h = 1; h < holds.length; h++) {
 								if (item.Style == holds[h].name) {
+									// 각 홀드
 									holds[h].ass.push(item);
 									found = true;
 									break;
 								}
 							}
 							if (!found) {
+								// 비홀드
 								appends.push(item);
 							}
 						}
@@ -3146,6 +3153,7 @@ function loadAssFile(path, text, target=-1) {
 					
 					/*
 					// TODO: SMI에서 화면 싱크인 것 뽑아오기... 필요한가?
+					// 반대로 일반 싱크 예외가 필요한가...?
 					// 일단 안 넣어주면 모두 화면 싱크로 처리되는 중
 					const totalFrameSyncs = [];
 					for (let h = 0; h < currentTab.holds.length; h++) {
