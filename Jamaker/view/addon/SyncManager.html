@@ -12,79 +12,111 @@
 windowName = "addon";
 
 // 초기 상태 기억
-// TODO: 경우에 따라 opener 분리 필요
-// TODO: 현재 홀드가 아닌 문서 전체에 대해 동작시킬까...?
-const hold = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
-const origin = hold ? hold.getText(true) : null;
-if (hold) {
+const tab = opener && opener.tabs && opener.tabs.length ? opener.tabs[opener.tab] : null;
+const origins = [];
+if (tab) {
 	Subtitle.video = opener.Subtitle.video;
 }
+
 const RANGE = 10; // 현재 싱크 전후로 렌더링할 범위
 let mode = 1;
 const M = [null, "", "_", "~"]; // 모드에 따른 파일명 끝 표시
 
 $(() => {
-	if (!origin) {
+	if (!tab) {
 		alert("작업 대상이 없습니다.");
 		window.close();
 		return;
 	}
-	if (!Subtitle.video.fs.length) {
-		alert("영상 프레임 정보가 없습니다.");
-		window.close();
-		return;
-	}
-	if (hold.area.hasClass("style")) {
-		alert("스타일 편집기를 닫으셔야 합니다.");
-		window.close();
-		return;
-	}
-	const fs = Subtitle.video.fs;
-	const kfs = Subtitle.video.kfs;
-	const trustKeyFrame = opener.SmiEditor.trustKeyFrame;
 	
-	origin.hold = hold;
-	origin.lines = hold.lines;
-	origin.start = 0;
-	origin.end = 0;
-	
-	console.log(hold.area);
-
-	if (hold.area.hasClass("ass")) {
-		// ASS만 작업
-		origin.assBody = origin.hold.assEditor.syncs;
+	{
+		// 현재 선택된 홀드 기준
+		const hold = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
+		const origin = hold.getText(true);
+		origin.hold = hold;
+		origin.lines = hold.lines;
 		
-	} else {
-		if (origin.selection[0] != origin.selection[1]) {
-			// 선택 범위만 작업
-			origin.start = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
-			origin.end   = origin.text.substring(0, origin.selection[1]).split("\n").length;
-		} else {
-			// 전체 작업
-			origin.end = origin.text.split("\n").length;
+		origin.start = 0;
+		origin.end = 0;
+		
+		if (hold.area.hasClass("ass")) {
+			// ASS만 작업
 			origin.assBody = origin.hold.assEditor.syncs;
+			origins.push(origin);
+			
+		} else {
+			if (origin.selection[0] != origin.selection[1]) {
+				// 선택 범위만 작업
+				origin.start = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
+				origin.end   = origin.text.substring(0, origin.selection[1]).split("\n").length;
+				origin.assBody = [];
+				origins.push(origin);
+				
+			} else {
+				// 전체 작업
+			}
 		}
 	}
 	
-	const lines = origin.lines.slice(origin.start, origin.end);
-	for (let i = 0; i < lines.length; i++) {
-		lines[i] = lines[i].TEXT;
+	let count = 0;
+	
+	if (origins.length) {
+		// 선택된 홀드만 작업
+		const origin = origins[0];
+
+		const lines = origin.lines.slice(origin.start, origin.end);
+		for (let i = 0; i < lines.length; i++) {
+			lines[i] = lines[i].TEXT;
+		}
+		origin.smiFile = new Subtitle.SmiFile(lines.join("\n"));
+		count = origin.smiFile.body.length + origin.assBody.length;
+		
+	} else {
+		// 모든 홀드에 대해 작업
+		const holds = tab.holds.slice(0);
+		holds.push(tab.assHold);
+		
+		for (let i = 0; i < holds.length; i++) {
+			const hold = holds[i];
+			const origin = hold.getText(true);
+			origin.hold = hold;
+			origin.lines = hold.lines;
+			
+			origin.start = 0;
+			origin.end = 0;
+			
+			origin.end = origin.text.split("\n").length;
+			origin.assBody = origin.hold.assEditor.syncs;
+			
+			const lines = origin.lines.slice(origin.start, origin.end);
+			for (let i = 0; i < lines.length; i++) {
+				lines[i] = lines[i].TEXT;
+			}
+			origin.smiFile = new Subtitle.SmiFile(lines.join("\n"));
+			count += origin.smiFile.body.length + origin.assBody.length;
+			
+			origins.push(origin);
+		}
 	}
-	origin.smiFile = new Subtitle.SmiFile(lines.join("\n"));
-	if (!origin.smiFile.body.length
-	 && !origin.assBody.length) {
+
+	if (!count) {
 		alert("작업 대상이 없습니다.");
 		window.close();
 		return;
 	}
+	
+	const fs = Subtitle.video.fs;
+	const kfs = Subtitle.video.kfs;
+	const trustKeyFrame = opener.SmiEditor.trustKeyFrame;
+	const renderFromKeyframe = Subtitle.video.path && Subtitle.video.path.endsWith(".m2ts");
 	
 	const $body = $("body");
 	const $tbody = $("#editor tbody").empty();
 	const $framesStorage = $("<div>"); // 객체 remove 하면 data가 날아가서 여기에 보관함
 	const frameSyncs = [];
 	
-	const $thead = $("#editor thead").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origin.smiFile.header.split("\n").join(""))));
-	const $tfoot = $("#editor tfoot").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origin.smiFile.footer.split("\n").join(""))));
+	const $thead = $("#editor thead").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origins[0].smiFile.header.split("\n").join(""))));
+	const $tfoot = $("#editor tfoot").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origins[0].smiFile.footer.split("\n").join(""))));
 	
 	function setFrames($frames, frameIndex, flag) {
 		for (let j = -RANGE; j < RANGE; j++) {
@@ -96,135 +128,139 @@ $(() => {
 			$frames.append($img);
 		}
 	}
-
-	let lastIndex = -1;
-	let count = 0;
-	if (origin.smiFile.body) {
-		// SMI
-		let lastFade = 0;
-		for (let i = 0; i < origin.smiFile.body.length; i++) {
-			const smi = origin.smiFile.body[i];
-			let fade = 0;
-			if (smi.text.indexOf("\\fade(")) {
-				if (smi.text.indexOf("\\fade(0")) {
-					// ASS 페이드인
-					fade = 1;
+	
+	for (let oi = 0; oi < origins.length; oi++) {
+		const origin = origins[oi];
+		
+		let lastIndex = -1;
+		let count = 0;
+		if (origin.smiFile.body) {
+			// SMI
+			let lastFade = 0;
+			for (let i = 0; i < origin.smiFile.body.length; i++) {
+				const smi = origin.smiFile.body[i];
+				let fade = 0;
+				if (smi.text.indexOf("\\fade(")) {
+					if (smi.text.indexOf("\\fade(0")) {
+						// ASS 페이드인
+						fade = 1;
+					} else {
+						// ASS 페이드아웃
+						fade = -1;
+					}
 				} else {
-					// ASS 페이드아웃
-					fade = -1;
-				}
-			} else {
-				// SMI 페이드 여부 확인
-				const attrs = smi.toAttr();
-				for (let j = 0; j < attrs.length; j++) {
-					const attr = attrs[j];
-					if (attr.fade == -1 || attr.fade == 1) {
-						fade = attr.fade;
-						break;
+					// SMI 페이드 여부 확인
+					const attrs = smi.toAttr();
+					for (let j = 0; j < attrs.length; j++) {
+						const attr = attrs[j];
+						if (attr.fade == -1 || attr.fade == 1) {
+							fade = attr.fade;
+							break;
+						}
 					}
 				}
-			}
-			
-			const $tr = $("<tr>").data({ smi: smi });
-			
-			if (smi.syncType == Subtitle.SyncType.frame) {
-				const frameIndex = Subtitle.findSyncIndex(smi.start, fs);
-				const $frames = $("<div>").addClass("frames");
-				const $sync = $("<td>").addClass("sync");
-				setSync($sync, fs[frameIndex]);
-				$framesStorage.append($frames);
-				$tr.addClass("fs").append($("<td>")).append($sync);
-				frameSyncs.push($tr);
-
-				let flag = "";
-				if (fade == 1) {
-					// 페이드인 시작 이미지 밝게
-					flag = "b";
-				} else if (fade == -1) {
-					// 페이드아웃 시작 이미지 어둡게
-					flag = "d";
-				} else if (lastFade == -1) {
-					// 페이드아웃 종료 이미지 밝게
-					flag = "b";
-				} else if (lastFade == 1) {
-					// 페이드인 종료 이미지 어둡게
-					flag = "d";
-				}
-				$tr.data({ index: (lastIndex = frameSyncs.length - 1), $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
-				count = 0;
 				
-				setFrames($frames, frameIndex, flag);
-
-			} else {
-				$tr.append($("<td>")).append($("<td>").addClass("sync").text(smi.syncType == Subtitle.SyncType.inner ? "~" : smi.start));
-				$tr.data({ index: lastIndex + (++count / 1000) }); // 1000개를 넘어갈 일은 없을 것
-			}
-			$tbody.append($tr.append($("<td>").text(smi.text.split("\n").join(""))));
-
-			lastFade = fade;
-		}
-	}
-	if (origin.assBody) {
-		// ASS
-		$tbody.append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text("&nbsp;")).data({ index: lastIndex + (++count / 1000) }));
-		
-		for (let i = 0; i < origin.assBody.length; i++) {
-			const ass = origin.assBody[i];
-			let start = ass.inputStart.val();
-			let end   = ass.inputEnd  .val();
-			
-			{	// start
-				const $tr = $("<tr>").data({ ass: ass, type: "start" });
+				const $tr = $("<tr>").data({ oi: oi, smi: smi });
 				
-				if (ass.checkStart.prop("checked")) {
-					const frameIndex = Subtitle.findSyncIndex(start, fs);
+				if (smi.syncType == Subtitle.SyncType.frame) {
+					const frameIndex = Subtitle.findSyncIndex(smi.start, fs);
 					const $frames = $("<div>").addClass("frames");
 					const $sync = $("<td>").addClass("sync");
 					setSync($sync, fs[frameIndex]);
 					$framesStorage.append($frames);
 					$tr.addClass("fs").append($("<td>")).append($sync);
 					frameSyncs.push($tr);
-					
-					// TODO: 페이드는?
+	
 					let flag = "";
-					
+					if (fade == 1) {
+						// 페이드인 시작 이미지 밝게
+						flag = "b";
+					} else if (fade == -1) {
+						// 페이드아웃 시작 이미지 어둡게
+						flag = "d";
+					} else if (lastFade == -1) {
+						// 페이드아웃 종료 이미지 밝게
+						flag = "b";
+					} else if (lastFade == 1) {
+						// 페이드인 종료 이미지 어둡게
+						flag = "d";
+					}
 					$tr.data({ index: (lastIndex = frameSyncs.length - 1), $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
 					count = 0;
 					
 					setFrames($frames, frameIndex, flag);
-					
+	
 				} else {
-					$tr.append($("<td>")).append($("<td>").addClass("sync").text(start));
+					$tr.append($("<td>")).append($("<td>").addClass("sync").text(smi.syncType == Subtitle.SyncType.inner ? "~" : smi.start));
 					$tr.data({ index: lastIndex + (++count / 1000) }); // 1000개를 넘어갈 일은 없을 것
 				}
-				$tbody.append($tr.append($("<td>").attr({ rowspan: 2 }).text(ass.inputText.val())));
+				$tbody.append($tr.append($("<td>").text(smi.text.split("\n").join(""))));
+	
+				lastFade = fade;
 			}
+		}
+		if (origin.assBody) {
+			// ASS
+			$tbody.append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text("&nbsp;")).data({ index: lastIndex + (++count / 1000) }));
 			
-			{	// end
-				const $tr = $("<tr>").data({ ass: ass, type: "end" });
-
-				if (ass.checkEnd.prop("checked")) {
-					const frameIndex = Subtitle.findSyncIndex(end, fs);
-					const $frames = $("<div>").addClass("frames");
-					const $sync = $("<td>").addClass("sync");
-					setSync($sync, fs[frameIndex]);
-					$framesStorage.append($frames);
-					$tr.addClass("fs").append($("<td>")).append($sync);
-					frameSyncs.push($tr);
+			for (let i = 0; i < origin.assBody.length; i++) {
+				const ass = origin.assBody[i];
+				let start = ass.inputStart.val();
+				let end   = ass.inputEnd  .val();
+				
+				{	// start
+					const $tr = $("<tr>").data({ ass: ass, type: "start" });
 					
-					// TODO: 페이드는?
-					let flag = "";
-					
-					$tr.data({ index:(lastIndex = frameSyncs.length - 1), $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
-					count = 0;
-					
-					setFrames($frames, frameIndex, flag);
-					
-				} else {
-					$tr.append($("<td>")).append($("<td>").addClass("sync").text(end));
-					$tr.data({ index: lastIndex + (++count / 1000) }); // 1000개를 넘어갈 일은 없을 것
+					if (ass.checkStart.prop("checked")) {
+						const frameIndex = Subtitle.findSyncIndex(start, fs);
+						const $frames = $("<div>").addClass("frames");
+						const $sync = $("<td>").addClass("sync");
+						setSync($sync, fs[frameIndex]);
+						$framesStorage.append($frames);
+						$tr.addClass("fs").append($("<td>")).append($sync);
+						frameSyncs.push($tr);
+						
+						// TODO: 페이드는?
+						let flag = "";
+						
+						$tr.data({ index: (lastIndex = frameSyncs.length - 1), $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
+						count = 0;
+						
+						setFrames($frames, frameIndex, flag);
+						
+					} else {
+						$tr.append($("<td>")).append($("<td>").addClass("sync").text(start));
+						$tr.data({ index: lastIndex + (++count / 1000) }); // 1000개를 넘어갈 일은 없을 것
+					}
+					$tbody.append($tr.append($("<td>").attr({ rowspan: 2 }).text(ass.inputText.val())));
 				}
-				$tbody.append($tr);
+				
+				{	// end
+					const $tr = $("<tr>").data({ ass: ass, type: "end" });
+	
+					if (ass.checkEnd.prop("checked")) {
+						const frameIndex = Subtitle.findSyncIndex(end, fs);
+						const $frames = $("<div>").addClass("frames");
+						const $sync = $("<td>").addClass("sync");
+						setSync($sync, fs[frameIndex]);
+						$framesStorage.append($frames);
+						$tr.addClass("fs").append($("<td>")).append($sync);
+						frameSyncs.push($tr);
+						
+						// TODO: 페이드는?
+						let flag = "";
+						
+						$tr.data({ index:(lastIndex = frameSyncs.length - 1), $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
+						count = 0;
+						
+						setFrames($frames, frameIndex, flag);
+						
+					} else {
+						$tr.append($("<td>")).append($("<td>").addClass("sync").text(end));
+						$tr.data({ index: lastIndex + (++count / 1000) }); // 1000개를 넘어갈 일은 없을 것
+					}
+					$tbody.append($tr);
+				}
 			}
 		}
 	}
@@ -248,16 +284,26 @@ $(() => {
 
 			const begin = data.offset + (data.frameIndex < RANGE ? 0 : data.frameIndex - RANGE);
 			const end   = data.offset + (data.frameIndex + RANGE > fs.length ? fs.length : data.frameIndex + RANGE);
-
+			
+			let fs0 = fs[begin];
+			if (renderFromKeyframe) {
+				// 필요한 프레임 바로 앞 키프레임 찾기
+				let index = Subtitle.findSyncIndex(fs0, kfs);
+				if (kfs[index] > fs0) {
+					index--;
+				}
+				fs0 = kfs[index];
+			}
+			
 			if ((renderGroup.flag == data.flag)
-			 && (fs[begin] < fs[renderGroup.end] + 500) // 렌더링에 필요한 프레임이 앞쪽과 500ms 이내로 이어질 때
+			 && (fs0 < fs[renderGroup.end] + 500) // 렌더링에 필요한 프레임이 앞쪽과 500ms 이내로 이어질 때
 			) {
 				renderGroup.end = end;
-
+				
 			} else {
 				renderList.push(renderGroup = {
 						flag: data.flag
-					,	time: fs[begin] + 1 // 반올림되거나 한 경우 고려해서 +1ms
+					,	time: fs0 + 1 // 반올림되거나 한 경우 고려해서 +1ms
 					,	begin: begin
 					,	end: end
 				});
@@ -381,6 +427,10 @@ $(() => {
 	
 	function apply() {
 		const smis = [];
+		for (let oi = 0; oi < origins.length; oi++) {
+			smis[oi] = [];
+		}
+		let countSmi = 0;
 		$tbody.find("tr").each(function() {
 			const $tr = $(this);
 			const data = $tr.data();
@@ -388,7 +438,9 @@ $(() => {
 				if ($tr.hasClass("fs")) {
 					data.smi.start = Number($tr.find(".sync").text());
 				}
-				smis.push(data.smi);
+				smis[data.oi].push(data.smi);
+				countSmi++;
+				
 			} else if (data.ass && $tr.hasClass("fs")) {
 				const sync = Number($tr.find(".sync").text());
 				if (data.type == "start") {
@@ -399,8 +451,7 @@ $(() => {
 				data.ass.update();
 			}
 		});
-		
-		if (!smis.length) {
+		if (!countSmi) {
 			// SMI 내역 없음 = ASS 편집
 			return;
 		}
@@ -427,23 +478,27 @@ $(() => {
 			}
 		}
 		
-		const result = new Subtitle.SmiFile();
-		result.header = origin.smiFile.header;
-		result.footer = origin.smiFile.footer;
-		result.body = smis;
-		
-		// 해당 줄 앞뒤 전체 선택되도록 조정
-		const origLines = origin.text.split("\n");
-		const prev = origLines.slice(0, origin.start).join("\n");
-		const next = origLines.slice(origin.end).join("\n");
-		
-		// 에디터에 적용
-		const text = (prev ? prev + "\n" : "") + result.toText() + (next ? "\n" + next : "");
-		// 현재 커서 위치를 기반으로 다시 맞춤
-		const selectedLine = origin.hold.input.val().substring(0, origin.hold.input[0].selectionEnd).split("\n").length;
-		const cursor = text.split("\n").slice(0, selectedLine - 1).join("\n").length + 1;
-		origin.hold.history.log();
-		origin.hold.setText(text, [cursor]);
+		for (let oi = 0; oi < origins.length; oi++) {
+			const origin = origins[oi];
+			
+			const result = new Subtitle.SmiFile();
+			result.header = origin.smiFile.header;
+			result.footer = origin.smiFile.footer;
+			result.body = smis[oi];
+			
+			// 해당 줄 앞뒤 전체 선택되도록 조정
+			const origLines = origin.text.split("\n");
+			const prev = origLines.slice(0, origin.start).join("\n");
+			const next = origLines.slice(origin.end).join("\n");
+			
+			// 에디터에 적용
+			const text = (prev ? prev + "\n" : "") + result.toText() + (next ? "\n" + next : "");
+			// 현재 커서 위치를 기반으로 다시 맞춤
+			const selectedLine = origin.hold.input.val().substring(0, origin.hold.input[0].selectionEnd).split("\n").length;
+			const cursor = text.split("\n").slice(0, selectedLine - 1).join("\n").length + 1;
+			origin.hold.history.log();
+			origin.hold.setText(text, [cursor]);
+		}
 	}
 	
 	$tbody.on("click", "tr", function(e) {

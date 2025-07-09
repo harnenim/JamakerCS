@@ -1,13 +1,13 @@
-let time = 0;
+window.time = 0;
 
-const tabs = [];
-let tab = 0;
-let closingTab = null;
-let tabToCloseAfterRun = null;
+window.tabs = [];
+window.tab = 0;
+window.closingTab = null;
+window.tabToCloseAfterRun = null;
 
-let autoSaveTemp = null;
+window.autoSaveTemp = null;
 
-let autoFindSync = false;
+window.autoFindSync = false;
 
 // C# 쪽에서 호출
 function refreshTime(now) {
@@ -18,7 +18,7 @@ function refreshTime(now) {
 		}
 	}
 }
-let showFps = null;
+window.showFps = null;
 
 window.Tab = function(text, path) {
 	this.area = SmiEditor.tabPreset.clone();
@@ -526,9 +526,9 @@ SmiEditor.prototype.moveToSync = function(add=0) {
 }
 SmiEditor.prototype._getText = SmiEditor.prototype.getText;
 SmiEditor.prototype.getText = function(forced) {
-	if (this.area.hasClass("style")
-	 || this.area.hasClass("ass")) {
-		if (!forced) {
+	if (!forced) {
+		if (this.area.hasClass("style")
+		 || this.area.hasClass("ass")) {
 			alert("SMI 에디터 모드가 아닙니다.");
 			throw new Error("SMI 에디터 모드 아님");
 			return;
