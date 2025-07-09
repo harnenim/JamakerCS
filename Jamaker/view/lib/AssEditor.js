@@ -1,7 +1,7 @@
 window.AssEditor = function(view, events=[], frameSyncs=null) {
 	this.view = (view ? view : (view = $("<div>"))).addClass("ass-editor").data({ obj: this });
 	this.savedSyncs = [];
-	this.setEvents(events, frameSyncs);
+	this.setEvents(events, frameSyncs, true);
 	this.update();
 	
 	const self = this;
@@ -23,11 +23,15 @@ AssEditor.FormatToEdit = ["Layer", "Style", "Name", "MarginL", "MarginR", "Margi
 AssEditor.FormatToSave = ["Layer", "start", "end", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
 AssEditor.FormatSimple = ["Layer", "Style", "Text"];
 
-AssEditor.prototype.setEvents = function(events=[], frameSyncs=null) {
+AssEditor.prototype.setEvents = function(events=[], frameSyncs=null, isInit=false) {
 	this.syncs = [];
 	this.view.empty();
 	this.addEvents(events, frameSyncs, false);
-	this.savedSyncs = this.syncs.slice(0);
+	if (isInit) {
+		this.savedSyncs = this.syncs.slice(0);
+	} else {
+		this.update();
+	}
 }
 AssEditor.prototype.addEvents = function(events=[], frameSyncs=null, withUpdate=true) {
 	const syncs = this.syncs = this.syncs.slice(0);
