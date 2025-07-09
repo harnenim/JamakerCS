@@ -976,7 +976,9 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 		const syncTimes = [];
 		const smis = hold.smiFile.body;
 		for (let i = 0; i < smis.length; i++) {
-			syncTimes.push(smis[i].start);
+			const smi = smis[i];
+			if (smi.syncType == SyncType.inner) continue; // 중간 싱크는 예외
+			syncTimes.push(smi.start);
 		}
 		if (h == 0) {
 			mainSyncs = syncs[0];
@@ -2532,8 +2534,8 @@ function loadAssFile(path, text, target=-1) {
 			for (let i = oi; i < originEvents.length; i++) {
 				// 싱크 일치하는 것 확인
 				const event = originEvents[i];
-				if (event.start != tEvent.start) continue;
-				if (event.end   != tEvent.end  ) continue;
+				if (event.start != tEvent.start) break;
+				if (event.end   != tEvent.end  ) break;
 				origins.push(event);
 				
 				const style = event.Style;
@@ -2551,8 +2553,8 @@ function loadAssFile(path, text, target=-1) {
 			for (let i = ti; i < targetEvents.length; i++) {
 				// 싱크 일치하는 것 확인
 				const event = targetEvents[i];
-				if (event.start != tEvent.start) continue;
-				if (event.end   != tEvent.end  ) continue;
+				if (event.start != tEvent.start) break;
+				if (event.end   != tEvent.end  ) break;
 				targets.push(event);
 				
 				const style = event.Style;
@@ -2569,8 +2571,8 @@ function loadAssFile(path, text, target=-1) {
 			if (!oStyle) {
 				// SMI에 없는 내용
 				console.log("SMI에 없는 내용", origins, targets);
-				const start = Subtitle.findSync(targets[0].start, Subtitle.video.fs);
-				const end   = Subtitle.findSync(targets[0].end  , Subtitle.video.fs);
+				const start = targets[0].start;
+				const end   = targets[0].end;
 				
 				// 스타일에 해당하는 기존 홀드에 넣을 수 있는지 확인
 				oStyles.push(...tStyles);
@@ -3021,17 +3023,9 @@ function loadAssFile(path, text, target=-1) {
 			count++;
 			oi++;
 		}
-		/* 위쪽 루프에서 ti가 끝까지 돌아가게 만듦
-		while (ti < targetEvents.length) {
-			// 일치하는 게 없으면 추가 내용
-			appendEvents.push(targetEvents[ti]);
-			ti++;
-			count++;
-		}
-		*/
 		
 		if (changedStyles.length > 0 || count > 0) {
-			let msg = "ASS 자막 수정 내역이 있습니다. 적용하시겠습니까?\n\n올바른 동영상 파일이 열려있어야 정상적인 결과를 얻을 수 있습니다.";
+			let msg = "ASS 자막 수정 내역이 있습니다. 적용하시겠습니까?\n\n자막에 맞는 동영상 파일이 열려있어야 정상적인 결과를 얻을 수 있습니다.";
 			if (count == 0) {
 				msg = "ASS 자막 스타일 수정 내역이 있습니다. 적용하시겠습니까?";
 			}
@@ -3100,6 +3094,165 @@ function loadAssFile(path, text, target=-1) {
 					}
 				}
 				if (count) {
+					// 스크립트는 홀드별로 분할해서 넣어야 함
+					const holds = currentTab.holds;
+					for (let h = 0; h < holds.length; h++) {
+						holds[h].ass = [];
+					}
+					
+					const appendEvents = appendFile.getEvents();
+					const list = appendEvents.body;
+					const appends = [];
+					
+					// 기존 SMI 홀드에 span 형태로 끼워넣을 수 있는지 확인
+					ti = 0;
+					while (ti < list.length) {
+						let targets = [];
+						const styles = [];
+						
+						// target 싱크 그룹화
+						const tEvent = list[ti];
+						for (let i = ti; i < list.length; i++) {
+							// 싱크 일치하는 것 확인
+							const event = list[i];
+							if (event.start != tEvent.start) break;
+							if (event.end   != tEvent.end  ) break;
+							targets.push(event);
+							
+							const style = event.Style;
+							if (styles.indexOf(style) < 0) {
+								styles.push(style);
+							}
+						}
+						
+						let imported = false;
+						const start = tEvent.start;
+						const end   = tEvent.end;
+						
+						for (let s = 0; s < styles.length; s++) {
+							const style = (styles[s] == "Default") ? "메인" : styles[s];
+							
+							// style 기준으로 홀드 찾기
+							for (let h = 0; h < currentTab.holds.length; h++) {
+								const hold = currentTab.holds[h];
+								
+								let canImport = (hold.name == style) && hold.smiFile; // ASS 출력 제외 홀드에는 넣을 수 없음
+								if (!canImport) continue;
+
+								const body = hold.smiFile.body;
+								let replaceFrom = 0;
+								let replaceTo = 0;
+								let fromEmpty = false;
+								let toEmpty = false;
+								
+								{
+									let i = 0;
+									for (; i < body.length; i++) {
+										if (body[i].start < start) {
+											continue;
+										}
+										
+										if (start < body[i].start) {
+											if (i == 0 || body[i-1].isEmpty()) {
+												// 공백에서 시작
+												replaceFrom = i;
+												fromEmpty = true;
+												
+											} else {
+												// 공백 아니면 겹칠 수 없음
+												canImport = false;
+												break;
+											}
+											
+										} else {
+											// SMI 싱크에서 시작
+											replaceFrom = i;
+											fromEmpty = false;
+										}
+	
+										for (; i < body.length; i++) {
+											if (body[i].start < end) {
+												continue;
+											}
+											
+											if (end < body[i].start) {
+												if (i == 0 || body[i-1].isEmpty()) {
+													// 공백에서 종료
+													replaceTo = i;
+													toEmpty = true;
+													
+												} else {
+													// 공백 아니면 겹칠 수 없음
+													canImport = false;
+												}
+											} else {
+												// SMI 싱크에서 종료
+												replaceTo = i;
+												toEmpty = false;
+											}
+											break;
+										}
+										break;
+									}
+								}
+								
+								if (canImport) {
+									console.log(replaceFrom, fromEmpty ? null : body[replaceFrom], replaceTo, toEmpty ? null : body[replaceTo], targets);
+									
+									let newText = "<!-- ASS\n";
+									for (let i = 0; i < targets.length; i++) {
+										// 싱크 겹치도록 넣어줌
+										const item = targets[i];
+//										newText += [item.Layer, "", (replaceTo - replaceFrom), item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
+										newText += [item.Layer, "", (replaceTo - replaceFrom), item.Style, item.Text].join(",") + "\n";
+									}
+									
+									let smi = body[replaceFrom];
+									if (fromEmpty) {
+										// 공백 싱크 추가
+										const bodyEnd = body.slice(replaceFrom);
+										body.length = replaceFrom;
+										body.push(smi = new Smi(start, SyncType.frame, ""));
+										body.push(...bodyEnd);
+									}
+									let smiText = smi.text;
+									if (smiText.startsWith("<!-- ASS\n")) {
+										// 기존 ASS 변환 내역
+										let index = smiText.indexOf("\n-->");
+										if (index == 8) {
+											smiText = smiText.substring(12).trim();
+										} else if (index > 0) {
+											newText += smiText.substring(9, index + 1);
+											smiText = smiText.substring(index + 4).trim();
+										}
+									}
+									newText += "-->";
+									
+									// SMI에 ASS 변환 내역 삽입
+									if (smiText) newText += "\n" + smiText;
+									smi.text = newText;
+									
+									if (toEmpty) {
+										// 종료 싱크 추가 필요
+										const bodyEnd = body.slice(replaceTo);
+										body.length = replaceTo;
+										body.push(new Smi(start, SyncType.frame, "&nbsp;"));
+										body.push(...bodyEnd);
+									}
+									imported = true;
+									break;
+								}
+							}
+						}
+						
+						if (!imported) {
+							appends.push(...targets);
+						}
+						
+						ti += targets.length;
+					}
+					
+					// 홀드 SMI 재구성
 					for (let i = 0; i < currentTab.holds.length; i++) {
 						const hold = currentTab.holds[i];
 						if (!hold.smiFile) continue;
@@ -3111,22 +3264,13 @@ function loadAssFile(path, text, target=-1) {
 						hold.render();
 					}
 					
-					// 스크립트는 홀드별로 분할해서 넣어야 함
-					const holds = currentTab.holds;
-					for (let h = 0; h < holds.length; h++) {
-						holds[h].ass = [];
-					}
-					
-					const appendEvents = appendFile.getEvents();
-					const list = appendEvents.body;
-					const appends = [];
-					for (let i = 0; i < list.length; i++) {
-						const item = list[i];
+					// SMI 에디터에 넣지 못한 내용물
+					const appendsWithoutHold = [];
+					for (let i = 0; i < appends.length; i++) {
+						const item = appends[i];
 						
 						item.start = AssEvent.fromAssTime(item.Start = item.oStart, true);
 						item.end   = AssEvent.fromAssTime(item.End   = item.oEnd  , true);
-						
-						// TODO: 기존 SMI 홀드에 span 형태로 끼워넣을 수 있는지 확인
 						
 						// 별도 ASS 자막 형태로 추가
 						if (item.Style == "Default") {
@@ -3145,11 +3289,11 @@ function loadAssFile(path, text, target=-1) {
 							}
 							if (!found) {
 								// 비홀드
-								appends.push(item);
+								appendsWithoutHold.push(item);
 							}
 						}
 					}
-					appendEvents.body = appends;
+					appendEvents.body = appendsWithoutHold;
 					
 					/*
 					// TODO: SMI에서 화면 싱크인 것 뽑아오기... 필요한가?
