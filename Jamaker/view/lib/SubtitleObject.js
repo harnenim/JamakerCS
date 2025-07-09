@@ -1866,7 +1866,7 @@ AssEvent.fromSync = function(sync, style=null) {
 					// 남은 내용물은 활용하지 않음
 					return events;
 				}
-				let span = 1;
+				let span = 0;
 				let cols = line.split(",");
 				if (cols.length == 1) {
 					// 임의로 텍스트만 쓴 경우
@@ -2329,7 +2329,7 @@ AssFile.prototype.addFromSyncs = function(syncs, styleName, syncTimes=[]) {
 			}
 			for (let j = 0; j < events.length; j++) {
 				const event = events[j];
-				if (event.span > 1) {
+				if (event.span > 0) {
 					const spanEnd = Math.min(ti + event.span, syncTimes.length - 1);
 					event.End = AssEvent.toAssTime(event.end = syncTimes[spanEnd]);
 				}
@@ -2337,7 +2337,7 @@ AssFile.prototype.addFromSyncs = function(syncs, styleName, syncTimes=[]) {
 		} else {
 			for (let j = 0; j < events.length; j++) {
 				const event = events[j];
-				if (event.span > 1) {
+				if (event.span > 0) {
 					const spanEnd = Math.min(i + event.span - 1, syncs.length - 1);
 					event.End = AssEvent.toAssTime(event.end = syncs[spanEnd].end);
 				}
@@ -4011,6 +4011,14 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 			tAttrs.push(...attrs.slice(attrIndex + 1));
 			
 			smis.push(new Smi(limitSync, (j == 0 ? smi.syncType : SyncType.inner)).fromAttrs(tAttrs, forConvert));
+			if (j == 0) {
+				// 첫 항목에만 주석 넣고 나머지에선 제거
+				for (let k = 0; k < attrs.length; k++) {
+					if (attrs[k].comment) {
+						attrs[k].comment = null;
+					}
+				}
+			}
 			realJ++;
 		}
 		if (withComment) {
@@ -4302,12 +4310,40 @@ SmiFile.prototype.toSyncs = function() {
 			const next = this.body[i + 1];
 			const end = (next.start) > 0 ? next.start : 0;
 			const normalized = item.normalize(end, true);
-			for (let j = 0; j < normalized.length - 1; j++) {
-				const sync = normalized[j].toSync();
-				sync.end = normalized[j + 1].start;
-				sync.endType = normalized[j + 1].syncType;
-				sync.origin = this.body[i];
-				result.push(sync);
+			if (normalized.length > 1) {
+				// 첫 항목에 남겨둔 ASS 변환용 주석에 싱크 분할됐으면 강제로 span=1 지정
+				const first = normalized[0];
+				if (first.text.startsWith("<!-- ASS\n")) {
+					const end = first.text.indexOf("\n-->");
+					if (end > 0) {
+						const smiText = first.text.substring(end + 4).trim();
+						const commentLines = first.text.substring(0, end + 4).split("\n");
+						for (let j = 1; j < commentLines.length - 1; j++) {
+							const commentLine = commentLines[j].split(",");
+							if (commentLine[1] == "") { // span값 사용 중
+								if (commentLine[2] == "") {
+									// span 값이 비어있었으면 1 지정
+									commentLine[2] = 1;
+									commentLines[j] = commentLine.join(",");
+								}
+							} else {
+								// span 없었으면 강제로 1 지정
+								commentLines[j] = commentLine[0] + ",,1," + commentLine.slice(1).join(",");
+							}
+						}
+						let newText = commentLines.join("\n");
+						if (smiText) newText += "\n" + smiText;
+						first.text = newText;
+					}
+				}
+				
+				for (let j = 0; j < normalized.length - 1; j++) {
+					const sync = normalized[j].toSync();
+					sync.end = normalized[j + 1].start;
+					sync.endType = normalized[j + 1].syncType;
+					sync.origin = this.body[i];
+					result.push(sync);
+				}
 			}
 			last = normalized[normalized.length - 1].toSync();
 			last.end = end;
