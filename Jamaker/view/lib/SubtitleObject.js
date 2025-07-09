@@ -1972,6 +1972,10 @@ AssEvent.fromSync = function(sync, style=null) {
 									break;
 								}
 							} else {
+								if (tag.indexOf("\\u1") > 0 || tag.indexOf("\\s1") > 0) {
+									// 밑줄이나 취소선이 있으면 공백으로 치부할 수 없음
+									break;
+								}
 								prev += tag;
 								line = line.substring(tagEnd);
 							}
@@ -1999,6 +2003,10 @@ AssEvent.fromSync = function(sync, style=null) {
 									break;
 								}
 							} else {
+								if (tag.indexOf("\\u1") > 0 || tag.indexOf("\\s1") > 0) {
+									// 밑줄이나 취소선이 있으면 공백으로 치부할 수 없음
+									break;
+								}
 								next = tag + next;
 								line = line.substring(0, tagBegin);
 							}
