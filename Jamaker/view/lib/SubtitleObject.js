@@ -1875,7 +1875,13 @@ AssEvent.fromSync = function(sync, style=null) {
 					// 축약 표현
 					cols = [cols[0], "", "", cols[1], "", 0, 0, 0, "", cols.slice(2).join(",")];
 				} else {
-					cols[9] = cols.slice(9).join(",");
+					let text = cols.slice(4).join(",");
+					cols.length = 4;
+					if (text.startsWith(",0,0,0,,")) {
+						text = text.substring(8);
+					}
+					cols.push(...["",0,0,0,"",text]);
+					
 					cols.length = 10;
 					if (cols[2] && isFinite(cols[2])) {
 						span = Number(cols[2]);

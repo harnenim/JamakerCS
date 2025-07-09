@@ -2640,7 +2640,8 @@ function loadAssFile(path, text, target=-1) {
 									newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
 								}
 								*/
-								newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
+//								newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
+								newText += [item.Layer, "", "", item.Style, item.Text].join(",") + "\n";
 							}
 							newText += "END\n-->";
 							console.log("ASS 전용 SMI 싱크 생성", newText);
@@ -2683,15 +2684,17 @@ function loadAssFile(path, text, target=-1) {
 						for (let i = 0; i < origins.length; i++) {
 							const o = origins[i];
 							const t = targets[i];
-							["Layer", "Start", "End", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
+//							["Layer", "Start", "End", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
 							if (o.start   != t.start  ) { updated = true; break; }
 							if (o.end     != t.end    ) { updated = true; break; }
 							if (o.Style   != t.Style  ) { updated = true; break; }
+							/*
 							if (o.Name    != t.Name   ) { updated = true; break; }
 							if (o.MarginL != t.MarginL) { updated = true; break; }
 							if (o.MarginR != t.MarginR) { updated = true; break; }
 							if (o.MarginV != t.MarginV) { updated = true; break; }
 							if (o.Effect  != t.Effect ) { updated = true; break; }
+							*/
 							if (o.Text    != t.Text   ) { updated = true; break; }
 						}
 					}
@@ -2958,7 +2961,8 @@ function loadAssFile(path, text, target=-1) {
 											newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
 										}
 										*/
-										newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
+//										newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
+										newText += [item.Layer, "", "", item.Style, item.Text].join(",") + "\n";
 									}
 									newText += "END\n-->";
 									if (smiText) newText += "\n" + smiText;
@@ -2977,7 +2981,8 @@ function loadAssFile(path, text, target=-1) {
 											newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
 										}
 										*/
-										newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
+//										newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
+										newText += [item.Layer, "", "", item.Style, item.Text].join(",") + "\n";
 									}
 									newText += "-->\n" + smiText;
 									smiText = newText;
