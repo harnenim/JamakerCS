@@ -843,6 +843,9 @@ Attr.junkAss = function(ass) {
 	attr.ass = ass;
 	return attr;
 }
+Attr.prototype.isEmpty = function () {
+	return this.text.split(" ").join("").split("　").join("").split("\n").join("").length == 0;
+}
 
 Attr.prototype.getWidth = function() {
 	const css = Subtitle.Width.DEFAULT_FONT;
@@ -1599,10 +1602,13 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 	// 색상to색상인 경우 - 겹치는 객체 만들어서 처리해야 함
 	if (checkFade) {
 		let count = 0;
+		let elseCount = 0;
 		const baseAttrs = [];
 		for (let i = 0; i < attrs.length; i++) {
 			const attr = new Attr(attrs[i], attrs[i].text);
-			if (attr.fade != 0) count++;
+			if (attr.fade != 0) {
+				count++;
+			}
 			attr.fade = 0;
 			baseAttrs.push(attr);
 		}
@@ -1610,8 +1616,10 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 		if (count) {
 			const texts = [];
 
+			let countHides = 0;
 			{	// 페이드 인
 				count = 0;
+				let countHide = 0;
 				const fadeAttrs = [Attr.junkAss("{\\fade([FADE_LENGTH],0)}")];
 				let wasFade = false;
 				for (let i = 0; i < attrs.length; i++) {
@@ -1623,17 +1631,18 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 							// 페이드 대상 원본 투명화
 							base.hide = true;
 							// 페이드 대상 활성화
-							if (i > 0) {
+							if (countHide > 0) {
 								fadeAttrs.push(Attr.junkAss("{\\1a\\bord}"));
 							}
 							wasFade = true;
 						}
 
-					} else {
+					} else if (!attr.isEmpty()) {
 						if (wasFade || i == 0) {
 							// 페이드 비대상 비활성화
 							fadeAttrs.push(Attr.junkAss("{\\bord0\\1a&HFF&}"));
 							wasFade = false;
+							countHide++;
 						}
 					}
 					attr.fade = 0;
@@ -1642,10 +1651,12 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 				if (count) {
 					texts.push(...Subtitle.Ass.fromAttrs(fadeAttrs, false, false));
 				}
+				countHides += countHide;
 			}
 
 			{	// 페이드 아웃
 				count = 0;
+				let countHide = 0;
 				const fadeAttrs = [Attr.junkAss("{\\fade(0,[FADE_LENGTH])}")];
 				let wasFade = false;
 				for (let i = 0; i < attrs.length; i++) {
@@ -1657,17 +1668,18 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 							// 페이드 대상 원본 투명화
 							base.hide = true;
 							// 페이드 대상 활성화
-							if (i > 0) {
+							if (countHide > 0) {
 								fadeAttrs.push(Attr.junkAss("{\\1a\\bord}"));
 							}
 							wasFade = true;
 						}
 
-					} else {
+					} else if (!attr.isEmpty()) {
 						if (wasFade || i == 0) {
 							// 페이드 비대상 비활성화
 							fadeAttrs.push(Attr.junkAss("{\\bord0\\1a&HFF&}"));
 							wasFade = false;
+							countHide++;
 						}
 					}
 					attr.fade = 0;
@@ -1676,9 +1688,11 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 				if (count) {
 					texts.push(...Subtitle.Ass.fromAttrs(fadeAttrs, false, false));
 				}
+				countHides += countHide;
 			}
 
-			{	// 페이드와 무관하게 보이는 내용물
+			if (countHides) {
+				// 페이드와 무관하게 보이는 내용물
 				let wasHide = false;
 				for (let i = 0; i < baseAttrs.length; i++) {
 					const attr = baseAttrs[i];
