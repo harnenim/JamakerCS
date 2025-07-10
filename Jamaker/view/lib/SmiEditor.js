@@ -1186,6 +1186,7 @@ SmiEditor.prototype.getCursor = function() {
 SmiEditor.prototype.setCursor = function(start, end) {
 	this.input[0].setSelectionRange(start, end ? end : start);
 }
+// TODO: 설정으로 뺄 것
 SmiEditor.scrollMargin = 3.5;
 SmiEditor.prototype.scrollToCursor = function(lineNo) {
 	let left = 0;
@@ -1198,11 +1199,11 @@ SmiEditor.prototype.scrollToCursor = function(lineNo) {
 	const scrollMargin = SmiEditor.scrollMargin * LH;
 	
 	{	const scrollTop = this.input.scrollTop();
-		if (top < scrollTop) { // 커서가 보이는 영역보다 위
+		if (top < scrollTop + scrollMargin) { // 커서가 보이는 영역보다 위
 			this.input.scrollTop(top - scrollMargin);
 		} else {
 			top += LH + SB - this.input.css("height").split("px")[0] + 2; // .height()는 padding을 빼고 반환함
-			if (top > scrollTop) { // 커서가 보이는 영역보다 아래
+			if (top > scrollTop - scrollMargin) { // 커서가 보이는 영역보다 아래
 				this.input.scrollTop(top + scrollMargin);
 			}
 		}
