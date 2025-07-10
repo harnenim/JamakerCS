@@ -1,0 +1,88 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>ASS 자막 변환에 대하여</title>
+	<script src="../lib/jquery-3.2.1.min.js"></script>
+	<script src="../lib/popup.js"></script>
+	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
+	<script>
+windowName = "help";
+	</script>
+	<style>
+body {
+	overflow-y: scroll;
+	padding: 8px;
+}
+table { width: 100%; }
+th, td {
+	padding: 4px;
+	font-size: 14px;
+}
+tr.editable th {
+	background: #ffb;
+}
+img {
+	display: block;
+	margin: 10px auto;
+	border: 1px solid #aaa;
+	max-width: 100%;
+}
+hr {
+	margin: 10px 0;
+}
+	</style>
+</head>
+<body>
+	<p>
+		<h3>기능 활성화</h3>
+		<br />
+		Jamaker에서는 SMI 자막을 프로젝트 파일처럼 활용해 ASS 자막을 관리하는 기능을 지원합니다.<br />
+		<br />
+		SAMI 태그에 ass 속성을 넣으면 변환 기능이 활성화되며, 저장 시 smi 파일과 같은 이름의 ass 파일이 함께 저장됩니다.<br />
+		[이미지: SAMI ass]<br />
+		<br />
+		각각의 홀드는 ASS 자막의 스타일과 연동되며, 스타일이 동일할 경우 홀드명 중복을 허용합니다.<br />
+	</p>
+	<hr />
+	<p>
+		<h3>문법</h3>
+		<br />
+		FONT 태그에 ass 속성을 넣어 ASS 자막에만 쓰이는 태그 등을 넣을 수 있습니다.<br />
+		[이미지: FONT ass]<br />
+		<br />
+		주석 형태를 통해 SMI의 한 싱크에 여러 개의 ASS 스크립트가 들어가는 걸 지원합니다.<br />
+		END로 끝맺음할 경우 SMI 내용을 무시하고 해당 주석의 내용물만으로 ASS 자막을 구성합니다.<br />
+		[이미지: smi원본-ass결과 비교 캡처]<br />
+		<br />
+		ASS 주석의 내용물은 기본적으로 [Layer, Style, Text]로 구성되며,<br />
+		[Name, MarginL, MarginR, MarginV, Effect] 속성은 의도적으로 배제했습니다.<br />
+		<br />
+		ASS 주석의 내용물에는 [Layer, (-), span, Style, Text] 형태도 들어갈 수 있는데,<br />
+		두 번째 항목이 비어있는 것으로 기본 형태와 구분되며,<br />
+		세 번째 항목(span)의 값에 따라 더 뒤쪽의 싱크를 종료싱크로 가져옵니다.<br />
+		[이미지: smi원본-ass결과(span) 비교 캡처]<br />
+		<br />
+		위의 방식으로 SMI 에디터 내에서 구현이 어려운 스크립트에 대해서는 별도로 ASS 에디터가 존재합니다.<br />
+		[이미지: 에디터 화면]<br />
+	</p>
+	<hr />
+	<p>
+		<h3>활용</h3>
+		<br />
+		위의 ASS 변환용 문법을 수기로 입력하는 경우는 많지 않습니다.<br />
+		<br />
+		기본적으로는 원래의 smi 파일에서 생성한 ass 파일 초안을 Aegisub 등에서 수정 작업을 거쳐 완성본을 만듭니다.<br />
+		<br />
+		Jamaker에서 smi 파일이 열려있는 상태에서 ass 자막을 추가로 읽으면 내용물을 비교하여<br />
+		해당 ASS 자막을 구현할 수 있는 형태로 SMI 자막에 변환용 문법을 생성해 줍니다.<br />
+		※ 역반영은 완벽한 결과는 보장하지 못하며, 추가 교정이 필요할 수 있습니다.<br />
+		<br />
+		상호 변환 과정에서 정확한 싱크 보정치가 필요하므로, 해당 동영상이 열린 상태에서 작업해야 합니다.<br />
+		이와 관련해, 간혹 Aegisub-팟플레이어 간에 1프레임 어긋나는 현상도 바로잡히게 됩니다.<br />
+		<br />
+		작업이 정상적으로 이뤄진다면 SMI 자막을 각 영상에 맞춰 조정하여 ASS 자막을 재생성할 수 있습니다.<br />
+	</p>
+</body>
+</html>
