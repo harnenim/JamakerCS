@@ -152,8 +152,8 @@ textarea,
 .hold.main .hold-style-ass .hold-style-output {
 	display: none;
 }
-.tab.ass .hold.main .btn-hold-style,
-.tab.ass .btn-hold-ass {
+.tab.ass .hold.main .btn-hold-style /*,
+.tab.ass .btn-hold-ass */ {
 	display: block;
 }
 .btn-hold-style:hover,

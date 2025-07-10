@@ -18,7 +18,7 @@ window.AssEditor = function(view, events=[], frameSyncs=null) {
 	});
 }
 //TODO: 일단 여기 적었는데, editor.js 등에서 쓸 방안을 강구하는 게?
-AssEditor.FormatToEdit = ["Layer", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
+AssEditor.FormatToEdit = ["Layer", "Style", "Text"];
 // 여기서 start/end는 소문자임
 AssEditor.FormatToSave = ["Layer", "start", "end", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
 AssEditor.FormatSimple = ["Layer", "Style", "Text"];
@@ -95,9 +95,15 @@ AssEditor.prototype.update = function() {
 		let isSaved = true;
 		for (let i = 0; i < this.syncs.length; i++) {
 			const sync = this.syncs[i];
-			if (sync != this.savedSyncs[i]) {
-				isSaved = false;
-				break;
+			const savedSync = this.savedSyncs[i];
+			if (sync != savedSync) {
+				if (sync.savedText == savedSync.savedText) {
+					// 내용물 교체했는데 텍스트 변환 결과가 그대로면 객체 교체
+					this.savedSyncs[i] = sync;
+				} else {
+					isSaved = false;
+					break;
+				}
 			}
 			if (!sync.isSaved) {
 				isSaved = false;
@@ -124,7 +130,7 @@ AssEditor.prototype.update = function() {
 		}
 		if (!sorted) {
 			const input = this.view.find(":focus");
-			this.sycns = sorts;
+			this.syncs = sorts;
 			for (let i = 0; i < sorts.length; i++) {
 				this.view.append(sorts[i].view);
 			}
@@ -204,19 +210,29 @@ AssEditor.Item = function(info) {
 	this.isSaved = true;
 	return this;
 }
-AssEditor.Item.prototype.getText = function() {
-	this.start = Number(this.inputStart.val());
-	this.end   = Number(this.inputEnd  .val());
-	const sync = "," + this.start + "," + this.end;
+AssEditor.Item.prototype.getText = function(start="", end="") {
+	const fixed = !!start;
+	if (!fixed) {
+		start = this.start = Number(this.inputStart.val());
+		end   = this.end   = Number(this.inputEnd  .val());
+	}
+	
 	const lines = this.inputText.val().split("\n");
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
-		const index = line.indexOf(",");
-		if (index >= 0) {
-			lines[i] = "Dialogue: " + line.substring(0, index) + sync + line.substring(index);
+		const cols = line.split(",");
+		if (cols.length < 3) {
+			// 잘못된 입력
+			lines[i] = "Dialogue: " + [ 0, start, end, "Default", "", 0, 0, 0, "", line ].join(",");
+		} else {
+			lines[i] = "Dialogue: " + [ cols[0], start, end, cols[1], "", 0, 0, 0, "", cols.slice(2).join(",") ].join(",");
 		}
 	}
-	return this.text = lines.join("\n");
+	const text = lines.join("\n");
+	if (!fixed) {
+		this.text = text;
+	}
+	return text;
 }
 AssEditor.Item.prototype.update = function() {
 	this.isSaved = (this.getText() == this.savedText);
@@ -240,14 +256,5 @@ AssEditor.Item.prototype.setSaved = function() {
 AssEditor.Item.prototype.toAssText = function() {
 	this.Start = AssEvent.toAssTime(this.start = Number(this.inputStart.val()), true);
 	this.End   = AssEvent.toAssTime(this.end   = Number(this.inputEnd  .val()), true);
-	const sync = "," + this.Start + "," + this.End;
-	const lines = this.inputText.val().split("\n");
-	for (let i = 0; i < lines.length; i++) {
-		const line = lines[i];
-		const index = line.indexOf(",");
-		if (index >= 0) {
-			lines[i] = "Dialogue: " + line.substring(0, index) + sync + line.substring(index);
-		}
-	}
-	return lines.join("\n");
+	return this.getText(this.Start, this.End);
 }

@@ -63,7 +63,8 @@ label, #showFps {
 .tab.with-hold .holds {
 	top: calc(20px * 4 + 4px);
 }
-.hold * {
+.hold *,
+.tab-ass-area * {
 	font-size: calc(20px * 0.7);
 	line-height: 20px;
 }

@@ -54,10 +54,15 @@ window.Tab = function(text, path) {
 			}
 			tab.onChangeSaved();
 		};
+		tab.area.find("div.tab-ass-script button").on("click", function() {
+			const sync = SmiEditor.getSyncTime("!"); // 가중치 없는 현재 싱크로 넣음
+			assHold.assEditor.addEvents([ new AssEvent(sync, sync, name, "") ]);
+		});
 		
 		let frameSyncs = [];
 		if (assFile) {
 			const events = assFile.getEvents();
+			/* 홀드별 ASS 에디터 구분은 혼란만 가중시키는 듯함
 			const list = events.body;
 			const appends = [];
 			for (let i = 0; i < list.length; i++) {
@@ -79,6 +84,7 @@ window.Tab = function(text, path) {
 				}
 			}
 			events.body = appends;
+			*/
 			
 			this.area.find(".tab-ass-styles textarea").val(assFile.getStyles().toText(false));
 			
@@ -94,7 +100,7 @@ window.Tab = function(text, path) {
 					}
 				}
 			}
-			assHold.assEditor.setEvents(appends, frameSyncs);
+			assHold.assEditor.setEvents(events.body, frameSyncs, true);
 			assHold.assEditor.update();
 		}
 		
@@ -2111,6 +2117,7 @@ function afterSaveFile(path) {
 		hold.savedStyle = SmiFile.toSaveStyle(hold.style);
 		hold.assEditor.setSaved();
 	}
+	currentTab.assHold.assEditor.setSaved();
 	currentTab.path = path;
 	const title = path ? ((path.length > 14) ? ("..." + path.substring(path.length - 14, path.length - 4)) : path.substring(0, path.length - 4)) : "새 문서";
 	$("#tabSelector .th:eq(" + tab + ") span").text(title).attr({ title: path });
@@ -2835,7 +2842,7 @@ function loadAssFile(path, text, target=-1) {
 										
 										// 순수 SMI 태그에서 생성된 ASS 태그
 										originPrev = [];
-										if (regenAss.Text.startsWith("{")) {
+										if (regenAss && regenAss.Text.startsWith("{")) {
 											const end = regenAss.Text.indexOf("}");
 											if (end > 0) {
 												originPrev = regenAss.Text.substring(1, end).split("\\");
@@ -3270,6 +3277,7 @@ function loadAssFile(path, text, target=-1) {
 					}
 					
 					// SMI 에디터에 넣지 못한 내용물
+					/* 홀드별 ASS 에디터 구분은 혼란만 가중시키는 듯함
 					const appendsWithoutHold = [];
 					for (let i = 0; i < appends.length; i++) {
 						const item = appends[i];
@@ -3299,6 +3307,8 @@ function loadAssFile(path, text, target=-1) {
 						}
 					}
 					appendEvents.body = appendsWithoutHold;
+					*/
+					appendEvents.body = appends;
 					
 					/*
 					// TODO: SMI에서 화면 싱크인 것 뽑아오기... 필요한가?
