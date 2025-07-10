@@ -28,7 +28,13 @@ $(() => {
 		window.close();
 		return;
 	}
-	
+
+    if (!Subtitle.video.fs.length) {
+        alert("동영상 프레임 분석이 끝나야 진행할 수 있습니다.");
+        window.close();
+        return;
+	}
+
 	{
 		// 현재 선택된 홀드 기준
 		const hold = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
@@ -114,10 +120,7 @@ $(() => {
 	const $tbody = $("#editor tbody").empty();
 	const $framesStorage = $("<div>"); // 객체 remove 하면 data가 날아가서 여기에 보관함
 	const frameSyncs = [];
-	
-	const $thead = $("#editor thead").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origins[0].smiFile.header.split("\n").join(""))));
-	const $tfoot = $("#editor tfoot").empty().append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text(origins[0].smiFile.footer.split("\n").join(""))));
-	
+
 	function setFrames($frames, frameIndex, flag) {
 		for (let j = -RANGE; j < RANGE; j++) {
 			const imgIndex = frameIndex + j;
@@ -160,7 +163,7 @@ $(() => {
 					}
 				}
 				
-				const $tr = $("<tr>").data({ oi: oi, smi: smi });
+                const $tr = $("<tr>").data({ oi: oi, smi: smi, origin: smi.start });
 				
 				if (smi.syncType == Subtitle.SyncType.frame) {
 					const frameIndex = Subtitle.findSyncIndex(smi.start, fs);
@@ -209,7 +212,7 @@ $(() => {
 				let end   = ass.inputEnd  .val();
 				
 				{	// start
-					const $tr = $("<tr>").data({ ass: ass, type: "start" });
+					const $tr = $("<tr>").data({ ass: ass, type: "start", origin: start });
 					
 					if (ass.checkStart.prop("checked")) {
 						const frameIndex = Subtitle.findSyncIndex(start, fs);
@@ -236,7 +239,7 @@ $(() => {
 				}
 				
 				{	// end
-					const $tr = $("<tr>").data({ ass: ass, type: "end" });
+					const $tr = $("<tr>").data({ ass: ass, type: "end", origin: end });
 	
 					if (ass.checkEnd.prop("checked")) {
 						const frameIndex = Subtitle.findSyncIndex(end, fs);
@@ -639,18 +642,16 @@ $(() => {
 	
 	$("#formShift").on("submit", function() {
 		const shift = Number($("#inputShift").val());
-		for (let i = 0; i < origin.smiFile.body.length; i++) {
-			const smi = origin.smiFile.body[i];
-			if (smi.syncType == Subtitle.SyncType.frame) {
-				const frameIndex = Subtitle.findSyncIndex(smi.start, fs);
-				const shiftIndex = Subtitle.findSyncIndex(smi.start + shift, fs);
-				const offset = shiftIndex - frameIndex;
-				const $tr = $tbody.find("tr:eq(" + i + ")");
-				$tr.data({ offset: offset });
-				$tr.data("$frames").css({ left: "calc(" + (-98 * offset) + "px + 50%" });
-				setSync($tr.find("td.sync"), fs[shiftIndex]);
-			}
-		}
+		$("#editor tbody tr.fs").each(function () {
+			const $tr = $(this);
+			const data = $tr.data();
+            const frameIndex = Subtitle.findSyncIndex(data.origin, fs);
+            const shiftIndex = Subtitle.findSyncIndex(data.origin + shift, fs);
+            const offset = shiftIndex - frameIndex;
+            $tr.data({ offset: offset });
+            $tr.data("$frames").css({ left: "calc(" + (-98 * offset) + "px + 50%" });
+            setSync($tr.find("td.sync"), fs[shiftIndex]);
+		});
 		return false;
 	}).on("click", "input[name=mode]", function() {
 		mode = $("input[name=mode]:checked").val();
