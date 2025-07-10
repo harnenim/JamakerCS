@@ -3207,6 +3207,8 @@ function loadAssFile(path, text, target=-1) {
 										break;
 									}
 								}
+								// 공백이 아닌 것도 분할해서 추가할 순 있겠지만, 연관된 것들 span 조정해야 함
+								// 여기까지 가면 ASS 에디터의 의미도 더 퇴색됨
 								
 								if (canImport) {
 									console.log(replaceFrom, fromEmpty ? null : body[replaceFrom], replaceTo, toEmpty ? null : body[replaceTo], targets);
@@ -3215,8 +3217,10 @@ function loadAssFile(path, text, target=-1) {
 									for (let i = 0; i < targets.length; i++) {
 										// 싱크 겹치도록 넣어줌
 										const item = targets[i];
-//										newText += [item.Layer, "", (replaceTo - replaceFrom), item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
-										newText += [item.Layer, "", (replaceTo - replaceFrom), item.Style, item.Text].join(",") + "\n";
+										let span = replaceTo - replaceFrom;
+										if (fromEmpty) span++;
+//										newText += [item.Layer, "", span, item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
+										newText += [item.Layer, "", span, item.Style, item.Text].join(",") + "\n";
 									}
 									
 									let smi = body[replaceFrom];

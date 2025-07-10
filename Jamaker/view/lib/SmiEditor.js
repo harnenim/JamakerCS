@@ -1186,6 +1186,7 @@ SmiEditor.prototype.getCursor = function() {
 SmiEditor.prototype.setCursor = function(start, end) {
 	this.input[0].setSelectionRange(start, end ? end : start);
 }
+SmiEditor.scrollMargin = 3.5;
 SmiEditor.prototype.scrollToCursor = function(lineNo) {
 	let left = 0;
 	if (typeof lineNo == "undefined") {
@@ -1194,14 +1195,15 @@ SmiEditor.prototype.scrollToCursor = function(lineNo) {
 		left = this.getWidth(linesBeforeCursor[lineNo = (linesBeforeCursor.length - 1)]);
 	}
 	let top = lineNo * LH;
+	const scrollMargin = SmiEditor.scrollMargin * LH;
 	
 	{	const scrollTop = this.input.scrollTop();
 		if (top < scrollTop) { // 커서가 보이는 영역보다 위
-			this.input.scrollTop(top);
+			this.input.scrollTop(top - scrollMargin);
 		} else {
 			top += LH + SB - this.input.css("height").split("px")[0] + 2; // .height()는 padding을 빼고 반환함
 			if (top > scrollTop) { // 커서가 보이는 영역보다 아래
-				this.input.scrollTop(top);
+				this.input.scrollTop(top + scrollMargin);
 			}
 		}
 	}
