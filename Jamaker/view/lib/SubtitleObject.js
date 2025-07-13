@@ -2314,8 +2314,8 @@ AssFile.prototype.addFromSyncs = function(syncs, styleName, syncTimes=[]) {
 		let x = 0;
 		let y = 0;
 		switch (style.Alignment % 3) {
-			case 0: x = style.MarginL; break;
-			case 1: x = playResX - style.MarginR; break;
+			case 0: x = playResX - style.MarginR; break;
+			case 1: x = style.MarginL; break;
 			case 2: x = (playResX + style.MarginL - style.MarginR) / 2; break;
 		}
 		switch (Math.floor((style.Alignment - 1) / 3)) {
