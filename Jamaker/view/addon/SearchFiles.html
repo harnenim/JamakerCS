@@ -117,6 +117,8 @@ $(() => {
 			// 입력된 게 없으면 최근 사용한 목록
 			$inputDir.attr({ list: "dlLastDirs" });
 		}
+	}).on("focus", () => {
+		$inputDir.parent().find("input[type=radio]").prop("checked", true);
 	});
 	opener.afterGetSubDirs = function(dirs) {
 		refreshDatalist($dlSubDirs, dirs.split("\n"));
