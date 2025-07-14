@@ -308,6 +308,7 @@ window.DEFAULT_SETTING =
 	, color : true
 	, sync  : 0.5
 	}
+,	scrollMargin: 3.5
 ,	size: 1
 ,	color:
 	{ background: "#f0f0f0"

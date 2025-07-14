@@ -1186,7 +1186,6 @@ SmiEditor.prototype.getCursor = function() {
 SmiEditor.prototype.setCursor = function(start, end) {
 	this.input[0].setSelectionRange(start, end ? end : start);
 }
-// TODO: 설정으로 뺄 것
 SmiEditor.scrollMargin = 3.5;
 SmiEditor.prototype.scrollToCursor = function(lineNo) {
 	let left = 0;

@@ -812,6 +812,7 @@ $(() => {
 			setting.highlight.enter  = $("input[name=highlight_enter]").prop("checked");
 			setting.highlight.color  = $("input[name=highlight_color]").prop("checked");
 			setting.highlight.sync   = Number($("input[name=highlight_sync]").val());
+			setting.scrollMargin     = $("input[name=scrollMargin]").val();
 			setting.viewer.useAlign  = $("input[name=viewer_useAlign]").prop("checked");
 			setting.viewer.size      = $("input[name=viewer_size]").val();
 			setting.viewer.css       = $("textarea[name=viewer_css]").val();
@@ -1652,6 +1653,11 @@ body {
 					<label><input type="checkbox" name="highlight_color" /> <span>색상 미리보기</span></label>
 				</span>
 			</div>
+		</div>
+		<div>
+			<label class="for-withoutSync"><span >커서 이동 시 스크롤 여백</span>
+				<input type="number" name="scrollMargin" step="0.5" />줄
+			</label>
 		</div>
 		<label>UI 배율
 			<select name="size">

@@ -163,7 +163,7 @@ $(() => {
 					}
 				}
 				
-                const $tr = $("<tr>").data({ oi: oi, smi: smi, origin: smi.start });
+				const $tr = $("<tr>").data({ oi: oi, smi: smi, origin: smi.start });
 				
 				if (smi.syncType == Subtitle.SyncType.frame) {
 					const frameIndex = Subtitle.findSyncIndex(smi.start, fs);
@@ -645,12 +645,12 @@ $(() => {
 		$("#editor tbody tr.fs").each(function () {
 			const $tr = $(this);
 			const data = $tr.data();
-            const frameIndex = Subtitle.findSyncIndex(data.origin, fs);
-            const shiftIndex = Subtitle.findSyncIndex(data.origin + shift, fs);
-            const offset = shiftIndex - frameIndex;
-            $tr.data({ offset: offset });
-            $tr.data("$frames").css({ left: "calc(" + (-98 * offset) + "px + 50%" });
-            setSync($tr.find("td.sync"), fs[shiftIndex]);
+			const frameIndex = Subtitle.findSyncIndex(data.origin, fs);
+			const shiftIndex = Subtitle.findSyncIndex(data.origin + shift, fs);
+			const offset = shiftIndex - frameIndex;
+			$tr.data({ offset: offset });
+			$tr.data("$frames").css({ left: "calc(" + (-98 * offset) + "px + 50%" });
+			setSync($tr.find("td.sync"), fs[shiftIndex]);
 		});
 		return false;
 	}).on("click", "input[name=mode]", function() {

@@ -1147,6 +1147,10 @@ SmiEditor.prototype.rename = function() {
 			alert("구분자는 입력할 수 없습니다.");
 			return;
 		}
+		if (isFinite(input)) {
+			alert("숫자만 입력할 순 없습니다.");
+			return;
+		}
 		if (input == "메인"
 		 || input == "Default"
 		) {
@@ -1766,6 +1770,8 @@ function setSetting(setting, initial=false) {
 	} else {
 		$(".for-frame-sync").hide();
 	}
+	
+	SmiEditor.scrollMargin = setting.scrollMargin;
 	
 	{
 		const dll = setting.player.control.dll;
