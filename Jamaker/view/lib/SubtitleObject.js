@@ -1895,7 +1895,7 @@ AssEvent.fromSync = function(sync, style=null) {
 			// RUBY 태그 등을 레이어 둘 이상으로 나눴으면 pos 같게 고정 필요
 			let moved = (texts.length > 1);
 			
-			// 메인홀드 내용 중 다른 홀드랑 겹쳐서 기본적으로 올려야 하는 내용물
+			// 다른 홀드랑 겹쳐서 기본적으로 올려야 하는 내용물
 			if (sync.bottom) {
 				y -= sync.bottom * style.Fontsize * 1.1;
 				moved = true;
@@ -2063,6 +2063,8 @@ AssEvent.fromSync = function(sync, style=null) {
 		if (text = text.split("}{").join("")) {
 //			const ass = new AssEvent(start, end, sync.style, text, minLayer + i);
 			// SMI와 공통인 게 마지막 레이어여야 함
+			
+			// SMI와 공통인 게 마지막 레이어여야 해서 999 부여
 			const ass = new AssEvent(start, end, sync.style, text, 999);
 			ass.origin = sync;
 			events.push(ass);
@@ -2170,7 +2172,9 @@ AssFile.prototype.toTxt = // 처음에 함수명 잘못 지은 걸 레거시 호
 AssFile.prototype.toText = function() {
 	const result = [];
 	for (let i = 0; i < this.parts.length; i++) {
-		result.push(this.parts[i].toText());
+		if (this.parts[i].body.length) {
+			result.push(this.parts[i].toText());
+		}
 	}
 	return result.join("\n\n");
 }

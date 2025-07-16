@@ -1062,27 +1062,62 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 		
 		syncs.push(hold.syncs = hold.smiFile.toSyncs());
 	}
-	for (let h = 1; h < holds.length; h++) {
-		const hold = holds[h];
-		// 메인 홀드보다 위쪽이면 건너뜀
-		if (hold.pos > 0) continue;
-
-		// 정렬 위치가 중앙 하단이 아니면 건너뜀
-		if (hold.style && hold.style.Alignment != 2) continue;
-
-		// 메인 홀드보다 아래에 깔린 내용일 경우, 겹치는 메인 홀드의 내용물이 기본적으로 위로 올라가도록 함
-		const holdSyncs = syncs[h];
-		let mi = 0;
-		for (let i = 0; i < holdSyncs.length; i++) {
-			const sync = holdSyncs[i];
-			while (mi < mainSyncs.length && mainSyncs[mi].end <= sync.start) {
-				mi++;
-			}
-			while (mi < mainSyncs.length && mainSyncs[mi].start < sync.end) {
-				mainSyncs[mi].bottom
-					= (mainSyncs[mi].bottom ? mainSyncs[mi].bottom : 0)
-					+ sync.getTextOnly().split("\n").length;
-				mi++;
+	{	// 홀드 결합 pos 자동 조정 재개발
+		
+		// 정렬 위치가 중앙 하단인 것들만 모음
+		const an2Holds = [];
+		for (let h = 0; h < holds.length; h++) {
+			const hold = holds[h];
+			if (hold.style && hold.style.Alignment != 2) continue;
+			an2Holds.push(hold);
+		}
+		// 아래인 것부터 정렬
+		an2Holds.sort((a, b) => {
+			return a.pos - b.pos;
+		});
+		
+		if (an2Holds.length > 1) {
+			const usedLines = []; // 각 싱크에 사용된 줄 수
+			for (let h = 0; h < an2Holds.length; h++) {
+				const hold = an2Holds[h];
+				for (let i = 0; i < hold.syncs.length; i++) {
+					const sync = hold.syncs[i];
+					const usedLine = { start: sync.start, used: 0 };
+					const newItems = [usedLine];
+					
+					// 이미 확인된 줄과 비교
+					let j = 0
+					for (; j < usedLines.length; j++) {
+						if (sync.start == usedLines[j].start) {
+							usedLine.used = usedLines[j].used;
+							break;
+						} else if (sync.start < usedLines[j].start) {
+							usedLine.used = (j > 0) ? usedLines[j - 1].used : 0;
+							break;
+						}
+					}
+					let k = j;
+					if (k < usedLines.length) {
+						for (; k < usedLines.length; k++) {
+							if (sync.end == usedLines[k].start) {
+								break;
+							} else if (sync.end < usedLines[k].start) {
+								newItems.push({ start: sync.end, used: usedLines[k - 1].used });
+								break;
+							}
+							usedLine.used = Math.max(usedLine.used, usedLines[k].used);
+						}
+					} else {
+						newItems.push({ start: sync.end, used: 0 });
+					}
+					
+					sync.bottom = usedLine.used;
+					usedLine.used += sync.getTextOnly().split("\n").length;
+					
+					newItems.push(...usedLines.slice(k));
+					usedLines.length = j;
+					usedLines.push(...newItems);
+				}
 			}
 		}
 	}
