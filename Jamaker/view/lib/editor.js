@@ -978,20 +978,107 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			styles[name] = style;
 		}
 		
-		syncs.push((hold.smiFile = new SmiFile(hold.text)).toSyncs());
-		const syncTimes = [];
+		hold.smiFile = new SmiFile(hold.text);
 		const smis = hold.smiFile.body;
+		
+		const assComments = []; // ASS 주석에서 복원한 목록
+		const toAssEnds = {};
 		for (let i = 0; i < smis.length; i++) {
 			const smi = smis[i];
-			if (smi.syncType == SyncType.inner) continue; // 중간 싱크는 예외
-			syncTimes.push(smi.start);
+			{	// 앞에서 나온 ASS 형태에 종료싱크 채워주기
+				const toAssEnd = toAssEnds[i];
+				if (toAssEnd) {
+					for (let j = 0; j < toAssEnd.length; j++) {
+						toAssEnd[j][2] += smi.start;
+					}
+				}
+			}
+			
+			let assTexts = [];
+			if (smi.text.startsWith("<!-- ASS X -->")) {
+				// ASS 변환 대상 제외
+				smi.text = smi.text.substring(14).trim();
+				smi.checeked = true;
+				
+			} else if (smi.text.startsWith("<!-- ASS\n")) {
+				// 원래 ASS 변환용 주석이 있었을 경우 삭제
+				const commentEnd = smi.text.indexOf("\n-->"); // "\n-->\n"으로 할 경우, SMI 내용물이 아예 없는 경우 못 잡아냄
+				if (commentEnd > 0) {
+					assTexts = smi.text.substring(9, commentEnd).split("\n");
+					smi.text = smi.text.substring(commentEnd + 4).trim();
+					if (assTexts[assTexts.length - 1] == "END") {
+						// ASS 변환 대상 제외
+						assTexts.length = assTexts.length - 1;
+						smi.skip = true;
+					}
+				}
+			}
+			
+			// ASS 주석에 [SMI] 있을 경우 넣을 내용물
+			const smiText = Subtitle.$tmp.html(smi.text).text().split("\n").join("\\N");
+			
+			// ASS 주석에서 복원
+			for (let j = 0; j < assTexts.length; j++) {
+				let ass = assTexts[j].split("[SMI]").join(smiText).split(",");
+				
+				if (isFinite(ass[0])) {
+					let type = null;
+					if (ass.length >= 5) {
+						if (ass[1] == "") { // span 형식
+							type = "span";
+							const span = (ass[2] != "" && isFinite(ass[2])) ? Number(ass[2]) : 1;
+							ass = [0, smi.start, 0, (ass[3] ? ass[3] : name), ass.slice(4).join(","), smi];
+							let toAssEnd = toAssEnds[i + span];
+							if (toAssEnd == null) {
+								toAssEnd = toAssEnds[i + span] = [];
+							}
+							toAssEnd.push(ass);
+							assComments.push(ass);
+							
+						} else if (isFinite(ass[1])) { // add 형식
+							type = "add";
+							const addStart = Number(ass[1]);
+							const addEnd = isFinite(ass[2]) ? Number(ass[2]) : addStart;
+							ass = [0, smi.start + addStart, addEnd, (ass[3] ? ass[3] : name), ass.slice(4).join(","), smi];
+							let toAssEnd = toAssEnds[i + 1];
+							if (toAssEnd == null) {
+								toAssEnd = toAssEnds[i + 1] = [];
+							}
+							toAssEnd.push(ass);
+							assComments.push(ass);
+						}
+					}
+					if (!type) {
+						// 싱크 변형 없이 스타일이 나오는 형식
+						ass = [0, smi.start, 0, ass[1], ass.slice(2).join(","), smi];
+						let toAssEnd = toAssEnds[i + 1];
+						if (toAssEnd == null) {
+							toAssEnd = toAssEnds[i + 1] = [];
+						}
+						toAssEnd.push(ass);
+						assComments.push(ass);
+					}
+				} else {
+					// 텍스트만 입력
+					ass = [0, smi.start, 0, name, ass.join(","), smi];
+					let toAssEnd = toAssEnds[i + 1];
+					if (toAssEnd == null) {
+						toAssEnd = toAssEnds[i + 1] = [];
+					}
+					toAssEnd.push(ass);
+					assComments.push(ass);
+				}
+			}
 		}
-		if (h == 0) {
-			mainSyncs = syncs[0];
-			mainSyncTimes = syncTimes;
-		} else {
-			assFile.addFromSyncs(syncs[h], name, syncTimes);
+		
+		for (let i = 0; i < assComments.length; i++) {
+			const item = assComments[i];
+			const event = new AssEvent(item[1], item[2], item[3], item[4], item[0]);
+			event.owner = item[5];
+			assEvents.body.push(event);
 		}
+		
+		syncs.push(hold.syncs = hold.smiFile.toSyncs());
 	}
 	for (let h = 1; h < holds.length; h++) {
 		const hold = holds[h];
@@ -1030,11 +1117,6 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 					const item = eventsBody[i];
 					item.Start = AssEvent.toAssTime((item.start = Subtitle.findSync(item.start)) - 15);
 					item.End   = AssEvent.toAssTime((item.end   = Subtitle.findSync(item.end  )) - 15);
-					/*
-					// ASS 전용 스크립트와 비교를 위함
-					item.start = Math.floor(item.start / 10) * 10;
-					item.end   = Math.floor(item.end   / 10) * 10;
-					*/
 				}
 			} else {
 				const FL = Subtitle.video.FL;
@@ -1042,11 +1124,6 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 					const item = eventsBody[i];
 					item.Start = Math.max(1, ((Math.round(item.start / FL) - 0.5) * FL) - 15);
 					item.End   = Math.max(1, ((Math.round(item.end   / FL) - 0.5) * FL) - 15);
-					/*
-					// ASS 전용 스크립트와 비교를 위함
-					item.start = Math.floor(item.start / 10) * 10;
-					item.end   = Math.floor(item.end   / 10) * 10;
-					*/
 				}
 			}
 		}
@@ -2452,7 +2529,7 @@ function loadAssFile(path, text, target=-1) {
 		}
 	}
 	
-	{	// TODO: 홀드 스크립트와 ASS 스크립트 비교
+	{	// 홀드 스크립트와 ASS 스크립트 비교
 		
 		// 1:1 - 결과물이 다른 경우
 		//       <font ass="~~"> 태그 추가해서 구현 시도 - 어느 정도 한계 존재 
@@ -2482,7 +2559,6 @@ function loadAssFile(path, text, target=-1) {
 			let assText = targetEvents[i].Text.split("}{").join("");
 
 			// 뒤쪽에 붙은 군더더기 종료태그 삭제
-			let removed = false;
 			while (assText.endsWith("}")) {
 				if (assText.endsWith("{}")) {
 					// 의도적으로 넣은 것
@@ -2490,32 +2566,40 @@ function loadAssFile(path, text, target=-1) {
 				}
 				let end = assText.lastIndexOf("{");
 				if (end > 0) {
-					const tag = assText.substring(end);
+					const tags = assText.substring(end + 1, assText.length - 1).split("\\");
 					assText = assText.substring(0, end);
-					if (tag.indexOf("\\fad") > 0
-					 || tag.indexOf("\\pos") > 0
-					 || tag.indexOf("\\mov") > 0
-					 || tag.indexOf("\\clip") > 0) {
-						// 종료태그가 아닌 전체적으로 쓰이는 태그일 경우 앞으로 이동
-						if (assText.startsWith("{")) {
-							end = assText.indexOf("}");
-							if (end > 0) { // 없을 리는 없음
-								assText = assText.substring(0, end) + tag.substring(1) + assText.substring(end + 1);
-							}
-						} else {
-							assText = tag + assText;
+					
+					// 끝에 붙은 공통 태그는 앞으로 가져옴
+					let frontTag = "";
+					for (let j = 0; j < tags.length; j++) {
+						const tag = tags[j];
+						if (tag.startsWith("fad")
+						 || tag.startsWith("pos")
+						 || tag.startsWith("mov")
+						 || tag.startsWith("clip")
+						) {
+							frontTag += "\\" + tag;
+							tags.splice(j, 1);
+							j--;
 						}
 					}
-					removed = true;
+					
+					if (frontTag) {
+						// 앞으로 가져온 태그가 있을 경우
+						if (assText.startsWith("{\\")) {
+							assText = "{" + frontTag + assText.substring(1);
+						} else {
+							assText = "{" + frontTag + "}" + assText;
+						}
+						// 끄트머리가 공백문자면 태그 없어도 중괄호 필요함
+						if (assText.endsWith("　")
+						 || assText.endsWith(" ")
+						) {
+							assText += "{}";
+						}
+					}
 				} else {
 					break;
-				}
-			}
-			if (removed) {
-				// ASS 자막 결과물에선 Zero-width-space가 공간을 차지하는 것 같음...
-				//assText += "​"; // 군더더기 태그 삭제한 대신 Zero-width-space로 끝맺음
-				if (assText.endsWith(" ") || assText.endsWith("　")) {
-					assText += "{}";
 				}
 			}
 			targetEvents[i].Text = assText;
@@ -2527,516 +2611,163 @@ function loadAssFile(path, text, target=-1) {
 			const tEvent = targetEvents[ti];
 			while ((oi < originEvents.length) && (originEvents[oi].Start < tEvent.Start)) {
 				// ASS 출력 제외 대상
-				if (originEvents[oi].origin) {
-					const o = originEvents[oi].origin.origin;
-					o.text = "<!-- ASS\nEND\n-->\n" + o.text;
-				} else {
-					// origin이 없었으면 기존에 ASS 전용으로 넣었던 것이므로 삭제 대상
-				}
-				console.log("count++ ASS 출력 제외 대상", originEvents[oi]);
-				count++;
+				const origin = originEvents[oi].origin;
 				oi++;
 			}
-			// Start 싱크가 일치할 경우
-			let origins = [];
-			let targets = [];
-			const groups = {};
-			const oStyles = [];
-			const tStyles = [];
-			let oStyle = null;
+			// 싱크가 일치하는 것들 찾기
+			const origins = [];
+			const targets = [];
 			for (let i = oi; i < originEvents.length; i++) {
-				// 싱크 일치하는 것 확인
 				const event = originEvents[i];
 				if (event.start != tEvent.start) break;
 				if (event.end   != tEvent.end  ) break;
 				origins.push(event);
-				
-				const style = event.Style;
-				let group = groups[style];
-				if (!group) {
-					oStyles.push(style);
-					groups[style] = group = { o: [], t: [] };
-				}
-				group.o.push(event);
-				
-				if (!oStyle && event.origin) {
-					oStyle = style;
-				}
 			}
 			for (let i = ti; i < targetEvents.length; i++) {
-				// 싱크 일치하는 것 확인
 				const event = targetEvents[i];
 				if (event.start != tEvent.start) break;
 				if (event.end   != tEvent.end  ) break;
 				targets.push(event);
-				
-				const style = event.Style;
-				let group = groups[style];
-				if (!group) {
-					tStyles.push(style); // 스타일 리스트만 채워두고
-					group = groups[""]; // 내용물은 한쪽에 몰아넣음
-				}
-				if (!group) groups[""] = group = { o: [], t: [] };
-				group.t.push(event);
 			}
-
-			let imported = false;
-			if (!oStyle) {
-				// SMI에 없는 내용
-				console.log("SMI에 없는 내용", origins, targets);
-				const start = targets[0].start;
-				const end   = targets[0].end;
-				
-				// 스타일에 해당하는 기존 홀드에 넣을 수 있는지 확인
-				oStyles.push(...tStyles);
-				for (let s = 0; s < oStyles.length; s++) {
-					const style = (oStyles[s] == "Default") ? "메인" : oStyles[s];
-					
-					for (let h = 0; h < currentTab.holds.length; h++) {
-						const hold = currentTab.holds[h];
-						
-						let canImport = (hold.name == style) && hold.smiFile; // ASS 출력 제외 홀드에는 넣을 수 없음
-						if (!canImport) continue;
-						
-						const body = hold.smiFile.body;
-						let replaceFrom = 0;
-						let replaceTo = 0;
-						
-						if (canImport) {
-							// 스타일에 맞는 홀드 찾음
-							let i = 0;
-							for (; i < body.length; i++) {
-								if (start < body[i].start) { // 다음 싱크에 도달
-									if (i == 0 || body[i-1].isEmpty()) {
-										// 직전이 공백 싱크임
-										replaceFrom = replaceTo = i;
-									} else {
-										// 공백 아니면 겹칠 수 없음
-										canImport = false;
-									}
-									break;
-								}
-								if (start == body[i].start) { // 싱크가 겹침
-									if (body[i].isEmpty()) {
-										// 해당 싱크가 공백이면 replace 함
-										replaceFrom = i;
-										replaceTo = i + 1;
-									} else {
-										// 공백 아니면 겹칠 수 없음
-										canImport = false;
-									}
-									break;
-								}
-							}
-							if (i == body.length) {
-								// 끝까지 돌았으면 겹치는 싱크 없음
-								replaceFrom = replaceTo = i;
-							}
-						}
-						
-						if (canImport) {
-							if (replaceTo < body.length && end > body[replaceTo].start) {
-								// 다음 싱크와 겹침
-								canImport = false;
-							}
-						}
-						if (canImport) {
-							// 공백 싱크 자리에 넣을 수 있음
-							console.log("공백 싱크 자리에 넣을 수 있음");
-							let newText = "<!-- ASS\n";
-							for (i = 0; i < targets.length; i++) {
-								const item = targets[i];
-								/* 축약 표현은 혼란만 가중되는 느낌
-								if (item.Name == "" && item.MarginL == 0 && item.MarginR == 0 && item.MarginV == 0 && item.Effect == "") {
-									newText += [item.Layer, item.Style, item.Text].join(",") + "\n";
-								} else {
-									newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
-								}
-								*/
-//								newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
-								newText += [item.Layer, "", "", item.Style, item.Text].join(",") + "\n";
-							}
-							newText += "END\n-->";
-							console.log("ASS 전용 SMI 싱크 생성", newText);
-							
-							const newSmis = [];
-							if (replaceFrom < replaceTo) {
-								// 공백 싱크 replace
-								const smi = body[replaceFrom];
-								smi.text = newText;
-								newSmis.push(smi);
-							} else {
-								// 신규 싱크 추가 - SMI에 없던 것이므로 화면 싱크로 예측 진행
-								newSmis.push(new Smi(start, SyncType.frame, newText));
-							}
-							if ((body.length == 0) || (replaceTo >= body.length) || end < body[replaceTo].start) {
-								// 다음 싱크와 떨어져 있으면 공백 싱크 추가
-								newSmis.push(new Smi(end, SyncType.frame, "&nbsp;"));
-							}
-							hold.smiFile.body = body.slice(0, replaceFrom).concat(newSmis).concat(body.slice(replaceTo));
-							imported = true;
-							console.log("count++ ASS 전용 SMI 싱크 생성", targets);
-							count++;
+			
+			// 기존 생성물과 일치하는지 확인
+			for (let oj = 0; oj < origins.length; oj++) {
+				const o = origins[oj];
+				if (o.origin) {
+					// SMI 기반 생성물
+					for (let tj = 0; tj < targets.length; tj++) {
+						const t = targets[tj];
+						if (o.Style == t.Style && o.Text == t.Text) {
+							t.origin = o.origin;
+							t.found = o.found = true;
 							break;
 						}
 					}
-					if (imported) {
-						break;
-					}
-				}
-				
-				if (!imported) {
-					appendEvents.push(...targets);
-					
-					// 수정 내역이 있을 때만 카운트
-					let updated = false;
-					if (origins.length != targets.length) {
-						updated = true;
-						
-					} else {
-						for (let i = 0; i < origins.length; i++) {
-							const o = origins[i];
-							const t = targets[i];
-//							["Layer", "Start", "End", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
-							if (o.start   != t.start  ) { updated = true; break; }
-							if (o.end     != t.end    ) { updated = true; break; }
-							if (o.Style   != t.Style  ) { updated = true; break; }
-							/*
-							if (o.Name    != t.Name   ) { updated = true; break; }
-							if (o.MarginL != t.MarginL) { updated = true; break; }
-							if (o.MarginR != t.MarginR) { updated = true; break; }
-							if (o.MarginV != t.MarginV) { updated = true; break; }
-							if (o.Effect  != t.Effect ) { updated = true; break; }
-							*/
-							if (o.Text    != t.Text   ) { updated = true; break; }
+					if (!o.found) {
+						// SMI 기반 생성물에 태그를 추가해 구현 가능한지 확인
+						let t = null;
+						for (let tj = targets.length - 1; tj >= 0; tj--) {
+							if (targets[tj].Style == o.Style) {
+								// 스타일이 같은 것 중 마지막 것을 가져옴
+								t = targets[tj];
+								break;
+							}
+						}
+						if (t && (t.Text.length > o.Text.length)) {
+							let targetTags = [];
+							let targetText = t.Text;
+							
+							if (targetText.startsWith("{")) {
+								const end = targetText.indexOf("}");
+								if (end > 0) {
+									targetTags = targetText.substring(1, end).split("\\").slice(1);
+									targetText = targetText.substring(end + 1);
+								}
+							}
+							
+							let originTags = [];
+							let originText = o.Text;
+							
+							if (originText.startsWith("{")) {
+								const end = originText.indexOf("}");
+								if (end > 0) {
+									originTags = originText.substring(1, end).split("\\").slice(1);
+									originText = originText.substring(end + 1);
+								}
+							}
+							
+							// SMI 기반 생성물 앞뒤에 내용물을 추가해서 구현 가능한지 확인
+							// TODO: 중간 내용물 추가도 필요한가...?
+							const index = targetText.indexOf(originText);
+							if (index >= 0) {
+								let convertable = true;
+								for (let ok = 0; ok < originTags.length; ok++) {
+									const oTag = originTags[ok];
+									let targetHasTag = false;
+									for (let tk = 0; tk < targetTags.length; tk++) {
+										if (oTag == targetTags[tk]) {
+											targetHasTag = true;
+											break;
+										}
+									}
+									if (!targetHasTag) {
+										// SMI 기반 생성물엔 있는데 결과물엔 없는 태그가 있으면 불가능
+										convertable = false;
+										break;
+									}
+								}
+								
+								if (convertable) {
+									// 추가돼야 하는 태그 확인
+									const appendTags = [];
+									for (let tk = 0; tk < targetTags.length; tk++) {
+										const tTag = targetTags[tk];
+										let originHasTag = false;
+										for (let ok = 0; ok < originTags.length; ok++) {
+											if (tTag == originTags[ok]) {
+												originHasTag = true;
+												break;
+											}
+										}
+										if (!originHasTag) {
+											appendTags.push(tTag);
+										}
+									}
+									let prev = "";
+									if (appendTags.length) {
+										prev = '<FONT ass="{\\' + appendTags.join("\\") + '}' + targetText.substring(0, index) + '"></FONT>\n';
+									} else if (index) {
+										prev = '<FONT ass="' + targetText.substring(0, index) + '"></FONT>\n';
+									}
+									let next = "";
+									if (targetText.length > (index + originText.length)) {
+										next = '\n<FONT ass="' + targetText.substring(index + originText.length) + '"></FONT>';
+									}
+									
+									o.origin.origin.text = prev + o.origin.origin.text + next;
+									t.found = true;
+									t.origin = o.origin;
+									count++;
+								}
+							}
 						}
 					}
 					
-					if (updated) {
-						console.log("count++ ASS 전용 스크립트로 처리", origins,targets);
-						count++;
-					}
-				}
-				oi += origins.length;
-				ti += targets.length;
-				
-				continue;
-			}
-			
-			// SMI에 없는 스타일인 경우 첫 홀드 SMI 주석으로 몰아주기
-			if (groups[""]) {
-				console.log("SMI에 없는 스타일인 경우 첫 홀드 SMI 주석으로 몰아주기");
-				targets = groups[""].t;
-				// SMI에서 가져온 게 뒤쪽으로 와야 함
-				targets.push(...groups[oStyles[0]].t);
-				groups[oStyles[0]].t = targets;
-			}
-			
-			// 각 스타일 그룹별로 작업
-			for (let s = 0; s < oStyles.length; s++) {
-				const group = groups[oStyles[s]];
-				origins = group.o;
-				targets = group.t;
-				
-				let modified = (origins.length != targets.length);
-				if (!modified) {
-					// 개수가 그대로면 결과물 검사
-					console.log("개수가 그대로면 결과물 검사");
-					for (let i = 0; i < origins.length; i++) {
-						if (origins[i].Text != targets[i].Text) {
-							modified = true;
+				} else {
+					// ASS 전용 스크립트
+					for (let tj = 0; tj < targets.length; tj++) {
+						const t = targets[tj];
+						if (o.Style == t.Style && o.Text == t.Text) {
+							t.owner = o.owner;
+							t.found = o.found = true;
 							break;
 						}
 					}
 				}
-				if (modified) {
-					// 수정 내역이 존재
-					console.log("수정 내역이 존재", origins, targets);
-					const origin = origins[origins.length - 1];
-					if (origin.origin && origin.origin.origin) {
-						// SMI 기반
-						const smi = origin.origin.origin;
-						console.log("SMI 기반", smi);
-						let smiText = smi.text;
-						let assComment = "";
-						if (smiText.startsWith("<!-- ASS\n")) {
-							// 원래 ASS 변환용 주석이 있었을 경우 삭제
-							const commentEnd = smiText.indexOf("\n-->"); // "\n-->\n"으로 할 경우, SMI 내용물이 아예 없는 경우 못 잡아냄
-							if (commentEnd > 0) {
-								assComment = smiText.substring(0, commentEnd + 4);
-								smiText = smiText.substring(commentEnd + 4).trim();
-							}
-						}
-						
-						const prepends = [];
-						let addCount = targets.length - origins.length;
-						for (let i = 0; i < addCount; i++) {
-							prepends.push(targets[i]);
-						}
-						// 1:N이든 N:M이든 일단 ASS 출력물이 더 많음
-						if (addCount >= 0) {
-							// SMI에 기반한 결과물 개수 확인
-							let i = 0;
-							for (; i < origins.length; i++) {
-								if (origins[i].origin) {
-									break;
-								}
-								prepends.push(targets[addCount + i]);
-							}
-							let generatedCount = origins.length - i;
-							
-							// SMI에 기반한 결과물만 가지고 일치 여부 확인
-							let replaced = false;
-							for (; i < origins.length; i++) {
-								if (origins[i].Text != targets[addCount + i].Text) {
-									assComment = "";
-									replaced = true;
-									break;
-								}
-							}
-							
-							let completed = false;
-							if (replaced && generatedCount == 1) {
-								let canReplace = false;
-								const sync = origin.origin;
-								let requireNext = false;
-								const newPrev = [];
-								
-								let originText = origin.Text;
-								let originPrev = [];
-								if (originText.startsWith("{")) {
-									const end = originText.indexOf("}");
-									if (end > 0) {
-										originPrev = originText.substring(1, end).split("\\");
-										originText = originText.substring(end + 1);
-									}
-								}
-								let targetText = targets[targets.length - 1].Text;
-								let targetPrev = [];
-								if (targetText.startsWith("{")) {
-									const end = targetText.indexOf("}");
-									if (end > 0) {
-										targetPrev = targetText.substring(1, end).split("\\");
-										targetText = targetText.substring(end + 1);
-									}
-								}
-								
-								// 스타일이 일치할 때만 확인
-								let tStyle = targets[targets.length - 1].Style;
-								if (origin.Style == tStyle) {
-									// 일부 태그만 추가해서 결과물 가능한지 확인
-									/*
-									const beginIndex = targetText.indexOf(originText);
-									if (beginIndex >= 0) {
-										// TODO: 원본 SMI에서 수정할 위치를 역산해서 수정해야 함
-										originText = originText.substring(beginIndex)
-									*/
-									
-									if (targetText.startsWith(originText)) {
-										// 앞쪽에 붙은 ASS 전용 태그 삭제
-										for (let j = 0; j < sync.text.length; j++) {
-											// 옛날에 attrs로 만들었어야 했는데, text로 해버려서 좀 헷갈림...
-											if (sync.text[j].ass) {
-												sync.text[j].ass = null;
-											} else {
-												break;
-											}
-										}
-										// ASS 변환 결과물 재생성
-										let regenAss = AssEvent.fromSync(sync, styles[origin.origin.style]);
-										regenAss = regenAss[regenAss.length - 1]; // 여기까지 오려면 반드시 1개 생성돼야 함
-										
-										// 순수 SMI 태그에서 생성된 ASS 태그
-										originPrev = [];
-										if (regenAss && regenAss.Text.startsWith("{")) {
-											const end = regenAss.Text.indexOf("}");
-											if (end > 0) {
-												originPrev = regenAss.Text.substring(1, end).split("\\");
-											}
-										}
-										if (originPrev.length) {
-											// 만들어져야 하는 ASS 태그 중에
-											let regenOriginCount = 0;
-											for (let j = 1; j < targetPrev.length; j++) {
-												const tag = targetPrev[j];
-												let generated = false;
-												// 이미 SMI에서 만들어졌는지 확인
-												for (let k = 1; k < originPrev.length; k++) {
-													if (tag == originPrev[k]) {
-														regenOriginCount++;
-														generated = true;
-														break;
-													}
-												}
-												if (!generated) {
-													// 만들어졌으면 제외
-													newPrev.push(tag);
-												}
-											}
-											if (newPrev.length) {
-												// ASS 전용으로 추가할 태그 있음
-												requireNext = (targetText != originText); // 뒤쪽에 추가로 붙일 내용이 있는지 확인
-												canReplace = true; // 원본에 ASS용 태그 붙인 형태로 생성 가능
-											} else {
-												// 태그 추가만으로 완성할 수 없음
-												// 아래에서 완전히 ASS 전용 스크립트로 대체
-												// & 위에서 ass 제거한 것도 어차피 불용 태그
-											}
-										} else {
-											// 순수 SMI에선 앞쪽에 붙은 게 없을 때
-											if (targetPrev.length) {
-												newPrev.push(...targetPrev.slice(1));
-											}
-											requireNext = (targetText != originText); // 뒤쪽에 추가로 붙일 내용이 있는지 확인
-											canReplace = true; // 원본에 ASS용 태그 붙인 형태로 생성 가능
-										}
-										
-									} else {
-										/* 일단 기각
-										// TODO: 중간 내용물이 바뀐 경우 확인
-										// 한 군데만 찾음 - 두 군데 이상 건드려야 하면 그냥 덮어씌우는 게 나을 듯함
-										const add = targetText.length - originText.length
-										let eqs = 0;
-										for (; eqs < originText.length; eqs++) {
-											if (targetText[eqs] != originText[eqs]) {
-												break;
-											}
-										}
-										let eqe = originText.length;
-										for (; eqe > eqs; eqe--) {
-											if (targetText[eqe - 1 + add] != originText[eqe - 1]) {
-												break;
-											}
-										}
-										if (add < 0) {
-											eqe = Math.max(eqe, eqs - add);
-										}
-										
-										// TODO: 이게 돌아가려면 ASS 결과물이 아닌, 원본 SMI에서 수정할 위치를 역산해서 수정해야 함
-										console.log("수정할 영역 비중:", ((eqe - eqs) / originText.length));
-										if ((eqe - eqs) < (originText.length / 5)) { // 80% 이상 원본 그대로
-											let pos = 0;
-											for (let j = 0; j < sync.text.length; j++) {
-												// ASS 변환 시 공백문자 제거 등이 돌아가기 전 원본임
-												console.log(sync.text[j]);
-											}
-											if (sync.text.length == 1) {
-												// 원본에서 속성이 하나일 때만 확인함
-												const lines = sync.text[0].text.split("\n");
-												const part1 = originText.substring(0, eqs).split("\\N");
-												const part2 = originText.substring(eqe);
-												const partFrom = originText.substring(eqs, eqe);
-												const partTo = targetText.substring(eqs, eqe + add);
-												
-												console.log(lines, part1, part2, partFrom, partTo);
-											}
-											// ......... 버릴까
-										}
-										*/
-									}
-								}
-								
-								if (canReplace) {
-									// 원본에 ASS용 태그 붙인 형태로 생성 가능
-									smi.fromAttrs(sync.text);
-									if (newPrev.length) {
-										// 앞쪽에 추가 내용 필요
-										smiText = '<FONT ass="{\\' + newPrev.join("\\") + '}"></FONT>\n' + smiText;
-									}
-									if (requireNext) {
-										// 뒤쪽에 추가 내용 필요
-										const next = targetText.substring(originText.length);
-										smiText = smiText + '\n<FONT ass="' + next + '"></FONT>';
-									}
-									replaced = false;
-								} else {
-									// 태그 추가로 해결되지 않음
-								}
-							}
-							
-							if (!completed) {
-								if (replaced) {
-									// 기본 내용도 달라짐 - 전체를 신규 내용으로 덮어쓰기
-									if (smiText.startsWith("<!-- ASS\n")) {
-										// 원래 ASS 변환용 주석이 있었을 경우 삭제
-										const commentEnd = smiText.indexOf("\n-->"); // "\n-->\n"으로 할 경우, SMI 내용물이 아예 없는 경우 못 잡아냄
-										if (commentEnd > 0) {
-											smiText = smiText.substring(commentEnd + 4).trim();
-										}
-									}
-									let newText = "<!-- ASS\n";
-									for (i = 0; i < targets.length; i++) {
-										const item = targets[i];
-										/* 축약 표현은 혼란만 가중되는 느낌
-										if (item.Name == "" && item.MarginL == 0 && item.MarginR == 0 && item.MarginV == 0 && item.Effect == "") {
-											newText += [item.Layer, item.Style, item.Text].join(",") + "\n";
-										} else {
-											newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
-										}
-										*/
-//										newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
-										newText += [item.Layer, "", "", item.Style, item.Text].join(",") + "\n";
-									}
-									newText += "END\n-->";
-									if (smiText) newText += "\n" + smiText;
-									smiText = newText;
-									
-									
-								} else if (addCount > 0) {
-									// 기본 내용은 동일, 위에 주석만 추가
-									let newText = "<!-- ASS\n";
-									for (i = 0; i < prepends.length; i++) {
-										const item = prepends[i];
-										/*
-										if (item.Name == "" && item.MarginL == 0 && item.MarginR == 0 && item.MarginV == 0 && item.Effect == "") {
-											newText += [item.Layer, item.Style, item.Text].join(",") + "\n";
-										} else {
-											newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
-										}
-										*/
-//										newText += [item.Layer, "", "", item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
-										newText += [item.Layer, "", "", item.Style, item.Text].join(",") + "\n";
-									}
-									newText += "-->\n" + smiText;
-									smiText = newText;
-									
-								} else {
-									// 변환 결과 그대로 - 동작 X
-								}
-							}
-							smi.text = (assComment ? assComment + "\n" + smiText : smiText);
-						}
-					} else {
-						// ASS 독자 내용
-						console.log("ASS 독자 내용", targets);
-						appendEvents.push(...targets);
-					}
-
-					console.log("count++ 수정 내역이 존재", targets);
+				if (!o.found) {
+					// SMI->ASS 변환 제외 필요
+					o.skip = true;
 					count++;
 				}
-				
-				// 그룹별 순서가 맞는단 보장은 없지만, 루프 다 돈 다음 개수는 맞음
-				oi += origins.length;
-				ti += targets.length;
 			}
+			for (let tj = 0; tj < targets.length; tj++) {
+				const t = targets[tj];
+				if (!t.found) {
+					// 기존에 없던 ASS 스크립트 카운트
+					count++;
+				}
+				if (!t.origin) {
+					// SMI 기반 생성물이 아닐 경우
+					appendEvents.push(t);
+				}
+			}
+			
+			oi += origins.length;
+			ti += targets.length;
 		}
 		while (oi < originEvents.length) {
 			// ASS 출력 제외 대상
-			if (originEvents[oi].origin) {
-				const o = originEvents[oi].origin.origin;
-				if (o.text.startsWith("<!-- ASS\n")) {
-					// 원래 ASS 변환용 주석이 있었을 경우 삭제
-					const commentEnd = o.text.indexOf("\n-->");
-					if (commentEnd > 0) {
-						o.text = o.text.substring(commentEnd + 4).trim();
-					}
-				}
-				o.text = "<!-- ASS\nEND\n-->\n" + o.text;
-				console.log(o.text);
-			} else {
-				// origin이 없었으면 기존에 ASS 전용으로 넣었던 것이므로 삭제 대상
-			}
+			originEvents[oi].skip = true;
 			console.log("count++ ASS 출력 제외 대상", originEvents[oi]);
 			count++;
 			oi++;
@@ -3156,7 +2887,7 @@ function loadAssFile(path, text, target=-1) {
 								
 								let canImport = (hold.name == style) && hold.smiFile; // ASS 출력 제외 홀드에는 넣을 수 없음
 								if (!canImport) continue;
-
+								
 								const body = hold.smiFile.body;
 								let replaceFrom = 0;
 								let replaceTo = 0;
@@ -3217,19 +2948,19 @@ function loadAssFile(path, text, target=-1) {
 								// 여기까지 가면 ASS 에디터의 의미도 더 퇴색됨
 								
 								if (canImport) {
-									console.log(replaceFrom, fromEmpty ? null : body[replaceFrom], replaceTo, toEmpty ? null : body[replaceTo], targets);
+									let smi = body[replaceFrom];
+									if (!smi.assComments) {
+										smi.assComments = [];
+									}
 									
-									let newText = "<!-- ASS\n";
 									for (let i = 0; i < targets.length; i++) {
 										// 싱크 겹치도록 넣어줌
 										const item = targets[i];
 										let span = replaceTo - replaceFrom;
 										if (fromEmpty) span++;
-//										newText += [item.Layer, "", span, item.Style, item.Name, item.MarginL, item.MarginR, item.MarginV, item.Effect, item.Text].join(",") + "\n";
-										newText += [item.Layer, "", span, item.Style, item.Text].join(",") + "\n";
+										smi.assComments.push([item.Layer, "", (span == 1 ? "" : span), item.Style, item.Text].join(","));
 									}
 									
-									let smi = body[replaceFrom];
 									if (fromEmpty) {
 										// 공백 싱크 추가
 										const bodyEnd = body.slice(replaceFrom);
@@ -3237,22 +2968,6 @@ function loadAssFile(path, text, target=-1) {
 										body.push(smi = new Smi(start, SyncType.frame, ""));
 										body.push(...bodyEnd);
 									}
-									let smiText = smi.text;
-									if (smiText.startsWith("<!-- ASS\n")) {
-										// 기존 ASS 변환 내역
-										let index = smiText.indexOf("\n-->");
-										if (index == 8) {
-											smiText = smiText.substring(12).trim();
-										} else if (index > 0) {
-											newText += smiText.substring(9, index + 1);
-											smiText = smiText.substring(index + 4).trim();
-										}
-									}
-									newText += "-->";
-									
-									// SMI에 ASS 변환 내역 삽입
-									if (smiText) newText += "\n" + smiText;
-									smi.text = newText;
 									
 									if (toEmpty) {
 										// 종료 싱크 추가 필요
@@ -3279,6 +2994,28 @@ function loadAssFile(path, text, target=-1) {
 						const hold = currentTab.holds[i];
 						if (!hold.smiFile) continue;
 						
+						for (let j = 0; j < hold.smiFile.body.length; j++) {
+							const smi = hold.smiFile.body[j];
+							if (smi.assComments) {
+								smi.assComments.sort((a, b) => {
+									return Number(a.split(",")[0]) - Number(b.split(",")[0]);
+								});
+								let comment = "<!-- ASS\n" + smi.assComments.join("\n");
+								if (smi.skip) {
+									comment += "\nEND"
+								}
+								comment += "\n-->";
+								if (smi.text) {
+									smi.text = comment + "\n" + smi.text;
+								} else {
+									smi.text = comment;
+								}
+								
+							} else if (smi.skip) {
+								smi.text = "<!-- ASS X -->\n" + smi.text;
+							}
+						}
+						
 						const smiText = hold.smiFile.toText();
 						hold.input.val(smiText);
 						hold.setCursor(0);
@@ -3287,62 +3024,39 @@ function loadAssFile(path, text, target=-1) {
 					}
 					
 					// SMI 에디터에 넣지 못한 내용물
-					/* 홀드별 ASS 에디터 구분은 혼란만 가중시키는 듯함
-					const appendsWithoutHold = [];
-					for (let i = 0; i < appends.length; i++) {
-						const item = appends[i];
-						
-						item.start = AssEvent.fromAssTime(item.Start = item.oStart, true);
-						item.end   = AssEvent.fromAssTime(item.End   = item.oEnd  , true);
-						
-						// 별도 ASS 자막 형태로 추가
-						if (item.Style == "Default") {
-							// 메인 홀드
-							holds[0].ass.push(item);
-							
-						} else {
-							let found = false;
-							for (let h = 1; h < holds.length; h++) {
-								if (item.Style == holds[h].name) {
-									// 각 홀드
-									holds[h].ass.push(item);
-									found = true;
-									break;
-								}
-							}
-							if (!found) {
-								// 비홀드
-								appendsWithoutHold.push(item);
-							}
-						}
-					}
-					appendEvents.body = appendsWithoutHold;
-					*/
 					appendEvents.body = appends;
 					
-					/*
-					// TODO: SMI에서 화면 싱크인 것 뽑아오기... 필요한가?
-					// 반대로 일반 싱크 예외가 필요한가...?
-					// 일단 안 넣어주면 모두 화면 싱크로 처리되는 중
-					const totalFrameSyncs = [];
+					// ASS 전용 스크립트의 기본값은 화면 싱크
+					
+					// 일반 싱크인 것들 예외 처리
+					const normalSyncs = [];
 					for (let h = 0; h < currentTab.holds.length; h++) {
 						const lines = currentTab.holds[h].lines;
 						for (let i = 0; i < lines.length; i++) {
 							const line = lines[i];
-							if (line.TYPE == TYPE.FRAME) {
-								
+							if (line.TYPE == TYPE.BASIC) {
+								normalSyncs.push(line.SYNC);
 							}
 						}
 					}
-					*/
+					normalSyncs.sort((a, b) => {
+						return a - b;
+					});
 					
-					currentTab.assHold.assEditor.setEvents(appendEvents.body);
+					// 기존 ASS 에디터의 화면 싱크
+					const frameSyncs = currentTab.assHold.assEditor.getFrameSyncs();
 					
-					// 각 홀드 ASS 에디터
-					for (let h = 0; h < holds.length; h++) {
-						const hold = holds[h];
-						hold.assEditor.setEvents(hold.ass);
+					// ASS 전용 스크립트에서 일반 싱크 제외하고 화면 싱크로 할당
+					for (let i = 0; i < appendEvents.body.length; i++) {
+						const event = appendEvents.body[i];
+						if (Subtitle.findSync(event.start, normalSyncs, false) == null) frameSyncs.push(event.start);
+						if (Subtitle.findSync(event.end  , normalSyncs, false) == null) frameSyncs.push(event.end  );
 					}
+					frameSyncs.sort((a, b) => {
+						return a - b;
+					});
+					
+					currentTab.assHold.assEditor.setEvents(appendEvents.body, frameSyncs);
 				}
 			});
 		} else {

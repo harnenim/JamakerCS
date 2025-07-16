@@ -1879,49 +1879,6 @@ AssEvent.fromSync = function(sync, style=null) {
 	let minLayer = 0;
 	
 	let attrs = sync.text;
-	if (attrs[0].comment) {
-		// 주석에서 추가 내용 확인
-		const comment = attrs[0].comment;
-		if (comment.startsWith("<!-- ASS\n")) {
-			const lines = comment.substring(9, comment.length - 3).trim().split("\n");
-			for (let i = 0; i < lines.length; i++) {
-				const line = lines[i].trim();
-				if (line == "END") {
-					// 남은 내용물은 활용하지 않음
-					return events;
-				}
-				let span = 0;
-				let cols = line.split(",");
-				if (cols.length == 1) {
-					// 임의로 텍스트만 쓴 경우
-					cols = [0, "", "", (style ? style.Name : "?"), "", 0, 0, 0, "", line];
-				} else if (cols[1]) { // 풀사이즈면 싱크값이 비어있어야 함
-					// 축약 표현
-					cols = [cols[0], "", "", cols[1], "", 0, 0, 0, "", cols.slice(2).join(",")];
-				} else {
-					let text = cols.slice(4).join(",");
-					cols.length = 4;
-					if (text.startsWith(",0,0,0,,")) {
-						text = text.substring(8);
-					}
-					cols.push(...["",0,0,0,"",text]);
-					
-					cols.length = 10;
-					if (cols[2] && isFinite(cols[2])) {
-						span = Number(cols[2]);
-					}
-				}
-				const ass = new AssEvent(start, end, cols[3], cols[9], cols[0]);
-				for (let j = 3; j < 9; j++) {
-					ass[Subtitle.Ass.cols[j]] = cols[j];
-				}
-				ass.origin = sync;
-				ass.span = span;
-				events.push(ass);
-				minLayer = Math.max(minLayer, cols[0]);
-			}
-		}
-	}
 	
 	const texts = AssEvent.fromAttrs(attrs);
 	for (let i = 0; i < texts.length; i++) {
@@ -2309,7 +2266,7 @@ AssFile.prototype.fromText = function(text) {
 	return this;
 }
 AssFile.prototype.addFromSync = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
-AssFile.prototype.addFromSyncs = function(syncs, styleName, syncTimes=[]) {
+AssFile.prototype.addFromSyncs = function(syncs, styleName) {
 	let playResX = 1920;
 	let playResY = 1080;
 	const infoPart = this.getInfo();
@@ -2345,29 +2302,6 @@ AssFile.prototype.addFromSyncs = function(syncs, styleName, syncTimes=[]) {
 		const sync = syncs[i];
 		sync.style = styleName;
 		const events = AssEvent.fromSync(sync, style);
-		if (syncTimes.length) {
-			// 받아온 싱크값 기준으로 확장
-			for (; ti < syncTimes.length; ti++) {
-				if (syncTimes[ti] >= sync.start) {
-					break;
-				}
-			}
-			for (let j = 0; j < events.length; j++) {
-				const event = events[j];
-				if (event.span > 0) {
-					const spanEnd = Math.min(ti + event.span, syncTimes.length - 1);
-					event.End = AssEvent.toAssTime(event.end = syncTimes[spanEnd]);
-				}
-			}
-		} else {
-			for (let j = 0; j < events.length; j++) {
-				const event = events[j];
-				if (event.span > 0) {
-					const spanEnd = Math.min(i + event.span - 1, syncs.length - 1);
-					event.End = AssEvent.toAssTime(event.end = syncs[spanEnd].end);
-				}
-			}
-		}
 		part.body.push(...events);
 	}
 }
@@ -4327,41 +4261,15 @@ SmiFile.prototype.toSyncs = function() {
 		let i = 0;
 		let last = null;
 		for (; i + 1 < this.body.length; i++) {
-			if (this.body[i].text.split("&nbsp;").join("").length == 0) {
+			const item = this.body[i];
+			if (item.isEmpty() || item.skip) {
 				continue;
 			}
 			
-			const item = this.body[i];
 			const next = this.body[i + 1];
 			const end = (next.start) > 0 ? next.start : 0;
 			const normalized = item.normalize(end, true);
 			if (normalized.length > 1) {
-				// 첫 항목에 남겨둔 ASS 변환용 주석에 싱크 분할됐으면 강제로 span=1 지정
-				const first = normalized[0];
-				if (first.text.startsWith("<!-- ASS\n")) {
-					const end = first.text.indexOf("\n-->");
-					if (end > 0) {
-						const smiText = first.text.substring(end + 4).trim();
-						const commentLines = first.text.substring(0, end + 4).split("\n");
-						for (let j = 1; j < commentLines.length - 1; j++) {
-							const commentLine = commentLines[j].split(",");
-							if (commentLine[1] == "") { // span값 사용 중
-								if (commentLine[2] == "") {
-									// span 값이 비어있었으면 1 지정
-									commentLine[2] = 1;
-									commentLines[j] = commentLine.join(",");
-								}
-							} else {
-								// span 없었으면 강제로 1 지정
-								commentLines[j] = commentLine[0] + ",,1," + commentLine.slice(1).join(",");
-							}
-						}
-						let newText = commentLines.join("\n");
-						if (smiText) newText += "\n" + smiText;
-						first.text = newText;
-					}
-				}
-				
 				for (let j = 0; j < normalized.length - 1; j++) {
 					const sync = normalized[j].toSync();
 					sync.end = normalized[j + 1].start;
@@ -4374,12 +4282,6 @@ SmiFile.prototype.toSyncs = function() {
 			last.end = end;
 			last.endType = next.syncType;
 			result.push(last);
-			/*
-			last = this.body[i].toSync();
-			last.end = (this.body[i + 1].start > 0 ? this.body[i + 1].start : 0);
-			last.endType = this.body[i + 1].syncType;
-			result.push(last);
-			*/
 		}
 		if (this.body[i].text.split("&nbsp;").join("").length > 0) {
 			result.push(last = this.body[i].toSync());
