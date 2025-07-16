@@ -2061,8 +2061,52 @@ AssEvent.fromSync = function(sync, style=null) {
 			}
 		}
 		if (text = text.split("}{").join("")) {
-//			const ass = new AssEvent(start, end, sync.style, text, minLayer + i);
-			// SMI와 공통인 게 마지막 레이어여야 함
+			// Default에 대해서 줄표 달린 것들 정렬 맞춰주기
+			// TOOD: 설정 만드는 게 나은가?
+			if (style && sync.style == "Default") {
+				let frontTag = "";
+				let lines = text;
+				if (text.startsWith("{")) {
+					const end = text.indexOf("}");
+					if (end > 0) {
+						frontTag = text.substring(0, end + 1);
+						lines = text.substring(end + 1);
+					}
+				}
+				
+				// \fs, \fscx 태그 등이 없어서 글씨 크기 유지가 보장될 때 동작
+				if (lines.indexOf("\\fs") < 0) {
+					lines = lines.split("\\N");
+					const pureLines = [];
+					for (let i = 0; i < lines.length; i++) {
+						let pureLine = Subtitle.$tmp.html(lines[i].split("{").join("<").split("}").join(">")).text();
+						if (pureLine.startsWith("-")) {
+							pureLines.push({ i: i, text: pureLine });
+						}
+					}
+					// 줄표 달린 게 2개 이상일 때
+					if (pureLines.length >= 2) {
+						const wStyle = { fontFamily: style.Fontname, fontSize: style.Fontsize };
+						const oneWidth = Subtitle.Width.getWidth("　", wStyle);
+						let maxWidth = 0;
+						for (let i = 0; i < pureLines.length; i++) {
+							const width = pureLines[i].width = Subtitle.Width.getWidth(pureLines[i].text, wStyle);
+							maxWidth = Math.max(width, maxWidth);
+						}
+						for (let i = 0; i < pureLines.length; i++) {
+							const add = (maxWidth - pureLines[i].width);
+							if (add) {
+								lines[pureLines[i].i] += "{\\fscx" + Math.floor(add / oneWidth * 100) + "}　{"
+									+ ((pureLines[i].i < lines.length - 1) ? "\\fscx" : "") + "}"; // 마지막 줄이면 {}으로 끝내기
+							}
+						}
+						text = lines.join("\\N");
+						if (frontTag) {
+							text = (frontTag + text).split("}{").join("");
+						}
+					}
+				}
+			}
 			
 			// SMI와 공통인 게 마지막 레이어여야 해서 999 부여
 			const ass = new AssEvent(start, end, sync.style, text, 999);
