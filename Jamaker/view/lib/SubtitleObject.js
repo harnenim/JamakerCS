@@ -1609,7 +1609,6 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 	// 색상to색상인 경우 - 겹치는 객체 만들어서 처리해야 함
 	if (checkFade) {
 		let count = 0;
-		let elseCount = 0;
 		let countHides = 0;
 		const baseAttrs = [];
 		for (let i = 0; i < attrs.length; i++) {
@@ -1876,7 +1875,6 @@ AssEvent.fromSync = function(sync, style=null) {
 	const events = sync.events = [];
 	const start = sync.start;
 	const end   = sync.end;
-	let minLayer = 0;
 	
 	let attrs = sync.text;
 	
@@ -2038,8 +2036,7 @@ AssEvent.fromSync = function(sync, style=null) {
 					
 					lines[j] = prev + line + next;
 				}
-				// 군더더기 제거
-				text = lines.join("\\N").split("{\\ass1}").join("").split("{\\ass0}").join("").split("}{").join("");
+				text = lines.join("\\N");
 				
 				const shift = minLeft - minRight;
 				if (shift) {
@@ -2060,6 +2057,10 @@ AssEvent.fromSync = function(sync, style=null) {
 				}
 			}
 		}
+
+		// 군더더기 제거
+		text = text.split("{\\ass1}").join("").split("{\\ass0}").join("").split("}{").join("");
+
 		if (text = text.split("}{").join("")) {
 			// Default에 대해서 줄표 달린 것들 정렬 맞춰주기
 			// TOOD: 설정 만드는 게 나은가?
