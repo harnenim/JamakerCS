@@ -1507,7 +1507,14 @@ AssEvent.prototype.fromSync = function(sync, style) {
 	this.Text = (this.texts = Subtitle.Ass.fromAttrs(sync.text))[0];
 	return this;
 }
-AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) => {
+AssEvent.fromAttrs = (attrs) => {
+	const texts = AssEvent.inFromAttrs(attrs);
+	for (let i = 0; i < texts.length; i++) {
+		texts[i] = texts[i].trim();
+	}
+	return texts;
+}
+AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) => {
 	if (checkFurigana) {
 		let hasFurigana = false;
 		for (let i = 0; i < attrs.length; i++) {
@@ -1591,7 +1598,7 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 						combined.push(Attr.junkAss("{\\1a\\bord}"));
 					}
 				}
-				texts.push(Subtitle.Ass.fromAttrs(combined, false)[0]);
+				texts.push(AssEvent.inFromAttrs(combined, false)[0]);
 			}
 			return texts;
 		}
@@ -1603,11 +1610,15 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 	if (checkFade) {
 		let count = 0;
 		let elseCount = 0;
+		let countHides = 0;
 		const baseAttrs = [];
 		for (let i = 0; i < attrs.length; i++) {
 			const attr = new Attr(attrs[i], attrs[i].text);
 			if (attr.fade != 0) {
 				count++;
+				if (isNaN(attr.fade)) {
+					countHides++; // 색상 페이드면 무조건 카운트
+				}
 			}
 			attr.fade = 0;
 			baseAttrs.push(attr);
@@ -1615,8 +1626,7 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 		
 		if (count) {
 			const texts = [];
-
-			let countHides = 0;
+			
 			{	// 페이드 인
 				count = 0;
 				let countHide = 0;
@@ -1649,9 +1659,9 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 					fadeAttrs.push(attr);
 				}
 				if (count) {
-					texts.push(...Subtitle.Ass.fromAttrs(fadeAttrs, false, false));
+					texts.push(...AssEvent.inFromAttrs(fadeAttrs, false, false));
+					countHides += countHide;
 				}
-				countHides += countHide;
 			}
 
 			{	// 페이드 아웃
@@ -1686,9 +1696,9 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 					fadeAttrs.push(attr);
 				}
 				if (count) {
-					texts.push(...Subtitle.Ass.fromAttrs(fadeAttrs, false, false));
+					texts.push(...AssEvent.inFromAttrs(fadeAttrs, false, false));
+					countHides += countHide;
 				}
-				countHides += countHide;
 			}
 
 			if (countHides) {
@@ -1705,7 +1715,7 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 					}
 				}
 
-				texts.push(...Subtitle.Ass.fromAttrs(baseAttrs, false, false));
+				texts.push(...AssEvent.inFromAttrs(baseAttrs, false, false));
 			}
 
 			{	// 색상 페이드는 위를 덮어야 해서 더 나중에 추가함
@@ -1748,7 +1758,7 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 					fadeAttrs.push(attr);
 				}
 				if (count) {
-					texts.push(...Subtitle.Ass.fromAttrs(fadeAttrs, false, false));
+					texts.push(...AssEvent.inFromAttrs(fadeAttrs, false, false));
 				}
 			}
 
@@ -1766,7 +1776,7 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 			
 			if (typeof attr.ass == "string") {
 				// ASS 속성 이전 부분 처리
-				text += Subtitle.Ass.fromAttrs(attrs.slice(assEnd, i), false, false, false);
+				text += AssEvent.inFromAttrs(attrs.slice(assEnd, i), false, false, false);
 				
 				// ASS 속성 처리
 				for (; i < attrs.length; i++) {
@@ -1835,7 +1845,7 @@ AssEvent.fromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) 
 		last = attr;
 	}
 	
-	return [text.split("\n").join("\\N").trim()];
+	return [text.split("\n").join("\\N")];
 }
 Subtitle.Ass.fromAttrs = AssEvent.fromAttrs;
 
@@ -1967,7 +1977,9 @@ AssEvent.fromSync = function(sync, style=null) {
 			}
 			
 			// 정렬용 좌우 여백 제거
-			{	const lines = text.split("\\N");
+			// 글씨 크기를 건드렸을 경우 작업하지 않음 (예: 흔들기 효과)
+			if (text.indexOf("\\fs") < 0) {
+				const lines = text.split("\\N");
 				
 				let minLeft = 99;
 				let minRight = 99;
@@ -2327,7 +2339,6 @@ AssFile.prototype.addFromSyncs = function(syncs, styleName, syncTimes=[]) {
 		style.pos = [x, y];
 	}
 	
-	
 	const part = this.getEvents();
 	let ti = 0;
 	for (let i = 0; i < syncs.length; i++) {
@@ -2392,7 +2403,7 @@ AssFile.prototype.getInfo = function() {
 AssFile.prototype.getStyles = function() {
 	let part = this.getPart("V4+ Styles");
 	if (part == null) {
-		part = new AssPart(name, AssPart.StylesFormat);
+		part = new AssPart("V4+ Styles", AssPart.StylesFormat);
 		this.parts.push(part);
 	}
 	return part;
@@ -2400,7 +2411,7 @@ AssFile.prototype.getStyles = function() {
 AssFile.prototype.getEvents = function() {
 	let part = this.getPart("Events");
 	if (part == null) {
-		part = new AssPart(name, AssPart.EventsFormat);
+		part = new AssPart("Events", AssPart.EventsFormat);
 		this.parts.push(part);
 	}
 	return part;
