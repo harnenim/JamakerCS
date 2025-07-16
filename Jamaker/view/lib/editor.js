@@ -989,7 +989,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			if (smi.text.startsWith("<!-- ASS X -->")) {
 				// ASS 변환 대상 제외
 				smi.text = smi.text.substring(14).trim();
-				smi.checeked = true;
+				smi.skip = true;
 				
 			} else if (smi.text.startsWith("<!-- ASS\n")) {
 				// 원래 ASS 변환용 주석이 있었을 경우 삭제
@@ -1111,7 +1111,10 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 							if (sync.end == usedLines[k].start) {
 								break;
 							} else if (sync.end < usedLines[k].start) {
-								newItems.push({ start: sync.end, used: usedLines[k - 1].used });
+								newItems.push({
+										start: sync.end
+									,	used: (k > 0) ? usedLines[k - 1].used : 0
+								});
 								break;
 							}
 							usedLine.used = Math.max(usedLine.used, usedLines[k].used);
@@ -2953,19 +2956,20 @@ function loadAssFile(path, text, target=-1) {
 								if (!canImport) continue;
 
 								const body = hold.smiFile.body;
-								let replaceFrom = 0;
-								let replaceTo = 0;
-								let fromEmpty = false;
-								let toEmpty = false;
+								let replaceFrom = -1;
+								let replaceTo = -1;
+								let fromEmpty = true;
+								let toEmpty = true;
 
 								{
 									let i = 0;
 									for (; i < body.length; i++) {
-										if (body[i].start < start) {
+										let sync = Subtitle.findSync(body[i].start);
+										if (sync < start) {
 											continue;
 										}
 										
-										if (start < body[i].start) {
+										if (start < sync) {
 											// 중간 싱크를 생성해야 함
 											if (i == 0 || body[i-1].isEmpty()) {
 												// 공백에서 시작
@@ -2985,11 +2989,12 @@ function loadAssFile(path, text, target=-1) {
 										}
 	
 										for (; i < body.length; i++) {
-											if (body[i].start < end) {
+											sync = Subtitle.findSync(body[i].start);
+											if (sync < end) {
 												continue;
 											}
 											
-											if (end < body[i].start) {
+											if (end < sync) {
 												// 중간 싱크를 생성해야 함
 												if (i == 0 || body[i-1].isEmpty()) {
 													// 공백에서 종료
@@ -3010,7 +3015,7 @@ function loadAssFile(path, text, target=-1) {
 										break;
 									}
 								}
-								if (!canImport) {
+								if (!canImport || replaceFrom < 0 || replaceTo < 0) {
 									continue;
 								}
 
@@ -3038,7 +3043,7 @@ function loadAssFile(path, text, target=-1) {
 									,	replaceTo: replaceTo
 									,	fromEmpty: fromEmpty
 									,	toEmpty: toEmpty
-									,	point
+									,	point: point
 								};
 							}
 						}
