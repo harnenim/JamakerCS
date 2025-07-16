@@ -1932,13 +1932,16 @@ AssEvent.fromSync = function(sync, style=null) {
 			}
 			
 			// 정렬용 좌우 여백 제거
-			// 글씨 크기를 건드렸을 경우 작업하지 않음 (예: 흔들기 효과)
-			if (text.indexOf("\\fs") < 0) {
+			do {
 				const lines = text.split("\\N");
-				
+				if (lines.length > 1 && text.indexOf("\\fs") > 0) {
+					// 여러 줄인데 글씨 크기를 건드렸을 경우 작업하지 않음 (예: 흔들기 효과)
+					break;
+				}
+
 				let minLeft = 99;
 				let minRight = 99;
-				
+
 				for (let j = 0; j < lines.length; j++) {
 					let line = lines[j];
 					let prev = "";
@@ -2001,13 +2004,13 @@ AssEvent.fromSync = function(sync, style=null) {
 							break;
 						}
 					}
-					
+
 					line = line.split("​").join("");
 					if (line.split("　").join("").trim().length == 0) {
 						// 비어있는 줄이면 무시
 						continue;
 					}
-					
+
 					let left = 0;
 					for (let k = 0; k < line.length; k++) {
 						if (line[k] == "　") {
@@ -2020,7 +2023,7 @@ AssEvent.fromSync = function(sync, style=null) {
 						}
 					}
 					minLeft = Math.min(left);
-					
+
 					let right = 0;
 					for (let k = line.length - 1; k >= 0; k--) {
 						if (line[k] == "　") {
@@ -2033,11 +2036,11 @@ AssEvent.fromSync = function(sync, style=null) {
 						}
 					}
 					minRight = Math.min(right);
-					
+
 					lines[j] = prev + line + next;
 				}
 				text = lines.join("\\N");
-				
+
 				const shift = minLeft - minRight;
 				if (shift) {
 					// 모든 줄에 공통으로 한쪽에 여백이 있을 경우 좌우 이동
@@ -2047,7 +2050,7 @@ AssEvent.fromSync = function(sync, style=null) {
 						moved = true;
 					}
 				}
-			}
+			} while (false);
 			
 			if (moved) {
 				if (text.indexOf("\\pos(") > 0 || text.indexOf("\\move(") > 0) {
