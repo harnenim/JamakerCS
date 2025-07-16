@@ -853,12 +853,22 @@ Tab.prototype.getAdditioinalToAss = function(forSmi=false) {
 	info.set("FrameSyncs", frameSyncs.join(","));
 	
 	let styles = this.area.find(".tab-ass-styles textarea").val();
-	if (styles) {
+	if (styles.trim().length) {
 		styles = styles.split("\n");
 		const part = assFile.getStyles();
 		part.body.length = 0;
 		for (let i = 0; i < styles.length; i++) {
-			part.body.push(styles[i].split(","));
+			let style = styles[i].split(":");
+			if (style.length > 1) {
+				const cols = style[1].trim().split(",");
+				if (cols.length >= AssPart.StylesFormat.length) {
+					style = { key: "Style", Encoding: 1 };
+					for (let j = 0; j < AssPart.StylesFormat.length; j++) {
+						style[AssPart.StylesFormat[j]] = cols[j];
+					}
+					part.body.push(style);
+				}
+			}
 		}
 	} else {
 		assFile.getStyles().length = 0;
@@ -938,7 +948,6 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 	assEvents.body.push(...append.getEvents().body);
 	
 	const holds = this.holds;
-	let mainSyncs = null;
 	const syncs = [];
 	const styles = {};
 	for (let h = 0; h < holds.length; h++) {
@@ -2557,7 +2566,6 @@ function loadAssFile(path, text, target=-1) {
 			const style = part.body[i];
 			styles[style.Name] = style;
 		}
-		const addPart = appendFile.getStyles();
 		
 		// ASS 파일에서 가져온 스타일
 		part = targetFile.getStyles();
@@ -2801,7 +2809,7 @@ function loadAssFile(path, text, target=-1) {
 				}
 				if (!o.found) {
 					// SMI->ASS 변환 제외 필요
-					o.skip = true;
+					o.origin.origin.skip = true;
 					count++;
 				}
 			}
@@ -2909,6 +2917,7 @@ function loadAssFile(path, text, target=-1) {
 					const appends = [];
 					
 					// 기존 SMI 홀드에 span 형태로 끼워넣을 수 있는지 확인
+
 					ti = 0;
 					while (ti < list.length) {
 						let targets = [];
@@ -2929,9 +2938,9 @@ function loadAssFile(path, text, target=-1) {
 							}
 						}
 						
-						let imported = false;
 						const start = tEvent.start;
-						const end   = tEvent.end;
+						const end = tEvent.end;
+						let importSet = null;
 						
 						for (let s = 0; s < styles.length; s++) {
 							const style = (styles[s] == "Default") ? "메인" : styles[s];
@@ -2940,15 +2949,15 @@ function loadAssFile(path, text, target=-1) {
 							for (let h = 0; h < currentTab.holds.length; h++) {
 								const hold = currentTab.holds[h];
 								
-								let canImport = (hold.name == style) && hold.smiFile; // ASS 출력 제외 홀드에는 넣을 수 없음
+								let canImport = hold.smiFile; // ASS 출력 제외 홀드에는 넣을 수 없음
 								if (!canImport) continue;
-								
+
 								const body = hold.smiFile.body;
 								let replaceFrom = 0;
 								let replaceTo = 0;
 								let fromEmpty = false;
 								let toEmpty = false;
-								
+
 								{
 									let i = 0;
 									for (; i < body.length; i++) {
@@ -2957,6 +2966,7 @@ function loadAssFile(path, text, target=-1) {
 										}
 										
 										if (start < body[i].start) {
+											// 중간 싱크를 생성해야 함
 											if (i == 0 || body[i-1].isEmpty()) {
 												// 공백에서 시작
 												replaceFrom = i;
@@ -2969,7 +2979,7 @@ function loadAssFile(path, text, target=-1) {
 											}
 											
 										} else {
-											// SMI 싱크에서 시작
+											// 시작 싱크가 SMI 싱크와 일치
 											replaceFrom = i;
 											fromEmpty = false;
 										}
@@ -2980,6 +2990,7 @@ function loadAssFile(path, text, target=-1) {
 											}
 											
 											if (end < body[i].start) {
+												// 중간 싱크를 생성해야 함
 												if (i == 0 || body[i-1].isEmpty()) {
 													// 공백에서 종료
 													replaceTo = i;
@@ -2990,7 +3001,7 @@ function loadAssFile(path, text, target=-1) {
 													canImport = false;
 												}
 											} else {
-												// SMI 싱크에서 종료
+												// 종료 싱크가 SMI 싱크와 일치
 												replaceTo = i;
 												toEmpty = false;
 											}
@@ -2999,45 +3010,77 @@ function loadAssFile(path, text, target=-1) {
 										break;
 									}
 								}
+								if (!canImport) {
+									continue;
+								}
+
 								// 공백이 아닌 것도 분할해서 추가할 순 있겠지만, 연관된 것들 span 조정해야 함
 								// 여기까지 가면 ASS 에디터의 의미도 더 퇴색됨
-								
-								if (canImport) {
-									let smi = body[replaceFrom];
-									if (!smi.assComments) {
-										smi.assComments = [];
-									}
-									
-									for (let i = 0; i < targets.length; i++) {
-										// 싱크 겹치도록 넣어줌
-										const item = targets[i];
-										let span = replaceTo - replaceFrom;
-										if (fromEmpty) span++;
-										smi.assComments.push([item.Layer, "", (span == 1 ? "" : span), item.Style, item.Text].join(","));
-									}
-									
-									if (fromEmpty) {
-										// 공백 싱크 추가
-										const bodyEnd = body.slice(replaceFrom);
-										body.length = replaceFrom;
-										body.push(smi = new Smi(start, SyncType.frame, ""));
-										body.push(...bodyEnd);
-									}
-									
-									if (toEmpty) {
-										// 종료 싱크 추가 필요
-										const bodyEnd = body.slice(replaceTo);
-										body.length = replaceTo;
-										body.push(new Smi(start, SyncType.frame, "&nbsp;"));
-										body.push(...bodyEnd);
-									}
-									imported = true;
-									break;
+
+								// 우선순위 판단
+								let point = 0;
+								if (!fromEmpty) point += 3; // SMI 싱크 그대로 사용
+								if (!toEmpty  ) point += 3; // SMI 싱크 그대로 사용
+								if (hold.name == style) {
+									point += 2; // 이름 동일
+								} else if (style.startsWith(hold.name)) {
+									point += 1; // 이름 포함
 								}
+
+								if (importSet && importSet.point > point) {
+									// 기존에 찾은 게 더 점수가 높음
+									continue;
+								}
+
+								importSet = {
+										hold: hold
+									,	replaceFrom: replaceFrom
+									,	replaceTo: replaceTo
+									,	fromEmpty: fromEmpty
+									,	toEmpty: toEmpty
+									,	point
+								};
 							}
 						}
-						
-						if (!imported) {
+
+						if (importSet) {
+							const body = importSet.hold.smiFile.body;
+							const replaceFrom = importSet.replaceFrom;
+							const replaceTo   = importSet.replaceTo;
+							const fromEmpty   = importSet.fromEmpty;
+							const toEmpty     = importSet.toEmpty;
+
+							let smi = body[replaceFrom];
+							if (!smi.assComments) {
+								smi.assComments = [];
+							}
+
+							for (let i = 0; i < targets.length; i++) {
+								// 싱크 겹치도록 넣어줌
+								const item = targets[i];
+								let span = replaceTo - replaceFrom;
+								if (fromEmpty) span++;
+								smi.assComments.push([item.Layer, "", (span == 1 ? "" : span), item.Style, item.Text].join(","));
+							}
+
+							if (fromEmpty) {
+								// 공백 싱크 추가
+								const bodyEnd = body.slice(replaceFrom);
+								body.length = replaceFrom;
+								body.push(smi = new Smi(start, SyncType.frame, ""));
+								body.push(...bodyEnd);
+							}
+
+							if (toEmpty) {
+								// 종료 싱크 추가 필요
+								const bodyEnd = body.slice(replaceTo);
+								body.length = replaceTo;
+								body.push(new Smi(start, SyncType.frame, "&nbsp;"));
+								body.push(...bodyEnd);
+							}
+
+						} else {
+							// SMI 홀드에 넣을 수 없는, ASS 전용 스크립트
 							appends.push(...targets);
 						}
 						
