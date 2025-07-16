@@ -157,6 +157,13 @@ AssEditor.prototype.toAssText = function() {
 	}
 	return text.join("\n");
 }
+AssEditor.prototype.toEvents = function() {
+	const events = [];
+	for (let i = 0; i < this.syncs.length; i++) {
+		events.push(...this.syncs[i].toEvents());
+	}
+	return events;
+}
 AssEditor.prototype.getFrameSyncs = function() {
 	// 프레임 싱크 구해오기
 	const syncs = [];
@@ -257,4 +264,26 @@ AssEditor.Item.prototype.toAssText = function() {
 	this.Start = AssEvent.toAssTime(this.start = Number(this.inputStart.val()), true);
 	this.End   = AssEvent.toAssTime(this.end   = Number(this.inputEnd  .val()), true);
 	return this.getText(this.Start, this.End);
+}
+AssEditor.Item.prototype.toEvents = function() {
+	this.Start = AssEvent.toAssTime(this.start = Number(this.inputStart.val()), true);
+	this.End   = AssEvent.toAssTime(this.end   = Number(this.inputEnd  .val()), true);
+	
+	const events = [];
+	const lines = this.inputText.val().split("\n");
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i];
+		const cols = line.split(",");
+		let event = null;
+		if (cols.length < 3) {
+			// 잘못된 입력
+			event = new AssEvent(this.start, this.end, "Default", line, 0);
+		} else {
+			event = new AssEvent(this.start, this.end, cols[1], cols.slice(2).join(","), cols[0]);
+		}
+		event.Start = this.Start;
+		event.End   = this.End  ;
+		events.push(event);
+	}
+	return events;
 }
