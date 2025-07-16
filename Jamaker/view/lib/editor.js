@@ -349,12 +349,12 @@ SmiEditor.prototype.setStyle = function(style) {
 	this.style = style;
 	const area = this.styleArea.find(".hold-style");
 	
-	area.find("input[name=Fontname]     ").val(style.Fontname);
 	area.find("input[name=PrimaryColour]").val(style.PrimaryColour).next().val(style.PrimaryColour);
 	area.find("input[name=Italic]   ").prop("checked", style.Italic);
 	area.find("input[name=Underline]").prop("checked", style.Underline);
 	area.find("input[name=StrikeOut]").prop("checked", style.StrikeOut);
 
+	area.find("input[name=Fontname]").val(style.Fontname);
 	area.find("input[name=output][value=" + style.output + "]").click();
 	area.find("input[name=Fontsize]").val(style.Fontsize);
 	area.find("input[name=Bold]    ").prop("checked", style.Bold);

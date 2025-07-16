@@ -4480,7 +4480,7 @@ SmiFile.toSaveStyle = function(style) {
 		
 	} else if (forSmi) {
 		// 기본 스타일
-		result.push(style.Fontname);
+		result.push(style.Fontname); // TODO: SMI에선 빼는 게 좋을 듯함
 		result.push(style.PrimaryColour);
 		result.push(style.Italic    ? 1 : 0);
 		result.push(style.Underline ? 1 : 0);
@@ -4543,10 +4543,12 @@ SmiFile.styleToSmi = function(style) {
 	
 	if (style) {
 		const font = [];
+		/* SMI에선 적용하지 않기로 함
 		if (style.Fontname) {
 			const fs = style.Fontname.startsWith("@") ? style.Fontname.substring(1) : style.Fontname;
 			font.push("face=\"" + fs + "\"");
 		}
+		*/
 		if (style.PrimaryColour != DefaultStyle.PrimaryColour && style.PrimaryColour != "#000000") {
 			font.push("color=\"" + style.PrimaryColour + "\"");
 		}
