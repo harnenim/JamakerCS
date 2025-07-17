@@ -2578,7 +2578,6 @@ function loadAssFile(path, text, target=-1) {
 	styleTexts = styleTexts ? [styleTexts] : [];
 	const styles = {}; // 아래에서도 필요해짐
 	const changedStyles = [];
-	let styleCount = 0;
 	{
 		// SMI 홀드 기반으로 생성한 스타일
 		let part = originFile.getStyles();
@@ -2857,9 +2856,9 @@ function loadAssFile(path, text, target=-1) {
 		}
 		
 		if (changedStyles.length > 0 || count > 0) {
-			let msg = "ASS 자막 수정 내역이 있습니다. 적용하시겠습니까?\n\n자막에 맞는 동영상 파일이 열려있어야 정상적인 결과를 얻을 수 있습니다.";
+			let msg = "ASS 자막 수정 내역이 " + count + "건, 그 밖에 레이어 번호 재할당이 있을 수 있습니다. 적용하시겠습니까?\n\n자막에 맞는 동영상 파일이 열려있어야 정상적인 결과를 얻을 수 있습니다.";
 			if (count == 0) {
-				msg = "ASS 자막 스타일 수정 내역이 있습니다. 적용하시겠습니까?";
+				msg = "ASS 자막 스타일 수정 내역이 " + changedStyles.length + "건 있습니다. 적용하시겠습니까?";
 			}
 			confirm(msg, () => {
 				if (changedStyles.length) {
@@ -2936,8 +2935,17 @@ function loadAssFile(path, text, target=-1) {
 					const list = appendEvents.body;
 					const appends = [];
 					
+					// 뒤쪽 싱크를 먼저 작업해야 span이 잘 생성됨
+					list.sort((a, b) => {
+						let result = b.start - a.start;
+						if (result == 0) {
+							result = b.end - a.end;
+						}
+						return result;
+					});
+					console.log(list);
+					
 					// 기존 SMI 홀드에 span 형태로 끼워넣을 수 있는지 확인
-
 					ti = 0;
 					while (ti < list.length) {
 						let targets = [];
@@ -2971,16 +2979,17 @@ function loadAssFile(path, text, target=-1) {
 								
 								let canImport = hold.smiFile; // ASS 출력 제외 홀드에는 넣을 수 없음
 								if (!canImport) continue;
-
+								
 								const body = hold.smiFile.body;
 								let replaceFrom = -1;
 								let replaceTo = -1;
 								let fromEmpty = true;
 								let toEmpty = true;
-
+								
 								{
 									let i = 0;
 									for (; i < body.length; i++) {
+										// SMI 싱크 그대로 쓰지 않고, 프레임 시간 가져와서 비교
 										let sync = Subtitle.findSync(body[i].start);
 										if (sync < start) {
 											continue;
@@ -2988,7 +2997,7 @@ function loadAssFile(path, text, target=-1) {
 										
 										if (start < sync) {
 											// 중간 싱크를 생성해야 함
-											if (i == 0 || body[i-1].isEmpty()) {
+											if (i == 0 || (body[i-1].isEmpty() && !body[i-1].assComments)) {
 												// 공백에서 시작
 												replaceFrom = i;
 												fromEmpty = true;
@@ -3013,7 +3022,7 @@ function loadAssFile(path, text, target=-1) {
 											
 											if (end < sync) {
 												// 중간 싱크를 생성해야 함
-												if (i == 0 || body[i-1].isEmpty()) {
+												if (i == 0 || (body[i-1].isEmpty() && !body[i-1].assComments)) {
 													// 공백에서 종료
 													replaceTo = i;
 													toEmpty = true;
@@ -3031,29 +3040,44 @@ function loadAssFile(path, text, target=-1) {
 										}
 										break;
 									}
+									if (i == body.length) {
+										// 홀드 내용물 전체보다 더 뒤쪽
+										if (i == 0 || (body[i-1].isEmpty() && !body[i-1].assComments)) {
+											if (replaceFrom < 0) {
+												replaceFrom = i;
+											}
+											replaceTo = i;
+											
+										} else {
+											canImport = false;
+										}
+									}
 								}
-								if (!canImport || replaceFrom < 0 || replaceTo < 0) {
+								if (!canImport) {
 									continue;
 								}
-
+								
 								// 공백이 아닌 것도 분할해서 추가할 순 있겠지만, 연관된 것들 span 조정해야 함
 								// 여기까지 가면 ASS 에디터의 의미도 더 퇴색됨
-
+								
 								// 우선순위 판단
 								let point = 0;
-								if (!fromEmpty) point += 3; // SMI 싱크 그대로 사용
-								if (!toEmpty  ) point += 3; // SMI 싱크 그대로 사용
+								if (!fromEmpty) point += 1; // SMI 싱크 그대로 사용
+								if (!toEmpty  ) point += 1; // SMI 싱크 그대로 사용
 								if (hold.name == style) {
-									point += 2; // 이름 동일
+									point += 4; // 이름 동일
 								} else if (style.startsWith(hold.name)) {
-									point += 1; // 이름 포함
+									point += 3; // 이름 포함
 								}
-
+								if (point == 0) {
+									continue;
+								}
+								
 								if (importSet && importSet.point > point) {
 									// 기존에 찾은 게 더 점수가 높음
 									continue;
 								}
-
+								
 								importSet = {
 										hold: hold
 									,	replaceFrom: replaceFrom
@@ -3064,19 +3088,35 @@ function loadAssFile(path, text, target=-1) {
 								};
 							}
 						}
-
+						
 						if (importSet) {
 							const body = importSet.hold.smiFile.body;
 							const replaceFrom = importSet.replaceFrom;
 							const replaceTo   = importSet.replaceTo;
 							const fromEmpty   = importSet.fromEmpty;
 							const toEmpty     = importSet.toEmpty;
-
+							
 							let smi = body[replaceFrom];
+
+							const bodySkipped = body.slice(replaceFrom, replaceTo);
+							const bodyEnd = body.slice(replaceTo);
+							body.length = replaceFrom;
+							
+							if (fromEmpty) {
+								// 공백 싱크 추가
+								body.push(smi = new Smi(start, SyncType.frame, ""));
+							}
+							body.push(...bodySkipped);
+
+							if (toEmpty) {
+								// 종료 싱크 추가 필요
+								body.push(new Smi(end, SyncType.frame, "&nbsp;"));
+							}
+							body.push(...bodyEnd);
+							
 							if (!smi.assComments) {
 								smi.assComments = [];
 							}
-
 							for (let i = 0; i < targets.length; i++) {
 								// 싱크 겹치도록 넣어줌
 								const item = targets[i];
@@ -3084,23 +3124,7 @@ function loadAssFile(path, text, target=-1) {
 								if (fromEmpty) span++;
 								smi.assComments.push([item.Layer, "", (span == 1 ? "" : span), item.Style, item.Text].join(","));
 							}
-
-							if (fromEmpty) {
-								// 공백 싱크 추가
-								const bodyEnd = body.slice(replaceFrom);
-								body.length = replaceFrom;
-								body.push(smi = new Smi(start, SyncType.frame, ""));
-								body.push(...bodyEnd);
-							}
-
-							if (toEmpty) {
-								// 종료 싱크 추가 필요
-								const bodyEnd = body.slice(replaceTo);
-								body.length = replaceTo;
-								body.push(new Smi(start, SyncType.frame, "&nbsp;"));
-								body.push(...bodyEnd);
-							}
-
+							
 						} else {
 							// SMI 홀드에 넣을 수 없는, ASS 전용 스크립트
 							appends.push(...targets);
@@ -3180,11 +3204,8 @@ function loadAssFile(path, text, target=-1) {
 				}
 			});
 		} else {
-			if (styleCount) {
-				alert("자막 스타일 변경사항이 있습니다.");
-			} else {
-				alert("ASS 자막에 특별한 수정사항이 없습니다.");
-			}
+			let msg = "ASS 자막에 특별한 수정사항이 없습니다.";
+			alert(msg);
 		}
 	}
 }
