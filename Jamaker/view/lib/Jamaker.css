@@ -108,6 +108,10 @@ button {
 	left: 0;
 	top: 0;
 	height: 30%;
+	display: none;
+}
+.tab.ass > .hold-selector > .selector.ass-only {
+	display: block;
 }
 .hold-selector > .selector:not(.main).selected {
 	z-index: 9999;
