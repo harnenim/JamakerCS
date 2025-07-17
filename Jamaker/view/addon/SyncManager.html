@@ -92,7 +92,7 @@ $(() => {
 			origin.end = 0;
 			
 			origin.end = origin.text.split("\n").length;
-			origin.assBody = origin.hold.assEditor.syncs;
+			origin.assBody = origin.hold.assEditor ? origin.hold.assEditor.syncs : [];
 			
 			const lines = origin.lines.slice(origin.start, origin.end);
 			for (let i = 0; i < lines.length; i++) {
