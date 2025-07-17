@@ -2826,7 +2826,7 @@ function loadAssFile(path, text, target=-1) {
 						}
 					}
 				}
-				if (!o.found) {
+				if (!o.found && o.origin) {
 					// SMI->ASS 변환 제외 필요
 					o.origin.origin.skip = true;
 					count++;
