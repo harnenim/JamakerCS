@@ -1431,12 +1431,11 @@ Subtitle.AssFile.prototype.fromSyncs = function(syncs, checkFrame=true) {
 
 
 
-//TODO: 첫 단추를 얘만 1ms가 아닌 10ms 단위로 잡아서 더 복잡해진 것 같은데... 엎을까...
 window.AssEvent = Subtitle.AssEvent = function(start, end, style, text, layer=0) {
 	this.key = "Dialogue";
 	this.Layer = layer;
-	this.Start = AssEvent.toAssTime(this.start = start);
-	this.End   = AssEvent.toAssTime(this.end   = end  );
+	this.Start = AssEvent.toAssTime(this.start = start); // 소문자 start/end: ms 단위 숫자값
+	this.End   = AssEvent.toAssTime(this.end   = end  ); // 대문자 Start/End: ASS 형식 시간값
 	this.Style = style;
 	this.Name = "";
 	this.MarginL = 0;
@@ -1933,15 +1932,16 @@ AssEvent.fromSync = function(sync, style=null) {
 			
 			// 정렬용 좌우 여백 제거
 			do {
+				
 				const lines = text.split("\\N");
 				if (lines.length > 1 && text.indexOf("\\fs") > 0) {
 					// 여러 줄인데 글씨 크기를 건드렸을 경우 작업하지 않음 (예: 흔들기 효과)
 					break;
 				}
-
+				
 				let minLeft = 99;
 				let minRight = 99;
-
+				
 				for (let j = 0; j < lines.length; j++) {
 					let line = lines[j];
 					let prev = "";
@@ -2004,13 +2004,13 @@ AssEvent.fromSync = function(sync, style=null) {
 							break;
 						}
 					}
-
+					
 					line = line.split("​").join("");
 					if (line.split("　").join("").trim().length == 0) {
 						// 비어있는 줄이면 무시
 						continue;
 					}
-
+					
 					let left = 0;
 					for (let k = 0; k < line.length; k++) {
 						if (line[k] == "　") {
@@ -2023,7 +2023,7 @@ AssEvent.fromSync = function(sync, style=null) {
 						}
 					}
 					minLeft = Math.min(left);
-
+					
 					let right = 0;
 					for (let k = line.length - 1; k >= 0; k--) {
 						if (line[k] == "　") {
@@ -2036,7 +2036,7 @@ AssEvent.fromSync = function(sync, style=null) {
 						}
 					}
 					minRight = Math.min(right);
-
+					
 					lines[j] = prev + line + next;
 				}
 				text = lines.join("\\N");
@@ -2060,14 +2060,13 @@ AssEvent.fromSync = function(sync, style=null) {
 				}
 			}
 		}
-
+		
 		// 군더더기 제거
 		text = text.split("{\\ass1}").join("").split("{\\ass0}").join("").split("}{").join("");
-
-		if (text = text.split("}{").join("")) {
+		
+		if (text) {
 			// Default에 대해서 줄표 달린 것들 정렬 맞춰주기
-			// TOOD: 설정 만드는 게 나은가?
-			if (style && sync.style == "Default") {
+			if (AssEvent.useAlignDialogue && style && sync.style == "Default") {
 				let frontTag = "";
 				let lines = text;
 				if (text.startsWith("{")) {

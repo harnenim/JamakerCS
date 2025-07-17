@@ -1253,7 +1253,7 @@ SmiEditor.prototype.rename = function() {
 			alert("잘못된 입력입니다.");
 			return;
 		}
-		if (input.indexOf("|") >= 0) {
+		if (input.indexOf("|") >= 0 || input.indexOf(",") >= 0) {
 			alert("구분자는 입력할 수 없습니다.");
 			return;
 		}
@@ -1882,6 +1882,7 @@ function setSetting(setting, initial=false) {
 	}
 	
 	SmiEditor.scrollMargin = setting.scrollMargin;
+	AssEvent.useAlignDialogue = setting.viewer.useAlign;
 	
 	{
 		const dll = setting.player.control.dll;
@@ -2127,11 +2128,6 @@ function saveFile(asNew, isExport) {
 		const styles = { "Default": SmiFile.toSaveStyle(currentTab.holds[0].style) };
 		for (let i = 1; i < currentTab.holds.length; i++) {
 			const hold = currentTab.holds[i];
-			if (hold.name.indexOf(",") >= 0) {
-				alert("ASS 자막 변환을 하는 경우 홀드명에 ,(쉼표)가 들어갈 수 없습니다.");
-				currentTab.selectHold(hold);
-				return;
-			}
 			const saveStyle = SmiFile.toSaveStyle(hold.style);
 			if (typeof styles[hold.name] == "string") {
 				if (styles[hold.name] != saveStyle) {
@@ -2474,7 +2470,6 @@ function loadAssFile(path, text, target=-1) {
 		
 		for (let i = 0; i < targetFile.parts.length; i++) {
 			const part = targetFile.parts[i];
-			console.log(part);
 			switch (part.name) {
 				case "Script Info":
 				case "V4+ Styles":
@@ -2482,7 +2477,6 @@ function loadAssFile(path, text, target=-1) {
 					break;
 				default: {
 					const origPart = currentTab.assFile.getPart(part.name);
-					console.log("orig", origPart);
 					if (origPart) {
 						origPart.format = part.format;
 						origPart.body   = part.body;
