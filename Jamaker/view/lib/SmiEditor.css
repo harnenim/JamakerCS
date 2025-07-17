@@ -343,6 +343,7 @@ textarea,
     resize: none;
 }
 
+/*
 .tab-ass-back {
 	position: absolute;
 	top: 0;
@@ -396,16 +397,23 @@ textarea,
 	padding: calc(20px * 0.4);
 	height: calc(100% - 20px);
 }
+*/
+.tab-ass-area {
+	width: 100%;
+	height: 100%;
+}
 .tab-ass-styles {
 	height: 30%;
 }
 .tab-ass-script {
 	height: 70%;
 }
+/*
 .tab-ass-area > div {
-	/* 이게 없으면 최초 로딩 시 하단 여백 생김 */
+	* 이게 없으면 최초 로딩 시 하단 여백 생김 *
 	display: none;
 }
+*/
 .tab.edit-ass .tab-ass-area > div {
 	display: block;
 }

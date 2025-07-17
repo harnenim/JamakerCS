@@ -194,7 +194,6 @@ label, #showFps {
 */
 .tab-ass-area {
 	padding: 0 calc(20px * 0.4);
-	height: 100%;
 }
 .tab-ass-area span {
 	height: calc(20px * 1.5);
