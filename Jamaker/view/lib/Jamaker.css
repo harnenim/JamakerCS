@@ -104,10 +104,15 @@ button {
 	transition: 0.2s;
 	opacity: 0.9;
 }
-.hold-selector > .selector:not(:first-child).selected {
+.hold-selector > .selector.ass-only {
+	left: 0;
+	top: 0;
+	height: 30%;
+}
+.hold-selector > .selector:not(.main).selected {
 	z-index: 9999;
 }
-.hold-selector > .selector:not(:first-child):hover {
+.hold-selector > .selector:not(.main):hover {
 	z-index: 99999;
 }
 .hold-selector > .selector .hold-name {

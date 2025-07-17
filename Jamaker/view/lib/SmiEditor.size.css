@@ -175,6 +175,7 @@ label, #showFps {
     height: calc(100% - 20px * 2);
 }
 
+/*
 .tab-ass-btn {
 	top: calc(100% - 20px);
 	height: 20px;
@@ -189,6 +190,11 @@ label, #showFps {
 	top: 20px;
 	padding: calc(20px * 0.4);
 	height: calc(100% - 20px);
+}
+*/
+.tab-ass-area {
+	padding: 0 calc(20px * 0.4);
+	height: 100%;
 }
 .tab-ass-area span {
 	height: calc(20px * 1.5);

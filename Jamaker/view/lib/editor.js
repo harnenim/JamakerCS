@@ -14,7 +14,11 @@ function refreshTime(now) {
 	if (time != now) {
 		time = now;
 		if (autoFindSync && tabs.length && tabs[tab]) {
-			tabs[tab].holds[tabs[tab].hold].findSync();
+			if (tabs[tab].hold < 0) {
+				tabs[tab].assHold.findSync();
+			} else {
+				tabs[tab].holds[tabs[tab].hold].findSync();
+			}
 		}
 	}
 }
@@ -43,20 +47,46 @@ window.Tab = function(text, path) {
 			holds[i].ass = [];
 		}
 		const assHold = tab.assHold = new SmiEditor();
-		assHold.isAssHold = true;
-		assHold.assEditor = new AssEditor(tab.area.find("div.tab-ass-script > div"));
-		assHold.assEditor.onUpdate = function() {
-			if (this.isSaved) {
-				tab.area.find(".tab-ass-btn").removeClass("not-saved");
-			} else {
-				tab.area.find(".tab-ass-btn").addClass("not-saved");
-			}
-			tab.onChangeSaved();
-		};
-		tab.area.find("div.tab-ass-script button").on("click", function() {
-			const sync = SmiEditor.getSyncTime("!"); // 가중치 없는 현재 싱크로 넣음
-			assHold.assEditor.addEvents([ new AssEvent(sync, sync, name, "") ]);
-		});
+		{
+			assHold.isAssHold = true;
+			
+			this.holdSelector.append(assHold.selector = $("<div class='selector ass-only'>").data({ hold: assHold }));
+			assHold.selector.append($("<div class='hold-name'>").append($("<span>").text("ASS 추가 스크립트")));
+			assHold.selector.attr({ title: "ASS 추가 스크립트" });
+			assHold.owner = this;
+			
+			assHold.area.empty().addClass("ass-hold");
+			
+			let form = $("<form>").addClass("tab-ass-area");
+			assHold.area.append(form);
+			
+			let div = $("<div>").addClass("tab-ass-styles");
+			div.append($("<span>").text("[V4+ Styles]"));
+			div.append($("<textarea spellcheck='false' tabindex='-1'>"));
+			form.append(div);
+			
+			div = $("<div>").addClass("tab-ass-script");
+			div.append($("<span>").text("[Events] ").append($("<button type='button'>").text("＋")));
+			const assEditorArea = $("<div>");
+			div.append(assEditorArea);
+			form.append(div);
+			
+			this.holdArea.append(assHold.area);
+			
+			assHold.assEditor = new AssEditor(assEditorArea);
+			assHold.assEditor.onUpdate = function() {
+				if (this.isSaved) {
+					assHold.selector.removeClass("not-saved");
+				} else {
+					assHold.selector.addClass("not-saved");
+				}
+				tab.onChangeSaved();
+			};
+			tab.area.find("div.tab-ass-script button").on("click", function() {
+				const sync = SmiEditor.getSyncTime("!"); // 가중치 없는 현재 싱크로 넣음
+				assHold.assEditor.addEvents([ new AssEvent(sync, sync, name, "") ]);
+			});
+		}
 		
 		let frameSyncs = [];
 		if (this.assFile) {
@@ -205,7 +235,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	
 	if (isMain) {
 		hold.area.addClass("main");
-		hold.selector.addClass("selected");
+		hold.selector.addClass("main selected");
 		const tab = this;
 		hold.afterRender = function() {
 			const match = /<sami( [^>]*)*>/gi.exec(this.text);
@@ -216,6 +246,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 						if (!tab.withAss) {
 							tab.withAss = true;
 							tab.area.addClass("ass");
+							tab.updateHoldSelector();
 						}
 						return;
 					}
@@ -223,6 +254,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			}
 			tab.withAss = false;
 			tab.area.removeClass("ass");
+			tab.updateHoldSelector();
 		}
 		
 	} else {
@@ -306,31 +338,6 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			});
 			
 			hold.setStyle(style);
-		}
-		
-		hold.area.append(hold.assArea = $("<div class='hold-ass-area'>"));
-		{
-			const area = SmiEditor.assPreset.clone();
-			hold.assArea.append(area);
-			
-			const part = new AssPart("Events", AssPart.EventsFormat);
-			if (hold.ass) {
-				part.body = hold.ass;
-			} else {
-				hold.ass = part.body;
-			}
-			hold.assEditor = new AssEditor(hold.assArea.find("div.hold-ass-script"), part.body, info.frameSyncs);
-			hold.assEditor.onUpdate = function() {
-				hold.afterChangeSaved(hold.isSaved());
-			};
-			
-			area.find(".btn-close-popup").on("click", function() {
-				hold.area.removeClass("ass");
-			});
-			area.find("span.hold-ass-events button").on("click", function() {
-				const sync = SmiEditor.getSyncTime("!"); // 가중치 없는 현재 싱크로 넣음
-				hold.assEditor.addEvents([ new AssEvent(sync, sync, name, "") ]);
-			});
 		}
 	}
 	
@@ -482,17 +489,19 @@ SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 	if (!originSync) return;
 	
 	// ASS 에디터도 싱크 이동
-	for (let i = 0; i < this.assEditor.syncs.length; i++) {
-		const item = this.assEditor.syncs[i];
-		const start = Number(item.inputStart.val());
-		const end   = Number(item.inputEnd  .val());
-		if (end >= originSync) {
-			const add = sync - originSync
-			item.inputEnd.val(end + add);
-			if (start >= originSync) {
-				item.inputStart.val(start + add);
+	if (this.assEditor) {
+		for (let i = 0; i < this.assEditor.syncs.length; i++) {
+			const item = this.assEditor.syncs[i];
+			const start = Number(item.inputStart.val());
+			const end   = Number(item.inputEnd  .val());
+			if (end >= originSync) {
+				const add = sync - originSync
+				item.inputEnd.val(end + add);
+				if (start >= originSync) {
+					item.inputStart.val(start + add);
+				}
+				item.update();
 			}
-			item.update();
 		}
 	}
 }
@@ -500,10 +509,10 @@ SmiEditor.prototype._toggleSyncType = SmiEditor.prototype.toggleSyncType;
 SmiEditor.prototype.toggleSyncType = function() {
 	// 스타일 편집일 때 무시
 	if (this.area.hasClass("style")) return;
-	
+	/*
 	// ASS 편집일 때 무시
 	if (this.area.hasClass("ass")) return;
-
+	*/
 	// SMI 에디터 동작
 	this._toggleSyncType();
 }
@@ -511,9 +520,9 @@ SmiEditor.prototype._moveToSync = SmiEditor.prototype.moveToSync;
 SmiEditor.prototype.moveToSync = function(add=0) {
 	// 스타일 편집일 때 무시
 	if (this.area.hasClass("style")) return;
-
+	
 	// ASS 편집일 때 동작
-	if (this.isAssHold || this.area.hasClass("ass")) {
+	if (this.isAssHold) {
 		// 선택된 객체 찾기
 		const $item = $(document.activeElement).parents(".item");
 		if (!$item.length) return;
@@ -589,7 +598,7 @@ SmiEditor.prototype.tagging = function(input, standCursor) {
 }
 
 Tab.prototype.updateHoldSelector = function() {
-	if (this.holds.length <= 1) {
+	if (!this.withAss && this.holds.length <= 1) {
 		this.area.removeClass("with-hold");
 		refreshPaddingBottom();
 		return;
@@ -709,7 +718,9 @@ Tab.prototype.updateHoldSelector = function() {
 Tab.prototype.selectHold = function(hold) {
 	let index = hold;
 	if (isFinite(hold)) {
-		if (!(hold = this.holds[hold])) {
+		if (this.withAss && hold < 0) {
+			hold = this.assHold;
+		} else if (!(hold = this.holds[hold])) {
 			return;
 		}
 	} else {
@@ -722,7 +733,7 @@ Tab.prototype.selectHold = function(hold) {
 	hold.selector.addClass("selected");
 	hold.area.show();
 	hold.input.focus().scroll();
-	if ((this.hold = index) > 0) {
+	if ((this.hold = index) != 0) {
 		this.lastHold = this.hold;
 	}
 	SmiEditor.Viewer.refresh();
@@ -731,8 +742,12 @@ Tab.prototype.selectLastHold = function() {
 	if (this.holds.length == 0) {
 		return;
 	}
-	if (this.hold > 0) {
+	if (this.hold != 0) {
 		this.selectHold(0);
+		return;
+	}
+	if (this.lastHold < 0) {
+		this.selectHold(-1);
 		return;
 	}
 	if (this.lastHold && this.holds[this.lastHold]) {
@@ -808,10 +823,12 @@ Tab.prototype.getAdditioinalToAss = function(forSmi=false) {
 	let frameSyncs = [];
 	{
 		let syncs = this.assHold.assEditor.getFrameSyncs();
+		/*
 		for (let h = 0; h < this.holds.length; h++) {
 			const hold = this.holds[h];
 			syncs.push(...hold.assEditor.getFrameSyncs());
 		}
+		*/
 		// 정렬
 		syncs.sort((a, b) =>  {
 			if (a < b) {
@@ -898,6 +915,7 @@ Tab.prototype.onChangeSaved = function(hold) {
 		for (let i = 0; i < this.holds.length; i++) {
 			this.holds[i].selector.removeClass("not-saved");
 		}
+		this.assHold.selector.removeClass("not-saved");
 	} else {
 		this.area.removeClass("tmp-saved").addClass("not-saved");
 	}
@@ -1219,12 +1237,15 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 }
 
 SmiEditor.prototype.isSaved = function() {
-	return (this.savedName  == this.name )
-		&& (this.savedPos   == this.pos  )
-		&& (this.savedStyle == SmiFile.toSaveStyle(this.style))
-		&& (this.saved == this.input.val()
-		&& (this.assEditor && this.assEditor.isSaved)
-	);
+	if (this.isAssHold) {
+		return this.assEditor.isSaved;
+	} else {
+		return (this.savedName  == this.name )
+			&& (this.savedPos   == this.pos  )
+			&& (this.savedStyle == SmiFile.toSaveStyle(this.style))
+			&& (this.saved == this.input.val()
+		);
+	}
 };
 SmiEditor.prototype.onChangeSaved = function(saved) {
 	// 홀드 저장 여부 표시
@@ -2227,7 +2248,9 @@ function afterSaveFile(path) {
 		hold.savedPos = hold.pos;
 		hold.savedName = hold.name;
 		hold.savedStyle = SmiFile.toSaveStyle(hold.style);
-		hold.assEditor.setSaved();
+		if (hold.assEditor) {
+			hold.assEditor.setSaved();
+		}
 	}
 	currentTab.assHold.assEditor.setSaved();
 	currentTab.path = path;
