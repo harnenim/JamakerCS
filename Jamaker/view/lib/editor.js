@@ -2820,15 +2820,26 @@ function loadAssFile(path, text, target=-1) {
 					for (let tj = 0; tj < targets.length; tj++) {
 						const t = targets[tj];
 						if (o.Style == t.Style && o.Text == t.Text) {
-							t.owner = o.owner;
+							if (o.comment) {
+								// 주석에서 생성된 경우 원형 가져오기
+								let assComments = (t.owner = o.owner).assComments;
+								if (!assComments) {
+									assComments = t.owner.assComments = [];
+								}
+								assComments.push(o.comment);
+							} else {
+								// ASS 에디터 생성물인 경우
+							}
 							t.found = o.found = true;
 							break;
 						}
 					}
 				}
-				if (!o.found && o.origin) {
+				if (!o.found) {
 					// SMI->ASS 변환 제외 필요
-					o.origin.origin.skip = true;
+					if (o.origin) {
+						o.origin.origin.skip = true;
+					}
 					count++;
 				}
 			}
@@ -2838,7 +2849,7 @@ function loadAssFile(path, text, target=-1) {
 					// 기존에 없던 ASS 스크립트 카운트
 					count++;
 				}
-				if (!t.origin) {
+				if (!t.origin && !t.owner) {
 					// SMI 기반 생성물이 아닐 경우
 					appendEvents.push(t);
 				}
@@ -2856,7 +2867,7 @@ function loadAssFile(path, text, target=-1) {
 		}
 		
 		if (changedStyles.length > 0 || count > 0) {
-			let msg = "ASS 자막 수정 내역이 " + count + "건, 그 밖에 레이어 번호 재할당이 있을 수 있습니다. 적용하시겠습니까?\n\n자막에 맞는 동영상 파일이 열려있어야 정상적인 결과를 얻을 수 있습니다.";
+			let msg = "ASS 자막 수정 내역이 " + count + "건 있습니다. 적용하시겠습니까?\n\n자막에 맞는 동영상 파일이 열려있어야 정상적인 결과를 얻을 수 있습니다.";
 			if (count == 0) {
 				msg = "ASS 자막 스타일 수정 내역이 " + changedStyles.length + "건 있습니다. 적용하시겠습니까?";
 			}
@@ -2943,7 +2954,6 @@ function loadAssFile(path, text, target=-1) {
 						}
 						return result;
 					});
-					console.log(list);
 					
 					// 기존 SMI 홀드에 span 형태로 끼워넣을 수 있는지 확인
 					ti = 0;
@@ -2951,10 +2961,11 @@ function loadAssFile(path, text, target=-1) {
 						let targets = [];
 						const styles = [];
 						
+						let fromAssEditor = false;
+						
 						// target 싱크 그룹화
 						const tEvent = list[ti];
 						for (let i = ti; i < list.length; i++) {
-							// 싱크 일치하는 것 확인
 							const event = list[i];
 							if (event.start != tEvent.start) break;
 							if (event.end   != tEvent.end  ) break;
@@ -2964,13 +2975,17 @@ function loadAssFile(path, text, target=-1) {
 							if (styles.indexOf(style) < 0) {
 								styles.push(style);
 							}
+
+							if (event.found) {
+								fromAssEditor = true;
+							}
 						}
 						
 						const start = tEvent.start;
 						const end = tEvent.end;
 						let importSet = null;
 						
-						for (let s = 0; s < styles.length; s++) {
+						for (let s = 0; !fromAssEditor && s < styles.length; s++) {
 							const style = (styles[s] == "Default") ? "메인" : styles[s];
 							
 							// style 기준으로 홀드 찾기
