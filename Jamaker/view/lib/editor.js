@@ -1075,7 +1075,8 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			for (let j = 0; j < assTexts.length; j++) {
 				const assText = assTexts[j];
 				let ass = assText.split("[SMI]").join(smiText).split(",");
-				
+
+				let layer = 0;
 				let span = 1;
 				let addStart = 0;
 				let addEnd = 0;
@@ -1083,6 +1084,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 				let text = "";
 				
 				if (isFinite(ass[0])) {
+					layer = ass[0];
 					let type = null;
 					
 					if (ass.length >= 5) {
@@ -1134,7 +1136,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 					text = ass.join(",");
 				}
 				
-				ass = [0, smi.start + addStart, addEnd, style, text, smi, assText];
+				ass = [layer, smi.start + addStart, addEnd, style, text, smi, assText];
 				let toAssEnd = toAssEnds[i + span];
 				if (toAssEnd == null) {
 					toAssEnd = toAssEnds[i + span] = [];
@@ -3307,7 +3309,7 @@ function splitHold(tab, styleName) {
 			name: holdName
 		,	text: ""
 		,	pos: 1
-//		,	style: {} 스타일 정보 가져와야 함
+//		,	style: {} TODO: 스타일 정보 가져와야 함
 	});
 	const body = [];
 	
