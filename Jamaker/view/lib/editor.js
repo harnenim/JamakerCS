@@ -1195,8 +1195,9 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 					for (; k < usedLines.length; k++) {
 						if (sync.end == usedLines[k].start) {
 							break;
-						} else if (sync.end < usedLines[j].start) {
+						} else if (sync.end < usedLines[k].start) {
 							nextLines.push({ start: sync.end, used: ((k > 0) ? usedLines[k - 1].used : 0) });
+							break;
 						}
 						used = Math.max(used, usedLines[k].used);
 					}
