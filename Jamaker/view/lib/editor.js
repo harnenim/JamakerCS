@@ -1201,6 +1201,10 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 						}
 						used = Math.max(used, usedLines[k].used);
 					}
+					if (k == usedLines.length) {
+						// 뒤쪽이 없었으면 끝내기 잡아줌
+						nextLines.push({ start: sync.end, used: 0 });
+					}
 					
 					sync.bottom = used;
 					used += sync.getTextOnly().split("\n").length;
