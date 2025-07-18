@@ -1028,55 +1028,74 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			
 			// ASS 주석에서 복원
 			for (let j = 0; j < assTexts.length; j++) {
-				let ass = assTexts[j].split("[SMI]").join(smiText).split(",");
+				const assText = assTexts[j];
+				let ass = assText.split("[SMI]").join(smiText).split(",");
+				
+				let span = 1;
+				let addStart = 0;
+				let addEnd = 0;
+				let style = name;
+				let text = "";
 				
 				if (isFinite(ass[0])) {
 					let type = null;
+					
 					if (ass.length >= 5) {
 						if (ass[1] == "") { // span 형식
 							type = "span";
-							const span = (ass[2] != "" && isFinite(ass[2])) ? Number(ass[2]) : 1;
-							ass = [0, smi.start, 0, (ass[3] ? ass[3] : name), ass.slice(4).join(","), smi];
-							let toAssEnd = toAssEnds[i + span];
-							if (toAssEnd == null) {
-								toAssEnd = toAssEnds[i + span] = [];
+							if (ass[2] == "") {
+								// [Layer, -, -, Style, Text]
+								if (ass[3]) style = ass[3];
+								text = ass.slice(4).join(",");
+								
+							} else if (isFinite(ass[2])) {
+								// [Layer, -, span, Style, Text]
+								span = Number(ass[2]);
+								if (ass[3]) style = ass[3];
+								text = ass.slice(4).join(",");
+								
+							} else if (ass[3].endsWith(")")) {
+								let ass2 = ass[2].split("(");
+								let ass3 = ass[3].split(")");
+								if (ass2.length == 2
+								 && isFinite(ass2[0])
+								 && isFinite(ass2[1])
+								 && isFinite(ass3[0])
+								) {
+									// [Layer, -, span(add, add), Style, Text]
+									span = Number(ass2[0]);
+									addStart = Number(ass2[1]);
+									addEnd   = Number(ass3[0]);
+									if (ass[4]) style = ass[4];
+									text = ass.slice(5).join(",");
+								}
 							}
-							toAssEnd.push(ass);
-							assComments.push(ass);
-							
 						} else if (isFinite(ass[1])) { // add 형식
 							type = "add";
-							const addStart = Number(ass[1]);
-							const addEnd = isFinite(ass[2]) ? Number(ass[2]) : addStart;
-							ass = [0, smi.start + addStart, addEnd, (ass[3] ? ass[3] : name), ass.slice(4).join(","), smi];
-							let toAssEnd = toAssEnds[i + 1];
-							if (toAssEnd == null) {
-								toAssEnd = toAssEnds[i + 1] = [];
-							}
-							toAssEnd.push(ass);
-							assComments.push(ass);
+							addStart = Number(ass[1]);
+							addEnd = isFinite(ass[2]) ? Number(ass[2]) : addStart;
+							if (ass[3]) style = ass[3];
+							text = ass.slice(4).join(",");
 						}
 					}
 					if (!type) {
 						// 싱크 변형 없이 스타일이 나오는 형식
-						ass = [0, smi.start, 0, ass[1], ass.slice(2).join(","), smi];
-						let toAssEnd = toAssEnds[i + 1];
-						if (toAssEnd == null) {
-							toAssEnd = toAssEnds[i + 1] = [];
-						}
-						toAssEnd.push(ass);
-						assComments.push(ass);
+						// [Layer, Style, Text]
+						style = ass[1];
+						text = ass.slice(2).join(",");
 					}
 				} else {
 					// 텍스트만 입력
-					ass = [0, smi.start, 0, name, ass.join(","), smi];
-					let toAssEnd = toAssEnds[i + 1];
-					if (toAssEnd == null) {
-						toAssEnd = toAssEnds[i + 1] = [];
-					}
-					toAssEnd.push(ass);
-					assComments.push(ass);
+					text = ass.join(",");
 				}
+				
+				ass = [0, smi.start + addStart, addEnd, style, text, smi, assText];
+				let toAssEnd = toAssEnds[i + span];
+				if (toAssEnd == null) {
+					toAssEnd = toAssEnds[i + span] = [];
+				}
+				toAssEnd.push(ass);
+				assComments.push(ass);
 			}
 		}
 		
@@ -1084,6 +1103,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			const item = assComments[i];
 			const event = new AssEvent(item[1], item[2], item[3], item[4], item[0]);
 			event.owner = item[5];
+			event.comment = item[6];
 			assEvents.body.push(event);
 		}
 		
