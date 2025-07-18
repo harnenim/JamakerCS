@@ -1176,44 +1176,42 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 				const hold = an2Holds[h];
 				for (let i = 0; i < hold.syncs.length; i++) {
 					const sync = hold.syncs[i];
-					const usedLine = { start: sync.start, used: 0 };
-					const newItems = [usedLine];
+					let used = 0;
 					
 					// 이미 확인된 줄과 비교
 					let j = 0
 					for (; j < usedLines.length; j++) {
 						if (sync.start == usedLines[j].start) {
-							usedLine.used = usedLines[j].used;
+							used = usedLines[j].used;
 							break;
 						} else if (sync.start < usedLines[j].start) {
-							usedLine.used = (j > 0) ? usedLines[j - 1].used : 0;
+							used = (j > 0) ? usedLines[j - 1].used : 0;
 							break;
 						}
 					}
+
+					const nextLines = [];
 					let k = j;
-					if (k < usedLines.length) {
-						for (; k < usedLines.length; k++) {
-							if (sync.end == usedLines[k].start) {
-								break;
-							} else if (sync.end < usedLines[k].start) {
-								newItems.push({
-										start: sync.end
-									,	used: (k > 0) ? usedLines[k - 1].used : 0
-								});
-								break;
-							}
-							usedLine.used = Math.max(usedLine.used, usedLines[k].used);
+					for (; k < usedLines.length; k++) {
+						if (sync.end == usedLines[k].start) {
+							break;
+						} else if (sync.end < usedLines[j].start) {
+							nextLines.push({ start: sync.end, used: ((k > 0) ? usedLines[k - 1].used : 0) });
 						}
-					} else {
-						newItems.push({ start: sync.end, used: 0 });
+						used = Math.max(used, usedLines[k].used);
 					}
 					
-					sync.bottom = usedLine.used;
-					usedLine.used += sync.getTextOnly().split("\n").length;
-					
-					newItems.push(...usedLines.slice(k));
+					sync.bottom = used;
+					used += sync.getTextOnly().split("\n").length;
+
+					nextLines.push(...usedLines.slice(k));
 					usedLines.length = j;
-					usedLines.push(...newItems);
+					if (j > 0 && usedLines[j - 1].used == used) {
+						// 앞쪽이랑 같으면 건너뜀
+					} else {
+						usedLines.push({ start: sync.start, used: used });
+					}
+					usedLines.push(...nextLines);
 				}
 			}
 		}
