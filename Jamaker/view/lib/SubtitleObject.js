@@ -2145,10 +2145,12 @@ AssPart.prototype.set = function(key, value) {
 	this.body.push({ key: key, value: value });
 }
 AssPart.prototype.toTxt = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
-AssPart.prototype.toText = function(withHeader=true) {
+AssPart.prototype.toText = function(withName=true, withFormat=true) {
 	const result = [];
-	if (withHeader) {
-		result.push('[' + this.name + ']');
+	if (withFormat) {
+		if (withName) {
+			result.push('[' + this.name + ']');
+		}
 		if (this.format) {
 			result.push("Format: " + this.format.join(", "));
 		}

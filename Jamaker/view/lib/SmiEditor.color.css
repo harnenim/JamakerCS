@@ -1,5 +1,9 @@
 @charset "utf-8";
 
+/*
+ * TODO: Jamaker.color.css 정도로 바꾸는 게 좋을 듯함...
+ */
+
 /* 기본 배경 색 */
 html, body,
 .hold > .col-sync,
@@ -9,6 +13,7 @@ html, body,
 .hold-selector > .selector:hover,
 .hold-style-area > form,
 .hold-ass-area > form,
+#assSplitHoldSelectorPopup,
 .tab-ass-area,
 button {
 	background: [background];
@@ -33,6 +38,7 @@ button {
 #tabSelector > .th,
 .hold-style-area > form,
 .hold-ass-area > form,
+#assSplitHoldSelectorPopup,
 .tab-ass-area,
 input, button {
 	border-color: [tabBorder];

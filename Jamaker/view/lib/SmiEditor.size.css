@@ -1,5 +1,9 @@
 @charset "utf-8";
 
+/*
+ * TODO: Jamaker.size.css 정도로 바꾸는 게 좋을 듯함...
+ */
+
 label, #showFps {
 	margin-left: calc(20px * 0.3);
 }
@@ -104,11 +108,21 @@ label, #showFps {
 	border-radius: calc(20px * 0.4);
 	padding: calc(20px * 0.5);
 }
+#assSplitHoldSelectorPopup {
+	border-radius: calc(20px * 0.4);
+	padding: calc(20px * 0.5);
+}
 .hold .hold-style-area > form {
 	max-height: calc(20px * 3.8 + 153px);
 }
 .tab.ass .hold .hold-style-area > form {
 	max-height: calc(20px * 23.6 + 177px);
+}
+#assSplitHoldSelectorPopup {
+	top: calc(20px * 10);
+	left: 50%;
+	width: calc(20px * 15);
+	margin-left: calc(-20px * 7.5);
 }
 .hold-style-area > form > button.btn-close-popup,
 .hold-ass-area > form > button.btn-close-popup {
@@ -194,6 +208,7 @@ label, #showFps {
 */
 .tab-ass-area {
 	padding: 0 calc(20px * 0.4);
+	height: 100%;
 }
 .tab-ass-area span {
 	height: calc(20px * 1.5);

@@ -66,7 +66,11 @@ window.Tab = function(text, path) {
 			form.append(div);
 			
 			div = $("<div>").addClass("tab-ass-script");
-			div.append($("<span>").text("[Events] ").append($("<button type='button'>").text("＋")));
+			div.append($("<span>").text("[Events] ")
+					.append($("<button type='button' class='btn-add-event'>").text("＋"))
+					.append(" ")
+					.append($("<button type='button' class='btn-split-hold'>").text("홀드 분리"))
+			);
 			const assEditorArea = $("<div>");
 			div.append(assEditorArea);
 			form.append(div);
@@ -82,9 +86,38 @@ window.Tab = function(text, path) {
 				}
 				tab.onChangeSaved();
 			};
-			tab.area.find("div.tab-ass-script button").on("click", function() {
+			tab.area.find("div.tab-ass-script button.btn-add-event").on("click", function() {
 				const sync = SmiEditor.getSyncTime("!"); // 가중치 없는 현재 싱크로 넣음
-				assHold.assEditor.addEvents([ new AssEvent(sync, sync, name, "") ]);
+				assHold.assEditor.addEvents([ new AssEvent(sync, sync, "Default", "") ]);
+			});
+			tab.area.find("div.tab-ass-script button.btn-split-hold").on("click", function() {
+				const events = assHold.assEditor.toEvents();
+				if (!events.length) {
+					alert("스크립트가 없습니다.");
+					return;
+				}
+				const styleList = [];
+				const styleMap = {};
+				for (let i = 0; i < events.length; i++) {
+					const event = events[i];
+					let style = styleMap[event.Style];
+					if (!style) {
+						styleList.push(style = styleMap[event.Style] = { name: event.Style, events: [] });
+					}
+					style.events.push(event);
+				}
+				styleList.sort((a, b) => {
+					return a.events.length - b.events.length;
+				});
+				
+				const $popup = $("#assSplitHoldSelectorPopup").empty();
+				for (let i = 0; i < styleList.length; i++) {
+					const style = styleList[i];
+					$popup.append($("<button>").text(style.name + " (" + style.events.length + "개)").data({ tab: tab, style: style.name }));
+				}
+				$popup.append($("<button>").text("취소"));
+				
+				$("#assSplitHoldSelector").show();
 			});
 		}
 		
@@ -115,7 +148,17 @@ window.Tab = function(text, path) {
 			events.body = appends;
 			*/
 			
-			this.area.find(".tab-ass-styles textarea").val(this.assFile.getStyles().toText(false));
+			this.area.find(".tab-ass-styles textarea").val(this.assFile.getStyles().toText(false, false));
+			/* TODO: 스타일 에디터가 아니라, Script Info와 Events를 제외한 나머지가 들어간 에디터를 만드는 게 좋을 듯함
+			const editAssFile = new AssFile(" "); // 공백이라도 안 넣으면 [Script Info] 자동 생성됨
+			for (let i = 0; i < this.assFile.parts.length; i++) {
+				const part = this.assFile.parts[i];
+				if (part.name == "Script Info") continue;
+				if (part.name == "Events") continue;
+				editAssFile.parts.push(part);
+			}
+			this.area.find(".tab-ass-styles textarea").val(editAssFile.toText());
+			*/
 			
 			const info = this.assFile.getInfo();
 			if (info) {
@@ -347,6 +390,8 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 		this.selectHold(hold);
 	}
 	this.onChangeSaved();
+	
+	return hold;
 }
 SmiEditor.prototype.setStyle = function(style) {
 	if (style.Fontname == "맑은 고딕") {
@@ -1690,6 +1735,14 @@ function init(jsonSetting, isBackup=true) {
 		}
 	});
 	
+	$("#assSplitHoldSelectorPopup").on("click", "button", function() {
+		const data = $(this).data();
+		if (data.tab && data.style) {
+			splitHold(data.tab, data.style);
+		}
+		$("#assSplitHoldSelector").hide();
+	});
+	
 	// ::-webkit-scrollbar에 대해 CefSharp에서 커서 모양이 안 바뀜
 	// ... 라이브러리 버그? 업데이트하면 달라지나?
 	$("body").on("mousemove", "textarea", function(e) {
@@ -2951,7 +3004,7 @@ function loadAssFile(path, text, target=-1) {
 					}
 					if (addPart.body.length) {
 						// 추가 스타일
-						styleTexts.push(addPart.toText(false));
+						styleTexts.push(addPart.toText(false, false));
 						currentTab.area.find(".tab-ass-styles textarea").val(styleTexts.join("\n"));
 					}
 				}
@@ -3243,6 +3296,222 @@ function loadAssFile(path, text, target=-1) {
 			alert(msg);
 		}
 	}
+}
+// C#과 연관 없지만 기능이 ASS 전용 스크립트 처리와 비슷해서 이쪽에 구현
+function splitHold(tab, styleName) {
+	let holdName = styleName;
+	if (holdName == "Default") {
+		holdName = "Default1";
+	}
+	const hold = tab.addHold({
+			name: holdName
+		,	text: ""
+		,	pos: 1
+//		,	style: {} 스타일 정보 가져와야 함
+	});
+	const body = [];
+	
+	const list = tab.assHold.assEditor.toEvents();
+	const appends = [];
+	
+	// 뒤쪽 싱크를 먼저 작업해야 span이 잘 생성됨
+	list.sort((a, b) => {
+		let result = b.start - a.start;
+		if (result == 0) {
+			result = b.end - a.end;
+		}
+		return result;
+	});
+	
+	// 기존 SMI 홀드에 span 형태로 끼워넣을 수 있는지 확인
+	ti = 0;
+	while (ti < list.length) {
+		let targets = [];
+		let hasStyle = false;
+		
+		// target 싱크 그룹화
+		const tEvent = list[ti];
+		for (let i = ti; i < list.length; i++) {
+			const event = list[i];
+			if (event.start != tEvent.start) break;
+			if (event.end   != tEvent.end  ) break;
+			targets.push(event);
+			
+			if (event.Style == styleName) {
+				hasStyle = true;
+			}
+		}
+		
+		const start = tEvent.start;
+		const end = tEvent.end;
+		let importSet = null;
+
+		// 스타일 겹치는 것만 진행
+		if (hasStyle) {
+			let canImport = true;
+			
+			let replaceFrom = -1;
+			let replaceTo = -1;
+			let fromEmpty = true;
+			let toEmpty = true;
+			
+			{
+				let i = 0;
+				for (; i < body.length; i++) {
+					// SMI 싱크 그대로 쓰지 않고, 프레임 시간 가져와서 비교
+					let sync = Subtitle.findSync(body[i].start);
+					if (sync < start) {
+						continue;
+					}
+					
+					if (start < sync) {
+						// 중간 싱크를 생성해야 함
+						if (i == 0 || (body[i-1].isEmpty() && !body[i-1].assComments)) {
+							// 공백에서 시작
+							replaceFrom = i;
+							fromEmpty = true;
+							
+						} else {
+							// 공백 아니면 겹칠 수 없음
+							canImport = false;
+							break;
+						}
+						
+					} else {
+						// 시작 싱크가 SMI 싱크와 일치
+						replaceFrom = i;
+						fromEmpty = false;
+					}
+
+					for (; i < body.length; i++) {
+						sync = Subtitle.findSync(body[i].start);
+						if (sync < end) {
+							continue;
+						}
+						
+						if (end < sync) {
+							// 중간 싱크를 생성해야 함
+							if (i == 0 || (body[i-1].isEmpty() && !body[i-1].assComments)) {
+								// 공백에서 종료
+								replaceTo = i;
+								toEmpty = true;
+								
+							} else {
+								// 공백 아니면 겹칠 수 없음
+								canImport = false;
+							}
+						} else {
+							// 종료 싱크가 SMI 싱크와 일치
+							replaceTo = i;
+							toEmpty = false;
+						}
+						break;
+					}
+					break;
+				}
+				if (i == body.length) {
+					// 홀드 내용물 전체보다 더 뒤쪽
+					if (i == 0 || (body[i-1].isEmpty() && !body[i-1].assComments)) {
+						if (replaceFrom < 0) {
+							replaceFrom = i;
+						}
+						replaceTo = i;
+						
+					} else {
+						canImport = false;
+					}
+				}
+			}
+			if (!canImport) {
+				continue;
+			}
+			
+			importSet = {
+					hold: hold
+				,	replaceFrom: replaceFrom
+				,	replaceTo: replaceTo
+				,	fromEmpty: fromEmpty
+				,	toEmpty: toEmpty
+			};
+		}
+		
+		if (importSet) {
+			const replaceFrom = importSet.replaceFrom;
+			const replaceTo   = importSet.replaceTo;
+			const fromEmpty   = importSet.fromEmpty;
+			const toEmpty     = importSet.toEmpty;
+			
+			let smi = body[replaceFrom];
+
+			const bodySkipped = body.slice(replaceFrom, replaceTo);
+			const bodyEnd = body.slice(replaceTo);
+			body.length = replaceFrom;
+			
+			if (fromEmpty) {
+				// 공백 싱크 추가
+				body.push(smi = new Smi(start, SyncType.frame, ""));
+			}
+			body.push(...bodySkipped);
+
+			if (toEmpty) {
+				// 종료 싱크 추가 필요
+				body.push(new Smi(end, SyncType.frame, "&nbsp;"));
+			}
+			body.push(...bodyEnd);
+			
+			if (!smi.assComments) {
+				smi.assComments = [];
+			}
+			for (let i = 0; i < targets.length; i++) {
+				// 싱크 겹치도록 넣어줌
+				const item = targets[i];
+				let span = replaceTo - replaceFrom;
+				if (fromEmpty) span++;
+				smi.assComments.push([item.Layer, "", (span == 1 ? "" : span), item.Style, item.Text].join(","));
+			}
+			
+		} else {
+			// SMI 홀드에 넣을 수 없는, ASS 전용 스크립트
+			appends.push(...targets);
+		}
+		
+		ti += targets.length;
+	}
+	
+	// 홀드 SMI 재구성
+	{
+		for (let j = 0; j < body.length; j++) {
+			const smi = body[j];
+			if (smi.assComments) {
+				smi.assComments.sort((a, b) => {
+					return Number(a.split(",")[0]) - Number(b.split(",")[0]);
+				});
+				let comment = "<!-- ASS\n" + smi.assComments.join("\n");
+				if (smi.skip) {
+					comment += "\nEND"
+				}
+				comment += "\n-->";
+				if (smi.text) {
+					smi.text = comment + "\n" + smi.text;
+				} else {
+					smi.text = comment;
+				}
+				
+			} else if (smi.skip) {
+				smi.text = "<!-- ASS X -->\n" + smi.text;
+			}
+		}
+		
+		const smiFile = new SmiFile();
+		smiFile.body = body;
+		const smiText = smiFile.toText();
+		hold.input.val(smiText);
+		hold.setCursor(0);
+		hold.scrollToCursor();
+		hold.render();
+	}
+	
+	tab.assHold.assEditor.setEvents(appends, tab.assHold.assEditor.getFrameSyncs());
 }
 
 // 종료 전 C# 쪽에서 호출

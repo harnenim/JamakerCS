@@ -1,5 +1,10 @@
 @charset "utf-8";
 
+/*
+ * TODO: 가급적 여기엔 SmiEditor 관련만 남기고 Jamaker.css 쪽으로 빼주는 게 좋을 듯함
+ *       홀드나 ASS 관련 부분이 이쪽에 섞임...
+ */
+
 .hold {
 	overflow: hidden;
 	position: relative;
@@ -82,10 +87,15 @@ textarea,
 	padding: 0;
 }
 .hold-style-area,
-.hold-ass-area {
+.hold-ass-area,
+#assSplitHoldSelector {
+	position: absolute;
+	top: 0;
 	left: 0;
 	right: 0;
+	bottom: 0;
 	background: #7f7f7f7f;
+	z-index: 9999;
 	display: none;
 }
 .hold.style .hold-style-area,
@@ -93,7 +103,8 @@ textarea,
 	display: block;
 }
 .hold-style-area > form,
-.hold-ass-area > form {
+.hold-ass-area > form,
+#assSplitHoldSelectorPopup {
 	position: absolute;
 	border: 1px solid #000;
 }
@@ -107,6 +118,15 @@ textarea,
 .hold-style-area > form > button.btn-close-popup:after,
 .hold-ass-area > form > button.btn-close-popup:after {
 	content: "×";
+}
+
+#assSplitHoldSelectorPopup button {
+	display: block;
+	width: 100%;
+	margin-bottom: 8px;
+}
+#assSplitHoldSelectorPopup button:last-child {
+	margin-bottom: 0;
 }
 
 #editor.trust-keyframe .sync.keyframe { font-weight: bold; }
@@ -343,7 +363,6 @@ textarea,
     resize: none;
 }
 
-/*
 .tab-ass-back {
 	position: absolute;
 	top: 0;
@@ -370,6 +389,10 @@ textarea,
 .tab-ass-btn:after {
 	content: "▲";
 }
+.ass-hold > * {
+	position: initial;
+}
+/*
 .tab-ass-area {
 	position: absolute;
 	top: 100%;
@@ -399,8 +422,7 @@ textarea,
 }
 */
 .tab-ass-area {
-	width: 100%;
-	height: 100%;
+	
 }
 .tab-ass-styles {
 	height: 30%;
@@ -410,7 +432,7 @@ textarea,
 }
 /*
 .tab-ass-area > div {
-	* 이게 없으면 최초 로딩 시 하단 여백 생김 *
+	이게 없으면 최초 로딩 시 하단 여백 생김
 	display: none;
 }
 */
