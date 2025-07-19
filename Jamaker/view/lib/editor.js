@@ -2772,6 +2772,10 @@ function loadAssFile(path, text, target=-1) {
 			while ((oi < originEvents.length) && (originEvents[oi].Start < tEvent.Start)) {
 				// ASS 출력 제외 대상
 				const origin = originEvents[oi].origin;
+				if (origin && !origin.origin.skip) {
+					origin.origin.skip = true;
+					count++;
+				}
 				oi++;
 			}
 			// 싱크가 일치하는 것들 찾기
@@ -2859,6 +2863,7 @@ function loadAssFile(path, text, target=-1) {
 								
 								if (convertable) {
 									// 추가돼야 하는 태그 확인
+									console.log("추가돼야 하는 태그 확인", o);
 									const appendTags = [];
 									for (let tk = 0; tk < targetTags.length; tk++) {
 										const tTag = targetTags[tk];
@@ -2883,9 +2888,11 @@ function loadAssFile(path, text, target=-1) {
 									if (targetText.length > (index + originText.length)) {
 										next = '\n<FONT ass="' + targetText.substring(index + originText.length) + '"></FONT>';
 									}
-									
+
+									console.log("skip 취소", o.origin.origin);
 									o.origin.origin.text = prev + o.origin.origin.text + next;
-									t.found = true;
+									o.origin.origin.skip = false;
+									o.found = t.found = true;
 									t.origin = o.origin;
 									count++;
 								}
@@ -3227,10 +3234,13 @@ function loadAssFile(path, text, target=-1) {
 					}
 					
 					// 홀드 SMI 재구성
+					console.log("홀드 SMI 재구성");
 					for (let i = 0; i < currentTab.holds.length; i++) {
 						const hold = currentTab.holds[i];
+						console.log(hold, hold.smiFile);
 						if (!hold.smiFile) continue;
-						
+
+						console.log(hold.smiFile.body);
 						for (let j = 0; j < hold.smiFile.body.length; j++) {
 							const smi = hold.smiFile.body[j];
 							if (smi.assComments) {
