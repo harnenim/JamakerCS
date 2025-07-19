@@ -2863,7 +2863,6 @@ function loadAssFile(path, text, target=-1) {
 								
 								if (convertable) {
 									// 추가돼야 하는 태그 확인
-									console.log("추가돼야 하는 태그 확인", o);
 									const appendTags = [];
 									for (let tk = 0; tk < targetTags.length; tk++) {
 										const tTag = targetTags[tk];
@@ -2889,7 +2888,6 @@ function loadAssFile(path, text, target=-1) {
 										next = '\n<FONT ass="' + targetText.substring(index + originText.length) + '"></FONT>';
 									}
 
-									console.log("skip 취소", o.origin.origin);
 									o.origin.origin.text = prev + o.origin.origin.text + next;
 									o.origin.origin.skip = false;
 									o.found = t.found = true;
@@ -3234,13 +3232,10 @@ function loadAssFile(path, text, target=-1) {
 					}
 					
 					// 홀드 SMI 재구성
-					console.log("홀드 SMI 재구성");
 					for (let i = 0; i < currentTab.holds.length; i++) {
 						const hold = currentTab.holds[i];
-						console.log(hold, hold.smiFile);
 						if (!hold.smiFile) continue;
 
-						console.log(hold.smiFile.body);
 						for (let j = 0; j < hold.smiFile.body.length; j++) {
 							const smi = hold.smiFile.body[j];
 							if (smi.assComments) {
