@@ -1513,7 +1513,8 @@ AssEvent.fromAttrs = (attrs) => {
 	}
 	return texts;
 }
-AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true) => {
+AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true, last=null) => {
+	console.log("inFromAttrs", attrs);
 	if (checkFurigana) {
 		let hasFurigana = false;
 		for (let i = 0; i < attrs.length; i++) {
@@ -1774,7 +1775,8 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 			
 			if (typeof attr.ass == "string") {
 				// ASS 속성 이전 부분 처리
-				text += AssEvent.inFromAttrs(attrs.slice(assEnd, i), false, false, false);
+				console.log("ASS 속성 이전 부분 처리", attr.ass);
+				text += AssEvent.inFromAttrs(attrs.slice(assEnd, i), false, false, false, (i > 0 ? attrs[i - 1] : null));
 				
 				// ASS 속성 처리
 				for (; i < attrs.length; i++) {
@@ -1797,9 +1799,13 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 	}
 	
 	// ASS 변환용 속성 없는 부분
-	let last = new Attr();
+	console.log("ASS 변환용 속성 없는 부분", text, attrs);
+	if (last == null) {
+		last = new Attr();
+	}
 	for (let i = assEnd; i < attrs.length; i++) {
 		const attr = attrs[i];
+		console.log("for", text, attr, last);
 		
 		if (attr.fade ==  1) text += "{\\fade([FADE_LENGTH],0)}";
 		if (attr.fade == -1) text += "{\\fade(0,[FADE_LENGTH])}";
@@ -1834,6 +1840,7 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 			
 		} else {
 			if (last.fc != attr.fc) {
+				console.log("fc", last, attr);
 				text += "{\\c" + Subtitle.Ass.colorFromAttr(attr.fc) + "}";
 			}
 		}
@@ -1842,6 +1849,7 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 		
 		last = attr;
 	}
+	console.log("final", text);
 	
 	return [text.split("\n").join("\\N")];
 }
@@ -1870,7 +1878,7 @@ AssEvent.prototype.clearEnds = function() {
 	return this.Text = text;
 }
 
-AssEvent.fromSync = function(sync, style=null) {
+AssEvent.fromSync = function (sync, style = null) {
 	const events = sync.events = [];
 	const start = sync.start;
 	const end   = sync.end;
@@ -2886,7 +2894,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				// 원래 텍스트 비었으면 군더더기 없이 하려고 했는데
 				// 태그 여닫은 순서는 기억하는 게 좋을 것 같음
 				// ... 아닌가?
-				if (last.ass || last.text.length > 0) {
+				if ((typeof last.ass == "string") || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2895,7 +2903,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setB(true));
 				break;
 			case "I":
-				if (last.ass || last.text.length > 0) {
+				if ((typeof last.ass == "string") || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2904,7 +2912,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setI(true));
 				break;
 			case "U":
-				if (last.ass || last.text.length > 0) {
+				if ((typeof last.ass == "string") || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2913,7 +2921,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setU(true));
 				break;
 			case "S":
-				if (last.ass || last.text.length > 0) {
+				if ((typeof last.ass == "string") || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2921,9 +2929,11 @@ Smi.toAttrs = (text, keepTags=true) => {
 				}
 				Smi.setStyle(last, status.setS(true));
 				break;
-			case "FONT":
-				if (last.ass || last.text.length > 0) {
+			case "FONT": {
+				let attrAdded = false;
+				if ((typeof last.ass == "string") || last.text.length > 0) {
 					result.push(last = new Attr());
+					attrAdded = true;
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -2932,12 +2942,23 @@ Smi.toAttrs = (text, keepTags=true) => {
 					const attrs = [];
 					for (let name in tag.attrs) {
 						attrs.push([name, tag.attrs[name]]);
+						if (!attrAdded && name.toUpperCase() == "ASS") {
+							if (keepTags) {
+								last.tagString = last.tagString.substring(0, last.tagString.length - tagString.length);
+							}
+							result.push(last = new Attr());
+							if (keepTags) {
+								last.tagString = tagString;
+							}
+							attrAdded = true;
+						}
 					}
 					Smi.setStyle(last, status.setFont(attrs));
 				}
 				break;
+			}
 			case "RUBY":
-				if (last.ass || last.text.length > 0) {
+				if ((typeof last.ass == "string") || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2947,7 +2968,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				ruby = last;
 				break;
 			case "RT":
-				if (last.ass || last.text.length > 0) {
+				if ((typeof last.ass == "string") || last.text.length > 0) {
 					last = new Attr(); // 후리가나는 상위 리스트에 넣지 않음
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2970,7 +2991,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 	function closeTag(tagName) {
 		switch (tagName.toUpperCase()) {
 			case "B":
-				if (last.ass || last.text.length > 0) {
+				if ((typeof last.ass == "string") || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2979,7 +3000,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setB(false));
 				break;
 			case "I":
-				if (last.ass || last.text.length > 0) {
+				if ((typeof last.ass == "string") || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2988,7 +3009,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setI(false));
 				break;
 			case "U":
-				if (last.ass || last.text.length > 0) {
+				if ((typeof last.ass == "string") || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2997,7 +3018,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setU(false));
 				break;
 			case "S":
-				if (last.ass || last.text.length > 0) {
+				if ((typeof last.ass == "string") || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -3006,7 +3027,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setS(false));
 				break;
 			case "FONT":
-				if (last.ass || last.text.length > 0) {
+				if ((typeof last.ass == "string") || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -3015,7 +3036,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setFont(null));
 				break;
 			case "RUBY":
-				if (last.ass || last.text.length > 0) {
+				if ((typeof last.ass == "string") || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -3113,6 +3134,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 					}
 					case '=': { // 속성값 시작
 						state = '=';
+						value = "";
 						break;
 					}
 					case ' ':
@@ -3545,7 +3567,7 @@ Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true, forConvert=f
 		}
 		let useAss = false;
 		let assLen = 0;
-		if (forConvert && attr.ass) {
+		if (forConvert && (typeof attr.ass == "string")) {
 			useAss = true;
 			assLen = 1;
 			let tLen = 0;
