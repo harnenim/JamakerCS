@@ -3792,11 +3792,13 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 				attrs[j].furigana.shake = null;
 			}
 		}
-		attrs[shakeRange[0]  ].text = "{SL}" + attrs[shakeRange[0]].text;
-		attrs[shakeRange[1]-1].text = attrs[shakeRange[1]-1].text + "{SR}";
+		// 줄 앞뒤에 {SL}, {SR}뿐만 아니라 Zero-Width-Space도 넣어줌
+		// 팟플 SMI에선 문제없었는데, ASS 변환 기능을 만들려니 공백문자가 무시당함...
+		attrs[shakeRange[0]  ].text = "​{SL}" + attrs[shakeRange[0]].text;
+		attrs[shakeRange[1]-1].text = attrs[shakeRange[1]-1].text + "{SR}​";
 		for (let j = shakeRange[0]; j < shakeRange[1]; j++) {
 			if (attrs[j].text.indexOf("\n") >= 0) {
-				attrs[j].text = attrs[j].text.split("\n").join("{SR}\n{\SL}");
+				attrs[j].text = attrs[j].text.split("\n").join("{SR}​\n​{\SL}");
 			}
 		}
 		
