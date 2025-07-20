@@ -2095,6 +2095,15 @@ AssEvent.fromSync = function (sync, style = null) {
 							pureLines.push({ i: i, text: pureLine });
 						}
 					}
+					if (pureLines.length == 0) {
+						// 반각 줄표 없으면 전각 줄표로 재확인
+						for (let i = 0; i < lines.length; i++) {
+							let pureLine = Subtitle.$tmp.html(lines[i].split("{").join("<").split("}").join(">")).text();
+							if (pureLine.startsWith("－")) {
+								pureLines.push({ i: i, text: pureLine });
+							}
+						}
+					}
 					// 줄표 달린 게 2개 이상일 때
 					if (pureLines.length >= 2) {
 						const wStyle = { fontFamily: style.Fontname, fontSize: style.Fontsize };
