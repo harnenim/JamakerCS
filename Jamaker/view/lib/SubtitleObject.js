@@ -621,12 +621,6 @@ Typing.prototype.outputWithCursorOnlyHangeul = function() {
 
 
 
-
-
-
-// from SubtitleObject.cs
-
-
 window.Subtitle = {
 	SyncType:
 	{	comment: -1
@@ -1025,9 +1019,8 @@ Color.prototype.ass = function(value, total) {
 
 
 
-// SubtitleObjectAss.cs
-
 // TODO: 첫 단추를 얘만 1ms가 아닌 10ms 단위로 잡아서 더 복잡해진 것 같은데... 엎을까...
+// 대충 AssFile, AssPart, AssEvent로 재개발은 했는데 이쪽 아직 삭제를 안 함...
 
 Subtitle.Ass = function(start, end, style, text) {
 	this.start = start;
@@ -1503,7 +1496,7 @@ AssEvent.prototype.fromSync = function(sync, style) {
 	this.Start = AssEvent.toAssTime(this.start = sync.start);
 	this.End   = AssEvent.toAssTime(this.end   = sync.end  );
 	this.Style = sync.style ? sync.style : "Default";
-	this.Text = (this.texts = Subtitle.Ass.fromAttrs(sync.text))[0];
+	this.Text = (this.texts = AssEvent.fromAttrs(sync.text))[0];
 	return this;
 }
 AssEvent.fromAttrs = (attrs) => {
@@ -1514,7 +1507,6 @@ AssEvent.fromAttrs = (attrs) => {
 	return texts;
 }
 AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true, last=null) => {
-	console.log("inFromAttrs", attrs);
 	if (checkFurigana) {
 		let hasFurigana = false;
 		for (let i = 0; i < attrs.length; i++) {
@@ -1775,7 +1767,6 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 			
 			if (typeof attr.ass == "string") {
 				// ASS 속성 이전 부분 처리
-				console.log("ASS 속성 이전 부분 처리", attr.ass);
 				text += AssEvent.inFromAttrs(attrs.slice(assEnd, i), false, false, false, (i > 0 ? attrs[i - 1] : null));
 				
 				// ASS 속성 처리
@@ -1799,13 +1790,11 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 	}
 	
 	// ASS 변환용 속성 없는 부분
-	console.log("ASS 변환용 속성 없는 부분", text, attrs);
 	if (last == null) {
 		last = new Attr();
 	}
 	for (let i = assEnd; i < attrs.length; i++) {
 		const attr = attrs[i];
-		console.log("for", text, attr, last);
 		
 		if (attr.fade ==  1) text += "{\\fade([FADE_LENGTH],0)}";
 		if (attr.fade == -1) text += "{\\fade(0,[FADE_LENGTH])}";
@@ -1840,7 +1829,6 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 			
 		} else {
 			if (last.fc != attr.fc) {
-				console.log("fc", last, attr);
 				text += "{\\c" + Subtitle.Ass.colorFromAttr(attr.fc) + "}";
 			}
 		}
@@ -1849,7 +1837,6 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 		
 		last = attr;
 	}
-	console.log("final", text);
 	
 	return [text.split("\n").join("\\N")];
 }
@@ -1878,7 +1865,7 @@ AssEvent.prototype.clearEnds = function() {
 	return this.Text = text;
 }
 
-AssEvent.fromSync = function (sync, style = null) {
+AssEvent.fromSync = function(sync, style=null) {
 	const events = sync.events = [];
 	const start = sync.start;
 	const end   = sync.end;
@@ -2128,8 +2115,8 @@ AssEvent.fromSync = function (sync, style = null) {
 				}
 			}
 			
-			// SMI와 공통인 게 마지막 레이어여야 해서 999 부여
-			const ass = new AssEvent(start, end, sync.style, text, 999);
+			// SMI와 공통인 건 레이어 200 부여
+			const ass = new AssEvent(start, end, sync.style, text, 200);
 			ass.origin = sync;
 			events.push(ass);
 		}
@@ -2476,8 +2463,6 @@ AssFile.prototype.fromSyncs = function(syncs, style) {
 
 
 
-
-// SubtitleObjectSmi.cs
 
 window.Smi = Subtitle.Smi = function(start, syncType, text) {
 	this.start = start ? Math.round(start) : 0;
