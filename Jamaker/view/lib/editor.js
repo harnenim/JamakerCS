@@ -519,7 +519,6 @@ SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 	
 	// ASS 편집일 때 동작
 	if (this.isAssHold || this.area.hasClass("ass")) {
-		console.log("ASS 편집일 때 동작");
 		// TODO: ASS 에디터에 대해서만 동작?
 		// 이거 자체를 쓸 일이 있나?
 		alert("ASS 에디터에선 사용하실 수 없습니다.");
@@ -1312,6 +1311,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 	}
 	
 	// TODO: ASS 에디터에 레이어 재계산치 반영 가능한가...?
+	// 애초에 여긴 SMI 저장 이후에 돌아가는 부분인데?
 	
 	if (orderByEndSync) {
 		// 레이어 보장된 상태에서 종료싱크까지 정렬
@@ -2833,7 +2833,7 @@ function loadAssFile(path, text, target=-1) {
 								break;
 							}
 						}
-						if (t && (t.Text.length > o.Text.length)) {
+						if (t) {
 							let targetTags = [];
 							let targetText = t.Text;
 							
@@ -2845,8 +2845,20 @@ function loadAssFile(path, text, target=-1) {
 								}
 							}
 							
+							let attrs = o.origin.text;
+							// 원래 있던 추가 ass 태그 삭제 후 비교
+							while (attrs.length && attrs[0].ass && !attrs[0].text) {
+								attrs = attrs.slice(1);
+							}
+							while (attrs.length > 1 && attrs[attrs.length - 1].ass && !attrs[attrs.length - 1].text) {
+								attrs.length--;
+							}
+							let originTexts = AssEvent.fromAttrs(attrs);
+							if (originTexts.length == 1) {
+								// RUBY 태그 등으로 여러 개로 분리됐으면 미지원
+								
 								let originTags = [];
-								let originText = o.Text;
+								let originText = originTexts[0];
 								
 								if (originText.startsWith("{")) {
 									const end = originText.indexOf("}");
@@ -2904,13 +2916,21 @@ function loadAssFile(path, text, target=-1) {
 											next = '\n<FONT ass="' + targetText.substring(index + originText.length) + '"></FONT>';
 										}
 										
-										o.origin.origin.text = prev + o.origin.origin.text + next;
+										let originSmi = o.origin.origin.text;
+										if (attrs.length < o.origin.text.length) {
+											// 비교 전에 제거한 게 있었으면 SMI 재구성
+											// TODO: 완전 재구성보다는 ass 태그만 삭제할 수 있으면 그게 더 좋을 듯?
+											originSmi = Smi.fromAttrs(attrs).split("\n").join("<br>");
+											delCount++;
+										}
+										o.origin.origin.text = prev + originSmi + next;
 										o.origin.origin.skip = false;
 										o.found = t.found = true;
 										t.origin = o.origin;
 										addCount++;
 									}
 								}
+							}
 						}
 					}
 					
@@ -2918,6 +2938,10 @@ function loadAssFile(path, text, target=-1) {
 					// ASS 전용 스크립트
 					for (let tj = 0; tj < targets.length; tj++) {
 						const t = targets[tj];
+						if (t.found) {
+							// 이미 매칭된 건 제외
+							continue;
+						}
 						if (o.Style == t.Style && o.Text == t.Text) {
 							if (o.comment) {
 								// 주석에서 생성된 경우 원형 가져오기
@@ -2962,6 +2986,14 @@ function loadAssFile(path, text, target=-1) {
 			originEvents[oi].skip = true;
 			delCount++;
 			oi++;
+		}
+		for (oi = 0; oi < originEvents.length; oi++) {
+			// 주석 기반 생성물 중 삭제 대상 확인
+			const event = originEvents[oi];
+			if (event.origin) {
+				// SMI 기반 생성물
+				continue;
+			}
 		}
 		
 		if (changedStyles.length + addCount + delCount > 0) {

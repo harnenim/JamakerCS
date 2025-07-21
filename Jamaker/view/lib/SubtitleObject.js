@@ -2882,13 +2882,15 @@ Smi.toAttrs = (text, keepTags=true) => {
 	let attr = null;
 	let value = null;
 	
+	let isFirst = true;
 	function openTag() {
+		const hadAss = (typeof last.ass == "string");
 		switch (tag.name.toUpperCase()) {
 			case "B":
 				// 원래 텍스트 비었으면 군더더기 없이 하려고 했는데
 				// 태그 여닫은 순서는 기억하는 게 좋을 것 같음
 				// ... 아닌가?
-				if ((typeof last.ass == "string") || last.text.length > 0) {
+				if (hadAss || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2897,7 +2899,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setB(true));
 				break;
 			case "I":
-				if ((typeof last.ass == "string") || last.text.length > 0) {
+				if (hadAss || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2906,7 +2908,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setI(true));
 				break;
 			case "U":
-				if ((typeof last.ass == "string") || last.text.length > 0) {
+				if (hadAss || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2915,7 +2917,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setU(true));
 				break;
 			case "S":
-				if ((typeof last.ass == "string") || last.text.length > 0) {
+				if (hadAss || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2925,7 +2927,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				break;
 			case "FONT": {
 				let attrAdded = false;
-				if ((typeof last.ass == "string") || last.text.length > 0) {
+				if (hadAss || last.text.length > 0) {
 					result.push(last = new Attr());
 					attrAdded = true;
 					if (keepTags) last.tagString = tagString;
@@ -2940,7 +2942,9 @@ Smi.toAttrs = (text, keepTags=true) => {
 							if (keepTags) {
 								last.tagString = last.tagString.substring(0, last.tagString.length - tagString.length);
 							}
-							result.push(last = new Attr());
+							if (!isFirst) {
+								result.push(last = new Attr());
+							}
 							if (keepTags) {
 								last.tagString = tagString;
 							}
@@ -2952,7 +2956,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				break;
 			}
 			case "RUBY":
-				if ((typeof last.ass == "string") || last.text.length > 0) {
+				if (hadAss || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2962,7 +2966,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				ruby = last;
 				break;
 			case "RT":
-				if ((typeof last.ass == "string") || last.text.length > 0) {
+				if (hadAss || last.text.length > 0) {
 					last = new Attr(); // 후리가나는 상위 리스트에 넣지 않음
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2981,11 +2985,13 @@ Smi.toAttrs = (text, keepTags=true) => {
 		}
 		tag = null;
 		tagString = null;
+		isFirst = false;
 	}
 	function closeTag(tagName) {
+		const hadAss = (typeof last.ass == "string");
 		switch (tagName.toUpperCase()) {
 			case "B":
-				if ((typeof last.ass == "string") || last.text.length > 0) {
+				if (hadAss || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2994,7 +3000,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setB(false));
 				break;
 			case "I":
-				if ((typeof last.ass == "string") || last.text.length > 0) {
+				if (hadAss || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -3003,7 +3009,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setI(false));
 				break;
 			case "U":
-				if ((typeof last.ass == "string") || last.text.length > 0) {
+				if (hadAss || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -3012,7 +3018,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setU(false));
 				break;
 			case "S":
-				if ((typeof last.ass == "string") || last.text.length > 0) {
+				if (hadAss || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -3021,7 +3027,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setS(false));
 				break;
 			case "FONT":
-				if ((typeof last.ass == "string") || last.text.length > 0) {
+				if (hadAss || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -3030,7 +3036,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 				Smi.setStyle(last, status.setFont(null));
 				break;
 			case "RUBY":
-				if ((typeof last.ass == "string") || last.text.length > 0) {
+				if (hadAss || last.text.length > 0) {
 					result.push(last = new Attr());
 					if (keepTags) last.tagString = tagString;
 				} else {
