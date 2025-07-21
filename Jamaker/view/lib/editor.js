@@ -1020,7 +1020,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 		
 		if ((style.output & 0b10) == 0) {
 			// ASS 변환 대상 제외
-			syncs.push([]);
+			syncs.push(hold.syncs = []);
 			hold.smiFile = null;
 			continue;
 		}
@@ -1033,6 +1033,18 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 		}
 		
 		hold.smiFile = new SmiFile(hold.text);
+		if (h == 0) {
+			// 메인 홀드에서 <title> 확인
+			const h0 = hold.smiFile.header.search(/<title>/gi);
+			if (h0 > 0) {
+				const h1 = hold.smiFile.header.search(/<\/title>/gi);
+				if (h1 > 0) {
+					const title = hold.smiFile.header.substring(h0 + 7, h1);
+					assFile.getInfo().body.push({ key: "title", value: title });
+				}
+			}
+		}
+		
 		const smis = hold.smiFile.body;
 		
 		const assComments = []; // ASS 주석에서 복원한 목록
@@ -1149,6 +1161,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			}
 		}
 		
+		// 주석 기반 스크립트
 		for (let i = 0; i < assComments.length; i++) {
 			const item = assComments[i];
 			const event = new AssEvent(item[1], item[2], item[3], item[4], item[0]);
@@ -1157,6 +1170,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			assEvents.body.push(event);
 		}
 		
+		// SMI 기반 스크립트
 		syncs.push(hold.syncs = hold.smiFile.toSyncs());
 	}
 	{	// 홀드 결합 pos 자동 조정
