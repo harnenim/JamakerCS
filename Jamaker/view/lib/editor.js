@@ -1159,13 +1159,11 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 		
 		syncs.push(hold.syncs = hold.smiFile.toSyncs());
 	}
-	{	// 홀드 결합 pos 자동 조정 재개발
-		
-		// 정렬 위치가 중앙 하단인 것들만 모음
+	{	// 홀드 결합 pos 자동 조정
 		const an2Holds = [];
 		for (let h = 0; h < holds.length; h++) {
 			const hold = holds[h];
-			if (hold.style && hold.style.Alignment != 2) continue;
+			if (hold.style && (hold.style.Alignment % 3 != 2)) continue; // ASS에서 좌우 구석일 경우 계산하지 않음
 			an2Holds.push(hold);
 		}
 		// 아래인 것부터 정렬
@@ -1177,6 +1175,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			const usedLines = []; // 각 싱크에 사용된 줄 수
 			for (let h = 0; h < an2Holds.length; h++) {
 				const hold = an2Holds[h];
+				const useBottom = (!hold.style || hold.style.Alignment == 2); // ASS에서 중앙 하단일 경우만 pos 자동 조정
 				for (let i = 0; i < hold.syncs.length; i++) {
 					const sync = hold.syncs[i];
 					let used = 0;
@@ -1192,7 +1191,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 							break;
 						}
 					}
-
+					
 					const nextLines = [];
 					let k = j;
 					for (; k < usedLines.length; k++) {
@@ -1209,9 +1208,11 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 						nextLines.push({ start: sync.end, used: 0 });
 					}
 					
-					sync.bottom = used;
+					if (useBottom) {
+						sync.bottom = used;
+					}
 					used += sync.getTextOnly().split("\n").length;
-
+					
 					nextLines.push(...usedLines.slice(k));
 					usedLines.length = j;
 					if (j > 0 && usedLines[j - 1].used == used) {
@@ -1225,6 +1226,17 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 		}
 	}
 	for (let h = 1; h < holds.length; h++) {
+		// TODO: 이게 맞나? 샘플 테스트 필요
+		// SMI에서 용도가 다른 <b> 태그 속성 없애고 진행
+		for (let i = 0; i < syncs[h].length; i++) {
+			const attrs = syncs[h][i].text;
+			for (let j = 0; j < attrs.length; j++) {
+				if (attrs[j].b) {
+					attrs[j].b = false;
+				}
+			}
+		}
+		// 홀드 내용물 추가
 		assFile.addFromSyncs(syncs[h], holds[h].name);
 	}
 	// 메인 홀드를 마지막에 추가
