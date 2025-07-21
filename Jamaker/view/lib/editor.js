@@ -925,9 +925,10 @@ Tab.prototype.getAdditioinalToAss = function(forSmi=false) {
 	assFile.getEvents().body = events;
 	
 	if (forSmi) {
-		if (this.assFile || styles.length || events.length) {
-			assFile.getEvents().format = AssEditor.FormatToSave;
-			return "\n<!-- ASS\n" + assFile.toText() + "\n-->";
+		assFile.getEvents().format = AssEditor.FormatToSave;
+		const assText = assFile.toText();
+		if (assText) {
+			return "\n<!-- ASS\n" + assText + "\n-->";
 		} else {
 			return "";
 		}

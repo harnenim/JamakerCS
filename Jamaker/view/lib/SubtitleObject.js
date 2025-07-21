@@ -1770,7 +1770,7 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 			
 			if (typeof attr.ass == "string") {
 				// ASS 속성 이전 부분 처리
-				text += AssEvent.inFromAttrs(attrs.slice(assEnd, i), false, false, false, (i > 0 ? attrs[i - 1] : null));
+				text += AssEvent.inFromAttrs(attrs.slice(assEnd, i), false, false, false, (assEnd > 0 ? attrs[assEnd - 1] : null));
 				
 				// ASS 속성 처리
 				for (; i < attrs.length; i++) {
@@ -1897,13 +1897,25 @@ AssEvent.fromSync = function(sync, style=null) {
 			}
 			
 			// 아래쪽에 공백줄 쌓아서 위로 올린 경우
-			while (text.endsWith("\\N{\\b1}　{\\b0}") || text.endsWith("\\N{\\i1}　{\\i0}")) {
+			while (true) {
+				let endsLength = 0;
+				if (text.endsWith("\\N")) {
+					endsLength = 2;
+				} else if (text.endsWith("\\N　")) {
+					endsLength = 3;
+				} else if (text.endsWith("\\N{\\b1}　{\\b0}")) {
+					endsLength = 13;
+				} else if (text.endsWith("\\N{\\i1}　{\\i0}")) {
+					endsLength = 13;
+				}
+				if (endsLength == 0) break;
+
 				if (style.Name == "Default") {
 					// 메인 홀드만 자동으로 pos 태그 반영
 					y -= style.Fontsize * 1.1;
 				}
 				moved = true;
-				text = text.substring(0, text.length - 13);
+				text = text.substring(0, text.length - endsLength);
 			}
 			// 위쪽에 공백줄 쌓아서 결합 맞춘 경우
 			{
