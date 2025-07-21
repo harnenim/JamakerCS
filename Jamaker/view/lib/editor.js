@@ -1026,7 +1026,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 				const h1 = hold.smiFile.header.search(/<\/title>/gi);
 				if (h1 > 0) {
 					const title = hold.smiFile.header.substring(h0 + 7, h1);
-					assFile.getInfo().body.push({ key: "title", value: title });
+					assFile.getInfo().body.push({ key: "Title", value: title });
 				}
 			}
 		}
