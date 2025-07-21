@@ -642,6 +642,9 @@ Subtitle.video = {
 Subtitle.findSync = (sync, fs=null, findNear=true, from=0, to=-1) => {
 	if (fs == null) fs = Subtitle.video.fs;
 	if (fs.length == 0) return null;
+	if (fs.length == 1) {
+		return (findNear || (fs[0] == sync)) ? fs[0] : null;
+	}
 	if (to < 0) {
 		// 최초 파라미터 없이 탐색 시작일 때
 		to = fs.length;

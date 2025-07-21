@@ -3350,14 +3350,68 @@ function splitHold(tab, styleName) {
 	if (holdName == "Default") {
 		holdName = "Default1";
 	}
+	
+	// 홀드에 적용할 스타일 찾기
+	let style = DefaultStyle;
+	for (let i = 0; i < tab.holds.length; i++) {
+		const hold = tab.holds[i];
+		if (hold.name == styleName) {
+			style = JSON.parse(JSON.stringify(hold.style));
+		}
+	}
+	if (style == DefaultStyle) {
+		// ASS 추가 스크립트에서 찾기
+		const appendFile = new AssFile(tab.area.find(".tab-ass-appends textarea").val());
+		const styles = appendFile.getStyles();
+		for (let i = 0; i < styles.body.length; i++) {
+			if (styles.body[i].Name == styleName) {
+				const assStyle = styles.body[i];
+				style = {};
+				style.Fontname = assStyle.Fontname;
+				style.Fontsize = assStyle.Fontsize;
+				{ let fc = assStyle.PrimaryColour  ; style.PrimaryColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.PrimaryOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
+				{ let fc = assStyle.SecondaryColour; style.SecondaryColour = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.SecondaryOpacity = 255 - Number('0x'+fc[2]+fc[3]); }
+				{ let fc = assStyle.OutlineColour  ; style.OutlineColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.OutlineOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
+				{ let fc = assStyle.BackColour     ; style.BackColour      = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.BackOpacity      = 255 - Number('0x'+fc[2]+fc[3]); }
+				style.Bold        = assStyle.Bold       ;
+				style.Italic      = assStyle.Italic     ;
+				style.Underline   = assStyle.Underline  ;
+				style.StrikeOut   = assStyle.StrikeOut  ;
+				style.ScaleX      = assStyle.ScaleX     ;
+				style.ScaleY      = assStyle.ScaleY     ;
+				style.Spacing     = assStyle.Spacing    ;
+				style.Angle       = assStyle.Angle      ;
+				style.BorderStyle = assStyle.BorderStyle;
+				style.Outline     = assStyle.Outline    ;
+				style.Shadow      = assStyle.Shadow     ;
+				style.Alignment   = assStyle.Alignment  ;
+				style.MarginL     = assStyle.MarginL    ;
+				style.MarginR     = assStyle.MarginR    ;
+				style.MarginV     = assStyle.MarginV    ;
+				style.output = 3;
+				
+				const next = styles.body.slice(i + 1);
+				styles.body.length = i;
+				styles.body.push(...next);
+				tab.area.find(".tab-ass-appends textarea").val(appendFile.toText());
+				break;
+			}
+		}
+	}
+	if (style == DefaultStyle) {
+		// 못 찾았을 경우
+		style = JSON.parse(JSON.stringify(style));
+	}
+	
 	const hold = tab.addHold({
 			name: holdName
 		,	text: ""
 		,	pos: 1
-//		,	style: {} TODO: 스타일 정보 가져와야 함
+		,	style: style
 	});
 	const body = [];
 	
+	const frameSyncs = tab.assHold.assEditor.getFrameSyncs();
 	const list = tab.assHold.assEditor.toEvents();
 	const appends = [];
 	
@@ -3365,12 +3419,12 @@ function splitHold(tab, styleName) {
 	list.sort((a, b) => {
 		let result = b.start - a.start;
 		if (result == 0) {
-			result = b.end - a.end;
+			// 시작 싱크가 같으면 종료 싱크가 빠른 것부터
+			result = a.end - b.end;
 		}
 		return result;
 	});
 	
-	// 기존 SMI 홀드에 span 형태로 끼워넣을 수 있는지 확인
 	ti = 0;
 	while (ti < list.length) {
 		let targets = [];
@@ -3392,7 +3446,7 @@ function splitHold(tab, styleName) {
 		const start = tEvent.start;
 		const end = tEvent.end;
 		let importSet = null;
-
+		
 		// 스타일 겹치는 것만 진행
 		if (hasStyle) {
 			let canImport = true;
@@ -3405,8 +3459,8 @@ function splitHold(tab, styleName) {
 			{
 				let i = 0;
 				for (; i < body.length; i++) {
-					// SMI 싱크 그대로 쓰지 않고, 프레임 시간 가져와서 비교
-					let sync = Subtitle.findSync(body[i].start);
+					// 여기선 원본이 SMI가 아니므로 따로 프레임 싱크에 맞춰주진 않음
+					let sync = body[i].start;
 					if (sync < start) {
 						continue;
 					}
@@ -3429,9 +3483,9 @@ function splitHold(tab, styleName) {
 						replaceFrom = i;
 						fromEmpty = false;
 					}
-
+					
 					for (; i < body.length; i++) {
-						sync = Subtitle.findSync(body[i].start);
+						sync = body[i].start;
 						if (sync < end) {
 							continue;
 						}
@@ -3469,17 +3523,15 @@ function splitHold(tab, styleName) {
 					}
 				}
 			}
-			if (!canImport) {
-				continue;
+			if (canImport) {
+				importSet = {
+						hold: hold
+					,	replaceFrom: replaceFrom
+					,	replaceTo: replaceTo
+					,	fromEmpty: fromEmpty
+					,	toEmpty: toEmpty
+				};
 			}
-			
-			importSet = {
-					hold: hold
-				,	replaceFrom: replaceFrom
-				,	replaceTo: replaceTo
-				,	fromEmpty: fromEmpty
-				,	toEmpty: toEmpty
-			};
 		}
 		
 		if (importSet) {
@@ -3496,13 +3548,13 @@ function splitHold(tab, styleName) {
 			
 			if (fromEmpty) {
 				// 공백 싱크 추가
-				body.push(smi = new Smi(start, SyncType.frame, ""));
+				body.push(smi = new Smi(start, (Subtitle.findSync(start, frameSyncs, false) ? SyncType.frame : SyncType.normal), ""));
 			}
 			body.push(...bodySkipped);
 
 			if (toEmpty) {
 				// 종료 싱크 추가 필요
-				body.push(new Smi(end, SyncType.frame, "&nbsp;"));
+				body.push(new Smi(end, (Subtitle.findSync(end, frameSyncs, false) ? SyncType.frame : SyncType.normal), "&nbsp;"));
 			}
 			body.push(...bodyEnd);
 			
@@ -3624,5 +3676,21 @@ function fitSyncsToFrame(frameSyncOnly=false, add=0) {
 	
 	for (let i = 0; i < holds.length; i++) {
 		holds[i].fitSyncsToFrame(frameSyncOnly, add);
+	}
+	tabs[tab].assHold.fitSyncsToFrame();
+}
+SmiEditor.prototype._fitSyncsToFrame = SmiEditor.prototype.fitSyncsToFrame;
+SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
+	if (this.isAssHold) {
+		for (let i = 0; i < this.assEditor.syncs.length; i++) {
+			const item = this.assEditor.syncs[i];
+			let sync = Subtitle.findSync(Number(item.inputStart.val()) + add);
+			if (sync != null) item.inputStart.val(sync == 0 ? 1 : sync);
+			sync = Subtitle.findSync(Number(item.inputEnd.val()) + add);
+			if (sync != null) item.inputEnd.val(sync == 0 ? 1 : sync);
+		}
+		this.assEditor.update();
+	} else {
+		this._fitSyncsToFrame(frameSyncOnly, add);
 	}
 }
