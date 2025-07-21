@@ -1068,14 +1068,17 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 				}
 			}
 			
-			// ASS 주석에 [SMI] 있을 경우 넣을 내용물
-			const smiText = Subtitle.$tmp.html(smi.text).text().split("\n").join("\\N");
+			// ASS 주석에 [TEXT], [SMI] 있을 경우 넣을 내용물
+			const smiText = Subtitle.$tmp.html(smi.text.split(/<br>/gi).join("\\N")).text();
+			const smiAss  = AssEvent.fromAttrs(smi.toAttrs())[0]; // RUBY 태그 같은 게 있으면 여러 줄 될 수 있지만 무시하는 쪽으로...
 			
 			// ASS 주석에서 복원
 			for (let j = 0; j < assTexts.length; j++) {
 				const assText = assTexts[j];
-				let ass = assText.split("[SMI]").join(smiText).split(",");
-
+				let ass = assText.split("[TEXT]").join(smiText)
+				                 .split("[SMI]").join(smiAss)
+				                 .split(",");
+				
 				let layer = 0;
 				let span = 1;
 				let addStart = 0;
