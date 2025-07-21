@@ -55,27 +55,9 @@ window.Tab = function(text, path) {
 			assHold.selector.attr({ title: "ASS 추가 스크립트" });
 			assHold.owner = this;
 			
-			assHold.area.empty().addClass("ass-hold");
-			
-			let form = $("<form>").addClass("tab-ass-area");
-			assHold.area.append(form);
-			
-			let div = $("<div>").addClass("tab-ass-styles");
-			div.append($("<span>").text("[V4+ Styles]"));
-			div.append($("<textarea spellcheck='false' tabindex='-1'>"));
-			form.append(div);
-			
-			div = $("<div>").addClass("tab-ass-script");
-			div.append($("<span>").text("[Events] ")
-					.append($("<button type='button' class='btn-add-event'>").text("＋"))
-					.append(" ")
-					.append($("<button type='button' class='btn-split-hold'>").text("홀드 분리"))
-			);
-			const assEditorArea = $("<div>");
-			div.append(assEditorArea);
-			form.append(div);
-			
+			assHold.area.empty().addClass("ass-hold").append(SmiEditor.assHoldPreset.clone());
 			this.holdArea.append(assHold.area);
+			const assEditorArea = assHold.area.find(".ass-editor");
 			
 			assHold.assEditor = new AssEditor(assEditorArea);
 			assHold.assEditor.onUpdate = function() {
@@ -148,8 +130,6 @@ window.Tab = function(text, path) {
 			events.body = appends;
 			*/
 			
-			this.area.find(".tab-ass-styles textarea").val(this.assFile.getStyles().toText(false, false));
-			/* TODO: 스타일 에디터가 아니라, Script Info와 Events를 제외한 나머지가 들어간 에디터를 만드는 게 좋을 듯함
 			const editAssFile = new AssFile(" "); // 공백이라도 안 넣으면 [Script Info] 자동 생성됨
 			for (let i = 0; i < this.assFile.parts.length; i++) {
 				const part = this.assFile.parts[i];
@@ -157,8 +137,7 @@ window.Tab = function(text, path) {
 				if (part.name == "Events") continue;
 				editAssFile.parts.push(part);
 			}
-			this.area.find(".tab-ass-styles textarea").val(editAssFile.toText());
-			*/
+			this.area.find(".tab-ass-appends textarea").val(editAssFile.toText());
 			
 			const info = this.assFile.getInfo();
 			if (info) {
@@ -862,17 +841,11 @@ Tab.prototype.replaceBeforeSave = function() {
 	}
 }
 Tab.prototype.getAdditioinalToAss = function(forSmi=false) {
-	const assFile = this.assFile ? this.assFile : new AssFile();
+	const assFile = new AssFile(" "); // 기본 part 없이 생성
 	
 	let frameSyncs = [];
 	{
 		let syncs = this.assHold.assEditor.getFrameSyncs();
-		/*
-		for (let h = 0; h < this.holds.length; h++) {
-			const hold = this.holds[h];
-			syncs.push(...hold.assEditor.getFrameSyncs());
-		}
-		*/
 		// 정렬
 		syncs.sort((a, b) =>  {
 			if (a < b) {
@@ -909,30 +882,43 @@ Tab.prototype.getAdditioinalToAss = function(forSmi=false) {
 			videoPath = "..\\" + videoPath;
 		}
 	}
-	const info = assFile.getInfo();
+	const info = assFile.getInfo(true);
 	info.set("VideoInfo", videoPath);
 	info.set("FrameSyncs", frameSyncs.join(","));
 	
-	let styles = this.area.find(".tab-ass-styles textarea").val();
-	if (styles.trim().length) {
-		styles = styles.split("\n");
-		const part = assFile.getStyles();
-		part.body.length = 0;
-		for (let i = 0; i < styles.length; i++) {
-			let style = styles[i].split(":");
-			if (style.length > 1) {
-				const cols = style[1].trim().split(",");
-				if (cols.length >= AssPart.StylesFormat.length) {
-					style = { key: "Style", Encoding: 1 };
-					for (let j = 0; j < AssPart.StylesFormat.length; j++) {
-						style[AssPart.StylesFormat[j]] = cols[j];
+	let appends = this.area.find(".tab-ass-appends textarea").val();
+	if (appends.trim().length) {
+		const appendFile = new AssFile(appends);
+		for (let i = 0; i < appendFile.parts.length; i++) {
+			const appendPart = appendFile.parts[i];
+			if (appendPart.name == "Script Info") continue;
+			if (appendPart.name == "Events") continue;
+			if (appendPart.name == "V4+ Styles") {
+				const part = assFile.getStyles();
+				for (let j = 0; j < appendPart.body.length; j++) {
+					const appendStyle = appendPart.body[j];
+					let style = null;
+					for (let k = 0; k < part.body.length; k++) {
+						if (part.body[k].Name == appendStyle.Name) {
+							style = part.body[k];
+							break;
+						}
 					}
-					part.body.push(style);
+					if (style) {
+						// TODO: 이미 있어도 덮어쓰는 게 맞을까...?
+					} else {
+						part.body.push(appendStyle);
+					}
+				}
+			} else {
+				const part = assFile.getPart(appendPart.name);
+				if (part) {
+					part.body.push(...appendPart.body);
+				} else {
+					assFile.parts.push(appendPart);
 				}
 			}
 		}
-	} else {
-		assFile.getStyles().length = 0;
 	}
 	
 	let events = this.assHold.assEditor.toEvents();
@@ -940,6 +926,7 @@ Tab.prototype.getAdditioinalToAss = function(forSmi=false) {
 	
 	if (forSmi) {
 		if (this.assFile || styles.length || events.length) {
+			assFile.getEvents().format = AssEditor.FormatToSave;
 			return "\n<!-- ASS\n" + assFile.toText() + "\n-->";
 		} else {
 			return "";
@@ -1484,6 +1471,11 @@ function init(jsonSetting, isBackup=true) {
 		SmiEditor.tabPreset = tabPreset.clone();
 		SmiEditor.tabPreset.attr({ id: null });
 		tabPreset.remove();
+		
+		const assHoldPreset = $("#assHoldPreset");
+		SmiEditor.assHoldPreset = assHoldPreset.clone();
+		SmiEditor.assHoldPreset.attr({ id: null });
+		assHoldPreset.remove();
 		
 		const holdStylePreset = $("#holdStylePreset");
 		SmiEditor.stylePreset = holdStylePreset.clone();
@@ -2677,8 +2669,6 @@ function loadAssFile(path, text, target=-1) {
 	const appendFile = new AssFile();
 	
 	// 홀드 스타일과 ASS 스타일 비교
-	let styleTexts = currentTab.area.find(".tab-ass-styles textarea").val();
-	styleTexts = styleTexts ? [styleTexts] : [];
 	const styles = {}; // 아래에서도 필요해짐
 	const changedStyles = [];
 	{
@@ -3006,7 +2996,8 @@ function loadAssFile(path, text, target=-1) {
 			}
 			confirm(msg, () => {
 				if (changedStyles.length) {
-					const addPart = appendFile.getStyles();
+					const styleFile = new AssFile(currentTab.area.find(".tab-ass-appends textarea").val());
+					const addPart = styleFile.getStyles();
 					
 					for (let i = 0; i < changedStyles.length; i++) {
 						const style = changedStyles[i];
@@ -3060,11 +3051,8 @@ function loadAssFile(path, text, target=-1) {
 							addPart.body.push(style);
 						}
 					}
-					if (addPart.body.length) {
-						// 추가 스타일
-						styleTexts.push(addPart.toText(false, false));
-						currentTab.area.find(".tab-ass-styles textarea").val(styleTexts.join("\n"));
-					}
+					appendFile.getStyles().body.push(...addPart.body);
+					currentTab.area.find(".tab-ass-appends textarea").val(appendFile.toText());
 				}
 				
 				if (addCount + delCount) {
