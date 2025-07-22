@@ -3030,7 +3030,13 @@ function extSubmit(method, url, values, withoutTag=true) {
 			
 			// 맞춤법 검사기 같은 데에 보내기 전에 태그 탈출 처리
 			if (withoutTag) {
-				value = $("<p>").html(value.split(/<br>/gi).join(" ")).text();
+				Subtitle.$tmp.html(value.split(/<br>/gi).join(" "));
+				Subtitle.$tmp.find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
+				value = Subtitle.$tmp.text();
+				value = value.split("​").join("").split("　").join(" ");
+				while (value.indexOf("  ") >= 0) {
+					value = value.split("  ").join(" ");
+				}
 			}
 
 			const params = {};
@@ -3089,7 +3095,8 @@ function extSubmitSpeller() {
 		
 		// 태그 탈출 처리
 		value = $("<p>").html(value.split(/<br>/gi).join(" ")).text();
-
+		
+		// TODO: 신버전용으로 해보려고 했는데 잘 안 됨...
 		SmiEditor.Addon.openExt("https://nara-speller.co.kr/speller"
 			, "$('textarea')[0].value = " + JSON.stringify(value) + ";\n"
 			+ "{	const $btn = $('button[type=submit]');\n"
