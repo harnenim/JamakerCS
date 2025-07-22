@@ -1441,7 +1441,7 @@ window.AssEvent = Subtitle.AssEvent = function(start, end, style, text, layer=0)
 	this.Text = text;
 }
 AssEvent.toAssTime = (time=0, fromFrameSync=false) => {
-	if (fromFrameSync) time -= 15;
+	if (fromFrameSync) time -= 15; // TODO: 15ms는 경험적 값이라서, 정확한 계산식을 만드는 게 좋을 듯함
 	if (time < 0) time = 0;
 	const h = Math.floor( time / 3600000);
 	const m = Math.floor( time /   60000) % 60;
@@ -1454,7 +1454,8 @@ AssEvent.fromAssTime = (assTime, toFrameSync=false) => {
 	const vs = assTime.split(':');
 	let time = ((Number(vs[0]) * 360000) + (Number(vs[1]) * 6000) + (Number(vs[2].split(".").join("")))) * 10;
 	if (toFrameSync) {
-		time = Subtitle.findSync(time + 15);
+//		time = Subtitle.findSync(time + 15);
+		time = AssEvent.optimizeSync(time);
 	}
 	return time;
 }
@@ -1464,6 +1465,16 @@ function intPadding(value, length = 2) {
 		value = "0" + value;
 	}
 	return value;
+}
+
+AssEvent.sColorFromAttr = (soColor) => {
+	return soColor.length == 6 ? "&H" + soColor.substring(4, 6) + soColor.substring(2, 4) + soColor.substring(0, 2) + "&" : soColor;
+}
+AssEvent.colorToAttr = (soColor) => {
+	return "" + soColor.substring(6, 8) + soColor.substring(4, 6) + soColor.substring(2, 4);
+}
+AssEvent.colorFromAttr = (attrColor) => {
+	return AssEvent.sColorFromAttr(attrColor);
 }
 
 //팟플레이어에서 실제 의도한 프레임에 출력되도록 시간값 재계산
@@ -1843,7 +1854,6 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 	
 	return [text.split("\n").join("\\N")];
 }
-Subtitle.Ass.fromAttrs = AssEvent.fromAttrs;
 
 // 뒤쪽에 붙은 군더더기 종료태그 삭제
 AssEvent.prototype.clearEnds = function() {
@@ -1942,6 +1952,12 @@ AssEvent.fromSync = function(sync, style=null) {
 			
 			// 정렬용 좌우 여백 제거
 			do {
+				if (style && style.Alignment) {
+					if (style.Alignment % 3 != 2) {
+						// 가운데 정렬 아니면 무시하기
+						break;
+					}
+				}
 				
 				const lines = text.split("\\N");
 				if (lines.length > 1 && text.indexOf("\\fs") > 0) {

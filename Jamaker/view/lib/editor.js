@@ -3730,3 +3730,253 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 		this._fitSyncsToFrame(frameSyncOnly, add);
 	}
 }
+
+function generateSmiFromAss() {
+	const origins = [];
+	
+	const tab = tabs[window.tab];
+	if (!tab) {
+		return;
+	}
+	
+	// 현재 선택된 홀드 기준
+	const origin = SmiEditor.selected.getText(true);
+	if (origin.selection[0] != origin.selection[1]) {
+		// 선택 범위만 작업
+		origin.hold = SmiEditor.selected;
+		origin.lines = SmiEditor.selected.lines;
+		
+		origin.start = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
+		origin.end   = origin.text.substring(0, origin.selection[1]).split("\n").length;
+		
+		const lines = origin.lines.slice(origin.start, origin.end);
+		for (let i = 0; i < lines.length; i++) {
+			lines[i] = lines[i].TEXT;
+		}
+		origin.smiFile = new Subtitle.SmiFile(lines.join("\n"));
+		
+		origins.push(origin);
+		
+	} else {
+		// 전체 작업
+		const holds = tab.holds.slice(0);
+		
+		for (let i = 0; i < holds.length; i++) {
+			const hold = holds[i];
+			const origin = hold.getText(true);
+			origin.hold = hold;
+			origin.lines = hold.lines;
+			
+			origin.start = 0;
+			origin.end = origin.text.split("\n").length;
+			
+			const lines = origin.lines.slice(origin.start, origin.end);
+			for (let i = 0; i < lines.length; i++) {
+				lines[i] = lines[i].TEXT;
+			}
+			origin.smiFile = new Subtitle.SmiFile(lines.join("\n"));
+			
+			origins.push(origin);
+		}
+	}
+	
+	for (let i = 0; i < origins.length; i++) {
+		const origin = origins[i];
+		const newLines = origin.text.split("\n");
+		let selectedLine = origin.start;
+		
+		for (let j = 0; j < origin.smiFile.body.length; j++) {
+			const item = origin.smiFile.body[j];
+			if (!item.text.startsWith("<!-- ASS\n")) continue;
+			
+			const commentEnd = item.text.indexOf("\n-->");
+			if (commentEnd < 0) continue;
+			
+			if (item.text.indexOf("\nEND\n-->") > 0) {
+				// 원래 SMI 무시하는 거였으면 건너뛰기
+				continue;
+			}
+			
+			if (item.text.substring(commentEnd + 4).trim()) {
+				// 원래 SMI 내용물 있었으면 건너뛰기
+				continue;
+			}
+			
+			const assComment = item.text.substring(9, commentEnd);
+			const assTexts = assComment.split("\n");
+			const texts = [];
+			let isPure = (assTexts.length == 1); // 한 싱크에 ASS 스크립트 하나면 순수하게 SMI로 구현될 가능성 있음
+			let skipCount = 0;
+			for (let j = 0; j < assTexts.length; j++) {
+				if (!isPure) {
+					// 마지막 하나 빼고 무시당했으면 순수 SMI 구현 가능성 있음
+					isPure = (assTexts.length - skipCount == 1);
+				}
+				const assText = assTexts[j];
+				let ass = assText.split(",");
+				
+				let style = null;
+				let text = "";
+				
+				if (isFinite(ass[0])) {
+					layer = ass[0];
+					let type = null;
+					
+					if (ass.length >= 5) {
+						if (ass[1] == "") { // span 형식
+							type = "span";
+							if (ass[2] == "") {
+								// [Layer, -, -, Style, Text]
+								style = ass[3];
+								text = ass.slice(4).join(",");
+								
+							} else if (isFinite(ass[2])) {
+								// [Layer, -, span, Style, Text]
+								isPure = false; // span 있으면 SMI만으로 구현 못 함
+								style = ass[3];
+								text = ass.slice(4).join(",");
+								
+							} else if (ass[3].endsWith(")")) {
+								let ass2 = ass[2].split("(");
+								let ass3 = ass[3].split(")");
+								if (ass2.length == 2
+								 && isFinite(ass2[0])
+								 && isFinite(ass2[1])
+								 && isFinite(ass3[0])
+								) {
+									// [Layer, -, span(add, add), Style, Text]
+									isPure = false; // span 있으면 SMI만으로 구현 못 함
+									style = ass[4];
+									text = ass.slice(5).join(",");
+								}
+							}
+						} else if (isFinite(ass[1])) { // add 형식
+							type = "add";
+							isPure = false; // add 있으면 SMI만으로 구현 못 함
+							style = ass[3];
+							text = ass.slice(4).join(",");
+						}
+					}
+					if (!type) {
+						// 싱크 변형 없이 스타일이 나오는 형식
+						// [Layer, Style, Text]
+						style = ass[1];
+						text = ass.slice(2).join(",");
+					}
+				} else {
+					// 텍스트만 입력
+					text = ass.join(",");
+				}
+				
+				let correctStyle = origin.hold.name;
+				if (correctStyle == "메인") correctStyle = "Default";
+				if (style && style != correctStyle) {
+					// 스타일이 맞을 때만 홀드 텍스트로 꺼냄
+					isPure = false;
+					continue;
+				}
+				
+				// 문자열이 아닌 배경색 용도
+				if (text.indexOf("■") >= 0) {
+					text = text.split("■").join(" ");
+					isPure = false;
+					skipCount++;
+				}
+				if (text.indexOf("●") >= 0) {
+					text = text.split("●").join(" ");
+					isPure = false;
+					skipCount++;
+				}
+				if (isPure) {
+					// 순수 SMI로 구현 가능한지 확인
+					if (text.startsWith("{}")) text = text.substring(2);
+					if (text.endsWith("{}")) text = text.substring(0, text.length - 2);
+					if (text.indexOf("{") > 0) {
+						// 맨 앞 말고도 태그가 있으면 SMI로 구현 불가
+						// TODO: 줄표에 따른 fscx 정도는 없애는 것도? - 태그로 공백문자만 감싼 경우 걸러내기?
+						text = Subtitle.$tmp.html(text.split("{").join("<a ").split("}").join(">")).text();
+						// TODO: 위에서 중간 태그 없애기 성공했으면 SMI 구현 가능 상태로 남겨서 아래 로직을 태울 것
+						isPure = false;
+					}
+					if (isPure && text.indexOf("{") == 0) {
+						// ASS 태그로 시작할 경우
+						const tagEnd = text.indexOf("}");
+						if (tagEnd > 0) {
+							const tags = text.substring(0, tagEnd).split("\\");
+							let smiText = text.substring(tagEnd + 1);
+							let smiCount = 0;
+							let smiAttr = new Attr(null, smiText);
+							let assTags = [];
+							
+							// 0번은 실제 태그 시작 전임
+							for (let t = 1; t < tags.length; t++) {
+								const tag = tags[t];
+								if (tag.startsWith("t(")) {
+									// \t 태그 끝날 때까지 ass 태그로 처리
+									for (; t < tags.length; t++) {
+										assTags.push(tags[t]);
+										if (tags[t].indexOf(")") >= 0) {
+											break;
+										}
+									}
+								} else if (tag.startsWith("c&H") && tag.length == 10) {
+									// 색상 태그는 SMI 태그로 처리
+									smiAttr.fc = "#" + tag[7] + tag[8] + tag[5] + tag[6] + tag[3] + tag[4];
+									smiCount++;
+									
+								} else if (tag.startsWith("i") && tag.length > 1 && tag[1] == "1") {
+									// 기울임 - 여기선 닫는 태그는 고려할 필요 없음
+									smiAttr.i = true;
+									smiCount++;
+									
+								} else if (tag.startsWith("u") && tag.length > 1 && tag[1] == "1") {
+									// 밑줄
+									smiAttr.u = true;
+									smiCount++;
+									
+								} else if (tag.startsWith("s") && tag.length > 1 && tag[1] == "1") {
+									// 취소선
+									smiAttr.s = true;
+									smiCount++;
+									
+								} else {
+									assTags.push(tag);
+								}
+							}
+							const assTagString = assTags.length ? '<FONT ass="{\\' + assTags.join("\\") + '}"></FONT>\n' : "";
+							if (smiCount) {
+								smiText = Smi.fromAttrs([smiAttr]);
+							}
+							text = assTagString + smiText;
+						}
+					}
+					if (!text.trim()) {
+						continue;
+					}
+					texts.push(...text.split("\\N"));
+				}
+			}
+			if (!texts.length) continue;
+			
+			let smiText = texts.join(texts.length > 2 ? "<br>\n" : "<br>");
+			if (isPure) {
+				if (assTexts.length > 1) {
+					// SMI로 구현 성공했지만 건너뛴 추가 스크립트가 있었을 경우
+					smiText = "<!-- ASS\n" + assTexts.slice(0, assTexts.length - 1).join("\n") + "\n-->\n" + smiText;
+				}
+			} else {
+				smiText = "<!-- ASS\n" + assComment + "\nEND\n-->\n" + smiText;
+			}
+			item.text = smiText;
+		}
+		const lines = origin.smiFile.toText().split("\n");
+		const nexts = newLines.slice(origin.end);
+		newLines.length = origin.start;
+		newLines.push(...lines);
+		newLines.push(...nexts);
+		
+		const cursor = 0;
+		origin.hold.history.log();
+		origin.hold.setText(newLines.join("\n"), [cursor]);
+	}
+}

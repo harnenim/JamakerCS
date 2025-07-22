@@ -37,11 +37,11 @@ let checkVersion;
 	const lastNotifyForCommand = "2024.12.07.v1";
 	const lastNotifyForAutoComplete = "2025.04.19.v1";
 	const lastNotifyForStyle = "2025.03.07.v1";
-	const lastNotifyForMenu = "2025.05.30.v2";
+	const lastNotifyForMenu = "2025.07.22.v1";
 }
 
 window.DEFAULT_SETTING =
-{	version: "2025.05.31.v1"
+{	version: "2025.07.22.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -57,6 +57,7 @@ window.DEFAULT_SETTING =
 		,	"색상코드 입력(&C)|binder.runColorPicker()"
 		,	"특수태그 정규화|SmiEditor.selected && SmiEditor.selected.normalize()"
 		,	"중간 싱크 생성|SmiEditor.selected && SmiEditor.selected.fillSync()"
+		,	"ASS 기반 SMI 텍스트 생성|generateSmiFromAss()"
 		,	"미리보기창 실행|SmiEditor.Viewer.open()"
 		,	"설정(&S)|openSetting()"
 		]
@@ -68,7 +69,6 @@ window.DEFAULT_SETTING =
 		,	"노래방 자막(&K)|openAddon('Karaoke', 'karaoke');"
 		,	"흔들기 효과(&S)|openAddon('Shake');"
 		,	"니코동 효과(&N)|openAddon('Nico');"
-		,	"ASS 자막으로 변환(&A)|openAddon('ToAss');"
 		,	"재생 속도 조절|openAddon('Speed');"
 		,	"맞춤법 검사기|extSubmit(\"post\", \"https://nara-speller.co.kr/old_speller/results\", \"text1\");"
 		,	"국어사전|extSubmit(\"get\", \"https://ko.dict.naver.com/%23/search\", \"query\");"
