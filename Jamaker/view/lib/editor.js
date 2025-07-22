@@ -3309,11 +3309,33 @@ function loadAssFile(path, text, target=-1) {
 							}
 						}
 						
+						let cursor = hold.input[0].selectionStart;
+						let cursorSync = 0;
+						for (let i = hold.text.substring(0, cursor).split("\n").length; i > 0; i--) {
+							const line = hold.lines[i];
+							if (line.TYPE) {
+								cursorSync = line.SYNC;
+								break;
+							}
+						}
+						
 						const smiText = hold.smiFile.toText();
 						hold.input.val(smiText);
-						hold.setCursor(0);
-						hold.scrollToCursor();
 						hold.render();
+						
+						cursor = 0;
+						for (let i = 0; i < hold.lines.length; i++) {
+							const line = hold.lines[i];
+							cursor += line.TEXT.length + 1;
+							if (line.TYPE) {
+								if (line.SYNC >= cursorSync) {
+									break;
+								}
+							}
+						}
+						
+						hold.setCursor(cursor);
+						hold.scrollToCursor();
 					}
 					
 					// SMI 에디터에 넣지 못한 내용물
