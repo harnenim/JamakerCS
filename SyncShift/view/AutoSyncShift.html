@@ -209,8 +209,8 @@ function setOriginSubtitleFile(path, text) {
 			
 		} else if (ext == ".ass") {
 			operation.type = "ass";
-			operation.origin = new Subtitle.AssFile(text);
-			operation.target = new Subtitle.AssFile();
+			operation.origin = (operation.originFile = new AssFile(text)).getEvents();
+			operation.target = (operation.targetFile = new AssFile()).getEvents();
 		}
 	}
 	const sortedBody = refreshPreview();
@@ -223,7 +223,7 @@ function setOriginSubtitleFile(path, text) {
 		const item = sortedBody[i];
 		if (range[0] <= 0) {
 			// 새로운 범위를 시작해야 함
-			if (item.text.split("&nbsp;").join(" ").trim().length == 0) {
+			if (operation.type == "smi" && item.text.split("&nbsp;").join(" ").trim().length == 0) {
 				// 공백 싱크일 경우 넘기기
 				continue;
 			}
@@ -353,18 +353,25 @@ function refreshPreview(isTarget=false) {
 			break;
 		}
 		case "ass": {
-			const body = body.slice(0);
+			body = body.slice(0);
+			// 싱크값 먼저 계산
+			for (let i = 0; i < body.length; i++) {
+				const item = body[i];
+				item.start = item.ms = AssEvent.fromAssTime(item.Start);
+				item.end   = item.me = AssEvent.fromAssTime(item.End  );
+			}
+			// 싱크 순 정렬
 			body.sort(function (a, b) {
 				if (a.start == b.start) {
 					return a.end - b.end;
 				}
 				return a.start - b.start;
-			})
+			});
 			for (let i = 0; i < body.length; i++) {
 				const item = body[i];
 				
 				// 태그 숨기기
-				const items = item.text.split("{");
+				const items = item.Text.split("{");
 				let text = items[0];
 				for (let j = 1; j < items.length; j++) {
 					let index = items[j].indexOf("}");
@@ -372,29 +379,17 @@ function refreshPreview(isTarget=false) {
 						text += "<!--{" + items[j].substring(0, index) + "}-->" + items[j].substring(index + 1);
 					}
 				}
-
-				// ms 단위 표현
-				item.ms = item.start * 10;
-				item.me = item.end   * 10;
-				// 화면 싱크 여부
-				item.fs = item.text.startsWith("{}");
-				item.fe = item.text.endsWith  ("{}");
 				
 				// 줄바꿈 처리
 				const $line = getLine(item, item.ms, text.split("\\N").join("<br />"));
 				item.previewText = $line.text();
 				
-				// 화면 싱크 강조
-				if (item.fs) {
-					$line.addClass("type1");
-				}
-
 				// 싱크 역전 오류
-				if (item.ms < lastSync) {
+				if (item.start < lastSync) {
 					$line.addClass("error");
 					errCount++;
 				}
-				lastSync = item.ms;
+				lastSync = item.start;
 				$preview.append($line);
 			}
 			break;
@@ -667,7 +662,7 @@ function apply() {
 			
 			let assFoot = "";
 			if (operation.input[0].ass) {
-				const ass = new Subtitle.AssFile2(operation.input[0].ass);
+				const ass = new AssFile(operation.input[0].ass);
 				const events = ass.getEvents();
 				events.format[1]
 				
@@ -682,7 +677,7 @@ function apply() {
 							}
 						} else {
 							for (let i = 0; i < frameSyncs.length; i++) {
-								frameSyncs[i] = shiftSync(Subtitle.AssEvent.fromAssTime(frameSyncs[i]));
+								frameSyncs[i] = shiftSync(AssEvent.fromAssTime(frameSyncs[i]));
 							}
 						}
 						assInfo.set("FrameSyncs", frameSyncs.join(","));
@@ -729,108 +724,25 @@ function apply() {
 			break;
 		}
 		case "ass": {
+			operation.targetFile = new AssFile(" ");
+			for (let i = 0; i < operation.originFile.parts.length; i++) {
+				const part = operation.originFile.parts[i];
+				if (part.name == "Events") continue;
+				operation.targetFile.parts.push(part);
+			}
+			
 			const origin = operation.origin;
-			const target = operation.target = new Subtitle.AssFile();
-			target.header = origin.header;
+			const target = operation.target = operation.targetFile.getEvents();
 			
 			{
 				let ki = 0;
 				for (let i = 0; i < origin.body.length; i++) {
 					const item = origin.body[i];
-					const ms = shiftSync(item.ms);
-					const me = shiftSync(item.me);
-					const ass = new Subtitle.Ass(Math.round(ms / 10), Math.round(me / 10), item.style, item.text);
-					ass.ms = ms;
-					ass.me = me;
-					target.body.push(ass);
-
-					// 화면 싱크 키프레임 대조
-					if (withKf) {
-						if (ass.fs = item.fs) {
-							console.log("withKf: " + ass.ms);
-							
-							const shift = shifts[shiftIndex];
-							if (shift.skipped == null) {
-								shift.fCount = 0;
-								shift.fSum = 0;
-								shift.skipped = [];
-							}
-							
-							while (kfs[ki] < ass.ms) {
-								if (ki == 0) break;
-								ki--;
-							}
-							while ((ki+1 < kfs.length) && (kfs[ki+1] < ass.ms)) {
-								ki++;
-							}
-							const distPrev = ass.ms - kfs[ki];
-							const distNext = (ki+1 < kfs.length) ? (kfs[ki+1] - ass.ms) : 999999999;
-							if (distPrev > 150 && distNext > 150) { // 3프레임 이상의 오차
-								shift.skipped.push([ass, 0]);
-								continue;
-							}
-							const add = (distPrev < distNext) ? -distPrev : distNext;
-							console.log("add to " + ass.ms + ": " + add);
-							shift.fSum += add;
-							shift.fCount++;
-							console.log(ass.ms + " -> " + (ass.ms + add));
-							ass.ms += add;
-						}
-						if (ass.fe = item.fe) {
-							console.log("withKf: " + ass.me);
-							
-							const shift = shifts[shiftIndex];
-							if (shift.skipped == null) {
-								shift.fCount = 0;
-								shift.fSum = 0;
-								shift.skipped = [];
-							}
-							
-							while (kfs[ki] < ass.me) {
-								if (ki == 0) break;
-								ki--;
-							}
-							while ((ki+1 < kfs.length) && (kfs[ki+1] < ass.me)) {
-								ki++;
-							}
-							const distPrev = ass.me - kfs[ki];
-							const distNext = (ki+1 < kfs.length) ? (kfs[ki+1] - ass.me) : 999999999;
-							if (distPrev > 150 && distNext > 150) { // 3프레임 이상의 오차
-								shift.skipped.push([ass, 1]);
-								continue;
-							}
-							const add = (distPrev < distNext) ? -distPrev : distNext;
-							console.log("add to " + ass.me + ": " + add);
-							shift.fSum += add;
-							shift.fCount++;
-							console.log(ass.me + " -> " + (ass.me + add));
-							ass.me += add;
-						}
-					}
-				}
-			}
-
-			// 키프레임 찾지 못한 화면 싱크 처리
-			for (let shiftIndex = 0; shiftIndex < shifts.length; shiftIndex++) {
-				const shift = shifts[shiftIndex];
-				if (shift.skipped == null || shift.fCount == 0 || shift.skipped.length == 0) {
-					continue;
-				}
-				const add = Math.round(shift.fSum / shift.fCount);
-				for (let i = 0; i < shift.skipped.length; i++) {
-					const item = shift.skipped[i];
-					switch (item[1]) {
-						case 0:
-							item.start = Math.round((item.ms = item.ms + add) / 10);
-							break;
-						case 1:
-							item.end   = Math.round((item.me = item.me + add) / 10);
-							break;
-					}
+					target.body.push(new AssEvent(shiftSync(item.start), shiftSync(item.end), item.Style, item.Text, item.Layer));
 				}
 			}
 			
-			operation.output = target.toText();
+			operation.output = operation.targetFile.toText();
 			refreshPreview(true);
 			break;
 		}
