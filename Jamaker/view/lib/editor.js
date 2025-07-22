@@ -2507,7 +2507,7 @@ function setVideoInfo(w=1920, h=1080, fr=23976) {
 function loadFkf(fkfName) {
 	// C# 파일 객체를 js 쪽에 전달할 수 없으므로, 정해진 경로의 파일을 ajax 형태로 가져옴
 	const req = new XMLHttpRequest();
-	req.open("GET", "../temp/" + fkfName);
+	req.open("GET", "../temp/" + encodeURIComponent(fkfName));
 	req.responseType = "arraybuffer";
 	req.onload = (e) => {
 		afterLoadFkfFile(req.response);
