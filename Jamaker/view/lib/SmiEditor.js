@@ -2854,10 +2854,26 @@ SmiEditor.Viewer = {
 												}
 											}
 											// <br> 뒤의 줄바꿈은 일단 제거
-											texts = texts.join("\n").split(/<br>\n/gi).join("<br>").split("\n");
+											let text = texts.join("\n").split(/<br>\n/gi).join("<br>");
+											{	// 주석 제거한 후 줄바꿈 확인
+												const commentStart = text.indexOf("<!--");
+												if (commentStart >= 0) {
+													const commentEnd = text.indexOf("-->", commentStart);
+													if (commentEnd > 0) {
+														const prev = text.substring(0, commentStart);
+														const next = text.substring(commentEnd + 3);
+														if (!prev && next.startsWith("\n")) {
+															text = next.substring(1);
+														} else {
+															text = prev + next;
+														}
+													}
+												}
+											}
+											texts = text.split("\n");
 											
 											// 3줄 넘어가면 줄바꿈 살림
-											const text = texts.join((texts.length - pass > 3) ? "<br>" : "");
+											text = texts.join((texts.length - pass > 3) ? "<br>" : "");
 											
 											if (text.split("&nbsp;").join("").trim()) { // 공백 싱크는 제외
 												newLines.push({ SYNC: 0, TYPE: null, TEXT: Smi.fromAttr(Smi.toAttr(tag[0] + text + tag[1], false)).split("\n").join("<br>") })
