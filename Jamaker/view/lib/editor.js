@@ -939,7 +939,7 @@ Tab.prototype.getAdditioinalToAss = function(forSmi=false) {
 }
 Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 	return SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment, Subtitle.video.FR / 1000)
-		+ this.getAdditioinalToAss(true); // ASS 추가 내용 footer에 넣어주기
+		+ (this.withAss ? this.getAdditioinalToAss(true) : ""); // ASS 추가 내용 footer에 넣어주기
 }
 Tab.prototype.onChangeSaved = function(hold) {
 	if (this.isSaved()) {
@@ -3053,7 +3053,16 @@ function loadAssFile(path, text, target=-1) {
 						}
 					}
 					appendFile.getStyles().body.push(...addPart.body);
-					currentTab.area.find(".tab-ass-appends textarea").val(appendFile.toText());
+					
+					styleFile.parts.length = 0;
+					for (let i = 0; i < appendFile.parts.length; i++) {
+						const part = appendFile.parts[i];
+						if (part.name == "Script Info") continue;
+						if (part.name == "Events") continue;
+						styleFile.parts.push(part);
+					}
+					
+					currentTab.area.find(".tab-ass-appends textarea").val(styleFile.toText());
 				}
 				
 				if (addCount + delCount) {
@@ -3292,7 +3301,11 @@ function loadAssFile(path, text, target=-1) {
 								}
 								
 							} else if (smi.skip) {
-								smi.text = "<!-- ASS X -->\n" + smi.text;
+								if (smi.text) {
+									smi.text = "<!-- ASS X -->\n" + smi.text;
+								} else {
+									smi.text = "<!-- ASS X -->";
+								}
 							}
 						}
 						
@@ -3394,10 +3407,10 @@ function splitHold(tab, styleName) {
 				const next = styles.body.slice(i + 1);
 				styles.body.length = i;
 				styles.body.push(...next);
-				tab.area.find(".tab-ass-appends textarea").val(appendFile.toText());
 				break;
 			}
 		}
+		tab.area.find(".tab-ass-appends textarea").val(appendFile.toText());
 	}
 	if (style == DefaultStyle) {
 		// 못 찾았을 경우
@@ -3647,7 +3660,7 @@ function srt2smi(text) {
  */
 function fitSyncsToFrame(frameSyncOnly=false, add=0) {
 	if (!Subtitle.video.fs.length) {
-		/*
+		//*
 		return;
 		/*/
 		// 테스트용 코드

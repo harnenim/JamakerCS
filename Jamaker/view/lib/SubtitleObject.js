@@ -1832,7 +1832,7 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 			
 		} else {
 			if (last.fc != attr.fc) {
-				text += "{\\c" + Subtitle.Ass.colorFromAttr(attr.fc) + "}";
+				text += "{\\c" + AssEvent.colorFromAttr(attr.fc) + "}";
 			}
 		}
 		
