@@ -1520,8 +1520,8 @@ AssEvent.fromSync = function(sync, style=null) {
 				if (style.Name == "Default") {
 					// 메인 홀드만 자동으로 pos 태그 반영
 					y -= style.Fontsize * 1.1;
+					moved = true;
 				}
-				moved = true;
 				text = text.substring(0, text.length - endsLength);
 			}
 			// 위쪽에 공백줄 쌓아서 결합 맞춘 경우
