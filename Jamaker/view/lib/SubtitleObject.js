@@ -3992,8 +3992,12 @@ SmiFile.prototype.toSyncs = function() {
 			last.endType = next.syncType;
 			result.push(last);
 		}
-		if (this.body[i].text.split("&nbsp;").join("").length > 0) {
-			result.push(last = this.body[i].toSync());
+		// 마지막 싱크
+		{
+			const item = this.body[i];
+			if (!item.skip && item.text.split("&nbsp;").join("").length > 0) {
+				result.push(last = item.toSync());
+			}
 		}
 	}
 

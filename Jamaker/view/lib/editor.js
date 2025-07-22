@@ -1147,6 +1147,10 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 				assComments.push(ass);
 			}
 		}
+		if (assComments.length && assComments[assComments.length - 1][2] == 0) {
+			// 마지막에 종료싱크 없을 때
+			assComments[assComments.length - 1][2] = 999999999;
+		}
 		
 		// 주석 기반 스크립트
 		for (let i = 0; i < assComments.length; i++) {
