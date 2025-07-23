@@ -1038,7 +1038,10 @@ window.AssEvent = Subtitle.AssEvent = function(start, end, style, text, layer=0)
 	this.Text = text;
 }
 AssEvent.toAssTime = (time=0, fromFrameSync=false) => {
-	if (fromFrameSync) time -= 15; // TODO: 15ms는 경험적 값이라서, 정확한 계산식을 만드는 게 좋을 듯함
+	if (fromFrameSync) {
+		time -= 15; // TODO: 15ms는 경험적 값이라서, 정확한 계산식을 만드는 게 좋을 듯함
+		// time = Math.floor((time - 5) / 10) * 10; // 저번에 이게 실패했었나?
+	}
 	if (time < 0) time = 0;
 	const h = Math.floor( time / 3600000);
 	const m = Math.floor( time /   60000) % 60;
@@ -1099,8 +1102,8 @@ AssEvent.optimizeSync = function(sync) {
 	return Subtitle.video.fs[i - 1];
 }
 AssEvent.prototype.optimizeSync = function() {
-	this.Start = AssEvent.toAssTime((this.start = AssEvent.optimizeSync(this.start)) - 15);
-	this.End   = AssEvent.toAssTime((this.end   = AssEvent.optimizeSync(this.end  )) - 15);
+	this.Start = AssEvent.toAssTime((this.start = AssEvent.optimizeSync(this.start)), true);
+	this.End   = AssEvent.toAssTime((this.end   = AssEvent.optimizeSync(this.end  )), true);
 }
 
 AssEvent.prototype.fromSync = function(sync, style) {

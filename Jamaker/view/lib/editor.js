@@ -2172,10 +2172,13 @@ function closeCurrentTab() {
 }
 
 function newFile() {
+	$("#assSplitHoldSelector").hide();
 	runIfCanOpenNewTab(openNewTab);
 }
 
 function openFile(path, text, forVideo) {
+	$("#assSplitHoldSelector").hide();
+	
 	if (path && path.toLowerCase().endsWith(".ass")) {
 		// 연동 ASS 파일 열기
 		loadAssFile(path, text);
@@ -2261,17 +2264,62 @@ function saveFile(asNew, isExport) {
 	}
 	*/
 	if (withAss) {
-		const styles = { "Default": SmiFile.toSaveStyle(currentTab.holds[0].style) };
+		const assStyles = {};
+		{
+			const assStyleList = currentTab.getAdditionalToAss().getStyles().body;
+			for (let i = 0; i < assStyleList.length; i++) {
+				const assStyle = assStyleList[i];
+				const arrStyle = [];
+				arrStyle.push(assStyle.Fontname);
+				arrStyle.push(assStyle.Fontsize);
+				arrStyle.push(assStyle.PrimaryColour  );
+				arrStyle.push(assStyle.SecondaryColour);
+				arrStyle.push(assStyle.OutlineColour  );
+				arrStyle.push(assStyle.BackColour     );
+				arrStyle.push(assStyle.Bold       );
+				arrStyle.push(assStyle.Italic     );
+				arrStyle.push(assStyle.Underline  );
+				arrStyle.push(assStyle.StrikeOut  );
+				arrStyle.push(assStyle.ScaleX     );
+				arrStyle.push(assStyle.ScaleY     );
+				arrStyle.push(assStyle.Spacing    );
+				arrStyle.push(assStyle.Angle      );
+				arrStyle.push(assStyle.BorderStyle);
+				arrStyle.push(assStyle.Outline    );
+				arrStyle.push(assStyle.Shadow     );
+				arrStyle.push(assStyle.Alignment  );
+				arrStyle.push(assStyle.MarginL    );
+				arrStyle.push(assStyle.MarginR    );
+				arrStyle.push(assStyle.MarginV    );
+				assStyles[assStyle.Name] = SmiFile.parseStyle(arrStyle.join(","));
+			}
+			
+			const hold = currentTab.holds[0];
+			const saveStyle = SmiFile.toSaveStyle(hold.style);
+			
+			const assStyle = assStyles["Default"];
+			if (assStyle && SmiFile.toSaveStyle(assStyle) != saveStyle) {
+				alert("ASS 추가 스크립트에서 설정한 스타일과 홀드의 스타일이 다릅니다.\n[메인] 홀드 스타일을 수정합니다.");
+				hold.setStyle(assStyle);
+			}
+		}
+		const smiStyles = {};
 		for (let i = 1; i < currentTab.holds.length; i++) {
 			const hold = currentTab.holds[i];
 			const saveStyle = SmiFile.toSaveStyle(hold.style);
-			if (typeof styles[hold.name] == "string") {
-				if (styles[hold.name] != saveStyle) {
+			
+			const assStyle = assStyles[hold.name];
+			if (assStyle && SmiFile.toSaveStyle(assStyle) != saveStyle) {
+				alert("ASS 추가 스크립트에서 설정한 스타일과 홀드의 스타일이 다릅니다.\n[" + hold.name + "] 홀드 스타일을 수정합니다.");
+				hold.setStyle(assStyle);
+				
+			} else if (typeof smiStyles[hold.name] == "string") {
+				if (smiStyles[hold.name] != saveStyle) {
 					const from = hold.name;
 					let to = null;
 					for (let j = 1; ; j++) {
 						to = hold.name + j;
-						if (typeof styles[to] == "undefined") {
+						if (typeof smiStyles[to] == "undefined") {
 							break;
 						}
 					}
@@ -2280,10 +2328,10 @@ function saveFile(asNew, isExport) {
 					hold.selector.find(".hold-name > span").text(hold.owner.holds.indexOf(hold) + "." + hold.name);
 					hold.selector.attr({ title: hold.name });
 					hold.afterChangeSaved(hold.isSaved());
-					styles[hold.name] = saveStyle;
+					smiStyles[hold.name] = saveStyle;
 				}
 			} else {
-				styles[hold.name] = saveStyle;
+				smiStyles[hold.name] = saveStyle;
 			}
 		}
 	}
@@ -3240,7 +3288,8 @@ function loadAssFile(path, text, target=-1) {
 								} else if (style.startsWith(hold.name)) {
 									point += 3; // 이름 포함
 								}
-								if (point == 0) {
+								if (point < 2) {
+									// 홀드명이 안 맞으면, 싱크도 앞뒤 모두 일치하는 게 아니면 넣지 않음
 									continue;
 								}
 								
@@ -3337,11 +3386,13 @@ function loadAssFile(path, text, target=-1) {
 						
 						let cursor = hold.input[0].selectionStart;
 						let cursorSync = 0;
-						for (let i = hold.text.substring(0, cursor).split("\n").length; i > 0; i--) {
-							const line = hold.lines[i];
-							if (line.TYPE) {
-								cursorSync = line.SYNC;
-								break;
+						if (hold.text) {
+							for (let i = hold.text.substring(0, cursor).split("\n").length; i > 0; i--) {
+								const line = hold.lines[i];
+								if (line.TYPE) {
+									cursorSync = line.SYNC;
+									break;
+								}
 							}
 						}
 						
@@ -3436,29 +3487,29 @@ function splitHold(tab, styleName) {
 		for (let i = 0; i < styles.body.length; i++) {
 			if (styles.body[i].Name == styleName) {
 				const assStyle = styles.body[i];
-				style = {};
-				style.Fontname = assStyle.Fontname;
-				style.Fontsize = assStyle.Fontsize;
-				{ let fc = assStyle.PrimaryColour  ; style.PrimaryColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.PrimaryOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
-				{ let fc = assStyle.SecondaryColour; style.SecondaryColour = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.SecondaryOpacity = 255 - Number('0x'+fc[2]+fc[3]); }
-				{ let fc = assStyle.OutlineColour  ; style.OutlineColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.OutlineOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
-				{ let fc = assStyle.BackColour     ; style.BackColour      = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.BackOpacity      = 255 - Number('0x'+fc[2]+fc[3]); }
-				style.Bold        = assStyle.Bold       ;
-				style.Italic      = assStyle.Italic     ;
-				style.Underline   = assStyle.Underline  ;
-				style.StrikeOut   = assStyle.StrikeOut  ;
-				style.ScaleX      = assStyle.ScaleX     ;
-				style.ScaleY      = assStyle.ScaleY     ;
-				style.Spacing     = assStyle.Spacing    ;
-				style.Angle       = assStyle.Angle      ;
-				style.BorderStyle = assStyle.BorderStyle;
-				style.Outline     = assStyle.Outline    ;
-				style.Shadow      = assStyle.Shadow     ;
-				style.Alignment   = assStyle.Alignment  ;
-				style.MarginL     = assStyle.MarginL    ;
-				style.MarginR     = assStyle.MarginR    ;
-				style.MarginV     = assStyle.MarginV    ;
-				style.output = 3;
+				const arrStyle = [];
+				arrStyle.push(assStyle.Fontname);
+				arrStyle.push(assStyle.Fontsize);
+				arrStyle.push(assStyle.PrimaryColour  );
+				arrStyle.push(assStyle.SecondaryColour);
+				arrStyle.push(assStyle.OutlineColour  );
+				arrStyle.push(assStyle.BackColour     );
+				arrStyle.push(assStyle.Bold       );
+				arrStyle.push(assStyle.Italic     );
+				arrStyle.push(assStyle.Underline  );
+				arrStyle.push(assStyle.StrikeOut  );
+				arrStyle.push(assStyle.ScaleX     );
+				arrStyle.push(assStyle.ScaleY     );
+				arrStyle.push(assStyle.Spacing    );
+				arrStyle.push(assStyle.Angle      );
+				arrStyle.push(assStyle.BorderStyle);
+				arrStyle.push(assStyle.Outline    );
+				arrStyle.push(assStyle.Shadow     );
+				arrStyle.push(assStyle.Alignment  );
+				arrStyle.push(assStyle.MarginL    );
+				arrStyle.push(assStyle.MarginR    );
+				arrStyle.push(assStyle.MarginV    );
+				style = SmiFile.parseStyle(arrStyle.join(","));
 				
 				const next = styles.body.slice(i + 1);
 				styles.body.length = i;
@@ -3485,15 +3536,27 @@ function splitHold(tab, styleName) {
 	const list = tab.assHold.assEditor.toEvents();
 	const appends = [];
 	
-	// 뒤쪽 싱크를 먼저 작업해야 span이 잘 생성됨
-	list.sort((a, b) => {
-		let result = b.start - a.start;
-		if (result == 0) {
-			// 시작 싱크가 같으면 종료 싱크가 빠른 것부터
-			result = a.end - b.end;
+	// 신규 홀드이므로 SMI 내용물은 전무함. ASS 기반으로 필요한 모든 싱크를 생성하고 시작
+	const syncs = [];
+	for (let i = 0; i < list.length; i++) {
+		const event = list[i];
+		if (event.Style == styleName) {
+			if (syncs.indexOf(event.start) < 0) {
+				syncs.push(event.start);
+			}
+			if (syncs.indexOf(event.end) < 0) {
+				syncs.push(event.end);
+			}
 		}
-		return result;
+	}
+	syncs.sort((a, b) => {
+		return a - b;
 	});
+	
+	for (let i = 0; i < syncs.length; i++) {
+		const start = syncs[i];
+		body.push(smi = new Smi(start, (Subtitle.findSync(start, frameSyncs, false) ? SyncType.frame : SyncType.normal), ""));
+	}
 	
 	ti = 0;
 	while (ti < list.length) {
@@ -3519,124 +3582,44 @@ function splitHold(tab, styleName) {
 		
 		// 스타일 겹치는 것만 진행
 		if (hasStyle) {
-			let canImport = true;
-			
 			let replaceFrom = -1;
 			let replaceTo = -1;
-			let fromEmpty = true;
-			let toEmpty = true;
 			
 			{
 				let i = 0;
 				for (; i < body.length; i++) {
-					// 여기선 원본이 SMI가 아니므로 따로 프레임 싱크에 맞춰주진 않음
 					let sync = body[i].start;
-					if (sync < start) {
-						continue;
-					}
-					
-					if (start < sync) {
-						// 중간 싱크를 생성해야 함
-						if (i == 0 || (body[i-1].isEmpty() && !body[i-1].assComments)) {
-							// 공백에서 시작
-							replaceFrom = i;
-							fromEmpty = true;
-							
-						} else {
-							// 공백 아니면 겹칠 수 없음
-							canImport = false;
-							break;
-						}
-						
-					} else {
-						// 시작 싱크가 SMI 싱크와 일치
+					if (sync == start) {
 						replaceFrom = i;
-						fromEmpty = false;
-					}
-					
-					for (; i < body.length; i++) {
-						sync = body[i].start;
-						if (sync < end) {
-							continue;
-						}
 						
-						if (end < sync) {
-							// 중간 싱크를 생성해야 함
-							if (i == 0 || (body[i-1].isEmpty() && !body[i-1].assComments)) {
-								// 공백에서 종료
+						for (; i < body.length; i++) {
+							sync = body[i].start;
+							if (sync == end) {
 								replaceTo = i;
-								toEmpty = true;
-								
-							} else {
-								// 공백 아니면 겹칠 수 없음
-								canImport = false;
+								break;
 							}
-						} else {
-							// 종료 싱크가 SMI 싱크와 일치
-							replaceTo = i;
-							toEmpty = false;
 						}
 						break;
 					}
-					break;
-				}
-				if (i == body.length) {
-					// 홀드 내용물 전체보다 더 뒤쪽
-					if (i == 0 || (body[i-1].isEmpty() && !body[i-1].assComments)) {
-						if (replaceFrom < 0) {
-							replaceFrom = i;
-						}
-						replaceTo = i;
-						
-					} else {
-						canImport = false;
-					}
 				}
 			}
-			if (canImport) {
-				importSet = {
-						hold: hold
-					,	replaceFrom: replaceFrom
-					,	replaceTo: replaceTo
-					,	fromEmpty: fromEmpty
-					,	toEmpty: toEmpty
-				};
-			}
+			importSet = {
+					hold: hold
+				,	replaceFrom: replaceFrom
+				,	span: replaceTo - replaceFrom
+			};
 		}
 		
 		if (importSet) {
-			const replaceFrom = importSet.replaceFrom;
-			const replaceTo   = importSet.replaceTo;
-			const fromEmpty   = importSet.fromEmpty;
-			const toEmpty     = importSet.toEmpty;
-			
-			let smi = body[replaceFrom];
-
-			const bodySkipped = body.slice(replaceFrom, replaceTo);
-			const bodyEnd = body.slice(replaceTo);
-			body.length = replaceFrom;
-			
-			if (fromEmpty) {
-				// 공백 싱크 추가
-				body.push(smi = new Smi(start, (Subtitle.findSync(start, frameSyncs, false) ? SyncType.frame : SyncType.normal), ""));
-			}
-			body.push(...bodySkipped);
-
-			if (toEmpty) {
-				// 종료 싱크 추가 필요
-				body.push(new Smi(end, (Subtitle.findSync(end, frameSyncs, false) ? SyncType.frame : SyncType.normal), "&nbsp;"));
-			}
-			body.push(...bodyEnd);
-			
+			const span = (importSet.span == 1 ? "" : importSet.span);
+			const smi = body[importSet.replaceFrom];
 			if (!smi.assComments) {
 				smi.assComments = [];
 			}
 			for (let i = 0; i < targets.length; i++) {
 				// 싱크 겹치도록 넣어줌
 				const item = targets[i];
-				let span = replaceTo - replaceFrom;
-				if (fromEmpty) span++;
-				smi.assComments.push([item.Layer, "", (span == 1 ? "" : span), item.Style, item.Text].join(","));
+				smi.assComments.push([item.Layer, "", span, item.Style, item.Text].join(","));
 			}
 			
 		} else {
@@ -3655,19 +3638,10 @@ function splitHold(tab, styleName) {
 				smi.assComments.sort((a, b) => {
 					return Number(a.split(",")[0]) - Number(b.split(",")[0]);
 				});
-				let comment = "<!-- ASS\n" + smi.assComments.join("\n");
-				if (smi.skip) {
-					comment += "\nEND"
-				}
-				comment += "\n-->";
-				if (smi.text) {
-					smi.text = comment + "\n" + smi.text;
-				} else {
-					smi.text = comment;
-				}
+				smi.text = "<!-- ASS\n" + smi.assComments.join("\n") + "\n-->";
 				
-			} else if (smi.skip) {
-				smi.text = "<!-- ASS X -->\n" + smi.text;
+			} else {
+				smi.text = "&nbsp;";
 			}
 		}
 		
