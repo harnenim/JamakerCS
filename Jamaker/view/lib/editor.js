@@ -840,7 +840,7 @@ Tab.prototype.replaceBeforeSave = function() {
 		}
 	}
 }
-Tab.prototype.getAdditioinalToAss = function(forSmi=false) {
+Tab.prototype.getAdditionalToAss = function(forSmi=false) {
 	const assFile = new AssFile(" "); // 기본 part 없이 생성
 	
 	let frameSyncs = [];
@@ -939,7 +939,7 @@ Tab.prototype.getAdditioinalToAss = function(forSmi=false) {
 }
 Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
 	return SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment, Subtitle.video.FR / 1000)
-		+ (this.withAss ? this.getAdditioinalToAss(true) : ""); // ASS 추가 내용 footer에 넣어주기
+		+ (this.withAss ? this.getAdditionalToAss(true) : ""); // ASS 추가 내용 footer에 넣어주기
 }
 Tab.prototype.onChangeSaved = function(hold) {
 	if (this.isSaved()) {
@@ -978,7 +978,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 	
 	// 스타일/이벤트는 뺐다가 뒤쪽에 다시 추가
 	assFile.parts.length = 1;
-	const append = this.getAdditioinalToAss();
+	const append = this.getAdditionalToAss();
 	for (let i = 0; i < append.parts.length; i++) {
 		switch (append.parts[i].name) {
 			case "Script Info":
@@ -1042,7 +1042,9 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 				const toAssEnd = toAssEnds[i];
 				if (toAssEnd) {
 					for (let j = 0; j < toAssEnd.length; j++) {
-						toAssEnd[j][2] += smi.start;
+						if (!toAssEnd[j][7]) {
+							toAssEnd[j][2] += smi.start;
+						}
 					}
 				}
 			}
@@ -1084,6 +1086,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 				let addEnd = 0;
 				let style = name;
 				let text = "";
+				let addEndFromStart = false;
 				
 				if (isFinite(ass[0])) {
 					layer = ass[0];
@@ -1122,7 +1125,15 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 						} else if (isFinite(ass[1])) { // add 형식
 							type = "add";
 							addStart = Number(ass[1]);
-							addEnd = isFinite(ass[2]) ? Number(ass[2]) : addStart;
+							if (isFinite(ass[2])) {
+								addEnd = Number(ass[2]);
+								if (ass[2].startsWith("+")) { // +로 시작할 경우 시작 싱크를 기준으로
+									addEnd += smi.start;
+									addEndFromStart = true;
+								}
+							} else {
+								addEnd = addStart;
+							}
 							if (ass[3]) style = ass[3];
 							text = ass.slice(4).join(",");
 						}
@@ -1138,7 +1149,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 					text = ass.join(",");
 				}
 				
-				ass = [layer, smi.start + addStart, addEnd, style, text, smi, assText];
+				ass = [layer, smi.start + addStart, addEnd, style, text, smi, assText, addEndFromStart];
 				let toAssEnd = toAssEnds[i + span];
 				if (toAssEnd == null) {
 					toAssEnd = toAssEnds[i + span] = [];
