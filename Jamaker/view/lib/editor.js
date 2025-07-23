@@ -2682,7 +2682,23 @@ function loadAssFile(path, text, target=-1) {
 	}
 	
 	// 불일치 부분 확인 및 보정
-	const appendFile = new AssFile();
+	const appendFile = new AssFile(currentTab.area.find(".tab-ass-appends textarea").val());
+	{
+		const stylePart = appendFile.getStyles();
+		appendFile.parts.length = 0;
+		
+		// 스타일 이외의 부분은 ASS 파일에서 불러온 값으로 채워줌
+		for (let i = 0; i < targetFile.parts.length; i++) {
+			const part = targetFile.parts[i];
+			if (part.name == "Script Info") continue;
+			if (part.name == "Events") continue;
+			if (part.name == "V4+ Styles") {
+				appendFile.parts.push(stylePart);
+				continue;
+			}
+			appendFile.parts.push(part);
+		}
+	}
 	
 	// 홀드 스타일과 ASS 스타일 비교
 	const styles = {}; // 아래에서도 필요해짐
@@ -3012,8 +3028,7 @@ function loadAssFile(path, text, target=-1) {
 			}
 			confirm(msg, () => {
 				if (changedStyles.length) {
-					const styleFile = new AssFile(currentTab.area.find(".tab-ass-appends textarea").val());
-					const addPart = styleFile.getStyles();
+					const stylePart = appendFile.getStyles();
 					
 					for (let i = 0; i < changedStyles.length; i++) {
 						const style = changedStyles[i];
@@ -3064,21 +3079,17 @@ function loadAssFile(path, text, target=-1) {
 								}
 							}
 						} else {
-							addPart.body.push(style);
+							stylePart.body.push(style);
 						}
 					}
-					appendFile.getStyles().body.push(...addPart.body);
-					
-					styleFile.parts.length = 0;
-					for (let i = 0; i < appendFile.parts.length; i++) {
-						const part = appendFile.parts[i];
-						if (part.name == "Script Info") continue;
-						if (part.name == "Events") continue;
-						styleFile.parts.push(part);
-					}
-					
-					currentTab.area.find(".tab-ass-appends textarea").val(styleFile.toText());
 				}
+				const appendWithoutEvents = new AssFile(" ");
+				for (let i = 0; i < appendFile.parts.length; i++) {
+					const part = appendFile.parts[i];
+					if (part.name == "Events") continue;
+					appendWithoutEvents.parts.push(part);
+				}
+				currentTab.area.find(".tab-ass-appends textarea").val(appendWithoutEvents.toText());
 				
 				if (addCount + delCount) {
 					// 스크립트는 홀드별로 분할해서 넣어야 함
@@ -3390,8 +3401,16 @@ function loadAssFile(path, text, target=-1) {
 				}
 			});
 		} else {
-			let msg = "ASS 자막에 특별한 수정사항이 없습니다.";
-			alert(msg);
+			let msg = "ASS 자막에 특별한 수정사항이 없습니다.\n추가 정보 부분만 검토합니다.";
+			confirm(msg, () => {
+				const appendWithoutEvents = new AssFile(" ");
+				for (let i = 0; i < appendFile.parts.length; i++) {
+					const part = appendFile.parts[i];
+					if (part.name == "Events") continue;
+					appendWithoutEvents.parts.push(part);
+				}
+				currentTab.area.find(".tab-ass-appends textarea").val(appendWithoutEvents.toText());
+			});
 		}
 	}
 }
