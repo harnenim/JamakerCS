@@ -3156,7 +3156,8 @@ function loadAssFile(path, text, target=-1) {
 					list.sort((a, b) => {
 						let result = b.start - a.start;
 						if (result == 0) {
-							result = b.end - a.end;
+							// 시작 싱크가 같으면 먼저 끝나는 것부터
+							result = a.end - b.end;
 						}
 						return result;
 					});
@@ -3912,6 +3913,7 @@ function generateSmiFromAss() {
 				if (style && style != correctStyle) {
 					// 스타일이 맞을 때만 홀드 텍스트로 꺼냄
 					isPure = false;
+					skipCount++;
 					continue;
 				}
 				
@@ -3930,14 +3932,15 @@ function generateSmiFromAss() {
 					// 순수 SMI로 구현 가능한지 확인
 					if (text.startsWith("{}")) text = text.substring(2);
 					if (text.endsWith("{}")) text = text.substring(0, text.length - 2);
-					if (text.indexOf("{") > 0) {
+					if (text.indexOf("{", 1) > 0) {
 						// 맨 앞 말고도 태그가 있으면 SMI로 구현 불가
 						// TODO: 줄표에 따른 fscx 정도는 없애는 것도? - 태그로 공백문자만 감싼 경우 걸러내기?
-						text = Subtitle.$tmp.html(text.split("{").join("<a ").split("}").join(">")).text();
-						// TODO: 위에서 중간 태그 없애기 성공했으면 SMI 구현 가능 상태로 남겨서 아래 로직을 태울 것
+						// TODO: 위에서 중간 태그 없애기 성공한다면 SMI 구현 가능 상태로 남겨서 아래 로직을 태울 것
 						isPure = false;
 					}
-					if (isPure && text.indexOf("{") == 0) {
+				}
+				if (isPure) {
+					if (text.indexOf("{") == 0) {
 						// ASS 태그로 시작할 경우
 						const tagEnd = text.indexOf("}");
 						if (tagEnd > 0) {
@@ -3990,11 +3993,13 @@ function generateSmiFromAss() {
 							text = assTagString + smiText;
 						}
 					}
-					if (!text.trim()) {
-						continue;
-					}
-					texts.push(...text.split("\\N"));
+				} else {
+					text = Subtitle.$tmp.html(text.split("{").join("<a ").split("}").join(">")).text();
 				}
+				if (!text.trim()) {
+					continue;
+				}
+				texts.push(...text.split("\\N"));
 			}
 			if (!texts.length) continue;
 			
