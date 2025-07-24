@@ -690,9 +690,6 @@ Subtitle.findSyncIndex = (sync, fs=null, from=0, to=-1) => {
 	}
 }
 
-const styleForSmi = Subtitle.styleForSmi = ["Fontname","PrimaryColour","Italic","Underline","StrikeOut"];
-const styleForAss = Subtitle.styleForAss = ["Fontsize","SecondaryColour","OutlineColour","BackColour","PrimaryOpacity","SecondaryOpacity","OutlineOpacity","BackOpacity","Bold","ScaleX","ScaleY","Spacing","Angle","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV"];
-
 window.SyncAttr = Subtitle.SyncAttr = function(start, end, startType, endType, text, origin=null) {
 	this.start = start ? start : 0;
 	this.end   = end   ? end   : 35999999;
@@ -1095,7 +1092,7 @@ AssEvent.optimizeSync = function(sync) {
 	for (; i < aegisubSyncs.length; i++) {
 		if (sync < aegisubSyncs[i]) {
 			// 싱크 위치 찾음
-			return fs[i - 1];
+			return (i == 1 && fs[0] == 0) ? 1 : fs[i - 1]; // ASS 0:00:00.00은 출력되지만, SMI 0ms는 출력되지 않아 1ms 부여
 		}
 	}
 	// 마지막 싱크로 맞춰줌
@@ -3926,6 +3923,66 @@ const DefaultStyle = Subtitle.DefaultStyle = {
 	,	MarginV: 40
 	,	output: 3 // 0b01: SMI / 0b10: ASS / 0b11: SMI+ASS
 };
+SmiFile.StyleFormat = ["Fontname", "Fontsize", "PrimaryColour", "SecondaryColour", "OutlineColour", "BackColour", "Bold", "Italic", "Underline", "StrikeOut", "ScaleX", "ScaleY", "Spacing", "Angle", "BorderStyle", "Outline", "Shadow", "Alignment", "MarginL", "MarginR", "MarginV"];
+SmiFile.toAssStyle = function(smiStyle, assStyle) {
+	if (!assStyle) assStyle = {};
+	assStyle.key = "Style";
+	assStyle.Encoding = 1;
+
+	smiStyle.Fontname = (!smiStyle.Fontname ? "맑은 고딕" : smiStyle.Fontname);
+	assStyle.Fontname = (smiStyle.Fontname);
+	assStyle.Fontsize = (smiStyle.Fontsize);
+	{ let fc = smiStyle.PrimaryColour   + (511 - smiStyle.PrimaryOpacity  ).toString(16).substring(1).toUpperCase(); assStyle.PrimaryColour   = ("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
+	{ let fc = smiStyle.SecondaryColour + (511 - smiStyle.SecondaryOpacity).toString(16).substring(1).toUpperCase(); assStyle.SecondaryColour = ("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
+	{ let fc = smiStyle.OutlineColour   + (511 - smiStyle.OutlineOpacity  ).toString(16).substring(1).toUpperCase(); assStyle.OutlineColour   = ("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
+	{ let fc = smiStyle.BackColour      + (511 - smiStyle.BackOpacity     ).toString(16).substring(1).toUpperCase(); assStyle.BackColour      = ("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
+	assStyle.Bold        = (smiStyle.Bold      ? -1 : 0);
+	assStyle.Italic      = (smiStyle.Italic    ? -1 : 0);
+	assStyle.Underline   = (smiStyle.Underline ? -1 : 0);
+	assStyle.StrikeOut   = (smiStyle.StrikeOut ? -1 : 0);
+	assStyle.ScaleX      = (smiStyle.ScaleX     );
+	assStyle.ScaleY      = (smiStyle.ScaleY     );
+	assStyle.Spacing     = (smiStyle.Spacing    );
+	assStyle.Angle       = (smiStyle.Angle      );
+	assStyle.BorderStyle = (smiStyle.BorderStyle ? 3 : 1);
+	assStyle.Outline     = (smiStyle.Outline    );
+	assStyle.Shadow      = (smiStyle.Shadow     );
+	assStyle.Alignment   = (smiStyle.Alignment  );
+	assStyle.MarginL     = (smiStyle.MarginL    );
+	assStyle.MarginR     = (smiStyle.MarginR    );
+	assStyle.MarginV     = (smiStyle.MarginV    );
+	return assStyle;
+}
+SmiFile.fromAssStyle = function(assStyle, smiStyle=null) {
+	if (!smiStyle) smiStyle = JSON.parse(JSON.stringify(DefaultStyle));
+	smiStyle.Fontname = (assStyle.Fontname == "맑은 고딕" ? "" : assStyle.Fontname);
+	smiStyle.Fontsize = assStyle.Fontsize;
+	{ let fc = assStyle.PrimaryColour  ; smiStyle.PrimaryColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; smiStyle.PrimaryOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
+	{ let fc = assStyle.SecondaryColour; smiStyle.SecondaryColour = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; smiStyle.SecondaryOpacity = 255 - Number('0x'+fc[2]+fc[3]); }
+	{ let fc = assStyle.OutlineColour  ; smiStyle.OutlineColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; smiStyle.OutlineOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
+	{ let fc = assStyle.BackColour     ; smiStyle.BackColour      = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; smiStyle.BackOpacity      = 255 - Number('0x'+fc[2]+fc[3]); }
+	smiStyle.Bold      = (assStyle.Bold      != 0);
+	smiStyle.Italic    = (assStyle.Italic    != 0);
+	smiStyle.Underline = (assStyle.Underline != 0);
+	smiStyle.StrikeOut = (assStyle.StrikeOut != 0);
+	smiStyle.ScaleX    = Number(assStyle.ScaleX   );
+	smiStyle.ScaleY    = Number(assStyle.ScaleY   );
+	smiStyle.Spacing   = Number(assStyle.Spacing  );
+	smiStyle.Angle     = Number(assStyle.Angle    );
+	smiStyle.BorderStyle = ((Number(assStyle.BorderStyle) & 2) != 0);
+	smiStyle.Outline   = Number(assStyle.Outline  );
+	smiStyle.Shadow    = Number(assStyle.Shadow   );
+	smiStyle.Alignment = Number(assStyle.Alignment);
+	smiStyle.MarginL   = Number(assStyle.MarginL  );
+	smiStyle.MarginR   = Number(assStyle.MarginR  );
+	smiStyle.MarginV   = Number(assStyle.MarginV  );
+	return smiStyle;
+}
+
+// TODO: 이렇게 두면 안 될 듯...? 결국 toSaveStyle 말곤 쓰는 데도 없음
+const styleForSmi = Subtitle.styleForSmi = ["Fontname","PrimaryColour","Italic","Underline","StrikeOut"];
+const styleForAss = Subtitle.styleForAss = ["Fontsize","SecondaryColour","OutlineColour","BackColour","PrimaryOpacity","SecondaryOpacity","OutlineOpacity","BackOpacity","Bold","ScaleX","ScaleY","Spacing","Angle","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV"];
+
 SmiFile.toSaveStyle = function(style) {
 	if (!style) return "";
 	
@@ -3952,27 +4009,10 @@ SmiFile.toSaveStyle = function(style) {
 	
 	const result = [];
 	if (forAss) {
-		result.push(style.Fontname);
-		result.push(style.Fontsize);
-		{ let fc = style.PrimaryColour   + (511 - style.PrimaryOpacity  ).toString(16).substring(1).toUpperCase(); result.push("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
-		{ let fc = style.SecondaryColour + (511 - style.SecondaryOpacity).toString(16).substring(1).toUpperCase(); result.push("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
-		{ let fc = style.OutlineColour   + (511 - style.OutlineOpacity  ).toString(16).substring(1).toUpperCase(); result.push("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
-		{ let fc = style.BackColour      + (511 - style.BackOpacity     ).toString(16).substring(1).toUpperCase(); result.push("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
-		result.push(style.Bold      ? -1 : 0);
-		result.push(style.Italic    ? -1 : 0);
-		result.push(style.Underline ? -1 : 0);
-		result.push(style.StrikeOut ? -1 : 0);
-		result.push(style.ScaleX     );
-		result.push(style.ScaleY     );
-		result.push(style.Spacing    );
-		result.push(style.Angle      );
-		result.push(style.BorderStyle ? 3 : 1);
-		result.push(style.Outline    );
-		result.push(style.Shadow     );
-		result.push(style.Alignment  );
-		result.push(style.MarginL    );
-		result.push(style.MarginR    );
-		result.push(style.MarginV    );
+		const assStyle = SmiFile.toAssStyle(style);
+		for (let i = 0; i < SmiFile.StyleFormat.length; i++) {
+			result.push(assStyle[SmiFile.StyleFormat[i]]);
+		}
 		
 	} else if (forSmi) {
 		// 기본 스타일
@@ -4008,27 +4048,11 @@ SmiFile.parseStyle = function(comment) {
 			
 		} else {
 			// ASS 변환용 스타일 포함
-			style.Fontname = infoStyle[0];
-			style.Fontsize = infoStyle[1];
-			{ let fc = infoStyle[2]; style.PrimaryColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.PrimaryOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
-			{ let fc = infoStyle[3]; style.SecondaryColour = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.SecondaryOpacity = 255 - Number('0x'+fc[2]+fc[3]); }
-			{ let fc = infoStyle[4]; style.OutlineColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.OutlineOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
-			{ let fc = infoStyle[5]; style.BackColour      = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; style.BackOpacity      = 255 - Number('0x'+fc[2]+fc[3]); }
-			style.Bold      = (infoStyle[6] != 0);
-			style.Italic    = (infoStyle[7] != 0);
-			style.Underline = (infoStyle[8] != 0);
-			style.StrikeOut = (infoStyle[9] != 0);
-			style.ScaleX    = Number(infoStyle[10]);
-			style.ScaleY    = Number(infoStyle[11]);
-			style.Spacing   = Number(infoStyle[12]);
-			style.Angle     = Number(infoStyle[13]);
-			style.BorderStyle = ((Number(infoStyle[14]) & 2) != 0);
-			style.Outline   = Number(infoStyle[15]);
-			style.Shadow    = Number(infoStyle[16]);
-			style.Alignment = Number(infoStyle[17]);
-			style.MarginL   = Number(infoStyle[18]);
-			style.MarginR   = Number(infoStyle[19]);
-			style.MarginV   = Number(infoStyle[20]);
+			const assStyle = {};
+			for (let i = 0; i < SmiFile.StyleFormat.length; i++) {
+				assStyle[SmiFile.StyleFormat[i]] = infoStyle[i];
+			}
+			SmiFile.fromAssStyle(assStyle, style);
 		}
 	}
 	return style;

@@ -3117,27 +3117,7 @@ function loadAssFile(path, text, target=-1) {
 							// 여기서 없을 수는 없음
 							if (holdStyle) {
 								// output은 유지
-								holdStyle.Fontname    = style.Fontname   ;
-								holdStyle.Fontsize    = style.Fontsize   ;
-								holdStyle.Bold        = style.Bold      != 0;
-								holdStyle.Italic      = style.Italic    != 0;
-								holdStyle.Underline   = style.Underline != 0;
-								holdStyle.StrikeOut   = style.StrikeOut != 0;
-								holdStyle.ScaleX      = style.ScaleX     ;
-								holdStyle.ScaleY      = style.ScaleY     ;
-								holdStyle.Spacing     = style.Spacing    ;
-								holdStyle.Angle       = style.Angle      ;
-								holdStyle.BorderStyle = (style.BorderStyle & 2) != 0;
-								holdStyle.Outline     = style.Outline    ;
-								holdStyle.Shadow      = style.Shadow     ;
-								holdStyle.Alignment   = style.Alignment  ;
-								holdStyle.MarginL     = style.MarginL    ;
-								holdStyle.MarginR     = style.MarginR    ;
-								holdStyle.MarginV     = style.MarginV    ;
-								{ let fc = style.PrimaryColour  ; holdStyle.PrimaryColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.PrimaryOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
-								{ let fc = style.SecondaryColour; holdStyle.SecondaryColour = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.SecondaryOpacity = 255 - Number('0x'+fc[2]+fc[3]); }
-								{ let fc = style.OutlineColour  ; holdStyle.OutlineColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.OutlineOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
-								{ let fc = style.BackColour     ; holdStyle.BackColour      = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; holdStyle.BackOpacity      = 255 - Number('0x'+fc[2]+fc[3]); }
+								SmiFile.fromAssStyle(style, holdStyle);
 								
 								// 해당 홀드 스타일 적용
 								// 같은 이름의 홀드가 여러 개일 수 있음
