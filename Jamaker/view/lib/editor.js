@@ -3314,6 +3314,10 @@ function loadAssFile(path, text, target=-1) {
 									// 홀드명이 안 맞으면, 싱크도 앞뒤 모두 일치하는 게 아니면 넣지 않음
 									continue;
 								}
+								if (h == 0 && point < 4) {
+									// 메인 홀드에는 Default 스타일 없으면 넣지 않음
+									continue;
+								}
 								
 								if (importSet && importSet.point > point) {
 									// 기존에 찾은 게 더 점수가 높음
@@ -3327,6 +3331,7 @@ function loadAssFile(path, text, target=-1) {
 									,	fromEmpty: fromEmpty
 									,	toEmpty: toEmpty
 									,	point: point
+									,	isDefault: (h == 0)
 								};
 							}
 						}
@@ -3346,13 +3351,37 @@ function loadAssFile(path, text, target=-1) {
 							
 							if (fromEmpty) {
 								// 공백 싱크 추가
-								body.push(smi = new Smi(start, SyncType.frame, ""));
+								let syncType = SyncType.frame;
+								if (importSet.isDefault) {
+									syncType = SyncType.normal;
+									for (let i = 0; i < targets.length; i++) {
+										const item = targets[i];
+										if (item.Text.startsWith("{}")) {
+											// 과거에 {} 붙여서 화면싱크 체크하는 트릭 사용함
+											syncType = SyncType.frame;
+											break;
+										}
+									}
+								}
+								body.push(smi = new Smi(start, syncType, ""));
 							}
 							body.push(...bodySkipped);
-
+							
 							if (toEmpty) {
 								// 종료 싱크 추가 필요
-								body.push(new Smi(end, SyncType.frame, "&nbsp;"));
+								let syncType = SyncType.frame;
+								if (importSet.isDefault) {
+									syncType = SyncType.normal;
+									for (let i = 0; i < targets.length; i++) {
+										const item = targets[i];
+										if (item.Text.endsWith("{}")) {
+											// 과거에 {} 붙여서 화면싱크 체크하는 트릭 사용함
+											syncType = SyncType.frame;
+											break;
+										}
+									}
+								}
+								body.push(new Smi(end, syncType, "&nbsp;"));
 							}
 							body.push(...bodyEnd);
 							
