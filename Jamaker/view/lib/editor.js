@@ -186,6 +186,26 @@ window.Tab = function(text, path) {
 				tab.hold--;
 			}
 			
+			{	// 홀드명 겹치는 게 남는지 확인
+				let exist = false;
+				for (let i = 0; i < tab.holds.length; i++) {
+					if (tab.holds[i] == hold) continue;
+					if (tab.holds[i].name == hold.name) {
+						exist = true;
+						break;
+					}
+				}
+				if (!exist) {
+					// 없으면 ASS 추가 스크립트에 홀드 스타일 넣기
+					const style = SmiFile.toAssStyle(hold.style);
+					style.Name = hold.name;
+					
+					const appendFile = new AssFile(tab.area.find(".tab-ass-appends textarea").val());
+					appendFile.getStyles().body.push(style);
+					tab.area.find(".tab-ass-appends textarea").val(appendFile.toText());
+				}
+			}
+			
 			tab.holds.splice(index, 1);
 			hold.selector.remove();
 			hold.area.remove();
@@ -1000,6 +1020,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 	const holds = this.holds;
 	const syncs = [];
 	const styles = {};
+	
 	for (let h = 0; h < holds.length; h++) {
 		const hold = holds[h];
 		const name = (h == 0) ? "Default" : hold.name;
@@ -2605,6 +2626,7 @@ function afterLoadFkfFile(buffer) {
 			kfs.push(view.getInt32(i * 4, true));
 		}
 	}
+	
 	Subtitle.video.fs  = vfs;
 	Subtitle.video.kfs = kfs;
 	afterSetFkf();
