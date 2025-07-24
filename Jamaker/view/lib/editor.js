@@ -3927,11 +3927,12 @@ function generateSmiFromAss() {
 											break;
 										}
 									}
+								/* ASS에서 검은 글씨 쓰거나 했으면 ASS 태그로 유지해야 함. SMI와 색이 같을 거란 보장이 없음
 								} else if (tag.startsWith("c&H") && tag.length == 10) {
-									// 색상 태그는 SMI 태그로 처리
+									// 색상
 									smiAttr.fc = "#" + tag[7] + tag[8] + tag[5] + tag[6] + tag[3] + tag[4];
 									smiCount++;
-									
+								*/
 								} else if (tag.startsWith("i") && tag.length > 1 && tag[1] == "1") {
 									// 기울임 - 여기선 닫는 태그는 고려할 필요 없음
 									smiAttr.i = true;
