@@ -1832,7 +1832,7 @@ AssEvent.prototype.toText = function(format=AssPart.EventsFormat) {
 	return value.join(",");
 }
 
-window.AssFile = Subtitle.AssFile2 = function(text) {
+window.AssFile = Subtitle.AssFile = function(text) {
 	this.parts = [];
 	if (text) {
 		this.fromText(text);
@@ -2953,139 +2953,6 @@ Smi.prototype.fromAttrs = function(attrs, forConvert=false) {
 	return this;
 }
 Smi.fromAttr = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
-// TODO: fromAttrs 재개발해서 여기 안 탐. 추후 삭제 조치
-Smi.fromAttrs = (attrs, fontSize=0) => { // fontSize를 넣으면 html로 % 크기 출력
-	let text = "";
-	
-	const a = Subtitle.$tmp;
-	let last = new Attr();
-	for (let i = 0; i < attrs.length; i++) {
-		const attr = attrs[i];
-		
-		//* // 그냥 없앨까...?
-		if (attr.tagString && attr.fade == 0 && attr.shake == null && attr.typing == null) {
-			// 원래 태그가 뭔지 알고 있을 경우 원본 복원
-			text += attr.tagString + attr.text;
-			
-		} else
-		//*/
-		if (attr.furigana) {
-			// <RUBY> 태그 적용 시 무조건 태그 닫고 열기
-			
-			if (last.s) text += "</S>";
-			if (last.u) text += "</U>";
-			if (last.i) text += "</I>";
-			if (last.b) text += "</B>";
-			
-			// 기존에 속성이 있었을 때 닫는 태그
-			if (last.fs > 0 || !last.fn == ("") || !last.fc == ("") || last.fade != 0 || last.shake != null || last.typing != null) {
-				text += "</FONT>";
-			}
-			let prev = "<RUBY>";
-			let next = "";
-			
-			if (attr.b) { prev += "<B>"; };
-			if (attr.i) { prev += "<I>"; };
-			if (attr.u) { prev += "<U>"; };
-			if (attr.s) { prev += "<S>"; next = "</S>" + next; };
-			if (attr.u) { next = "</U>" + next; };
-			if (attr.i) { next = "</I>" + next; };
-			if (attr.b) { next = "</B>" + next; };
-			
-			// 속성이 있을 때 여는 태그
-			let fontStart = "";
-			let fontEnd = "";
-			if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.shake != null || attr.typing != null) {
-				fontStart = "<FONT";
-				if (attr.fs > 0) {
-					if (fontSize)    fontStart += " style=\"font-size: " + (attr.fs / fontSize * 100) + "%;\"";
-					else             fontStart += " size=\"" + attr.fs + "\"";
-				}
-				if (attr.fn   != "") fontStart += " face=\"" + attr.fn + "\"";
-				if (attr.fc   != "") fontStart += " color=\""+ Smi.colorFromAttr(attr.fc) + "\"";
-				if (attr.fade != 0 ) fontStart += " fade=\"" + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\"";
-				if (attr.shake != null) fontStart += " shake=\"" + attr.shake.ms + "," + attr.shake.size + "\"";
-				if (attr.typing != null) fontStart += " typing=\"" + Typing.Mode.toString[attr.typing.mode] + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString[attr.typing.cursor] + "\"";
-				fontStart += ">";
-				fontEnd = "</FONT>";
-			}
-			next += "<RT><RP>(</RP>" + Smi.fromAttrs([attr.furigana, new Attr()]) + "<RP>)</RP></RT></RUBY>";
-			
-			text += fontStart + prev + attr.text + next + fontEnd;
-			
-		} else if (last.furigana) {
-			// 앞쪽에 <RUBY> 태그 있었을 때
-			
-			// 속성이 있을 때 여는 태그
-			if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.shake != null || attr.typing != null) {
-				text += "<FONT";
-				if (attr.fs > 0) {
-					if (fontSize)    text += " style=\"font-size: " + (attr.fs / fontSize * 100) + "%;\"";
-					else             text += " size=\"" + attr.fs + "\"";
-				}
-				if (attr.fn   != "") text += " face=\"" + attr.fn + "\"";
-				if (attr.fc   != "") text += " color=\""+ Smi.colorFromAttr(attr.fc) + "\"";
-				if (attr.fade != 0 ) text += " fade=\"" + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\"";
-				if (attr.shake != null) text += " shake=\"" + attr.shake.ms + "," + attr.shake.size + "\"";
-				if (attr.typing != null) text += " typing=\"" + Typing.Mode.toString[attr.typing.mode] + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString[attr.typing.cursor] + "\"";
-				text += ">";
-			}
-			
-			if (attr.b) text += "<B>";
-			if (attr.i) text += "<I>";
-			if (attr.u) text += "<U>";
-			if (attr.s) text += "<S>";
-			
-			text += attr.text;
-			
-		} else {
-			if (last.s && !attr.s) text += "</S>";
-			if (last.u && !attr.u) text += "</U>";
-			if (last.i && !attr.i) text += "</I>";
-			if (last.b && !attr.b) text += "</B>";
-			
-			if ( last.fs   != attr.fs
-			 ||  last.fn   != attr.fn
-			 ||  last.fc   != attr.fc
-			 ||  last.fade != attr.fade
-			 || (last.shake  == null && attr.shake  != null)
-			 || (last.shake  != null && attr.shake  == null)
-			 || (last.typing == null && attr.typing != null)
-			 || (last.typing != null && attr.typing == null)
-			) {
-				// 기존에 속성이 있었을 때만 닫는 태그
-				if (last.fs > 0 || !last.fn == ("") || !last.fc == ("") || last.fade != 0 || last.shake != null || last.typing != null)
-					text += "</FONT>";
-				
-				// 신규 속성이 있을 때만 여는 태그
-				if (attr.fs > 0 || !attr.fn == ("") || !attr.fc == ("") || attr.fade != 0 || attr.shake != null || attr.typing != null) {
-					text += "<FONT";
-					if (attr.fs > 0) {
-						if (fontSize)    text += " style=\"font-size: " + (attr.fs / fontSize * 100) + "%;\"";
-						else             text += " size=\"" + attr.fs + "\"";
-					}
-					if (attr.fn   != "") text += " face=\"" + attr.fn + "\"";
-					if (attr.fc   != "") text += " color=\""+ Smi.colorFromAttr(attr.fc) + "\"";
-					if (attr.fade != 0 ) text += " fade=\"" + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\"";
-					if (attr.shake != null) text += " shake=\"" + attr.shake.ms + "," + attr.shake.size + "\"";
-					if (attr.typing != null) text += " typing=\"" + Typing.Mode.toString[attr.typing.mode] + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString[attr.typing.cursor] + "\"";
-					text += ">";
-				}
-			}
-			
-			// 특수태그 정규화 시 해당 태그는 안쪽에 들어간다고 가정하여 나중에 추가
-			if (!last.b && attr.b) text += "<B>";
-			if (!last.i && attr.i) text += "<I>";
-			if (!last.u && attr.u) text += "<U>";
-			if (!last.s && attr.s) text += "<S>";
-			
-			text += (attr.text == "\n") ? "<br>" : a.text(attr.text).html();
-		}
-		last = attr;
-	}
-	
-	return text;
-}
 Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true, forConvert=false) => { // fontSize를 넣으면 html로 % 크기 출력
 	let text = "";
 	

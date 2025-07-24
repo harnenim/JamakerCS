@@ -151,7 +151,7 @@ $(() => {
 					}
 				} else {
 					// SMI 페이드 여부 확인
-					const attrs = smi.toAttr();
+					const attrs = smi.toAttrs();
 					for (let j = 0; j < attrs.length; j++) {
 						const attr = attrs[j];
 						if (attr.fade == -1 || attr.fade == 1) {

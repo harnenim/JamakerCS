@@ -232,7 +232,7 @@ window.Combine = {
 			if (smi.text.split("&nbsp;").join("").trim()) {
 				const lineCount = smi.text.split(/<br>/gi).length;
 					
-				const attrs = smi.toAttr(false);
+				const attrs = smi.toAttrs(false);
 				const defaultWidth = getAttrWidth(attrs, checker);
 				const sizedWidth   = getAttrWidth(attrs, checker, true);
 				syncs.push(last = [smi.start, smi.syncType, 0, 0, smi.text, attrs, lineCount, defaultWidth, sizedWidth]);

@@ -43,7 +43,7 @@ $(() => {
 	
 	$("#btnExport").on("click", function() {
 		const holds = Subtitle.SmiFile.textToHolds($("#input").val());
-		const assFile = new Subtitle.AssFile2();
+		const assFile = new AssFile();
 		
 		for (let h = 0; h < holds.length; h++) {
 			const hold = holds[h];

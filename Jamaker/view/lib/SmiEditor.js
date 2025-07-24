@@ -2876,7 +2876,7 @@ SmiEditor.Viewer = {
 											text = texts.join((texts.length - pass > 3) ? "<br>" : "");
 											
 											if (text.split("&nbsp;").join("").trim()) { // 공백 싱크는 제외
-												newLines.push({ SYNC: 0, TYPE: null, TEXT: Smi.fromAttr(Smi.toAttr(tag[0] + text + tag[1], false)).split("\n").join("<br>") })
+												newLines.push({ SYNC: 0, TYPE: null, TEXT: Smi.fromAttrs(Smi.toAttrs(tag[0] + text + tag[1], false)).split("\n").join("<br>") })
 											}
 										}
 										// 싱크 줄은 그냥 그대로
@@ -2899,7 +2899,7 @@ SmiEditor.Viewer = {
 									const text = texts.join((texts.length - pass > 3) ? "<br>" : "");
 
 									if (text.split("&nbsp;").join("").trim()) { // 공백 싱크는 제외
-										newLines.push({ SYNC: 0, TYPE: null, TEXT: Smi.fromAttr(Smi.toAttr(tag[0] + text + tag[1], false)).split("\n").join("<br>") })
+										newLines.push({ SYNC: 0, TYPE: null, TEXT: Smi.fromAttrs(Smi.toAttrs(tag[0] + text + tag[1], false)).split("\n").join("<br>") })
 									}
 								}
 								lines.push(newLines);
