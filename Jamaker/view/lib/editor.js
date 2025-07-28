@@ -3130,7 +3130,7 @@ function loadAssFile(path, text, target=-1) {
 				if (delCount) countMsg.push("삭제 " + addCount + "건");
 				msg = "스크립트/태그 " + countMsg.join(", ") + "이 있습니다. 적용하시겠습니까?\n\n자막에 맞는 동영상 파일이 열려있어야 정상적인 결과를 얻을 수 있습니다.";
 			}
-			confirm(msg, () => {
+			confirm(msg, () => { try {
 				if (changedStyles.length) {
 					const stylePart = appendFile.getStyles();
 					
@@ -3516,7 +3516,11 @@ function loadAssFile(path, text, target=-1) {
 					
 					currentTab.assHold.assEditor.setEvents(appendEvents.body, frameSyncs);
 				}
-			});
+			} catch (e) {
+				// 가끔 안 도는 경우가 있는 것 같은데...
+				console.log(e);
+				// TODO: 로그 저장해봐야 하나...
+			}});
 		} else {
 			let msg = "ASS 자막에 특별한 수정사항이 없습니다.\n추가 정보 부분만 검토합니다.";
 			confirm(msg, () => {
@@ -3805,7 +3809,7 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 	}
 }
 
-function generateSmiFromAss() {
+function generateSmiFromAss(keepHoldsAss=true) {
 	const origins = [];
 	
 	const tab = tabs[window.tab];
@@ -3859,6 +3863,8 @@ function generateSmiFromAss() {
 		const newLines = origin.text.split("\n");
 		let selectedLine = origin.start;
 		
+		const keepHoldAss = (origin.hold.name == "메인") ? false : keepHoldsAss;
+		
 		for (let j = 0; j < origin.smiFile.body.length; j++) {
 			const item = origin.smiFile.body[j];
 			if (!item.text.startsWith("<!-- ASS\n")) continue;
@@ -3879,6 +3885,7 @@ function generateSmiFromAss() {
 			const assComment = item.text.substring(9, commentEnd);
 			const assTexts = assComment.split("\n");
 			const texts = [];
+			let keepAss = keepHoldAss;
 			let isPure = (assTexts.length == 1); // 한 싱크에 ASS 스크립트 하나면 순수하게 SMI로 구현될 가능성 있음
 			let skipCount = 0;
 			for (let j = 0; j < assTexts.length; j++) {
@@ -3973,6 +3980,7 @@ function generateSmiFromAss() {
 						isPure = false;
 					}
 				}
+				
 				if (isPure) {
 					if (text.indexOf("{") == 0) {
 						// ASS 태그로 시작할 경우
@@ -3995,12 +4003,15 @@ function generateSmiFromAss() {
 											break;
 										}
 									}
-								/* ASS에서 검은 글씨 쓰거나 했으면 ASS 태그로 유지해야 함. SMI와 색이 같을 거란 보장이 없음
-								} else if (tag.startsWith("c&H") && tag.length == 10) {
+								} else if (tag.startsWith("c&H")) {
 									// 색상
-									smiAttr.fc = "#" + tag[7] + tag[8] + tag[5] + tag[6] + tag[3] + tag[4];
-									smiCount++;
-								*/
+									if (tag.length == 10) {
+										smiAttr.fc = "#" + tag[7] + tag[8] + tag[5] + tag[6] + tag[3] + tag[4];
+										smiCount++;
+									} else if (tag.length == 12) { // 투명도 같이 쓴 경우
+										smiAttr.fc = "#" + tag[9] + tag[10] + tag[7] + tag[8] + tag[5] + tag[6];
+										smiCount++;
+									}
 								} else if (tag.startsWith("i") && tag.length > 1 && tag[1] == "1") {
 									// 기울임 - 여기선 닫는 태그는 고려할 필요 없음
 									smiAttr.i = true;
@@ -4020,12 +4031,18 @@ function generateSmiFromAss() {
 									assTags.push(tag);
 								}
 							}
-							const assTagString = assTags.length ? '<FONT ass="{\\' + assTags.join("\\") + '}"></FONT>\n' : "";
 							if (smiCount) {
 								smiText = Smi.fromAttrs([smiAttr]);
 							}
-							text = assTagString + smiText;
+							if (assTags.length) {
+								text = '<FONT ass="{\\' + assTags.join("\\") + '}"></FONT>\n' + smiText;
+							} else {
+								text = smiText;
+							}
 						}
+					} else {
+						// ASS 태그가 아예 없음
+						keepAss = false;
 					}
 				} else {
 					text = Subtitle.$tmp.html(text.split("{").join("<a ").split("}").join(">")).text();
@@ -4038,13 +4055,23 @@ function generateSmiFromAss() {
 			if (!texts.length) continue;
 			
 			let smiText = texts.join(texts.length > 2 ? "<br>\n" : "<br>");
-			if (isPure) {
-				if (assTexts.length > 1) {
-					// SMI로 구현 성공했지만 건너뛴 추가 스크립트가 있었을 경우
-					smiText = "<!-- ASS\n" + assTexts.slice(0, assTexts.length - 1).join("\n") + "\n-->\n" + smiText;
-				}
-			} else {
+			while (smiText.indexOf("<br>\n<br>") > 0) { // ASS에서 의도적으로 줄바꿈 반복한 경우가 있음
+				smiText = smiText.split("<br>\n<br>").join("<br>");
+			}
+			if (keepAss) {
+				// SMI로 구현 성공했어도 ASS 원형을 유지
+				// 완전히 변환해보니 ASS 스크립트 유지한 채로 SMI 결과물을 함부로 수정하기 힘들어짐
 				smiText = "<!-- ASS\n" + assComment + "\nEND\n-->\n" + smiText;
+				
+			} else {
+				if (isPure) { // 순수 SMI만으로 구현 가능
+					if (assTexts.length > 1) {
+						// SMI로 구현 성공했지만 건너뛴 추가 스크립트가 있었을 경우
+						smiText = "<!-- ASS\n" + assTexts.slice(0, assTexts.length - 1).join("\n") + "\n-->\n" + smiText;
+					}
+				} else {
+					smiText = "<!-- ASS\n" + assComment + "\nEND\n-->\n" + smiText;
+				}
 			}
 			item.text = smiText;
 		}
