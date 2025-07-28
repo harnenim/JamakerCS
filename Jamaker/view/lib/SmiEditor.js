@@ -2273,9 +2273,8 @@ SmiEditor.prototype.moveToSide = function(direction) {
 		if (this.lines[nextLine].TEXT.toUpperCase().startsWith("</BODY>")) {
 			break;
 		}
-		// <br>로 끝나는 라인이 아닐 경우 아직 싱크 찍지 않은 부분으로 간주
-		if (!this.lines[nextLine].TEXT.toUpperCase().endsWith("<BR>")) {
-			nextLine++;
+		// 태그로 끝나는 라인이 아닐 경우 아직 싱크 찍지 않은 부분으로 간주
+		if (!this.lines[nextLine].TEXT.toUpperCase().endsWith(">")) {
 			break;
 		}
 	}
@@ -2284,11 +2283,45 @@ SmiEditor.prototype.moveToSide = function(direction) {
 	for (let i = 0; i < textLines.length; i++) {
 		textLines[i] = textLines[i].TEXT;
 	}
-	textLines = textLines.join("").split("​").join("").split(/<br>/gi);
+	textLines = textLines.join("").split("\n").join("").split("​").join("").split(/<br>/gi);
 	
 	// 내용물 비었으면 무시
 	if ($("<span>").html(textLines.join("").split("　").join(" ")).text().trim().length == 0) {
 		return;
+	}
+	
+	for (let i = 0; i < textLines.length; i++) {
+		let lineText = textLines[i];
+		let linePrev = "";
+		let lineNext = "";
+		
+		while (lineText.startsWith("<")) {
+			const tagEnd = lineText.indexOf(">") + 1;
+			if (tagEnd < 1) break;
+			
+			const tag = lineText.substring(0, tagEnd);
+			const tagL = tag.toLowerCase();
+			if (tag.startsWith("<s") || tag.startsWith("<u")) break; // 공백문자에도 영향을 줌
+			linePrev += tag;
+			lineText = lineText.substring(tagEnd);
+		}
+		
+		while (lineText.endsWith(">")) {
+			const tagStart = lineText.lastIndexOf("<");
+			if (tagStart < 1) break;
+			
+			const tag = lineText.substring(tagStart);
+			const tagL = tag.toLowerCase();
+			if (tag.startsWith("</s") || tag.startsWith("</u")) break; // 공백문자에도 영향을 줌
+			lineNext += tag;
+			lineText = lineText.substring(0, tagStart);
+		}
+		
+		textLines[i] = {
+				prev: linePrev
+			,	text: lineText
+			,	next: lineNext
+		};
 	}
 	
 	if (direction > 0) {
@@ -2299,7 +2332,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 			// 모든 줄이 공백으로 끝나는지 확인
 			if (remained) {
 				for (let j = 0; j < textLines.length; j++) {
-					if (!textLines[j].endsWith("　")) {
+					if (!textLines[j].text.endsWith("　")) {
 						remained = false;
 						break;
 					}
@@ -2308,12 +2341,12 @@ SmiEditor.prototype.moveToSide = function(direction) {
 			if (remained) {
 				// 오른쪽 공백 제거
 				for (let j = 0; j < textLines.length; j++) {
-					textLines[j] = textLines[j].substring(0, textLines[j].length - 1);
+					textLines[j].text = textLines[j].text.substring(0, textLines[j].text.length - 1);
 				}
 			} else {
 				// 왼쪽 공백 추가
 				for (let j = 0; j < textLines.length; j++) {
-					textLines[j] = "　" + textLines[j];
+					textLines[j].text = "　" + textLines[j].text;
 				}
 				added = true;
 			}
@@ -2321,7 +2354,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 		// 모든 줄이 공백으로 끝나는지 확인
 		if (remained) {
 			for (let j = 0; j < textLines.length; j++) {
-				if (!textLines[j].endsWith("　")) {
+				if (!textLines[j].text.endsWith("　")) {
 					remained = false;
 					break;
 				}
@@ -2330,14 +2363,20 @@ SmiEditor.prototype.moveToSide = function(direction) {
 		if (!remained) {
 			// 오른쪽에 추가했던 공백을 다 없앴어도 원본에 공백 있을 수 있음
 			for (let i = 0; i < textLines.length; i++) {
-				let textLine = textLines[i];
+				let textLine = textLines[i].text;
 				if (textLine.endsWith(" ") || textLine.endsWith("　")) {
-					textLines[i] = textLine + "​";
+					textLines[i].text = textLine + "​";
 				}
 			}
 		}
-		const br = (remained ? "​" : "") + ("<br>" + ((remained || added) ? "\n" : "")) + (added ? "​" : "");
-		textLines = ((added ? "​" : "") + textLines.join(br) + (remained ? "​" : "")).split("\n");
+		for (let i = 0; i < textLines.length; i++) {
+			const line = textLines[i];
+			if (added || remained) line.prev += "\n";
+			if (added   ) line.prev = line.prev + "​";
+			if (remained) line.next = "​" + line.next;
+			textLines[i] = line.prev + line.text + line.next;
+		}
+		textLines = textLines.join("<br>").split("\n");
 		
 	} else {
 		// 왼쪽으로 이동
@@ -2347,7 +2386,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 			// 모든 줄이 공백으로 시작하는지 확인
 			if (remained) {
 				for (let j = 0; j < textLines.length; j++) {
-					if (!textLines[j].startsWith("　")) {
+					if (!textLines[j].text.startsWith("　")) {
 						remained = false;
 						break;
 					}
@@ -2356,12 +2395,12 @@ SmiEditor.prototype.moveToSide = function(direction) {
 			if (remained) {
 				// 왼쪽 공백 제거
 				for (let j = 0; j < textLines.length; j++) {
-					textLines[j] = textLines[j].substring(1);
+					textLines[j].text = textLines[j].text.substring(1);
 				}
 			} else {
 				// 오른쪽 공백 추가
 				for (let j = 0; j < textLines.length; j++) {
-					textLines[j] = textLines[j] + "　";
+					textLines[j].text = textLines[j].text + "　";
 				}
 				added = true;
 			}
@@ -2369,7 +2408,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 		// 모든 줄이 공백으로 시작하는지 확인
 		if (remained) {
 			for (let j = 0; j < textLines.length; j++) {
-				if (!textLines[j].startsWith("　")) {
+				if (!textLines[j].text.startsWith("　")) {
 					remained = false;
 					break;
 				}
@@ -2378,14 +2417,20 @@ SmiEditor.prototype.moveToSide = function(direction) {
 		if (!remained) {
 			// 왼쪽에 추가했던 공백을 다 없앴어도 원본에 공백 있을 수 있음
 			for (let i = 0; i < textLines.length; i++) {
-				let textLine = textLines[i];
+				let textLine = textLines[i].text;
 				if (textLine.startsWith(" ") || textLine.startsWith("　")) {
-					textLines[i] = "​" + textLine;
+					textLines[i].text = "​" + textLine;
 				}
 			}
 		}
-		const br = (added ? "​" : "") + ("<br>" + ((remained || added) ? "\n" : "")) + (remained ? "​" : "");
-		textLines = ((remained ? "​" : "") + textLines.join(br) + (added ? "​" : "")).split("\n");
+		for (let i = 0; i < textLines.length; i++) {
+			const line = textLines[i];
+			if (added || remained) line.prev += "\n";
+			if (remained) line.prev = line.prev + "​";
+			if (added   ) line.next = "​" + line.next;
+			textLines[i] = line.prev + line.text + line.next;
+		}
+		textLines = textLines.join("<br>").split("\n");
 	}
 	
 	for (let i = 0; i < textLines.length; i++) {
