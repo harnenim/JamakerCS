@@ -2285,11 +2285,13 @@ function saveFile(asNew, isExport) {
 	}
 	*/
 	if (withAss) {
+		const appendFile = currentTab.getAdditionalToAss();
+		const appendStyles = appendFile.getStyles();
+		
 		const assStyles = {};
 		{
-			const assStyleList = currentTab.getAdditionalToAss().getStyles().body;
-			for (let i = 0; i < assStyleList.length; i++) {
-				const assStyle = assStyleList[i];
+			for (let i = 0; i < appendStyles.body.length; i++) {
+				const assStyle = appendStyles.body[i];
 				const arrStyle = [];
 				arrStyle.push(assStyle.Fontname);
 				arrStyle.push(assStyle.Fontsize);
@@ -2313,15 +2315,19 @@ function saveFile(asNew, isExport) {
 				arrStyle.push(assStyle.MarginR    );
 				arrStyle.push(assStyle.MarginV    );
 				assStyles[assStyle.Name] = SmiFile.parseStyle(arrStyle.join(","));
+				assStyles[assStyle.Name].orig = assStyle;
 			}
 			
 			const hold = currentTab.holds[0];
 			const saveStyle = SmiFile.toSaveStyle(hold.style);
 			
 			const assStyle = assStyles["Default"];
-			if (assStyle && SmiFile.toSaveStyle(assStyle) != saveStyle) {
-				alert("ASS 추가 스크립트에서 설정한 스타일과 홀드의 스타일이 다릅니다.\n[메인] 홀드 스타일을 수정합니다.");
-				hold.setStyle(assStyle);
+			if (assStyle) {
+				if (assStyle && SmiFile.toSaveStyle(assStyle) != saveStyle) {
+					alert("ASS 추가 스크립트에서 설정한 스타일과 홀드의 스타일이 다릅니다.\n[메인] 홀드 스타일을 수정합니다.");
+					hold.setStyle(assStyle);
+				}
+				assStyle.orig.hasHold = true;
 			}
 		}
 		const smiStyles = {};
@@ -2330,30 +2336,58 @@ function saveFile(asNew, isExport) {
 			const saveStyle = SmiFile.toSaveStyle(hold.style);
 			
 			const assStyle = assStyles[hold.name];
-			if (assStyle && SmiFile.toSaveStyle(assStyle) != saveStyle) {
-				alert("ASS 추가 스크립트에서 설정한 스타일과 홀드의 스타일이 다릅니다.\n[" + hold.name + "] 홀드 스타일을 수정합니다.");
-				hold.setStyle(assStyle);
+			if (assStyle) {
+				// ASS 스타일이 있으면 따라감
+				if (SmiFile.toSaveStyle(assStyle) != saveStyle) {
+					alert("ASS 추가 스크립트에서 설정한 스타일과 홀드의 스타일이 다릅니다.\n[" + hold.name + "] 홀드 스타일을 수정합니다.");
+					hold.setStyle(assStyle);
+				}
+				assStyle.orig.hasHold = true;
 				
-			} else if (typeof smiStyles[hold.name] == "string") {
-				if (smiStyles[hold.name] != saveStyle) {
-					const from = hold.name;
-					let to = null;
-					for (let j = 1; ; j++) {
-						to = hold.name + j;
-						if (typeof smiStyles[to] == "undefined") {
-							break;
+			} else {
+				// ASS 스타일이 없으면 홀드 스타일끼리 비교
+				if (typeof smiStyles[hold.name] == "string") {
+					if (smiStyles[hold.name] != saveStyle) {
+						const from = hold.name;
+						let to = null;
+						for (let j = 1; ; j++) {
+							to = hold.name + j;
+							if (typeof smiStyles[to] == "undefined") {
+								break;
+							}
 						}
+						alert("같은 이름의 홀드끼리 스타일이 일치하지 않습니다.\n임의로 이름을 변경합니다.\n" + from + " -> " + to);
+						hold.name = to;
+						hold.selector.find(".hold-name > span").text(hold.owner.holds.indexOf(hold) + "." + hold.name);
+						hold.selector.attr({ title: hold.name });
+						hold.afterChangeSaved(hold.isSaved());
+						smiStyles[hold.name] = saveStyle;
 					}
-					alert("같은 이름의 홀드끼리 스타일이 일치하지 않습니다.\n임의로 이름을 변경합니다.\n" + from + " -> " + to);
-					hold.name = to;
-					hold.selector.find(".hold-name > span").text(hold.owner.holds.indexOf(hold) + "." + hold.name);
-					hold.selector.attr({ title: hold.name });
-					hold.afterChangeSaved(hold.isSaved());
+				} else {
 					smiStyles[hold.name] = saveStyle;
 				}
-			} else {
-				smiStyles[hold.name] = saveStyle;
 			}
+		}
+		
+		let removeCount = 0;
+		const requiredStyles = [];
+		for (let i = 0; i < appendStyles.body.length; i++) {
+			if (appendStyles.body[i].hasHold) {
+				removeCount++;
+			} else {
+				requiredStyles.push(appendStyles.body[i]);
+			}
+		}
+		if (removeCount) {
+			appendStyles.body = requiredStyles;
+			
+			const appendWithoutEvents = new AssFile(" ");
+			for (let i = 0; i < appendFile.parts.length; i++) {
+				const part = appendFile.parts[i];
+				if (part.name == "Events") continue;
+				appendWithoutEvents.parts.push(part);
+			}
+			currentTab.area.find(".tab-ass-appends textarea").val(appendWithoutEvents.toText());
 		}
 	}
 	
