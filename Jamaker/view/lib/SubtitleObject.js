@@ -708,11 +708,7 @@ SyncAttr.prototype.getTextOnly = function () {
 	return text;
 }
 Subtitle.Width =
-{	DEFAULT_FONT: { fontFamily: "맑은 고딕", fontSize: 72 }
-/*
-	public static Font DEFAULT_FONT = new Font("맑은 고딕", 72.0F);
-	public static Image FAKE_IMAGE = new Bitmap(1, 1);
-*/
+{	DEFAULT_FONT: { fontFamily: "맑은 고딕", fontSize: "72px" }
 ,	getWidth: function(input, font) {
 		if (typeof input == "string") {
 			if (!font) font = this.DEFAULT_FONT;
@@ -1705,7 +1701,7 @@ AssEvent.fromSync = function(sync, style=null) {
 					lines = lines.split("\\N");
 					const pureLines = [];
 					for (let i = 0; i < lines.length; i++) {
-						let pureLine = Subtitle.$tmp.html(lines[i].split("{").join("<").split("}").join(">")).text();
+						let pureLine = Subtitle.$tmp.html(lines[i].split("{").join("<a ").split("}").join(">")).text();
 						if (pureLine.startsWith("-")) {
 							pureLines.push({ i: i, text: pureLine });
 						}
@@ -1713,7 +1709,7 @@ AssEvent.fromSync = function(sync, style=null) {
 					if (pureLines.length == 0) {
 						// 반각 줄표 없으면 전각 줄표로 재확인
 						for (let i = 0; i < lines.length; i++) {
-							let pureLine = Subtitle.$tmp.html(lines[i].split("{").join("<").split("}").join(">")).text();
+							let pureLine = Subtitle.$tmp.html(lines[i].split("{").join("<a ").split("}").join(">")).text();
 							if (pureLine.startsWith("－")) {
 								pureLines.push({ i: i, text: pureLine });
 							}
@@ -1721,7 +1717,7 @@ AssEvent.fromSync = function(sync, style=null) {
 					}
 					// 줄표 달린 게 2개 이상일 때
 					if (pureLines.length >= 2) {
-						const wStyle = { fontFamily: style.Fontname, fontSize: style.Fontsize };
+						const wStyle = { fontFamily: style.Fontname, fontSize: style.Fontsize + "px" };
 						const oneWidth = Subtitle.Width.getWidth("　", wStyle);
 						let maxWidth = 0;
 						for (let i = 0; i < pureLines.length; i++) {
