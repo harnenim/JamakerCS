@@ -3130,7 +3130,7 @@ function loadAssFile(path, text, target=-1) {
 				if (delCount) countMsg.push("삭제 " + addCount + "건");
 				msg = "스크립트/태그 " + countMsg.join(", ") + "이 있습니다. 적용하시겠습니까?\n\n자막에 맞는 동영상 파일이 열려있어야 정상적인 결과를 얻을 수 있습니다.";
 			}
-			confirm(msg, () => { try {
+			confirm(msg, () => {
 				if (changedStyles.length) {
 					const stylePart = appendFile.getStyles();
 					
@@ -3269,7 +3269,7 @@ function loadAssFile(path, text, target=-1) {
 											replaceFrom = i;
 											fromEmpty = false;
 										}
-	
+										
 										for (; i < body.length; i++) {
 											sync = Subtitle.findSync(body[i].start);
 											if (sync < end) {
@@ -3325,6 +3325,7 @@ function loadAssFile(path, text, target=-1) {
 								} else if (style.startsWith(hold.name)) {
 									point += 3; // 이름 포함
 								}
+								
 								if (point < 2) {
 									// 홀드명이 안 맞으면, 싱크도 앞뒤 모두 일치하는 게 아니면 넣지 않음
 									continue;
@@ -3453,7 +3454,7 @@ function loadAssFile(path, text, target=-1) {
 						let cursor = hold.input[0].selectionStart;
 						let cursorSync = 0;
 						if (hold.text) {
-							for (let i = hold.text.substring(0, cursor).split("\n").length; i > 0; i--) {
+							for (let i = hold.text.substring(0, cursor).split("\n").length - 1; i > 0; i--) {
 								const line = hold.lines[i];
 								if (line.TYPE) {
 									cursorSync = line.SYNC;
@@ -3516,11 +3517,7 @@ function loadAssFile(path, text, target=-1) {
 					
 					currentTab.assHold.assEditor.setEvents(appendEvents.body, frameSyncs);
 				}
-			} catch (e) {
-				// 가끔 안 도는 경우가 있는 것 같은데...
-				console.log(e);
-				// TODO: 로그 저장해봐야 하나...
-			}});
+			});
 		} else {
 			let msg = "ASS 자막에 특별한 수정사항이 없습니다.\n추가 정보 부분만 검토합니다.";
 			confirm(msg, () => {

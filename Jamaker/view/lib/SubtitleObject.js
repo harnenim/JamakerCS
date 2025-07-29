@@ -1701,7 +1701,7 @@ AssEvent.fromSync = function(sync, style=null) {
 					lines = lines.split("\\N");
 					const pureLines = [];
 					for (let i = 0; i < lines.length; i++) {
-						let pureLine = Subtitle.$tmp.html(lines[i].split("{").join("<a ").split("}").join(">")).text();
+						let pureLine = Subtitle.$tmp.html(lines[i].split("{").join("<span ").split("}").join(">")).text();
 						if (pureLine.startsWith("-")) {
 							pureLines.push({ i: i, text: pureLine });
 						}
@@ -1709,7 +1709,7 @@ AssEvent.fromSync = function(sync, style=null) {
 					if (pureLines.length == 0) {
 						// 반각 줄표 없으면 전각 줄표로 재확인
 						for (let i = 0; i < lines.length; i++) {
-							let pureLine = Subtitle.$tmp.html(lines[i].split("{").join("<a ").split("}").join(">")).text();
+							let pureLine = Subtitle.$tmp.html(lines[i].split("{").join("<span ").split("}").join(">")).text();
 							if (pureLine.startsWith("－")) {
 								pureLines.push({ i: i, text: pureLine });
 							}
