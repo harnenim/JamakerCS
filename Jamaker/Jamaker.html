@@ -223,7 +223,7 @@ const window_open = function(url, name, options, opener) {
 		
 		this.windows[this.mainView.contentWindow.windowName] = window;
 		
-		this.script("init", [this.strSettingJson]); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
+		this.script("init", [this.strSettingJson, false]); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
 		this.script("setPlayerDlls", [this.strBridgeList]);
 		this.script("setHighlights", [this.strHighlights]);
 
@@ -545,7 +545,7 @@ window.MB = 9;
 			// 존재하면 가져오기
 			this.strSettingJson = localStorage.getItem("setting.bak");
 		}
-		this.script("init", [this.strSettingJson, false]);
+		this.script("init", [this.strSettingJson, true]);
 	}
 	editor.saveSetting = function(setting) {
 		localStorage.setItem("setting", (this.strSettingJson = setting));

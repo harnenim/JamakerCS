@@ -1503,22 +1503,25 @@ function setDefault(target, dflt) {
 
 // C# 쪽에서 호출
 function init(jsonSetting, isBackup=true) {
-	{
+	if (!SmiEditor.tabPreset) {
 		const tabPreset = $("#tabPreset");
 		SmiEditor.tabPreset = tabPreset.clone();
 		SmiEditor.tabPreset.attr({ id: null });
 		tabPreset.remove();
-		
+	}
+	if (!SmiEditor.assHoldPreset) {
 		const assHoldPreset = $("#assHoldPreset");
 		SmiEditor.assHoldPreset = assHoldPreset.clone();
 		SmiEditor.assHoldPreset.attr({ id: null });
 		assHoldPreset.remove();
-		
+	}
+	if (!SmiEditor.stylePreset) {
 		const holdStylePreset = $("#holdStylePreset");
 		SmiEditor.stylePreset = holdStylePreset.clone();
 		SmiEditor.stylePreset.attr({ id: null });
 		holdStylePreset.remove();
-		
+	}
+	if (!SmiEditor.assPreset) {
 		const holdAssPreset = $("#holdAssPreset");
 		SmiEditor.assPreset = holdAssPreset.clone();
 		SmiEditor.assPreset.attr({ id: null });
@@ -1533,7 +1536,7 @@ function init(jsonSetting, isBackup=true) {
 				return;
 			}
 		}
-		
+
 		const notified = checkVersion(setting.version);
 		
 		if (notified.style) {
@@ -1566,7 +1569,7 @@ function init(jsonSetting, isBackup=true) {
 			
 			setting.viewer.css = css.join("");
 		}
-		
+
 		// C#에서 보내준 세팅값 오류로 빠진 게 있으면 채워주기
 		if (!Array.isArray(setting)) {
 			let count = setDefault(setting, DEFAULT_SETTING);
@@ -1670,9 +1673,9 @@ function init(jsonSetting, isBackup=true) {
 		
 		if (!isBackup) {
 			binder.repairSetting();
-			return;
-		}
-		
+		return;
+	}
+	
 		setting = deepCopyObj(DEFAULT_SETTING);
 		saveSetting();
 	}
@@ -1864,7 +1867,7 @@ function init(jsonSetting, isBackup=true) {
 			}
 		}
 	});
-	
+
 	setSetting(setting, true);
 	SmiEditor.Viewer.open(); // 스타일 세팅 설정 완료 후에 실행
 	moveWindowsToSetting();
@@ -1883,7 +1886,7 @@ function setSetting(setting, initial=false) {
 	} else {
 		$("body").removeClass("use-tab");
 	}
-	
+
 	SmiEditor.setSetting(setting);
 	if (initial || (oldSetting.size != setting.size) || (JSON.stringify(oldSetting.color) != JSON.stringify(setting.color))) {
 		// 스타일 바뀌었을 때만 재생성
@@ -2040,7 +2043,7 @@ function setSetting(setting, initial=false) {
 	
 	SmiEditor.scrollMargin = setting.scrollMargin;
 	AssEvent.useAlignDialogue = setting.viewer.useAlign;
-	
+
 	{
 		const dll = setting.player.control.dll;
 		if (dll) {
@@ -2053,7 +2056,7 @@ function setSetting(setting, initial=false) {
 	
 	Combine.css = setting.viewer.css;
 	DefaultStyle.Fontsize = Number(setting.viewer.size) / 18 * 80;
-	
+
 	binder.setMenus(setting.menu);
 	
 	window.setting = JSON.parse(JSON.stringify(setting));
@@ -2535,7 +2538,7 @@ function openNewTab(text, path, forVideo) {
 	}
 
 	const title = path ? ((path.length > 14) ? ("..." + path.substring(path.length - 14, path.length - 4)) : path.substring(0, path.length - 4)) : "새 문서";
-	
+
 	const tab = new Tab(text ? text : setting.newFile, path);
 	tabs.push(tab);
 	$("#editor").append(tab.area);
@@ -2543,10 +2546,10 @@ function openNewTab(text, path, forVideo) {
 	const th = $("<div class='th'>").append($("<span>").text(title)).attr({ title: path });
 	th.append($("<button type='button' class='btn-close-tab'>").text("×"));
 	$("#btnNewTab").before(th);
-	
+
 	_for_video_ = forVideo;
 	(tab.th = th).data("tab", tab).click();
-	
+
 	if (path && path.indexOf(":")) { // 웹버전에선 온전한 파일 경로를 얻지 못해 콜론 없음
 		let withAss = false;
 		{
