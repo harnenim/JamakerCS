@@ -2275,6 +2275,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 		}
 		// 태그로 끝나는 라인이 아닐 경우 아직 싱크 찍지 않은 부분으로 간주
 		if (!this.lines[nextLine].TEXT.toUpperCase().endsWith(">")) {
+			nextLine++;
 			break;
 		}
 	}
@@ -2301,7 +2302,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 			
 			const tag = lineText.substring(0, tagEnd);
 			const tagL = tag.toLowerCase();
-			if (tag.startsWith("<s") || tag.startsWith("<u")) break; // 공백문자에도 영향을 줌
+			if (tagL.startsWith("<s") || tagL.startsWith("<u")) break; // 공백문자에도 영향을 줌
 			linePrev += tag;
 			lineText = lineText.substring(tagEnd);
 		}
@@ -2312,7 +2313,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 			
 			const tag = lineText.substring(tagStart);
 			const tagL = tag.toLowerCase();
-			if (tag.startsWith("</s") || tag.startsWith("</u")) break; // 공백문자에도 영향을 줌
+			if (tagL.startsWith("</s") || tagL.startsWith("</u")) break; // 공백문자에도 영향을 줌
 			lineNext += tag;
 			lineText = lineText.substring(0, tagStart);
 		}
@@ -2371,7 +2372,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 		}
 		for (let i = 0; i < textLines.length; i++) {
 			const line = textLines[i];
-			if (added || remained) line.prev += "\n";
+			if ((i || line.prev) && (added || remained)) line.prev += "\n";
 			if (added   ) line.prev = line.prev + "​";
 			if (remained) line.next = "​" + line.next;
 			textLines[i] = line.prev + line.text + line.next;
@@ -2425,7 +2426,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 		}
 		for (let i = 0; i < textLines.length; i++) {
 			const line = textLines[i];
-			if (added || remained) line.prev += "\n";
+			if ((i || line.prev) && (added || remained)) line.prev += "\n";
 			if (remained) line.prev = line.prev + "​";
 			if (added   ) line.next = "​" + line.next;
 			textLines[i] = line.prev + line.text + line.next;
