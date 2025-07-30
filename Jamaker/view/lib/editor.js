@@ -2111,7 +2111,7 @@ function setHighlights(list) {
 function openSetting() {
 	SmiEditor.settingWindow = window.open("setting.html", "setting", "scrollbars=no,location=no,resizable=no,width=1,height=1");
 	binder.moveWindow("setting"
-			, (setting.window.x < setting.player.window.x)
+			, (setting.window.x < setting.player.window.x && setting.window.width < 880)
 			  ? (setting.window.x + (40 * DPI))
 			  : (setting.window.x + setting.window.width - (840 * DPI))
 			, setting.window.y + (40 * DPI)
@@ -2146,7 +2146,9 @@ function openHelp(name) {
 	const url = (name.substring(0, 4) == "http") ? name : "help/" + name.split("..").join("").split(":").join("") + ".html";
 	SmiEditor.helpWindow = window.open(url, "help", "scrollbars=no,location=no,resizable=no,width=1,height=1");
 	binder.moveWindow("help"
-			, setting.window.x + (40 * DPI)
+			, (setting.window.x < setting.player.window.x && setting.window.width < 880)
+			  ? (setting.window.x + (40 * DPI))
+			  : (setting.window.x + setting.window.width - (840 * DPI))
 			, setting.window.y + (40 * DPI)
 			, 800 * DPI
 			, (600+30) * DPI
