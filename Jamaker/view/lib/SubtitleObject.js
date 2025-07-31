@@ -2053,7 +2053,7 @@ AssFile.prototype.addStyle = function(name, style, origin=null) {
 	style.Encoding = 1;
 	style.origin = origin;
 	
-	if (!style.Fontname) style.Fontname = "맑은 고딕";
+	if (!style.Fontname) style.Fontname = Subtitle.DefaultStyle.Fontname;
 	style.Bold        = style.Bold        ? -1 : 0;
 	style.Italic      = style.Italic      ? -1 : 0;
 	style.Underline   = style.Underline   ? -1 : 0;
@@ -3926,7 +3926,7 @@ SmiFile.toAssStyle = function(smiStyle, assStyle) {
 	assStyle.key = "Style";
 	assStyle.Encoding = 1;
 
-	smiStyle.Fontname = (!smiStyle.Fontname ? "맑은 고딕" : smiStyle.Fontname);
+	smiStyle.Fontname = (!smiStyle.Fontname ? Subtitle.DefaultStyle.Fontname : smiStyle.Fontname);
 	assStyle.Fontname = (smiStyle.Fontname);
 	assStyle.Fontsize = (smiStyle.Fontsize);
 	{ let fc = smiStyle.PrimaryColour   + (511 - smiStyle.PrimaryOpacity  ).toString(16).substring(1).toUpperCase(); assStyle.PrimaryColour   = ("&H"+fc[7]+fc[8]+fc[5]+fc[6]+fc[3]+fc[4]+fc[1]+fc[2]); }
@@ -3952,7 +3952,7 @@ SmiFile.toAssStyle = function(smiStyle, assStyle) {
 }
 SmiFile.fromAssStyle = function(assStyle, smiStyle=null) {
 	if (!smiStyle) smiStyle = JSON.parse(JSON.stringify(DefaultStyle));
-	smiStyle.Fontname = (assStyle.Fontname == "맑은 고딕" ? "" : assStyle.Fontname);
+	smiStyle.Fontname = (assStyle.Fontname == Subtitle.DefaultStyle.Fontname ? "" : assStyle.Fontname);
 	smiStyle.Fontsize = assStyle.Fontsize;
 	{ let fc = assStyle.PrimaryColour  ; smiStyle.PrimaryColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; smiStyle.PrimaryOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
 	{ let fc = assStyle.SecondaryColour; smiStyle.SecondaryColour = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; smiStyle.SecondaryOpacity = 255 - Number('0x'+fc[2]+fc[3]); }

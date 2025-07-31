@@ -197,7 +197,7 @@ window.Tab = function(text, path) {
 				}
 				if (!exist) {
 					// 없으면 ASS 추가 스크립트에 홀드 스타일 넣기
-					const style = SmiFile.toAssStyle(hold.style);
+					style = SmiFile.toAssStyle(hold.style);
 					style.Name = hold.name;
 					
 					const appendFile = new AssFile(tab.area.find(".tab-ass-appends textarea").val());
@@ -269,11 +269,11 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	hold.owner = this;
 	hold.pos   = hold.savedPos   = info.pos;
 	
-	const style = hold.style = (info.style ? info.style : JSON.parse(JSON.stringify(setting.defStyle)));
-	if (style.Fontname == setting.defStyle.Fontname) {
+	const style = hold.style = (info.style ? info.style : JSON.parse(JSON.stringify(Subtitle.DefaultStyle)));
+	if (style.Fontname == Subtitle.DefaultStyle.Fontname) {
 		style.Fontname = "";
 	}
-	hold.savedStyle = SmiFile.toSaveStyle(style, setting.defStyle);
+	hold.savedStyle = SmiFile.toSaveStyle(style, Subtitle.DefaultStyle);
 	hold.savedAss = hold.ass = info.ass;
 	hold.tempSavedText = info.text;
 	hold.updateTimeRange();
@@ -396,7 +396,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	return hold;
 }
 SmiEditor.prototype.setStyle = function(style) {
-	if (style.Fontname == setting.defStyle.Fontname) {
+	if (style.Fontname == Subtitle.DefaultStyle.Fontname) {
 		style.Fontname = "";
 	}
 	this.style = style;
@@ -434,12 +434,12 @@ SmiEditor.prototype.setStyle = function(style) {
 }
 SmiEditor.prototype.refreshStyle = function() {
 	const style = this.style;
-	if (style.Fontname == setting.defStyle.Fontname) {
+	if (style.Fontname == Subtitle.DefaultStyle.Fontname) {
 		style.Fontname = "";
 	}
 	
 	const css = {};
-	css.fontFamily = style.Fontname ? (style.Fontname.startsWith("@") ? style.Fontname.substring(1) : style.Fontname) : setting.defStyle.Fontname;
+	css.fontFamily = style.Fontname ? (style.Fontname.startsWith("@") ? style.Fontname.substring(1) : style.Fontname) : Subtitle.DefaultStyle.Fontname;
 	css.color = style.PrimaryColour + (256 + style.PrimaryOpacity).toString(16).substring(1);
 	css.fontStyle = style.Italic ? "italic" : "";
 	{	const deco = [];
@@ -1030,7 +1030,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 	for (let h = 0; h < holds.length; h++) {
 		const hold = holds[h];
 		const name = (h == 0) ? "Default" : hold.name;
-		const style = hold.style ? hold.style : setting.defStyle;
+		const style = hold.style ? hold.style : Subtitle.DefaultStyle;
 		
 		if ((style.output & 0b10) == 0) {
 			// ASS 변환 대상 제외
@@ -1369,12 +1369,12 @@ SmiEditor.prototype.isSaved = function() {
 	if (this.isAssHold) {
 		return this.assEditor.isSaved;
 	} else {
-		if (this.style.Fontname == setting.defStyle.Fontname) {
+		if (this.style.Fontname == Subtitle.DefaultStyle.Fontname) {
 			this.style.Fontname = "";
 		}
 		return (this.savedName  == this.name )
 			&& (this.savedPos   == this.pos  )
-			&& (this.savedStyle == SmiFile.toSaveStyle(this.style, setting.defStyle))
+			&& (this.savedStyle == SmiFile.toSaveStyle(this.style, Subtitle.DefaultStyle))
 			&& (this.saved == this.input.val()
 		);
 	}
@@ -1674,6 +1674,7 @@ function init(jsonSetting, isBackup=true) {
 				setting.defStyle.Fontname = "맑은 고딕";
 				count++;
 			}
+			Subtitle.DefaultStyle = setting.defStyle;
 			if (count) {
 				saveSetting();
 			}
@@ -2069,7 +2070,11 @@ function setSetting(setting, initial=false) {
 	}
 	
 	Combine.css = setting.viewer.css;
-//	DefaultStyle.Fontsize = Number(setting.viewer.size) / 18 * 80;
+	//	DefaultStyle.Fontsize = Number(setting.viewer.size) / 18 * 80;
+	Subtitle.DefaultStyle = setting.defStyle;
+
+	$("input[name=Fontname]").attr({ placeholder: Subtitle.DefaultStyle.Fontname });
+	SmiEditor.stylePreset.find("input[name=Fontname]").attr({ placeholder: Subtitle.DefaultStyle.Fontname });
 	
 	binder.setMenus(setting.menu);
 	
@@ -2338,11 +2343,11 @@ function saveFile(asNew, isExport) {
 			}
 			
 			const hold = currentTab.holds[0];
-			const saveStyle = SmiFile.toSaveStyle(hold.style, setting.defStyle);
+			const saveStyle = SmiFile.toSaveStyle(hold.style, Subtitle.DefaultStyle);
 			
 			const assStyle = assStyles["Default"];
 			if (assStyle) {
-				if (assStyle && SmiFile.toSaveStyle(assStyle, setting.defStyle) != saveStyle) {
+				if (assStyle && SmiFile.toSaveStyle(assStyle, Subtitle.DefaultStyle) != saveStyle) {
 					alert("ASS 추가 스크립트에서 설정한 스타일과 홀드의 스타일이 다릅니다.\n[메인] 홀드 스타일을 수정합니다.");
 					hold.setStyle(assStyle);
 				}
@@ -2352,12 +2357,12 @@ function saveFile(asNew, isExport) {
 		const smiStyles = {};
 		for (let i = 1; i < currentTab.holds.length; i++) {
 			const hold = currentTab.holds[i];
-			const saveStyle = SmiFile.toSaveStyle(hold.style, setting.defStyle);
+			const saveStyle = SmiFile.toSaveStyle(hold.style, Subtitle.DefaultStyle);
 			
 			const assStyle = assStyles[hold.name];
 			if (assStyle) {
 				// ASS 스타일이 있으면 따라감
-				if (SmiFile.toSaveStyle(assStyle, setting.defStyle) != saveStyle) {
+				if (SmiFile.toSaveStyle(assStyle, Subtitle.DefaultStyle) != saveStyle) {
 					alert("ASS 추가 스크립트에서 설정한 스타일과 홀드의 스타일이 다릅니다.\n[" + hold.name + "] 홀드 스타일을 수정합니다.");
 					hold.setStyle(assStyle);
 				}
@@ -2484,7 +2489,7 @@ function afterSaveFile(path) {
 		hold.saved = hold.input.val();
 		hold.savedPos = hold.pos;
 		hold.savedName = hold.name;
-		hold.savedStyle = SmiFile.toSaveStyle(hold.style, setting.defStyle);
+		hold.savedStyle = SmiFile.toSaveStyle(hold.style, Subtitle.DefaultStyle);
 		if (hold.assEditor) {
 			hold.assEditor.setSaved();
 		}
@@ -3567,14 +3572,14 @@ function splitHold(tab, styleName) {
 	}
 	
 	// 홀드에 적용할 스타일 찾기
-	let style = setting.defStyle;
+	let style = Subtitle.DefaultStyle;
 	for (let i = 0; i < tab.holds.length; i++) {
 		const hold = tab.holds[i];
 		if (hold.name == styleName) {
 			style = JSON.parse(JSON.stringify(hold.style));
 		}
 	}
-	if (style == setting.defStyle) {
+	if (style == Subtitle.DefaultStyle) {
 		// ASS 추가 스크립트에서 찾기
 		const appendFile = new AssFile(tab.area.find(".tab-ass-appends textarea").val());
 		const styles = appendFile.getStyles();
@@ -3613,7 +3618,7 @@ function splitHold(tab, styleName) {
 		}
 		tab.area.find(".tab-ass-appends textarea").val(appendFile.toText());
 	}
-	if (style == setting.defStyle) {
+	if (style == Subtitle.DefaultStyle) {
 		// 못 찾았을 경우
 		style = JSON.parse(JSON.stringify(style));
 		style.Fontname = "";

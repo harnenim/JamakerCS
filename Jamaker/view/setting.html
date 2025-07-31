@@ -894,8 +894,6 @@ $(() => {
 			opener.saveSetting();
 			setColor(setting.color);
 			
-			opener.$("input[name=Fontname]").attr({ placeholder: setting.defStyle.Fontname });
-			opener.SmiEditor.stylePreset.find("input[name=Fontname]").attr({ placeholder: setting.defStyle.Fontname });;
 			for (let i = 0; i < defaultHolds.length; i++) {
 				defaultHolds[i].setStyle(JSON.parse(JSON.stringify(setting.defStyle)));
 			}
