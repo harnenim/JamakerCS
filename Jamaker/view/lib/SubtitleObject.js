@@ -1491,6 +1491,7 @@ AssEvent.fromSync = function(sync, style=null) {
 			let y = style.pos[1];
 			
 			// RUBY 태그 등을 레이어 둘 이상으로 나눴으면 pos 같게 고정 필요
+			// TODO: ... 레이어 번호 다르게 했으면 pos 떼도 되나?
 			let moved = (texts.length > 1);
 			
 			// 다른 홀드랑 겹쳐서 기본적으로 올려야 하는 내용물

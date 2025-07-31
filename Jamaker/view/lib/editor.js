@@ -403,7 +403,7 @@ SmiEditor.prototype.setStyle = function(style) {
 	area.find("input[name=Italic]   ").prop("checked", style.Italic);
 	area.find("input[name=Underline]").prop("checked", style.Underline);
 	area.find("input[name=StrikeOut]").prop("checked", style.StrikeOut);
-
+	
 	area.find("input[name=Fontname]").val(style.Fontname);
 	area.find("input[name=output][value=" + style.output + "]").click();
 	area.find("input[name=Fontsize]").val(style.Fontsize);
@@ -1212,7 +1212,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			const usedLines = []; // 각 싱크에 사용된 줄 수
 			for (let h = 0; h < an2Holds.length; h++) {
 				const hold = an2Holds[h];
-				const useBottom = (!hold.style || hold.style.Alignment == 2); // ASS에서 중앙 하단일 경우만 pos 자동 조정
+				const useBottom = (!hold.style || (hold.style.Alignment % 3 == 2)); // ASS 중앙 정렬인 것들에 대해 기본 높이 계산
 				for (let i = 0; i < hold.syncs.length; i++) {
 					const sync = hold.syncs[i];
 					let used = 0;
@@ -1536,7 +1536,7 @@ function init(jsonSetting, isBackup=true) {
 				return;
 			}
 		}
-
+		
 		const notified = checkVersion(setting.version);
 		
 		if (notified.style) {
@@ -1569,7 +1569,7 @@ function init(jsonSetting, isBackup=true) {
 			
 			setting.viewer.css = css.join("");
 		}
-
+		
 		// C#에서 보내준 세팅값 오류로 빠진 게 있으면 채워주기
 		if (!Array.isArray(setting)) {
 			let count = setDefault(setting, DEFAULT_SETTING);
@@ -1673,9 +1673,9 @@ function init(jsonSetting, isBackup=true) {
 		
 		if (!isBackup) {
 			binder.repairSetting();
-		return;
-	}
-	
+			return;
+		}
+		
 		setting = deepCopyObj(DEFAULT_SETTING);
 		saveSetting();
 	}
@@ -1867,7 +1867,7 @@ function init(jsonSetting, isBackup=true) {
 			}
 		}
 	});
-
+	
 	setSetting(setting, true);
 	SmiEditor.Viewer.open(); // 스타일 세팅 설정 완료 후에 실행
 	moveWindowsToSetting();
@@ -1886,7 +1886,7 @@ function setSetting(setting, initial=false) {
 	} else {
 		$("body").removeClass("use-tab");
 	}
-
+	
 	SmiEditor.setSetting(setting);
 	if (initial || (oldSetting.size != setting.size) || (JSON.stringify(oldSetting.color) != JSON.stringify(setting.color))) {
 		// 스타일 바뀌었을 때만 재생성
@@ -2043,7 +2043,7 @@ function setSetting(setting, initial=false) {
 	
 	SmiEditor.scrollMargin = setting.scrollMargin;
 	AssEvent.useAlignDialogue = setting.viewer.useAlign;
-
+	
 	{
 		const dll = setting.player.control.dll;
 		if (dll) {
@@ -2538,7 +2538,7 @@ function openNewTab(text, path, forVideo) {
 	}
 
 	const title = path ? ((path.length > 14) ? ("..." + path.substring(path.length - 14, path.length - 4)) : path.substring(0, path.length - 4)) : "새 문서";
-
+	
 	const tab = new Tab(text ? text : setting.newFile, path);
 	tabs.push(tab);
 	$("#editor").append(tab.area);
@@ -2546,10 +2546,10 @@ function openNewTab(text, path, forVideo) {
 	const th = $("<div class='th'>").append($("<span>").text(title)).attr({ title: path });
 	th.append($("<button type='button' class='btn-close-tab'>").text("×"));
 	$("#btnNewTab").before(th);
-
+	
 	_for_video_ = forVideo;
 	(tab.th = th).data("tab", tab).click();
-
+	
 	if (path && path.indexOf(":")) { // 웹버전에선 온전한 파일 경로를 얻지 못해 콜론 없음
 		let withAss = false;
 		{
@@ -3133,7 +3133,9 @@ function loadAssFile(path, text, target=-1) {
 				let countMsg = [];
 				if (addCount) countMsg.push("추가 " + addCount + "건");
 				if (delCount) countMsg.push("삭제 " + addCount + "건");
-				msg = "스크립트/태그 " + countMsg.join(", ") + "이 있습니다. 적용하시겠습니까?\n\n자막에 맞는 동영상 파일이 열려있어야 정상적인 결과를 얻을 수 있습니다.";
+				msg = "스크립트/태그 " + countMsg.join(", ") + "이 있습니다. 적용하시겠습니까?\n"
+				    + "자막에 맞는 동영상 파일이 열려있어야 정상적인 결과를 얻을 수 있습니다.\n\n"
+				    + "수정되지 않은 부분에도 레이어 재계산 등이 있을 수 있습니다.";
 			}
 			confirm(msg, () => {
 				if (changedStyles.length) {
