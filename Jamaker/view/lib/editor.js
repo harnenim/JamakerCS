@@ -3390,7 +3390,7 @@ function loadAssFile(path, text, target=-1) {
 							}
 							body.push(...bodySkipped);
 							
-							if (toEmpty) {
+							{
 								// 종료 싱크 추가 필요
 								let syncType = SyncType.frame;
 								if (importSet.isDefault) {
@@ -3404,7 +3404,13 @@ function loadAssFile(path, text, target=-1) {
 										}
 									}
 								}
-								body.push(new Smi(end, syncType, "&nbsp;"));
+								if (toEmpty) {
+									body.push(new Smi(end, syncType, "&nbsp;"));
+									
+								} else if (syncType == SyncType.frame && bodyEnd.length) {
+									// 종료태그는 이미 일반 싱크로 추가됐을 수도 있음
+									bodyEnd[0].syncType = SyncType.frame;
+								}
 							}
 							body.push(...bodyEnd);
 							
