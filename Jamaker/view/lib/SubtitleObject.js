@@ -3977,16 +3977,19 @@ SmiFile.fromAssStyle = function(assStyle, smiStyle=null) {
 }
 
 // TODO: 이렇게 두면 안 될 듯...? 결국 toSaveStyle 말곤 쓰는 데도 없음
-const styleForSmi = Subtitle.styleForSmi = ["Fontname","PrimaryColour","Italic","Underline","StrikeOut"];
-const styleForAss = Subtitle.styleForAss = ["Fontsize","SecondaryColour","OutlineColour","BackColour","PrimaryOpacity","SecondaryOpacity","OutlineOpacity","BackOpacity","Bold","ScaleX","ScaleY","Spacing","Angle","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV"];
+const styleForSmi = Subtitle.styleForSmi = ["PrimaryColour","Italic","Underline","StrikeOut"];
+const styleForAss = Subtitle.styleForAss = ["Fontname","Fontsize","SecondaryColour","OutlineColour","BackColour","PrimaryOpacity","SecondaryOpacity","OutlineOpacity","BackOpacity","Bold","ScaleX","ScaleY","Spacing","Angle","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV"];
 
-SmiFile.toSaveStyle = function(style) {
+SmiFile.toSaveStyle = function(style, defStyle=null) {
 	if (!style) return "";
+	if (!defStyle) {
+		defStyle = DefaultStyle;
+	}
 	
 	let forSmi = false;
 	for (let i = 0; i < styleForSmi.length; i++) {
 		const name = styleForSmi[i];
-		if (style[name] != DefaultStyle[name]) {
+		if (style[name] != defStyle[name]) {
 			forSmi = true;
 			break;
 		}
@@ -3994,8 +3997,11 @@ SmiFile.toSaveStyle = function(style) {
 	let forAss = false;
 	for (let i = 0; i < styleForAss.length; i++) {
 		const name = styleForAss[i];
-		if (style[name] != DefaultStyle[name]) {
-			if (name == "Fontsize" && style.Fontsize == 0) {
+		if (style[name] != defStyle[name]) {
+			if (name == "Fontname" && style.Fontname == "") {
+				// 폰트 기본값
+				continue;
+			} else if (name == "Fontsize" && style.Fontsize == 0) {
 				// 글씨크기 0은 ASS 출력 제외를 위한 속성
 				continue;
 			}

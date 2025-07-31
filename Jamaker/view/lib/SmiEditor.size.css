@@ -116,7 +116,7 @@ label, #showFps {
 	max-height: calc(20px * 3.8 + 153px);
 }
 .tab.ass .hold .hold-style-area > form {
-	max-height: calc(20px * 23.6 + 177px);
+	max-height: calc(20px * 20.8 + 177px);
 }
 #assSplitHoldSelectorPopup {
 	top: calc(20px * 10);

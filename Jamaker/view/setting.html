@@ -751,6 +751,27 @@ $(() => {
 			});
 		}
 		
+		$("input[name=defStyle_OutlineColour], input[name=defStyle_BackColour]").each(function() {
+			const $input = $(this);
+			$input.next().val($input.val().toUpperCase());
+		}).on("input propertychange", function () {
+			const $input = $(this);
+			$input.next().val($input.val().toUpperCase());
+		});
+		$("input.color").on("input propertychange", function () {
+			const $input = $(this);
+			const color = $input.val();
+			if (color.startsWith("#") && color.length == 7) {
+				if (isFinite("0x" + color.substring(1))) {
+					$input = $input.prev().val(color);
+				} else {
+					return;
+				}
+			} else {
+				return;
+			}
+		});
+		
 		(refreshFuncs["style"] = (setting) => {
 			refresh($("#style"), setting);
 			refreshPreset(setting);
@@ -807,16 +828,21 @@ $(() => {
 		submitFuncs["style"] = () => {
 			setting.size             = $("select[name=size]").val();
 			setting.useTab           = $("input[name=useTab]").prop("checked");
+			
 			setting.highlight.parser = $("select[name=highlight_parser]").val();
 			setting.highlight.style  = $("select[name=highlight_style]").val();
 			setting.highlight.enter  = $("input[name=highlight_enter]").prop("checked");
 			setting.highlight.color  = $("input[name=highlight_color]").prop("checked");
 			setting.highlight.sync   = Number($("input[name=highlight_sync]").val());
+			
 			setting.scrollMargin     = $("input[name=scrollMargin]").val();
+			
 			setting.viewer.useAlign  = $("input[name=viewer_useAlign]").prop("checked");
-			setting.viewer.size      = $("input[name=viewer_size]").val();
+//			setting.viewer.size      = $("input[name=viewer_size]").val();
 			setting.viewer.css       = $("textarea[name=viewer_css]").val();
+			
 			setting.newFile          = $("textarea[name=newFile]"   ).val();
+			
 			setting.color.background = $("input[name=color_background]").val();
 			setting.color.selector   = $("input[name=color_selector]"  ).val();
 			setting.color.border     = $("input[name=color_border]"    ).val();
@@ -829,11 +855,50 @@ $(() => {
 			setting.color.syncBorder = $("input[name=color_syncBorder]").val();
 			setting.color.syncError  = $("input[name=color_syncError]" ).val();
 			setting.color.syncEqual  = $("input[name=color_syncEqual]" ).val();
+			
+			const defaultHolds = [];
+			{
+				for (let t = 0; t < opener.tabs.length; t++) {
+					const tab = opener.tabs[t];
+					for (let h = 0; h < tab.holds.length; h++) {
+						const hold = tab.holds[h];
+						if (!hold.style) {
+							// 기본 스타일이면 적용
+							defaultHolds.push(hold);
+						} else {
+							if (opener.SmiFile.toSaveStyle(hold.style, setting.defStyle) == "") {
+								// 기본 스타일이면 적용
+								defaultHolds.push(hold);
+							}
+						}
+					}
+				}
+			}
+			setting.defStyle.Fontname        = $("input[name=defStyle_Fontname]"     ).val();
+			setting.defStyle.Fontsize = Number($("input[name=defStyle_Fontsize]"     ).val());
+			setting.defStyle.Bold            = $("input[name=defStyle_Bold]"         ).prop("checked");
+			setting.defStyle.OutlineColour   = $("input[name=defStyle_OutlineColour]").val();
+			setting.defStyle.Outline  = Number($("input[name=defStyle_Outline]"      ).val());
+			setting.defStyle.BackColour      = $("input[name=defStyle_BackColour]"   ).val();
+			setting.defStyle.Shadow   = Number($("input[name=defStyle_Shadow]"       ).val());
+			setting.defStyle.MarginL = setting.defStyle.MarginR = Number($("input[name=defStyle_MarginL]").val());
+			setting.defStyle.MarginV         = $("input[name=defStyle_MarginV]"      ).val();
+			if (!setting.defStyle.Fontname) {
+				$("input[name=defStyle_Fontname]").val(setting.defStyle.Fontname = "맑은 고딕");
+			}
+			setting.viewer.size = setting.defStyle.Fontsize / 80 * 18;
+			
 			refreshHighlight();
 			setSaved("style", true);
 			opener.setSetting(setting);
 			opener.saveSetting();
 			setColor(setting.color);
+			
+			opener.$("input[name=Fontname]").attr({ placeholder: setting.defStyle.Fontname });
+			opener.SmiEditor.stylePreset.find("input[name=Fontname]").attr({ placeholder: setting.defStyle.Fontname });;
+			for (let i = 0; i < defaultHolds.length; i++) {
+				defaultHolds[i].setStyle(JSON.parse(JSON.stringify(setting.defStyle)));
+			}
 		};
 	}
 	
@@ -1048,7 +1113,10 @@ $(() => {
 
 	$("form").each((_, el) => {
 		const form = $(el);
-		form.attr("onsubmit", "submitFuncs['" + form.attr("id") + "'](); return false;");
+		form.on("submit", function(e) {
+			e.preventDefault();
+			submitFuncs[form.attr("id")]();
+		});
 		form.append($("<button type='submit'>").hide());
 	});
 	
@@ -1298,6 +1366,19 @@ fieldset ol button,
 }
 #areaNewFile .highlight-textarea > textarea {
 	resize: vertical;
+}
+/* ASS 기본 스타일 */
+#style_ass span {
+	display: inline-block;
+	width: 70px;
+}
+#style_ass input[type=text],
+#style_ass input[type=number],
+#style_ass input[type=color] {
+    height: 22px;
+}
+#style_ass input[type=text].color {
+    width: 60px;
 }
 </style>
 <style id="styleColor"></style>
@@ -1697,8 +1778,25 @@ body {
 		</fieldset>
 		<label id="areaNewFile">새 문서
 		</label>
-		<br />
-		<label for="taViewerCss">미리보기</label> / <label>글씨 크기 <input type="number" name="viewer_size" style="width: 40px" /> (팟플레이어 기준)</label>
+		<fieldset id="style_ass" style="display: block;">
+			<legend>ASS 기본 스타일</legend>
+			<div>
+				<label><span>글꼴  </span><input type="text" name="defStyle_Fontname" />　</label>
+				<label><span style="width: auto;">크기　</span><input type="number" name="defStyle_Fontsize" />px</label>
+				<label><input type="checkbox" name="defStyle_Bold" checked="checked" /> 굵게</label>
+			</div>
+			<div>
+				<label><span>외곽선</span><input type="color" name="defStyle_OutlineColour"   /><input type="text" class="color" /><input type="number" name="defStyle_Outline" />px</label>
+			</div>
+			<div>
+				<label><span>그림자</span><input type="color" name="defStyle_BackColour"      /><input type="text" class="color" /><input type="number" name="defStyle_Shadow" />px</label>
+			</div>
+			<div>
+				<label><span>좌우 여백</span><input type="number" name="defStyle_MarginL" />px</label> /
+				<label><span>상하 여백</span><input type="number" name="defStyle_MarginV" />px</label>
+			</div>
+		</fieldset>
+		<label for="taViewerCss">미리보기</label><!-- / <label>글씨 크기 <input type="number" name="viewer_size" style="width: 40px" /> (팟플레이어 기준)</label> -->
 		<textarea id="taViewerCss" name="viewer_css" spellcheck="false" style="height: 300px;"></textarea>
 	</form>
 	

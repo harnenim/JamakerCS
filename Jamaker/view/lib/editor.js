@@ -269,8 +269,11 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	hold.owner = this;
 	hold.pos   = hold.savedPos   = info.pos;
 	
-	const style = hold.style = (info.style ? info.style : JSON.parse(JSON.stringify(DefaultStyle)));
-	hold.savedStyle = SmiFile.toSaveStyle(style);
+	const style = hold.style = (info.style ? info.style : JSON.parse(JSON.stringify(setting.defStyle)));
+	if (style.Fontname == setting.defStyle.Fontname) {
+		style.Fontname = "";
+	}
+	hold.savedStyle = SmiFile.toSaveStyle(style, setting.defStyle);
 	hold.savedAss = hold.ass = info.ass;
 	hold.tempSavedText = info.text;
 	hold.updateTimeRange();
@@ -393,7 +396,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	return hold;
 }
 SmiEditor.prototype.setStyle = function(style) {
-	if (style.Fontname == "맑은 고딕") {
+	if (style.Fontname == setting.defStyle.Fontname) {
 		style.Fontname = "";
 	}
 	this.style = style;
@@ -431,9 +434,12 @@ SmiEditor.prototype.setStyle = function(style) {
 }
 SmiEditor.prototype.refreshStyle = function() {
 	const style = this.style;
+	if (style.Fontname == setting.defStyle.Fontname) {
+		style.Fontname = "";
+	}
 	
 	const css = {};
-	css.fontFamily = style.Fontname ? (style.Fontname.startsWith("@") ? style.Fontname.substring(1) : style.Fontname) : "맑은 고딕";
+	css.fontFamily = style.Fontname ? (style.Fontname.startsWith("@") ? style.Fontname.substring(1) : style.Fontname) : setting.defStyle.Fontname;
 	css.color = style.PrimaryColour + (256 + style.PrimaryOpacity).toString(16).substring(1);
 	css.fontStyle = style.Italic ? "italic" : "";
 	{	const deco = [];
@@ -1024,7 +1030,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 	for (let h = 0; h < holds.length; h++) {
 		const hold = holds[h];
 		const name = (h == 0) ? "Default" : hold.name;
-		const style = hold.style ? hold.style : DefaultStyle;
+		const style = hold.style ? hold.style : setting.defStyle;
 		
 		if ((style.output & 0b10) == 0) {
 			// ASS 변환 대상 제외
@@ -1363,9 +1369,12 @@ SmiEditor.prototype.isSaved = function() {
 	if (this.isAssHold) {
 		return this.assEditor.isSaved;
 	} else {
+		if (this.style.Fontname == setting.defStyle.Fontname) {
+			this.style.Fontname = "";
+		}
 		return (this.savedName  == this.name )
 			&& (this.savedPos   == this.pos  )
-			&& (this.savedStyle == SmiFile.toSaveStyle(this.style))
+			&& (this.savedStyle == SmiFile.toSaveStyle(this.style, setting.defStyle))
 			&& (this.saved == this.input.val()
 		);
 	}
@@ -1659,6 +1668,11 @@ function init(jsonSetting, isBackup=true) {
 						}
 					}
 				}
+			}
+			if (!setting.defStyle) {
+				setting.defStyle = JSON.parse(JSON.stringify(DefaultStyle));
+				setting.defStyle.Fontname = "맑은 고딕";
+				count++;
 			}
 			if (count) {
 				saveSetting();
@@ -2055,8 +2069,8 @@ function setSetting(setting, initial=false) {
 	}
 	
 	Combine.css = setting.viewer.css;
-	DefaultStyle.Fontsize = Number(setting.viewer.size) / 18 * 80;
-
+//	DefaultStyle.Fontsize = Number(setting.viewer.size) / 18 * 80;
+	
 	binder.setMenus(setting.menu);
 	
 	window.setting = JSON.parse(JSON.stringify(setting));
@@ -2324,11 +2338,11 @@ function saveFile(asNew, isExport) {
 			}
 			
 			const hold = currentTab.holds[0];
-			const saveStyle = SmiFile.toSaveStyle(hold.style);
+			const saveStyle = SmiFile.toSaveStyle(hold.style, setting.defStyle);
 			
 			const assStyle = assStyles["Default"];
 			if (assStyle) {
-				if (assStyle && SmiFile.toSaveStyle(assStyle) != saveStyle) {
+				if (assStyle && SmiFile.toSaveStyle(assStyle, setting.defStyle) != saveStyle) {
 					alert("ASS 추가 스크립트에서 설정한 스타일과 홀드의 스타일이 다릅니다.\n[메인] 홀드 스타일을 수정합니다.");
 					hold.setStyle(assStyle);
 				}
@@ -2338,12 +2352,12 @@ function saveFile(asNew, isExport) {
 		const smiStyles = {};
 		for (let i = 1; i < currentTab.holds.length; i++) {
 			const hold = currentTab.holds[i];
-			const saveStyle = SmiFile.toSaveStyle(hold.style);
+			const saveStyle = SmiFile.toSaveStyle(hold.style, setting.defStyle);
 			
 			const assStyle = assStyles[hold.name];
 			if (assStyle) {
 				// ASS 스타일이 있으면 따라감
-				if (SmiFile.toSaveStyle(assStyle) != saveStyle) {
+				if (SmiFile.toSaveStyle(assStyle, setting.defStyle) != saveStyle) {
 					alert("ASS 추가 스크립트에서 설정한 스타일과 홀드의 스타일이 다릅니다.\n[" + hold.name + "] 홀드 스타일을 수정합니다.");
 					hold.setStyle(assStyle);
 				}
@@ -2470,7 +2484,7 @@ function afterSaveFile(path) {
 		hold.saved = hold.input.val();
 		hold.savedPos = hold.pos;
 		hold.savedName = hold.name;
-		hold.savedStyle = SmiFile.toSaveStyle(hold.style);
+		hold.savedStyle = SmiFile.toSaveStyle(hold.style, setting.defStyle);
 		if (hold.assEditor) {
 			hold.assEditor.setSaved();
 		}
@@ -3553,14 +3567,14 @@ function splitHold(tab, styleName) {
 	}
 	
 	// 홀드에 적용할 스타일 찾기
-	let style = DefaultStyle;
+	let style = setting.defStyle;
 	for (let i = 0; i < tab.holds.length; i++) {
 		const hold = tab.holds[i];
 		if (hold.name == styleName) {
 			style = JSON.parse(JSON.stringify(hold.style));
 		}
 	}
-	if (style == DefaultStyle) {
+	if (style == setting.defStyle) {
 		// ASS 추가 스크립트에서 찾기
 		const appendFile = new AssFile(tab.area.find(".tab-ass-appends textarea").val());
 		const styles = appendFile.getStyles();
@@ -3599,9 +3613,10 @@ function splitHold(tab, styleName) {
 		}
 		tab.area.find(".tab-ass-appends textarea").val(appendFile.toText());
 	}
-	if (style == DefaultStyle) {
+	if (style == setting.defStyle) {
 		// 못 찾았을 경우
 		style = JSON.parse(JSON.stringify(style));
+		style.Fontname = "";
 	}
 	
 	const hold = tab.addHold({
@@ -3620,7 +3635,10 @@ function splitHold(tab, styleName) {
 	const syncs = [];
 	for (let i = 0; i < list.length; i++) {
 		const event = list[i];
-		if (event.Style == styleName) {
+		if (event.Style == styleName
+		 || event.Style.startsWith(styleName)
+		 || styleName.startsWith(event.Style)
+		) {
 			if (syncs.indexOf(event.start) < 0) {
 				syncs.push(event.start);
 			}
@@ -3651,7 +3669,10 @@ function splitHold(tab, styleName) {
 			if (event.end   != tEvent.end  ) break;
 			targets.push(event);
 			
-			if (event.Style == styleName) {
+			if (event.Style == styleName
+			 || event.Style.startsWith(styleName)
+			 || styleName.startsWith(event.Style)
+			) {
 				hasStyle = true;
 			}
 		}
