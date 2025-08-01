@@ -197,7 +197,7 @@ window.Tab = function(text, path) {
 				}
 				if (!exist) {
 					// 없으면 ASS 추가 스크립트에 홀드 스타일 넣기
-					style = SmiFile.toAssStyle(hold.style);
+					const style = SmiFile.toAssStyle(hold.style);
 					style.Name = hold.name;
 					
 					const appendFile = new AssFile(tab.area.find(".tab-ass-appends textarea").val());
@@ -273,7 +273,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	if (style.Fontname == Subtitle.DefaultStyle.Fontname) {
 		style.Fontname = "";
 	}
-	hold.savedStyle = SmiFile.toSaveStyle(style, Subtitle.DefaultStyle);
+	hold.savedStyle = SmiFile.toSaveStyle(style);
 	hold.savedAss = hold.ass = info.ass;
 	hold.tempSavedText = info.text;
 	hold.updateTimeRange();
@@ -1374,7 +1374,7 @@ SmiEditor.prototype.isSaved = function() {
 		}
 		return (this.savedName  == this.name )
 			&& (this.savedPos   == this.pos  )
-			&& (this.savedStyle == SmiFile.toSaveStyle(this.style, Subtitle.DefaultStyle))
+			&& (this.savedStyle == SmiFile.toSaveStyle(this.style))
 			&& (this.saved == this.input.val()
 		);
 	}
@@ -2072,7 +2072,7 @@ function setSetting(setting, initial=false) {
 	Combine.css = setting.viewer.css;
 	//	DefaultStyle.Fontsize = Number(setting.viewer.size) / 18 * 80;
 	Subtitle.DefaultStyle = setting.defStyle;
-
+	
 	$("input[name=Fontname]").attr({ placeholder: Subtitle.DefaultStyle.Fontname });
 	SmiEditor.stylePreset.find("input[name=Fontname]").attr({ placeholder: Subtitle.DefaultStyle.Fontname });
 	
@@ -2343,11 +2343,11 @@ function saveFile(asNew, isExport) {
 			}
 			
 			const hold = currentTab.holds[0];
-			const saveStyle = SmiFile.toSaveStyle(hold.style, Subtitle.DefaultStyle);
+			const saveStyle = SmiFile.toSaveStyle(hold.style);
 			
 			const assStyle = assStyles["Default"];
 			if (assStyle) {
-				if (assStyle && SmiFile.toSaveStyle(assStyle, Subtitle.DefaultStyle) != saveStyle) {
+				if (assStyle && SmiFile.toSaveStyle(assStyle) != saveStyle) {
 					alert("ASS 추가 스크립트에서 설정한 스타일과 홀드의 스타일이 다릅니다.\n[메인] 홀드 스타일을 수정합니다.");
 					hold.setStyle(assStyle);
 				}
@@ -2357,12 +2357,12 @@ function saveFile(asNew, isExport) {
 		const smiStyles = {};
 		for (let i = 1; i < currentTab.holds.length; i++) {
 			const hold = currentTab.holds[i];
-			const saveStyle = SmiFile.toSaveStyle(hold.style, Subtitle.DefaultStyle);
+			const saveStyle = SmiFile.toSaveStyle(hold.style);
 			
 			const assStyle = assStyles[hold.name];
 			if (assStyle) {
 				// ASS 스타일이 있으면 따라감
-				if (SmiFile.toSaveStyle(assStyle, Subtitle.DefaultStyle) != saveStyle) {
+				if (SmiFile.toSaveStyle(assStyle) != saveStyle) {
 					alert("ASS 추가 스크립트에서 설정한 스타일과 홀드의 스타일이 다릅니다.\n[" + hold.name + "] 홀드 스타일을 수정합니다.");
 					hold.setStyle(assStyle);
 				}
@@ -2489,7 +2489,7 @@ function afterSaveFile(path) {
 		hold.saved = hold.input.val();
 		hold.savedPos = hold.pos;
 		hold.savedName = hold.name;
-		hold.savedStyle = SmiFile.toSaveStyle(hold.style, Subtitle.DefaultStyle);
+		hold.savedStyle = SmiFile.toSaveStyle(hold.style);
 		if (hold.assEditor) {
 			hold.assEditor.setSaved();
 		}

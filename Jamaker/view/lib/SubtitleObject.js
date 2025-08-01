@@ -3892,7 +3892,9 @@ SmiFile.prototype.fromSyncs = function(syncs) {
 	return this;
 }
 
-const DefaultStyle = Subtitle.DefaultStyle = {
+// DefaultStyle는 상수
+// Subtitle.DefaultStyle는 변수
+const DefaultStyle = {
 		Fontname: ""
 	,	Fontsize: 80
 	,	PrimaryColour  : "#FFFFFF"
@@ -3920,6 +3922,9 @@ const DefaultStyle = Subtitle.DefaultStyle = {
 	,	MarginV: 40
 	,	output: 3 // 0b01: SMI / 0b10: ASS / 0b11: SMI+ASS
 };
+Subtitle.DefaultStyle = JSON.parse(JSON.stringify(DefaultStyle));
+Subtitle.DefaultStyle.Fontname = "맑은 고딕";
+
 SmiFile.StyleFormat = ["Fontname", "Fontsize", "PrimaryColour", "SecondaryColour", "OutlineColour", "BackColour", "Bold", "Italic", "Underline", "StrikeOut", "ScaleX", "ScaleY", "Spacing", "Angle", "BorderStyle", "Outline", "Shadow", "Alignment", "MarginL", "MarginR", "MarginV"];
 SmiFile.toAssStyle = function(smiStyle, assStyle) {
 	if (!assStyle) assStyle = {};
@@ -3951,7 +3956,7 @@ SmiFile.toAssStyle = function(smiStyle, assStyle) {
 	return assStyle;
 }
 SmiFile.fromAssStyle = function(assStyle, smiStyle=null) {
-	if (!smiStyle) smiStyle = JSON.parse(JSON.stringify(DefaultStyle));
+	if (!smiStyle) smiStyle = JSON.parse(JSON.stringify(Subtitle.DefaultStyle));
 	smiStyle.Fontname = (assStyle.Fontname == Subtitle.DefaultStyle.Fontname ? "" : assStyle.Fontname);
 	smiStyle.Fontsize = assStyle.Fontsize;
 	{ let fc = assStyle.PrimaryColour  ; smiStyle.PrimaryColour   = '#'+fc[8]+fc[9]+fc[6]+fc[7]+fc[4]+fc[5]; smiStyle.PrimaryOpacity   = 255 - Number('0x'+fc[2]+fc[3]); }
@@ -3980,16 +3985,13 @@ SmiFile.fromAssStyle = function(assStyle, smiStyle=null) {
 const styleForSmi = Subtitle.styleForSmi = ["PrimaryColour","Italic","Underline","StrikeOut"];
 const styleForAss = Subtitle.styleForAss = ["Fontname","Fontsize","SecondaryColour","OutlineColour","BackColour","PrimaryOpacity","SecondaryOpacity","OutlineOpacity","BackOpacity","Bold","ScaleX","ScaleY","Spacing","Angle","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV"];
 
-SmiFile.toSaveStyle = function(style, defStyle=null) {
+SmiFile.toSaveStyle = function(style) {
 	if (!style) return "";
-	if (!defStyle) {
-		defStyle = DefaultStyle;
-	}
 	
 	let forSmi = false;
 	for (let i = 0; i < styleForSmi.length; i++) {
 		const name = styleForSmi[i];
-		if (style[name] != defStyle[name]) {
+		if (style[name] != Subtitle.DefaultStyle[name]) {
 			forSmi = true;
 			break;
 		}
@@ -3997,7 +3999,7 @@ SmiFile.toSaveStyle = function(style, defStyle=null) {
 	let forAss = false;
 	for (let i = 0; i < styleForAss.length; i++) {
 		const name = styleForAss[i];
-		if (style[name] != defStyle[name]) {
+		if (style[name] != Subtitle.DefaultStyle[name]) {
 			if (name == "Fontname" && style.Fontname == "") {
 				// 폰트 기본값
 				continue;
@@ -4029,7 +4031,7 @@ SmiFile.toSaveStyle = function(style, defStyle=null) {
 	return result.join(",");
 }
 SmiFile.parseStyle = function(comment) {
-	const style = JSON.parse(JSON.stringify(DefaultStyle));
+	const style = JSON.parse(JSON.stringify(Subtitle.DefaultStyle));
 	if (comment.startsWith("<")) {
 		// 홀드 스타일 초기 문법
 		const attr = Smi.toAttrs(comment)[0];
@@ -4072,7 +4074,7 @@ SmiFile.styleToSmi = function(style) {
 			font.push("face=\"" + fs + "\"");
 		}
 		*/
-		if (style.PrimaryColour != DefaultStyle.PrimaryColour && style.PrimaryColour != "#000000") {
+		if (style.PrimaryColour != Subtitle.DefaultStyle.PrimaryColour && style.PrimaryColour != "#000000") {
 			font.push("color=\"" + style.PrimaryColour + "\"");
 		}
 		if (font.length) {
