@@ -52,7 +52,7 @@ $(() => {
 			
 		} else {
 			if (origin.selection[0] != origin.selection[1]) {
-				// 선택 범위만 작업
+				// 블록지정 있으면 해당 홀드의 선택 범위만 작업
 				origin.start = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
 				origin.end   = origin.text.substring(0, origin.selection[1]).split("\n").length;
 				origin.assBody = [];
@@ -167,7 +167,7 @@ $(() => {
 					const frameIndex = Subtitle.findSyncIndex(smi.start, fs);
 					const $frames = $("<div>").addClass("frames");
 					const $sync = $("<td>").addClass("sync");
-					setSync($sync, fs[frameIndex]);
+					setSync($sync, ((frameIndex < fs.length) ? fs[frameIndex] : 99999999));
 					$framesStorage.append($frames);
 					$tr.addClass("fs").append($("<td>")).append($sync);
 					frameSyncs.push($tr);
@@ -216,7 +216,7 @@ $(() => {
 						const frameIndex = Subtitle.findSyncIndex(start, fs);
 						const $frames = $("<div>").addClass("frames");
 						const $sync = $("<td>").addClass("sync");
-						setSync($sync, fs[frameIndex]);
+						setSync($sync, ((frameIndex < fs.length) ? fs[frameIndex] : 99999999));
 						$framesStorage.append($frames);
 						$tr.addClass("fs").append($("<td>")).append($sync);
 						frameSyncs.push($tr);
@@ -243,7 +243,7 @@ $(() => {
 						const frameIndex = Subtitle.findSyncIndex(end, fs);
 						const $frames = $("<div>").addClass("frames");
 						const $sync = $("<td>").addClass("sync");
-						setSync($sync, fs[frameIndex]);
+						setSync($sync, ((frameIndex < fs.length) ? fs[frameIndex] : 99999999));
 						$framesStorage.append($frames);
 						$tr.addClass("fs").append($("<td>")).append($sync);
 						frameSyncs.push($tr);
