@@ -1218,9 +1218,36 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			const usedLines = []; // 각 싱크에 사용된 줄 수
 			for (let h = 0; h < an2Holds.length; h++) {
 				const hold = an2Holds[h];
-				const useBottom = (!hold.style || (hold.style.Alignment % 3 == 2)); // ASS 중앙 정렬인 것들에 대해 기본 높이 계산
+				
 				for (let i = 0; i < hold.syncs.length; i++) {
 					const sync = hold.syncs[i];
+					
+					let useBottom = true; // a2Holds에 애초에 걸러진 것만 있음
+					for (let j = 0; j < sync.text.length; j++) {
+						const ass = sync.text[j].ass;
+						if (ass && (ass.indexOf("\\an") > 0)) {
+							const an = ass[ass.indexOf("\\an") + 3];
+							if (an % 3 != 2) {
+								// 개별적으로 좌우 구석에 밀었을 경우 제외
+								useBottom = false;
+								break;
+							}
+						}
+					}
+					if (!useBottom) {
+						// \pos를 지정했으면 좌우 구석이 아니므로 중앙 높이를 차지할 수 있음
+						for (let j = 0; j < sync.text.length; j++) {
+							const ass = sync.text[j].ass;
+							if (ass && (ass.indexOf("\\pos") > 0)) {
+								useBottom = true;
+								break;
+							}
+						}
+					}
+					if (!useBottom) {
+						continue;
+					}
+					
 					let used = 0;
 					
 					// 이미 확인된 줄과 비교
@@ -1251,9 +1278,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 						nextLines.push({ start: sync.end, used: 0 });
 					}
 					
-					if (useBottom) {
-						sync.bottom = used;
-					}
+					sync.bottom = used;
 					used += sync.getTextOnly().split("\n").length;
 					
 					nextLines.push(...usedLines.slice(k));
