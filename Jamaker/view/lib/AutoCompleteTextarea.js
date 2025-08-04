@@ -161,7 +161,10 @@ AutoCompleteTextarea.prototype.onKeyup = function(e) {
 			}
 			break;
 		}
-		case 27: { // Esc
+		case 17: // Ctrl
+		case 18: // Alt
+		case 27: // Esc
+		{
 			e.preventDefault();
 			// 선택 취소
 			this.close();
