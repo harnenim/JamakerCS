@@ -2962,7 +2962,7 @@ Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true, forConvert=f
 				
 				// 후리가나 처리
 				const subAttrs = [attr.clone()];
-				for (; i < attrs.length; i++) {
+				for (i++; i < attrs.length; i++) {
 					if (attr.furigana == attrs[i].furigana) {
 						const subAttr = attrs[i].clone();
 						subAttr.furigana = null;
@@ -3203,6 +3203,7 @@ Smi.Color = Subtitle.Color;
 
 // 여기선 forConvert를 앞으로 가져옴
 Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps=null) {
+	// TODO: 그러고 보니 fps 기준을 이대로 두는 게 맞나...
 	if (fps == null) {
 		fps = Subtitle.video.FR / 1000;
 	}
@@ -3255,6 +3256,11 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 			j += newAttrs.length - 1;
 			smi.fromAttrs(attrs, forConvert);
 		}
+	}
+	if (end < 0) {
+		// 종료태그 없는 경우, 그라데이션만 동작
+		smi.text = "<!-- End=999999999\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smi.text;
+		return [smi];
 	}
 	
 	let hasFade = false;
@@ -3673,6 +3679,10 @@ Smi.normalize = (smis, withComment=false, fps=null, forConvert=false) => {
 		} else {
 			smis[i] = nSmis[0];
 		}
+	}
+	if (smis.length) {
+		// 마지막 하나도 색상 그라데이션은 계산해야 함
+		smis[smis.length - 1].normalize(-1, forConvert, withComment);
 	}
 	
 	return result;

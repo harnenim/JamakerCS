@@ -3,8 +3,8 @@
 <meta charset="utf-8">
 <title>미리보기</title>
 <script src="lib/jquery-3.2.1.min.js"></script>
-<script src="lib/SmiEditor.js"></script>
 <script src="lib/SubtitleObject.js"></script>
+<script src="lib/SmiEditor.js"></script>
 <script>
 let title = document.getElementsByTagName("title")[0];
 let lastTab = null;
@@ -154,16 +154,18 @@ function refreshTime(receiveTime, withoutTitle) {
 		showText[hold] = showLines.join("<br>");
 		
 		// 정규화 자동 적용
-		if ((showLines.length < 16) // 싱크 안 찍은 줄에 fade 같은 게 들어가면 연산량 과도해질 수 있음
-		 && nextSyncLine
-		 && setting.saveWithNormalize
-		) {
-			let toNormalize = new SmiFile(lines[hold][indexes[hold]].TEXT + "\n" + showText[hold] + "\n" + nextSyncLine.TEXT);
-			toNormalize.normalize();
-			//if (toNormalize.body.length > 2) { // 그라데이션만 적용된 경우 싱크 개수가 늘지 않음
+		if (setting.saveWithNormalize) {
+			if (nextSyncLine && (showLines.length < 16)) { // 싱크 안 찍은 줄에 fade 같은 게 들어가면 연산량 과도해질 수 있음
+				let toNormalize = new SmiFile(lines[hold][indexes[hold]].TEXT + "\n" + showText[hold] + "\n" + nextSyncLine.TEXT);
+				toNormalize.normalize();
 				normalizedLines[hold] = toNormalize.body.slice(0, toNormalize.body.length - 1);
 				showText[hold] = normalizedLines[hold][normalizedIndex[hold] = 0].text; // 일단은 첫 싱크 출력, 다음 루프에 추가로 잡아주기
-			//}
+			} else {
+				// 종료싱크 없어도 그라데이션은 적용
+				let toNormalize = new SmiFile(lines[hold][indexes[hold]].TEXT + "\n" + showText[hold]);
+				toNormalize.normalize();
+				showText[hold] = (normalizedLines[hold] = toNormalize.body)[normalizedIndex[hold] = 0].text;
+			}
 		}
 		setTextToView(showText[hold], hold);
 	}
@@ -197,6 +199,8 @@ function setTextToView(text, hold) {
 	// 폰트에 따른 보정
 	viewer.find("font").each(function() {
 		const $font = $(this);
+		if ($font.parents("rt").length) return; // 후리가나 건너뛰기
+		
 		let face = $font.attr("face");
 		if (face) {
 			$font.css({ fontFamily: face });
