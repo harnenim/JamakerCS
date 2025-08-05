@@ -2322,6 +2322,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 				prev: linePrev
 			,	text: lineText
 			,	next: lineNext
+			,	skip: (lineText.split("　").join("").split("&nbsp;").join(" ").trim().length == 0)
 		};
 	}
 	
@@ -2333,6 +2334,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 			// 모든 줄이 공백으로 끝나는지 확인
 			if (remained) {
 				for (let j = 0; j < textLines.length; j++) {
+					if (textLines[j].skip) continue;
 					if (!textLines[j].text.endsWith("　")) {
 						remained = false;
 						break;
@@ -2342,11 +2344,13 @@ SmiEditor.prototype.moveToSide = function(direction) {
 			if (remained) {
 				// 오른쪽 공백 제거
 				for (let j = 0; j < textLines.length; j++) {
+					if (textLines[j].skip) continue;
 					textLines[j].text = textLines[j].text.substring(0, textLines[j].text.length - 1);
 				}
 			} else {
 				// 왼쪽 공백 추가
 				for (let j = 0; j < textLines.length; j++) {
+					if (textLines[j].skip) continue;
 					textLines[j].text = "　" + textLines[j].text;
 				}
 				added = true;
@@ -2355,6 +2359,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 		// 모든 줄이 공백으로 끝나는지 확인
 		if (remained) {
 			for (let j = 0; j < textLines.length; j++) {
+				if (textLines[j].skip) continue;
 				if (!textLines[j].text.endsWith("　")) {
 					remained = false;
 					break;
@@ -2364,6 +2369,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 		if (!remained) {
 			// 오른쪽에 추가했던 공백을 다 없앴어도 원본에 공백 있을 수 있음
 			for (let i = 0; i < textLines.length; i++) {
+				if (textLines[i].skip) continue;
 				let textLine = textLines[i].text;
 				if (textLine.endsWith(" ") || textLine.endsWith("　")) {
 					textLines[i].text = textLine + "​";
@@ -2372,9 +2378,11 @@ SmiEditor.prototype.moveToSide = function(direction) {
 		}
 		for (let i = 0; i < textLines.length; i++) {
 			const line = textLines[i];
-			if ((i || line.prev) && (added || remained)) line.prev += "\n";
-			if (added   ) line.prev = line.prev + "​";
-			if (remained) line.next = "​" + line.next;
+			if (!line.skip) {
+				if ((i || line.prev) && (added || remained)) line.prev += "\n";
+				if (added   ) line.prev = line.prev + "​";
+				if (remained) line.next = "​" + line.next;
+			}
 			textLines[i] = line.prev + line.text + line.next;
 		}
 		textLines = textLines.join("<br>").split("\n");
@@ -2387,6 +2395,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 			// 모든 줄이 공백으로 시작하는지 확인
 			if (remained) {
 				for (let j = 0; j < textLines.length; j++) {
+					if (textLines[j].skip) continue;
 					if (!textLines[j].text.startsWith("　")) {
 						remained = false;
 						break;
@@ -2396,11 +2405,13 @@ SmiEditor.prototype.moveToSide = function(direction) {
 			if (remained) {
 				// 왼쪽 공백 제거
 				for (let j = 0; j < textLines.length; j++) {
+					if (textLines[j].skip) continue;
 					textLines[j].text = textLines[j].text.substring(1);
 				}
 			} else {
 				// 오른쪽 공백 추가
 				for (let j = 0; j < textLines.length; j++) {
+					if (textLines[j].skip) continue;
 					textLines[j].text = textLines[j].text + "　";
 				}
 				added = true;
@@ -2409,6 +2420,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 		// 모든 줄이 공백으로 시작하는지 확인
 		if (remained) {
 			for (let j = 0; j < textLines.length; j++) {
+				if (textLines[j].skip) continue;
 				if (!textLines[j].text.startsWith("　")) {
 					remained = false;
 					break;
@@ -2418,6 +2430,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 		if (!remained) {
 			// 왼쪽에 추가했던 공백을 다 없앴어도 원본에 공백 있을 수 있음
 			for (let i = 0; i < textLines.length; i++) {
+				if (textLines[i].skip) continue;
 				let textLine = textLines[i].text;
 				if (textLine.startsWith(" ") || textLine.startsWith("　")) {
 					textLines[i].text = "​" + textLine;
@@ -2426,9 +2439,11 @@ SmiEditor.prototype.moveToSide = function(direction) {
 		}
 		for (let i = 0; i < textLines.length; i++) {
 			const line = textLines[i];
-			if ((i || line.prev) && (added || remained)) line.prev += "\n";
-			if (remained) line.prev = line.prev + "​";
-			if (added   ) line.next = "​" + line.next;
+			if (!line.skip) {
+				if ((i || line.prev) && (added || remained)) line.prev += "\n";
+				if (remained) line.prev = line.prev + "​";
+				if (added   ) line.next = "​" + line.next;
+			}
 			textLines[i] = line.prev + line.text + line.next;
 		}
 		textLines = textLines.join("<br>").split("\n");
