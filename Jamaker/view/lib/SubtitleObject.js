@@ -1495,7 +1495,8 @@ AssEvent.fromSync = function(sync, style=null) {
 			let moved = (texts.length > 1);
 			
 			// 다른 홀드랑 겹쳐서 기본적으로 올려야 하는 내용물
-			if (sync.bottom) {
+			// 스타일 자체에서 200 이상 띄운 경우엔 계산하지 않음
+			if (sync.bottom && style.MarginV < 200) {
 				y -= sync.bottom * style.Fontsize * 1.1;
 				moved = true;
 			}
