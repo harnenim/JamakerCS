@@ -2398,7 +2398,7 @@ Smi.Status.prototype.setFont = function(attrs) {
 								tAttr = new Attr.TypingAttr(Typing.Mode.character, s, e);
 							}
 							
-						} else if (match = /keyboard\(([0-9]+),([0-9]+)\)/.exec(mode)) {
+						} else if (match = /character\(([0-9]+),([0-9]+)\)/.exec(mode)) {
 							tAttr = new Attr.TypingAttr(Typing.Mode.character, Number(match[1]), Number(match[2]));
 						}
 						
