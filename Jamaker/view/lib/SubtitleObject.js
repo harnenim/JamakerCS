@@ -3259,7 +3259,9 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 	}
 	if (end < 0) {
 		// 종료태그 없는 경우, 그라데이션만 동작
-		smi.text = "<!-- End=999999999\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smi.text;
+		if (withComment) {
+			smi.text = "<!-- End=999999999\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smi.text;
+		}
 		return [smi];
 	}
 	
