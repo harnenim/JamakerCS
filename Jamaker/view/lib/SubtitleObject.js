@@ -1687,7 +1687,7 @@ AssEvent.fromSync = function(sync, style=null) {
 		
 		if (text) {
 			// Default에 대해서 줄표 달린 것들 정렬 맞춰주기
-			if (AssEvent.useAlignDialogue && style && sync.style == "Default") {
+			if (AssEvent.useAlignDialogue && style && (sync.style.startsWith("Default") || sync.style.startsWith("메인"))) {
 				let frontTag = "";
 				let lines = text;
 				if (text.startsWith("{")) {
