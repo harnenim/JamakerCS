@@ -106,29 +106,6 @@ window.Tab = function(text, path) {
 		let frameSyncs = [];
 		if (this.assFile) {
 			const events = this.assFile.getEvents();
-			/* 홀드별 ASS 에디터 구분은 혼란만 가중시키는 듯함
-			const list = events.body;
-			const appends = [];
-			for (let i = 0; i < list.length; i++) {
-				const item = list[i];
-				if (item.Style == "Default") {
-					holds[0].ass.push(item);
-				} else {
-					let found = false;
-					for (let h = 1; h < holds.length; h++) {
-						if (item.Style == holds[h].name) {
-							holds[h].ass.push(item);
-							found = true;
-							break;
-						}
-					}
-					if (!found) {
-						appends.push(item);
-					}
-				}
-			}
-			events.body = appends;
-			*/
 			
 			const editAssFile = new AssFile(" "); // 공백이라도 안 넣으면 [Script Info] 자동 생성됨
 			for (let i = 0; i < this.assFile.parts.length; i++) {
@@ -352,9 +329,14 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			}).on("input propertychange", "input[type=number], input[type=range]", function () {
 				const $input = $(this);
 				const name = $input.attr("name");
-				hold.style[name] = Number($input.val());
+				let value = $input.val();
+				if (isFinite(value)) {
+					value = Number(value);
+				} else {
+					value = 0;
+				}
+				hold.style[name] = value;
 				hold.refreshStyle();
-				
 				
 			}).on("change", "input[type=checkbox]", function () {
 				const $input = $(this);
@@ -2493,7 +2475,11 @@ function saveFile(asNew, isExport) {
 	} else {
 		binder.save(currentTab.getSaveText(true, !(exporting = isExport)), path, true);
 		if (withAss) {
-			binder.save(currentTab.toAss().toText(), assPath, false);
+		    if (Subtitle.video.fs.length) {
+		    	binder.save(currentTab.toAss().toText(), assPath, false);
+		    } else {
+		        alert("동영상 프레임 분석이 끝나야 ASS 파일을 생성할 수 있습니다.");
+			}
 		}
 	}
 }

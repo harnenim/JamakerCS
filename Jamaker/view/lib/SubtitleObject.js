@@ -1686,8 +1686,13 @@ AssEvent.fromSync = function(sync, style=null) {
 		text = text.split("{\\ass1}").join("").split("{\\ass0}").join("").split("}{").join("");
 		
 		if (text) {
-			// Default에 대해서 줄표 달린 것들 정렬 맞춰주기
-			if (AssEvent.useAlignDialogue && style && (sync.style.startsWith("Default") || sync.style.startsWith("메인"))) {
+			// 메인(+유사메인) 홀드에 대해서 줄표 달린 것들 정렬 맞춰주기
+			if (AssEvent.useAlignDialogue
+			 && style
+			 && (   sync.style.startsWith("Default")
+				 || sync.style.startsWith("메인")
+			    )
+			) {
 				let frontTag = "";
 				let lines = text;
 				if (text.startsWith("{")) {
@@ -4254,6 +4259,12 @@ SmiFile.prototype.antiNormalize = function() {
 			if (!comment.startsWith("Hold=")) {
 				continue;
 			}
+			comment = comment.split("\n");
+			let style = null;
+			if (comment.length > 1) {
+				style = SmiFile.parseStyle(comment[1]);
+			}
+			comment = comment[0];
 			
 			let removeEnd = i + (index < 0 ? 0 : 1);
 			for(; removeEnd < this.body.length; removeEnd++) {
@@ -4273,6 +4284,7 @@ SmiFile.prototype.antiNormalize = function() {
 			hold.body[0].text = afterComment;
 			hold.antiNormalize();
 			hold.next = this.body[removeStart];
+			if (style) hold.style = style;
 			
 			hold.name = comment = comment.substring(5);
 			hold.pos = 1;

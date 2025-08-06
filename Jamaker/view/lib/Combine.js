@@ -782,7 +782,12 @@ if (SmiFile) {
 		const normalized = new SmiFile(holds[0].text).antiNormalize();
 		normalized[0].pos = 0;
 		normalized[0].name = "메인";
-		holds = normalized.concat(holds.slice(1));
+		
+		// 내포 홀드를 뒤쪽에 추가해 선택기가 위로 올라오도록 함
+		const exportedHoldsLength = holds.length;
+		holds[0] = normalized[0];
+		holds.push(...normalized.slice(1));
+		
 		if (holds[0].isWithSplit()) {
 			// 대사 사이 1프레임 공백 싱크 제거
 			const body = holds[0].body;
@@ -824,10 +829,7 @@ if (SmiFile) {
 		}
 		holds[0].text = holds[0].toText().trim();
 		
-		for (let i = 1; i < normalized.length; i++) {
-			// 내포 홀드는 ASS 추가 스크립트 영역 없음
-			// ... 그냥 홀드마다가 아니라 메인 홀드 주석에 몰아주는 게 나을 듯?
-			
+		for (let i = exportedHoldsLength; i < holds.length; i++) {
 			// 내포된 홀드는 종료싱크가 빠졌을 수 있음
 			const hold = holds[i];
 			if (hold.next && !hold.body[hold.body.length - 1].isEmpty()) {
@@ -841,28 +843,31 @@ if (SmiFile) {
 			if (names.length > 1) {
 				holds[i].name = names[0];
 				if (names[1] == "X") {
-					// 처음에 방향성을 잘못 잡음...
+					// 처음에 방향성을 잘못 잡음... 극히 일부 샘플에만 들어간 값
 					output = 1;
 				} else {
 					output = Number(names[1]);
 				}
 			}
-			const style = JSON.parse(JSON.stringify(DefaultStyle));
-			style.output = output;
-			holds[i].style = style;
+			// 홀드 스타일: antiNormalize 단계에서 가져옴
+			if (!holds[i].style) {
+				const style = JSON.parse(JSON.stringify(DefaultStyle));
+				style.output = output;
+				holds[i].style = style;
+			}
 		}
-		for (let i = normalized.length; i < holds.length; i++) {
+		for (let i = 1; i < exportedHoldsLength; i++) {
 			const hold = new SmiFile(holds[i].text).antiNormalize()[0];
 			let text = (holds[i].text = hold.toText().trim());
 			let lines = text.split("\n");
-
-			// ASS 출력 제외 확인
+			
+			// 출력 선택 확인
 			const names = holds[i].name.split("|");
 			let output = 3;
 			if (names.length > 1) {
 				holds[i].name = names[0];
 				if (names[1] == "X") {
-					// 처음에 방향성을 잘못 잡음...
+					// 처음에 방향성을 잘못 잡음... 극히 일부 샘플에만 들어간 값
 					output = 1;
 				} else {
 					output = Number(names[1]);
@@ -879,17 +884,6 @@ if (SmiFile) {
 				style.output = output;
 				holds[i].style = style;
 			}
-			/*
-			if ((lines[0] == "<!-- ASS")) {
-				for (let j = 1; j < lines.length; j++) {
-					if (lines[j] == "-->") {
-						holds[i].ass = lines.slice(1, j).join("\n");
-						text = (lines = lines.slice(j + 1)).join("\n");
-						break;
-					}
-				}
-			}
-			*/
 			holds[i].text = text;
 		}
 		return holds;
@@ -1004,10 +998,14 @@ if (SmiFile) {
 						continue;
 					}
 					// 스타일 적용 필요하면 내포 홀드 처리하지 않음
-					style = SmiFile.toSaveStyle(hold.style);
+					const style = hold.saveStyle = SmiFile.toSaveStyle(hold.style);
 					if (style) {
 						//text = "<!-- Style\n" + style + "\n-->\n" + text;
-						continue;
+						// ASS용 스타일은 내포 홀드 처리함. SMI용 스타일이 적용된 경우만 제외
+						if (hold.style.PrimaryColour != "#FFFFFF") continue;
+						if (hold.style.Italic   ) continue;
+						if (hold.style.Underline) continue;
+						if (hold.style.StrikeOut) continue;
 					}
 				}
 				
@@ -1118,7 +1116,9 @@ if (SmiFile) {
 					holdEnd++;
 				}
 				if (withComment) {
-					importBody[0].text = "<!-- End=" + holdEnd + "\nHold=" + hold.pos + "|" + hold.exportName + "\n-->\n" + importBody[0].text;
+					importBody[0].text = "<!-- End=" + holdEnd + "\nHold=" + hold.pos + "|" + hold.exportName
+						+ (hold.saveStyle ? "\n" + hold.saveStyle : "")
+						+ "\n-->\n" + importBody[0].text;
 				}
 				main.body = main.body.slice(0, (removePrev ? index - 1 : index)).concat(importBody).concat(main.body.slice(index));
 			}

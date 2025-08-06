@@ -28,13 +28,13 @@ $(() => {
 		window.close();
 		return;
 	}
-
+	
     if (!Subtitle.video.fs.length) {
         alert("동영상 프레임 분석이 끝나야 진행할 수 있습니다.");
         window.close();
         return;
 	}
-
+	
 	{
 		// 현재 선택된 홀드 기준
 		const hold = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
