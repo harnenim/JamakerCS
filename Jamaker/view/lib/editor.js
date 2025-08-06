@@ -1086,7 +1086,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			for (let j = 0; j < assTexts.length; j++) {
 				const assText = assTexts[j];
 				let ass = assText.split("[TEXT]").join(smiText)
-				                 .split("[SMI]").join(smiAss)
+				                 .split("[SMI]").join(smiAss).split("}{").join("") // [SMI]는 태그 생겼을 수 있음
 				                 .split(",");
 				
 				let layer = 0;
@@ -3464,6 +3464,7 @@ function loadAssFile(path, text, target=-1) {
 					}
 					
 					// 홀드 SMI 재구성
+					console.log(currentTab.holds);
 					for (let i = 0; i < currentTab.holds.length; i++) {
 						const hold = currentTab.holds[i];
 						if (!hold.smiFile) continue;

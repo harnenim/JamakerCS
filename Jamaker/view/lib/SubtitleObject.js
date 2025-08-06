@@ -3226,7 +3226,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 		fps = Subtitle.video.FR / 1000;
 	}
 	
-	const smi = this;
+	let smi = this;
 	const smiText = this.text;
 	const attrs = this.toAttrs();
 	
@@ -3272,6 +3272,9 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 			attrs.push(...newAttrs);
 			attrs.push(...after);
 			j += newAttrs.length - 1;
+
+			// this를 훼손하면 안 됨
+			smi = new Smi(smi.start, smi.type);
 			smi.fromAttrs(attrs, forConvert);
 		}
 	}
