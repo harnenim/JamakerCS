@@ -2526,7 +2526,8 @@ Smi.toAttrs = (text, keepTags=true) => {
 				// 태그 여닫은 순서는 기억하는 게 좋을 것 같음
 				// ... 아닌가?
 				if (hadAss || last.text.length > 0) {
-					result.push(last = new Attr());
+					last = new Attr();
+					if (!ruby) result.push(last);
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -2535,7 +2536,8 @@ Smi.toAttrs = (text, keepTags=true) => {
 				break;
 			case "I":
 				if (hadAss || last.text.length > 0) {
-					result.push(last = new Attr());
+					last = new Attr();
+					if (!ruby) result.push(last);
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -2544,7 +2546,8 @@ Smi.toAttrs = (text, keepTags=true) => {
 				break;
 			case "U":
 				if (hadAss || last.text.length > 0) {
-					result.push(last = new Attr());
+					last = new Attr();
+					if (!ruby) result.push(last);
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -2553,7 +2556,8 @@ Smi.toAttrs = (text, keepTags=true) => {
 				break;
 			case "S":
 				if (hadAss || last.text.length > 0) {
-					result.push(last = new Attr());
+					last = new Attr();
+					if (!ruby) result.push(last);
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -2563,7 +2567,8 @@ Smi.toAttrs = (text, keepTags=true) => {
 			case "FONT": {
 				let attrAdded = false;
 				if (hadAss || last.text.length > 0) {
-					result.push(last = new Attr());
+					last = new Attr();
+					if (!ruby) result.push(last);
 					attrAdded = true;
 					if (keepTags) last.tagString = tagString;
 				} else {
@@ -2578,7 +2583,8 @@ Smi.toAttrs = (text, keepTags=true) => {
 								last.tagString = last.tagString.substring(0, last.tagString.length - tagString.length);
 							}
 							if (!isFirst) {
-								result.push(last = new Attr());
+								last = new Attr();
+								if (!ruby) result.push(last);
 							}
 							if (keepTags) {
 								last.tagString = tagString;
@@ -2627,7 +2633,8 @@ Smi.toAttrs = (text, keepTags=true) => {
 		switch (tagName.toUpperCase()) {
 			case "B":
 				if (hadAss || last.text.length > 0) {
-					result.push(last = new Attr());
+					last = new Attr();
+					if (!ruby) result.push(last);
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -2636,7 +2643,8 @@ Smi.toAttrs = (text, keepTags=true) => {
 				break;
 			case "I":
 				if (hadAss || last.text.length > 0) {
-					result.push(last = new Attr());
+					last = new Attr();
+					if (!ruby) result.push(last);
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -2645,7 +2653,8 @@ Smi.toAttrs = (text, keepTags=true) => {
 				break;
 			case "U":
 				if (hadAss || last.text.length > 0) {
-					result.push(last = new Attr());
+					last = new Attr();
+					if (!ruby) result.push(last);
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -2654,7 +2663,8 @@ Smi.toAttrs = (text, keepTags=true) => {
 				break;
 			case "S":
 				if (hadAss || last.text.length > 0) {
-					result.push(last = new Attr());
+					last = new Attr();
+					if (!ruby) result.push(last);
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -2663,7 +2673,8 @@ Smi.toAttrs = (text, keepTags=true) => {
 				break;
 			case "FONT":
 				if (hadAss || last.text.length > 0) {
-					result.push(last = new Attr());
+					last = new Attr();
+					if (!ruby) result.push(last);
 					if (keepTags) last.tagString = tagString;
 				} else {
 					if (keepTags) last.tagString += tagString;
@@ -2678,6 +2689,7 @@ Smi.toAttrs = (text, keepTags=true) => {
 					if (keepTags) last.tagString += tagString;
 				}
 				Smi.setStyle(last, status);
+				ruby = null;
 				break;
 			case "RT":
 				if (ruby) {

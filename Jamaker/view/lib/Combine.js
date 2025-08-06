@@ -1394,6 +1394,18 @@ if (SmiFile) {
 						newLog.end = main.body[ni].start;
 						break;
 					}
+					if ((newLog.start == newLog.end) // 의도대로라면 여길 들어오는 건 연속 공백싱크인 경우뿐임
+					 && (newLog.from[0] > 0)
+					 && (newLog.to  [0] > 0)
+					) {
+						const oPrev = originBody[newLog.from[0] - 1];
+						const nPrev = main.body [newLog.to  [0] - 1];
+						if (oPrev.start == nPrev.start && oPrev.text == nPrev.text) {
+							newLog.start = oPrev.start;
+							newLog.from[0] = newLog.from[0] - 1;
+							newLog.to  [0] = newLog.to  [0] - 1;
+						}
+					}
 					logs.push(newLog);
 				}
 				// 메인 홀드에 없는 내용만 남음
