@@ -3272,8 +3272,8 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 			attrs.push(...newAttrs);
 			attrs.push(...after);
 			j += newAttrs.length - 1;
-
-			// this를 훼손하면 안 됨
+			
+			// this를 훼손하면 안 됨 - TODO: withComment=false 체크할까?
 			smi = new Smi(smi.start, smi.type);
 			smi.fromAttrs(attrs, forConvert);
 		}

@@ -1079,14 +1079,16 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			}
 			
 			// ASS 주석에 [TEXT], [SMI] 있을 경우 넣을 내용물
-			const smiText = Subtitle.$tmp.html(smi.text.split(/<br>/gi).join("\\N")).text();
+			let smiText = Subtitle.$tmp.html(smi.text.split(/<br>/gi).join("\\N")).text();
+			while (smiText.indexOf("\\N　\\N") >= 0) { smiText = smiText.split("\\N　\\N").join("\\N"); }
+			while (smiText.indexOf("\\N\\N"  ) >= 0) { smiText = smiText.split("\\N\\N"  ).join("\\N"); }
 			const smiAss  = AssEvent.fromAttrs(smi.toAttrs())[0]; // RUBY 태그 같은 게 있으면 여러 줄 될 수 있지만 무시하는 쪽으로...
 			
 			// ASS 주석에서 복원
 			for (let j = 0; j < assTexts.length; j++) {
 				const assText = assTexts[j];
 				let ass = assText.split("[TEXT]").join(smiText)
-				                 .split("[SMI]").join(smiAss).split("}{").join("") // [SMI]는 태그 생겼을 수 있음
+				                 .split("[SMI]").join(smiAss).split("}{").join("") // [SMI]는 태그 만들었을 수 있음
 				                 .split(",");
 				
 				let layer = 0;
@@ -3464,7 +3466,6 @@ function loadAssFile(path, text, target=-1) {
 					}
 					
 					// 홀드 SMI 재구성
-					console.log(currentTab.holds);
 					for (let i = 0; i < currentTab.holds.length; i++) {
 						const hold = currentTab.holds[i];
 						if (!hold.smiFile) continue;
