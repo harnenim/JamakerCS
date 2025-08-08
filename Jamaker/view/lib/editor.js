@@ -1190,7 +1190,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 		const an2Holds = [];
 		for (let h = 0; h < holds.length; h++) {
 			const hold = holds[h];
-			if (hold.style && (hold.style.Alignment % 3 != 2)) continue; // ASS에서 좌우 구석일 경우 계산하지 않음
+			if (hold.style && (hold.style.Alignment == 2 || hold.style.Alignment == 5)) continue; // ASS에서 정중앙 혹은 중앙 하단일 경우
 			an2Holds.push(hold);
 		}
 		// 아래인 것부터 정렬
