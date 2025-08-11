@@ -1089,8 +1089,8 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 				const assText = assTexts[j];
 				let ass = assText.split("[TEXT]").join(smiText)
 				                 .split("[SMI]").join(smiAss)
-								 .split("}{").join("") // [SMI]는 태그 만들었을 수 있음
-								 .split("\n").join("") // 비태그 줄바꿈은 무시해야 함
+				                 .split("}{").join("") // [SMI]는 태그 만들었을 수 있음
+				                 .split("\n").join("") // 비태그 줄바꿈은 무시해야 함
 				                 .split(",");
 				
 				let layer = 0;
