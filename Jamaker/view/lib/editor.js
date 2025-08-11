@@ -1192,7 +1192,11 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 		const an2Holds = [];
 		for (let h = 0; h < holds.length; h++) {
 			const hold = holds[h];
-			if (hold.style && (hold.style.Alignment == 2 || hold.style.Alignment == 5)) continue; // ASS에서 정중앙 혹은 중앙 하단일 경우
+			if (hold.style
+			 && !(   hold.style.Alignment == 2
+			      || hold.style.Alignment == 5
+			     )
+			) continue; // ASS에서 정중앙 혹은 중앙 하단이 아니면 제외
 			an2Holds.push(hold);
 		}
 		// 아래인 것부터 정렬
