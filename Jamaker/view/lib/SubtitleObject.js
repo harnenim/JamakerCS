@@ -708,7 +708,7 @@ SyncAttr.prototype.getTextOnly = function () {
 	return text;
 }
 Subtitle.Width =
-{	DEFAULT_FONT: { fontFamily: "맑은 고딕", fontSize: "72px" }
+{	DEFAULT_FONT: { fontFamily: "맑은 고딕", fontSize: "72px", fontWeight: "bold" }
 ,	getWidth: function(input, font) {
 		if (typeof input == "string") {
 			if (!font) font = this.DEFAULT_FONT;
@@ -838,9 +838,10 @@ Attr.prototype.isEmpty = function () {
 }
 
 Attr.prototype.getWidth = function() {
-	const css = Subtitle.Width.DEFAULT_FONT;
+	const css = JSON.parse(JSON.stringify(Subtitle.Width.DEFAULT_FONT));
 	if (this.fs) css.fontSize   = this.fs;
 	if (this.fn) css.fontFamily = this.fn;
+	css.fontWeight = (this.b ? "bold" : null);
 	return Subtitle.Width.getWidth(this.text, css);
 }
 Attr.getWidths = (attrs) => {
