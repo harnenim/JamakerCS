@@ -1725,7 +1725,7 @@ AssEvent.fromSync = function(sync, style=null) {
 					}
 					// 줄표 달린 게 2개 이상일 때
 					if (pureLines.length >= 2) {
-						const wStyle = { fontFamily: style.Fontname, fontSize: style.Fontsize + "px" };
+						const wStyle = { fontFamily: style.Fontname, fontSize: style.Fontsize + "px", fontWeight: (style.Bold == 0 ? "normal" : "bold") };
 						const oneWidth = Subtitle.Width.getWidth("　", wStyle);
 						let maxWidth = 0;
 						for (let i = 0; i < pureLines.length; i++) {
