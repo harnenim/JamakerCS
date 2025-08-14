@@ -3630,6 +3630,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 		
 	} else {
 		if (hasGradation) {
+			this.text = smi.text;
 			// 주석 추가
 			if (withComment) {
 				this.text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + this.text;
