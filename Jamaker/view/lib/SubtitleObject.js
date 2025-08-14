@@ -4139,28 +4139,10 @@ SmiFile.prototype.normalize = function(withComment=false, fps=null) {
 	if (preset) {
 		for (let i = 0; i < smis.length; i++) {
 			const smi = smis[i];
-			const text = smi.text.split("&nbsp;").join("").trim();
-			if (text.length) {
-				let hasText = false;
-				const tags = text.split("<");
-				if (tags[0]) {
-					hasText = true;
-				} else {
-					for (let j = 1; j < tags.length; j++) {
-						const tag = tags[j];
-						if (tag.indexOf(">") > 0) {
-							if (tag.substring(tag.indexOf(">") + 1)) {
-								hasText = true;
-								break;
-							}
-						}
-					}
-				}
-				if (hasText) {
-					smi.text = preset.join(smi.text);
-					// 태그 재구성
-					smi.fromAttrs(smi.toAttrs(false));
-				}
+			if (Subtitle.$tmp.html(smi.text).text().split("　").join(" ").trim()) {
+				smi.text = preset.join(smi.text);
+				// 태그 재구성
+				smi.fromAttrs(smi.toAttrs(false));
 			}
 		}
 	}
