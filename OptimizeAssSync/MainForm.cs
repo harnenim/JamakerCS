@@ -113,7 +113,7 @@ namespace Jamaker
                     DirectoryInfo di = new DirectoryInfo("temp");
                     if (di.Exists)
                     {
-                        VideoInfo.FromFkfFile("temp/" + fkfName);
+                        VideoInfo.FromFkfFile("temp/fkf/" + fkfName);
                         Script("Progress.set", new object[] { selector, 0 });
                         Script("setFkfFile", fkfName);
                         return;
@@ -130,7 +130,7 @@ namespace Jamaker
                 }).RefreshInfo((VideoInfo videoInfo) =>
                 {
                     videoInfo.ReadKfs(true);
-                    videoInfo.SaveFkf("temp/" + fkfName);
+                    videoInfo.SaveFkf("temp/fkf/" + fkfName);
                     Script("Progress.set", new object[] { selector, 0 });
                     Script("setFkfFile", fkfName);
                 });

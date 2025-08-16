@@ -1116,10 +1116,33 @@ namespace Jamaker
                     // 기존에 있으면 가져오기
                     try
                     {
+                        DirectoryInfo di = new DirectoryInfo("temp/fkf");
+                        if (di.Exists)
+                        {
+                            VideoInfo.FromFkfFile("temp/fkf/" + fkfName);
+                            Script("Progress.set", new object[] { "#forFrameSync", 1 });
+                            Script("loadFkf", new object[] { fkfName });
+                            return;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    // 기존 버전에선 fkf 폴더 없이 그냥 temp 폴더에 있었음
+                    try
+                    {
                         DirectoryInfo di = new DirectoryInfo("temp");
                         if (di.Exists)
                         {
-                            VideoInfo.FromFkfFile("temp/" + fkfName);
+                            di = new DirectoryInfo("temp/fkf");
+                            if (!di.Exists)
+                            {
+                                di.Create();
+                            }
+                            File.Move("temp/" + fkfName, "temp/fkf/" + fkfName);
+                            VideoInfo.FromFkfFile("temp/fkf/" + fkfName);
                             Script("Progress.set", new object[] { "#forFrameSync", 1 });
                             Script("loadFkf", new object[] { fkfName });
                             return;
@@ -1140,7 +1163,7 @@ namespace Jamaker
                     {
                         Script("Progress.set", new object[] { "#forFrameSync", 1 });
                         videoInfo.ReadKfs(true);
-                        videoInfo.SaveFkf("temp/" + fkfName);
+                        videoInfo.SaveFkf("temp/fkf/" + fkfName);
                         if (requestFramesPath == path)
                         {   // 중간에 다른 파일 불러왔을 수도 있음
                             Script("loadFkf", new object[] { fkfName });

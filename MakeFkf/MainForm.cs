@@ -121,10 +121,10 @@ namespace Jamaker
                     // 기존에 있으면 가져오기
                     try
                     {
-                        DirectoryInfo di = new DirectoryInfo("temp");
+                        DirectoryInfo di = new DirectoryInfo("temp/fkf");
                         if (di.Exists)
                         {
-                            VideoInfo.FromFkfFile("temp/" + fkfName);
+                            VideoInfo.FromFkfFile("temp/fkf/" + fkfName);
                             Script("Progress.set", new object[] { selector, 1 });
                             MakeFkf(index + 1);
                             return;
@@ -141,7 +141,7 @@ namespace Jamaker
                     }).RefreshInfo((VideoInfo videoInfo) =>
                     {
                         videoInfo.ReadKfs(true);
-                        videoInfo.SaveFkf("temp/" + fkfName);
+                        videoInfo.SaveFkf("temp/fkf/" + fkfName);
                         Script("Progress.set", new object[] { selector, 1 });
                         MakeFkf(index + 1);
                     });
