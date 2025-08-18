@@ -114,7 +114,7 @@ Binder.prototype.stop        = function() { this._.player.stop(); }
 Binder.prototype.moveTo  = function(time) { this._.player.moveTo(time); }
 
 // 부가기능
-Binder.prototype.runColorPicker = function() { alert("C#에서 동작합니다."); }
+Binder.prototype.runColorPicker = function() { this._.runColorPicker(); }
 </script>
 <script src="bridge/WebForm.js"></script>
 <script>
@@ -1011,6 +1011,11 @@ window.MB = 9;
 		const hwnd = window.open("bridge/tempDir.html", "tempDir", "location=no,width=1,height=1");
 		const rect = editor.mainView.contentWindow.setting.player.window;
 		WinAPI.MoveWindow(hwnd, rect.x + 40, rect.y + 40, rect.width - 80, rect.height - 80);
+	}
+	
+	editor.runColorPicker = function() {
+		const color = prompt("색상 입력 테스트", "#ABCDEF");
+		editor.script("SmiEditor.inputText", [color]);
 	}
 }
 {	// Designer

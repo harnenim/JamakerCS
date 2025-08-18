@@ -611,12 +611,22 @@ SmiEditor.prototype.setLine = function(text, selection) {
 }
 SmiEditor.prototype._inputText = SmiEditor.prototype.inputText;
 SmiEditor.prototype.inputText = function(text) {
-	if (this.area.hasClass("style")
-	 || this.area.hasClass("ass")) {
+	if (this.area.hasClass("ass")) {
 		alert("SMI 에디터 모드가 아닙니다.");
 		return;
 	}
-	this._inputText(text);
+	if (this.area.hasClass("style")) {
+		if (text.length == 7 && text.startsWith("#")) {
+			this.style.PrimaryColour = text;
+			this.area.find("input[name=PrimaryColour]").val(text).next().val(text);
+			this.refreshStyle();
+		} else {
+			alert("SMI 에디터 모드가 아닙니다.");
+			return;
+		}
+	} else {
+		this._inputText(text);
+	}
 }
 SmiEditor.prototype._tagging = SmiEditor.prototype.tagging;
 SmiEditor.prototype.tagging = function(input, standCursor) {
