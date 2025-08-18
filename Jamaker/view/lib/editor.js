@@ -3478,6 +3478,9 @@ function loadAssFile(path, text, target=-1) {
 						
 						for (let j = 0; j < hold.smiFile.body.length; j++) {
 							const smi = hold.smiFile.body[j];
+							if (smi.origin) {
+								smi.text = smi.origin;
+							}
 							if (smi.assComments) {
 								smi.assComments.sort((a, b) => {
 									return Number(a.split(",")[0]) - Number(b.split(",")[0]);

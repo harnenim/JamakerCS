@@ -1741,8 +1741,9 @@ AssEvent.fromSync = function(sync, style=null) {
 						}
 						text = lines.join("\\N");
 						if (frontTag) {
-							text = (frontTag + text).split("}{").join("");
+							text = (frontTag + text);
 						}
+						text = text.split("}{").join("");
 					}
 				}
 			}
@@ -3630,6 +3631,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 		
 	} else {
 		if (hasGradation) {
+			this.origin = smiText;
 			this.text = smi.text;
 			// 주석 추가
 			if (withComment) {
