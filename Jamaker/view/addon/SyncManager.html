@@ -193,17 +193,15 @@ $(() => {
 	
 				} else {
 					$tr.append($("<td>")).append($("<td>").addClass("sync").text(smi.syncType == Subtitle.SyncType.inner ? "~" : smi.start));
-					$tr.data({ index: lastIndex + (++count / 1000) }); // 1000개를 넘어갈 일은 없을 것
+					$tr.data({ index: (frameSyncs.length - 1) + (++count / 10000) }); // 10000개를 넘어갈 일은 없을 것
 				}
-				$tbody.append($tr.append($("<td>").text(smi.text.split("\n").join(""))));
+				$tbody.append($tr.append($("<td>").text(smi.text.split("\n").join("")).attr("title", smi.text)));
 	
 				lastFade = fade;
 			}
 		}
 		if (origin.assBody) {
 			// ASS
-			$tbody.append($("<tr>").append($("<td>")).append($("<td>")).append($("<td>").text("&nbsp;")).data({ index: lastIndex + (++count / 1000) }));
-			
 			for (let i = 0; i < origin.assBody.length; i++) {
 				const ass = origin.assBody[i];
 				let start = Number(ass.inputStart.val());
@@ -231,9 +229,10 @@ $(() => {
 						
 					} else {
 						$tr.append($("<td>")).append($("<td>").addClass("sync").text(start));
-						$tr.data({ index: lastIndex + (++count / 1000) }); // 1000개를 넘어갈 일은 없을 것
+						$tr.data({ index: (frameSyncs.length - 1) + (++count / 1000) }); // 1000개를 넘어갈 일은 없을 것
 					}
-					$tbody.append($tr.append($("<td>").attr({ rowspan: 2 }).text(ass.inputText.val())));
+					const assText = ass.inputText.val();
+					$tbody.append($tr.append($("<td>").attr({ rowspan: 2 }).text(assText).attr("title", assText.split("{").join("\n{").split("}").join("}\n"))));
 				}
 				
 				{	// end
@@ -258,7 +257,7 @@ $(() => {
 						
 					} else {
 						$tr.append($("<td>")).append($("<td>").addClass("sync").text(end));
-						$tr.data({ index: lastIndex + (++count / 1000) }); // 1000개를 넘어갈 일은 없을 것
+						$tr.data({ index: lastIndex + (++count / 10000) }); // 10000개를 넘어갈 일은 없을 것
 					}
 					$tbody.append($tr);
 				}
@@ -378,7 +377,7 @@ $(() => {
 		diffs[key] = diff;
 	}
 	
-	let selected = -1;
+	window.selected = -1;
 	function select(index, $tr=null) {
 		if (selected == index) return;
 		
@@ -386,6 +385,7 @@ $(() => {
 		if ($tr == null) {
 			$tr = frameSyncs[selected];
 		}
+		console.log(selected, $tr, $tr.data());
 		
 		$tbody.find("tr.selected").removeClass("selected");
 		$tr.addClass("selected");
@@ -517,6 +517,7 @@ $(() => {
 	});
 	
 	$(document).on("keydown", function(e) {
+		console.log(selected);
 		switch (e.keyCode) {
 			case 38: { // ↑
 				e.preventDefault();
