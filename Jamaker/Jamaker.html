@@ -522,7 +522,10 @@ window.MB = 9;
 
 {	// 설정
 	editor.loadSetting = function(afterSuccess) {
-		this.strSettingJson = localStorage.getItem("setting");
+		let setting = localStorage.getItem("setting");
+		if (setting) {
+			this.strSettingJson = setting
+		}
 		this.strBridgeList = playerDlls;
 		$.ajax({url: "view/lib/highlight/list.txt"
 			,	dataType: "text"
@@ -541,9 +544,12 @@ window.MB = 9;
 		// TODO: 설정 파일 존재하면 삭제
 		
 		// 백업 파일 존재하는지 확인
-		if (false) {
+		if (true) {
 			// 존재하면 가져오기
-			this.strSettingJson = localStorage.getItem("setting.bak");
+			let setting = localStorage.getItem("setting.bak");
+			if (setting) {
+				this.strSettingJson = setting;
+			}
 		}
 		this.script("init", [this.strSettingJson, true]);
 	}

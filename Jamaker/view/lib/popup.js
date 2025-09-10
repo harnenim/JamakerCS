@@ -83,8 +83,8 @@ confirm = (msg, yes, no) => {
 }
 
 // opener가 있는 addon에서만 쓰임
-let loadAddonSetting;
-let saveAddonSetting;
+window.loadAddonSetting = null;
+window.saveAddonSetting = null;
 if (opener) {
 	opener.afterLoadAddonSetting = () => {};
 	loadAddonSetting = (name, afterLoad) => {
@@ -97,6 +97,23 @@ if (opener) {
 		opener.afterSaveAddonSetting = afterSave ? afterSave : () => {};
 		opener.binder.saveAddonSetting(name, text);
 	}
+} else {
+	// 프레임 샘플에선 opener가 나중에 추가됨
+	$(() => {
+		if (opener) {
+			opener.afterLoadAddonSetting = () => {};
+			loadAddonSetting = (name, afterLoad) => {
+				opener.afterLoadAddonSetting = afterLoad ? afterLoad : () => {};
+				opener.binder.loadAddonSetting(name);
+			}
+			
+			opener.afterSaveAddonSetting = () => {};
+			saveAddonSetting = (name, text, afterSave) => {
+				opener.afterSaveAddonSetting = afterSave ? afterSave : () => {};
+				opener.binder.saveAddonSetting(name, text);
+			}
+		}
+	});
 }
 
 function setColor(color) {

@@ -12,18 +12,18 @@
 windowName = "addon";
 
 // 초기 상태 기억
-const tab = opener && opener.tabs && opener.tabs.length ? opener.tabs[opener.tab] : null;
+let tab = null;
 const origins = [];
-if (tab) {
-	Subtitle.video = opener.Subtitle.video;
-}
 
 const RANGE = 10; // 현재 싱크 전후로 렌더링할 범위
 let mode = 1;
 const M = [null, "", "_", "~"]; // 모드에 따른 파일명 끝 표시
 
 $(() => {
-	if (!tab) {
+	if (opener && opener.tabs && opener.tabs.length) {
+		tab = opener.tabs[opener.tab];
+		Subtitle.video = opener.Subtitle.video;
+	} else {
 		alert("작업 대상이 없습니다.");
 		window.close();
 		return;

@@ -16,11 +16,12 @@
 windowName = "addon";
 
 // 초기 상태 기억
-// TODO: 경우에 따라 opener 분리 필요
-const origin = opener && opener.SmiEditor.selected ? opener.SmiEditor.selected.getText() : null;
+let origin = null;
 
 function init() {
-	if (!origin) {
+	if (opener && opener.SmiEditor.selected) {
+		origin = opener.SmiEditor.selected.getText();
+	} else {
 		alert("작업 대상이 없습니다.");
 		window.close();
 		return false;

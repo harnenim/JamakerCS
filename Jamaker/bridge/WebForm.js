@@ -23,17 +23,23 @@ WebForm.prototype.script = function(names, p) {
 	}
 }
 WebForm.prototype.alert = function(name, msg) {
-	this.getHwnd(name)._alert(msg);
+	let hwnd = this.getHwnd(name);
+	if (hwnd.iframe) hwnd = hwnd.iframe.contentWindow;
+	hwnd._alert(msg);
 }
 WebForm.prototype.confirm = function(name, msg) {
-	if (this.getHwnd(name)._confirm(msg)) {
+	let hwnd = this.getHwnd(name);
+	if (hwnd.iframe) hwnd = hwnd.iframe.contentWindow;
+	if (hwnd._confirm(msg)) {
 		this.mainView.contentWindow.afterConfirmYes();
 	} else {
 		this.mainView.contentWindow.afterConfirmNo();
 	}
 }
 WebForm.prototype.prompt = function(name, msg, def) {
-	this.mainView.contentWindow.afterPrompt(this.getHwnd(name)._prompt(msg, def));
+	let hwnd = this.getHwnd(name);
+	if (hwnd.iframe) hwnd = hwnd.iframe.contentWindow;
+	this.mainView.contentWindow.afterPrompt(hwnd._prompt(msg, def));
 }
 
 WebForm.prototype.showDragging = function(id) {

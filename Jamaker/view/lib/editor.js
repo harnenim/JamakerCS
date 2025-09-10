@@ -2096,6 +2096,36 @@ function setSetting(setting, initial=false) {
 	
 	Combine.css = setting.viewer.css;
 	//	DefaultStyle.Fontsize = Number(setting.viewer.size) / 18 * 80;
+	if (!setting.defStyle) {
+		setting.defStyle = {
+				"Fontname": "맑은 고딕"
+			,	"Fontsize": 80
+			,	"PrimaryColour"  : "#FFFFFF"
+			,	"SecondaryColour": "#FF0000"
+			,	"OutlineColour"  : "#000000"
+			,	"BackColour"     : "#000000"
+			,	"PrimaryOpacity"  : 255
+			,	"SecondaryOpacity": 255
+			,	"OutlineOpacity"  : 255
+			,	"BackOpacity"     : 255
+			,	"Bold"     : true
+			,	"Italic"   : false
+			,	"Underline": false
+			,	"StrikeOut": false
+			,	"ScaleX": 100
+			,	"ScaleY": 100
+			,	"Spacing": 0
+			,	"Angle": 0
+			,	"BorderStyle": false
+			,	"Outline": 4
+			,	"Shadow": 0
+			,	"Alignment": 2
+			,	"MarginL": 64
+			,	"MarginR": 64
+			,	"MarginV": 40
+			,	"output": 3
+		}
+	}
 	Subtitle.DefaultStyle = setting.defStyle;
 	
 	$("input[name=Fontname]").attr({ placeholder: Subtitle.DefaultStyle.Fontname });

@@ -13,10 +13,12 @@
 	<script>
 windowName = "addon";
 
-const editor = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
+let editor = null;
 
 $(() => {
-	if (!editor) {
+	if (opener && opener.SmiEditor) {
+		editor = opener.SmiEditor.selected;
+	} else {
 		alert("작업 대상이 없습니다.");
 	}
 	alert("본 기능은 더 이상 사용되지 않습니다.");

@@ -13,12 +13,8 @@
 windowName = "addon";
 
 // 초기 상태 기억
-// TODO: 경우에 따라 opener 분리 필요
-const tab = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
-const origin = tab ? tab.getText() : null;
-if (tab) {
-	Subtitle.video = opener.Subtitle.video;
-}
+let tab = null;
+let origin = null;
 
 function smi2assTime(ms) {
 	ms = Math.max(0, ms);
@@ -509,6 +505,12 @@ function apply() {
 }
 
 $(() => {
+	tab = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
+	origin = tab ? tab.getText() : null;
+	if (tab) {
+		Subtitle.video = opener.Subtitle.video;
+	}
+	
 	if (splitOrigin()) {
 		$("#btnFrameAssToSmi").on("click", frameAssToSmi);
 		

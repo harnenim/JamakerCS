@@ -252,10 +252,12 @@ CheckString.prototype.doReplace = function() {
 }
 
 //초기 상태 기억
-const origin = (opener && opener.SmiEditor && opener.SmiEditor.selected) ? opener.SmiEditor.selected.getText() : null;
+let origin = null;
 let operation = null;
 $(() => {
-	if (!origin) {
+	if (opener && opener.SmiEditor && opener.SmiEditor.selected) {
+		origin = opener.SmiEditor.selected.getText();
+	} else {
 		alert("작업 대상이 없습니다.");
 		window.close();
 		return false;
