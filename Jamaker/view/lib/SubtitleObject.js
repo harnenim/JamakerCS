@@ -784,7 +784,7 @@ Subtitle.Width =
 
 // 객체 복사용이 아닌, 기존 속성에 이어지는 새 객체를 만드는 쪽으로 만들었던 부분이라 text는 비운 채로 생성함
 // SMI 복원용 태그는 기본적으론 복사 안 함
-window.Attr = Subtitle.Attr = function(old, text="", withTagString=false) {
+window.Attr = Subtitle.Attr = function(old, text="") {
 	if (old) {
 		this.text = text;
 		this.b    = old.b;
@@ -799,7 +799,6 @@ window.Attr = Subtitle.Attr = function(old, text="", withTagString=false) {
 		this.shake = old.shake;
 		this.typing = old.typing;
 		this.furigana = old.furigana;
-		this.tagString = withTagString ? old.tagString : null;
 	} else {
 		this.text = text;
 		this.b    = false; // Bold
@@ -813,7 +812,6 @@ window.Attr = Subtitle.Attr = function(old, text="", withTagString=false) {
 		this.fade = 0; // 형식> in: 1 / out: -1 / #ABCDEF / #ABCDEF~#FEDCBA
 		this.shake = null;
 		this.typing = null;
-		this.tagString = null;
 	}
 }
 Attr.TypingAttr = function(mode, start, end) {
@@ -1128,7 +1126,8 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 			const lines = [line];
 			for (let i = 0; i < attrs.length; i++) {
 				const attr = attrs[i];
-				if (attr.text.indexOf("\n") < 0) {
+				
+				if (attr.attrs || attr.text.indexOf("\n") < 0) {
 					line.attrs.push(attr);
 					
 				} else {
@@ -1160,7 +1159,11 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 							furigana.push(Attr.junkAss("{\\fscy50\\fscx50}"));
 						}
 						
-						furigana.push(line.attrs[j].furigana);
+						if (line.attrs[j].attrs) {
+							furigana.push(...line.attrs[j].furigana);
+						} else {
+							furigana.push(line.attrs[j].furigana);
+						}
 						
 						if (j < line.attrs.length - 1) {
 							furigana.push(Attr.junkAss("{\\fscx\\bord0\\1a&HFF&}"));
@@ -1175,6 +1178,16 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 				count = Math.max(count, line.furigana.length);
 			}
 			
+			function push(combined, attrs) {
+				for (let i = 0; i < attrs.length; i++) {
+					if (attrs[i].attrs) {
+						combined.push(...attrs[i].attrs);
+					} else {
+						combined.push(attrs[i]);
+					}
+				}
+			}
+			
 			const texts = [];
 			for (let c = 0; c < count; c++) {
 				const combined = [];
@@ -1185,16 +1198,16 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 					line = lines[i];
 					if (line.furigana.length) {
 						if (c < line.furigana.length) {
-							combined.push(...line.furigana[c]);
+							push(combined, line.furigana[c]);
 						} else {
 							combined.push(Attr.junkAss("{\\fscy50\\fscx50}　{\\fscx\\fscy}\\N"));
 						}
 					}
 					if (c == 0) {
-						combined.push(...line.attrs);
+						push(combined, line.attrs);
 					} else {
 						combined.push(Attr.junkAss("{\\bord0\\1a&HFF&}"));
-						combined.push(...line.attrs);
+						push(combined, line.attrs);
 						combined.push(Attr.junkAss("{\\1a\\bord}"));
 					}
 				}
@@ -2503,18 +2516,18 @@ Smi.setStyle = (attr, status) => {
 Smi.setFurigana = (attr, furigana) => {
 	attr.furigana = furigana ? furigana : null;
 }
-Smi.toAttr = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
-Smi.toAttrs = (text, keepTags=true) => {
+/**
+ * <RUBY> 태그 내에 속성 여러 개일 때 문제 생겨서 재개발
+ */
+Smi.toAttrs = (text) => {
 	const status = new Smi.Status();
 	let last = new Attr();
-	last.tagString = "";
-	const result = [last];
+	let attrs = [last];
+	const result = attrs;
 	let ruby = null;
-	let furigana = null;
 	
 	let state = null;
 
-	let tagString = null;
 	let tag = null;
 	let attr = null;
 	let value = null;
@@ -2528,68 +2541,42 @@ Smi.toAttrs = (text, keepTags=true) => {
 				// 태그 여닫은 순서는 기억하는 게 좋을 것 같음
 				// ... 아닌가?
 				if (hadAss || last.text.length > 0) {
-					last = new Attr();
-					if (!ruby) result.push(last);
-					if (keepTags) last.tagString = tagString;
-				} else {
-					if (keepTags) last.tagString += tagString;
+					attrs.push(last = new Attr());
 				}
 				Smi.setStyle(last, status.setB(true));
 				break;
 			case "I":
 				if (hadAss || last.text.length > 0) {
-					last = new Attr();
-					if (!ruby) result.push(last);
-					if (keepTags) last.tagString = tagString;
-				} else {
-					if (keepTags) last.tagString += tagString;
+					attrs.push(last = new Attr());
 				}
 				Smi.setStyle(last, status.setI(true));
 				break;
 			case "U":
 				if (hadAss || last.text.length > 0) {
-					last = new Attr();
-					if (!ruby) result.push(last);
-					if (keepTags) last.tagString = tagString;
-				} else {
-					if (keepTags) last.tagString += tagString;
+					attrs.push(last = new Attr());
 				}
 				Smi.setStyle(last, status.setU(true));
 				break;
 			case "S":
 				if (hadAss || last.text.length > 0) {
-					last = new Attr();
-					if (!ruby) result.push(last);
-					if (keepTags) last.tagString = tagString;
-				} else {
-					if (keepTags) last.tagString += tagString;
+					attrs.push(last = new Attr());
 				}
 				Smi.setStyle(last, status.setS(true));
 				break;
 			case "FONT": {
 				let attrAdded = false;
 				if (hadAss || last.text.length > 0) {
-					last = new Attr();
-					if (!ruby) result.push(last);
+					attrs.push(last = new Attr());
 					attrAdded = true;
-					if (keepTags) last.tagString = tagString;
-				} else {
-					if (keepTags) last.tagString += tagString;
 				}
 				{
 					const attrs = [];
 					for (let name in tag.attrs) {
 						attrs.push([name, tag.attrs[name]]);
 						if (!attrAdded && name.toUpperCase() == "ASS") {
-							if (keepTags) {
-								last.tagString = last.tagString.substring(0, last.tagString.length - tagString.length);
-							}
 							if (!isFirst) {
 								last = new Attr();
-								if (!ruby) result.push(last);
-							}
-							if (keepTags) {
-								last.tagString = tagString;
+								attrs.push(last);
 							}
 							attrAdded = true;
 						}
@@ -2599,27 +2586,18 @@ Smi.toAttrs = (text, keepTags=true) => {
 				break;
 			}
 			case "RUBY":
-				if (hadAss || last.text.length > 0) {
-					result.push(last = new Attr());
-					if (keepTags) last.tagString = tagString;
-				} else {
-					if (keepTags) last.tagString += tagString;
-				}
+				result.push(ruby = {
+						attrs: attrs = [last = new Attr()]
+					,	furigana: []
+				});
 				Smi.setStyle(last, status);
-				ruby = last;
 				break;
 			case "RT":
-				if (hadAss || last.text.length > 0) {
-					last = new Attr(); // 후리가나는 상위 리스트에 넣지 않음
-					if (keepTags) last.tagString = tagString;
-				} else {
-					if (keepTags) last.tagString += tagString;
-				}
+				(attrs = ruby.furigana).push(last = new Attr()); // 후리가나는 상위 리스트에 넣지 않음
 				Smi.setStyle(last, status);
-				furigana = last;
 				break;
 			case "RP":
-				last = new Attr(); // 후리가나는 상위 리스트에 넣지 않음
+				last = new Attr(); // <RP> 태그는 정크 처리
 				Smi.setStyle(last, status);
 				break;
 			case "BR":
@@ -2627,7 +2605,6 @@ Smi.toAttrs = (text, keepTags=true) => {
 				break;
 		}
 		tag = null;
-		tagString = null;
 		isFirst = false;
 	}
 	function closeTag(tagName) {
@@ -2635,84 +2612,59 @@ Smi.toAttrs = (text, keepTags=true) => {
 		switch (tagName.toUpperCase()) {
 			case "B":
 				if (hadAss || last.text.length > 0) {
-					last = new Attr();
-					if (!ruby) result.push(last);
-					if (keepTags) last.tagString = tagString;
-				} else {
-					if (keepTags) last.tagString += tagString;
+					attrs.push(last = new Attr());
 				}
 				Smi.setStyle(last, status.setB(false));
 				break;
 			case "I":
 				if (hadAss || last.text.length > 0) {
-					last = new Attr();
-					if (!ruby) result.push(last);
-					if (keepTags) last.tagString = tagString;
-				} else {
-					if (keepTags) last.tagString += tagString;
+					attrs.push(last = new Attr());
 				}
 				Smi.setStyle(last, status.setI(false));
 				break;
 			case "U":
 				if (hadAss || last.text.length > 0) {
-					last = new Attr();
-					if (!ruby) result.push(last);
-					if (keepTags) last.tagString = tagString;
-				} else {
-					if (keepTags) last.tagString += tagString;
+					attrs.push(last = new Attr());
 				}
 				Smi.setStyle(last, status.setU(false));
 				break;
 			case "S":
 				if (hadAss || last.text.length > 0) {
-					last = new Attr();
-					if (!ruby) result.push(last);
-					if (keepTags) last.tagString = tagString;
-				} else {
-					if (keepTags) last.tagString += tagString;
+					attrs.push(last = new Attr());
 				}
 				Smi.setStyle(last, status.setS(false));
 				break;
 			case "FONT":
 				if (hadAss || last.text.length > 0) {
-					last = new Attr();
-					if (!ruby) result.push(last);
-					if (keepTags) last.tagString = tagString;
-				} else {
-					if (keepTags) last.tagString += tagString;
+					attrs.push(last = new Attr());
 				}
 				Smi.setStyle(last, status.setFont(null));
 				break;
 			case "RUBY":
-				if (hadAss || last.text.length > 0) {
-					result.push(last = new Attr());
-					if (keepTags) last.tagString = tagString;
-				} else {
-					if (keepTags) last.tagString += tagString;
-				}
+				(attrs = result).push(last = new Attr());
 				Smi.setStyle(last, status);
 				ruby = null;
 				break;
 			case "RT":
 				if (ruby) {
-					Smi.setFurigana(ruby, furigana);
-					furigana = null;
-					last = ruby;
+					(attrs = ruby.attrs).push(last = new Attr());
+					Smi.setStyle(last, status);
 				}
 				break;
 			case "RP":
-				if (furigana) last = furigana;
+				if (ruby) {
+					(attrs = ruby.furigana).push(last = new Attr());
+					Smi.setStyle(last, status);
+				}
 				break;
 			default:
 				break;
 		}
-		tagString = null;
 	}
 	
 	let commentStart = 0;
 	for (let pos = 0; pos < text.length; pos++) {
 		const c = text[pos];
-		if (tagString) tagString += c;
 		
 		switch (state) {
 			case '/': { // 태그?!
@@ -2724,7 +2676,6 @@ Smi.toAttrs = (text, keepTags=true) => {
 						pos = text.length;
 						break;
 					}
-					tagString += text.substring(pos + 1, end + 1);
 					closeTag(text.substring(pos + 1, end));
 					pos = end;
 					state = null;
@@ -2904,7 +2855,6 @@ Smi.toAttrs = (text, keepTags=true) => {
 						// 주석은 첫 항목이어야 함
 						last.comment = text.substring(0, pos + 3);
 						result.push(last = new Attr());
-						last.tagString = "";
 					}
 					state = null;
 					pos += 2;
@@ -2922,7 +2872,6 @@ Smi.toAttrs = (text, keepTags=true) => {
 						} else {
 							// 태그 시작
 							state = '/';
-							tagString = c;
 						}
 						break;
 					}
@@ -2939,7 +2888,18 @@ Smi.toAttrs = (text, keepTags=true) => {
 	const a = Subtitle.$tmp;
 	for (let i = 0; i < result.length; i++) {
 		// &amp; 같은 문자 처리
-		result[i].text = a.html(result[i].text).text();
+		if (result[i].attrs) {
+			let subAttrs = result[i].attrs;
+			for (let j = 0; j < subAttrs.length; j++) {
+				subAttrs[j].text = a.html(subAttrs[j].text).text();
+			}
+			subAttrs = result[i].furigana;
+			for (let j = 0; j < subAttrs.length; j++) {
+				subAttrs[j].text = a.html(subAttrs[j].text).text();
+			}
+		} else {
+			result[i].text = a.html(result[i].text).text();
+		}
 	}
 	
 	return result;
@@ -2976,24 +2936,11 @@ Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true, forConvert=f
 		for (let i = 0; i < attrs.length; i++) {
 			const attr = attrs[i];
 			
-			if (attr.furigana) {
-				// 후리가나 달리기 이전 부분 처리
-				text += Smi.fromAttrs(attrs.slice(rubyEnd, i), 0, true, true, forConvert);
-				
-				// 후리가나 처리
-				const subAttrs = [attr.clone()];
-				for (i++; i < attrs.length; i++) {
-					if (attr.furigana == attrs[i].furigana) {
-						const subAttr = attrs[i].clone();
-						subAttr.furigana = null;
-						subAttrs.push(subAttr);
-					} else {
-						rubyEnd = i;
-						i--; // 다음 루프에 ++ 됨
-						break;
-					}
-				}
-				text += "<RUBY>" + Smi.fromAttrs(subAttrs, fontSize, false, true, forConvert) + "<RT><RP>(</RP>" + Smi.fromAttrs([attr.furigana], fontSize, false, true, forConvert) + "<RP>)</RP></RT></RUBY>";
+			if (attr.attrs) {
+				text += Smi.fromAttrs(attrs.slice(rubyEnd, i), 0, false, true, forConvert) + "<RUBY>"
+				      + Smi.fromAttrs(   attr.attrs   , fontSize, false, true, forConvert) + "<RT><RP>(</RP>"
+				      + Smi.fromAttrs(   attr.furigana, fontSize, false, true, forConvert) + "<RP>)</RP></RT></RUBY>";
+				rubyEnd = i + 1;
 			}
 		}
 	}
@@ -3229,11 +3176,12 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 	}
 	
 	let smi = this;
-	const smiText = this.text;
-	const attrs = this.toAttrs();
+	let smiText = this.text;
+	let attrs = this.toAttrs();
 	
 	// 그라데이션 먼저 글자 단위 분해
 	let hasGradation = false;
+	/*
 	for (let j = 0; j < attrs.length; j++) {
 		const attr = attrs[j];
 		
@@ -3274,11 +3222,78 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 			attrs.push(...newAttrs);
 			attrs.push(...after);
 			j += newAttrs.length - 1;
-			
-			// this를 훼손하면 안 됨 - TODO: withComment=false 체크할까?
-			smi = new Smi(smi.start, smi.type);
-			smi.fromAttrs(attrs, forConvert);
 		}
+	}
+	*/
+	{
+		function checkGradation(attr) {
+			const gAttrs = [];
+			
+			const gc = (attr.fc.length == 15)
+				&& (attr.fc[0] == '#')
+				&& (attr.fc[7] == '~')
+				&& (attr.fc[8] == '#');
+			const gf = (attr.fade.length == 15)
+				&& (attr.fade[0] == '#')
+				&& (attr.fade[7] == '~')
+				&& (attr.fade[8] == '#');
+			
+			if (gc || gf) {
+				hasGradation = true;
+				
+				const cFrom = gc ? attr.fc.substring(0,  7) : (attr.fc ? attr.fc : "#ffffff");
+				const cTo   = gc ? attr.fc.substring(8, 15) : (attr.fc ? attr.fc : "#ffffff");
+				const color = new Color(cTo, cFrom);
+				
+				for (let k = 0; k < attr.text.length; k++) {
+					const gAttr = new Attr(attr);
+					gAttr.fc = color.get(k, attr.text.length - 1);
+					gAttr.text = attr.text[k];
+					gAttrs.push(gAttr);
+				}
+				if (gf) {
+					const fFrom = attr.fade.substring(0,  7);
+					const fTo   = attr.fade.substring(8, 15);
+					const fColor = new Color(fTo, fFrom);
+					for (let k = 0; k < gAttrs.length; k++) {
+						gAttrs[k].fade = fColor.smi(k, gAttrs.length - 1);
+					}
+				}
+			} else {
+				gAttrs.push(attr);
+			}
+			
+			return gAttrs;
+		}
+		
+		const newAttrs = [];
+		for (let j = 0; j < attrs.length; j++) {
+			const attr = attrs[j];
+			
+			if (attr.attrs) {
+				const gAttr = { attrs: [], furigana: [] };
+				
+				for (let k = 0; k < attr.attrs.length; k++) {
+					const gAttrs = checkGradation(attr.attrs[k]);
+					gAttr.attrs.push(...gAttrs);
+				}
+				for (let k = 0; k < attr.furigana.length; k++) {
+					const gAttrs = checkGradation(attr.furigana[k]);
+					gAttr.furigana.push(...gAttrs);
+				}
+				newAttrs.push(gAttr);
+				
+			} else {
+				const gAttrs = checkGradation(attr);
+				newAttrs.push(...gAttrs);
+			}
+		}
+		attrs = newAttrs;
+	}
+	if (hasGradation) {
+		// this를 훼손하면 안 됨 - TODO: withComment=false 체크할까?
+		smi = new Smi(smi.start, smi.type);
+		smi.fromAttrs(attrs, forConvert);
 	}
 	if (end < 0) {
 		// 종료태그 없는 경우, 그라데이션만 동작
@@ -3308,7 +3323,22 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 			}
 		}
 	}
-
+	
+	function normalizeFade(attr) {
+		if (attr.fade != 0) {
+			attr.fadeColor = new Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"));
+			attr.fade = 0;
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+	function setFadeColor(attr, j, count) {
+		if (attr.fadeColor) {
+			attr.fc = attr.fadeColor.get(1 + 2 * j, 2 * count);
+		}
+	}
+	
 	const smis = [];
 	if (shakeRange) {
 		// 흔들기는 한 싱크에 하나만 가능
@@ -3357,30 +3387,23 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 		}
 		
 		// 페이드 효과 추가 처리
-		const fadeColors = [];
 		if (hasFade) {
+			let countFades = 0;
 			for (let j = 0; j < attrs.length; j++) {
 				const attr = attrs[j];
-				attr.tagString = null;
-				if (attr.fade != 0) {
-					fadeColors.push(new Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
-					attr.fade = 0;
-				}
-				if (attr.furigana) {
-					const furi = attr.furigana;
-					if (furi.fade != 0) {
-						fadeColors.push(new Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
-						furi.fade = 0;
+				if (attr.attrs) {
+					for (let k = 0; k < attr.attrs.length; k++) {
+						countFades += normalizeFade(attr.attrs[k]);
 					}
+					for (let k = 0; k < attr.furigana.length; k++) {
+						countFades += normalizeFade(attr.furigana[k]);
+					}
+				} else {
+					countFades += normalizeFade(attr);
 				}
 			}
-			if (fadeColors.length == 0) {
+			if (!countFades) {
 				return [smi];
-			}
-		} else {
-			// 페이드 없어도 tagString은 빼줘야 함
-			for (let j = 0; j < attrs.length; j++) {
-				attrs[j].tagString = null;
 			}
 		}
 		
@@ -3396,7 +3419,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 		const TBmin = "<font size=\"" + (0 * shake.size + 1) + "\">　</font>";
 		const TBmid = "<font size=\"" + (1 * shake.size + 1) + "\">　</font>";
 		const TBmax = "<font size=\"" + (2 * shake.size + 1) + "\">　</font>";
-		
+
 		for (let j = 0; j < count; j++) {
 			/*
 			 * ５０３
@@ -3406,9 +3429,18 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 			const step = j % 8;
 			
 			// 페이드 효과 추가 처리
-			for (let k = 0; k < fadeColors.length; k++) {
-				const color = fadeColors[k];
-				((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1 + 2 * j, 2 * count);
+			for (let jj = 0; jj < attrs.length; jj++) {
+				const attr = attrs[jj];
+				if (attr.attrs) {
+					for (let k = 0; k < attr.attrs.length; k++) {
+						setFadeColor(attr.attrs[k], j, count);
+					}
+					for (let k = 0; k < attr.furigana.length; k++) {
+						setFadeColor(attr.furigana[k], j, count);
+					}
+				} else {
+					setFadeColor(attr, j, count);
+				}
 			}
 			let text = Smi.fromAttrs(attrs).split("\n").join("<br>");
 			
@@ -3466,7 +3498,14 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 					if (!isLastAttr) {
 						let length = 0;
 						for (let k = j + 1; k < attrs.length; k++) {
-							length += attrs[k].text.length;
+							if (attrs[k].attrs) {
+								const subAttrs = attrs[k].attrs;
+								for (let ki = 0; ki < subAttrs.length; ki++) {
+									length += subAttrs[ki].text.length;
+								}
+							} else {
+								length += attrs[k].text.length;
+							}
 						}
 						isLastAttr = (length == 0);
 					}
@@ -3475,8 +3514,6 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 				// 타이핑 찾은 후 나머지에 대해 타이핑 제거
 				attrs[j].typing = null;
 			}
-			// 태그 원본도 신뢰할 수 없음
-			attrs[j].tagString = null;
 		}
 		if (attr == null) {
 			return [smi];
@@ -3503,21 +3540,21 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 		// 페이드 효과 추가 처리
 		const fadeColors = [];
 		if (hasFade) {
+			let countFades = 0;
 			for (let j = 0; j < attrs.length; j++) {
 				const attr = attrs[j];
-				if (attr.fade != 0) {
-					fadeColors.push(new Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
-					attr.fade = 0;
-				}
-				if (attr.furigana) {
-					const furi = attr.furigana;
-					if (furi.fade != 0) {
-						fadeColors.push(new Color( furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
-						furi.fade = 0;
+				if (attr.attrs) {
+					for (let k = 0; k < attr.attrs.length; k++) {
+						countFades += normalizeFade(attr.attrs[k]);
 					}
+					for (let k = 0; k < attr.furigana.length; k++) {
+						countFades += normalizeFade(attr.furigana[k]);
+					}
+				} else {
+					countFades += normalizeFade(attr);
 				}
 			}
-			if (fadeColors.length == 0) {
+			if (!countFades) {
 				return [smi];
 			}
 		}
@@ -3563,9 +3600,18 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 			}
 			
 			// 페이드 효과 추가 처리
-			for (let k = 0; k < fadeColors.length; k++) {
-				const color = fadeColors[k];
-				((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1 + 2 * j, 2 * count);
+			for (let jj = 0; jj < attrs.length; jj++) {
+				const attr = attrs[jj];
+				if (attr.attrs) {
+					for (let k = 0; k < attr.attrs.length; k++) {
+						setFadeColor(attr.attrs[k], j, count);
+					}
+					for (let k = 0; k < attr.furigana.length; k++) {
+						setFadeColor(attr.furigana[k], j, count);
+					}
+				} else {
+					setFadeColor(attr, j, count);
+				}
 			}
 			
 			const tAttrs = attrs.slice(0, attrIndex);
@@ -3592,38 +3638,43 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 		const start = smi.start;
 		const count = Math.round((end - start) * fps / 1000);
 		
-		const fadeColors = [];
+		let countFades = 0;
 		for (let j = 0; j < attrs.length; j++) {
 			const attr = attrs[j];
-			attr.tagString = null;
-			if (attr.fade != 0) {
-				fadeColors.push(new Color(attr.fade, ((attr.fc.length == 6) ? attr.fc : "ffffff"), j));
-				attr.fade = 0;
-			}
-			if (attr.furigana) {
-				const furi = attr.furigana;
-				if (furi.fade != 0) {
-					fadeColors.push(new Color(furi.fade, ((furi.fc.length == 6) ? furi.fc : "ffffff"), -1-j));
-					furi.fade = 0;
+			if (attr.attrs) {
+				for (let k = 0; k < attr.attrs.length; k++) {
+					countFades += normalizeFade(attr.attrs[k]);
 				}
+				for (let k = 0; k < attr.furigana.length; k++) {
+					countFades += normalizeFade(attr.furigana[k]);
+				}
+			} else {
+				countFades += normalizeFade(attr);
 			}
 		}
-		if (fadeColors.length == 0) {
+		if (!countFades) {
 			return [smi];
 		}
 		
-		for (let j = 0; j < fadeColors.length; j++) {
-			const color = fadeColors[j];
-			((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1, 2 * count);
-		}
-		smis.push(new Smi(start).fromAttrs(attrs));
-		
-		for (let j = 1; j < count; j++) {
-			for (let k = 0; k < fadeColors.length; k++) {
-				const color = fadeColors[k];
-				((color.index < 0) ? attrs[-1 - color.index].furigana : attrs[color.index]).fc = color.get(1 + 2 * j, 2 * count);
+		for (let j = 0; j < count; j++) {
+			for (let jj = 0; jj < attrs.length; jj++) {
+				const attr = attrs[jj];
+				if (attr.attrs) {
+					for (let k = 0; k < attr.attrs.length; k++) {
+						setFadeColor(attr.attrs[k], j, count);
+					}
+					for (let k = 0; k < attr.furigana.length; k++) {
+						setFadeColor(attr.furigana[k], j, count);
+					}
+				} else {
+					setFadeColor(attr, j, count);
+				}
 			}
-			smis.push(new Smi((start * (count - j) + end * j) / count, SyncType.inner).fromAttrs(attrs));
+			if (j == 0) {
+				smis.push(new Smi(start, smi.syncType).fromAttrs(attrs));
+			} else {
+				smis.push(new Smi((start * (count - j) + end * j) / count, SyncType.inner).fromAttrs(attrs));
+			}
 		}
 		if (withComment) {
 			smis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[0].text;

@@ -171,15 +171,25 @@ window.Combine = {
 	}
 	function getAttrWidth(attrs, checker, withFs=false) {
 		const cAttrs = [];
-		for (let i = 0; i < attrs.length; i++) {
-			const attr = new Attr(attrs[i], attrs[i].text.split("&nbsp;").join(" "), true);
-			attr.fs = ((withFs && attr.fs) ? attr.fs : Combine.defaultSize);
-			if (attr.fn && attr.fn != "맑은 고딕") {
+		function append(attr) {
+			const cAttr = new Attr(attr, attr.text.split("&nbsp;").join(" "), true);
+			cAttr.fs = ((withFs && cAttr.fs) ? cAttr.fs : Combine.defaultSize);
+			if (cAttr.fn && cAttr.fn != "맑은 고딕") {
 				// 팟플레이어 폰트 크기 보정
-				attr.fs = attr.fs * 586 / 456;
+				cAttr.fs = cAttr.fs * 586 / 456;
 			}
-			attr.furigana = null;
-			cAttrs.push(attr);
+			cAttr.furigana = null;
+			cAttrs.push(cAttr);
+		}
+		for (let i = 0; i < attrs.length; i++) {
+			if (attrs[i].attrs) {
+				const subAttrs = attrs[i].attrs;
+				for (let j = 0; j < subAttrs.length; j++) {
+					append(subAttrs[j]);
+				}
+			} else {
+				append(attrs[i]);
+			}
 		}
 		const width = checker.html(Smi.fromAttr(cAttrs, Combine.defaultSize).split("\n").join("<br>")).width();
 		if (LOG) console.log(width, attrs);
@@ -368,7 +378,24 @@ window.Combine = {
 						let maxFs = 0;
 						for (let k = 0; k < attrs.length; k++) {
 							const attr = attrs[k];
-							if (attr.text) {
+							if (attr.attrs) {
+								const subAttrs = attr.attrs;
+								for (let ki = 0; ki < subAttrs.length; ki++) {
+									const subAttr = subAttrs[ki];
+									if (subAttr.text) {
+										if (!subAttr.text.split("　").join("").split("​").join("").trim()) {
+											continue;
+										}
+										if (attr.fs) {
+											maxFs = Math.max(maxFs, subAttr.fs);
+										} else {
+											maxFs = Combine.defaultSize;
+											break;
+										}
+									}
+								}
+								
+							} else if (attr.text) {
 								if (!attr.text.split("　").join("").split("​").join("").trim()) {
 									continue;
 								}
@@ -411,9 +438,30 @@ window.Combine = {
 							let trimedLine = { attrs: [], isEmpty: true };
 							const trimedLines = [trimedLine];
 							for (let k = 0; k < attrs.length; k++) {
+								if (attrs[k].attrs) {
+									const subAttrs = attrs[k].attrs;
+									for (let ki = 0; ki < subAttrs.length; ki++) {
+										const attrText = subAttrs[ki].text.split("​").join("");
+										let attr = new Attr(subAttrs[ki], attrText, true);
+										
+										if (attrText.length == 0) {
+											// 내용물 없는 속성 무시
+											continue;
+										}
+
+										if (attr.text) {
+											trimedLine.attrs.push(attr);
+										}
+										wasClear = isClear(attr, br);
+										if (trimedLine.isEmpty && attr.text.split("　").join("").trim().length) {
+											trimedLine.isEmpty = isEmpty = false;
+										}
+									}
+									continue;
+								}
 								const attrText = attrs[k].text.split("​").join("");
 								let attr = new Attr(attrs[k], attrText, true);
-									
+								
 								if (attrText.length == 0) {
 									// 내용물 없는 속성 무시
 									if (k < attrs.length - 1) {
