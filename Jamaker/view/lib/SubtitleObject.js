@@ -2586,6 +2586,9 @@ Smi.toAttrs = (text) => {
 				break;
 			}
 			case "RUBY":
+				if (last.text.length == 0) {
+					result.pop();
+				}
 				result.push(ruby = {
 						attrs: attrs = [last = new Attr()]
 					,	furigana: []
@@ -2593,12 +2596,21 @@ Smi.toAttrs = (text) => {
 				Smi.setStyle(last, status);
 				break;
 			case "RT":
-				(attrs = ruby.furigana).push(last = new Attr()); // 후리가나는 상위 리스트에 넣지 않음
-				Smi.setStyle(last, status);
+				if (ruby) {
+					(attrs = ruby.furigana).push(last = new Attr()); // 후리가나는 상위 리스트에 넣지 않음
+					Smi.setStyle(last, status);
+				}
 				break;
 			case "RP":
-				last = new Attr(); // <RP> 태그는 정크 처리
-				Smi.setStyle(last, status);
+				if (ruby) {
+					if (attrs == ruby.furigana) {
+						if (last.text.length == 0) {
+							attrs.pop();
+						}
+					}
+					last = new Attr(); // <RP> 태그는 정크 처리
+					Smi.setStyle(last, status);
+				}
 				break;
 			case "BR":
 				last.text += "\n";
@@ -2641,12 +2653,20 @@ Smi.toAttrs = (text) => {
 				Smi.setStyle(last, status.setFont(null));
 				break;
 			case "RUBY":
-				(attrs = result).push(last = new Attr());
-				Smi.setStyle(last, status);
-				ruby = null;
+				if (ruby) {
+					if (last.text.length == 0) {
+						attrs.pop();
+					}
+					(attrs = result).push(last = new Attr());
+					Smi.setStyle(last, status);
+					ruby = null;
+				}
 				break;
 			case "RT":
 				if (ruby) {
+					if (last.text.length == 0) {
+						attrs.pop();
+					}
 					(attrs = ruby.attrs).push(last = new Attr());
 					Smi.setStyle(last, status);
 				}
