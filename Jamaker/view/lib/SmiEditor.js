@@ -3098,6 +3098,9 @@ function extSubmit(method, url, values, withoutTag=true) {
 				while (value.indexOf("  ") >= 0) {
 					value = value.split("  ").join(" ");
 				}
+				while (value.indexOf("  ") >= 0) { // &nbsp;에서 만들어진 건 이쪽으로 옴
+					value = value.split("  ").join(" ");
+				}
 			}
 
 			const params = {};
