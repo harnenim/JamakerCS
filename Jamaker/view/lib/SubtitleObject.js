@@ -2575,8 +2575,7 @@ Smi.toAttrs = (text) => {
 						attrs.push([name, tag.attrs[name]]);
 						if (!attrAdded && name.toUpperCase() == "ASS") {
 							if (!isFirst) {
-								last = new Attr();
-								attrs.push(last);
+								attrs.push(last = new Attr());
 							}
 							attrAdded = true;
 						}
@@ -2587,7 +2586,8 @@ Smi.toAttrs = (text) => {
 			}
 			case "RUBY":
 				if (last.text.length == 0) {
-					result.pop();
+					// TODO: 문법을 제대로 안 지켰으면 (특히 <RP> 태그) attrs가 의도한 값이 아닐 수 있을 듯? 보완 필요
+					attrs.pop();
 				}
 				result.push(ruby = {
 						attrs: attrs = [last = new Attr()]
