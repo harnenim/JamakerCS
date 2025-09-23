@@ -2586,8 +2586,7 @@ Smi.toAttrs = (text) => {
 			}
 			case "RUBY":
 				if (last.text.length == 0) {
-					// TODO: 문법을 제대로 안 지켰으면 (특히 <RP> 태그) attrs가 의도한 값이 아닐 수 있을 듯? 보완 필요
-					attrs.pop();
+					if (!(ruby && ruby.rp)) attrs.pop();
 				}
 				result.push(ruby = {
 						attrs: attrs = [last = new Attr()]
@@ -2596,21 +2595,21 @@ Smi.toAttrs = (text) => {
 				Smi.setStyle(last, status);
 				break;
 			case "RT":
-				if (ruby) {
-					(attrs = ruby.furigana).push(last = new Attr()); // 후리가나는 상위 리스트에 넣지 않음
-					Smi.setStyle(last, status);
+				if (!ruby) break;
+				if (last.text.length == 0) {
+					if (!ruby.rp) attrs.pop();
 				}
+				(attrs = ruby.furigana).push(last = new Attr()); // 후리가나는 상위 리스트에 넣지 않음
+				Smi.setStyle(last, status);
 				break;
 			case "RP":
-				if (ruby) {
-					if (attrs == ruby.furigana) {
-						if (last.text.length == 0) {
-							attrs.pop();
-						}
-					}
-					last = new Attr(); // <RP> 태그는 정크 처리
-					Smi.setStyle(last, status);
+				if (!ruby) break;
+				if (last.text.length == 0) {
+					if (!ruby.rp) attrs.pop();
 				}
+				ruby.rp = true;
+				last = new Attr(); // <RP> 태그는 정크 처리
+				Smi.setStyle(last, status);
 				break;
 			case "BR":
 				last.text += "\n";
@@ -2653,29 +2652,27 @@ Smi.toAttrs = (text) => {
 				Smi.setStyle(last, status.setFont(null));
 				break;
 			case "RUBY":
-				if (ruby) {
-					if (last.text.length == 0) {
-						attrs.pop();
-					}
-					(attrs = result).push(last = new Attr());
-					Smi.setStyle(last, status);
-					ruby = null;
+				if (!ruby) break;
+				if (last.text.length == 0) {
+					if (!ruby.rp) attrs.pop();
 				}
+				(attrs = result).push(last = new Attr());
+				Smi.setStyle(last, status);
+				ruby = null;
 				break;
 			case "RT":
-				if (ruby) {
-					if (last.text.length == 0) {
-						attrs.pop();
-					}
-					(attrs = ruby.attrs).push(last = new Attr());
-					Smi.setStyle(last, status);
+				if (!ruby) break;
+				if (last.text.length == 0) {
+					if (!ruby.rp) attrs.pop();
 				}
+				(attrs = ruby.attrs).push(last = new Attr());
+				Smi.setStyle(last, status);
 				break;
 			case "RP":
-				if (ruby) {
-					(attrs = ruby.furigana).push(last = new Attr());
-					Smi.setStyle(last, status);
-				}
+				if (!ruby) break;
+				ruby.rp = false;
+				(attrs = ruby.furigana).push(last = new Attr());
+				Smi.setStyle(last, status);
 				break;
 			default:
 				break;

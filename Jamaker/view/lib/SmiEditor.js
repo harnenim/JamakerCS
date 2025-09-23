@@ -3094,15 +3094,12 @@ function extSubmit(method, url, values, withoutTag=true) {
 				Subtitle.$tmp.html(value.split(/<br>/gi).join(" "));
 				Subtitle.$tmp.find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
 				value = Subtitle.$tmp.text();
-				value = value.split("​").join("").split("　").join(" ");
+				value = value.split("​").join("").split("　").join(" ").split(" ").join(" ");
 				while (value.indexOf("  ") >= 0) {
 					value = value.split("  ").join(" ");
 				}
-				while (value.indexOf("  ") >= 0) { // &nbsp;에서 만들어진 건 이쪽으로 옴
-					value = value.split("  ").join(" ");
-				}
 			}
-
+			
 			const params = {};
 			params[name] = value;
 			SmiEditor.Addon.openExtSubmit(method, url, params);
