@@ -1476,14 +1476,16 @@ namespace Jamaker
         }
 
         private int saveAfter = 0;
+        private int saveTab = 0;
         private bool saveSmi = true;
         private string textToSave = "";
-        public void Save(string text, string path, bool isSmi)
+        public void Save(int tab, string text, string path, bool isSmi)
         {
             if (path == null || path.Length == 0)
             {
                 // 파일명 수신 시 동작 설정
                 saveAfter = 100;
+                saveTab = tab;
                 textToSave = text;
                 saveSmi = isSmi;
                 afterGetFileName = new AfterGetString(SaveWithDialogAfterGetVideoFileName);
@@ -1500,7 +1502,7 @@ namespace Jamaker
                 (sw = new StreamWriter(path, false, Encoding.UTF8)).Write(text);
                 if (isSmi)
                 {
-                    Script("afterSaveFile", path);
+                    Script("afterSaveFile", new object[] { tab, path });
                 }
                 else
                 {
@@ -1523,14 +1525,14 @@ namespace Jamaker
             if (path != null && path.Length > 0)
             {
                 saveAfter = 0;
-                SaveWithDialog(textToSave, path);
+                SaveWithDialog(saveTab, textToSave, path);
             }
         }
-        public void SaveWithDialog(string text, string videoPath)
+        public void SaveWithDialog(int tab, string text, string videoPath)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() => { SaveWithDialog(text, videoPath); }));
+                Invoke(new Action(() => { SaveWithDialog(tab, text, videoPath); }));
             }
             else
             {
@@ -1559,7 +1561,7 @@ namespace Jamaker
                 {   // 저장 취소
                     return;
                 }
-                Save(text, dialog.FileName, saveSmi);
+                Save(tab, text, dialog.FileName, saveSmi);
             }
         }
         public void SaveTemp(string text, string path)

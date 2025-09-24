@@ -47,8 +47,8 @@ Binder.prototype.runPlayer = function(path) {
 	this._.runPlayer(path);
 }
 
-Binder.prototype.save = function(text, path, isSmi=true) {
-	this._.save(text, path, isSmi);
+Binder.prototype.save = function(tab, text, path, isSmi=true) {
+	this._.save(tab, text, path, isSmi);
 }
 Binder.prototype.saveTemp = function(text, path) {
 	this._.saveTemp(text, path);
@@ -976,7 +976,7 @@ window.MB = 9;
         }).Start();
         //*/
 	}
-	editor.save = async function(text, path, isSmi) {
+	editor.save = async function(tab, text, path, isSmi) {
 		const paths = path.split(":");
 		if (paths[1]) {
 			const fileBuffer = fileBuffers[paths[0]];
@@ -984,15 +984,15 @@ window.MB = 9;
 			await stream.write("\ufeff" + text); // BOM 넣어줌
 			await stream.close();
 			if (isSmi) {
-				editor.script("afterSaveFile", [path]);
+				editor.script("afterSaveFile", [tab, path]);
 			} else {
 				editor.script("afterSaveAssFile", [path]);
 			}
 		} else {
-			editor.saveWithDialog(text, isSmi);
+			editor.saveWithDialog(tab, text, isSmi);
 		}
 	}
-	editor.saveWithDialog = async function(text, isSmi) {
+	editor.saveWithDialog = async function(tab, text, isSmi) {
 		const fileBuffer = await window.showSaveFilePicker({
 			types: [
 				{ description: "SAMI", accept: (isSmi ? { "text/sami": [".smi"] } : { "text/ass": [".ass"] }) }
@@ -1002,7 +1002,7 @@ window.MB = 9;
 			const index = fileBuffers.length;
 			fileBuffers.push(fileBuffer);
 			const file = await fileBuffer.getFile();
-			editor.save(text, index + ":" + file.name, isSmi);
+			editor.save(tab, text, index + ":" + file.name, isSmi);
 		}
 	}
 	editor.saveTemp = function(text, path) {

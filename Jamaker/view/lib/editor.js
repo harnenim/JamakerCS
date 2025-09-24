@@ -2540,7 +2540,7 @@ function saveFile(asNew, isExport) {
 		const saveText = currentTab.getSaveText(true, !(exporting = isExport));
 		
 		const saveFrom = log("binder.save start");
-		binder.save(saveText, path, true);
+		binder.save(tab, saveText, path, true);
 		log("binder.save end", saveFrom);
 		
 		if (withAss) {
@@ -2576,7 +2576,7 @@ function saveFile(asNew, isExport) {
 }
 
 // 저장 후 C# 쪽에서 호출
-function afterSaveFile(path) {
+function afterSaveFile(tab, path) { // 저장 도중에 탭 전환할 수 있어서 파라미터로 유지함
 	const funcSince = log("afterSaveFile start");
 	
 	const currentTab = tabs[tab];
@@ -2615,6 +2615,8 @@ function afterSaveAssFile(path) {
 	tabs[tab].assPath = path;
 }
 
+// TODO: 임시 저장은 현재 탭만이 아니라 모든 탭에 동작해야 하나...?
+// 근데 그렇게 쓸 일 자체가 없을 듯하긴 함
 function saveTemp() {
 	const currentTab = tabs[tab];
 	if (!currentTab) {
