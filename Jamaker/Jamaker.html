@@ -81,6 +81,10 @@ Binder.prototype.doExit = function(resetPlayer, exitPlayer) {
 	this._.doExit(resetPlayer, exitPlayer);
 }
 
+Binder.prototype.log = function(msg) {
+	console.log(msg);
+}
+
 // 팝업 통신
 Binder.prototype.sendMsg = function(target, msg) {
 	this._.sendMsg(target, msg);
