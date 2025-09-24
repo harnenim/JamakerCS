@@ -123,7 +123,7 @@ namespace Jamaker
         public void Log(string msg)
         {
             // TODO: 로그 파일 저장 따로 만들어야 하나?
-            Console.WriteLine(msg);
+            _.Log(msg);
         }
         
         #region 팝업 통신

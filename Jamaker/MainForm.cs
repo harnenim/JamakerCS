@@ -53,6 +53,7 @@ namespace Jamaker
             timer.Tick += FollowWindow;
             timer.Tick += RefreshPlayer;
             timer.Tick += FocusIfRequested;
+            timer.Tick += SaveLogs;
             timer.Start();
 
             FormClosing += new FormClosingEventHandler(BeforeExit);
@@ -193,7 +194,50 @@ namespace Jamaker
                     player.DoExit();
                 }
             }
+            if (swLogs != null)
+            {
+                swLogs.Close();
+            }
             Process.GetCurrentProcess().Kill();
+        }
+
+        private StreamWriter swLogs = null;
+        private long lastLog = long.MaxValue;
+        public void Log(string msg)
+        {
+            Console.WriteLine(msg);
+
+            if (swLogs == null)
+            {
+                try
+                {
+                    // 설정 폴더 없으면 생성
+                    DirectoryInfo di = new DirectoryInfo("temp");
+                    if (!di.Exists) { di.Create(); }
+                    di = new DirectoryInfo("temp/logs");
+                    if (!di.Exists) { di.Create(); }
+
+                    swLogs = new StreamWriter($"temp/logs/{lastLog = DateTime.Now.Ticks}.txt", false, Encoding.UTF8);
+                    swLogs.WriteLine(msg);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+            else
+            {
+                swLogs.WriteLine(msg);
+                lastLog = DateTime.Now.Ticks;
+            }
+        }
+        private void SaveLogs(object sender, EventArgs e)
+        {
+            if (swLogs != null && ((DateTime.Now.Ticks - lastLog) > 1000))
+            {
+                swLogs.Flush();
+                lastLog = long.MaxValue;
+            }
         }
 
         private void WebFormClosed(object sender, FormClosedEventArgs e)
