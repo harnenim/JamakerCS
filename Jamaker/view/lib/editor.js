@@ -2827,7 +2827,6 @@ function afterSetFkf() {
 	log("afterSetFkf end", funcSince);
 }
 
-// C# 쪽에서 호출
 function loadAssFile(path, text, target=-1) {
 	if (target < 0) {
 		// 탭이 지정 안 된 경우..는 없어야 맞음

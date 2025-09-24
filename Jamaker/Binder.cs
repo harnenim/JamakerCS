@@ -95,10 +95,6 @@ namespace Jamaker
         {
             _.OpenFileForVideo();
         }
-        public void LoadAssFile(string path, int tab)
-        {
-            _.LoadAssFile(path, tab);
-        }
         public void CheckLoadVideoFile(string smiPath)
         {
             _.CheckLoadVideoFile(smiPath);

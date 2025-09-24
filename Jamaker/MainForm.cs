@@ -9,8 +9,6 @@ using System.Diagnostics;
 using Jamaker.addon;
 using System.Reflection;
 using System.Threading;
-using Jamaker.Properties;
-using System.Xml.Linq;
 
 namespace Jamaker
 {
@@ -854,7 +852,7 @@ namespace Jamaker
                             ,   Name = subMenuName.Split('(')[0]
                             ,   Size = new Size(200, 22)
                             };
-                            subMenuItem.Click += new EventHandler(new EventHandler((object sender, EventArgs e) => {
+                            subMenuItem.Click += new EventHandler(new EventHandler((sender, e) => {
                                 Script("eval", tmp[1]);
                             }));
                             menuItem.DropDownItems.Add(subMenuItem);
@@ -992,23 +990,6 @@ namespace Jamaker
             finally { sr?.Close(); }
 
             Script("openFile", new object[] { path, text, forVideo });
-        }
-        public void LoadAssFile(string path, int tab)
-        {
-            string text = "";
-            StreamReader sr = null;
-            try
-            {
-                sr = new StreamReader(path, DetectEncoding(path));
-                text = sr.ReadToEnd();
-            }
-            catch
-            {
-                Script("alert", "연동된 ASS 파일을 열지 못했습니다.");
-            }
-            finally { sr?.Close(); }
-
-            Script("loadAssFile", new object[] { path, text });
         }
 
         private string smiPath;
@@ -1154,12 +1135,12 @@ namespace Jamaker
                     }
 
                     // 없으면 새로 가져오기
-                    new VideoInfo(path, (double ratio) => {
+                    new VideoInfo(path, (ratio) => {
                         if (requestFramesPath == path)
                         {   // 중간에 다른 파일 불러왔을 수도 있음
                             Script("Progress.set", new object[] { "#forFrameSync", ratio });
                         }
-                    }).RefreshInfo((VideoInfo videoInfo) =>
+                    }).RefreshInfo((videoInfo) =>
                     {
                         Script("Progress.set", new object[] { "#forFrameSync", 1 });
                         videoInfo.ReadKfs(true);
