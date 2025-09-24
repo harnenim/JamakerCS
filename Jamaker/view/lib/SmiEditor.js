@@ -307,6 +307,19 @@ window.SmiEditor = function(text) {
 	}, 1);
 };
 
+SmiEditor.LOG = true; // 배포 시 false
+SmiEditor.log = window.log = (msg, since=0) => {
+	if (typeof binder === "undefined" || !SmiEditor.LOG) {
+		SmiEditor.log = window.log = () => {};
+	} else {
+		(SmiEditor.log = window.log = (msg, since=0) => {
+			const time = new Date().getTime();
+			binder.log(time + "\t" + msg + (since ? (": " + (time - since)) : ""));
+			return time;
+		})(msg, since);
+	}
+};
+
 SmiEditor.setSetting = (setting) => {
 	if (setting.sync) {
 		SmiEditor.sync = setting.sync;
@@ -461,8 +474,10 @@ SmiEditor.prototype.isSaved = function() {
 	return (this.saved == this.input.val());
 };
 SmiEditor.prototype.afterSave = function() {
+	const funcSince = log("afterSave start");
 	this.saved = this.input.val();
 	this.afterChangeSaved(true);
+	log("afterSave end", funcSince);
 };
 SmiEditor.prototype.afterChangeSaved = function(saved) {
 	if (this.onChangeSaved) {
@@ -480,6 +495,8 @@ SmiEditor.prototype.bindEvent = function() {
 	this.render();
 	
 	this.input.on("scroll", function(e) {
+		const funcSince = log("스크롤 렌더링 start");
+		
 		const scrollTop  = editor.input.scrollTop ();
 		const scrollLeft = editor.input.scrollLeft();
 		
@@ -588,6 +605,8 @@ SmiEditor.prototype.bindEvent = function() {
 			}
 		}
 		
+		log("스크롤 렌더링 end", funcSince);
+		
 	}).on("blur", function() {
 		editor.showBlockArea();
 	}).on("focus", function() {
@@ -659,6 +678,7 @@ SmiEditor.keyEventActivated = false;
 SmiEditor.activateKeyEvent = function() {
 	if (SmiEditor.keyEventActivated) return;
 	SmiEditor.keyEventActivated = true;
+	const funcSince = log("activateKeyEvent start");
 	
 	let lastKeyDown = 0;
 	$(document).on("keydown", function(e) {
@@ -1149,12 +1169,16 @@ SmiEditor.activateKeyEvent = function() {
 						}
 					}
 					
+					const funcSince = log("단축키 실행 start");
 					const type = typeof f;
 					if (type == "function") {
+						log(String.fromCharCode(e.keyCode) + " / func: " + f.name);
 						f();
 					} else if (type == "string") {
+						log(String.fromCharCode(e.keyCode) + " / func: " + f.split("\n")[0]);
 						eval("(() => { " + f + "// */\n})()"); // 내용물이 주석으로 끝날 수도 있음
 					}
+					log("단축키 실행 end", funcSince);
 				}
 			}
 		}
@@ -1171,6 +1195,7 @@ SmiEditor.activateKeyEvent = function() {
 			}
 		}
 	});
+	log("activateKeyEvent end", funcSince);
 };
 
 SmiEditor.prototype.historyForward = function() {
@@ -1770,6 +1795,8 @@ SmiEditor.prototype.render = function(range=null) {
 
 	const self = this;
 	function thread() {
+		const funcSince = log("render start");
+		
 		const lines = self.lines;
 		const newText = self.input.val();
 		const newTextLines = newText.split("\n");
@@ -1849,6 +1876,8 @@ SmiEditor.prototype.render = function(range=null) {
 		self.isRendering = false;
 		
 		self.afterChangeSaved(self.isSaved());
+		
+		log("render end", funcSince);
 		
 		setTimeout(() => {
 			{
@@ -2075,6 +2104,8 @@ SmiEditor.prototype.renderByResync = function(range) {
 	// 프로세스 분리할 필요가 있나?
 	const self = this;
 	setTimeout(() => {
+		const funcSince = log("renderByResync start");
+		
 		const syncLines = [];
 		
 		// 줄 수 변동량
@@ -2121,6 +2152,8 @@ SmiEditor.prototype.renderByResync = function(range) {
 		}
 		self.isRendering = false;
 		self.afterChangeSaved(self.isSaved());
+		
+		log("renderByResync end", funcSince);
 		
 		setTimeout(() => {
 			if (self.needToRender) {
@@ -3094,9 +3127,12 @@ function extSubmit(method, url, values, withoutTag=true) {
 				Subtitle.$tmp.html(value.split(/<br>/gi).join(" "));
 				Subtitle.$tmp.find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
 				value = Subtitle.$tmp.text();
-				value = value.split("​").join("").split("　").join(" ").split(" ").join(" ");
+				value = value.split("​").join("").split("　").join(" ").split(" ").join(" ");
 				while (value.indexOf("  ") >= 0) {
 					value = value.split("  ").join(" ");
+				}
+				while (value.indexOf("  ") >= 0) { // &nbsp;에서 만들어진 건 이쪽으로 옴
+					value = value.split("  ").join(" ");
 				}
 			}
 			

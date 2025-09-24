@@ -632,6 +632,7 @@ window.Subtitle = {
 ,	$tmp: $("<a>")
 };
 window.SyncType = Subtitle.SyncType;
+
 Subtitle.video = {
 		path: null
 	,	FR: 23976 // 기본값 23.976fps

@@ -123,6 +123,11 @@ namespace Jamaker
         {
             _.DoExit(resetPlayer, exitPlayer);
         }
+
+        public void Log(string msg)
+        {
+            Console.WriteLine(msg);
+        }
         
         #region 팝업 통신
         // 이거 결국 finder 말곤 안 쓰나?

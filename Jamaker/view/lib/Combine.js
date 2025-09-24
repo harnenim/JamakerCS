@@ -252,6 +252,8 @@ window.Combine = {
 	}
 	
 	Combine.combine = (inputUpper, inputLower) => {
+		const funcFrom = log("combine start");
+		
 		// 결합 로직 돌아갈 때 문법 하이라이트가 있으면 성능 저하됨
 		// ... 지금은 개선해서 큰 저하 없을지도?
 		const hljs = $(".hljs").hide();
@@ -788,12 +790,16 @@ window.Combine = {
 		if (lastSync) {
 			lines.push("&nbsp;");
 		}
+		log("combine end", funcFrom);
+		
 		return lines;
 	}
 }
 
 if (SmiFile) {
 	SmiFile.textToHolds = (text) => {
+		const funcFrom = log("textToHolds start");
+		
 		const texts = text.split("\r\n").join("\n").split("\n<!-- Hold=");
 		let holds = [{ text: texts[0] }];
 		for (let i = 1; i < texts.length; i++) {
@@ -934,6 +940,9 @@ if (SmiFile) {
 			}
 			holds[i].text = text;
 		}
+
+		log("textToHolds end", funcFrom);
+		
 		return holds;
 	}
 	
@@ -943,6 +952,8 @@ if (SmiFile) {
 		return match && (match[0].indexOf("split") > 0);
 	}
 	SmiFile.holdsToTexts = (origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) => {
+		const funcFrom = log("holdsToTexts start");
+		
 		const result = [];
 		let logs = [];
 		let originBody = [];
@@ -1483,6 +1494,7 @@ if (SmiFile) {
 				}
 			}
 		}
+		
 		if (withComment) {
 			result[0] = main.toText();
 			for (let i = 1; i < result.length; i++) {
@@ -1490,14 +1502,17 @@ if (SmiFile) {
 					result.splice(i--, 1);
 				}
 			}
-			return result;
 			
 		} else {
 			for (let i = 0; i < main.body.length; i++) {
 				main.body[i].text = main.body[i].text.split("\n").join("");
 			}
-			return [main.toText()];
+			result[0] = main.toText();
+			result.length = 1;
 		}
+		log("holdsToTexts end", funcFrom);
+		
+		return result;
 	}
 	SmiFile.holdsToText = (origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) => {
 		return SmiFile.holdsToTexts(origHolds, withNormalize, withCombine, withComment, fps).join("\n");
