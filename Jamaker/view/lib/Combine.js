@@ -252,7 +252,7 @@ window.Combine = {
 	}
 	
 	Combine.combine = (inputUpper, inputLower) => {
-		const funcFrom = log("combine start");
+		const funcFrom = windows.log ? log("combine start") : 0;
 		
 		// 결합 로직 돌아갈 때 문법 하이라이트가 있으면 성능 저하됨
 		// ... 지금은 개선해서 큰 저하 없을지도?
@@ -790,7 +790,7 @@ window.Combine = {
 		if (lastSync) {
 			lines.push("&nbsp;");
 		}
-		log("combine end", funcFrom);
+		if (window.log) log("combine end", funcFrom);
 		
 		return lines;
 	}
@@ -798,7 +798,7 @@ window.Combine = {
 
 if (SmiFile) {
 	SmiFile.textToHolds = (text) => {
-		const funcFrom = log("textToHolds start");
+		const funcFrom = window.log ? log("textToHolds start") : 0;
 		
 		const texts = text.split("\r\n").join("\n").split("\n<!-- Hold=");
 		let holds = [{ text: texts[0] }];
@@ -941,7 +941,7 @@ if (SmiFile) {
 			holds[i].text = text;
 		}
 
-		log("textToHolds end", funcFrom);
+		if (window.log) log("textToHolds end", funcFrom);
 		
 		return holds;
 	}
@@ -952,7 +952,7 @@ if (SmiFile) {
 		return match && (match[0].indexOf("split") > 0);
 	}
 	SmiFile.holdsToTexts = (origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) => {
-		const funcFrom = log("holdsToTexts start");
+		const funcFrom = window.log ? log("holdsToTexts start") : 0;
 		
 		const result = [];
 		let logs = [];
@@ -1510,7 +1510,7 @@ if (SmiFile) {
 			result[0] = main.toText();
 			result.length = 1;
 		}
-		log("holdsToTexts end", funcFrom);
+		if (window.log) log("holdsToTexts end", funcFrom);
 		
 		return result;
 	}
