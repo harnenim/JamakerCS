@@ -252,7 +252,7 @@ window.Combine = {
 	}
 	
 	Combine.combine = (inputUpper, inputLower) => {
-		const funcFrom = windows.log ? log("combine start") : 0;
+		const funcFrom = window.log ? log("combine start") : 0;
 		
 		// 결합 로직 돌아갈 때 문법 하이라이트가 있으면 성능 저하됨
 		// ... 지금은 개선해서 큰 저하 없을지도?
