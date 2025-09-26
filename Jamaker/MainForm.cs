@@ -1118,6 +1118,7 @@ namespace Jamaker
                                 }
                                 else if (line.StartsWith("r_frame_rate="))
                                 {
+                                    if (fr > 0) continue;
                                     string[] strFrs = line.Substring(13).Split('/');
                                     if (strFrs.Length > 1)
                                     {
