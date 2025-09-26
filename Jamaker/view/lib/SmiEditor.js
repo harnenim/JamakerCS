@@ -495,8 +495,6 @@ SmiEditor.prototype.bindEvent = function() {
 	this.render();
 	
 	this.input.on("scroll", function(e) {
-		const funcSince = log("스크롤 렌더링 start");
-		
 		const scrollTop  = editor.input.scrollTop ();
 		const scrollLeft = editor.input.scrollLeft();
 		
@@ -604,8 +602,6 @@ SmiEditor.prototype.bindEvent = function() {
 				editor.hview.append(toAppendViews[i]);
 			}
 		}
-		
-		log("스크롤 렌더링 end", funcSince);
 		
 	}).on("blur", function() {
 		editor.showBlockArea();
