@@ -3326,6 +3326,9 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 	let shakeRange = null;
 	for (let j = 0; j < attrs.length; j++) {
 		const attr = attrs[j];
+		if (attr.attrs) {
+			continue;
+		}
 		if (attr.fade != 0) {
 			hasFade = true;
 		}
