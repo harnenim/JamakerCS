@@ -9,6 +9,8 @@ using System.Diagnostics;
 using Jamaker.addon;
 using System.Reflection;
 using System.Threading;
+using System.Runtime.InteropServices;
+using System.Drawing.Imaging;
 
 namespace Jamaker
 {
@@ -1204,7 +1206,27 @@ namespace Jamaker
         private string lastThumbnailsPath = null;
         private int lastThumbnailsProcSeq = 0;
         private int lastThumbnailsFileSeq = 0;
-        
+
+        private static readonly int TX = 640;
+        private static readonly int TY = 360;
+
+        private static byte[] BitmapToByteArray(Bitmap bitmap)
+        {
+            BitmapData data = bitmap.LockBits(new Rectangle(0, 0, TX, TY), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+            byte[] bytes = new byte[TX * TY * 3];
+            Marshal.Copy(data.Scan0, bytes, 0, TX * TY * 3);
+            bitmap.UnlockBits(data);
+            return bytes;
+        }
+        private static Bitmap ByteArrayToBitmap(byte[] bytes)
+        {
+            Bitmap bitmap = new Bitmap(TX, TY);
+            BitmapData data = bitmap.LockBits(new Rectangle(0, 0, TX, TY), ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+            Marshal.Copy(bytes, 0, data.Scan0, TX * TY * 3);
+            bitmap.UnlockBits(data);
+            return bitmap;
+        }
+
         public void RenderThumbnails(string path, string paramsStr)
         {
             Console.WriteLine($"RenderThumbnails: {paramsStr}");
@@ -1303,7 +1325,7 @@ namespace Jamaker
                         //else
                         //if (flag == "d") vf = "-vf \"curves=r='0/0 0.9/0.1 1/1'\" ";
 
-                        string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s 96x54 -qscale:v 2 -r {fps} {vf}-f image2 \"{dir}/p{procSeq}_{begin}{flag}_%d.jpg\"";
+                        string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s {TX}x{TY} -qscale:v 2 -r {fps} {vf}-f image2 \"{dir}/p{procSeq}_{begin}{flag}_%d.jpg\"";
 
                         Process proc = new Process();
                         proc.StartInfo.UseShellExecute = false;
@@ -1360,8 +1382,7 @@ namespace Jamaker
                                 if (bLast != null)
                                 {
                                     bool isFade = (flag != "");
-                                    int sum = 0;
-                                    int dMax = 1; // 0이면 문제 생김
+                                    long sum = 0;
 
                                     // 렌더링 중복 실행 시 다른 스레드에서 파일 삭제될 수 있어서 try-catch 문에 넣음
                                     try
@@ -1371,63 +1392,74 @@ namespace Jamaker
                                         Bitmap bPrev = bLast;
                                         Bitmap bTrgt = bLast = new Bitmap(img1);
 
+                                        byte[] arrPrev = BitmapToByteArray(bPrev);
+                                        byte[] arrTrgt = BitmapToByteArray(bTrgt);
+
                                         // 각 픽셀 비교
-                                        int[][][] aDiff = new int[54][][];
-                                        for (int y = 0; y < 54; y++)
+                                        int[] arrDiff = new int[TX * TY * 3];
+                                        int[] sums = new int[TY];
+                                        for (int y = 0; y < TY; y++)
                                         {
-                                            aDiff[y] = new int[96][];
-                                            for (int x = 0; x < 96; x++)
+                                        	// int y = get_global_id(0);
+                    	        			int pixel;
+                    	        			
+                                            sums[y] = 0;
+                                            for (int x = 0; x < TX; x++)
                                             {
-                                                Color p = bPrev.GetPixel(x, y);
-                                                Color t = bTrgt.GetPixel(x, y);
-                                                int r = t.R - p.R;
-                                                int g = t.G - p.G;
-                                                int b = t.B - p.B;
-                                                aDiff[y][x] = new int[] { r, g, b };
-                                                sum += r + g + b;
-                                                if (isFade)
-                                                {
-                                                    dMax = Math.Max(dMax, Math.Abs(r));
-                                                    dMax = Math.Max(dMax, Math.Abs(g));
-                                                    dMax = Math.Max(dMax, Math.Abs(b));
-                                                }
+                                            	pixel = (TX * y + x) * 3;
+                    	        				sums[y] += (arrDiff[pixel+0] = (int)arrPrev[pixel+0] - (int)arrTrgt[pixel+0]);
+                    	        				sums[y] += (arrDiff[pixel+1] = (int)arrPrev[pixel+1] - (int)arrTrgt[pixel+1]);
+                    	        				sums[y] += (arrDiff[pixel+2] = (int)arrPrev[pixel+2] - (int)arrTrgt[pixel+2]);
                                             }
+                                        }
+                                        for (int y = 0; y < TY; y++)
+                                        {
+                                        	sum += sums[y];
                                         }
 
                                         // 페이드 효과에 대해선 더 잘 보이도록
-                                        double a = isFade ? 40 : 4;
-                                        //double a = isFade ? Math.Max(8, 255.0 / dMax) : 4;
-                                        int avg = Math.Abs(sum) / (96 * 54 * 3);
+                                        int a = isFade ? 40 : 4;
+                                        int avg = (int)(Math.Abs(sum) / (TX * TY * 3));
 
-                                        Bitmap b2 = new Bitmap(96, 54);
-                                        Bitmap b3 = new Bitmap(96, 54);
+                                        byte[] arr2 = new byte[TX * TY * 3];
+                                        byte[] arr3 = new byte[TX * TY * 3];
 
-                                        for (int y = 0; y < 54; y++)
+                                        for (int y = 0; y < TY; y++)
                                         {
-                                            for (int x = 0; x < 96; x++)
+                                        	// int y = get_global_id(0);
+                    	        			int pixel, diffR, diffG, diffB, v;
+                                        	
+                                            for (int x = 0; x < TX; x++)
                                             {
+                                            	pixel = (TX * y + x) * 3;
+                                            	
                                                 // 이전 프레임과 차이
-                                                b2.SetPixel(x, y, Color.FromArgb(255
-                                                    , Math.Min((int)(Math.Abs(aDiff[y][x][0]) * a), 255)
-                                                    , Math.Min((int)(Math.Abs(aDiff[y][x][1]) * a), 255)
-                                                    , Math.Min((int)(Math.Abs(aDiff[y][x][2]) * a), 255)
-                                                ));
+                                            	v = arrDiff[pixel+0] * a; if (v < 0) v = -v; arr2[pixel+0] = (byte)(v < 255 ? v : 255);
+                                            	v = arrDiff[pixel+1] * a; if (v < 0) v = -v; arr2[pixel+1] = (byte)(v < 255 ? v : 255);
+                                            	v = arrDiff[pixel+2] * a; if (v < 0) v = -v; arr2[pixel+2] = (byte)(v < 255 ? v : 255);
 
-                                                // 밝기 변화
-                                                //int v = (int)((aDiff[y][x][0] + aDiff[y][x][1] + aDiff[y][x][2]) * a);
-                                                // RGB 모두 변화하는 것만 확인: 가장 조금 변화하는 것 확인
-                                                int rgb = (Math.Abs(aDiff[y][x][0]) < Math.Abs(aDiff[y][x][1])) ? 0 : 1;
-                                                rgb = (Math.Abs(aDiff[y][x][rgb]) < Math.Abs(aDiff[y][x][2])) ? rgb : 2;
-                                                int v = (int)(aDiff[y][x][rgb] * a);
-                                                b3.SetPixel(x, y, (v > 0)
-                                                    ? Color.FromArgb(255, Math.Min(v, 255), avg, 0)
-                                                    : Color.FromArgb(255, 0, avg, Math.Min(-v, 255))
-                                                );
+                                                // 밝기 변화량
+                                                //v = (int)((arrDiff[pixel+0] + arrDiff[pixel+1] + arrDiff[pixel+2]) * a);
+                                                // RGB 중에 가장 조금 변화한 것만 확인
+                    	        				diffR = arrDiff[pixel+0]; if (diffR < 0) diffR = -diffR; v = diffR;
+                    	        				diffG = arrDiff[pixel+1]; if (diffG < 0) diffG = -diffG; v = (v < diffG ? v : diffG);
+                    	        				diffB = arrDiff[pixel+2]; if (diffG < 0) diffG = -diffB; v = (v < diffB ? v : diffB);
+                    	        				v *= a;
+                    	        				
+                                                if (v > 0) {
+                                                	arr3[pixel+0] = (byte)(v < 255 ? v : 255);
+                                                	arr3[pixel+2] = 0;
+                                                } else {
+                                                	v = -v;
+                                                	arr3[pixel+0] = 0;
+                                                	arr3[pixel+2] = (byte)(v < 255 ? v : 255);
+                                                }
+                                                arr3[pixel+1] = (byte)avg;
                                             }
                                         }
 
-                                        b2.Save(img2, System.Drawing.Imaging.ImageFormat.Jpeg);
-                                        b3.Save(img3, System.Drawing.Imaging.ImageFormat.Jpeg);
+                                        ByteArrayToBitmap(arr2).Save(img2, ImageFormat.Jpeg);
+                                        ByteArrayToBitmap(arr3).Save(img3, ImageFormat.Jpeg);
 
                                         Script("setDiff", new object[] { $"{begin + index}{flag}", sum });
 
@@ -1466,6 +1498,7 @@ namespace Jamaker
 
             }).Start();
         }
+        
         public void CancelRenderThumbnails()
         {
             if (isThumbnailsRendering)
