@@ -281,8 +281,8 @@ window.DEFAULT_SETTING =
 	, { from: "신 났"     , to: "신났"    , use: true }
 	, { from: "신 났"     , to: "신났"    , use: true }
 	
-	, { from: "지구 상"   , to: "지구상"  , use: true } // 2017년 맞춤법 변경사항
-/*	, { from: "지도 상"   , to: "지도상"  , use: false } // '지구 상공'에 과잉 보정되는 경우 있음 */
+/*	, { from: "지구 상"   , to: "지구상"  , use: false } // '지구 상공'에 과잉 보정되는 경우 있음 */
+	, { from: "지도 상"   , to: "지도상"  , use: true } // 2017년 맞춤법 변경사항
 	, { from: "직선 상"   , to: "직선상"  , use: true }
 	, { from: "궤도 상"   , to: "궤도상"  , use: true }
 	, { from: "인터넷 상" , to: "인터넷상", use: true }
