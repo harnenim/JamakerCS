@@ -107,6 +107,10 @@ namespace Jamaker
         {
             _.RequestFrames(path);
         }
+        public void SetThumbnailSize(int width, int height)
+        {
+            _.SetThumbnailSize(width, height);
+        }
         public void RenderThumbnails(string path, string paramsStr)
         {
             _.RenderThumbnails(path, paramsStr);

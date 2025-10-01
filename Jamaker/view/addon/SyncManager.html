@@ -19,6 +19,9 @@ const RANGE = 10; // 현재 싱크 전후로 렌더링할 범위
 let mode = 1;
 const M = [null, "", "_", "~"]; // 모드에 따른 파일명 끝 표시
 
+let TX = 96;
+let TY = 54;
+
 $(() => {
 	if (opener && opener.tabs && opener.tabs.length) {
 		tab = opener.tabs[opener.tab];
@@ -34,6 +37,13 @@ $(() => {
         window.close();
         return;
 	}
+    
+    {
+	    if (opener.setting.sync.width ) TX = opener.setting.sync.width ;
+	    if (opener.setting.sync.height) TY = opener.setting.sync.height;
+	    const $styleSize = $("#styleSize");
+	    $styleSize.html($styleSize.html().split("96px").join(TX + "px").split("54px").join(TY + "px"));
+    }
 	
 	{
 		// 현재 선택된 홀드 기준
@@ -122,7 +132,7 @@ $(() => {
 	function setFrames($frames, frameIndex, flag) {
 		for (let j = -RANGE; j < RANGE; j++) {
 			const imgIndex = frameIndex + j;
-			const $img = $("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * 98) }).data({ index: imgIndex, offset: j });
+			const $img = $("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * (TX + 2)) }).data({ index: imgIndex, offset: j });
 			if (trustKeyFrame && Subtitle.findSync(fs[imgIndex], kfs, false)) {
 				$img.addClass("keyframe");
 			}
@@ -385,7 +395,6 @@ $(() => {
 		if ($tr == null) {
 			$tr = frameSyncs[selected];
 		}
-		console.log(selected, $tr, $tr.data());
 		
 		$tbody.find("tr.selected").removeClass("selected");
 		$tr.addClass("selected");
@@ -394,7 +403,7 @@ $(() => {
 		if (offset.top < 0) {
 			$body.stop().animate({ scrollTop: $body.scrollTop() + offset.top - 30 }, 200);
 		} else {
-			const bottom = offset.top + 56;
+			const bottom = offset.top + TY + 2;
 			const margin = $body.height() - bottom;
 			if (margin < 0) {
 				$body.stop().animate({ scrollTop: $body.scrollTop() - margin + 30 }, 200);
@@ -421,7 +430,7 @@ $(() => {
 		if (index < 0) return;
 		
 		$tr.data({ offset: offset });
-		data.$frames.css({ left: "calc(50% - " + (offset * 98) + "px)" });
+		data.$frames.css({ left: "calc(50% - " + (offset * (TX + 2)) + "px)" });
 		
 		setSync($tr.find("td.sync"), fs[index]);
 	}
@@ -517,12 +526,11 @@ $(() => {
 	});
 	
 	$(document).on("keydown", function(e) {
-		console.log(selected);
 		switch (e.keyCode) {
 			case 38: { // ↑
 				e.preventDefault();
 				if (e.ctrlKey || selected == 0) {
-					$body.stop().animate({ scrollTop: $body.scrollTop() - 56 }, 200);
+					$body.stop().animate({ scrollTop: $body.scrollTop() - (TY + 2) }, 200);
 					break;
 				}
 				if (selected > 0) {
@@ -537,7 +545,7 @@ $(() => {
 			case 40: { // ↓
 				e.preventDefault();
 				if (e.ctrlKey || selected == frameSyncs.length - 1) {
-					$body.stop().animate({ scrollTop: $body.scrollTop() + 56 }, 200);
+					$body.stop().animate({ scrollTop: $body.scrollTop() + (TY + 2) }, 200);
 					break;
 				}
 				if (selected < frameSyncs.length - 1) {
@@ -613,7 +621,7 @@ $(() => {
 				const offset = $tr.offset();
 				
 				if (status < 0) {
-					if (offset.top + 56 < 0) {
+					if (offset.top + TY + 2 < 0) {
 						// 위쪽에 있어서 안 보임
 						hideFrames($tr);
 						return;
@@ -648,7 +656,7 @@ $(() => {
 			const shiftIndex = Subtitle.findSyncIndex(data.origin + shift, fs);
 			const offset = shiftIndex - frameIndex;
 			$tr.data({ offset: offset });
-			$tr.data("$frames").css({ left: "calc(" + (-98 * offset) + "px + 50%" });
+			$tr.data("$frames").css({ left: "calc(" + (-(TX + 2) * offset) + "px + 50%" });
 			setSync($tr.find("td.sync"), fs[shiftIndex]);
 		});
 		return false;
@@ -698,7 +706,6 @@ body {
 	color: #888;
 }
 #editor tr.fs {
-	height: 57px;
 	color: #000;
 }
 #editor tr.selected td {
@@ -726,7 +733,6 @@ body {
 	position: absolute;
 	top: 0;
 	left: 50%;
-	height: 56px;
 	transition: 0.2s;
 }
 #editor .frame {
@@ -734,8 +740,6 @@ body {
 	position: absolute;
 	top: 0;
 	border: 1px solid #888;
-	width: 98px;
-	height: 56px;
 	cursor: pointer;
 	transition: 0.2s;
 }
@@ -761,14 +765,6 @@ body {
 	border: 0;
 	transition: 0.2s;
 }
-.frameChecker.left  { left: calc(35% - 1.5px); }
-.frameChecker.right { left: calc(35% - 0.5px); }
-body:not(.mode1) #editor .frames {
-	margin-left: -49px;
-}
-body:not(.mode1) .frameChecker.left  { left: calc(35% - 49.5px); }
-body:not(.mode1) .frameChecker.right { left: calc(35% + 48.5px); }
-body:not(.mode1) .frame:first-child { margin-left: 98px; }
 #formShift, #btnApply, #btnSet {
 	position: fixed;
 	opacity: 0.5;
@@ -801,6 +797,26 @@ body:not(.mode1) .frame:first-child { margin-left: 98px; }
 	height: 30px;
 	bottom: 0;
 }
+	</style>
+	<style id="styleSize">
+#editor tr.fs {
+	height: calc(54px + 3px);
+}
+#editor .frame {
+	height: calc(54px + 2px);
+}
+#editor .frame {
+	width: calc(96px + 2px);
+	height: calc(54px + 2px);
+}
+.frameChecker.left  { left: calc(35% - 1.5px); }
+.frameChecker.right { left: calc(35% - 0.5px); }
+body:not(.mode1) #editor .frames {
+	margin-left: calc(-96px / 2 - 1px);
+}
+body:not(.mode1) .frameChecker.left  { left: calc(35% - (96px / 2) - 1.5px); }
+body:not(.mode1) .frameChecker.right { left: calc(35% + (96px / 2) + 0.5px); }
+body:not(.mode1) .frame:first-child { margin-left: calc(96px + 2px); }
 	</style>
 </head>
 <body class="mode1">

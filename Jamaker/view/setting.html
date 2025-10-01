@@ -292,6 +292,8 @@ $(() => {
 			setting.sync.kframe = $("input[name=sync_kframe]").prop("checked");
 			setting.sync.kLimit = Number($("input[name=sync_kLimit]").val());
 			setting.sync.holds  = $("input[name=sync_holds]").prop("checked");
+			setting.sync.width  = Number($("input[name=sync_width]" ).val());
+			setting.sync.height = Number($("input[name=sync_height]").val());
 			opener.setSetting(setting);
 			opener.saveSetting();
 		};
@@ -1520,6 +1522,8 @@ body {
 		<br />
 		<label><input type="checkbox" name="sync_holds" /> 싱크 일괄 이동 시 다른 홀드에도 적용</label><br />
 		<p>※ 블록지정 영역에 대한 일괄 싱크 입력에는 적용되지 않습니다.</p>
+		<br />
+		<label>화면 싱크 매니저 섬네일 크기: <input type="number" name="sync_width" />×<input type="number" name="sync_height" /></label>
 	</form>
 	
 	<form id="cmd">

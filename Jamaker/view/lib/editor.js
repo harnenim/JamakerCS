@@ -2086,6 +2086,8 @@ function setSetting(setting, initial=false) {
 		}
 		SmiEditor.followKeyFrame = setting.sync.kframe;
 		SmiEditor.limitKeyFrame  = setting.sync.kLimit;
+		
+		binder.setThumbnailSize(setting.sync.width, setting.sync.height);
 	}
 	
 	// 기본 단축키

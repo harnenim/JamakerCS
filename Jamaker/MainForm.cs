@@ -61,11 +61,8 @@ namespace Jamaker
             FormClosing += new FormClosingEventHandler(BeforeExit);
             FormClosed += new FormClosedEventHandler(WebFormClosed);
 
-            // 실행 직후 섬네일 남은 게 있으면 삭제
-            new Thread(() =>
-            {
-                ClearThumbnails();
-            }).Start();
+            // 마지막 섬네일 정보 가져오기
+            new Thread(() => { LoadThumbnailInfo(); }).Start();
         }
         private MenuStrip menuStrip;
         private readonly MouseEventHandler clickMenuStrip;
@@ -196,10 +193,7 @@ namespace Jamaker
                     player.DoExit();
                 }
             }
-            if (swLogs != null)
-            {
-                swLogs.Close();
-            }
+            swLogs?.Close();
             Process.GetCurrentProcess().Kill();
         }
 
@@ -694,15 +688,20 @@ namespace Jamaker
 
                     if (withRun && player.hwnd == 0)
                     {
-                        try
-                        {
-                            ProcessStartInfo startInfo = new ProcessStartInfo
-                            {   FileName = path
-                            ,   Arguments = null
-                            };
-                            Process.Start(startInfo);
-                        }
-                        catch { }
+                        new Thread(() => {
+	                        try
+	                        {
+	                            ProcessStartInfo startInfo = new ProcessStartInfo
+	                            {   FileName = path
+	                            ,   Arguments = null
+	                            };
+	                            Process.Start(startInfo);
+	                        }
+	                        catch
+	                        {
+	                            Script("alert", "플레이어를 실행하지 못했습니다.");
+	                        }
+                        }).Start();
                     }
                 }
             }
@@ -1207,8 +1206,8 @@ namespace Jamaker
         private int lastThumbnailsProcSeq = 0;
         private int lastThumbnailsFileSeq = 0;
 
-        private static readonly int TX = 640;
-        private static readonly int TY = 360;
+        private static int TX = 96;
+        private static int TY = 54;
 
         private static byte[] BitmapToByteArray(Bitmap bitmap)
         {
@@ -1227,35 +1226,77 @@ namespace Jamaker
             return bitmap;
         }
 
+        public void SaveThumbnailInfo(string path)
+        {
+            lastThumbnailsPath = path;
+            try
+            {
+                StreamWriter sw = new StreamWriter("temp/thumbnails/_.txt", false, Encoding.UTF8);
+                sw.Write($"{path}\n{TX}\n{TY}");
+                sw.Close();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            UpdateViewerSetting();
+        }
+        public void LoadThumbnailInfo()
+        {
+        	StreamReader sr = null;
+            try
+            {   // 설정 파일 경로
+                sr = new StreamReader("temp/thumbnails/_.txt", Encoding.UTF8);
+                string[] info = sr.ReadToEnd().Split('\n');
+                lastThumbnailsPath = info[0];
+                TX = int.Parse(info[1]);
+                TY = int.Parse(info[2]);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally { sr?.Close(); }
+        }
+        public void SetThumbnailSize(int width, int height)
+        {
+        	if (TX != width || TY != height)
+    		{
+        		ClearThumbnails();
+        		TX = width;
+        		TY = height;
+    		}
+        }
         public void RenderThumbnails(string path, string paramsStr)
         {
             Console.WriteLine($"RenderThumbnails: {paramsStr}");
             isThumbnailsRendering = true;
             int procSeq = ++lastThumbnailsProcSeq;
             int fileSeq = lastThumbnailsFileSeq;
-                
+            
             string[] list = paramsStr.Split('\n');
 
             new Thread(() =>
             {
-                // 섬네일 대상 파일이 바뀐 경후 초기화
-                if (lastThumbnailsPath != path)
-                {
-                    ClearThumbnails();
-                    lastThumbnailsPath = path;
-                    fileSeq = ++lastThumbnailsFileSeq;
-                }
-                Script("setThumbnailsFileSeq", new object[] { fileSeq });
-
-                string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
-                string exeFile = Path.Combine(exePath, "ffmpeg.exe");
-
                 string dir = "temp/thumbnails";
                 DirectoryInfo di = new DirectoryInfo(dir);
                 if (!di.Exists)
                 {
                     di.Create();
                 }
+
+                // 섬네일 대상 파일이 바뀐 경후 초기화
+                if (lastThumbnailsPath != path)
+                {
+                    ClearThumbnails();
+                    SaveThumbnailInfo(path);
+                    fileSeq = ++lastThumbnailsFileSeq;
+                }
+                Script("setThumbnailsFileSeq", new object[] { fileSeq });
+
+                string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
+                string exeFile = Path.Combine(exePath, "ffmpeg.exe");
 
                 int didread;
                 int offset = 0;

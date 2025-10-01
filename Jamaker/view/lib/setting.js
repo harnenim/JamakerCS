@@ -41,7 +41,7 @@ let checkVersion;
 }
 
 window.DEFAULT_SETTING =
-{	version: "2025.08.23.v1"
+{	version: "2025.10.03.v1"
 ,	menu:
 	// 유일하게 C#으로 그린 메뉴도 여기서 다 구성함
 	[	[	"파일(&F)"
@@ -103,6 +103,8 @@ window.DEFAULT_SETTING =
 	,	kframe: false
 	,	kLimit: 200
 	,	holds: true
+	,	width: 96	// 화면 싱크 매니저 섬네일 크기
+	,	height: 54
 	}
 ,	command:
 	{	fn: // F1~F12: pqrstuvwxyz{
