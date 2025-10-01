@@ -84,23 +84,23 @@ namespace Jamaker
                 mainForm.SetWindow(names[0], hwnd);
                 mainForm.SetFocus(hwnd);
 
-                if (names[0] == "addon")
+                if (mainForm.afterInitAddon != null && names[0] == "addon")
                 {
-                    Console.WriteLine($"func: {mainForm.afterInitAddon}");
-                    /*
+                    string afterInitAddon = mainForm.afterInitAddon;
+                    mainForm.afterInitAddon = null;
                     new Thread(() =>
                     {
                         try
                         {
                             Thread.Sleep(1000); // 1초 지연 실행
-                            mainForm.Script(chromiumWebBrowser, "eval", mainForm.afterInitAddon );
+                            Console.WriteLine($"addon.eval: {afterInitAddon}");
+                            //mainForm.Script(chromiumWebBrowser, "eval", afterInitAddon );
                         }
                         catch (Exception e)
                         {
                             Console.WriteLine(e);
                         }
                     }).Start();
-                    */
                 }
             }
         }

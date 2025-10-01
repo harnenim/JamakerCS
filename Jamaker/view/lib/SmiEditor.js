@@ -3190,13 +3190,16 @@ function extSubmitSpeller() {
 		// 태그 탈출 처리
 		value = $("<p>").html(value.split(/<br>/gi).join(" ")).text();
 		
-		// TODO: 신버전용으로 해보려고 했는데 잘 안 됨...
+		// 신버전용으로 시도 중
 		SmiEditor.Addon.openExt("https://nara-speller.co.kr/speller"
-			, "$('textarea')[0].value = " + JSON.stringify(value) + ";\n"
-			+ "{	const $btn = $('button[type=submit]');\n"
-			+ "	$btn.disabled = false;\n"
-			+ "	$btn.clikc();\n"
-			+ "}"
+			,	"const chekcer = setInterval(() => {\n"
+			+	"	const $ta = document.getElementsByTagName('textarea')[0];\n"
+			+	"	if ($ta) clearInterval(checker);\n"
+			+	"	else return;\n"
+			+	"	$ta.value = " + JSON.stringify(value) + ";\n"
+			+	"	$ta.dispatchEvent(new Event('input', { bubbles: true }));\n"
+			+	"	setTimeout(() => { document.getElementByTagName('button')[3].click(); });\n"
+			+	"}, 100);"
 		);
 	}
 }
