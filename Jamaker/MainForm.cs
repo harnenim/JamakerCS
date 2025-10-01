@@ -699,7 +699,7 @@ namespace Jamaker
 	                        }
 	                        catch
 	                        {
-	                            Script("alert", "플레이어를 실행하지 못했습니다.");
+	                            Script("alert", "플레이어를 실행하지 못했습니다.\n설정을 확인하시기 바랍니다.");
 	                        }
                         }).Start();
                     }
