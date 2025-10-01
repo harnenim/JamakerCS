@@ -6,8 +6,6 @@ using System.Windows.Forms;
 using CefSharp;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Subtitle;
-using System.Linq;
 
 namespace Jamaker
 {
