@@ -986,7 +986,7 @@ window.MB = 9;
 			if (isSmi) {
 				editor.script("afterSaveFile", [tab, path]);
 			} else {
-				editor.script("afterSaveAssFile", [path]);
+				editor.script("afterSaveAssFile", [tab, path]);
 			}
 		} else {
 			editor.saveWithDialog(tab, text, isSmi);

@@ -1,3 +1,5 @@
+const LOG = true; // 배포 시 false
+
 let LH = 20; // LineHeight
 let SB = 16; // ScrollBarWidth ... TODO: 자동으로 구해지도록?
 
@@ -307,9 +309,8 @@ window.SmiEditor = function(text) {
 	}, 1);
 };
 
-SmiEditor.LOG = true; // 배포 시 false
 SmiEditor.log = window.log = (msg, since=0) => {
-	if (typeof binder === "undefined" || !SmiEditor.LOG) {
+	if (typeof binder === "undefined" || !LOG) {
 		SmiEditor.log = window.log = () => {};
 	} else {
 		(SmiEditor.log = window.log = (msg, since=0) => {
