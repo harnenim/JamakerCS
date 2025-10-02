@@ -21,6 +21,7 @@ window.Frame = function(url, name, options, onload) {
 	}
 	this.focus = function() {
 		this.iframe.focus();
+		Frame.refreshOrder(this);
 	}
 	
 	this.go(url ? url : "about:blank");

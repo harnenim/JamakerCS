@@ -1877,34 +1877,24 @@ function init(jsonSetting, isBackup=true) {
 	SmiEditor.activateKeyEvent();
 
 	// Win+방향키 이벤트 직후 창 위치 초기화
-	const winKeyStatus = [false, false];
+	const winKeyStatus = [0, 0];
 	$(window).on("keydown", function (e) {
-		if (e.keyCode == 91 || e.keyCode == 92) {
-			// WinKey 최우선 처리
-			winKeyStatus[e.keyCode - 91] = true;
-			return;
-		}
 		if (e.keyCode == 27) { // ESC
 			if (SmiEditor.selected) {
 				const hold = SmiEditor.selected;
 				if (hold.styleArea) {
-					// 일반 SMI 홀드
+					// SMI 홀드 스타일 창 닫기
 					if (hold.area.hasClass("style")) {
 						hold.area.removeClass("style");
 						if (SmiEditor.Viewer.window) {
 							SmiEditor.Viewer.refresh();
 						}
-					} else if (hold.area.hasClass("ass")) {
-						hold.area.removeClass("ass");
 					}
-				} else {
-					// ASS 추가 편집 전용 홀드
-					tabs[tab].area.find("button.tab-ass-btn").click();
 				}
 			}
 		}
 	}).on("keyup", function (e) {
-		if (winKeyStatus[0] || winKeyStatus[1]) {
+		if (e.metaKey) {
 			switch (e.keyCode) {
 				case 37: // ←
 				case 38: // ↑
@@ -1913,14 +1903,6 @@ function init(jsonSetting, isBackup=true) {
 					setTimeout(() => {
 						moveWindowsToSetting();
 					}, 1);
-					break;
-				}
-				case 91: {
-					winKeyStatus[0] = false;
-					break;
-				}
-				case 92: {
-					winKeyStatus[1] = false;
 					break;
 				}
 			}
@@ -2189,9 +2171,11 @@ function moveWindowsToSetting() {
 	binder.setFollowWindow(setting.window.follow);
 
 	// 창 위치 초기화 후 호출
-	setTimeout(() => {
-		refreshPaddingBottom();
-	}, 1);
+	setTimeout(() => { refreshPaddingBottom(); }, 1);
+	setTimeout(() => { refreshPaddingBottom(); }, 100); // 딜레이 버그 보완책으로 한 번 더 돌림
+	
+	// 설정에 따른 이동이었으면 웹샘플에서 설정창 맨 위로
+	binder.focus("setting");
 }
 
 // C# 쪽에서 호출

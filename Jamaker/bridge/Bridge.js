@@ -42,8 +42,8 @@ function WebPlayerBridge() {
 			WinAPI.MoveWindow(this.hwnd, this.initialOffset.left, this.initialOffset.top, this.initialOffset.right - this.initialOffset.left, this.initialOffset.bottom - this.initialOffset.top), true;
 		}
 	}
-	WebPlayerBridge.prototype.moveWindow = function(x, y) {
-		if (x == null || y == null) {
+	WebPlayerBridge.prototype.moveWindow = function(x=-11111, y=-111111) {
+		if (x == -11111 || y == -11111) {
 			// 프로그램 설정에 따른 위치로
 			WinAPI.MoveWindow(this.hwnd
 					, this.currentOffset.left

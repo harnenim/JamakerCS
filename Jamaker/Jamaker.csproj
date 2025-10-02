@@ -206,12 +206,8 @@
     <Content Include="view\addon\Fusion.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="view\addon\img\SpellCheck_btnOrgCopy.gif">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="view\addon\img\SpellCheck_title.gif">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="view\addon\img\SpellCheck_btnOrgCopy.gif" />
+    <Content Include="view\addon\img\SpellCheck_title.gif" />
     <Content Include="view\addon\Karaoke.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -221,9 +217,7 @@
     <Content Include="view\addon\Nico.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="view\addon\Normalizer.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="view\addon\Normalizer.html" />
     <Content Include="view\addon\SearchFiles.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -233,9 +227,7 @@
     <Content Include="view\addon\Speed.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="view\addon\SpellCheck.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="view\addon\SpellCheck.html" />
     <Content Include="view\addon\SpellCheckTest.html" />
     <Content Include="view\addon\SyncManager.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -243,9 +235,7 @@
     <Content Include="view\addon\SyncManager0.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="view\addon\ToAss.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="view\addon\ToAss.html" />
     <Content Include="view\editor.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

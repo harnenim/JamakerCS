@@ -348,7 +348,9 @@ window.MB = 9;
 			return;
 		}
 		const hwnd = this.getHwnd(target);
-		WinAPI.SetForegroundWindow(hwnd);
+		if (hwnd) {
+			WinAPI.SetForegroundWindow(hwnd);
+		}
 	}
 	editor.setFollowWindow = function(follow) {
 		if (follow) {
@@ -569,7 +571,9 @@ window.MB = 9;
 	}
 
 	editor.setPlayer = function(dll, exe, withRun) {
-		this.player = new WebPlayerBridge(exe);
+		if (!this.player) {
+			this.player = new WebPlayerBridge(exe);
+		}
 		const offset = JSON.parse(editor.strSettingJson).player.window;
 		this.player.currentOffset.top    = offset.y - MT;
 		this.player.currentOffset.left   = offset.x - ML;

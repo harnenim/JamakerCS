@@ -14,6 +14,7 @@ html, body {
 	height: 20px;
 	background: #f0f0f0;
 	user-select: none;
+	font-size: 14px;
 }
 .menustrip li,
 .submenu   li {
