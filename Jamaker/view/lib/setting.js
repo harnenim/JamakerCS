@@ -103,8 +103,10 @@ window.DEFAULT_SETTING =
 	,	kframe: false
 	,	kLimit: 200
 	,	holds: true
-	,	width: 96	// 화면 싱크 매니저 섬네일 크기
-	,	height: 54
+	,	width: 192	// 화면 싱크 매니저 섬네일 크기
+	,	height: 108
+	,	uiWidth: 96
+	,	uiHeight: 54
 	}
 ,	command:
 	{	fn: // F1~F12: pqrstuvwxyz{
