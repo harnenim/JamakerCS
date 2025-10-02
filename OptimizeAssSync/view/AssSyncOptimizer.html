@@ -55,7 +55,7 @@ function setFkfFile(file) {
 	if (typeof file == "string") {
 		const paths = file.split("\\").join("/").split("/");
 		paths[paths.length - 1] = encodeURIComponent(paths[paths.length - 1]);
-		const path = (paths.length > 1 ? ("file://" + paths.join("/")) : ("../temp/" + paths[0]));
+		const path = (paths.length > 1 ? ("file://" + paths.join("/")) : ("../temp/fkf/" + paths[0]));
 		const req = new XMLHttpRequest();
 		req.open("GET", path);
 		req.responseType = "arraybuffer";
