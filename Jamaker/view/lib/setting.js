@@ -204,10 +204,8 @@ window.DEFAULT_SETTING =
 	,	withAlts:
 		{	't': '/* 일괄 싱크 입력 */\n' + 'editor.reSyncPrompt();'
 		,	'1': '/* 맞춤법 검사기 */\n'
-			   + 'let text = editor.getText();\n'
 			   + 'extSubmit("post", "https://nara-speller.co.kr/old_speller/results", "text1");'
 		,	'2': '/* 국어사전 */\n'
-			   + 'let text = editor.getText();\n'
 			   + 'extSubmit("get", "https://ko.dict.naver.com/%23/search", "query");'
 		,	'N': '/* 홀드 추가 */\n' + 'tabs.length && tabs[tab].addHold();'
 		,	'Q': '/* 재생 위치 찾기 */\n' + 'editor.findSync();'
