@@ -1158,6 +1158,7 @@ if (SmiFile) {
 				}
 			}
 			// 내포 홀드 처리
+			let lastStart = 999999999;
 			for (let i = imports.length - 1; i >= 0; i--) {
 				const index = imports[i][0];
 				const hold = imports[i][1];
@@ -1169,11 +1170,12 @@ if (SmiFile) {
 						importBody.pop();
 					}
 				}
-				if (hold.afterMain) {
+				if (hold.afterMain && (holdEnd < lastStart)) {
 					// 메인 홀드보다 뒤쪽에 독립된 경우, 종료싱크를 잡아주기 위해 +1
-					// TODO: 독립 홀드 2개 이상이 있으면서 싱크가 붙어있으면 증발 문제 발생
 					holdEnd++;
 				}
+				lastStart = hold.start;
+				
 				if (withComment) {
 					importBody[0].text = "<!-- End=" + holdEnd + "\nHold=" + hold.pos + "|" + hold.exportName
 						+ (hold.saveStyle ? "\n" + hold.saveStyle : "")
