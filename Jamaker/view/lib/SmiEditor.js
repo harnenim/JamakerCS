@@ -1990,7 +1990,7 @@ SmiEditor.prototype.moveLine = function(toNext) {
 	if (this.isRendering) return;
 	this.history.log();
 	
-	const text = this.input.val();
+	let text = this.input.val();
 	const range = this.getCursor();
 	const lineRange = [text.substring(0, range[0]).split("\n").length - 1, text.substring(0, range[1]).split("\n").length - 1];
 	const lines = text.split("\n");
@@ -1998,27 +1998,46 @@ SmiEditor.prototype.moveLine = function(toNext) {
 	
 	if (toNext) {
 		if (lineRange[1] == lines.length - 1) {
+			// 더 이상 내릴 수 없음
 			return;
 		}
-		this.input.val(lines.slice(0, lineRange[0]).concat(lines[lineRange[1]+1], lines.slice(lineRange[0], lineRange[1]+1), lines.slice(lineRange[1]+2)).join("\n"));
+		text =	lines.slice(0, lineRange[0]) // 그대로인 범위
+		.concat(
+				lines      [lineRange[1]+1] // 선택 범위 아랫줄을 위로 올림
+			,	lines.slice(lineRange[0],
+				            lineRange[1]+1) // 선택 범위를 아래로 내림
+			,	lines.slice(lineRange[1]+2) // 그대로인 범위
+		).join("\n");
 		
+		// 이동 후 커서 위치에 따른 스크롤
 		const targetTop = (lineRange[1]+2) * LH - this.input.css("height").split("px")[0] + SB;
 		if (targetTop > this.input.scrollTop()) {
 			this.input.scrollTop(targetTop);
 		}
+		// 이동 후 커서 위치 = 위로 내린 줄 길이만큼 더하기
 		addLine = lines[lineRange[1]+1].length + 1;
 	} else {
 		if (lineRange[0] == 0) {
+			// 더 이상 올릴 수 없음
 			return;
 		}
-		this.input.val(lines.slice(0, lineRange[0]-1).concat(lines.slice(lineRange[0], lineRange[1]+1), lines[lineRange[0]-1], lines.slice(lineRange[1]+1)).join("\n"));
+		text =	lines.slice(0, lineRange[0]-1) // 그대로인 범위
+		.concat(
+				lines.slice(lineRange[0],
+				            lineRange[1]+1) // 선택 범위를 위로 올림
+			,	lines      [lineRange[0]-1] // 선택 범위 윗줄을 아래로 내림
+			,	lines.slice(lineRange[1]+1) // 그대로인 범위
+		).join("\n");
 		
+		// 이동 후 커서 위치에 따른 스크롤
 		const targetTop = (lineRange[1]-1) * LH;
 		if (targetTop < this.input.scrollTop()) {
 			this.input.scrollTop(targetTop);
 		}
+		// 이동 후 커서 위치 = 아래로 내린 줄 길이만큼 빼기
 		addLine = -(lines[lineRange[0]-1].length + 1);
 	}
+	this.input.val(text);
 	this.setCursor(range[0]+addLine, range[1]+addLine);
 	this.history.log();
 	this.render([Math.max(0, lineRange[0]-1), Math.min(lineRange[1]+2, lines.length)]);
