@@ -1441,7 +1441,7 @@ namespace Jamaker
                                 if (bLast != null)
                                 {
                                     bool isFade = (flag != "");
-                                    long sum = 0;
+                                    double sum = 0;
 
                                     // 렌더링 중복 실행 시 다른 스레드에서 파일 삭제될 수 있어서 try-catch 문에 넣음
                                     try
@@ -1456,7 +1456,7 @@ namespace Jamaker
 
                                         // 각 픽셀 비교
                                         int[] arrDiff = new int[TX * TY * 3];
-                                        int[] sums = new int[TY];
+                                        double[] sums = new double[TY];
                                         for (int y = 0; y < TY; y++)
                                         {
                                         	// int y = get_global_id(0);
@@ -1466,9 +1466,9 @@ namespace Jamaker
                                             for (int x = 0; x < TX; x++)
                                             {
                                             	pixel = (TX * y + x) * 3;
-                    	        				sums[y] += (arrDiff[pixel+0] = (int)arrPrev[pixel+0] - (int)arrTrgt[pixel+0]);
-                    	        				sums[y] += (arrDiff[pixel+1] = (int)arrPrev[pixel+1] - (int)arrTrgt[pixel+1]);
-                    	        				sums[y] += (arrDiff[pixel+2] = (int)arrPrev[pixel+2] - (int)arrTrgt[pixel+2]);
+                    	        				sums[y] += 0.299 * (arrDiff[pixel+0] = arrPrev[pixel+0] - arrTrgt[pixel+0]);
+                    	        				sums[y] += 0.587 * (arrDiff[pixel+1] = arrPrev[pixel+1] - arrTrgt[pixel+1]);
+                    	        				sums[y] += 0.114 * (arrDiff[pixel+2] = arrPrev[pixel+2] - arrTrgt[pixel+2]);
                                             }
                                         }
                                         for (int y = 0; y < TY; y++)
@@ -1478,7 +1478,7 @@ namespace Jamaker
 
                                         // 페이드 효과에 대해선 더 잘 보이도록
                                         int a = isFade ? 40 : 4;
-                                        int avg = (int)(Math.Abs(sum) / (TX * TY * 3));
+                                        int avg = (int)(Math.Abs(sum) / (TX * TY));
 
                                         byte[] arr2 = new byte[TX * TY * 3];
                                         byte[] arr3 = new byte[TX * TY * 3];
@@ -1486,8 +1486,9 @@ namespace Jamaker
                                         for (int y = 0; y < TY; y++)
                                         {
                                         	// int y = get_global_id(0);
-                    	        			int pixel, diffR, diffG, diffB, v;
-                                        	
+                    	        			int pixel, v;
+                                            double diffR, diffG, diffB;
+
                                             for (int x = 0; x < TX; x++)
                                             {
                                             	pixel = (TX * y + x) * 3;
@@ -1500,10 +1501,10 @@ namespace Jamaker
                                                 // 밝기 변화량
                                                 //v = (int)((arrDiff[pixel+0] + arrDiff[pixel+1] + arrDiff[pixel+2]) * a);
                                                 // RGB 중에 가장 조금 변화한 것만 확인
-                    	        				diffR = arrDiff[pixel+0]; if (diffR < 0) diffR = -diffR; v = diffR;
-                    	        				diffG = arrDiff[pixel+1]; if (diffG < 0) diffG = -diffG; v = (v < diffG ? v : diffG);
-                    	        				diffB = arrDiff[pixel+2]; if (diffG < 0) diffG = -diffB; v = (v < diffB ? v : diffB);
-                    	        				v *= a;
+                    	        				diffR = 0.299 * arrDiff[pixel+0]; if (diffR < 0) diffR = -diffR; v = (int)diffR;
+                    	        				diffG = 0.587 * arrDiff[pixel+1]; if (diffG < 0) diffG = -diffG; v = (v < diffG ? v : (int)diffG);
+                    	        				diffB = 0.114 * arrDiff[pixel+2]; if (diffG < 0) diffG = -diffB; v = (v < diffB ? v : (int)diffB);
+                    	        				v *= a * 2;
                     	        				
                                                 if (v > 0) {
                                                 	arr3[pixel+0] = (byte)(v < 255 ? v : 255);
