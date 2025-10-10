@@ -167,12 +167,8 @@
     <Content Include="bridge\tempDir.html" />
     <Content Include="bridge\player.html" />
     <Content Include="bridge\WinAPI.js" />
-    <Content Include="ffmpeg\ffmpeg.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ffmpeg\ffprobe.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="ffmpeg\ffmpeg.exe" />
+    <Content Include="ffmpeg\ffprobe.exe" />
     <Content Include="index.html" />
     <Content Include="Jamaker.html" />
     <Content Include="jamaker.ico" />

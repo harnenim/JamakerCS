@@ -255,6 +255,7 @@ namespace Jamaker
             catch { }
             return 0;
         }
+        bool initialMoved = false;
         public void MoveWindow(string target, int x, int y, int width, int height, bool resizable)
         {
             try
@@ -291,6 +292,21 @@ namespace Jamaker
                         if (target.Equals("editor"))
                         {
                             Script("setDpiBy", width);
+
+                            if (!initialMoved)
+                            {
+                                string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
+                                if (!File.Exists(Path.Combine(exePath, "ffmpeg.exe")))
+                                {
+                                    Alert("editor", "ffmpeg.exe 파일이 없습니다.");
+                                    return;
+                                }
+                                if (!File.Exists(Path.Combine(exePath, "ffprobe.exe")))
+                                {
+                                    Alert("editor", "ffprobe.exe 파일이 없습니다.");
+                                }
+                                initialMoved = true;
+                            }
                         }
                     }
                 }
