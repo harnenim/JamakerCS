@@ -106,7 +106,6 @@ namespace Jamaker
                 Script("setDroppable");
 
                 WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
-                useFollowWindow = true;
             }
             catch { }
         }
@@ -140,7 +139,7 @@ namespace Jamaker
                     }
                     else
                     {   // 실행 직후 초기 위치 가져옴
-                        if (player.GetWindowInitialPosition() != null )
+                        if (player.GetWindowInitialPosition() != null && useMovePlayer)
                         {   // 초기화 성공
                             player.MoveWindow(); // 설정 위치로 이동
                         }
@@ -272,7 +271,7 @@ namespace Jamaker
                 }
                 if (target.Equals("player"))
                 {
-                    if (player != null)
+                    if (player != null && useMovePlayer)
                     {
                         player.currentOffset.top = y;
                         player.currentOffset.left = x;
