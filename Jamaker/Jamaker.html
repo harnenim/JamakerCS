@@ -40,8 +40,8 @@ Binder.prototype.saveSetting = function(setting) {
 Binder.prototype.setVideoExts = function(exts) {
 	this._.setVideoExts(exts);
 }
-Binder.prototype.setPlayer = function(dll, exe, withRun) {
-	this._.setPlayer(dll, exe, withRun);
+Binder.prototype.setPlayer = function(dll, exe, withRun, useMove) {
+	this._.setPlayer(dll, exe, withRun, useMove);
 }
 Binder.prototype.runPlayer = function(path) {
 	this._.runPlayer(path);
@@ -138,6 +138,7 @@ const window_open = function(url, name, options, opener) {
 
 {	// editor
 	editor.player = null;
+	editor.useMovePlayer = false;
 	editor.strSettingJson = "불러오기 실패 예제";
 	editor.strBridgeList = "NoPlayer: (없음)";
 	editor.strHighlights = "eclipse: Eclipse \n vs: Visual Studio";
@@ -570,7 +571,7 @@ window.MB = 9;
 		this.videoExts = exts.split(','); // C#에서만 필요
 	}
 
-	editor.setPlayer = function(dll, exe, withRun) {
+	editor.setPlayer = function(dll, exe, withRun, useMove) {
 		if (!this.player) {
 			this.player = new WebPlayerBridge(exe);
 		}
@@ -582,11 +583,12 @@ window.MB = 9;
 		if (withRun) {
 			this.runPlayer(exe);
 		}
+		this.useMovePlayer = useMove;
 	}
 	editor.runPlayer = function(path) {
 		if (this.player && this.player.hwnd) this.player.hwnd.run();
 		// C#에선 플레이어 실행되면 브리지의 타이머에서 잡아서 크기 조절함
-		if (JSON.parse(editor.strSettingJson).player.window.use) {
+		if (this.useMovePlayer) {
 			this.player.moveWindow();
 		}
 	}

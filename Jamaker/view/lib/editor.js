@@ -2096,7 +2096,7 @@ function setSetting(setting, initial=false) {
 		if (dll) {
 			const playerSetting = setting.player.control[dll];
 			if (playerSetting) {
-				binder.setPlayer(dll, playerSetting.path, playerSetting.withRun);
+				binder.setPlayer(dll, playerSetting.path, playerSetting.withRun, setting.player.window.use);
 			}
 		}
 	}

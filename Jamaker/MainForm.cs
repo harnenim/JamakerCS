@@ -17,6 +17,7 @@ namespace Jamaker
     public partial class MainForm : Form
     {
         public PlayerBridge.PlayerBridge player = null;
+        private bool useMovePlayer = false;
 
         private string strSettingJson = "불러오기 실패 예제";
         private string strBridgeList = "NoPlayer: (없음)"; // 기본값
@@ -644,13 +645,13 @@ namespace Jamaker
             videoExts = exts.Split(',');
         }
 
-        public void SetPlayer(string dll, string path, bool withRun)
+        public void SetPlayer(string dll, string path, bool withRun, bool useMove)
         {
             if (InvokeRequired)
             {
                 Invoke(new Action(() =>
                 {
-                    SetPlayer(dll, path, withRun);
+                    SetPlayer(dll, path, withRun, useMove);
                 }));
             }
             else
@@ -704,6 +705,8 @@ namespace Jamaker
                         }).Start();
                     }
                 }
+
+                useMovePlayer = useMove;
             }
         }
         

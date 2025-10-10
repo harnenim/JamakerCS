@@ -74,9 +74,9 @@ namespace Jamaker
         {
             _.SetVideoExts(exts);
         }
-        public void SetPlayer(string dll, string exe, bool withRun)
+        public void SetPlayer(string dll, string exe, bool withRun, bool useMove)
         {
-            _.SetPlayer(dll, exe, withRun);
+            _.SetPlayer(dll, exe, withRun, useMove);
         }
 
         public void Save(int tab, string text, string path, bool isSmi)
