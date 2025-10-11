@@ -16,7 +16,9 @@
 	<link rel="stylesheet" type="text/css" href="../lib/AutoCompleteTextarea.css" />
 	<script>
 windowName = "addon";
-let LOG = false;
+if (LOG == undefined) {
+	LOG = false;
+}
 
 $(() => {
 	if (opener) {
