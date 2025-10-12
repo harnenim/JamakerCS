@@ -95,7 +95,9 @@ namespace Jamaker
             string[] lines = proc.StandardError.ReadToEnd().Split(new char[] { '\n', '\r' });
             foreach (string line in lines)
             {
-                if (line.Trim().Length == 0) continue;
+                string trimmed = line.Trim();
+
+                if (trimmed.Length == 0) continue;
                 if (lastStream != null && line.Equals("    Metadata:"))
                 {
                     isMetadata = true;
@@ -116,7 +118,7 @@ namespace Jamaker
                         isMetadata = false;
                     }
                 }
-                if (line.StartsWith("  Duration: "))
+                if (trimmed.StartsWith("Duration: "))
                 {
                     string dur = line.Substring(12, line.IndexOf(',', 12) - 12);
                     string[] vs = dur.Split(':');
@@ -129,7 +131,7 @@ namespace Jamaker
                     duration = (int)(v * 1000);
                     //Console.WriteLine("duration: {0}", duration);
                 }
-                else if (line.StartsWith("    Stream #"))
+                else if (trimmed.StartsWith("Stream #"))
                 {
                     string pattern = "Stream #([0-9]+:[0-9])+(\\[(.*)\\])?(\\((.*)\\))?: (.*): ";
                     System.Text.RegularExpressions.Match m = System.Text.RegularExpressions.Regex.Match(line, pattern);
@@ -140,7 +142,7 @@ namespace Jamaker
                       , language = groups[5].Value
                     });
                 }
-                else if (lastStream != null && line.StartsWith("      title           : "))
+                else if (lastStream != null && trimmed.StartsWith("title           : "))
                 {
                     //lastStream.metadata["title"] = line.Substring(24);
                 }
