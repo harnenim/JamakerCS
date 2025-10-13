@@ -324,7 +324,7 @@ $(() => {
 				const imgIndex = data.frameIndex + j;
 				const cName = "img" + imgIndex + data.flag;
 				if (data.$frames.find("." + cName).length == 0) {
-					const $img = $("<img>").addClass("frame " + cName).css({ left: (j * 98) }).data({ index: imgIndex, offset: j });
+					const $img = $("<img>").addClass("frame " + cName).css({ left: (j * (TX + 2)) }).data({ index: imgIndex, offset: j });
 					if (trustKeyFrame && Subtitle.findSync(fs[imgIndex], kfs, false)) {
 						$img.addClass("keyframe");
 					}

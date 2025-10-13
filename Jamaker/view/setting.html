@@ -32,6 +32,8 @@ $(() => {
 	styleColorAppendPreset = $("#styleColorAppend").html();
 	setColor(setting.color);
 	
+	let lastFocus = null;
+	
 	// 전역에서 접근 가능해야 함
 	window.show = function(index) {
 		$("#settingNav > a.selected").removeClass("selected");
@@ -40,8 +42,12 @@ $(() => {
 		opened = $("#settingArea > form:eq(" + index + ")").addClass("selected").attr("id");
 		// 지역변수 setting도 건드려야 함
 		opener.setting.show = setting.show = index;
+		lastFocus = null;
 	}
-	$(document).on("keydown", function(e) {
+	$(document).on("focus", "input,textarea", function(e) {
+		lastFocus = $(this);
+		
+	}).on("keydown", function(e) {
 		if (e.ctrlKey) {
 			switch (e.keyCode) {
 				case 9: {
@@ -67,6 +73,11 @@ $(() => {
 					show(e.keyCode - 49);
 				}
 			}
+		}
+	}).on("keyup", function(e) {
+		if (e.altKey && e.keyCode == 83) {
+			// Alt+S 했을 땐 포커스 원위치
+			lastFocus.focus();
 		}
 	});
 	let opened = null;
