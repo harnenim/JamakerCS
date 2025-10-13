@@ -1485,9 +1485,8 @@ namespace Jamaker
 
                                         for (int y = 0; y < TY; y++)
                                         {
-                                        	// int y = get_global_id(0);
-                    	        			int pixel, v;
-                                            double diffR, diffG, diffB;
+                                            // int y = get_global_id(0);
+                                            int pixel, diffR, diffG, diffB, v;
 
                                             for (int x = 0; x < TX; x++)
                                             {
@@ -1501,11 +1500,11 @@ namespace Jamaker
                                                 // 밝기 변화량
                                                 //v = (int)((arrDiff[pixel+0] + arrDiff[pixel+1] + arrDiff[pixel+2]) * a);
                                                 // RGB 중에 가장 조금 변화한 것만 확인
-                    	        				diffR = 0.299 * arrDiff[pixel+0]; if (diffR < 0) diffR = -diffR; v = (int)diffR;
-                    	        				diffG = 0.587 * arrDiff[pixel+1]; if (diffG < 0) diffG = -diffG; v = (v < diffG ? v : (int)diffG);
-                    	        				diffB = 0.114 * arrDiff[pixel+2]; if (diffG < 0) diffG = -diffB; v = (v < diffB ? v : (int)diffB);
-                    	        				v *= a * 2;
-                    	        				
+                                                diffR = arrDiff[pixel + 0]; if (diffR < 0) diffR = -diffR; v = diffR;
+                                                diffG = arrDiff[pixel + 1]; if (diffG < 0) diffG = -diffG; v = (v < diffG ? v : diffG);
+                                                diffB = arrDiff[pixel + 2]; if (diffG < 0) diffG = -diffB; v = (v < diffB ? v : diffB);
+                                                v *= a;
+
                                                 if (v > 0) {
                                                 	arr3[pixel+0] = (byte)(v < 255 ? v : 255);
                                                 	arr3[pixel+2] = 0;
