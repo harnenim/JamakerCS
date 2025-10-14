@@ -705,6 +705,16 @@ Tab.prototype.updateHoldSelector = function() {
 	const posStatus = {};
 	for (let i = 0; i < timers.length; i++) {
 		const timer = timers[i];
+		
+		// 종료된 홀드를 먼저 빼주지 않으면 과잉 보정 발생
+		timer.holds.sort((a, b) => {
+			if (a.type < b.type)
+				return -1;
+			if (a.type > b.type)
+				return 1;
+			return 0;
+		});
+		
 		const rate = (timer.rate / (timers.length + add - 1) * 100);
 		for (let j = 0; j < timer.holds.length; j++) {
 			const selector = timer.holds[j];
