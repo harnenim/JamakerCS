@@ -3199,50 +3199,6 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 	
 	// 그라데이션 먼저 글자 단위 분해
 	let hasGradation = false;
-	/*
-	for (let j = 0; j < attrs.length; j++) {
-		const attr = attrs[j];
-		
-		const gc = (attr.fc.length == 15)
-			&& (attr.fc[0] == '#')
-			&& (attr.fc[7] == '~')
-			&& (attr.fc[8] == '#');
-		const gf = (attr.fade.length == 15)
-			&& (attr.fade[0] == '#')
-			&& (attr.fade[7] == '~')
-			&& (attr.fade[8] == '#');
-		
-		if (gc || gf) {
-			hasGradation = true;
-			
-			const cFrom = gc ? attr.fc.substring(0,  7) : (attr.fc ? attr.fc : "#ffffff");
-			const cTo   = gc ? attr.fc.substring(8, 15) : (attr.fc ? attr.fc : "#ffffff");
-			const color = new Color(cTo, cFrom);
-			
-			const newAttrs = [];
-			for (let k = 0; k < attr.text.length; k++) {
-				const newAttr = new Attr(attr);
-				newAttr.fc = color.get(k, attr.text.length - 1);
-				newAttr.text = attr.text[k];
-				newAttrs.push(newAttr);
-			}
-			if (gf) {
-				const fFrom = attr.fade.substring(0,  7);
-				const fTo   = attr.fade.substring(8, 15);
-				const fColor = new Color(fTo, fFrom);
-				for (let k = 0; k < newAttrs.length; k++) {
-					newAttrs[k].fade = fColor.smi(k, newAttrs.length - 1);
-				}
-			}
-			const after = attrs.slice(j + 1);
-			
-			attrs.length = j;
-			attrs.push(...newAttrs);
-			attrs.push(...after);
-			j += newAttrs.length - 1;
-		}
-	}
-	*/
 	{
 		function checkGradation(attr) {
 			const gAttrs = [];
@@ -3581,6 +3537,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 		}
 		
 		// 10ms 미만 간격이면 팟플레이어에서 겹쳐서 나오므로 적절히 건너뛰기
+		// TODO: 가급적 fps 기반으로 하는 게 나을 듯
 		// TODO: ... 현재는 holdsToText 거칠 경우 뭉치는 것 교정해줄 듯?
 		const countLimit = Math.min(count, Math.floor((end - start) / 10));
 		let realJ = 0;
@@ -3781,7 +3738,7 @@ Smi.normalize = (smis, withComment=false, fps=null, forConvert=false) => {
 	}
 	if (smis.length) {
 		// 마지막 하나도 색상 그라데이션은 계산해야 함
-		smis[smis.length - 1].normalize(-1, forConvert, withComment);
+		smis[smis.length - 1] = smis[smis.length - 1].normalize(-1, forConvert, withComment)[0];
 	}
 	
 	return result;
