@@ -1031,11 +1031,27 @@ window.AssEvent = Subtitle.AssEvent = function(start, end, style, text, layer=0)
 	this.Text = text;
 }
 AssEvent.toAssTime = (time=0, fromFrameSync=false) => {
+	/*
 	if (fromFrameSync) {
-		time -= 15; // TODO: 15ms는 경험적 값이라서, 정확한 계산식을 만드는 게 좋을 듯함
+		// TODO: 15ms는 경험적 값이라서, 정확한 계산식을 만드는 게 좋을 듯함
+		// 24fps에선 15ms로 문제없는데, 30fps에선 오차 발생 확인
 		// time = Math.floor((time - 5) / 10) * 10; // 저번에 이게 실패했었나?
+		time -= 15;
 	}
+	*/
 	if (time < 0) time = 0;
+	if (Subtitle.video.fs.length) {
+		const index = Subtitle.findSyncIndex(time);
+		if (index > 0) {
+			time = Math.floor(((Subtitle.video.fs[index - 1] + Subtitle.video.fs[index] * 2) / 3) / 10) * 10;
+		} else {
+			time = Subtitle.video.fs[0];
+		}
+	} else {
+		if (fromFrameSync) {
+			time -= 15;
+		}
+	}
 	const h = Math.floor( time / 3600000);
 	const m = Math.floor( time /   60000) % 60;
 	const s = Math.floor( time /    1000) % 60;
@@ -1047,7 +1063,6 @@ AssEvent.fromAssTime = (assTime, toFrameSync=false) => {
 	const vs = assTime.split(':');
 	let time = ((Number(vs[0]) * 360000) + (Number(vs[1]) * 6000) + (Number(vs[2].split(".").join("")))) * 10;
 	if (toFrameSync) {
-//		time = Subtitle.findSync(time + 15);
 		time = AssEvent.optimizeSync(time);
 	}
 	return time;
@@ -3537,9 +3552,11 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 		}
 		
 		// 10ms 미만 간격이면 팟플레이어에서 겹쳐서 나오므로 적절히 건너뛰기
-		// TODO: 가급적 fps 기반으로 하는 게 나을 듯
-		// TODO: ... 현재는 holdsToText 거칠 경우 뭉치는 것 교정해줄 듯?
-		const countLimit = Math.min(count, Math.floor((end - start) / 10));
+		// 프레임 정보 있으면 fps 기반으로 카운트
+		let countLimit = Math.min(count, Math.floor((end - start) / 10));
+		if (Subtitle.video.fs.length) {
+			countLimit = Subtitle.findSyncIndex(end) - Subtitle.findSyncIndex(start);
+		}
 		let realJ = 0;
 		
 		for (let j = 0; j < count; j++) {
