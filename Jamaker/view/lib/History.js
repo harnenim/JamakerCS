@@ -28,6 +28,9 @@ window.History = function(input, limit, doAfter) {
 		history.updateCursor();
 	});
 	input.on("click", function() {
+		// 내용 수정 후 히스토리 로깅 안 된 상태에서 클릭으로 커서 옮겼을 경우 기존 커서 기억
+		// 수정 없었을 경우 무시해야 함
+		history.log(null, true);
 		history.updateCursor();
 	});
 	/* 방향키는 에디터에서 logIfCursorMoved 구현하는 걸로
@@ -42,13 +45,15 @@ History.prototype.test = function() {
 		console.log(data[1]);
 	}
 }
-History.prototype.log = function(text) {
+History.prototype.log = function(text, withoutCursor=false) {
 	// 마지막 로그와 차이가 없으면 취소
 	if (!text) {
 		text = this.input.val();
 	}
 	if (this.last[0] == text) {
-		this.last[1][1] = this.updateCursor();
+		if (!withoutCursor) {
+			this.last[1][1] = this.updateCursor();
+		}
 		return;
 	}
 	
@@ -84,7 +89,6 @@ History.prototype.passiveLog = function() {
 	
 	if (this.isInserting && text.length < this.lastText.length) {
 		// 입력에서 삭제로 전환 시 기록
-		//console.log("입력에서 삭제로 전환 시 기록");
 		this.log(this.lastText);
 		
 	} else {

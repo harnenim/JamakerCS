@@ -281,7 +281,8 @@ window.SmiEditor = function(text) {
 		}
 		
 		this.input.val(text);
-		this.setCursor(0)
+//		this.setCursor(0) // history 선언되기 전
+		this.input[0].setSelectionRange(0, 0);
 		this.saved = text;
 	} else {
 		this.saved = "";
@@ -1225,6 +1226,7 @@ SmiEditor.prototype.getCursor = function() {
 }
 SmiEditor.prototype.setCursor = function(start, end) {
 	this.input[0].setSelectionRange(start, end ? end : start);
+	this.history.log(null, true);
 }
 SmiEditor.scrollMargin = 3.5;
 SmiEditor.prototype.scrollToCursor = function(lineNo) {
