@@ -1943,7 +1943,11 @@ function setSetting(setting, initial=false) {
 	}
 	
 	SmiEditor.setSetting(setting);
-	if (initial || (oldSetting.size != setting.size) || (JSON.stringify(oldSetting.color) != JSON.stringify(setting.color))) {
+	if (initial
+	 || (               oldSetting.size       !=                setting.size      )
+	 || (               oldSetting.scrollShow !=                setting.scrollShow)
+	 || (JSON.stringify(oldSetting.color)     != JSON.stringify(setting.color)    )
+	) {
 		// 스타일 바뀌었을 때만 재생성
 		if (setting.css) {
 			delete(setting.css);
@@ -1952,7 +1956,7 @@ function setSetting(setting, initial=false) {
 		// 스크롤바 버튼 새로 그려야 함
 		let button = "";
 		let disabled = "";
-		{
+		if (setting.scrollShow == 0) {
 			let canvas = SmiEditor.canvas;
 			if (!canvas) canvas = SmiEditor.canvas = document.createElement("canvas");
 			canvas.width = canvas.height = ((SB = (16 * setting.size)) + 1) * 2;
@@ -1987,11 +1991,12 @@ function setSetting(setting, initial=false) {
 					for (let name in setting.color) {
 						preset = preset.split("[" + name + "]").join(setting.color[name]);
 					}
-					if (button) {
+					console.log("button.length", button.length);
+					if (button.length) {
 						preset = preset.split("[button]").join(button).split("[buttonDisabled]").join(disabled);
-						$("body").addClass("custom-scrollbar");
+						$("body").addClass("classic-scrollbar");
 					} else {
-						$("body").removeClass("custom-scrollbar");
+						$("body").removeClass("classic-scrollbar");
 					}
 					
 					let $style = $("#styleColor");

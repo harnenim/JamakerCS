@@ -250,7 +250,8 @@ div.hold-ass-script {
 .ass-editor .item textarea[name=text] { left: calc(20px * 5); width: calc(100% - 20px * 6); }
 .ass-editor .item button { bottom: calc(20px * 0.9); width: 20px; }
 
-.custom-scrollbar ::-webkit-scrollbar,
-.custom-scrollbar ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }
-.custom-scrollbar ::-webkit-scrollbar-button:end { background-position-y: calc(20px * 0.8 + 1px); }
-.custom-scrollbar ::-webkit-scrollbar-button:horizontal { background-position-x: calc(20px * 0.8 + 1px); }
+::-webkit-scrollbar,
+body.classic-scrollbar ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }
+body.classic-scrollbar ::-webkit-scrollbar-button:end { background-position-y: calc(20px * 0.8 + 1px); }
+body.classic-scrollbar ::-webkit-scrollbar-button:horizontal { background-position-x: calc(20px * 0.8 + 1px); }
+body:not(.classic-scrollbar) ::-webkit-scrollbar-thumb { border-radius: calc(20px * 0.5); border: calc(20px * 0.2) solid transparent; }

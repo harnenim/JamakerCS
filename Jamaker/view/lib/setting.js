@@ -312,8 +312,9 @@ window.DEFAULT_SETTING =
 	, color : true
 	, sync  : 0.5
 	}
-,	scrollMargin: 3.5
 ,	size: 1
+,	scrollMargin: 3.5
+,	scrollShow: 1
 ,	color:
 	{ background: "#f0f0f0"
 	, selector  : "#c1c1c1"

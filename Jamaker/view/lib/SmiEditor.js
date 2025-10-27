@@ -331,6 +331,7 @@ SmiEditor.setSetting = (setting) => {
 		SmiEditor.showColor = setting.highlight.color;
 		SmiEditor.showEnter = setting.highlight.enter;
 	}
+	SmiEditor.scrollShow = setting.scrollShow;
 	
 	{	// AutoComplete
 		for (let key in SmiEditor.autoComplete) {
@@ -402,6 +403,7 @@ SmiEditor.setSetting = (setting) => {
 		}
 	}
 }
+SmiEditor.scrollShow = 1;
 
 SmiEditor.sync = {
 	insert: 1 // 싱크 입력 시 커서 이동
@@ -603,6 +605,18 @@ SmiEditor.prototype.bindEvent = function() {
 			for (let i = 0; i < toAppendViews.length; i++) {
 				editor.hview.append(toAppendViews[i]);
 			}
+		}
+		
+		{
+			if (!editor.lastScroll) {
+				editor.input.addClass("scrolling");
+			}
+			const now = editor.lastScroll = new Date().getTime();
+			setTimeout(function() {
+				if (editor.lastScroll != now) return;
+				editor.input.removeClass("scrolling");
+				editor.lastScroll = null;
+			}, SmiEditor.scrollShow * 1000);
 		}
 		
 	}).on("blur", function() {

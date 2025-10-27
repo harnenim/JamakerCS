@@ -851,6 +851,7 @@ $(() => {
 			setting.highlight.sync   = Number($("input[name=highlight_sync]").val());
 			
 			setting.scrollMargin     = Number($("input[name=scrollMargin]").val());
+			setting.scrollShow       = Number($("input[name=scrollShow]").val());
 			
 			setting.viewer.useAlign  = $("input[name=viewer_useAlign]").prop("checked");
 //			setting.viewer.size      = $("input[name=viewer_size]").val();
@@ -1751,31 +1752,41 @@ body {
 				</span>
 			</div>
 		</div>
-		<div>
+		<div style="float: left;">
 			<label class="for-withoutSync"><span >커서 이동 시 스크롤 여백</span>
-				<input type="number" name="scrollMargin" step="0.5" />줄
+				<input type="number" style="width: 40px;" name="scrollMargin" step="0.5" />줄
+			</label>
+			<br />
+			<label>UI 배율
+				<select name="size">
+					<option value="0.8" >80%</option>
+					<option value="0.9" >90%</option>
+					<option value="1"  >100%</option>
+					<option value="1.1">110%</option>
+					<option value="1.2">120%</option>
+					<option value="1.3">130%</option>
+					<option value="1.4">140%</option>
+					<option value="1.5">150%</option>
+					<option value="1.7">170%</option>
+					<option value="2.0">200%</option>
+					<option value="2.5">250%</option>
+					<option value="3.0">300%</option>
+					<option value="4.0">400%</option>
+				</select>
 			</label>
 		</div>
-		<label>UI 배율
-			<select name="size">
-				<option value="0.8" >80%</option>
-				<option value="0.9" >90%</option>
-				<option value="1"  >100%</option>
-				<option value="1.1">110%</option>
-				<option value="1.2">120%</option>
-				<option value="1.3">130%</option>
-				<option value="1.4">140%</option>
-				<option value="1.5">150%</option>
-				<option value="1.7">170%</option>
-				<option value="2.0">200%</option>
-				<option value="2.5">250%</option>
-				<option value="3.0">300%</option>
-				<option value="4.0">400%</option>
-			</select>
-			<br />
-		</label>
-		<label><input type="checkbox" name="useTab" /> 탭 사용</label><br />
-		<label><input type="checkbox" name="viewer_useAlign" /> 미리보기/ASS 변환 시 줄표로 시작할 경우 왼쪽 정렬</label><br />
+		<div style="float: left; margin-left: 38px;">
+			<label>스크롤바 노출 시간
+				<input type="number" style="width: 40px;" name="scrollShow" step="0.5" />초<br />
+				(※ 0초일 경우 기존 형태 스크롤바)
+			</label>
+		</div>
+		<div style="clear: both;">
+			<label><input type="checkbox" name="useTab" /> 탭 사용</label>
+		</div>
+		<div>
+			<label><input type="checkbox" name="viewer_useAlign" /> 미리보기/ASS 변환 시 줄표로 시작할 경우 왼쪽 정렬</label>
+		</div>
 		<fieldset id="style_color">
 			<legend>색 설정</legend>
 			<fieldset id="style_color_preset">

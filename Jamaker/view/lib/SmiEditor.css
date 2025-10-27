@@ -465,3 +465,11 @@ div.hold-ass-script {
 	width: calc(100% - 20px);
 	height: calc(100% - 20px * 3);
 }
+
+::-webkit-scrollbar-thumb { background-clip: content-box; }
+::-webkit-scrollbar-button { width: 0; height: 0; }
+::-webkit-scrollbar,
+::-webkit-scrollbar-corner,
+::-webkit-scrollbar-button,
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-thumb { background-color: transparent; }
