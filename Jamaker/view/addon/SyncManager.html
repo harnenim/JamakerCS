@@ -319,7 +319,11 @@ $(() => {
 					,	end: end
 				});
 			}
-
+			
+			let $imgs = data.$frames.children();
+			for (let i = 0; i < $imgs.length; i++) {
+				$imgs[i] = $($imgs[i]);
+			}
 			for (let j = data.offset - RANGE; j < data.offset + RANGE; j++) {
 				const imgIndex = data.frameIndex + j;
 				const cName = "img" + imgIndex + data.flag;
@@ -328,8 +332,15 @@ $(() => {
 					if (trustKeyFrame && Subtitle.findSync(fs[imgIndex], kfs, false)) {
 						$img.addClass("keyframe");
 					}
-					data.$frames.append($img);
+					$imgs.push($img);
 				}
+			}
+			$imgs.sort((a, b) => {
+				const v = a.data("index") - b.data("index");
+				return (v > 0) ? 1 : ((v < 0) ? -1 : 0);
+			});
+			for (let i = 0; i < $imgs.length; i++) {
+				data.$frames.append($imgs[i]);
 			}
 		};
 		if (renderList.length == 0) {
