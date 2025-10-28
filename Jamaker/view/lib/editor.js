@@ -1943,6 +1943,9 @@ function setSetting(setting, initial=false) {
 	}
 	
 	SmiEditor.setSetting(setting);
+	if (initial && oldSetting.scrollShow == undefined) {
+		setting.scrollShow = 0; // 기존 사용자는 0초로 초기화
+	}
 	if (initial
 	 || (               oldSetting.size       !=                setting.size      )
 	 || (               oldSetting.scrollShow !=                setting.scrollShow)
@@ -1991,7 +1994,6 @@ function setSetting(setting, initial=false) {
 					for (let name in setting.color) {
 						preset = preset.split("[" + name + "]").join(setting.color[name]);
 					}
-					console.log("button.length", button.length);
 					if (button.length) {
 						preset = preset.split("[button]").join(button).split("[buttonDisabled]").join(disabled);
 						$("body").addClass("classic-scrollbar");

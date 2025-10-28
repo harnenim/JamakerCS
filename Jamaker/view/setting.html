@@ -31,6 +31,7 @@ $(() => {
 	
 	styleColorAppendPreset = $("#styleColorAppend").html();
 	setColor(setting.color);
+	SmiEditor.scrollShow = setting.scrollShow;
 	
 	let lastFocus = null;
 	
@@ -909,6 +910,7 @@ $(() => {
 			opener.setSetting(setting);
 			opener.saveSetting();
 			setColor(setting.color);
+			SmiEditor.scrollShow = setting.scrollShow;
 			
 			for (let i = 0; i < defaultHolds.length; i++) {
 				defaultHolds[i].setStyle(JSON.parse(JSON.stringify(setting.defStyle)));
@@ -1394,6 +1396,17 @@ fieldset ol button,
 #style_ass input[type=text].color {
     width: 60px;
 }
+
+body.classic-scrollbar ::-webkit-scrollbar,
+body.classic-scrollbar ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }
+body.classic-scrollbar ::-webkit-scrollbar-button:end { background-position-y: calc(20px * 0.8 + 1px); }
+body.classic-scrollbar ::-webkit-scrollbar-button:horizontal { background-position-x: calc(20px * 0.8 + 1px); }
+body:not(.classic-scrollbar) ::-webkit-scrollbar-thumb { border-radius: calc(20px * 0.5); border: calc(20px * 0.2) solid transparent; }
+
+.input ::-webkit-scrollbar-thumb:hover { background-color: #aaaaaa; }
+.input .scrolling::-webkit-scrollbar-thumb { background-color: #c1c1c1; }
+.input .scrolling::-webkit-scrollbar-corner { background: #dddddd; }
+
 </style>
 <style id="styleColor"></style>
 <style id="styleColorAppend">
@@ -1518,11 +1531,11 @@ body {
 	</form>
 	
 	<form id="sync">
-		<label>싱크 입력 시 <input type="number" name="sync_insert" />줄 아래로 이동</label><br />
-		<label>싱크 수정 시 <input type="number" name="sync_update" />줄 아래로 이동</label><br />
+		<label>싱크 입력 시 <input type="number" name="sync_insert" min="0" />줄 아래로 이동</label><br />
+		<label>싱크 수정 시 <input type="number" name="sync_update" min="0" />줄 아래로 이동</label><br />
 		<label>싱크 가중치: <input type="number" name="sync_weight" />ms</label><br />
-		<label>싱크 조절 단위: <input type="number" name="sync_unit" />ms</label><br />
-		<label>재생 이동 단위: <input type="number" name="sync_move" />ms</label><br />
+		<label>싱크 조절 단위: <input type="number" name="sync_unit" min="0" />ms</label><br />
+		<label>재생 이동 단위: <input type="number" name="sync_move" min="0" />ms</label><br />
 		<label>싱크 언어: <input type="text" name="sync_lang" /></label><br />
 		<label>싱크 태그 형태: <input type="text" name="sync_preset" style="width: 400px;" /></label><br />
 		<br />
@@ -1531,14 +1544,14 @@ body {
 			　가변 프레임 영상의 경우 문제가 생길 수 있습니다.
 		</p>
 		<br />
-		<label>키프레임을 신뢰할 수 있는 영상에 대해 <input type="number" name="sync_kLimit" />ms 범위에서 화면 싱크를 키프레임에 맞도록 보정</label><br />
+		<label>키프레임을 신뢰할 수 있는 영상에 대해 <input type="number" name="sync_kLimit" min="0" />ms 범위에서 화면 싱크를 키프레임에 맞도록 보정</label><br />
 		<label><input type="checkbox" name="sync_kframe" /> 키프레임을 신뢰할 수 있는 영상에 대해 자동으로 화면 싱크 처리</label><br />
 		<br />
 		<label><input type="checkbox" name="sync_holds" /> 싱크 일괄 이동 시 다른 홀드에도 적용</label><br />
 		<p>※ 블록지정 영역에 대한 일괄 싱크 입력에는 적용되지 않습니다.</p>
 		<br />
-		<label>화면 싱크 매니저 섬네일 생성 크기: <input type="number" name="sync_width" />×<input type="number" name="sync_height" /></label><br />
-		<label>화면 싱크 매니저 섬네일 출력 크기: <input type="number" name="sync_uiWidth" />×<input type="number" name="sync_uiHeight" /></label><br />
+		<label>화면 싱크 매니저 섬네일 생성 크기: <input type="number" name="sync_width"   min="1" />×<input type="number" name="sync_height"   min="1" /></label><br />
+		<label>화면 싱크 매니저 섬네일 출력 크기: <input type="number" name="sync_uiWidth" min="1" />×<input type="number" name="sync_uiHeight" min="1" /></label><br />
 	</form>
 	
 	<form id="cmd">
@@ -1754,7 +1767,7 @@ body {
 		</div>
 		<div style="float: left;">
 			<label class="for-withoutSync"><span >커서 이동 시 스크롤 여백</span>
-				<input type="number" style="width: 40px;" name="scrollMargin" step="0.5" />줄
+				<input type="number" style="width: 40px;" name="scrollMargin" step="0.5" min="0" />줄
 			</label>
 			<br />
 			<label>UI 배율
@@ -1777,7 +1790,7 @@ body {
 		</div>
 		<div style="float: left; margin-left: 38px;">
 			<label>스크롤바 노출 시간
-				<input type="number" style="width: 40px;" name="scrollShow" step="0.5" />초<br />
+				<input type="number" style="width: 40px;" name="scrollShow" step="0.5" min="0" />초<br />
 				(※ 0초일 경우 기존 형태 스크롤바)
 			</label>
 		</div>
@@ -1809,7 +1822,7 @@ body {
 			<legend>ASS 기본 스타일</legend>
 			<div>
 				<label><span>글꼴  </span><input type="text" name="defStyle_Fontname" />　</label>
-				<label><span style="width: auto;">크기　</span><input type="number" name="defStyle_Fontsize" />px</label>
+				<label><span style="width: auto;">크기　</span><input type="number" name="defStyle_Fontsize" min="1" />px</label>
 				<label><input type="checkbox" name="defStyle_Bold" checked="checked" /> 굵게</label>
 			</div>
 			<div>
@@ -1819,11 +1832,11 @@ body {
 				<label><span>그림자</span><input type="color" name="defStyle_BackColour"      /><input type="text" class="color" /><input type="number" name="defStyle_Shadow" />px</label>
 			</div>
 			<div>
-				<label><span>좌우 여백</span><input type="number" name="defStyle_MarginL" />px</label> /
-				<label><span>상하 여백</span><input type="number" name="defStyle_MarginV" />px</label>
+				<label><span>좌우 여백</span><input type="number" name="defStyle_MarginL" min="0" />px</label> /
+				<label><span>상하 여백</span><input type="number" name="defStyle_MarginV" min="0" />px</label>
 			</div>
 		</fieldset>
-		<label for="taViewerCss">미리보기</label><!-- / <label>글씨 크기 <input type="number" name="viewer_size" style="width: 40px" /> (팟플레이어 기준)</label> -->
+		<label for="taViewerCss">미리보기</label>
 		<textarea id="taViewerCss" name="viewer_css" spellcheck="false" style="height: 300px;"></textarea>
 	</form>
 	

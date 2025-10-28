@@ -466,10 +466,10 @@ div.hold-ass-script {
 	height: calc(100% - 20px * 3);
 }
 
-::-webkit-scrollbar-thumb { background-clip: content-box; }
-::-webkit-scrollbar-button { width: 0; height: 0; }
-::-webkit-scrollbar,
-::-webkit-scrollbar-corner,
-::-webkit-scrollbar-button,
-::-webkit-scrollbar-track,
-::-webkit-scrollbar-thumb { background-color: transparent; }
+.input ::-webkit-scrollbar-thumb { background-clip: content-box; }
+.input ::-webkit-scrollbar-button { width: 0; height: 0; }
+.input ::-webkit-scrollbar,
+.input ::-webkit-scrollbar-corner,
+.input ::-webkit-scrollbar-button,
+.input ::-webkit-scrollbar-track,
+.input ::-webkit-scrollbar-thumb { background-color: transparent; }

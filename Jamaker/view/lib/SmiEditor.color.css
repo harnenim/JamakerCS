@@ -99,22 +99,22 @@ body, input, button,
 }
 
 /* 스크롤바(배경색 기반)... */
-::-webkit-scrollbar-thumb:hover { background-color: [border]; }
-.scrolling::-webkit-scrollbar-thumb { background-color: [selector]; }
-.scrolling::-webkit-scrollbar-corner { background: [tab]; }
+.input ::-webkit-scrollbar-thumb:hover { background-color: [border]; }
+.input .scrolling::-webkit-scrollbar-thumb { background-color: [selector]; }
+.input .scrolling::-webkit-scrollbar-corner { background: [tab]; }
 
-.classic-scrollbar ::-webkit-scrollbar { background: #8080801f; }
-.classic-scrollbar ::-webkit-scrollbar-corner { background: [tab]; }
-.classic-scrollbar ::-webkit-scrollbar-button,
-.classic-scrollbar ::-webkit-scrollbar-track { background: transparent; }
-.classic-scrollbar ::-webkit-scrollbar-thumb { background: [selector]; border-color: [background]; }
-.classic-scrollbar ::-webkit-scrollbar-thumb:hover { background: [border]; }
-.classic-scrollbar ::-webkit-scrollbar-button { background-image: url('[button]'); }
-.classic-scrollbar .scrollTop::-webkit-scrollbar-button:vertical:start,
-.classic-scrollbar .scrollBottom::-webkit-scrollbar-button:vertical:end,
-.classic-scrollbar .scrollLeft::-webkit-scrollbar-button:horizontal:start,
-.classic-scrollbar .scrollRight::-webkit-scrollbar-button:horizontal:end { background-image: url('[buttonDisabled]'); }
-.classic-scrollbar .disable-scroll-x::-webkit-scrollbar-thumb:horizontal { background: [background]; }
+body.classic-scrollbar .input ::-webkit-scrollbar { background: #8080801f; }
+body.classic-scrollbar .input ::-webkit-scrollbar-corner { background: [tab]; }
+body.classic-scrollbar .input ::-webkit-scrollbar-button,
+body.classic-scrollbar .input ::-webkit-scrollbar-track { background: transparent; }
+body.classic-scrollbar .input ::-webkit-scrollbar-thumb { background: [selector]; border-color: [background]; }
+body.classic-scrollbar .input ::-webkit-scrollbar-thumb:hover { background: [border]; }
+body.classic-scrollbar .input ::-webkit-scrollbar-button { background-image: url('[button]'); }
+body.classic-scrollbar .input .scrollTop::-webkit-scrollbar-button:vertical:start,
+body.classic-scrollbar .input .scrollBottom::-webkit-scrollbar-button:vertical:end,
+body.classic-scrollbar .input .scrollLeft::-webkit-scrollbar-button:horizontal:start,
+body.classic-scrollbar .input .scrollRight::-webkit-scrollbar-button:horizontal:end { background-image: url('[buttonDisabled]'); }
+body.classic-scrollbar .input .disable-scroll-x::-webkit-scrollbar-thumb:horizontal { background: [background]; }
 
 /* 싱크 구분 색 */
 .sync,.sync > span { border-color: [syncBorder]; }
