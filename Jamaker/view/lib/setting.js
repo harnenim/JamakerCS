@@ -261,7 +261,7 @@ window.DEFAULT_SETTING =
 		,	'<RUBY>쓰기<RT><RP>(</RP>읽기<RP>)</RP></RT></RUBY>'
 		,	'<font color="#cccccc">'
 		,	'<font fade="in">'
-		,	'<font keyboard="typing">'
+		,	'<font typing="keyboard">'
 		]]
 	,	"190": ['>', ['>>>|…']]
 	}
