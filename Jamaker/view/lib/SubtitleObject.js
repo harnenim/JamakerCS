@@ -1704,8 +1704,12 @@ AssEvent.fromSync = function(sync, style=null) {
 			} while (false);
 			
 			if (moved) {
-				if (text.indexOf("\\pos(") > 0 || text.indexOf("\\move(") > 0) {
+				if (text.indexOf("\\pos(") > 0
+				 || text.indexOf("\\move(") > 0
+				 || text.indexOf("\\an") > 0
+				) {
 					// 강제로 pos 태그 잡혀있으면 추가 적용하지 않음
+					// an 태그로 정렬 바꾼 경우에도 적용하지 않음
 				} else {
 					text = "{\\pos(" + x + "," + y + ")}" + text;
 				}
