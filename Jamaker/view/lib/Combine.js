@@ -523,6 +523,11 @@ window.Combine = {
 							if (LOG) {
 								console.log(attrs, trimedLines, isEmpty);
 							}
+
+							let checkThinSpace = false;
+							let fullPad;
+							let fullAttrs;
+							let fullWidth;
 							
 							if (!isEmpty) {
 								// 전체가 기본보다 작은 글씨로 감싸여 있을 경우
@@ -531,10 +536,17 @@ window.Combine = {
 									br.fs = maxFs;
 								}
 								do {
-									lastPad = pad;
-									lastAttrs = padsAttrs;
-									lastWidth = width;
-									pad = lastPad + " ";
+									if (checkThinSpace) {
+										fullPad = pad;
+										fullAttrs = padsAttrs;
+										fullWidth = width;
+										pad = lastPad + " "; // &ThinSpace;
+									} else {
+										lastPad = pad;
+										lastAttrs = padsAttrs;
+										lastWidth = width;
+										pad = lastPad + " ";
+									}
 									padsAttrs = [];
 										
 									for (let l = 0; l < trimedLines.length; l++) {
@@ -621,14 +633,33 @@ window.Combine = {
 									}
 									width = getAttrWidth(padsAttrs, checker, withFontSize);
 									if (LOG) console.log(padsAttrs, width);
-										
-								} while (width < groupMaxWidth);
+									
+									if (width == groupMaxWidth || checkThinSpace) {
+										break;
+									}
+									if (width > groupMaxWidth) {
+										// ThinSpace 추가 검증
+										//checkThinSpace = true;
+										// 팟플레이어에서 실험 결과 일반 공백이랑 같은 폭을 차지함
+										break;
+									}
+								} while (true);
 							}
-								
+							
+							if (LOG) console.log("width", groupMaxWidth, lastWidth, width, fullWidth);
+							
 							if ((width - groupMaxWidth) > (groupMaxWidth - lastWidth)) {
+								// 마지막 공백문자 추가 안 한 게 더 폭이 비슷함
 								pad = lastPad;
 								padsAttrs = lastAttrs;
 								width = lastWidth;
+								if (LOG) console.log(padsAttrs, width);
+								
+							} else if (checkThinSpace && ((fullWidth - groupMaxWidth) < (groupMaxWidth - width))) {
+								// 마지막에 ThinSpace 추가한 것보다 FullSpace 추가한 게 더 폭이 비슷함
+								pad = fullPad;
+								padsAttrs = fullAttrs;
+								width = fullWidth;
 								if (LOG) console.log(padsAttrs, width);
 							}
 							
