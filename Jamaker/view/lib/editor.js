@@ -1344,6 +1344,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 					const item = eventsBody[i];
 					item.Start = AssEvent.toAssTime((item.start = Subtitle.findSync(item.start)) - 15);
 					item.End   = AssEvent.toAssTime((item.end   = Subtitle.findSync(item.end  )) - 15);
+					if (item.start == 0) item.start = 1;
 				}
 			} else {
 				const FL = Subtitle.video.FL;

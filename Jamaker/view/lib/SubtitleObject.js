@@ -3944,6 +3944,7 @@ SmiFile.prototype.toSyncs = function() {
 			last = normalized[normalized.length - 1].toSync();
 			last.end = end;
 			last.endType = next.syncType;
+			last.origin = this.body[i];
 			result.push(last);
 		}
 		// 마지막 싱크
@@ -3951,6 +3952,7 @@ SmiFile.prototype.toSyncs = function() {
 			const item = this.body[i];
 			if (!item.skip && item.text.split("&nbsp;").join("").length > 0) {
 				result.push(last = item.toSync());
+				last.origin = item;
 			}
 		}
 	}
