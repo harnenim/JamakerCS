@@ -1804,14 +1804,14 @@ AssEvent.fromSync = function(sync, style=null) {
 	if (sync.origin && sync.origin.preAss) {
 		for (let j = 0; j < sync.origin.preAss.length; j++) {
 			const ass = sync.origin.preAss[j];
+			const origin = ass.Text;
 			for (let i = 0; i < texts.length; i++) {
 				const text = texts[i];
 				if (i == 0) {
-					ass.Text = ass.comment.split("[SMI]").join(text).split("}{").join("");
+					ass.Text = origin.split("[SMI]").join(text).split("}{").join("");
 				} else {
-					const event = new AssEvent(ass.start, ass.end, ass.Style, ass.comment.split("[SMI]").join(text).split("}{").join(""), ass.Layer);
+					const event = new AssEvent(ass.start, ass.end, ass.Style, origin.split("[SMI]").join(text).split("}{").join(""), ass.Layer);
 					event.owner = ass.owner;
-					event.comment = ass.comment;
 					events.push(event);
 				}
 			}
