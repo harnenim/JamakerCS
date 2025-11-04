@@ -1505,6 +1505,11 @@ AssEvent.prototype.clearEnds = function() {
 }
 
 AssEvent.fromSync = function(sync, style=null) {
+	if (sync.origin && sync.origin.skip && !sync.origin.preAss) {
+		// ASS 변환 제외 대상
+		return [];
+	}
+	
 	const events = sync.events = [];
 	const start = sync.start;
 	const end   = sync.end;
@@ -1784,10 +1789,32 @@ AssEvent.fromSync = function(sync, style=null) {
 				}
 			}
 			
-			// SMI와 공통인 건 레이어 200 부여
-			const ass = new AssEvent(start, end, sync.style, text, 200);
-			ass.origin = sync;
-			events.push(ass);
+			if (sync.origin && sync.origin.skip) {
+				// 이쪽으로 빠진 경우 주석 기반 생성물만 있고, 완전 자동 생성물은 사용하지 않음
+			} else {
+				// 변환을 통한 생성물은 레이어 200 부여
+				const event = new AssEvent(start, end, sync.style, text, 200);
+				event.origin = sync;
+				events.push(event);
+			}
+		}
+		
+		texts[i] = text;
+	}
+	if (sync.origin && sync.origin.preAss) {
+		for (let j = 0; j < sync.origin.preAss.length; j++) {
+			const ass = sync.origin.preAss[j];
+			for (let i = 0; i < texts.length; i++) {
+				const text = texts[i];
+				if (i == 0) {
+					ass.Text = ass.comment.split("[SMI]").join(text).split("}{").join("");
+				} else {
+					const event = new AssEvent(ass.start, ass.end, ass.Style, ass.comment.split("[SMI]").join(text).split("}{").join(""), ass.Layer);
+					event.owner = ass.owner;
+					event.comment = ass.comment;
+					events.push(event);
+				}
+			}
 		}
 	}
 	return events;
@@ -2002,7 +2029,7 @@ AssFile.prototype.addFromSyncs = function(syncs, styleName) {
 			case "PlayResY": playResY = Number(info.value); break;
 		}
 	}
-
+	
 	const style = (typeof styleName == "string") ? this.getStyle(styleName) : styleName;
 	if (style) {
 		let x = 0;
@@ -3925,7 +3952,7 @@ SmiFile.prototype.toSyncs = function() {
 		let last = null;
 		for (; i + 1 < this.body.length; i++) {
 			const item = this.body[i];
-			if (item.isEmpty() || item.skip) {
+			if (item.isEmpty()) { // skip은 ASS 변환 과정에서 따로 처리
 				continue;
 			}
 			
@@ -3937,14 +3964,14 @@ SmiFile.prototype.toSyncs = function() {
 					const sync = normalized[j].toSync();
 					sync.end = normalized[j + 1].start;
 					sync.endType = normalized[j + 1].syncType;
-					sync.origin = this.body[i];
+					sync.origin = item;
 					result.push(sync);
 				}
 			}
 			last = normalized[normalized.length - 1].toSync();
 			last.end = end;
 			last.endType = next.syncType;
-			last.origin = this.body[i];
+			last.origin = item;
 			result.push(last);
 		}
 		// 마지막 싱크

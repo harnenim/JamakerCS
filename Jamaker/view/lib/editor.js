@@ -1111,18 +1111,15 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 				}
 			}
 			
-			// ASS 주석에 [TEXT], [SMI] 있을 경우 넣을 내용물
+			// ASS 주석에 [TEXT] 있을 경우 넣을 내용물 ([SMI]는 후처리 필요해서 빼둠)
 			let smiText = Subtitle.$tmp.html(smi.text.split(/<br>/gi).join("\\N")).text();
 			while (smiText.indexOf("\\N　\\N") >= 0) { smiText = smiText.split("\\N　\\N").join("\\N"); }
 			while (smiText.indexOf("\\N\\N"  ) >= 0) { smiText = smiText.split("\\N\\N"  ).join("\\N"); }
-			const smiAss  = AssEvent.fromAttrs(smi.toAttrs())[0]; // RUBY 태그 같은 게 있으면 여러 줄 될 수 있지만 무시하는 쪽으로...
 			
 			// ASS 주석에서 복원
 			for (let j = 0; j < assTexts.length; j++) {
 				const assText = assTexts[j];
 				let ass = assText.split("[TEXT]").join(smiText)
-				                 .split("[SMI]").join(smiAss)
-				                 .split("}{").join("") // [SMI]는 태그 만들었을 수 있음
 				                 .split("\n").join("") // 비태그 줄바꿈은 무시해야 함
 				                 .split(",");
 				
@@ -1216,6 +1213,14 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			event.owner = item[5];
 			event.comment = item[6];
 			assEvents.body.push(event);
+			
+			// [SMI]는 후처리 결과를 반영해야 함
+			if (event.comment.indexOf("[SMI]") >= 0) {
+				if (!event.owner.preAss) {
+					event.owner.preAss = [];
+				}
+				event.owner.preAss.push(event);
+			}
 		}
 		
 		// SMI 기반 스크립트
