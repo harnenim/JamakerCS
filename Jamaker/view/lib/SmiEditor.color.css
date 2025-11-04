@@ -68,7 +68,7 @@ input,
 /* 기본 글씨 색 */
 body, input, button,
 .hljs.nonactive textarea,
-.tab-ass-area {
+.tab-ass-area textarea {
 	color: [text];
 	caret-color: [text];
 }
