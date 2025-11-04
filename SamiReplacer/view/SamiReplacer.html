@@ -47,7 +47,6 @@ function beforeExit() {
 	binder.exitAfterSaveSetting(JSON.stringify({ from: $("#vFrom").val(), to: $("#vTo").val() }));
 }
 
-// 원래 C#에서 돌렸었는데, SubtitleObject.js 수정내역이 많아져서 이쪽에서 돌림
 let originRange = null;
 let targetRange = null;
 let hasNewFrameSync = false;
@@ -128,7 +127,12 @@ function replace(index, text) {
 	}
 	
 	if (changed) {
-		text = SmiFile.holdsToText(holds); // 여기서 fps 값 가져오긴 어렵나...
+		let assFoot = "";
+		if (holds[0].ass) {
+			assFoot = "\n<!-- ASS\n" + holds[0].ass + "\n-->";
+		}
+		
+		text = SmiFile.holdsToText(holds) + assFoot; // 여기서 fps 값 가져오긴 어렵나...
 	} else {
 		text = null;
 	}
