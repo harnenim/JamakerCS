@@ -1263,25 +1263,28 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 				let countHide = 0;
 				const fadeAttrs = [Attr.junkAss("{\\fade([FADE_LENGTH],0)}")];
 				let wasFade = false;
+				let isFirst = true;
 				for (let i = 0; i < attrs.length; i++) {
 					const attr = new Attr(attrs[i], attrs[i].text);
 					const base = baseAttrs[i];
 					if (attr.fade == 1) {
 						count++;
+						isFirst = false;
 						if (!wasFade) {
 							// 페이드 대상 원본 투명화
 							base.hide = true;
 							// 페이드 대상 활성화
 							if (countHide > 0) {
-								fadeAttrs.push(Attr.junkAss("{\\1a\\bord}"));
+								fadeAttrs.push(Attr.junkAss("{\\1a\\bord\\shad}"));
 							}
 							wasFade = true;
 						}
 
 					} else if (!attr.isEmpty()) {
-						if (wasFade || i == 0) {
+						if (wasFade || isFirst) {
 							// 페이드 비대상 비활성화
-							fadeAttrs.push(Attr.junkAss("{\\bord0\\1a&HFF&}"));
+							isFirst = false;
+							fadeAttrs.push(Attr.junkAss("{\\shad0\\bord0\\1a&HFF&}"));
 							wasFade = false;
 							countHide++;
 						}
@@ -1300,25 +1303,28 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 				let countHide = 0;
 				const fadeAttrs = [Attr.junkAss("{\\fade(0,[FADE_LENGTH])}")];
 				let wasFade = false;
+				let isFirst = true;
 				for (let i = 0; i < attrs.length; i++) {
 					const attr = new Attr(attrs[i], attrs[i].text);
 					const base = baseAttrs[i];
 					if (attr.fade == -1) {
 						count++;
+						isFirst = false;
 						if (!wasFade) {
 							// 페이드 대상 원본 투명화
 							base.hide = true;
 							// 페이드 대상 활성화
 							if (countHide > 0) {
-								fadeAttrs.push(Attr.junkAss("{\\1a\\bord}"));
+								fadeAttrs.push(Attr.junkAss("{\\1a\\bord\\shad}"));
 							}
 							wasFade = true;
 						}
 
 					} else if (!attr.isEmpty()) {
-						if (wasFade || i == 0) {
+						if (wasFade || isFirst) {
 							// 페이드 비대상 비활성화
-							fadeAttrs.push(Attr.junkAss("{\\bord0\\1a&HFF&}"));
+							isFirst = false;
+							fadeAttrs.push(Attr.junkAss("{\\shad0\\bord0\\1a&HFF&}"));
 							wasFade = false;
 							countHide++;
 						}
@@ -1333,25 +1339,40 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 			}
 
 			if (countHides) {
-				// 페이드와 무관하게 보이는 내용물
+				// 페이드인/아웃와 무관하게 보이는 내용물
 				let wasHide = false;
 				for (let i = 0; i < baseAttrs.length; i++) {
-					const attr = baseAttrs[i];
-					if (!wasHide && attr.hide) {
-						attr.text = "{\\bord0\\1a&HFF&}" + attr.text;
+					const base = baseAttrs[i];
+					let tag = "";
+					if (!wasHide && base.hide) {
+						tag = "{\\shad0\\bord0\\1a&HFF&}";
 						wasHide = true;
-					} else if (wasHide && !attr.hide) {
-						attr.text = "{\\1a\\bord}" + attr.text;
+					} else if (wasHide && !base.hide) {
+						tag = "{\\1a\\bord\\shad}";
 						wasHide = false;
 					}
+					if (!wasHide) {
+						const attr = attrs[i];
+						if (typeof attr.fade == "string" && attr.fade[0] == "#") {
+							if (attr.fade.length == 7) {
+								// 색상 페이드 최종 색
+								base.fc = attr.fade.substring(1);
+
+							} else if (attr.fade.length == 15 && attr.fade[7] == "~" && attr.fade[8] == "#") {
+								// 그라데이션 페이드 최종 색
+								base.fc = attr.fade;
+							}
+						}
+					}
+					base.text = tag + base.text;
 				}
 
 				texts.push(...AssEvent.inFromAttrs(baseAttrs, false, false));
 			}
 
-			{	// 색상 페이드는 위를 덮어야 해서 더 나중에 추가함
+			{	// 색상 페이드 원본 색 페이드아웃
 				count = 0;
-				const fadeAttrs = [Attr.junkAss("{\\fade([FADE_LENGTH],0)\\bord0}")];
+				const fadeAttrs = [Attr.junkAss("{\\fade(0, [FADE_LENGTH])\\bord0}")];
 				let wasFade = false;
 				for (let i = 0; i < attrs.length; i++) {
 					const attr = new Attr(attrs[i], attrs[i].text);
@@ -1360,12 +1381,10 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 						if (attr.fade.length == 7) {
 							// 색상 페이드
 							isFade = true;
-							attr.fc = attr.fade.substring(1);
 
 						} else if (attr.fade.length == 15 && attr.fade[7] == "~" && attr.fade[8] == "#") {
 							// 그라데이션 페이드
 							isFade = true;
-							attr.fc = attr.fade;
 						}
 					}
 					if (isFade) {
@@ -3707,7 +3726,11 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 			}
 		}
 		if (withComment) {
-			smis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[0].text;
+			if (smis.length) {
+				smis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[0].text;
+			} else {
+				// 싱크 길이가 1프레임 미만이면 변환결과가 없을 수도 있음
+			}
 		}
 		
 	} else {
@@ -3784,7 +3807,7 @@ Smi.normalize = (smis, withComment=false, fps=null, forConvert=false) => {
 			i += add;
 			added += add;
 			
-		} else {
+		} else if (nSmis.length == 1) {
 			smis[i] = nSmis[0];
 		}
 	}
