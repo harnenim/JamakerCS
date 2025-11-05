@@ -1812,6 +1812,7 @@ AssEvent.fromSync = function(sync, style=null) {
 				} else {
 					const event = new AssEvent(ass.start, ass.end, ass.Style, origin.split("[SMI]").join(text).split("}{").join(""), ass.Layer);
 					event.owner = ass.owner;
+					event.comment = ass.comment;
 					events.push(event);
 				}
 			}
@@ -2615,7 +2616,7 @@ Smi.toAttrs = (text) => {
 				break;
 			case "FONT": {
 				let attrAdded = false;
-				if (hadAss || last.text.length > 0) {
+				{ // <font> 태그는 텍스트 없어도 다른 속성 필요할 수 있음
 					attrs.push(last = new Attr());
 					attrAdded = true;
 				}
