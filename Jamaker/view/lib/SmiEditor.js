@@ -1356,15 +1356,21 @@ SmiEditor.prototype.setLine = function(text, selection) {
 	this.history.log();
 	this.render();
 }
-SmiEditor.inputText = (text) => {
+SmiEditor.inputText = (input) => {
 	if (SmiEditor.selected) {
-		SmiEditor.selected.inputText(text);
+		SmiEditor.selected.inputText(input);
 	}
 }
 SmiEditor.prototype.inputText = function(input, standCursor) {
 	const text = this.input.val();
 	const selection = this.getCursor();
 	const cursor = selection[0] + (standCursor ? 0 : input.length);
+	if (input.length == 7 && input[0] == "#"
+		&& selection[0] > 0 && text[selection[0] - 1] == "&"
+		&& selection[1] < text.length && text[selection[1]] == "&") {
+		// ASS 색상코드 입력
+		input = "H" + input.substring(5,7) + input.substring(3,5) + input.substring(1,3);
+	}
 	this.setText(text.substring(0, selection[0]) + input + text.substring(selection[1]), [cursor, cursor]);
 	this.scrollToCursor();
 }
