@@ -135,4 +135,5 @@ function setColor(color) {
 
 $(() => {
 	$("textarea").attr({ spellcheck: false });
+	$("input").attr({ autocomplete: "off" });
 });

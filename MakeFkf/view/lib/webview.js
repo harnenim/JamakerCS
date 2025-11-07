@@ -140,6 +140,8 @@ $(() => {
 			obj.attr("title", title.join("\n"));
 		}
 	});
+	
+	$("input").attr({ autocomplete: "off" });
 });
 
 window.Progress = function() {
