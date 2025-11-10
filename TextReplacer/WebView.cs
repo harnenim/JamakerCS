@@ -23,13 +23,6 @@ namespace Jamaker
             , IPopupFeatures popupFeatures, IWindowInfo windowInfo, IBrowserSettings browserSettings
             , ref bool noJavascriptAccess, out IWebBrowser newBrowser)
         {
-            string name = targetFrameName;
-            /*
-            if (name.Equals("viewer") || name.Equals("finder"))
-            {
-                windowInfo.Style |= 0x80880080;
-            }
-            */
             newBrowser = null;
             return false;
         }

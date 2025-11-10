@@ -118,7 +118,6 @@ namespace Jamaker
 
         private void WebFormClosed(object sender, FormClosedEventArgs e)
         {
-
             Process.GetCurrentProcess().Kill();
         }
 
