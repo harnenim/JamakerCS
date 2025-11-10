@@ -227,6 +227,11 @@ namespace Jamaker
                 lastLog = DateTime.Now.Ticks;
             }
         }
+        public void PassiveLog(string msg)
+        {
+            if (swLogs == null) return;
+            swLogs.WriteLine(msg);
+        }
         private void SaveLogs(object sender, EventArgs e)
         {
             if (swLogs != null && ((DateTime.Now.Ticks - lastLog) > 1000))
@@ -546,7 +551,7 @@ namespace Jamaker
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                PassiveLog(e.ToString());
                 try
                 {   // 구버전 설정 파일 경로
                     sr = new StreamReader("view/setting.json", Encoding.UTF8);
@@ -561,7 +566,10 @@ namespace Jamaker
                 sr = new StreamReader("bridge/list.txt", Encoding.UTF8);
                 strBridgeList = sr.ReadToEnd();
             }
-            catch (Exception e) { Console.WriteLine(e); }
+            catch (Exception e) {
+                Console.WriteLine(e);
+                PassiveLog(e.ToString());
+            }
             finally { sr?.Close(); }
 
             try
@@ -569,7 +577,10 @@ namespace Jamaker
                 sr = new StreamReader("view/lib/highlight/list.txt", Encoding.UTF8);
                 strHighlights = sr.ReadToEnd();
             }
-            catch (Exception e) { Console.WriteLine(e); }
+            catch (Exception e) {
+                Console.WriteLine(e);
+                PassiveLog(e.ToString());
+            }
             finally { sr?.Close(); }
 
             string[] bridgeList = strBridgeList.Split('\n');
@@ -613,7 +624,10 @@ namespace Jamaker
                     }
                 }
             }
-            catch (Exception e) { Console.WriteLine(e); }
+            catch (Exception e) {
+                Console.WriteLine(e);
+                PassiveLog(e.ToString());
+            }
             finally { sr?.Close(); }
 
             // 프로그램 다시 초기화
@@ -649,6 +663,7 @@ namespace Jamaker
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                PassiveLog(e.ToString());
             }
 
             UpdateViewerSetting();
@@ -759,6 +774,7 @@ namespace Jamaker
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                PassiveLog(e.ToString());
                 try
                 {   // 구버전 addon 설정 파일 경로
                     StreamReader sr = new StreamReader($"view/addon/{path}", Encoding.UTF8);
@@ -768,6 +784,7 @@ namespace Jamaker
                 catch (Exception e2)
                 {
                     Console.WriteLine(e2);
+                    PassiveLog(e2.ToString());
                 }
             }
             Script("afterLoadAddonSetting", setting.Replace("\r\n", "\n"));
@@ -790,6 +807,7 @@ namespace Jamaker
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                PassiveLog(e.ToString());
             }
             Script("afterSaveAddonSetting");
         }
@@ -833,9 +851,10 @@ namespace Jamaker
                                 Script("afterFound", new object[] { file.Name, text });
                             }
                         }
-                        catch (Exception e2)
+                        catch (Exception e)
                         {
-                            Console.WriteLine(e2);
+                            Console.WriteLine(e);
+                            PassiveLog(e.ToString());
                         }
                     }
                 }
@@ -958,7 +977,6 @@ namespace Jamaker
         #endregion
 
         #region 파일 드래그 관련
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:사용하지 않는 매개 변수를 제거하세요.", Justification = "<보류 중>")]
         private void OverrideDrop(int x, int y)
         {
             try
@@ -1046,9 +1064,10 @@ namespace Jamaker
                 sr = new StreamReader(path, DetectEncoding(path));
                 text = sr.ReadToEnd();
             }
-            catch
+            catch (Exception e)
             {
                 Script("alert", "파일을 열지 못했습니다.");
+                PassiveLog(e.ToString());
             }
             finally { sr?.Close(); }
 
@@ -1148,7 +1167,10 @@ namespace Jamaker
                                     }
                                 }
                             }
-                            catch (Exception) { }
+                            catch (Exception e)
+                            {
+                                PassiveLog(e.ToString());
+                            }
                         }
                         proc.Close();
 
@@ -1173,6 +1195,7 @@ namespace Jamaker
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
+                        PassiveLog(e.ToString());
                     }
 
                     // 기존 버전에선 fkf 폴더 없이 그냥 temp 폴더에 있었음
@@ -1196,6 +1219,7 @@ namespace Jamaker
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
+                        PassiveLog(e.ToString());
                     }
 
                     // 없으면 새로 가져오기
@@ -1215,7 +1239,10 @@ namespace Jamaker
                         }
                     });
                 }
-                catch (Exception e) { Console.WriteLine(e); }
+                catch (Exception e) {
+                    Console.WriteLine(e);
+                    PassiveLog(e.ToString());
+                }
             }).Start();
         }
         
@@ -1256,6 +1283,7 @@ namespace Jamaker
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                PassiveLog(e.ToString());
             }
 
             UpdateViewerSetting();
@@ -1274,6 +1302,7 @@ namespace Jamaker
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                PassiveLog(e.ToString());
             }
             finally { sr?.Close(); }
         }
@@ -1550,6 +1579,7 @@ namespace Jamaker
                     catch (Exception e)
                     {
                         Console.WriteLine(e.ToString());
+                        PassiveLog(e.ToString());
                     }
                 }
 
@@ -1588,6 +1618,7 @@ namespace Jamaker
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
+                        PassiveLog(e.ToString());
                     }
                 }
             }
@@ -1630,6 +1661,7 @@ namespace Jamaker
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                PassiveLog(e.ToString());
                 Script("alert", "저장되지 않았습니다.");
             }
             finally
@@ -1704,6 +1736,7 @@ namespace Jamaker
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                PassiveLog(e.ToString());
             }
         }
         #endregion
