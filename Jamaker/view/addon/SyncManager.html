@@ -403,6 +403,14 @@ $(() => {
 	function select(index, $tr=null) {
 		if (selected == index) return;
 		
+		const byKeyboard = ($tr === true);
+		let scrollMargin = 30;
+		
+		if (byKeyboard) {
+			$tr = null;
+			scrollMargin = opener.setting.scrollMargin * 30;
+		}
+		
 		selected = index;
 		if ($tr == null) {
 			$tr = frameSyncs[selected];
@@ -412,13 +420,13 @@ $(() => {
 		$tr.addClass("selected");
 		
 		const offset = $tr.offset();
-		if (offset.top < 0) {
-			$body.stop().animate({ scrollTop: $body.scrollTop() + offset.top - 30 }, 200);
+		if (offset.top < (byKeyboard ? scrollMargin : 0)) {
+			$body.stop().animate({ scrollTop: $body.scrollTop() + offset.top - scrollMargin }, 200);
 		} else {
 			const bottom = offset.top + TY + 2;
 			const margin = $body.height() - bottom;
-			if (margin < 0) {
-				$body.stop().animate({ scrollTop: $body.scrollTop() - margin + 30 }, 200);
+			if (margin < (byKeyboard ? scrollMargin : 0)) {
+				$body.stop().animate({ scrollTop: $body.scrollTop() - margin + scrollMargin }, 200);
 			}
 		}
 	}
@@ -547,9 +555,9 @@ $(() => {
 				}
 				if (selected > 0) {
 					if (selected % 1) {
-						select(Math.floor(selected));
+						select(Math.floor(selected), true);
 					} else {
-						select(selected - 1);
+						select(selected - 1, true);
 					}
 				}
 				break;
@@ -562,9 +570,9 @@ $(() => {
 				}
 				if (selected < frameSyncs.length - 1) {
 					if (selected % 1) {
-						select(Math.ceil(selected));
+						select(Math.ceil(selected), true);
 					} else {
-						select(selected + 1);
+						select(selected + 1, true);
 					}
 				}
 				break;
