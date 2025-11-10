@@ -3329,8 +3329,8 @@ function loadAssFile(path, text, target=-1) {
 									break;
 								}
 							}
-							// 여기서 없을 수는 없음
 							if (holdStyle) {
+								// 홀드 스타일 수정
 								// output은 유지
 								SmiFile.fromAssStyle(style, holdStyle);
 								
@@ -3340,6 +3340,15 @@ function loadAssFile(path, text, target=-1) {
 									const hold = currentTab.holds[h];
 									if (hold.name == styleName) {
 										hold.setStyle(holdStyle);
+									}
+								}
+								
+							} else {
+								// 비홀드 스타일 수정
+								for (let j = 0; j < stylePart.body.length; j++) {
+									const extendStyle = stylePart.body[j];
+									if (extendStyle.Name == styleName) {
+										stylePart.body[j] = style;
 									}
 								}
 							}
