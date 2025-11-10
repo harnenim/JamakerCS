@@ -148,6 +148,16 @@ label, #showFps {
 .hold-style-preview {
 	margin-right: calc(20px * 2);
 }
+.hold-style-preview > textarea[name=script] {
+	height: calc(100% - 20px * 1.1);
+	padding: calc(20px * 0.1);
+}
+.hold-style-preview-color {
+	right: calc(20px * 2);
+}
+.hold-style-preview-toggle {
+	width: calc(20px * 2);
+}
 .hold-style fieldset {
 	padding: calc(20px * 0.2);
 }
@@ -250,8 +260,8 @@ div.hold-ass-script {
 .ass-editor .item textarea[name=text] { left: calc(20px * 5); width: calc(100% - 20px * 6); }
 .ass-editor .item button { bottom: calc(20px * 0.9); width: 20px; }
 
-body ::-webkit-scrollbar,
-body.classic-scrollbar ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }
-body.classic-scrollbar ::-webkit-scrollbar-button:end { background-position-y: calc(20px * 0.8 + 1px); }
-body.classic-scrollbar ::-webkit-scrollbar-button:horizontal { background-position-x: calc(20px * 0.8 + 1px); }
-body:not(.classic-scrollbar) ::-webkit-scrollbar-thumb { border-radius: calc(20px * 0.7 - 4px); border: 4px solid transparent; }
+body .hljs ::-webkit-scrollbar,
+body.classic-scrollbar .hljs ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }
+body.classic-scrollbar .hljs ::-webkit-scrollbar-button:end { background-position-y: calc(20px * 0.8 + 1px); }
+body.classic-scrollbar .hljs ::-webkit-scrollbar-button:horizontal { background-position-x: calc(20px * 0.8 + 1px); }
+body:not(.classic-scrollbar) .hljs ::-webkit-scrollbar-thumb { border-radius: calc(20px * 0.7 - 4px); border: 4px solid transparent; }

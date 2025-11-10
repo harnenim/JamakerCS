@@ -60,9 +60,12 @@ textarea,
 }
 .highlight-textarea > div {
 	right: 0;
-	bottom: 17px;
+	bottom: 0; /* 스크롤바에 가려지는 영역까지 확장 */
 	overflow: hidden;
 	pointer-events: none;
+}
+body.classic-scrollbar .highlight-textarea > div {
+	bottom: 17px;
 }
 .highlight-textarea > div * {
 	font-weight: normal; /* 굵게 하면 글자폭이 달라짐 */
@@ -286,9 +289,27 @@ textarea,
 	line-height: 100px;
 	margin: -50px -500%;
 }
+.hold-style-preview > textarea[name=script] {
+	display: none;
+	top: 0;
+	left: 0;
+	width: 100%;
+	border-width: 0 0 1px;
+	resize: none;
+}
+.hold-style-preview.script > div {
+	display: none;
+}
+.hold-style-preview.script > textarea[name=script] {
+	display: block;
+}
 .hold-style-preview-color {
+	bottom: 0;
+}
+.hold-style-preview-toggle {
 	right: 0;
 	bottom: 0;
+	padding: 0;
 }
 .hold-style-setting {
 	height: calc(100% - 150px);
@@ -425,10 +446,10 @@ textarea,
 	
 }
 .tab-ass-appends {
-	height: 30%;
+	height: 40%;
 }
 .tab-ass-script {
-	height: 70%;
+	height: 60%;
 }
 /*
 .tab-ass-area > div {

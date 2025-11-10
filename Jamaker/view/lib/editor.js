@@ -354,6 +354,9 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 				const text = $main.text();
 				$preview.find(".hold-style-preview-outline, .hold-style-preview-shadow").text(text);
 				if ($main.children().length) $main.text(text);
+				
+			}).on("click", "button.hold-style-preview-toggle", function() {
+				$preview.toggleClass("script");
 			});
 			$preview.find(".hold-style-preview-outline, .hold-style-preview-shadow").text($preview.find(".hold-style-preview-main").text());
 			
@@ -445,6 +448,17 @@ SmiEditor.prototype.refreshStyle = function() {
 	css["-webkit-text-stroke"] = (style.Outline * 3) + "px " + style.BackColour + (256 + style.BackOpacity).toString(16).substring(1);
 	css.top = css.left = "calc(50% + " + style.Shadow + "px)";
 	this.$preview.find(".hold-style-preview-shadow").css(css);
+	
+	{	// ASS 스크립트 미리보기
+		if (!this.assStyle) {
+			this.assStyle = new AssPart("V4+ Styles", AssPart.StylesFormat);
+			this.assStyle.body.push({});
+		}
+		const style = SmiFile.toAssStyle(this.style);
+		style.Name = this.name == "메인" ? "Default" : this.name;
+		this.assStyle.body[0] = style;
+		this.$preview.find("textarea[name=script]").val(this.assStyle.toText() + "\n"); // 블록지정 편의성을 위해 줄바꿈 추가
+	}
 	
 	this.afterChangeSaved(this.isSaved());
 }

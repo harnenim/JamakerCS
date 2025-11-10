@@ -82,7 +82,7 @@ body, input, button,
 }
 
 /* 버튼 활성 색 */
-.hold-selector > .selector button:hover {
+button:hover {
 	background: [hover];
 }
 
