@@ -1450,7 +1450,11 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 	
 	// ASS 변환용 속성 없는 부분
 	if (last == null) {
-		last = new Attr();
+		if (assEnd > 0) {
+			last = attrs[assEnd - 1];
+		} else {
+			last = new Attr();
+		}
 	}
 	for (let i = assEnd; i < attrs.length; i++) {
 		const attr = attrs[i];
