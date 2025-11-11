@@ -348,6 +348,7 @@ body.classic-scrollbar .highlight-textarea > div {
 .hold-style .hold-style-alignment label {
 	min-width: 0;
 }
+.hold-style input { vertical-align: middle; }
 .hold-style input[type=number] { text-align: right; }
 .hold-style input[type=range]  { width: 300px; }
 /*
