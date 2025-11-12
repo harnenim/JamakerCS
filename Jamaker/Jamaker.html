@@ -48,7 +48,7 @@ Binder.prototype.runPlayer = function(path) {
 }
 
 Binder.prototype.save = function(tab, text, path, isSmi=true) {
-	this._.save(tab, text, path, isSmi);
+	this._.requestSave(tab, text, path, isSmi);
 }
 Binder.prototype.saveTemp = function(text, path) {
 	this._.saveTemp(text, path);
@@ -985,33 +985,103 @@ window.MB = 9;
         }).Start();
         //*/
 	}
-	editor.save = async function(tab, text, path, isSmi) {
+	const SaveOrder = function(tab, text, path, isSmi) {
+		this.tab = tab;
+		this.text = text;
+		this.path = path;
+		this.isSmi = isSmi;
+	}
+	editor.saveOrders = [];
+	editor.saveIndex = 0;
+	
+	editor.requestSave = async function(tab, text, path, isSmi) {
+		const order = new SaveOrder(tab, text, path, isSmi);
+		
+		if (editor.saveOrders.length == 0) {
+			// 저장 대기열 없으면 그냥 진행
+			editor.saveOrders.push(order);
+			editor.save();
+			
+		} else {
+			let updated = false;
+			for (let i = editor.saveIndex + 1; i < editor.saveOrders.length; i++) {
+				const item = editor.saveOrders[i];
+				if (item.tab == tab && item.isSmi == isSmi) {
+					// 저장 대기열 중복이면 내용물 교체
+					item.text = text;
+					item.path = path;
+					item.isSmi = isSmi;
+					updated = true;
+					break;
+				}
+			}
+			if (!updated) {
+				// 저장 대기열 추가
+				editor.saveOrders.push(order);
+			}
+		}
+	}
+	editor.save = async function() {
+		const order = editor.saveOrders[editor.saveIndex];
+		
+		const tab = order.tab;
+		const path = order.path;
+		const text = order.text;
+		const isSmi = order.isSmi;
+		
 		const paths = path.split(":");
 		if (paths[1]) {
 			const fileBuffer = fileBuffers[paths[0]];
 			const stream = await fileBuffer.createWritable();
-			await stream.write("\ufeff" + text); // BOM 넣어줌
+			await stream.write("\ufeff" + order.text); // BOM 넣어줌
 			await stream.close();
+			
 			if (isSmi) {
 				editor.script("afterSaveFile", [tab, path]);
 			} else {
 				editor.script("afterSaveAssFile", [tab, path]);
 			}
+			if (++editor.saveIndex < editor.saveOrders.length) {
+				// 저장 대기열 있으면 다음 순서 진행
+				editor.save();
+			} else {
+				// 저장 끝났으면 대기열 초기화
+				editor.saveOrders.length = editor.saveIndex = 0;
+			}
 		} else {
-			editor.saveWithDialog(tab, text, isSmi);
+			// 저장 경로 없으면 대화상자 열어야 함
+			editor.saveWithDialog(order);
 		}
 	}
-	editor.saveWithDialog = async function(tab, text, isSmi) {
-		const fileBuffer = await window.showSaveFilePicker({
-			types: [
-				{ description: "SAMI", accept: (isSmi ? { "text/sami": [".smi"] } : { "text/ass": [".ass"] }) }
-			]
-		});
+	editor.saveWithDialog = async function(order) {
+		let fileBuffer = null;
+		try  {
+			fileBuffer = await window.showSaveFilePicker({
+				types: [
+					{ description: "SAMI", accept: (order.isSmi ? { "text/sami": [".smi"] } : { "text/ass": [".ass"] }) }
+				]
+			});
+		} catch (e) {
+			console.log(e);
+		}
 		if (fileBuffer) {
 			const index = fileBuffers.length;
 			fileBuffers.push(fileBuffer);
 			const file = await fileBuffer.getFile();
-			editor.save(tab, text, index + ":" + file.name, isSmi);
+			
+			// 현재 저장 명령 갱신 후 재실행
+			order.path = index + ":" + file.name;
+			editor.save();
+			
+		} else {
+			// 저장 취소
+			if (++editor.saveIndex < editor.saveOrders.length) {
+				// 저장 대기열 있으면 다음 순서 진행
+				editor.save();
+			} else {
+				// 저장 끝났으면 대기열 초기화
+				editor.saveOrders.length = editor.saveIndex = 0;
+			}
 		}
 	}
 	editor.saveTemp = function(text, path) {
