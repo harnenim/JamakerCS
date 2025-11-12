@@ -1624,12 +1624,69 @@ namespace Jamaker
             }
         }
 
+        private class SaveOrder
+        {
+            public int tab;
+            public string text;
+            public string path;
+            public bool isSmi;
+            public SaveOrder(int tab, string text, string path, bool isSmi)
+            {
+                this.tab = tab;
+                this.text = text;
+                this.path = path;
+                this.isSmi = isSmi;
+            }
+        }
+        private readonly List<SaveOrder> saveOrders = new List<SaveOrder>();
+        private int saveIndex = 0;
+        public void Save(int tab, string text, string path, bool isSmi)
+        {
+            SaveOrder order = new SaveOrder(tab, text, path, isSmi);
+
+            if (saveOrders.Count == 0)
+            {
+                // 저장 대기열 없으면 그냥 진행
+                saveOrders.Add(order);
+                Save();
+            }
+            else
+            {
+                bool updated = false;
+                for (int i = saveIndex + 1; i < saveOrders.Count; i++)
+                {
+                    SaveOrder item = saveOrders[i];
+                    if (item.tab == tab && item.isSmi == isSmi)
+                    {
+                        // 저장 대기열 중복이면 내용물 교체
+                        item.text = text;
+                        item.path = path;
+                        item.isSmi = isSmi;
+                        updated = true;
+                        break;
+                    }
+                }
+                if (!updated)
+                {
+                    // 저장 대기열 추가
+                    saveOrders.Add(order);
+                }
+            }
+        }
+
         private int saveAfter = 0;
         private int saveTab = 0;
         private bool saveSmi = true;
         private string textToSave = "";
-        public void Save(int tab, string text, string path, bool isSmi)
+        public void Save()
         {
+            SaveOrder order = saveOrders[saveIndex];
+
+            int tab = order.tab;
+            string text = order.text;
+            string path = order.path;
+            bool isSmi = order.isSmi;
+
             if (path == null || path.Length == 0)
             {
                 // 파일명 수신 시 동작 설정
@@ -1656,6 +1713,17 @@ namespace Jamaker
                 else
                 {
                     // TODO: ASS 저장 후 작업은?
+                }
+                if (++saveIndex < saveOrders.Count)
+                {
+                    // 저장 대기열 있으면 다음 순서 진행
+                    Save();
+                }
+                else
+                {
+                    // 저장 끝났으면 대기열 초기화
+                    saveOrders.Clear();
+                    saveIndex = 0;
                 }
             }
             catch (Exception e)
@@ -1709,6 +1777,17 @@ namespace Jamaker
                 };
                 if (dialog.ShowDialog() != DialogResult.OK)
                 {   // 저장 취소
+                    if (++saveIndex < saveOrders.Count)
+                    {
+                        // 저장 대기열 있으면 다음 순서 진행
+                        Save();
+                    }
+                    else
+                    {
+                        // 저장 끝났으면 대기열 초기화
+                        saveOrders.Clear();
+                        saveIndex = 0;
+                    }
                     return;
                 }
                 Save(tab, text, dialog.FileName, saveSmi);
