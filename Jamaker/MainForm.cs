@@ -1714,17 +1714,6 @@ namespace Jamaker
                 {
                     // TODO: ASS 저장 후 작업은?
                 }
-                if (++saveIndex < saveOrders.Count)
-                {
-                    // 저장 대기열 있으면 다음 순서 진행
-                    Save();
-                }
-                else
-                {
-                    // 저장 끝났으면 대기열 초기화
-                    saveOrders.Clear();
-                    saveIndex = 0;
-                }
             }
             catch (Exception e)
             {
@@ -1736,6 +1725,21 @@ namespace Jamaker
             {
                 sw?.Close();
             }
+            AfterSave();
+        }
+        private void AfterSave()
+        {
+            if (++saveIndex < saveOrders.Count)
+            {
+                // 저장 대기열 있으면 다음 순서 진행
+                Save();
+            }
+            else
+            {
+                // 저장 끝났으면 대기열 초기화
+                saveOrders.Clear();
+                saveIndex = 0;
+            }
         }
         public void SaveWithDialogAfterGetVideoFileName(string path)
         {
@@ -1744,6 +1748,10 @@ namespace Jamaker
             {
                 saveAfter = 0;
                 SaveWithDialog(saveTab, textToSave, path);
+            }
+            else
+            {
+                AfterSave();
             }
         }
         public void SaveWithDialog(int tab, string text, string videoPath)
@@ -1777,17 +1785,7 @@ namespace Jamaker
                 };
                 if (dialog.ShowDialog() != DialogResult.OK)
                 {   // 저장 취소
-                    if (++saveIndex < saveOrders.Count)
-                    {
-                        // 저장 대기열 있으면 다음 순서 진행
-                        Save();
-                    }
-                    else
-                    {
-                        // 저장 끝났으면 대기열 초기화
-                        saveOrders.Clear();
-                        saveIndex = 0;
-                    }
+                    AfterSave();
                     return;
                 }
                 Save(tab, text, dialog.FileName, saveSmi);
