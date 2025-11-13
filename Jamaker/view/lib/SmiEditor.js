@@ -2558,6 +2558,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 SmiEditor.Finder1 = {
 		last: { find: "", replace: "", withCase: false, reverse: false }
 	,	open: function(isReplace) {
+			// TODO: 근데... 전역변수 setting 값 가져오는 건 editor.js에서 구현하는 게 맞나...?
 			const ratio = DPI ? DPI : 1;
 			const w = 440 * ratio;
 			const h = 220 * ratio;
@@ -2953,6 +2954,7 @@ SmiEditor.Viewer = {
 		}
 	,	moveWindowToSetting: function() {
 			// CefSharp 쓴 경우 window.moveTo 같은 걸로 못 움직임. 네이티브로 해야 함
+			// TODO: 근데... 전역변수 setting 값 가져오는 건 editor.js에서 구현하는 게 맞나...?
 			binder.moveWindow("viewer"
 					, setting.viewer.window.x
 					, setting.viewer.window.y
@@ -3120,11 +3122,27 @@ SmiEditor.Addon = {
 				}
 			}
 			for (let i = 0; i < targets.length; i++) {
+				// TODO: 근데... 전역변수 setting 값 가져오는 건 editor.js에서 구현하는 게 맞나...?
+				let x1 = setting.player.window.x;
+				let y1 = setting.player.window.y;
+				let x2 = x1 + setting.player.window.width;
+				let y2 = y1 + setting.player.window.height;
+				
+				do {
+					// 플레이어와 미리보기 창의 x축 위치가 유사할 경우 y축 확장
+					if (Math.abs(setting.viewer.window.x - x1) > margin) break;
+					if (Math.abs(setting.viewer.window.x + setting.viewer.window.width - x2) > margin) break;
+					
+					y1 = Math.min(y1, setting.viewer.window.y);
+					y2 = Math.max(y2, setting.viewer.window.y + setting.viewer.window.height);
+					
+				} while(false);
+				
 				binder.moveWindow(targets[i]
-						, setting.player.window.x + margin
-						, setting.player.window.y + margin
-						, setting.player.window.width  - (margin * 2)
-						, setting.player.window.height - (margin * 2)
+						, x1 + margin
+						, y1 + margin
+						, (x2 - x1) - (margin * 2)
+						, (y2 - y1) - (margin * 2)
 						, true);
 			}
 		}

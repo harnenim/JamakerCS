@@ -136,14 +136,12 @@ label, #showFps {
 	font-size: calc(20px * 1.5);
 	padding-bottom: calc(20px * 0.5);
 }
-.btn-hold-style,
-.btn-hold-ass {
-	right: calc(20px * 0.8 + 1px);
+.btn-hold-style {
 	width: calc(20px * 3 + 2px);
 	height: calc(20px + 2px);
 }
-.btn-hold-ass {
-	top: calc(20px + 1px);
+body.classic-scrollbar .btn-hold-style {
+	right: calc(20px * 0.8 + 1px);
 }
 .hold-style-preview {
 	margin-right: calc(20px * 2);

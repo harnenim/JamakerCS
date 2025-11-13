@@ -82,7 +82,8 @@ body, input, button,
 }
 
 /* 버튼 활성 색 */
-button:hover {
+button:hover,
+.hold-selector > .selector button:hover {
 	background: [hover];
 }
 
@@ -100,7 +101,7 @@ button:hover {
 
 /* 스크롤바(배경색 기반)... */
 .input ::-webkit-scrollbar-thumb:hover { background-color: [border]; }
-.input .scrolling::-webkit-scrollbar-thumb { background-color: [selector]; }
+.input .scrolling::-webkit-scrollbar-thumb { background-color: [tabBorder]7f; }
 .input .scrolling::-webkit-scrollbar-corner { background: [tab]; }
 
 body.classic-scrollbar .input ::-webkit-scrollbar { background: #8080801f; }

@@ -222,9 +222,6 @@ window.Tab = function(text, path) {
 	this.area.on("click", ".btn-hold-style", function(e) {
 		const hold = $(this).data("hold");
 		hold.area.addClass("style");
-	}).on("click", ".btn-hold-ass", function(e) {
-		const hold = $(this).data("hold");
-		hold.area.addClass("ass");
 	});
 };
 window.getCurrentTab = function() {
@@ -291,7 +288,6 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	}
 	{
 		hold.area.append($("<button type='button' class='btn-hold-style' title='홀드 공통 스타일 설정'>").text("스타일").data({ hold: hold }));
-		hold.area.append($("<button type='button' class='btn-hold-ass' title='ASS 저장에만 쓰이는 추가 스크립트'>").text("ASS용").data({ hold: hold }));
 		
 		hold.area.append(hold.styleArea = $("<div class='hold-style-area'>"));
 		{
@@ -455,7 +451,7 @@ SmiEditor.prototype.refreshStyle = function() {
 			this.assStyle.body.push({});
 		}
 		const style = SmiFile.toAssStyle(this.style);
-		style.Name = this.name == "메인" ? "Default" : this.name;
+		style.Name = this.name;
 		this.assStyle.body[0] = style;
 		this.$preview.find("textarea[name=script]").val(this.assStyle.toText() + "\n"); // 블록지정 편의성을 위해 줄바꿈 추가
 	}
@@ -1601,12 +1597,6 @@ function init(jsonSetting, isBackup=true) {
 		SmiEditor.stylePreset = holdStylePreset.clone();
 		SmiEditor.stylePreset.attr({ id: null });
 		holdStylePreset.remove();
-	}
-	if (!SmiEditor.assPreset) {
-		const holdAssPreset = $("#holdAssPreset");
-		SmiEditor.assPreset = holdAssPreset.clone();
-		SmiEditor.assPreset.attr({ id: null });
-		holdAssPreset.remove();
 	}
 	
 	try {
@@ -3300,6 +3290,7 @@ function loadAssFile(path, text, target=-1) {
 		funcSince = log("loadAssFile - 비교 완료", funcSince);
 		
 		if (changedStyles.length + addCount + delCount > 0) {
+			console.log(changedStyles);
 			let msg = "스타일 수정 내역이 " + changedStyles.length + "건 있습니다. 적용하시겠습니까?";
 			if (addCount + delCount) {
 				let countMsg = [];

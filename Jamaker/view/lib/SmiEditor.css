@@ -163,24 +163,21 @@ body.classic-scrollbar .highlight-textarea > div {
 	border-style: dotted;
 }
 
-.btn-hold-style,
-.btn-hold-ass {
+.btn-hold-style {
 	position: absolute;
 	top: 0;
+	right: 0;
 	opacity: 0.3;
 	transition: 0.2s;
 }
 .hold.main .btn-hold-style,
-.btn-hold-ass,
 .hold.main .hold-style-ass .hold-style-output {
 	display: none;
 }
-.tab.ass .hold.main .btn-hold-style /*,
-.tab.ass .btn-hold-ass */ {
+.tab.ass .hold.main .btn-hold-style {
 	display: block;
 }
-.btn-hold-style:hover,
-.btn-hold-ass:hover {
+.btn-hold-style:hover {
 	opacity: 1;
 }
 
@@ -266,8 +263,7 @@ body.classic-scrollbar .highlight-textarea > div {
 	height: 20px;
 }
 
-#holdStylePreset,
-#holdAssPreset {
+#holdStylePreset {
 	display: none;
 }
 .hold-style-preview {

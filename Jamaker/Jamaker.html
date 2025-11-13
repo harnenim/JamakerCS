@@ -1030,27 +1030,31 @@ window.MB = 9;
 		const isSmi = order.isSmi;
 		
 		const paths = path.split(":");
-		if (paths[1]) {
-			const fileBuffer = fileBuffers[paths[0]];
-			const stream = await fileBuffer.createWritable();
-			await stream.write("\ufeff" + order.text); // BOM 넣어줌
-			await stream.close();
-			
-			if (isSmi) {
-				editor.script("afterSaveFile", [tab, path]);
-			} else {
-				editor.script("afterSaveAssFile", [tab, path]);
-			}
-			if (++editor.saveIndex < editor.saveOrders.length) {
-				// 저장 대기열 있으면 다음 순서 진행
-				editor.save();
-			} else {
-				// 저장 끝났으면 대기열 초기화
-				editor.saveOrders.length = editor.saveIndex = 0;
-			}
-		} else {
+		if (!paths[1]) {
 			// 저장 경로 없으면 대화상자 열어야 함
 			editor.saveWithDialog(order);
+			return;
+		}
+		
+		const fileBuffer = fileBuffers[paths[0]];
+		const stream = await fileBuffer.createWritable();
+		await stream.write("\ufeff" + order.text); // BOM 넣어줌
+		await stream.close();
+		
+		if (isSmi) {
+			editor.script("afterSaveFile", [tab, path]);
+		} else {
+			editor.script("afterSaveAssFile", [tab, path]);
+		}
+		editor.afterSave();
+	}
+	editor.afterSave = function() {
+		if (++editor.saveIndex < editor.saveOrders.length) {
+			// 저장 대기열 있으면 다음 순서 진행
+			editor.save();
+		} else {
+			// 저장 끝났으면 대기열 초기화
+			editor.saveOrders.length = editor.saveIndex = 0;
 		}
 	}
 	editor.saveWithDialog = async function(order) {
@@ -1075,13 +1079,7 @@ window.MB = 9;
 			
 		} else {
 			// 저장 취소
-			if (++editor.saveIndex < editor.saveOrders.length) {
-				// 저장 대기열 있으면 다음 순서 진행
-				editor.save();
-			} else {
-				// 저장 끝났으면 대기열 초기화
-				editor.saveOrders.length = editor.saveIndex = 0;
-			}
+			editor.afterSave();
 		}
 	}
 	editor.saveTemp = function(text, path) {
