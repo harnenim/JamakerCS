@@ -22,6 +22,16 @@ window.main = new WebForm();
 	main.run = function() {
 		this.initializeComponent();
 		
+		let offset = localStorage.getItem("offset.MakeFkf");
+		if (offset) {
+			offset = offset.split(",");
+			const top = Number(offset[0]);
+			const left = Number(offset[1]);
+			const width = Number(offset[2]);
+			const height = Number(offset[3]);
+			WinAPI.MoveWindow(window, left, top, width, height);
+		}
+		
 		main.mainView.src = "view/MakeFkf.html";
 		main.mainView.onload = function() {
 			// 브라우저 샘플에선 url 변형 필요
@@ -41,6 +51,19 @@ window.main = new WebForm();
 				main.showDragging();
 			});
 		};
+	}
+	
+	main.beforeExit = function(e) {
+		const offset = new RECT();
+		WinAPI.GetWindowRect(window, offset);
+		localStorage.setItem("offset.MakeFkf", [
+				offset.top
+			,	offset.left
+			,	offset.right - offset.left
+			,	offset.bottom - offset.top
+		].join(","));
+		
+		this.script("beforeExit");
 	}
 }
 {

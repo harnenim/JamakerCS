@@ -171,6 +171,16 @@ const window_open = function(url, name, options, opener) {
 	editor.run = function() {
 		this.initializeComponent();
 		
+		let offset = localStorage.getItem("offset.Jamaker");
+		if (offset) {
+			offset = offset.split(",");
+			const top = Number(offset[0]);
+			const left = Number(offset[1]);
+			const width = Number(offset[2]);
+			const height = Number(offset[3]);
+			WinAPI.MoveWindow(window, left, top, width, height);
+		}
+		
 		this.loadSetting(() => {
 			editor.mainView.src = "view/editor.html";
 			editor.mainView.onload = function() {
@@ -263,6 +273,15 @@ const window_open = function(url, name, options, opener) {
 		e.Cancel = true;
 		Script("beforeExit");
 		*/
+		
+		WinAPI.GetWindowRect(window, this.offset);
+		localStorage.setItem("offset.Jamaker", [
+				editor.offset.top
+			,	editor.offset.left
+			,	editor.offset.right - editor.offset.left
+			,	editor.offset.bottom - editor.offset.top
+		].join(","));
+		
 		const viewer = editor.mainView.contentWindow.SmiEditor.Viewer;
 		if (viewer && viewer.window) viewer.window.close();
 		

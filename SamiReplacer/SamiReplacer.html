@@ -11,11 +11,11 @@
 Binder.prototype.addFilesByDrag = function() {
 	this._.addFilesByDrag();
 }
-Binder.prototype.compare = function(file) {
-	this._.compare(file);
+Binder.prototype.startReplace = function(files) {
+	this._.startReplace(files);
 }
-Binder.prototype.replace = function(files, index, ignores) {
-	this._.replace(files, index, ignores);
+Binder.prototype.saveAndReplaceNext = function(index, text) {
+	this._.saveAndReplaceNext(index, text);
 }
 Binder.prototype.exitAfterSaveSetting = function(setting) {
 	this._.exitAfterSaveSetting(setting);
@@ -29,6 +29,16 @@ window.main = new WebForm();
 	
 	main.run = function() {
 		this.initializeComponent();
+		
+		let offset = localStorage.getItem("offset.SamiReplacer");
+		if (offset) {
+			offset = offset.split(",");
+			const top = Number(offset[0]);
+			const left = Number(offset[1]);
+			const width = Number(offset[2]);
+			const height = Number(offset[3]);
+			WinAPI.MoveWindow(window, left, top, width, height);
+		}
 		
 		const settingJson = localStorage.getItem("setting.SamiReplacer");
 		if (settingJson) {
@@ -64,11 +74,20 @@ window.main = new WebForm();
 	};
 	
 	main.beforeExit = function(e) {
+		const offset = new RECT();
+		WinAPI.GetWindowRect(window, offset);
+		localStorage.setItem("offset.SamiReplacer", [
+				offset.top
+			,	offset.left
+			,	offset.right - offset.left
+			,	offset.bottom - offset.top
+		].join(","));
+		
 		this.script("beforeExit");
 	}
 }
 {
-	main.files = {};
+	main.fileMap = {};
 	main.addFilesByDrag = function() {
 		if (!this.droppedFiles) return;
 		if (this.droppedFiles.length < 1) {
@@ -77,7 +96,7 @@ window.main = new WebForm();
 		}
 		for (let i = 0; i < this.droppedFiles.length; i++) {
 			const file = this.droppedFiles[i];
-			main.files[file.name] = file;
+			main.fileMap[file.name] = file;
 			main.script("addFile", [ file.name ]);
 		}
 		this.droppedFiles = null;
@@ -85,8 +104,21 @@ window.main = new WebForm();
 	main.compare = function(file) {
 		console.log(file);
 	}
-	main.replace = function(files, index, ignores) {
-		console.log(files);
+	main.startReplace = function(files) {
+		this.files = files;
+		this.ignores = [];
+		this.replace(0);
+	}
+	main.replace = async function(index) {
+		if (index >= this.files.length) {
+			return;
+		}
+		
+		const file = this.fileMap[this.files[index]];
+		this.script("replace", [index, await file.text()]);;
+	}
+	main.saveAndReplaceNext = function(index, text) {
+		console.log(index, text);
 	}
 }
 {

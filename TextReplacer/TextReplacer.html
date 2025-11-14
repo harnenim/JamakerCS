@@ -39,6 +39,16 @@ window.main = new WebForm();
 	main.run = function() {
 		this.initializeComponent();
 		
+		let offset = localStorage.getItem("offset.TextReplacer");
+		if (offset) {
+			offset = offset.split(",");
+			const top = Number(offset[0]);
+			const left = Number(offset[1]);
+			const width = Number(offset[2]);
+			const height = Number(offset[3]);
+			WinAPI.MoveWindow(window, left, top, width, height);
+		}
+		
 		const settingJson = localStorage.getItem("setting.TextReplacer");
 		if (settingJson) {
 			main.settingJson = settingJson;
@@ -80,6 +90,15 @@ window.main = new WebForm();
 	};
 	
 	main.beforeExit = function(e) {
+		const offset = new RECT();
+		WinAPI.GetWindowRect(window, offset);
+		localStorage.setItem("offset.TextReplacer", [
+				offset.top
+			,	offset.left
+			,	offset.right - offset.left
+			,	offset.bottom - offset.top
+		].join(","));
+		
 		this.script("beforeExit");
 	}
 	/*
