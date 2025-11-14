@@ -403,5 +403,21 @@ namespace Jamaker
             }
             return encoding;
         }
+
+        public bool CheckFfmpeg()
+        {
+            string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
+            if (!File.Exists(Path.Combine(exePath, "ffmpeg.exe")))
+            {
+                Alert("editor", "ffmpeg.exe 파일이 없습니다.");
+                return false;
+            }
+            if (!File.Exists(Path.Combine(exePath, "ffprobe.exe")))
+            {
+                Alert("editor", "ffprobe.exe 파일이 없습니다.");
+                return false;
+            }
+            return true;
+        }
     }
 }

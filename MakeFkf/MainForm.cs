@@ -64,7 +64,10 @@ namespace Jamaker
 
             FormClosed += new FormClosedEventHandler(WebFormClosed);
         }
-        public void OverrideInitAfterLoad() { }
+        public void OverrideInitAfterLoad()
+        {
+            CheckFfmpeg();
+        }
 
         private void WebFormClosed(object sender, FormClosedEventArgs e)
         {
@@ -136,15 +139,22 @@ namespace Jamaker
                     }
 
                     // 없으면 새로 가져오기
-                    new VideoInfo(path, (double ratio) => {
-                        Script("Progress.set", new object[] { selector, ratio });
-                    }).RefreshInfo((VideoInfo videoInfo) =>
+                    if (CheckFfmpeg())
                     {
-                        videoInfo.ReadKfs(true);
-                        videoInfo.SaveFkf("temp/fkf/" + fkfName);
-                        Script("Progress.set", new object[] { selector, 1 });
+                        new VideoInfo(path, (double ratio) => {
+                            Script("Progress.set", new object[] { selector, ratio });
+                        }).RefreshInfo((VideoInfo videoInfo) =>
+                        {
+                            videoInfo.ReadKfs(true);
+                            videoInfo.SaveFkf("temp/fkf/" + fkfName);
+                            Script("Progress.set", new object[] { selector, 1 });
+                            MakeFkf(index + 1);
+                        });
+                    }
+                    else
+                    {
                         MakeFkf(index + 1);
-                    });
+                    }
                 }
                 catch (Exception e) { Console.WriteLine(e); }
             }

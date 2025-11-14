@@ -298,19 +298,11 @@ namespace Jamaker
                         {
                             Script("setDpiBy", width);
 
+                            // 최초 실행 시 ffmpeg 존재 여부 확인인데, 창 위치 잡아준 후에 alert 돌아가도록 함
                             if (!initialMoved)
                             {
-                                string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
-                                if (!File.Exists(Path.Combine(exePath, "ffmpeg.exe")))
-                                {
-                                    Alert("editor", "ffmpeg.exe 파일이 없습니다.");
-                                    return;
-                                }
-                                if (!File.Exists(Path.Combine(exePath, "ffprobe.exe")))
-                                {
-                                    Alert("editor", "ffprobe.exe 파일이 없습니다.");
-                                }
                                 initialMoved = true;
+                                CheckFfmpeg();
                             }
                         }
                     }

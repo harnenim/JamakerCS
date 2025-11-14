@@ -1,12 +1,13 @@
-﻿using System;
+﻿using CefSharp;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Text;
-using System.Windows.Forms;
-using CefSharp;
-using System.Diagnostics;
 using System.Threading;
-using System.Collections.Generic;
+using System.Windows.Forms;
 
 namespace Jamaker
 {
@@ -168,6 +169,8 @@ namespace Jamaker
         public void ReadVideoFile(string path, bool isOrigin, bool withSaveSkf, bool withKf)
         {
             Console.WriteLine("ReadVideoFile: {0}", path);
+            if (!CheckFfmpeg()) return;
+
             ShowProcessing("불러오는 중");
             var progress = isOrigin ? "#originVideo > .input" : "#targetVideo > .input";
             readingVideoFile = new VideoInfo(path, (double ratio) =>

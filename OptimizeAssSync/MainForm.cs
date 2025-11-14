@@ -124,16 +124,20 @@ namespace Jamaker
                     Console.WriteLine(e);
                 }
 
-                // 없으면 새로 가져오기
-                new VideoInfo(path, (double ratio) => {
-                    Script("Progress.set", new object[] { selector, ratio });
-                }).RefreshInfo((VideoInfo videoInfo) =>
+                if (CheckFfmpeg())
                 {
-                    videoInfo.ReadKfs(true);
-                    videoInfo.SaveFkf("temp/fkf/" + fkfName);
-                    Script("Progress.set", new object[] { selector, 0 });
-                    Script("setFkfFile", fkfName);
-                });
+                    // 없으면 새로 가져오기
+                    new VideoInfo(path, (double ratio) =>
+                    {
+                        Script("Progress.set", new object[] { selector, ratio });
+                    }).RefreshInfo((VideoInfo videoInfo) =>
+                    {
+                        videoInfo.ReadKfs(true);
+                        videoInfo.SaveFkf("temp/fkf/" + fkfName);
+                        Script("Progress.set", new object[] { selector, 0 });
+                        Script("setFkfFile", fkfName);
+                    });
+                }
             }
             catch (Exception e) { Console.WriteLine(e); }
         }
