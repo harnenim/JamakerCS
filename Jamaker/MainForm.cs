@@ -302,7 +302,7 @@ namespace Jamaker
                             if (!initialMoved)
                             {
                                 initialMoved = true;
-                                CheckFfmpeg();
+                                CheckFfmpeg(true);
                             }
                         }
                     }

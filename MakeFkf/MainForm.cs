@@ -66,7 +66,7 @@ namespace Jamaker
         }
         public void OverrideInitAfterLoad()
         {
-            CheckFfmpeg();
+            CheckFfmpeg(true);
         }
 
         private void WebFormClosed(object sender, FormClosedEventArgs e)
@@ -139,7 +139,7 @@ namespace Jamaker
                     }
 
                     // 없으면 새로 가져오기
-                    if (CheckFfmpeg())
+                    if (CheckFfmpeg(false))
                     {
                         new VideoInfo(path, (double ratio) => {
                             Script("Progress.set", new object[] { selector, ratio });

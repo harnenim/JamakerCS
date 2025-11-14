@@ -124,7 +124,7 @@ namespace Jamaker
                     Console.WriteLine(e);
                 }
 
-                if (CheckFfmpeg())
+                if (CheckFfmpeg(true))
                 {
                     // 없으면 새로 가져오기
                     new VideoInfo(path, (double ratio) =>
