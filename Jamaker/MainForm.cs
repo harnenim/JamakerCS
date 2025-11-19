@@ -302,7 +302,7 @@ namespace Jamaker
                             if (!initialMoved)
                             {
                                 initialMoved = true;
-                                CheckFfmpeg(true);
+                                CheckFFmpegWithAlert();
                             }
                         }
                     }
@@ -1110,6 +1110,13 @@ namespace Jamaker
             // 아주 오래 걸리진 않는 작업
             // 키프레임 신뢰 버튼 쪽에 프로그레스
         	requestFramesPath = path;
+        	
+        	if ((VideoInfo.CheckFFmpeg() & 1) == 0) {
+        		// ffmpeg 없을 경우 - 처음에 만들었던 플레이어 의존 방식
+        		// 해상도 없이 frame rate만 가져옴
+                Script("setVideoInfo", new object[] { 1920, 1080, player.GetFps() });
+        		
+        	} else {
             new Thread(() =>
             {
                 try
@@ -1117,14 +1124,7 @@ namespace Jamaker
                     FileInfo info = new FileInfo(path);
 
                     {
-                        string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
-                        
-                        Process proc = new Process();
-                        proc.StartInfo.UseShellExecute = false;
-                        proc.StartInfo.CreateNoWindow = true;
-                        proc.StartInfo.RedirectStandardOutput = true;
-                        proc.StartInfo.RedirectStandardError = true;
-                        proc.StartInfo.FileName = Path.Combine(exePath, "ffprobe.exe");
+                        Process proc = VideoInfo.GetFFprobe(true);
                         proc.StartInfo.Arguments = $"-v error -select_streams v -show_entries stream=width,height,r_frame_rate \"{path}\"";
                         proc.Start();
                         proc.BeginErrorReadLine();
@@ -1236,6 +1236,7 @@ namespace Jamaker
                     PassiveLog(e.ToString());
                 }
             }).Start();
+            }
         }
         
         private bool isThumbnailsRendering = false;
@@ -1334,9 +1335,6 @@ namespace Jamaker
                 }
                 Script("setThumbnailsFileSeq", new object[] { fileSeq });
 
-                string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
-                string exeFile = Path.Combine(exePath, "ffmpeg.exe");
-
                 int didread;
                 int offset = 0;
                 byte[] buffer = new byte[sizeof(float) * (1024 + 1)];
@@ -1405,15 +1403,8 @@ namespace Jamaker
                         //else
                         //if (flag == "d") vf = "-vf \"curves=r='0/0 0.9/0.1 1/1'\" ";
 
-                        string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s {TX}x{TY} -qscale:v 2 -r {fps} {vf}-f image2 \"{dir}/p{procSeq}_{begin}{flag}_%d.jpg\"";
-
-                        Process proc = new Process();
-                        proc.StartInfo.UseShellExecute = false;
-                        proc.StartInfo.CreateNoWindow = true;
-                        proc.StartInfo.RedirectStandardOutput = true;
-                        proc.StartInfo.RedirectStandardError = true;
-                        proc.StartInfo.FileName = exeFile;
-                        proc.StartInfo.Arguments = args;
+                        Process proc = VideoInfo.GetFFmpeg(true);
+                        proc.StartInfo.Arguments = $"-ss {timeStr} -t {length} -i \"{path}\" -s {TX}x{TY} -qscale:v 2 -r {fps} {vf}-f image2 \"{dir}/p{procSeq}_{begin}{flag}_%d.jpg\"";
                         proc.Start();
                         proc.BeginErrorReadLine();
 

@@ -66,7 +66,7 @@ namespace Jamaker
 
             FormClosed += new FormClosedEventHandler(WebFormClosed);
         }
-        public void OverrideInitAfterLoad() { }
+        public void OverrideInitAfterLoad() {}
 
         private void WebFormClosed(object sender, FormClosedEventArgs e)
         {
@@ -124,7 +124,7 @@ namespace Jamaker
                     Console.WriteLine(e);
                 }
 
-                if (CheckFfmpeg(true))
+                if ((VideoInfo.CheckFFmpeg() & 3) == 3)
                 {
                     // 없으면 새로 가져오기
                     new VideoInfo(path, (double ratio) =>

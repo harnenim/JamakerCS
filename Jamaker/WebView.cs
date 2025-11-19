@@ -404,20 +404,16 @@ namespace Jamaker
             return encoding;
         }
 
-        public bool CheckFfmpeg(bool withAlert)
+        public int CheckFFmpegWithAlert()
         {
-            string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
-            if (!File.Exists(Path.Combine(exePath, "ffmpeg.exe")))
+            int status = VideoInfo.CheckFFmpeg();
+            switch (status)
             {
-                if (withAlert) Alert("editor", "ffmpeg.exe 파일이 없습니다.");
-                return false;
+                case 2: Script("alert", "ffmpeg.exe 파일이 없습니다."); break;
+                case 1: Script("alert", "ffprobe.exe 파일이 없습니다."); break;
+                case 0: Script("alert", "ffmpeg.exe, ffprobe.exe 파일이 없습니다."); break;
             }
-            if (!File.Exists(Path.Combine(exePath, "ffprobe.exe")))
-            {
-                if (withAlert) Alert("editor", "ffprobe.exe 파일이 없습니다.");
-                return false;
-            }
-            return true;
+            return status;
         }
     }
 }

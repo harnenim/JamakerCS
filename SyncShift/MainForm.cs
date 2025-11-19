@@ -169,7 +169,7 @@ namespace Jamaker
         public void ReadVideoFile(string path, bool isOrigin, bool withSaveSkf, bool withKf)
         {
             Console.WriteLine("ReadVideoFile: {0}", path);
-            if (!CheckFfmpeg(true)) return;
+            if ((VideoInfo.CheckFFmpeg() & 3) != 3) return;
 
             ShowProcessing("불러오는 중");
             var progress = isOrigin ? "#originVideo > .input" : "#targetVideo > .input";

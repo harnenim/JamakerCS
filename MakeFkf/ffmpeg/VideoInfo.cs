@@ -27,6 +27,14 @@ namespace Jamaker
         // 생각보다 키프레임이 화면전환에 안 맞는 경우가 많음
     	public static bool WITH_KEYFRAME = false;
 
+        public static int CheckFFmpeg()
+        {
+        	int status = 0;
+        	status |= File.Exists(Path.Combine(exePath, "ffmpeg.exe" )) ? 1 : 0;
+            status |= File.Exists(Path.Combine(exePath, "ffprobe.exe")) ? 2 : 0;
+            return status;
+        }
+
         public string path;
         public int duration;
         public List<StreamAttr> streams;
@@ -80,11 +88,19 @@ namespace Jamaker
         	proc.StartInfo.FileName = Path.Combine(exePath, exe);
         	return proc;
         }
-
+        public static Process GetFFprobe(bool withStandardError)
+        {
+        	return GetProcess("ffprobe.exe", withStandardError);
+        }
+        public static Process GetFFmpeg(bool withStandardError)
+        {
+        	return GetProcess("ffmpeg.exe", withStandardError);
+        }
+        
         private void RefreshVideoInfo()
         {
-            Process proc = GetProcess("ffprobe.exe", true);
-            proc.StartInfo.Arguments = "\"" + path + "\"";
+            Process proc = GetFFprobe(true);
+            proc.StartInfo.Arguments = $"\"{path}\"";
             proc.Start();
 
             streams = new List<StreamAttr>();
@@ -150,8 +166,8 @@ namespace Jamaker
             proc.Close();
 
             Console.WriteLine("RefreshVideoLength");
-            proc = GetProcess("ffprobe.exe");
-            proc.StartInfo.Arguments = "-hide_banner -show_format -show_streams -pretty \"" + path + "\"";
+            proc = GetFFprobe(false);
+            proc.StartInfo.Arguments = $"-hide_banner -show_format -show_streams -pretty \"{path}\"";
             proc.Start();
             lines = proc.StandardOutput.ReadToEnd().Split(new char[] { '\n', '\r' });
 
@@ -236,7 +252,7 @@ namespace Jamaker
                 }
             }
 
-            Process proc = GetProcess("ffmpeg.exe", true);
+            Process proc = GetFFmpeg(true);
             proc.StartInfo.Arguments = string.Format($"-i \"{path}\" -vn -map {audioMap} -ar 44100 -ac 1 -f f32le -");
             proc.ErrorDataReceived += new DataReceivedEventHandler(Proc_ErrorDataReceived);
             proc.Start();
@@ -311,7 +327,7 @@ namespace Jamaker
 
             if (withKeyframe)
             {
-            	Process proc = GetProcess("ffprobe.exe", true);
+            	Process proc = GetFFprobe(true);
                 proc.StartInfo.Arguments = $"-loglevel error -select_streams v:0 -show_entries packet=pts_time,flags -of csv=print_section=0 \"{path}\"";
                 proc.ErrorDataReceived += new DataReceivedEventHandler(Proc_ErrorDataReceived);
                 proc.Start();
