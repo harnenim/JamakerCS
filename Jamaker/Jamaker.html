@@ -47,8 +47,8 @@ Binder.prototype.runPlayer = function(path) {
 	this._.runPlayer(path);
 }
 
-Binder.prototype.save = function(tab, text, path, isSmi=true) {
-	this._.requestSave(tab, text, path, isSmi);
+Binder.prototype.save = function(tab, text, path, type=0) { // type 0: jmk / 1: smi / 2: ass
+	this._.requestSave(tab, text, path, type);
 }
 Binder.prototype.saveTemp = function(text, path) {
 	this._.saveTemp(text, path);
@@ -151,6 +151,7 @@ const window_open = function(url, name, options, opener) {
 			case ".smi":
 			case ".srt":
 			case ".ass":
+			case ".jmk":
 			case ".txt": {
 				await editor.loadFile(file);
 				break;
@@ -748,7 +749,17 @@ window.MB = 9;
 	let afterGetString = () => {};
 	
 	editor.openFile = async function() {
-		const fileBuffer = await window.showOpenFilePicker({ types: [ { description: "지원되는 자막 파일", accept:{ "text/sami": [".smi"], "text/srt" : [".srt"], "text/ass" : [".ass"] } } ] });
+		const fileBuffer = await window.showOpenFilePicker({
+			types: [
+				{	description: "지원되는 자막 파일"
+				,	accept: {
+							"text/sami": [".smi", ".jmk"]
+						,	"text/srt" : [".srt"]
+						,	"text/ass" : [".ass"]
+					}
+				}
+			]
+		});
 		if (fileBuffer && fileBuffer[0]) {
 			editor.loadFile(fileBuffer[0]);
 		}
@@ -831,190 +842,21 @@ window.MB = 9;
 				editor.script("startRenderThumbnails", [begin, end, flag]);
 				setTimeout(() => {
 					editor.script("startCompareThumbnails", [begin, end, flag]);
-					//editor.script("afterRenderThumbnails", [begin, end, flag]);
 				}, 100);
 			}
 		}, 1);
-		
-		/*
-        Console.WriteLine($"RenderThumbnails: {paramsStr}");
-        string[] list = paramsStr.Split('\n');
-        new Thread(() =>
-        {
-            string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
-            string exeFile = Path.Combine(exePath, "ffmpeg.exe");
-
-            string dir = "temp/thumbnails";
-            DirectoryInfo di = new DirectoryInfo(dir);
-            if (!di.Exists)
-            {
-                di.Create();
-            }
-
-            int didread;
-            int offset = 0;
-            byte[] buffer = new byte[sizeof(float) * (1024 + 1)];
-
-            foreach (string paramStr in list)
-            {
-                string[] param = paramStr.Split(',');
-                int time  = int.Parse(param[0]);
-                double length = double.Parse(param[1]) / 1000;
-                int begin = int.Parse(param[2]);
-                int end   = int.Parse(param[3]);
-                string flag = param[4];
-
-                int ms = time % 60000;
-                int m = time / 60000;
-                int h = m / 60;
-                m %= 60;
-                string timeStr = ((100 + h) * 100 + m) * 100000 + ms + "";
-                timeStr = timeStr.Substring(1, 2) + ":" + timeStr.Substring(3, 2) + ":" + timeStr.Substring(5, 2) + "." + timeStr.Substring(7, 3);
-
-                string vf = "";
-                //if (flag == "b") vf = "-vf \"curves=r='0/0 0.1/0.9 1/1'\" ";
-                //else
-                //if (flag == "d") vf = "-vf \"curves=r='0/0 0.9/0.1 1/1'\" ";
-                
-                string args = $"-ss {timeStr} -t {length} -i \"{path}\" -s 96x54 -qscale:v 2 {vf}-f image2 \"{dir}/{begin}{flag}_%d.jpg\"";
-
-                try
-                {
-                    Process proc = new Process();
-                    proc.StartInfo.UseShellExecute = false;
-                    proc.StartInfo.CreateNoWindow = true;
-                    proc.StartInfo.RedirectStandardOutput = true;
-                    proc.StartInfo.RedirectStandardError = true;
-                    proc.StartInfo.FileName = exeFile;
-                    proc.StartInfo.Arguments = args;
-                    proc.Start();
-                    proc.BeginErrorReadLine();
-
-                    Stream stream = proc.StandardOutput.BaseStream;
-
-                    while ((didread = stream.Read(buffer, offset, sizeof(float) * 1024)) != 0)
-                    {
-                        Console.WriteLine(didread);
-                    }
-					
-                    Bitmap bLast = null;
-                    for (int index = 0; index < (end - begin); index++)
-                    {
-                    	// 위에서 만든 이미지 경로
-                    	string img0 = $"{dir}/{begin}{flag}_{index + 1}.jpg";
-                    	
-                    	// 실제 필요한 이미지 경로
-                        string img1 = $"{dir}/{begin + index}{flag}.jpg";
-                        if (File.Exists(img1)) File.Delete(img1);
-                        File.Move(img0, img1);
-
-                        // 프레임 간 차이 이미지 경로
-                        string img2 = $"{dir}/{begin + index}{flag}_.jpg";
-                        if (File.Exists(img2)) File.Delete(img2);
-                        
-                        // 밝기 변화 이미지 경로
-                        string img3 = $"{dir}/{begin + index}{flag}~.jpg";
-                        if (File.Exists(img3)) File.Delete(img3);
-                        
-                        if (bLast != null)
-                        {
-                            // 라이브러리 써보려고 했는데 결과물이 별로임
-                            // 96x54 정도는 직접 돌릴 만한 크기
-                            Bitmap bPrev = bLast;
-                            Bitmap bTrgt = bLast = new Bitmap(img1);
-                            
-                            new Thread(() =>
-                            {
-                                bool isFade = (flag != "");
-                                int sum = 0;
-                                int dMax = 1; // 0이면 문제 생김
-                                
-                                // 각 픽셀 비교
-                                int[][][] aDiff = new int[54][][];
-                                for (int y = 0; y < 54; y++)
-                                {
-                                    aDiff[y] = new int[96][];
-                                    for (int x = 0; x < 96; x++)
-                                    {
-                                        Color p = bPrev.GetPixel(x, y);
-                                        Color t = bTrgt.GetPixel(x, y);
-                                        int r = p.R - t.R;
-                                        int g = p.G - t.G;
-                                        int b = p.B - t.B;
-                                        aDiff[y][x] = new int[] { r, g, b };
-                                        sum += r + g + b;
-                                        if (isFade) {
-                                            dMax = Math.Max(dMax, Math.Abs(r));
-                                            dMax = Math.Max(dMax, Math.Abs(g));
-                                            dMax = Math.Max(dMax, Math.Abs(b));
-                                        }
-                                    }
-                                }
-
-                                // 페이드 효과에 대해선 더 잘 보이도록
-                                double a = isFade ? 12 : 4;
-                                //double a = isFade ? Math.Max(8, 255.0 / dMax) : 4;
-                                int avg = sum / (96 * 54);
-
-                                Bitmap b2 = new Bitmap(96, 54);
-                                Bitmap b3 = new Bitmap(96, 54);
-                                
-                                for (int y = 0; y < 54; y++)
-                                {
-                                    for (int x = 0; x < 96; x++)
-                                    {
-                                    	// 이전 프레임과 차이
-                                        b2.SetPixel(x, y, Color.FromArgb(255
-                                            , Math.Min((int) (Math.Abs(aDiff[y][x][0]) * a), 255)
-                                            , Math.Min((int) (Math.Abs(aDiff[y][x][1]) * a), 255)
-                                            , Math.Min((int) (Math.Abs(aDiff[y][x][2]) * a), 255)
-                                        ));
-                                        
-                                        // 밝기 변화
-                                        int v = Math.Min((int) ((aDiff[y][x][0] + aDiff[y][x][1] + aDiff[y][x][2]) * a), 255);
-                                        b3.SetPixel(x, y, (v > 0)
-                                        	?	Color.FromArgb(255, v, diffAvg, 0)
-                                        	:	Color.FromArgb(255, 0, diffAvg, v)
-                                        );
-                                    }
-                                }
-
-                                b2.Save(img2, System.Drawing.Imaging.ImageFormat.Jpeg);
-                                b3.Save(img3, System.Drawing.Imaging.ImageFormat.Jpeg);
-                                
-                                Script("setDiff", new object[] { $"{begin + index}{flag}", sum });
-                                
-                            }).Start();
-                        }
-                        else
-                        {
-                        	// 앞 프레임이 없음 = 첫 번째 이미지, 그냥 복사
-                            File.Copy(img1, img2);
-                            File.Copy(img1, img3);
-                        }
-                    }
-
-                    Script("afterRenderThumbnails", new object[] { begin, end, flag });
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.ToString());
-                }
-            }
-        }).Start();
-        //*/
 	}
-	const SaveOrder = function(tab, text, path, isSmi) {
+	const SaveOrder = function(tab, text, path, type) {
 		this.tab = tab;
 		this.text = text;
 		this.path = path;
-		this.isSmi = isSmi;
+		this.type = type;
 	}
 	editor.saveOrders = [];
 	editor.saveIndex = 0;
 	
-	editor.requestSave = async function(tab, text, path, isSmi) {
-		const order = new SaveOrder(tab, text, path, isSmi);
+	editor.requestSave = async function(tab, text, path, type) {
+		const order = new SaveOrder(tab, text, path, type);
 		
 		if (editor.saveOrders.length == 0) {
 			// 저장 대기열 없으면 그냥 진행
@@ -1025,11 +867,11 @@ window.MB = 9;
 			let updated = false;
 			for (let i = editor.saveIndex + 1; i < editor.saveOrders.length; i++) {
 				const item = editor.saveOrders[i];
-				if (item.tab == tab && item.isSmi == isSmi) {
+				if (item.tab == tab && item.type == type) {
 					// 저장 대기열 중복이면 내용물 교체
 					item.text = text;
 					item.path = path;
-					item.isSmi = isSmi;
+					item.type = type;
 					updated = true;
 					break;
 				}
@@ -1046,7 +888,7 @@ window.MB = 9;
 		const tab = order.tab;
 		const path = order.path;
 		const text = order.text;
-		const isSmi = order.isSmi;
+		const type = order.type;
 		
 		const paths = path.split(":");
 		if (!paths[1]) {
@@ -1060,10 +902,10 @@ window.MB = 9;
 		await stream.write("\ufeff" + order.text); // BOM 넣어줌
 		await stream.close();
 		
-		if (isSmi) {
-			editor.script("afterSaveFile", [tab, path]);
-		} else {
-			editor.script("afterSaveAssFile", [tab, path]);
+		switch (type) {
+			case 0: editor.script("afterSaveFile"   , [tab, path]); break;
+			case 1: editor.script("afterSaveSmiFile", [tab, path]); break;
+			case 2: editor.script("afterSaveAssFile", [tab, path]); break;
 		}
 		editor.afterSave();
 	}
@@ -1079,11 +921,16 @@ window.MB = 9;
 	editor.saveWithDialog = async function(order) {
 		let fileBuffer = null;
 		try  {
-			fileBuffer = await window.showSaveFilePicker({
-				types: [
-					{ description: "SAMI", accept: (order.isSmi ? { "text/sami": [".smi"] } : { "text/ass": [".ass"] }) }
-				]
-			});
+			const types = [];
+			switch (order.type) {
+				case 0:
+				case 1: types.push({ description: "SAMI 자막", accept: { "text/sami": [".smi"] } }); break;
+				case 2: types.push({ description: "ASS 자막" , accept: { "text/ass" : [".ass"] } }); break;
+			}
+			if (order.type == 0) {
+				types.push({ description: "자막 프로젝트", accept: { "text/sami": [".jmk"] } });
+			}
+			fileBuffer = await window.showSaveFilePicker({ types: types });
 		} catch (e) {
 			console.log(e);
 		}

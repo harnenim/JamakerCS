@@ -982,7 +982,7 @@ if (SmiFile) {
 		const match = /<body( [^>]*)*>/gi.exec(this.header);
 		return match && (match[0].indexOf("split") > 0);
 	}
-	SmiFile.holdsToTexts = (origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) => {
+	SmiFile.holdsToTexts = (origHolds, withNormalize=true, withCombine=true, withComment=1, fps=23.976) => {
 		const funcFrom = window.log ? log("holdsToTexts start") : 0;
 		
 		const result = [];
@@ -1207,7 +1207,7 @@ if (SmiFile) {
 				}
 				lastStart = hold.start;
 				
-				if (withComment) {
+				if (withComment > 0) {
 					importBody[0].text = "<!-- End=" + holdEnd + "\nHold=" + hold.pos + "|" + hold.exportName
 						+ (hold.saveStyle ? "\n" + hold.saveStyle : "")
 						+ "\n-->\n" + importBody[0].text;
@@ -1218,7 +1218,7 @@ if (SmiFile) {
 		
 		// 정규화 등 작업
 		if (withNormalize) {
-			const normalized = main.normalize(withComment && !withCombine, fps);
+			const normalized = main.normalize((withComment > 0) && !withCombine, fps);
 			originBody = normalized.origin;
 			logs = normalized.logs;
 		} else {
@@ -1428,7 +1428,7 @@ if (SmiFile) {
 				}
 			}
 			
-			if (withComment) {
+			if (withComment > 0) {
 				// 홀드 결합 있을 경우 주석처리 재계산
 				logs = [];
 				let oi = 0;
@@ -1528,7 +1528,7 @@ if (SmiFile) {
 			}
 		}
 		
-		if (withComment) {
+		if (withComment > 0) {
 			result[0] = main.toText();
 			for (let i = 1; i < result.length; i++) {
 				if (result[i].length == 0) {
@@ -1537,6 +1537,11 @@ if (SmiFile) {
 			}
 			
 		} else {
+			if (withComment < 0) { // 싱크 타입까지 제거
+				for (let i = 0; i < main.body.length; i++) {
+					main.body[i].syncType = SyncType.normal;
+				}
+			}
 			for (let i = 0; i < main.body.length; i++) {
 				main.body[i].text = main.body[i].text.split("\n").join("");
 			}
@@ -1547,7 +1552,7 @@ if (SmiFile) {
 		
 		return result;
 	}
-	SmiFile.holdsToText = (origHolds, withNormalize=true, withCombine=true, withComment=true, fps=23.976) => {
+	SmiFile.holdsToText = (origHolds, withNormalize=true, withCombine=true, withComment=1, fps=23.976) => {
 		return SmiFile.holdsToTexts(origHolds, withNormalize, withCombine, withComment, fps).join("\n");
 	}
 }

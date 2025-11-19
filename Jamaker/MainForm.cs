@@ -975,7 +975,10 @@ namespace Jamaker
             {
                 foreach (string strFile in droppedFiles)
                 {
-                    if (strFile.ToUpper().EndsWith(".SMI") || strFile.ToUpper().EndsWith(".SRT") || strFile.ToUpper().EndsWith(".ASS"))
+                    if (strFile.ToUpper().EndsWith(".SMI")
+                     || strFile.ToUpper().EndsWith(".SRT")
+                     || strFile.ToUpper().EndsWith(".ASS")
+                     || strFile.ToUpper().EndsWith(".JMK"))
                     {
                         LoadFile(strFile);
                         break;
@@ -1016,7 +1019,7 @@ namespace Jamaker
             }
             else
             {
-                OpenFileDialog dialog = new OpenFileDialog{ Filter = "지원되는 자막 파일|*.smi;*.srt;*.ass" };
+                OpenFileDialog dialog = new OpenFileDialog{ Filter = "지원되는 자막 파일|*.smi;*.jmk,*.srt;*.ass" };
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
                     LoadFile(dialog.FileName);
@@ -1038,7 +1041,7 @@ namespace Jamaker
                 int index = path.LastIndexOf('.');
                 if (index > 0)
                 {
-                    LoadFile(path.Substring(0, index) + ".smi", true);
+                    LoadFile(path.Substring(0, index) + ".jmk", true);
                 }
             }
         }
@@ -1055,15 +1058,22 @@ namespace Jamaker
             {
                 sr = new StreamReader(path, DetectEncoding(path));
                 text = sr.ReadToEnd();
+                Script("openFile", new object[] { path, text, forVideo });
             }
             catch (Exception e)
             {
-                Script("alert", "파일을 열지 못했습니다.");
-                PassiveLog(e.ToString());
+                if (path.EndsWith(".jmk"))
+                {
+                	// 프로젝트 파일 없었으면 smi 파일로 재시도
+                    LoadFile(path.Substring(0, path.Length - 4) + ".smi", true);
+                }
+                else
+                {
+                    Script("alert", "파일을 열지 못했습니다.");
+                    PassiveLog(e.ToString());
+                }
             }
             finally { sr?.Close(); }
-
-            Script("openFile", new object[] { path, text, forVideo });
         }
 
         private string smiPath;
@@ -1612,20 +1622,21 @@ namespace Jamaker
             public int tab;
             public string text;
             public string path;
-            public bool isSmi;
-            public SaveOrder(int tab, string text, string path, bool isSmi)
+            public int type;
+            public SaveOrder(int tab, string text, string path, int type)
             {
                 this.tab = tab;
                 this.text = text;
                 this.path = path;
-                this.isSmi = isSmi;
+                this.type = type;
             }
         }
         private readonly List<SaveOrder> saveOrders = new List<SaveOrder>();
         private int saveIndex = 0;
-        public void Save(int tab, string text, string path, bool isSmi)
+        public void Save(int tab, string text, string path, int type)
         {
-            SaveOrder order = new SaveOrder(tab, text, path, isSmi);
+            Console.WriteLine($"Save({tab}, {path}, {type}), count: {saveOrders.Count}");
+            SaveOrder order = new SaveOrder(tab, text, path, type);
 
             if (saveOrders.Count == 0)
             {
@@ -1639,12 +1650,12 @@ namespace Jamaker
                 for (int i = saveIndex + 1; i < saveOrders.Count; i++)
                 {
                     SaveOrder item = saveOrders[i];
-                    if (item.tab == tab && item.isSmi == isSmi)
+                    if (item.tab == tab && item.type == type)
                     {
                         // 저장 대기열 중복이면 내용물 교체
                         item.text = text;
                         item.path = path;
-                        item.isSmi = isSmi;
+                        item.type = type;
                         updated = true;
                         break;
                     }
@@ -1659,7 +1670,6 @@ namespace Jamaker
 
         private int saveAfter = 0;
         private int saveTab = 0;
-        private bool saveSmi = true;
         private string textToSave = "";
         public void Save()
         {
@@ -1668,7 +1678,7 @@ namespace Jamaker
             int tab = order.tab;
             string text = order.text;
             string path = order.path;
-            bool isSmi = order.isSmi;
+            int type = order.type;
 
             if (path == null || path.Length == 0)
             {
@@ -1676,7 +1686,6 @@ namespace Jamaker
                 saveAfter = 100;
                 saveTab = tab;
                 textToSave = text;
-                saveSmi = isSmi;
                 afterGetFileName = new AfterGetString(SaveWithDialogAfterGetVideoFileName);
                 // player에 현재 재생 중인 파일명 요청
                 player.GetFileName();
@@ -1689,7 +1698,7 @@ namespace Jamaker
             try
             {   // 무조건 UTF-8로 저장
                 (sw = new StreamWriter(path, false, Encoding.UTF8)).Write(text);
-                if (isSmi)
+                if (type == 0)
                 {
                     Script("afterSaveFile", new object[] { tab, path });
                 }
@@ -1730,18 +1739,18 @@ namespace Jamaker
             if (path != null && path.Length > 0)
             {
                 saveAfter = 0;
-                SaveWithDialog(saveTab, textToSave, path);
+                SaveWithDialog(path);
             }
             else
             {
                 AfterSave();
             }
         }
-        public void SaveWithDialog(int tab, string text, string videoPath)
+        public void SaveWithDialog(string videoPath)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() => { SaveWithDialog(tab, text, videoPath); }));
+                Invoke(new Action(() => { SaveWithDialog(videoPath); }));
             }
             else
             {
@@ -1762,7 +1771,7 @@ namespace Jamaker
                 }
 
                 SaveFileDialog dialog = new SaveFileDialog {
-                    Filter = "SAMI 자막 파일|*.smi"
+                    Filter = "SAMI 자막 및 프로젝트 파일|*.smi;*.jmk"
                 ,   InitialDirectory = directory
                 ,   FileName = filename
                 };
@@ -1771,7 +1780,8 @@ namespace Jamaker
                     AfterSave();
                     return;
                 }
-                Save(tab, text, dialog.FileName, saveSmi);
+                saveOrders[saveIndex].path = dialog.FileName;
+                Save();
             }
         }
         public void SaveTemp(string text, string path)

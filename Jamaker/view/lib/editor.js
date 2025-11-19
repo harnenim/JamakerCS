@@ -258,22 +258,32 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 		const tab = this;
 		hold.afterRender = function() {
 			const match = /<sami( [^>]*)*>/gi.exec(this.text);
+			
+			let withSmi = false;
+			let withAss = false;
+			
 			if (match && match[1]) {
 				const attrs = match[1].toUpperCase().split(" ");
 				for (let i = 0; i < attrs.length; i++) {
-					if (attrs[i] == "ASS") {
-						if (!tab.withAss) {
-							tab.withAss = true;
-							tab.area.addClass("ass");
-							tab.updateHoldSelector();
-						}
-						return;
+					if (attrs[i] == "SMI") {
+						withSmi = true;
+					} else if (attrs[i] == "ASS") {
+						withAss = true;
 					}
 				}
 			}
-			tab.withAss = false;
-			tab.area.removeClass("ass");
-			tab.updateHoldSelector();
+			tab.withSmi = withSmi;
+			if (tab.withAss != withAss) {
+				if (withAss) {
+					tab.withAss = true;
+					tab.area.addClass("ass");
+					tab.updateHoldSelector();
+				} else {
+					tab.withAss = false;
+					tab.area.removeClass("ass");
+					tab.updateHoldSelector();
+				}
+			}
 		}
 		
 	} else {
@@ -983,10 +993,10 @@ Tab.prototype.getAdditionalToAss = function(forSmi=false) {
 		return assFile;
 	}
 }
-Tab.prototype.getSaveText = function(withCombine=true, withComment=true) {
+Tab.prototype.getSaveText = function(withCombine=true, withComment=1) {
 	const funcSince = log("getSaveText start");
 	const result = SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment, Subtitle.video.FR / 1000)
-		+ (this.withAss ? this.getAdditionalToAss(true) : ""); // ASS 추가 내용 footer에 넣어주기
+		+ (((withComment > 0) && this.withAss) ? this.getAdditionalToAss(true) : ""); // ASS 추가 내용 footer에 넣어주기
 	log("getSaveText end", funcSince);
 	return result;
 }
@@ -2400,7 +2410,31 @@ function saveFile(asNew, isExport) {
 			}
 		}
 		
-		let withAss = currentTab.withAss;
+		let withSmi = !isExport && currentTab.withSmi; // SMI 내보내기 시엔 처리하지 않음
+		let smiPath = "";
+		if (withSmi) {
+			// 프로젝트 파일 경로 기반으로
+			if (path) {
+				if (path.indexOf("\\") > 0 || path.indexOf("/") >= 0) {
+					// 웹샘플 파일명이면 여기로 못 들어옴
+					if (path.toLowerCase().endsWith(".smi")) {
+						withSmi = false; // smi 파일을 직접 프로젝트로 쓰는 경우 별도 저장 없음
+					} else if (path.toLowerCase().endsWith(".jmk")) {
+						smiPath = path.substring(0, path.length - 3) + "smi";
+					} else {
+						smiPath = path + ".smi";
+					}
+				} else if (currentTab.smiPath) {
+					// 웹샘플에서 이미 저장한 적 있을 경우
+					smiPath = currentTab.smiPath;
+				}
+			} else {
+				alert("최초 프로젝트 파일 생성 시엔 SMI 파일이 생성되지 않습니다.");
+				withSmi = false;
+			}
+		}
+		
+		let withAss = !isExport && currentTab.withAss; // SMI 내보내기 시엔 처리하지 않음
 		if (withAss) {
 			const appendFile = currentTab.getAdditionalToAss();
 			const appendStyles = appendFile.getStyles();
@@ -2510,12 +2544,13 @@ function saveFile(asNew, isExport) {
 		
 		let assPath = "";
 		if (withAss) {
-			//*
-			// SMI 파일 경로 기반으로
+			// 프로젝트 파일 경로 기반으로
 			if (path) {
 				if (path.indexOf("\\") > 0 || path.indexOf("/") >= 0) {
 					// 웹샘플 파일명이면 여기로 못 들어옴
 					if (path.toLowerCase().endsWith(".smi")) {
+						assPath = path.substring(0, path.length - 3) + "ass";
+					} else if (path.toLowerCase().endsWith(".jmk")) {
 						assPath = path.substring(0, path.length - 3) + "ass";
 					} else {
 						assPath = path + ".ass";
@@ -2528,20 +2563,6 @@ function saveFile(asNew, isExport) {
 				alert("최초 SMI 파일 생성 시엔 ASS 파일이 생성되지 않습니다.");
 				withAss = false;
 			}
-			/*/
-			// SMI 파일이 아닌 영상 파일 경로 기반으로
-			if (Subtitle.video.path) {
-				const index = Subtitle.video.path.lastIndexOf(".");
-				if (index > 0) {
-					assPath = Subtitle.video.path.substring(0, index) + ".ass";
-				} else {
-					assPath = Subtitle.video.path + ".ass";
-				}
-			} else if (currentTab.assPath) {
-				// 웹샘플에서 이미 저장한 적 있을 경우
-				assPath = currentTab.assPath;
-			}
-			*/
 		}
 		
 		log("saveFile end", funcSince);
@@ -2549,18 +2570,25 @@ function saveFile(asNew, isExport) {
 		function saveAfterConfirm() {
 			lastSave = new Date().getTime();
 			
-			const saveText = currentTab.getSaveText(true, !(exporting = isExport));
+			const saveText = currentTab.getSaveText(true, (exporting = isExport) ? -1 : 1);
 			
 			const saveFrom = log("binder.save start");
-			binder.save(tab, saveText, path, true);
+			binder.save(tab, saveText, path, 0);
 			log("binder.save end", saveFrom);
-			
+
+			if (withSmi) {
+				const smiText = currentTab.getSaveText(true, -1);
+				
+				const saveSmiFrom = log("binder.save smi start");
+				binder.save(tab, smiText, smiPath, 1);
+				log("binder.save smi end", saveSmiFrom);
+			}
 			if (withAss) {
 			    if (Subtitle.video.fs.length) {
 					const assText = currentTab.toAss().toText();
 					
 					const saveAssFrom = log("binder.save ass start");
-					binder.save(tab, assText, assPath, false);
+					binder.save(tab, assText, assPath, 2);
 					log("binder.save ass end", saveAssFrom);
 					
 			    } else {
@@ -2624,6 +2652,10 @@ function afterSaveFile(tab, path) { // 저장 도중에 탭 전환할 수 있어
 	currentTab.onChangeSaved();
 	
 	log("afterSaveFile end", funcSince);
+}
+// 웹버전에서만 활용
+function afterSaveSmiFile(tab, path) {
+	tabs[tab].smiPath = path;
 }
 // 웹버전에서만 활용
 function afterSaveAssFile(tab, path) {

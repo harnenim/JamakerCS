@@ -2555,6 +2555,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 	this.render([syncLine, nextLine]);
 }
 
+// 별도 창 방식
 SmiEditor.Finder1 = {
 		last: { find: "", replace: "", withCase: false, reverse: false }
 	,	open: function(isReplace) {
@@ -2746,6 +2747,7 @@ SmiEditor.Finder1 = {
 			}, delay);
 		}
 };
+// iframe 방식
 SmiEditor.Finder2 = {
 		last: { find: "", replace: "", withCase: false, reverse: false }
 	,	open: function(isReplace) {
