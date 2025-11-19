@@ -14,7 +14,7 @@ namespace Jamaker
     {
         private string settingJson = "{\"filters\":\"*.txt, *.smi, *.ass\",\"replacers\":[{\"use\":true,\"from\":\"다시 한번\",\"to\":\"다시 한 번\"},{\"use\":true,\"from\":\"그리고 보니\",\"to\":\"그러고 보니\"},{\"use\":true,\"from\":\"뒤쳐\",\"to\":\"뒤처\"},{\"use\":true,\"from\":\"제 정신\",\"to\":\"제정신\"},{\"use\":true,\"from\":\"스탠드 얼론\",\"to\":\"스탠드얼론\"},{\"use\":true,\"from\":\"멘테넌스\",\"to\":\"메인터넌스\"},{\"use\":true,\"from\":\"뒷처리\",\"to\":\"뒤처리\"},{\"use\":true,\"from\":\"스탭도\",\"to\":\"스태프도\"},{\"use\":true,\"from\":\"등 져선\",\"to\":\"등져선\"},{\"use\":true,\"from\":\"타코이즈\",\"to\":\"터쿼이즈\"},{\"use\":true,\"from\":\"쓰레드\",\"to\":\"스레드\"},{\"use\":true,\"from\":\"져버리지\",\"to\":\"저버리지\"},{\"use\":true,\"from\":\"글러먹\",\"to\":\"글러 먹\"}]}";
 
-        public MainForm()
+        public MainForm(string[] args)
         {
             string ProcName = Process.GetCurrentProcess().ProcessName;
             if (Process.GetProcessesByName(ProcName).Length > 1)
@@ -29,7 +29,7 @@ namespace Jamaker
             StreamReader sr = null;
             try
             {   // 설정 파일 경로
-                sr = new StreamReader("setting/TextReplacer.txt", Encoding.UTF8);
+                sr = new StreamReader(Path.Combine(Application.StartupPath, "setting/TextReplacer.txt"), Encoding.UTF8);
                 string strSetting = sr.ReadToEnd();
                 string[] strRect = strSetting.Split(',');
                 if (strRect.Length >= 4)
@@ -61,7 +61,7 @@ namespace Jamaker
             AllowTransparency = true;
 
             mainView.LifeSpanHandler = new LSH(this);
-            mainView.LoadUrl(Path.Combine(Directory.GetCurrentDirectory(), "view/TextReplacer.html"));
+            mainView.LoadUrl(Path.Combine(Application.StartupPath, "view/TextReplacer.html"));
             mainView.JavascriptObjectRepository.Settings.LegacyBindingEnabled = true;
             mainView.JavascriptObjectRepository.Register("binder", new Binder(this), false, BindingOptions.DefaultBinder);
             mainView.RequestHandler = new RequestHandler(); // TODO: 팝업에서 이동을 막아야 되는데...
@@ -95,13 +95,13 @@ namespace Jamaker
                 WinAPI.GetWindowRect(Handle.ToInt32(), ref offset);
 
                 // 설정 폴더 없으면 생성
-                DirectoryInfo di = new DirectoryInfo("setting");
+                DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "setting"));
                 if (!di.Exists)
                 {
                     di.Create();
                 }
 
-                sw = new StreamWriter("setting/TextReplacer.txt", false, Encoding.UTF8);
+                sw = new StreamWriter(Path.Combine(Application.StartupPath, "setting/TextReplacer.txt"), false, Encoding.UTF8);
                 sw.Write(offset.left + "," + offset.top + "," + (offset.right - offset.left) + "," + (offset.bottom - offset.top) + ",\n" + setting);
             }
             catch (Exception ex)

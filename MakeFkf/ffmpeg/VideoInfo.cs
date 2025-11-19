@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Windows.Forms;
 
 namespace Jamaker
 {
@@ -21,7 +22,7 @@ namespace Jamaker
             VIDEO, SKF, FKF
         }
 
-        public static string exePath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg");
+        public static string exePath = Path.Combine(Application.StartupPath, "ffmpeg");
 
         // 원래 키프레임도 보려고 했는데...
         // 생각보다 키프레임이 화면전환에 안 맞는 경우가 많음

@@ -15,7 +15,7 @@ namespace Jamaker
     {
         private readonly string settingJson = "{\"saveSkf\":{\"origin\":true,\"target\":true},\"separators\":\"&nbsp;&nbsp;\\n하느@harne_\",\"maxBlank\":30}";
 
-        public MainForm()
+        public MainForm(string[] args)
         {
             string ProcName = Process.GetCurrentProcess().ProcessName;
             if (Process.GetProcessesByName(ProcName).Length > 1)
@@ -30,7 +30,7 @@ namespace Jamaker
             StreamReader sr = null;
             try
             {   // 설정 파일 경로
-                sr = new StreamReader("setting/SyncShift.txt", Encoding.UTF8);
+                sr = new StreamReader(Path.Combine(Application.StartupPath, "setting/SyncShift.txt"), Encoding.UTF8);
                 string strSetting = sr.ReadToEnd();
                 string[] strRect = strSetting.Split(',');
                 if (strRect.Length >= 4)
@@ -62,7 +62,7 @@ namespace Jamaker
             AllowTransparency = true;
 
             mainView.LifeSpanHandler = new LSH(this);
-            mainView.LoadUrl(Path.Combine(Directory.GetCurrentDirectory(), "view/AutoSyncShift.html"));
+            mainView.LoadUrl(Path.Combine(Application.StartupPath, "view/AutoSyncShift.html"));
             mainView.JavascriptObjectRepository.Settings.LegacyBindingEnabled = true;
             mainView.JavascriptObjectRepository.Register("binder", new Binder(this), false, BindingOptions.DefaultBinder);
             mainView.RequestHandler = new RequestHandler(); // TODO: 팝업에서 이동을 막아야 되는데...
@@ -96,13 +96,13 @@ namespace Jamaker
                 WinAPI.GetWindowRect(Handle.ToInt32(), ref offset);
 
                 // 설정 폴더 없으면 생성
-                DirectoryInfo di = new DirectoryInfo("setting");
+                DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "setting"));
                 if (!di.Exists)
                 {
                     di.Create();
                 }
 
-                sw = new StreamWriter("setting/SyncShift.txt", false, Encoding.UTF8);
+                sw = new StreamWriter(Path.Combine(Application.StartupPath, "setting/SyncShift.txt"), false, Encoding.UTF8);
                 sw.Write(offset.left + "," + offset.top + "," + (offset.right - offset.left) + "," + (offset.bottom - offset.top) + ",\n" + setting);
             }
             catch (Exception ex)
@@ -393,6 +393,7 @@ namespace Jamaker
                     case ".smi":
                     case ".ass":
                     case ".srt":
+                    case ".jmk":
                         {
                             if (hasSubtitle) break;
                             hasSubtitle = true;

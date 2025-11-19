@@ -23,8 +23,9 @@ namespace Jamaker
         private string strBridgeList = "NoPlayer: (없음)"; // 기본값
         private string strHighlights = "SyncOnly: 싱크 줄 구분\neclipse: 이클립스 스타일";
         private readonly Dictionary<string, string> bridgeDlls = new Dictionary<string, string>();
+        private string[] args;
 
-        public MainForm()
+        public MainForm(string[] args)
         {
             string ProcName = Process.GetCurrentProcess().ProcessName;
             if (Process.GetProcessesByName(ProcName).Length > 1) {
@@ -46,10 +47,12 @@ namespace Jamaker
 
             mainView.LifeSpanHandler = new LSH(this);
             LoadSetting();
-            mainView.LoadUrl(Path.Combine(Directory.GetCurrentDirectory(), "view/editor.html"));
+            mainView.LoadUrl(Path.Combine(Application.StartupPath, "view/editor.html"));
             mainView.JavascriptObjectRepository.Settings.LegacyBindingEnabled = true;
             mainView.JavascriptObjectRepository.Register("binder", new Binder(this), false, BindingOptions.DefaultBinder);
             mainView.RequestHandler = new RequestHandler(); // TODO: 팝업에서 이동을 막아야 되는데...
+
+            this.args = args;
 
             timer.Interval = 10;
             timer.Enabled = true;
@@ -208,12 +211,12 @@ namespace Jamaker
                 try
                 {
                     // 설정 폴더 없으면 생성
-                    DirectoryInfo di = new DirectoryInfo("temp");
+                    DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp"));
                     if (!di.Exists) { di.Create(); }
-                    di = new DirectoryInfo("temp/logs");
+                    di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp/logs"));
                     if (!di.Exists) { di.Create(); }
 
-                    swLogs = new StreamWriter($"temp/logs/{lastLog = DateTime.Now.Ticks}.txt", false, Encoding.UTF8);
+                    swLogs = new StreamWriter(Path.Combine(Application.StartupPath, $"temp/logs/{lastLog = DateTime.Now.Ticks}.txt"), false, Encoding.UTF8);
                     swLogs.WriteLine(msg);
                 }
                 catch (Exception e)
@@ -298,11 +301,25 @@ namespace Jamaker
                         {
                             Script("setDpiBy", width);
 
-                            // 최초 실행 시 ffmpeg 존재 여부 확인인데, 창 위치 잡아준 후에 alert 돌아가도록 함
                             if (!initialMoved)
                             {
                                 initialMoved = true;
+
+                                // 최초 실행 시 ffmpeg 존재 여부 확인인데, 창 위치 잡아준 후에 alert 돌아가도록 함
                                 CheckFFmpegWithAlert();
+
+                                // 파일 드래그해서 실행하는 경우도 이쪽에서 받도록 함
+                                if (args.Length > 0)
+                                {
+                                    string strFile = args[0];
+                                    if (strFile.ToUpper().EndsWith(".SMI")
+                                     || strFile.ToUpper().EndsWith(".SRT")
+                                     || strFile.ToUpper().EndsWith(".ASS")
+                                     || strFile.ToUpper().EndsWith(".JMK"))
+                                    {
+                                        LoadFile(strFile);
+                                    }
+                                }
                             }
                         }
                     }
@@ -538,7 +555,7 @@ namespace Jamaker
         	StreamReader sr = null;
             try
             {   // 설정 파일 경로
-                sr = new StreamReader("setting/Jamaker.json", Encoding.UTF8);
+                sr = new StreamReader(Path.Combine(Application.StartupPath, "setting/Jamaker.json"), Encoding.UTF8);
                 strSettingJson = sr.ReadToEnd();
             }
             catch (Exception e)
@@ -546,7 +563,7 @@ namespace Jamaker
                 PassiveLog(e.ToString());
                 try
                 {   // 구버전 설정 파일 경로
-                    sr = new StreamReader("view/setting.json", Encoding.UTF8);
+                    sr = new StreamReader(Path.Combine(Application.StartupPath, "view/setting.json"), Encoding.UTF8);
                     strSettingJson = sr.ReadToEnd();
                 }
                 catch (Exception e2) { Console.WriteLine(e2); }
@@ -555,7 +572,7 @@ namespace Jamaker
 
             try
             {
-                sr = new StreamReader("bridge/list.txt", Encoding.UTF8);
+                sr = new StreamReader(Path.Combine(Application.StartupPath, "bridge/list.txt"), Encoding.UTF8);
                 strBridgeList = sr.ReadToEnd();
             }
             catch (Exception e) {
@@ -566,7 +583,7 @@ namespace Jamaker
 
             try
             {
-                sr = new StreamReader("view/lib/highlight/list.txt", Encoding.UTF8);
+                sr = new StreamReader(Path.Combine(Application.StartupPath, "view/lib/highlight/list.txt"), Encoding.UTF8);
                 strHighlights = sr.ReadToEnd();
             }
             catch (Exception e) {
@@ -597,21 +614,21 @@ namespace Jamaker
             try
             {
                 // 설정 폴더 없으면 생성
-                DirectoryInfo di = new DirectoryInfo("setting");
+                DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "setting"));
                 if (!di.Exists)
                 {
                     di.Create();
                 }
                 else
                 {
-                    if (File.Exists("setting/Jamaker.json"))
+                    if (File.Exists(Path.Combine(Application.StartupPath, "setting/Jamaker.json")))
                     {   // 설정파일 있는데 여기로 왔으면 설정파일이 깨졌다는 의미
-                        File.Delete("setting/Jamaker.json");
+                        File.Delete(Path.Combine(Application.StartupPath, "setting/Jamaker.json"));
                     }
-                    if (File.Exists("setting/Jamaker.json.bak"))
+                    if (File.Exists(Path.Combine(Application.StartupPath, "setting/Jamaker.json.bak")))
                     {   // 백업 파일 존재하면 가져오기
-                        File.Move("setting/Jamaker.json.bak", "setting/Jamaker.json");
-                        sr = new StreamReader("setting/Jamaker.json", Encoding.UTF8);
+                        File.Move(Path.Combine(Application.StartupPath, "setting/Jamaker.json.bak"), Path.Combine(Application.StartupPath, "setting/Jamaker.json"));
+                        sr = new StreamReader(Path.Combine(Application.StartupPath, "setting/Jamaker.json"), Encoding.UTF8);
                         strSettingJson = sr.ReadToEnd();
                     }
                 }
@@ -633,22 +650,22 @@ namespace Jamaker
             try
             {
                 // 설정 폴더 없으면 생성
-                DirectoryInfo di = new DirectoryInfo("setting");
+                DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "setting"));
                 if (!di.Exists)
                 {
                     di.Create();
                 }
-                else if (File.Exists("setting/Jamaker.json"))
+                else if (File.Exists(Path.Combine(Application.StartupPath, "setting/Jamaker.json")))
                 {
                     // 기존 설정파일 백업 후 진행
-                    if (File.Exists("setting/Jamaker.json.bak"))
+                    if (File.Exists(Path.Combine(Application.StartupPath, "setting/Jamaker.json.bak")))
                     {
-                        File.Delete("setting/Jamaker.json.bak");
+                        File.Delete(Path.Combine(Application.StartupPath, "setting/Jamaker.json.bak"));
                     }
-                    File.Move("setting/Jamaker.json", "setting/Jamaker.json.bak");
+                    File.Move(Path.Combine(Application.StartupPath, "setting/Jamaker.json"), Path.Combine(Application.StartupPath, "setting/Jamaker.json.bak"));
                 }
 
-                StreamWriter sw = new StreamWriter("setting/Jamaker.json", false, Encoding.UTF8);
+                StreamWriter sw = new StreamWriter(Path.Combine(Application.StartupPath, "setting/Jamaker.json"), false, Encoding.UTF8);
                 sw.Write(strSettingJson);
                 sw.Close();
             }
@@ -692,7 +709,7 @@ namespace Jamaker
                 {
                     try
                     {   // DLL 파일 동적 호출
-                        string dllPath = Path.Combine(Directory.GetCurrentDirectory(), $"bridge/{dll}.dll");
+                        string dllPath = Path.Combine(Application.StartupPath, $"bridge/{dll}.dll");
                         Assembly asm = Assembly.LoadFile(dllPath);
                         Type[] types = asm.GetExportedTypes();
                         player = (PlayerBridge.PlayerBridge)Activator.CreateInstance(types[0]);
@@ -759,7 +776,7 @@ namespace Jamaker
             string setting = "";
             try
             {   // addon 설정 파일 경로
-                StreamReader sr = new StreamReader($"setting/addon_{path}", Encoding.UTF8);
+                StreamReader sr = new StreamReader(Path.Combine(Application.StartupPath, $"setting/addon_{path}"), Encoding.UTF8);
                 setting = sr.ReadToEnd();
                 sr.Close();
             }
@@ -769,7 +786,7 @@ namespace Jamaker
                 PassiveLog(e.ToString());
                 try
                 {   // 구버전 addon 설정 파일 경로
-                    StreamReader sr = new StreamReader($"view/addon/{path}", Encoding.UTF8);
+                    StreamReader sr = new StreamReader(Path.Combine(Application.StartupPath, $"view/addon/{path}"), Encoding.UTF8);
                     setting = sr.ReadToEnd();
                     sr.Close();
                 }
@@ -786,13 +803,13 @@ namespace Jamaker
             try
             {
                 // 설정 폴더 없으면 생성
-                DirectoryInfo di = new DirectoryInfo("setting");
+                DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "setting"));
                 if (!di.Exists)
                 {
                     di.Create();
                 }
 
-                StreamWriter sw = new StreamWriter($"setting/addon_{path}", false, Encoding.UTF8);
+                StreamWriter sw = new StreamWriter(Path.Combine(Application.StartupPath, $"setting/addon_{path}"), false, Encoding.UTF8);
                 sw.Write(text);
                 sw.Close();
             }
@@ -1185,10 +1202,10 @@ namespace Jamaker
                     // 기존에 있으면 가져오기
                     try
                     {
-                        DirectoryInfo di = new DirectoryInfo("temp/fkf");
+                        DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp/fkf"));
                         if (di.Exists)
                         {
-                            VideoInfo.FromFkfFile("temp/fkf/" + fkfName);
+                            VideoInfo.FromFkfFile(Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
                             Script("Progress.set", new object[] { "#forFrameSync", 1 });
                             Script("loadFkf", new object[] { fkfName });
                             return;
@@ -1203,16 +1220,16 @@ namespace Jamaker
                     // 기존 버전에선 fkf 폴더 없이 그냥 temp 폴더에 있었음
                     try
                     {
-                        DirectoryInfo di = new DirectoryInfo("temp");
+                        DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp"));
                         if (di.Exists)
                         {
-                            di = new DirectoryInfo("temp/fkf");
+                            di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp/fkf"));
                             if (!di.Exists)
                             {
                                 di.Create();
                             }
-                            File.Move("temp/" + fkfName, "temp/fkf/" + fkfName);
-                            VideoInfo.FromFkfFile("temp/fkf/" + fkfName);
+                            File.Move(Path.Combine(Application.StartupPath, "temp/" + fkfName), Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
+                            VideoInfo.FromFkfFile(Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
                             Script("Progress.set", new object[] { "#forFrameSync", 1 });
                             Script("loadFkf", new object[] { fkfName });
                             return;
@@ -1279,7 +1296,7 @@ namespace Jamaker
             lastThumbnailsPath = path;
             try
             {
-                StreamWriter sw = new StreamWriter("temp/thumbnails/_.txt", false, Encoding.UTF8);
+                StreamWriter sw = new StreamWriter(Path.Combine(Application.StartupPath, "temp/thumbnails/_.txt"), false, Encoding.UTF8);
                 sw.Write($"{path}\n{TX}\n{TY}");
                 sw.Close();
             }
@@ -1296,7 +1313,7 @@ namespace Jamaker
         	StreamReader sr = null;
             try
             {   // 설정 파일 경로
-                sr = new StreamReader("temp/thumbnails/_.txt", Encoding.UTF8);
+                sr = new StreamReader(Path.Combine(Application.StartupPath, "temp/thumbnails/_.txt"), Encoding.UTF8);
                 string[] info = sr.ReadToEnd().Split('\n');
                 lastThumbnailsPath = info[0];
                 TX = int.Parse(info[1]);
@@ -1329,7 +1346,7 @@ namespace Jamaker
 
             new Thread(() =>
             {
-                string dir = "temp/thumbnails";
+                string dir = Path.Combine(Application.StartupPath, "temp/thumbnails");
                 DirectoryInfo di = new DirectoryInfo(dir);
                 if (!di.Exists)
                 {
@@ -1370,7 +1387,7 @@ namespace Jamaker
                         for (int index = 0; index < (end - begin); index++)
                         {
                             Console.WriteLine($"index: {index}");
-                            if (!File.Exists($"{dir}/{fileSeq}_{begin + index}{flag}.jpg"))
+                            if (!File.Exists(Path.Combine(Application.StartupPath, $"{dir}/{fileSeq}_{begin + index}{flag}.jpg")))
                             {
                                 Console.WriteLine("no img");
                                 isCompleted = false;
@@ -1379,13 +1396,13 @@ namespace Jamaker
                             // 0일 땐 비교값 계산 없음
                             if (index == 0) continue;
 
-                            if (!File.Exists($"{dir}/{fileSeq}_{begin + index}{flag}_.jpg"))
+                            if (!File.Exists(Path.Combine(Application.StartupPath, $"{dir}/{fileSeq}_{begin + index}{flag}_.jpg")))
                             {
                                 Console.WriteLine("no img _");
                                 isCompleted = false;
                                 break;
                             }
-                            if (!File.Exists($"{dir}/{fileSeq}_{begin + index}{flag}~.jpg"))
+                            if (!File.Exists(Path.Combine(Application.StartupPath, $"{dir}/{fileSeq}_{begin + index}{flag}~.jpg")))
                             {
                                 Console.WriteLine("no img ~");
                                 isCompleted = false;
@@ -1439,23 +1456,23 @@ namespace Jamaker
                                 if (fileSeq != lastThumbnailsFileSeq) return;
 
                                 // 위에서 만든 이미지 경로
-                                string img0 = $"{dir}/p{procSeq}_{begin}{flag}_{index + 1}.jpg";
+                                string img0 = Path.Combine(Application.StartupPath, $"{dir}/p{procSeq}_{begin}{flag}_{index + 1}.jpg");
 
                                 // 실제 필요한 이미지 경로
-                                string img1 = $"{dir}/{fileSeq}_{begin + index}{flag}.jpg";
+                                string img1 = Path.Combine(Application.StartupPath, $"{dir}/{fileSeq}_{begin + index}{flag}.jpg");
                                 try {
                                     if (File.Exists(img1)) File.Delete(img1);
                                     File.Move(img0, img1);
                                 } catch (Exception e) { Console.WriteLine(e); }
 
                                 // 프레임 간 차이 이미지 경로
-                                string img2 = $"{dir}/{fileSeq}_{begin + index}{flag}_.jpg";
+                                string img2 = Path.Combine(Application.StartupPath, $"{dir}/{fileSeq}_{begin + index}{flag}_.jpg");
                                 try {
                                     if (File.Exists(img2)) File.Delete(img2);
                                 } catch (Exception e) { Console.WriteLine(e); }
 
                                 // 밝기 변화 이미지 경로
-                                string img3 = $"{dir}/{fileSeq}_{begin + index}{flag}~.jpg";
+                                string img3 = Path.Combine(Application.StartupPath, $"{dir}/{fileSeq}_{begin + index}{flag}~.jpg");
                                 try {
                                     if (File.Exists(img3)) File.Delete(img3);
                                 } catch (Exception e) { Console.WriteLine(e); }
@@ -1597,7 +1614,7 @@ namespace Jamaker
         }
         public void ClearThumbnails()
         {
-            string dir = "temp/thumbnails";
+            string dir = Path.Combine(Application.StartupPath, "temp/thumbnails");
             DirectoryInfo di = new DirectoryInfo(dir);
             if (di.Exists)
             {
@@ -1791,7 +1808,7 @@ namespace Jamaker
 
             try
             {   // 임시 파일 폴더 없으면 생성
-                DirectoryInfo di = new DirectoryInfo("temp");
+                DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp"));
                 if (!di.Exists)
                 {
                     di.Create();
@@ -1799,7 +1816,7 @@ namespace Jamaker
 
                 // 임시 파일 저장
                 long now = DateTime.Now.Ticks;
-                StreamWriter sw = new StreamWriter("temp/" + now + "_" + filename, false, Encoding.UTF8);
+                StreamWriter sw = new StreamWriter(Path.Combine(Application.StartupPath, "temp/" + now + "_" + filename), false, Encoding.UTF8);
                 sw.Write(text);
                 sw.Close();
             }

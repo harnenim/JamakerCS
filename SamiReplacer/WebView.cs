@@ -267,17 +267,5 @@ namespace Jamaker
             }
             return encoding;
         }
-
-        public int CheckFFmpegWithAlert()
-        {
-            int status = VideoInfo.CheckFFmpeg();
-            switch (status)
-            {
-                case 2: Script("alert", "ffmpeg.exe 파일이 없습니다."); break;
-                case 1: Script("alert", "ffprobe.exe 파일이 없습니다."); break;
-                case 0: Script("alert", "ffmpeg.exe, ffprobe.exe 파일이 없습니다."); break;
-            }
-            return status;
-        }
     }
 }
