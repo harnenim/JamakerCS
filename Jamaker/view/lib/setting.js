@@ -2,7 +2,7 @@
 let checkVersion;
 {	checkVersion = (version) => {
 		if (!version) version = "";
-
+		
 		const notify = [];
 		const notified = {};
 		if (version < lastNotifyForCommand) {

@@ -68,7 +68,7 @@ window.main = new WebForm();
 			}
 			
 			main.mainView.contentWindow.binder = main.binder = new Binder(main);
-
+			
 			const cd = main.mainView.contentDocument;
 			cd.addEventListener("dragenter", function(e) {
 				e.preventDefault();
@@ -79,7 +79,7 @@ window.main = new WebForm();
 		//FormClosing += new FormClosingEventHandler(BeforeExit);
 		//FormClosed += new FormClosedEventHandler(WebFormClosed);
 	}
-
+	
 	main.initAfterLoad = function() {
 		this.super_initAfterLoad();
 		this.script("init", [main.settingJson]);
@@ -316,7 +316,7 @@ window.main = new WebForm();
 	
 	main.calcShift = function(strRanges, strShifts) {
 		console.log("CalcShift: {0}, {1}".split("{0}").join(strRanges).split("{1}").join(strShifts));
-
+		
 		if (main.originVideoFile == null || main.targetVideoFile == null) {
 			main.script("alert", ["파일을 선택해주세요."]);
 			return;
@@ -328,7 +328,7 @@ window.main = new WebForm();
 			const sRanges = strRanges.length ? strRanges.split('|') : [];
 			const sShifts = strShifts.length ? strShifts.split('|') : [];
 			const ranges = [];
-
+			
 			if (sRanges.length == 0) {
 				main.script("addRange", [0, main.originVideoFile.GetSfs().Count * 10]);
 				ranges.push(new Range(0, main.originVideoFile.GetSfs().length));
@@ -352,7 +352,7 @@ window.main = new WebForm();
 						const shift = shifts[j];
 						if (shift.start < start) continue;
 						if (shift.start >= end) break;
-
+						
 						if (shift.start > start) {
 							last.end = shift.start;
 							ranges.push(last = new Range(shift.start, end, shift.shift));
@@ -362,7 +362,7 @@ window.main = new WebForm();
 					}
 				}
 			}
-
+			
 			const result = SyncShift.GetShiftsForRanges(
 					main.originVideoFile.GetSfs()
 				,	main.targetVideoFile.GetSfs()
@@ -374,7 +374,7 @@ window.main = new WebForm();
 				const shift = result[i];
 				main.script("addShift", [shift.start * 10, shift.shift * 10]);
 			}
-
+			
 			main.hideProcessing();
 			main.setProgress("#settingCalc", 0);
 		}, 1);
@@ -387,11 +387,11 @@ window.main = new WebForm();
 			return;
 		}
 		const path = targetVideoFile.path.Substring(0, targetVideoFile.path.Length - new FileInfo(targetVideoFile.path).Extension.Length) + "." + operation;
-
+		
 		StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8);
 		sw.Write(text);
 		sw.Close();
-
+		
 		main.script("alert", ["저장했습니다."]);
 		*/
 		// 무조건 대화상자 열어야 함

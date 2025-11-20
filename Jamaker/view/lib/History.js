@@ -124,7 +124,7 @@ History.prototype.back = function() {
 };
 History.prototype.forward = function() {
 	if (this.cnt >= this.range[1]) return;
-
+	
 	if (this.last[0] != this.input.val()) {
 		// 마지막 로그와 차이가 있으면 정지
 		this.range[1] = this.cnt;

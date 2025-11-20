@@ -142,7 +142,7 @@ const window_open = function(url, name, options, opener) {
 	editor.strSettingJson = "불러오기 실패 예제";
 	editor.strBridgeList = "NoPlayer: (없음)";
 	editor.strHighlights = "eclipse: Eclipse \n vs: Visual Studio";
-
+	
 	// override
 	editor.drop = async function(x, y) {
 		const file = this.droppedFiles[0];
@@ -201,7 +201,7 @@ const window_open = function(url, name, options, opener) {
 					editor.mainView.contentWindow.binder.initAfterLoad();
 				}, 1000);
 				*/
-
+				
 				const cd = editor.mainView.contentDocument;
 				cd.addEventListener("dragenter", (e) => {
 					e.preventDefault();
@@ -234,7 +234,7 @@ const window_open = function(url, name, options, opener) {
 		//FormClosing += new FormClosingEventHandler(BeforeExit);
 		//FormClosed += new FormClosedEventHandler(WebFormClosed);
 	}
-
+	
 	this.loaded = false;
 	editor.initAfterLoad = function() {
 		if (this.loaded) return;
@@ -245,7 +245,7 @@ const window_open = function(url, name, options, opener) {
 		this.script("init", [this.strSettingJson, false]); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
 		this.script("setPlayerDlls", [this.strBridgeList]);
 		this.script("setHighlights", [this.strHighlights]);
-
+		
 		// 세팅 확인
 		WinAPI.GetWindowRect(this.getHwnd("editor"), this.lastOffset);
 		editor.useFollowWindow = true;
@@ -256,7 +256,7 @@ const window_open = function(url, name, options, opener) {
 			this.script("eval", ["for (let i = 0; i < 200000; i++) { SmiEditor.video.fs.push(Math.round(i * SmiEditor.video.FL)); }"]);
 		}, 2000);
 	};
-
+	
 	editor.refreshPlayer = function() {
 		if (this.player) {
 			// 플레이어 살아있음
@@ -296,7 +296,7 @@ const window_open = function(url, name, options, opener) {
 	}
 	/*
 	public void DoExit(bool resetPlayer, bool exitPlayer)
-
+	
 	public void WebFormClosed(object sender, FormClosedEventArgs e)
 	*/
 }
@@ -430,7 +430,7 @@ window.MB = 9;
 				}
 				WinAPI.MoveWindow(viewer, vMoveX, vMoveY, this.viewerOffset);
 			}
-
+			
 			if (this.player.hwnd && this.player.hwnd.window && this.player.hwnd.window.name) {
 				let pMoveX = moveX;
 				let pMoveY = moveY;
@@ -465,7 +465,7 @@ window.MB = 9;
 				+	"setting.window.width = "  + (this.offset.right  - this.offset.left - ML - MR) + ";"
 				+	"setting.window.height = " + (this.offset.bottom - this.offset.top  - MB) + ";"
 				]);
-
+				
 				const viewer = this.getHwnd("viewer");
 				if (viewer) {
 					WinAPI.GetWindowRect(viewer, this.viewerOffset);
@@ -476,7 +476,7 @@ window.MB = 9;
 					+	"setting.viewer.window.height = " + (this.viewerOffset.bottom - this.viewerOffset.top  - MB) + ";"
 					]);
 				}
-
+				
 				const player = this.getHwnd("player");
 				if (player) {
 					const playerOffset = this.player.currentOffset;
@@ -511,7 +511,7 @@ window.MB = 9;
 	editor.runFind       = function(params) { editor.mainView.contentWindow.SmiEditor.Finder.runFind      (params); };	
 	editor.runReplace    = function(params) { editor.mainView.contentWindow.SmiEditor.Finder.runReplace   (params); };	
 	editor.runReplaceAll = function(params) { editor.mainView.contentWindow.SmiEditor.Finder.runReplaceAll(params); };
-
+	
 	editor.updateViewerSetting = function() {
 		let viewer = this.getHwnd("viewer");
 		if (viewer) {
@@ -590,7 +590,7 @@ window.MB = 9;
 	editor.setVideoExts = function(exts) {
 		this.videoExts = exts.split(','); // C#에서만 필요
 	}
-
+	
 	editor.setPlayer = function(dll, exe, withRun, useMove) {
 		if (!this.player) {
 			this.player = new WebPlayerBridge(exe);
@@ -730,7 +730,7 @@ window.MB = 9;
 				}
 			}
 		});
-
+		
 		$(document).on("keydown", editor.keyDownForMenu);
 	});
 	editor.keyDownForMenu = function(e) {

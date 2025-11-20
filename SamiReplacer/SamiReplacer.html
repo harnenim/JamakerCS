@@ -57,7 +57,7 @@ window.main = new WebForm();
 			}
 			
 			main.mainView.contentWindow.binder = main.binder = new Binder(main);
-
+			
 			const cd = main.mainView.contentDocument;
 			cd.addEventListener("dragenter", (e) => {
 				e.preventDefault();
@@ -65,10 +65,8 @@ window.main = new WebForm();
 			});
 		};
 	}
-
+	
 	main.initAfterLoad = function() {
-		console.log("initAfterLoad");
-		console.log(main.settingJson);
 		this.super_initAfterLoad();
 		this.script("init", [main.settingJson]);
 	};

@@ -60,7 +60,7 @@ window.Combine = {
 				while ((k = text.indexOf("<", j)) >= 0) {
 					// 태그 열기
 					j = k + 1;
-
+					
 					// 태그 닫힌 곳까지 탐색
 					const closeIndex = text.indexOf(">", j);
 					if (j < closeIndex) {
@@ -73,7 +73,7 @@ window.Combine = {
 						}
 						const tagName = text.substring(j, k);
 						j = k;
-
+						
 						if (tagName.toUpperCase() == "SYNC") {
 							while (j < closeIndex) {
 								// 속성 찾기
@@ -222,7 +222,7 @@ window.Combine = {
 	function parse(text, checker) {
 		const smis = new SmiFile(text).body;
 		smis.push(new Smi(99999999, SyncType.normal, "&nbsp;"));
-						
+		
 		const syncs = [];
 		let last = null;
 		for (let i = 0; i < smis.length; i++) {
@@ -241,7 +241,7 @@ window.Combine = {
 			}
 			if (smi.text.split("&nbsp;").join("").trim()) {
 				const lineCount = smi.text.split(/<br>/gi).length;
-					
+				
 				const attrs = smi.toAttrs(false);
 				const defaultWidth = getAttrWidth(attrs, checker);
 				const sizedWidth   = getAttrWidth(attrs, checker, true);
@@ -284,7 +284,7 @@ window.Combine = {
 						group.maxLines[0] = Math.max(group.maxLines[0], us[LINES]);
 						group.maxWidth = Math.max(group.maxWidth, us[WIDTH]);
 						group.maxSized = Math.max(group.maxSized, us[SIZED]);
-							
+						
 					} else { // 아래가 없거나 끝남 -> 그룹 끊김
 						groups.push(group = {
 								upper: [us]
@@ -295,7 +295,7 @@ window.Combine = {
 						});
 					}
 					ui++;
-						
+					
 				} else if (ls[STIME] < us[STIME]) { // 아래가 바뀜
 					if (group
 						&& (   (   (ls[STYPE] == SyncType.inner) // 중간 싱크
@@ -308,7 +308,7 @@ window.Combine = {
 						group.maxLines[1] = Math.max(group.maxLines[1], ls[LINES]);
 						group.maxWidth = Math.max(group.maxWidth, ls[WIDTH]);
 						group.maxSized = Math.max(group.maxSized, ls[SIZED]);
-							
+						
 					} else { // 위가 없거나 끝남 -> 그룹 끊김
 						groups.push(group = {
 								upper: []
@@ -319,7 +319,7 @@ window.Combine = {
 						});
 					}
 					li++;
-						
+					
 				} else { // 둘이 같이 바뀜
 					if ((us[STYPE] == SyncType.inner) || (us[STYPE] == SyncType.combinedInner)
 					 || (ls[STYPE] == SyncType.inner) || (ls[STYPE] == SyncType.combinedInner)) {
@@ -332,7 +332,7 @@ window.Combine = {
 						group.maxWidth = Math.max(group.maxWidth, ls[WIDTH]);
 						group.maxSized = Math.max(group.maxSized, us[SIZED]);
 						group.maxSized = Math.max(group.maxSized, ls[SIZED]);
-							
+						
 					} else {
 						// 새 그룹
 						groups.push(group = {
@@ -354,7 +354,7 @@ window.Combine = {
 			const groupMaxWidth = withFontSize ? group.maxSized : group.maxWidth;
 			group.lines = [];
 			let last = null;
-				
+			
 			// 팟플레이어 왼쪽 정렬에서 좌우로 흔들리지 않도록 최대한 잡아줌
 			if (group.upper.length && group.lower.length) {
 				if (LOG) {
@@ -362,11 +362,11 @@ window.Combine = {
 					console.log("group width: " + group.maxWidth);
 					console.log("group sized width: " + group.maxSized);
 				}
-					
+				
 				const lists = [group.upper, group.lower];
 				for (let i = 0; i < lists.length; i++) {
 					const list = lists[i];
-						
+					
 					for (let j = 0; j < list.length; j++) {
 						// 줄 길이 채워주기
 						const sync = list[j];
@@ -415,7 +415,6 @@ window.Combine = {
 							// 여백을 붙여서 제일 적절한 값 찾기
 							if (withFontSize) {
 								// 글씨 크기 적용했을 때 더 작아졌으면 이걸 기준으로 구함
-
 								/*
 								if (sync[WIDTH] > groupMaxWidth) {
 									// 크기 조절 안 했을 때의 폭을 이미 넘어섰으면 작업 안 함
@@ -425,7 +424,6 @@ window.Combine = {
 								}
 								*/
 							}
-
 							let isEmpty = true;
 							let width = sync[SIZED];
 							let padsAttrs = attrs;
@@ -450,7 +448,7 @@ window.Combine = {
 											// 내용물 없는 속성 무시
 											continue;
 										}
-
+										
 										if (attr.text) {
 											trimedLine.attrs.push(attr);
 										}
@@ -478,7 +476,7 @@ window.Combine = {
 										}
 									}
 								}
-
+								
 								const attrLines = attrText.split("\n");
 								if (attrLines.length > 1) {
 									// 속성 안에 줄바꿈이 있었으면 분리 후 진행
@@ -490,11 +488,11 @@ window.Combine = {
 										// 첫 줄바꿈 전에 내용 없으면 건너뜀
 										wasClear = false;
 									}
-										
+									
 									if (trimedLine.isEmpty && attr.text.split("　").join("").trim().length) {
 										trimedLine.isEmpty = isEmpty = false;
 									}
-										
+									
 									for (let l = 1; l < attrLines.length; l++) {
 										attr = new Attr(attr, attrLines[l], true);
 										const isEmptyAttr = (attr.text.split("​").join("").trim().length == 0);
@@ -509,7 +507,7 @@ window.Combine = {
 											}
 										}
 									}
-										
+									
 								} else {
 									if (attr.text) {
 										trimedLine.attrs.push(attr);
@@ -664,7 +662,7 @@ window.Combine = {
 							}
 							
 							sync[TEXT] = Smi.fromAttr(padsAttrs).split("\n").join("<br>");
-								
+							
 						} else {
 							sync[TEXT] = Smi.fromAttr(attrs).split("\n").join("<br>");
 						}
@@ -683,7 +681,7 @@ window.Combine = {
 					if (us[STIME] < ls[STIME]) { // 위가 바뀜
 						if (!last) { // 첫 싱크
 							group.lines.push(last = [us[STIME], us[STYPE], us[ETIME], us[ETYPE], us, null]);
-								
+							
 						} else {
 							// 아래는 유지하고 위는 바뀐 걸 추가
 							if (last[STIME] == us[STIME]) {
@@ -694,7 +692,7 @@ window.Combine = {
 								last[ETYPE] = us[STYPE];
 								group.lines.push(last = curr);
 							}
-								
+							
 							if (us[ETIME] < last[ETIME]) { // 위가 먼저 끝남
 								const curr = [us[ETIME], us[ETYPE], last[ETIME], last[ETYPE], null, last[LOWER]];
 								last[ETIME] = us[ETIME];
@@ -707,11 +705,11 @@ window.Combine = {
 							}
 						}
 						ui++;
-							
+						
 					} else if (ls[STIME] < us[STIME]) { // 아래가 바뀜
 						if (!last) { // 첫 싱크
 							group.lines.push(last = [ls[STIME], ls[STYPE], ls[ETIME], ls[ETYPE], null, ls]);
-								
+							
 						} else {
 							// 위는 유지하고 아래는 바뀐 걸 추가
 							if (last[STIME] == ls[STIME]) {
@@ -722,7 +720,7 @@ window.Combine = {
 								last[ETYPE] = ls[STYPE];
 								group.lines.push(last = curr);
 							}
-								
+							
 							if (ls[ETIME] < last[ETIME]) { // 아래가 먼저 끝남
 								const curr = [ls[ETIME], ls[ETYPE], last[ETIME], last[ETYPE], last[TEXT], null];
 								last[ETIME] = ls[ETIME];
@@ -735,7 +733,7 @@ window.Combine = {
 							}
 						}
 						li++;
-							
+						
 					} else { // 둘이 같이 바뀜(그룹 첫 싱크에서만 가능)
 						let ss = us;
 						if (ls[ETIME] < us[ETIME]) {
@@ -971,7 +969,7 @@ if (SmiFile) {
 			}
 			holds[i].text = text;
 		}
-
+		
 		if (window.log) log("textToHolds end", funcFrom);
 		
 		return holds;
@@ -983,6 +981,8 @@ if (SmiFile) {
 		return match && (match[0].indexOf("split") > 0);
 	}
 	SmiFile.holdsToTexts = (origHolds, withNormalize=true, withCombine=true, withComment=1, fps=23.976) => {
+		// withComment: 원래 true/false였는데, 1: true / 0: false / -1: Jamaker 전용 싱크 표시 같은 것까지 제거하도록 변경
+		
 		const funcFrom = window.log ? log("holdsToTexts start") : 0;
 		
 		const result = [];
@@ -1249,7 +1249,7 @@ if (SmiFile) {
 				if (aPos > bPos) return 1;
 				return 0;
 			});
-
+			
 			const holdSmis = [];
 			for (let hi = 1; hi < holds.length; hi++) {
 				const hold = holds[hi];
@@ -1324,7 +1324,7 @@ if (SmiFile) {
 							}
 						}
 					}
-
+					
 					mainEnd = mainBegin;
 					const last = smi.body[smi.body.length - 1];
 					let isEnded = last.isEmpty();
@@ -1352,18 +1352,18 @@ if (SmiFile) {
 						continue;
 					}
 				}
-
+				
 				// 홀드 결합
 				const sliced = new SmiFile();
 				sliced.body = main.body.slice(mainBegin, mainEnd);
-
+				
 				const slicedText = sliced.toText().trim();
 				const combineText = smi.toText().trim();
 				const combined = new SmiFile(((hold.pos < 0) ? Combine.combine(slicedText, combineText) : Combine.combine(combineText, slicedText)).join("\n"));
 				// 원칙상 normalized.result를 다뤄야 맞을 것 같지만...
 				main.body = main.body.slice(0, mainBegin).concat(combined.body).concat(main.body.slice(mainEnd));
 			}
-
+			
 			{	// 최종본에서 그룹 단위 윗줄 채워주기
 				let begin = 0;
 				let maxLine = 0;
@@ -1374,7 +1374,7 @@ if (SmiFile) {
 					 || smi.syncType == SyncType.combinedFrame
 					 || smi.syncType == SyncType.combinedInner) {
 						maxLine = Math.max(maxLine, line);
-
+						
 					} else {
 						const end = i;
 						if (end - begin > 1) {
@@ -1386,13 +1386,13 @@ if (SmiFile) {
 								}
 							}
 						}
-
+						
 						maxLine = line;
 						begin = i;
 					}
 				}
 			}
-
+			
 			{	// 임시 중간 싱크 정상화
 				for (let i = 0; i < main.body.length; i++) {
 					const smi = main.body[i];

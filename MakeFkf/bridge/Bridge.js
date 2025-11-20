@@ -26,7 +26,7 @@ function WebPlayerBridge() {
 		// 샘플에선 플레이어 값 무조건 존재
 		return true;
 	}
-
+	
 	WebPlayerBridge.prototype.getWindowInitialPosition = function() {
 		WinAPI.GetWindowRect(this.hwnd, this.initialOffset);
 		return (this.initialOffset.top + 100 < this.initialOffset.bottom) ? this.initialOffset : null;

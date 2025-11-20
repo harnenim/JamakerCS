@@ -243,7 +243,7 @@ function setOriginSubtitleFile(path, text) {
 			range = [-1, 0];
 		}
 	}
-
+	
 	$("#rangeList .list-body").empty();
 	for (let j = 0; j < ranges.length; j++) {
 		const range = ranges[j];
@@ -338,7 +338,7 @@ function refreshPreview(isTarget=false) {
 				const item = body[i];
 				const $line = getLine(item, item.start, item.text.split("\n").join("<br />"));
 				item.previewText = $line.text();
-
+				
 				// ms 단위 표현
 				item.ms = item.start;
 				item.me = item.end;
@@ -512,7 +512,7 @@ function apply() {
 		addShift();
 		shifts.push({ start: 0, shift: 0 });
 	}
-
+	
 	const withKf = kfs.length > 2 && $("#chkTrustKfTarget").prop("checked");
 	
 	function getShiftIndex(sync) {
@@ -543,7 +543,7 @@ function apply() {
 					const smi = hold.body[i];
 					const index = getShiftIndex(smi.start);
 					smi.start = shiftSync(smi.start, index);
-
+					
 					if (withKf && (smi.syncType == SyncType.frame)) {
 						const shift =	shifts[index];
 						if (shift.skipped == null || shift.fCount == 0 || shift.skipped.length == 0) {
@@ -576,7 +576,7 @@ function apply() {
 						if (commentEnd > 0) {
 							let comment = item.text.substring(9, commentEnd).trim().split("<​").join("<").split("​>").join(">");
 							afterComment = item.text.substring(commentEnd + 3).trim();
-	
+							
 							const index = comment.indexOf("\n");
 							if (index > 0) {
 								let syncEnd = Number(index < 0 ? comment : comment.substring(0, index));
@@ -598,7 +598,7 @@ function apply() {
 					// 화면 싱크 키프레임 대조
 					if (withKf && (smi.syncType == SyncType.frame)) {
 						console.log("withKf: " + smi.start);
-	
+						
 						const shift = shifts[shiftIndex];
 						if (shift.skipped == null) {
 							shift.fCount = 0;
@@ -1239,7 +1239,7 @@ h4 {
 			<label title="일부 홀드만 따로 빼서 작업하는 용도일 때 주로 사용"><input type="checkbox" id="chkCombine" /> <span>홀드 결합 생략</span></label>
 		</div>
 	</div>
-
+	
 	<div id="processing" style="display: none;">
 		<span>작업 중…</span>
 		<div id="selectAudio" style="display: none;">

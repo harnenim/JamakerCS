@@ -11,7 +11,7 @@
 Binder.prototype.dropFiles = function() {
 	this._.dropFiles();
 }
-Binder.prototype.checkAndMakeFkf = function(path) {
+Binder.prototype.setVideoFile = function(path) {
 	this._.checkAndMakeFkf(path);
 }
 Binder.prototype.saveFile = function(text) {
@@ -54,7 +54,7 @@ const main = new WebForm();
 			}
 			
 			main.mainView.contentWindow.binder = main.binder = new Binder(main);
-
+			
 			const cd = main.mainView.contentDocument;
 			cd.addEventListener("dragenter", (e) => {
 				e.preventDefault();
@@ -62,7 +62,7 @@ const main = new WebForm();
 			});
 		};
 	}
-
+	
 	main.initAfterLoad = function() {
 		this.super_initAfterLoad();
 	};
@@ -92,7 +92,7 @@ const main = new WebForm();
 		for (let i = 0; i < this.droppedFiles.length; i++) {
 			const file = this.droppedFiles[i];
 			const ext = file.name.toLowerCase();
-
+			
 			if (ext.endsWith(".ass")) {
 				if (hasAss) continue;
 				hasAss = true;

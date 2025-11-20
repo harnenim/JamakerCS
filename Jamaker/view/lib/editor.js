@@ -449,7 +449,7 @@ SmiEditor.prototype.refreshStyle = function() {
 	
 	css["-webkit-text-stroke"] = (style.Outline * 3) + "px " + style.OutlineColour + (256 + style.OutlineOpacity).toString(16).substring(1);
 	this.$preview.find(".hold-style-preview-outline").css(css);
-
+	
 	css.color = style.BackColour + (256 + style.BackOpacity).toString(16).substring(1);
 	css["-webkit-text-stroke"] = (style.Outline * 3) + "px " + style.BackColour + (256 + style.BackOpacity).toString(16).substring(1);
 	css.top = css.left = "calc(50% + " + style.Shadow + "px)";
@@ -798,7 +798,7 @@ Tab.prototype.selectHold = function(hold) {
 		index = this.holds.indexOf(hold);
 	}
 	SmiEditor.selected = hold;
-
+	
 	this.holdSelector.find(".selector").removeClass("selected");
 	this.holdArea.find(".hold").hide();
 	hold.selector.addClass("selected");
@@ -909,7 +909,7 @@ Tab.prototype.getAdditionalToAss = function(forSmi=false) {
 			}
 			return 0;
 		});
-
+		
 		// 중복 제외 후 출력
 		let last = null;
 		for (let i = 0; i < syncs.length; i++) {
@@ -977,7 +977,7 @@ Tab.prototype.getAdditionalToAss = function(forSmi=false) {
 	
 	let events = this.assHold.assEditor.toEvents();
 	assFile.getEvents().body = events;
-
+	
 	log("getAdditionalToAss end", funcSince);
 	
 	if (forSmi) {
@@ -1073,7 +1073,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			hold.smiFile = null;
 			continue;
 		}
-
+		
 		if (styles[name]) {
 			// 이미 추가함
 		} else {
@@ -1385,7 +1385,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			eventsBody[i].clearEnds();
 		}
 	}
-
+	
 	// 원래의 스크립트 순서를 기준으로, 시간이 겹치는 걸 기준으로 레이어 재부여
 	let forLayers = [];
 	for (let i = 0; i < eventsBody.length; i++) {
@@ -1416,7 +1416,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 	
 	// TODO: ASS 에디터에 레이어 재계산치 반영 가능한가...?
 	// 애초에 여긴 SMI 저장 이후에 돌아가는 부분인데?
-
+	
 	log("toAss end", funcSince);
 	
 	if (orderByEndSync) {
@@ -1852,7 +1852,7 @@ function init(jsonSetting, isBackup=true) {
 		}
 		confirm((!saved ? "저장되지 않았습니다.\n" : "") + "탭을 닫으시겠습니까?", () => {
 			const index = closeTab(th);
-
+			
 			setTimeout(() => {
 				if (tabs.length) {
 					if ($("#tabSelector .th.selected").length == 0) {
@@ -1876,7 +1876,7 @@ function init(jsonSetting, isBackup=true) {
 			}, 1);
 		});
 	});
-
+	
 	$("#editor").on("click", "button.tab-ass-btn", function() {
 		const $btn = $(this);
 		const $tab = $btn.parents(".tab");
@@ -1905,7 +1905,7 @@ function init(jsonSetting, isBackup=true) {
 	});
 	
 	SmiEditor.activateKeyEvent();
-
+	
 	// Win+방향키 이벤트 직후 창 위치 초기화
 	const winKeyStatus = [0, 0];
 	$(window).on("keydown", function (e) {
@@ -1942,7 +1942,7 @@ function init(jsonSetting, isBackup=true) {
 	setSetting(setting, true);
 	SmiEditor.Viewer.open(); // 스타일 세팅 설정 완료 후에 실행
 	moveWindowsToSetting();
-
+	
 	autoSaveTemp = setInterval(() => {
 		saveTemp();
 	}, setting.tempSave * 1000);
@@ -1983,7 +1983,7 @@ function setSetting(setting, initial=false) {
 			let canvas = SmiEditor.canvas;
 			if (!canvas) canvas = SmiEditor.canvas = document.createElement("canvas");
 			canvas.width = canvas.height = ((SB = (16 * setting.size)) + 1) * 2;
-
+			
 			const v1 = SB / 2;
 			const v2 = SB + 1 + (SB / 2);
 			const v15 = setting.size * 1.5;
@@ -2206,7 +2206,7 @@ function moveWindowsToSetting() {
 		// TODO: false->true일 때 플레이어 위치 다시 구하기?
 	}
 	binder.setFollowWindow(setting.window.follow);
-
+	
 	// 창 위치 초기화 후 호출
 	setTimeout(() => { refreshPaddingBottom(); }, 1);
 	setTimeout(() => { refreshPaddingBottom(); }, 100); // 딜레이 버그 보완책으로 한 번 더 돌림
@@ -2346,7 +2346,7 @@ function openFile(path, text, forVideo) {
 		});
 	}
 }
-function openFileForVideo(path, text) {
+function openFileForVideo() {
 	runIfCanOpenNewTab(() => {
 		// C#에서 동영상의 자막 파일 탐색
 		binder.openFileForVideo();
@@ -2575,7 +2575,7 @@ function saveFile(asNew, isExport) {
 			const saveFrom = log("binder.save start");
 			binder.save(tab, saveText, path, 0);
 			log("binder.save end", saveFrom);
-
+			
 			if (withSmi) {
 				const smiText = currentTab.getSaveText(true, -1);
 				
@@ -2713,13 +2713,13 @@ function openNewTab(text, path, forVideo) {
 			texts.push(text = srt2smi(text));
 		}
 	}
-
+	
 	const title = path ? ((path.length > 14) ? ("..." + path.substring(path.length - 14, path.length - 4)) : path.substring(0, path.length - 4)) : "새 문서";
 	
 	const tab = new Tab(text ? text : setting.newFile, path);
 	tabs.push(tab);
 	$("#editor").append(tab.area);
-
+	
 	const th = $("<div class='th'>").append($("<span>").text(title)).attr({ title: path });
 	th.append($("<button type='button' class='btn-close-tab'>").text("×"));
 	$("#btnNewTab").before(th);
@@ -2766,7 +2766,7 @@ function setVideo(path) {
 	Subtitle.video.aegisubSyncs = null;
 	$("#forFrameSync").addClass("disabled");
 	$("#checkTrustKeyframe").attr({ disabled: true });
-
+	
 	// 동영상 파일이 열려있을 때만 프레임 분석 진행
 	const ext = path.toLowerCase();
 	if (ext.endsWith(".avi")
@@ -3055,7 +3055,7 @@ function loadAssFile(path, text, target=-1) {
 		
 		for (let i = 0; i < targetEvents.length; i++) {
 			let assText = targetEvents[i].Text.split("}{").join("");
-
+			
 			// 뒤쪽에 붙은 군더더기 종료태그 삭제
 			while (assText.endsWith("}")) {
 				if (assText.endsWith("{}")) {
@@ -3429,7 +3429,7 @@ function loadAssFile(path, text, target=-1) {
 							if (styles.indexOf(style) < 0) {
 								styles.push(style);
 							}
-
+							
 							if (event.found) {
 								fromAssEditor = true;
 							}
@@ -3573,7 +3573,7 @@ function loadAssFile(path, text, target=-1) {
 							const toEmpty     = importSet.toEmpty;
 							
 							let smi = body[replaceFrom];
-
+							
 							const bodySkipped = body.slice(replaceFrom, replaceTo);
 							const bodyEnd = body.slice(replaceTo);
 							body.length = replaceFrom;
@@ -4023,7 +4023,7 @@ function fitSyncsToFrame(frameSyncOnly=false, add=0) {
 		}
 		//*/
 	}
-
+	
 	if (!tabs.length) return;
 	const holds = tabs[tab].holds;
 	

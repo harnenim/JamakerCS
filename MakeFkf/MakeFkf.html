@@ -44,7 +44,7 @@ window.main = new WebForm();
 			}
 			
 			main.mainView.contentWindow.binder = main.binder = new Binder(main);
-
+			
 			const cd = main.mainView.contentDocument;
 			cd.addEventListener("dragenter", (e) => {
 				e.preventDefault();

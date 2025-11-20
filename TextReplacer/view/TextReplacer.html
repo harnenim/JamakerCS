@@ -45,7 +45,7 @@ function init(jsonSetting) {
 			listReplacer.append(li);
 		}
 	}
-
+	
 	progress = new Progress();
 }
 
@@ -160,7 +160,7 @@ $(() => {
 	listReplacer.on("keyup", "textarea", function () {
 		setTextareaHeight($(this));
 	});
-
+	
 	listReplacer.on("click", ".btnDeleteReplacer", function() {
 		$(this).parents("li").remove();
 	});

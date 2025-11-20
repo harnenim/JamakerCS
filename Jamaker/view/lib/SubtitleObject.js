@@ -10,13 +10,13 @@ window.Johap = {
 		
 		for (let i = 0; i < origin.length; i++) {
 			const c = origin[i];
-
+			
 			if (c >= '가' && c <= '힣')
 			{
 				const cCho_ = Math.floor((c.charCodeAt() - 44032) / 588);
 				const cJung = Math.floor((c.charCodeAt() - 44032) / 28) % 21;
 				const cJong = ((c.charCodeAt() - 44032) % 28);
-
+				
 				if (cJong > 0) {
 					result.push(Johap.cho_[cCho_]);
 					result.push(Johap.jung[cJung]);
@@ -370,7 +370,7 @@ Typing.prototype.typeTypewriter = function(c) {
 			this.typing = String.fromCharCode(44032/*'가'*/ + ((this.typing.charCodeAt() - 4352/*'ᄀ'*/) * 588) + ((c.charCodeAt() - 4449/*'ᅡ'*/) * 28));
 			return;
 		}
-
+		
 		// 이중중성
 		if (this.typing >= '고' && this.typing <= '흐') {
 			switch (((this.typing.charCodeAt() - '가'.charCodeAt()) / 28) % 21) {
@@ -389,7 +389,7 @@ Typing.prototype.typeTypewriter = function(c) {
 					break;
 			}
 		}
-
+		
 		// 이중모음
 		switch (this.typing) {
 			case 'ᅩ':
@@ -411,7 +411,7 @@ Typing.prototype.typeTypewriter = function(c) {
 			this.typed += this.typing;
 		}
 		this.typing = c;
-	
+		
 	} else if (c >= 'ᆨ' && c <= 'ᇂ') {
 		// 종성
 		if (this.typing >= '가' && this.typing <= '히' && (this.typing.charCodeAt() % 28 == 16/*'가' % 28*/)) {
@@ -477,7 +477,7 @@ Typing.prototype.typeKeyboard = function(c) {
 				}
 			}
 		}
-
+		
 		// 이중자음
 		switch (this.typing) {
 			case 'ㄱ':
@@ -497,7 +497,7 @@ Typing.prototype.typeKeyboard = function(c) {
 				if (c == 'ㅎ') { this.typing = 'ㅀ'; return; }
 				break;
 		}
-
+		
 		// 자음
 		if (this.typing != ' ') {
 			this.typed += this.typing;
@@ -510,7 +510,7 @@ Typing.prototype.typeKeyboard = function(c) {
 			this.typing = String.fromCharCode(44032/*'가'*/ + (Typing.nCho(this.typing) * 588) + ((c.charCodeAt() - 12623/*'ㅏ'*/) * 28));
 			return;
 		}
-
+		
 		if (this.typing >= '가' && this.typing <= '힣') {
 			// 이중중성
 			switch (((this.typing.charCodeAt() - 44032/*'가'*/) / 28) % 21) {
@@ -528,7 +528,7 @@ Typing.prototype.typeKeyboard = function(c) {
 					if (c == 'ㅣ') { this.typing = String.fromCharCode(this.typing.charCodeAt() + 28 * 1); return; } // ㅢ
 					break;
 			}
-
+			
 			// 앞 글자 종성을 초성으로 가져오기
 			switch ((this.typing.charCodeAt() - 44032/*'가'*/) % 28) {
 				case 00/*가-가*/: break;
@@ -561,7 +561,7 @@ Typing.prototype.typeKeyboard = function(c) {
 				case 27/*갛-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 27); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅎ') * 588 + (c.charCodeAt() - 12623) * 28); return;
 			}
 		}
-
+		
 		// 이중모음
 		switch (this.typing) {
 			case 'ㅗ':
@@ -578,7 +578,7 @@ Typing.prototype.typeKeyboard = function(c) {
 				if (c == 'ㅣ') { this.typing = 'ㅢ'; return; }
 				break;
 		}
-
+		
 		// 모음
 		if (this.typing != ' ') {
 			this.typed += this.typing;
@@ -1279,7 +1279,7 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 							}
 							wasFade = true;
 						}
-
+						
 					} else if (!attr.isEmpty()) {
 						if (wasFade || isFirst) {
 							// 페이드 비대상 비활성화
@@ -1297,7 +1297,7 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 					countHides += countHide;
 				}
 			}
-
+			
 			{	// 페이드 아웃
 				count = 0;
 				let countHide = 0;
@@ -1319,7 +1319,7 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 							}
 							wasFade = true;
 						}
-
+						
 					} else if (!attr.isEmpty()) {
 						if (wasFade || isFirst) {
 							// 페이드 비대상 비활성화
@@ -1337,7 +1337,7 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 					countHides += countHide;
 				}
 			}
-
+			
 			if (countHides) {
 				// 페이드인/아웃와 무관하게 보이는 내용물
 				let wasHide = false;
@@ -1357,7 +1357,7 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 							if (attr.fade.length == 7) {
 								// 색상 페이드 최종 색
 								base.fc = attr.fade.substring(1);
-
+								
 							} else if (attr.fade.length == 15 && attr.fade[7] == "~" && attr.fade[8] == "#") {
 								// 그라데이션 페이드 최종 색
 								base.fc = attr.fade;
@@ -1366,10 +1366,10 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 					}
 					base.text = tag + base.text;
 				}
-
+				
 				texts.push(...AssEvent.inFromAttrs(baseAttrs, false, false));
 			}
-
+			
 			{	// 색상 페이드 원본 색 페이드아웃
 				count = 0;
 				const fadeAttrs = [Attr.junkAss("{\\fade(0, [FADE_LENGTH])\\bord0}")];
@@ -1381,7 +1381,7 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 						if (attr.fade.length == 7) {
 							// 색상 페이드
 							isFade = true;
-
+							
 						} else if (attr.fade.length == 15 && attr.fade[7] == "~" && attr.fade[8] == "#") {
 							// 그라데이션 페이드
 							isFade = true;
@@ -1396,7 +1396,6 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 							}
 							wasFade = true;
 						}
-
 					} else {
 						if (wasFade || i == 0) {
 							// 페이드 비대상 비활성화
@@ -1411,7 +1410,7 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 					texts.push(...AssEvent.inFromAttrs(fadeAttrs, false, false));
 				}
 			}
-
+			
 			return texts;
 		}
 	}
@@ -1575,7 +1574,7 @@ AssEvent.fromSync = function(sync, style=null) {
 					endsLength = 13;
 				}
 				if (endsLength == 0) break;
-
+				
 				if (style.Name == "Default") {
 					// 메인 홀드만 자동으로 pos 태그 반영
 					y -= style.Fontsize * 1.1;
@@ -1722,7 +1721,7 @@ AssEvent.fromSync = function(sync, style=null) {
 					lines[j] = prev + line + next;
 				}
 				text = lines.join("\\N");
-
+				
 				const shift = minLeft - minRight;
 				if (shift) {
 					// 모든 줄에 공통으로 한쪽에 여백이 있을 경우 좌우 이동
@@ -2481,11 +2480,11 @@ Smi.Status.prototype.setFont = function(attrs) {
 					const mode = attr[0];
 					let match = null;
 					let tAttr = null;
-
+					
 					if (mode.startsWith("character")) {
 						if (mode == "character") {
 							tAttr = new Attr.TypingAttr(Typing.Mode.character);
-
+							
 						} else if (mode.length == 11) {
 							const s = ((mode[ 9] == '(') ? 1 : ((mode[ 9] == '[') ? 0 : -1));
 							const e = ((mode[10] == ')') ? 1 : ((mode[10] == ']') ? 0 : -1));
@@ -2601,7 +2600,7 @@ Smi.toAttrs = (text) => {
 	let ruby = null;
 	
 	let state = null;
-
+	
 	let tag = null;
 	let attr = null;
 	let value = null;
@@ -3195,9 +3194,9 @@ Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true, forConvert=f
 				}
 				case "FONT": {
 					opener = "<FONT";
-
+					
 					// TODO: 정말 <FONT> 태그를 생성해야 하는 유의미한 값인지 내용물 재확인 필요?
-
+					
 					for (let k = 0; k < font.length; k++) {
 						const key = font[k];
 						switch (key) {
@@ -3469,7 +3468,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 		const TBmin = "<font size=\"" + (0 * shake.size + 1) + "\">　</font>";
 		const TBmid = "<font size=\"" + (1 * shake.size + 1) + "\">　</font>";
 		const TBmax = "<font size=\"" + (2 * shake.size + 1) + "\">　</font>";
-
+		
 		for (let j = 0; j < count; j++) {
 			/*
 			 * ５０３
@@ -3529,7 +3528,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 		if (withComment) {
 			smis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[0].text;
 		}
-
+		
 	} else if (hasTyping) {
 		// 타이핑은 한 싱크에 하나만 가능
 		let attrIndex = -1;
@@ -3576,17 +3575,17 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 				widths.push(Smi.getLineWidth(attrTexts[j]));
 			}
 		}
-
+		
 		const start = smi.start;
 		const count = types.length - attr.typing.end - attr.typing.start;
 		
 		if (count < 1) {
 			return [smi];
 		}
-
+		
 		const typingStart = attr.typing.start;
 		attr.typing = null;
-
+		
 		// 페이드 효과 추가 처리
 		const fadeColors = [];
 		if (hasFade) {
@@ -3779,7 +3778,7 @@ Smi.normalize = (smis, withComment=false, fps=null, forConvert=false) => {
 				const startSync = smis[startIndex].start;
 				const endSync   = smis[endIndex  ].start;
 				const count = endIndex - startIndex;
-
+				
 				for (let j = 1; j < count; j++) {
 					smis[startIndex + j].start = Math.round(((count - j) * startSync + j * endSync) / count);
 				}
@@ -3891,7 +3890,7 @@ SmiFile.prototype.fromText = function(text) {
 			} else {
 				last.text += text.substring(index, pos);
 			}
-
+			
 			let start = 0;
 			index = text.indexOf('>', pos + 6) + 1;
 			if (index == 0) {
@@ -3906,7 +3905,7 @@ SmiFile.prototype.fromText = function(text) {
 					break;
 				}
 			}
-
+			
 			this.body.push(last = new Smi(start));
 			
 		} else if (text.length > pos + 4 && text.substring(pos, pos + 3).toUpperCase() == ("<P ")) {
@@ -3945,7 +3944,7 @@ SmiFile.prototype.fromText = function(text) {
 			index = pos;
 		}
 	}
-
+	
 	if (last == null) {
 		this.header = text.substring(0);
 	} else {
@@ -3970,7 +3969,7 @@ SmiFile.prototype.fromText = function(text) {
 SmiFile.prototype.toSync = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
 SmiFile.prototype.toSyncs = function() {
 	const result = [];
-
+	
 	if (this.body.length > 0) {
 		// TODO: normalize 작업 필요??
 		// 단순 페이드는 예외 처리
@@ -4017,7 +4016,7 @@ SmiFile.prototype.toSyncs = function() {
 SmiFile.prototype.fromSync = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
 SmiFile.prototype.fromSyncs = function(syncs) {
 	const smis = [];
-
+	
 	if (syncs.length > 0) {
 		let i = 0;
 		let last = null;
@@ -4030,11 +4029,10 @@ SmiFile.prototype.fromSyncs = function(syncs) {
 			} else {
 				smis.push(new Smi().fromSync(syncs[i]));
 			}
-
 			smis.push(last = new Smi(syncs[i].end, syncs[i].endType, "&nbsp;"));
 		}
 	}
-
+	
 	this.body = smis;
 	return this;
 }
@@ -4077,7 +4075,7 @@ SmiFile.toAssStyle = function(smiStyle, assStyle) {
 	if (!assStyle) assStyle = {};
 	assStyle.key = "Style";
 	assStyle.Encoding = 1;
-
+	
 	smiStyle.Fontname = (!smiStyle.Fontname ? Subtitle.DefaultStyle.Fontname : smiStyle.Fontname);
 	assStyle.Fontname = (smiStyle.Fontname);
 	assStyle.Fontsize = (smiStyle.Fontsize);
@@ -4238,7 +4236,7 @@ SmiFile.styleToSmi = function(style) {
 SmiFile.prototype.normalize = function(withComment=false, fps=null) {
 	const smis = [];
 	smis.push(...this.body);
-
+	
 	let preset = null;
 	{
 		const lines = this.header.split("\n");

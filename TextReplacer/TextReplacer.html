@@ -72,7 +72,7 @@ window.main = new WebForm();
 				main.mainView.contentWindow.binder.initAfterLoad();
 			}, 1000);
 			*/
-
+			
 			const cd = main.mainView.contentDocument;
 			cd.addEventListener("dragenter", (e) => {
 				e.preventDefault();
@@ -83,7 +83,7 @@ window.main = new WebForm();
 		//FormClosing += new FormClosingEventHandler(BeforeExit);
 		//FormClosed += new FormClosedEventHandler(WebFormClosed);
 	}
-
+	
 	main.initAfterLoad = function() {
 		this.super_initAfterLoad();
 		this.script("init", [main.settingJson]);
@@ -103,7 +103,7 @@ window.main = new WebForm();
 	}
 	/*
 	public void DoExit(bool resetPlayer, bool exitPlayer)
-
+	
 	public void WebFormClosed(object sender, FormClosedEventArgs e)
 	*/
 }
@@ -196,7 +196,7 @@ function Replaced(text, froms, tos) {
 			count++;
 		}
 	}
-
+	
 	this.origin         = origin        ;
 	this.originReplaced = originReplaced;
 	this.result         = result        ;

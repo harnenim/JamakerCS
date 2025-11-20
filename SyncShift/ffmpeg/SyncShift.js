@@ -29,7 +29,7 @@ SyncShift.GetShiftsForRange = function(origin, target, range, targetRangeStart, 
 	const start = range.start;
 	let   shift = range.shift;
 	const limitOfOrigin = Math.min(range.end, origin.length);
-
+	
     let minPoint = null;
     let minShift = shift;
     let doPlus = true, doMinus = true;
@@ -136,13 +136,13 @@ SyncShift.GetShiftsForRange = function(origin, target, range, targetRangeStart, 
         	count = 0;
         }
         offset++;
-
+        
         if (offset % 100 == 0) {
             progress.Set(offset / origin.length);
         }
     }
     console.log(v + " > " + limit);
-
+    
     // 5초 이상 남았을 때만 나머지 범위 확인
     if (offset + 500 < range.end) {
     	shifts.push(...SyncShift.GetShiftsForRange(origin, target, new Range(offset, range.end), (offset + shift), progress));

@@ -37,7 +37,7 @@ function addFile(file) {
 	 || ext.endsWith(".mkv")
 	 || ext.endsWith(".ts")
 	 || ext.endsWith(".m2ts")
-			) {
+	) {
 		listFiles.add(file, true);
 	}
 }
@@ -74,7 +74,7 @@ $(() => {
 	$("#cover").on("click", function(e) {
 		binder.hideDragging();
 	});
-
+	
 	$("#btnMakeFkfs").on("click", function() {
 		const files = [];
 		for (let i = 0; i < listFiles.list.length; i++) {

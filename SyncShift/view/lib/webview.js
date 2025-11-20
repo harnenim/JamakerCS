@@ -1,3 +1,4 @@
+// TODO: 지금 이 부분 쓰고 있는지 확인 필요
 let showDrag = false;
 function setShowDrag(dragging) {
 	showDrag = dragging;

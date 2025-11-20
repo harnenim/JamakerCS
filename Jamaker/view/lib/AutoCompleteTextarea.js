@@ -22,15 +22,15 @@ window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 	}
 	this.resize();
 	this.SB = 16; // 스크롤바 폭 계산하는 걸 만드는 게?
-
+	
 	this.pos = 0;	// 입력 시작 위치
 	this.text = "";	// 입력값
 	this.list = [];	// 선택 목록
 	this.lis = [];	// 선택 <li>
 	this.selected = -1; // 선택 항목
-
+	
 	ta.ac = this;
-
+	
 	ta.on("keydown", function(e) {
 		if (ta.ac.selected >= 0) {
 			switch (e.keyCode) {

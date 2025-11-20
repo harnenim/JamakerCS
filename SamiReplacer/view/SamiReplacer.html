@@ -60,7 +60,7 @@ function replace(index, text) {
 		const hold = holds[hi];
 		const originSmi = new SmiFile(hold.text);
 		let isChanged = false;
-	
+		
 		let i = 0;
 		let shiftIndex = 0;
 		let shiftTime = 0;
@@ -68,13 +68,13 @@ function replace(index, text) {
 			if (originSmi.body[i].text == originRange[0].text) {
 				shiftTime = originSmi.body[i].start - originRange[0].start;
 				let isCorrect = true;
-	
+				
 				for (shiftIndex = 0; shiftIndex < originRange.length; shiftIndex++) {
 					if (!originSmi.body[i + shiftIndex].text == originRange[shiftIndex].text) {
 						isCorrect = false;
 						break;
 					}
-	
+					
 					if ((originSmi.body[i + shiftIndex].syncType == SyncType.normal) &&
 						(originSmi.body[i + shiftIndex].start != originRange[shiftIndex].start + shiftTime)
 					) {
@@ -82,28 +82,26 @@ function replace(index, text) {
 						break;
 					}
 				}
-	
+				
 				if (isCorrect) {
 					isChanged = true;
 					break;
 				}
 			}
 		}
-	
+		
 		if (isChanged) {
 			changed++;
 			
 			const targetSmi = new SmiFile();
 			targetSmi.header = originSmi.header;
 			targetSmi.footer = originSmi.footer;
-	
+			
 			for (let k = 0; k < i; k++) {
 				targetSmi.body.push(originSmi.body[k]);
 			}
 			for (let k = 0; k < targetRange.length; k++) {
 				if (targetRange[k].syncType == SyncType.frame && matches[k] >= 0) {
-					console.log([i, k, matches[k]].join(","));
-					console.log((i + matches[k]) + " / " + originSmi.body.length)
 					targetSmi.body.push(new Smi(
 							originSmi.body[i + matches[k]].start
 						,	targetRange[k].syncType
@@ -117,11 +115,11 @@ function replace(index, text) {
 					));
 				}
 			}
-	
+			
 			for (let k = i + shiftIndex; k < originSmi.body.length; k++) {
 				targetSmi.body.push(originSmi.body[k]);
 			}
-	
+			
 			hold.text = targetSmi.toText();
 		}
 	}
@@ -177,17 +175,16 @@ $(() => {
 		let i = 0;
 		for (let j = 0; j < targetRange.length; j++) {
 			if (targetRange[j].syncType != SyncType.frame) continue;
-
+			
 			while (i < originRange.length && originRange[i].start < targetRange[j].start) i++;
-
+			
 			if (i >= originRange.length) break;
-
+			
 			if (originRange[i].syncType != SyncType.frame) {
 				// 목표 화면 싱크가 원본 화면 싱크와 겹치지 않으면 -1
 				matches[j] = -1;
 				hasNewFrameSync = true;
 				break;
-
 			}
 			if (originRange[i].start == targetRange[j].start) {
 				// 목표 화면 싱크가 원본 화면 싱크와 겹치는 경우
