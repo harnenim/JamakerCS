@@ -99,7 +99,7 @@ namespace Jamaker
 
         private void OverrideDrop(int x, int y)
         {
-            Script("drop", new object[] { x, y });
+            Script("drop", x, y);
         }
 
         string[] videos = new string[0];
@@ -116,7 +116,7 @@ namespace Jamaker
             {
                 try
                 {
-                    Script("scrollTo", new object[] { index });
+                    Script("scrollTo", index);
 
                     string selector = $"#listFiles li:eq({index})";
                     string path = videos[index];
@@ -130,7 +130,7 @@ namespace Jamaker
                         if (di.Exists)
                         {
                             VideoInfo.FromFkfFile(Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
-                            Script("Progress.set", new object[] { selector, 1 });
+                            Script("Progress.set", selector, 1);
                             MakeFkf(index + 1);
                             return;
                         }
@@ -144,12 +144,12 @@ namespace Jamaker
                     if ((VideoInfo.CheckFFmpeg() & 3) == 3)
                     {
                         new VideoInfo(path, (double ratio) => {
-                            Script("Progress.set", new object[] { selector, ratio });
+                            Script("Progress.set", selector, ratio);
                         }).RefreshInfo((VideoInfo videoInfo) =>
                         {
                             videoInfo.ReadKfs(true);
                             videoInfo.SaveFkf(Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
-                            Script("Progress.set", new object[] { selector, 1 });
+                            Script("Progress.set", selector, 1);
                             MakeFkf(index + 1);
                         });
                     }
@@ -191,12 +191,12 @@ namespace Jamaker
                 FileInfo[] subFiles = dir.GetFiles();
                 foreach(FileInfo subFile in subFiles)
                 {
-                    Script("addFile", new object[] { subFile.FullName });
+                    Script("addFile", subFile.FullName);
                 }
             }
             else
             {
-                Script("addFile", new object[] { file });
+                Script("addFile", file);
             }
         }
         #endregion

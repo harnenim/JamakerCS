@@ -103,7 +103,7 @@ namespace Jamaker
         {
             try
             {
-                Script("init", new object[] { strSettingJson, false }); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
+                Script("init", strSettingJson, false); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
                 Script("setPlayerDlls", strBridgeList); // 플레이어 브리지 추가 가능토록
                 Script("setHighlights", strHighlights);
                 Script("setDroppable");
@@ -131,7 +131,7 @@ namespace Jamaker
                     if (player.initialOffset.top + 100 < player.initialOffset.bottom)
                     {   // 유효
                         int time = player.GetTime();
-                        Script("refreshTime", new object[] { time });
+                        Script("refreshTime", time);
                         UpdateViewerTime(time);
 
                         if (++refreshPlayerIndex % 100 == 0)
@@ -350,21 +350,23 @@ namespace Jamaker
                     WinAPI.GetWindowRect(hwnd, ref targetOffset);
                     if (target.Equals("player"))
                     {
-                        Script("afterGetWindow", new object[] { target
+                        Script("afterGetWindow"
+                            , target
                             , targetOffset.left
                             , targetOffset.top
                             , targetOffset.right - targetOffset.left
                             , targetOffset.bottom - targetOffset.top
-                        });
+                        );
                     }
                     else
                     {
-                        Script("afterGetWindow", new object[] { target
+                        Script("afterGetWindow"
+                            , target
                             , targetOffset.left + 7
                             , targetOffset.top
                             , targetOffset.right - targetOffset.left - 14
                             , targetOffset.bottom - targetOffset.top - 9
-                        });
+                        );
                     }
                 }
             }
@@ -618,7 +620,7 @@ namespace Jamaker
             finally { sr?.Close(); }
 
             // 프로그램 다시 초기화
-            Script("init", new object[] { strSettingJson, true });
+            Script("init", strSettingJson, true);
         }
 
         public void SaveSetting(string strSettingJson)
@@ -835,7 +837,7 @@ namespace Jamaker
 
                             if (text.IndexOf(query) >= 0)
                             {
-                                Script("afterFound", new object[] { file.Name, text });
+                                Script("afterFound", file.Name, text);
                             }
                         }
                         catch (Exception e)
@@ -997,7 +999,7 @@ namespace Jamaker
                 if (path != null)
                 {
                     afterGetFileName?.Invoke(path);
-                    Script("setVideo", new object[] { path });
+                    Script("setVideo", path);
                 }
             }
 
@@ -1081,7 +1083,7 @@ namespace Jamaker
             {
                 sr = new StreamReader(path, DetectEncoding(path));
                 text = sr.ReadToEnd();
-                Script("openFile", new object[] { path, text, forVideo });
+                Script("openFile", path, text, forVideo);
             }
             catch (Exception e)
             {
@@ -1147,7 +1149,7 @@ namespace Jamaker
         	if ((VideoInfo.CheckFFmpeg() & 1) == 0) {
         		// ffmpeg 없을 경우 - 처음에 만들었던 플레이어 의존 방식
         		// 해상도 없이 frame rate만 가져옴
-                Script("setVideoInfo", new object[] { 1920, 1080, player.GetFps() });
+                Script("setVideoInfo", 1920, 1080, player.GetFps());
         		
         	} else {
             new Thread(() =>
@@ -1200,7 +1202,7 @@ namespace Jamaker
                         proc.Close();
 
                         Console.WriteLine($"setVideoInfo: {width}, {height}, {fr}");
-                        Script("setVideoInfo", new object[] { width, height, fr });
+                        Script("setVideoInfo", width, height, fr);
                     }
 
                     string fkfName = $"{info.Name.Substring(0, info.Name.Length - info.Extension.Length)}.{info.Length}.fkf";
@@ -1212,8 +1214,8 @@ namespace Jamaker
                         if (di.Exists)
                         {
                             VideoInfo.FromFkfFile(Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
-                            Script("Progress.set", new object[] { "#forFrameSync", 1 });
-                            Script("loadFkf", new object[] { fkfName });
+                            Script("Progress.set", "#forFrameSync", 1);
+                            Script("loadFkf", fkfName);
                             return;
                         }
                     }
@@ -1236,8 +1238,8 @@ namespace Jamaker
                             }
                             File.Move(Path.Combine(Application.StartupPath, "temp/" + fkfName), Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
                             VideoInfo.FromFkfFile(Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
-                            Script("Progress.set", new object[] { "#forFrameSync", 1 });
-                            Script("loadFkf", new object[] { fkfName });
+                            Script("Progress.set", "#forFrameSync", 1);
+                            Script("loadFkf", fkfName);
                             return;
                         }
                     }
@@ -1251,16 +1253,16 @@ namespace Jamaker
                     new VideoInfo(path, (ratio) => {
                         if (requestFramesPath == path)
                         {   // 중간에 다른 파일 불러왔을 수도 있음
-                            Script("Progress.set", new object[] { "#forFrameSync", ratio });
+                            Script("Progress.set", "#forFrameSync", ratio);
                         }
                     }).RefreshInfo((videoInfo) =>
                     {
-                        Script("Progress.set", new object[] { "#forFrameSync", 1 });
+                        Script("Progress.set", "#forFrameSync", 1);
                         videoInfo.ReadKfs(true);
                         videoInfo.SaveFkf("temp/fkf/" + fkfName);
                         if (requestFramesPath == path)
                         {   // 중간에 다른 파일 불러왔을 수도 있음
-                            Script("loadFkf", new object[] { fkfName });
+                            Script("loadFkf", fkfName);
                         }
                     });
                 }
@@ -1366,7 +1368,7 @@ namespace Jamaker
                     SaveThumbnailInfo(path);
                     fileSeq = ++lastThumbnailsFileSeq;
                 }
-                Script("setThumbnailsFileSeq", new object[] { fileSeq });
+                Script("setThumbnailsFileSeq", fileSeq);
 
                 int didread;
                 int offset = 0;
@@ -1418,11 +1420,11 @@ namespace Jamaker
                         // 이미 존재하면 재활용
                         if (isCompleted)
                         {
-                            Script("afterRenderThumbnails", new object[] { begin, end, flag });
+                            Script("afterRenderThumbnails", begin, end, flag);
                             continue;
                         }
 
-                        Script("startRenderThumbnails", new object[] { begin, end, flag });
+                        Script("startRenderThumbnails", begin, end, flag);
 
                         int ms = time % 60000;
                         int m = time / 60000;
@@ -1453,7 +1455,7 @@ namespace Jamaker
 
                         new Thread(() =>
                         {
-                            Script("startCompareThumbnails", new object[] { begin, end, flag });
+                            Script("startCompareThumbnails", begin, end, flag);
 
                             Bitmap bLast = null;
                             for (int index = 0; index < (end - begin); index++)
@@ -1565,7 +1567,7 @@ namespace Jamaker
                                         ByteArrayToBitmap(arr2).Save(img2, ImageFormat.Jpeg);
                                         ByteArrayToBitmap(arr3).Save(img3, ImageFormat.Jpeg);
 
-                                        Script("setDiff", new object[] { $"{begin + index}{flag}", sum });
+                                        Script("setDiff", $"{begin + index}{flag}", sum);
 
                                     } catch (Exception e) { Console.WriteLine(e); }
                                 }
@@ -1588,7 +1590,7 @@ namespace Jamaker
                             if (fileSeq != lastThumbnailsFileSeq) return;
 
                             //Console.WriteLine($"{renderingProcSeq}/{lastRenderingProcSeq}: {begin}, {end}, {flag}");
-                            Script("afterRenderThumbnails", new object[] { begin, end, flag });
+                            Script("afterRenderThumbnails", begin, end, flag);
 
                         }).Start();
                     }
@@ -1723,7 +1725,7 @@ namespace Jamaker
                 (sw = new StreamWriter(path, false, Encoding.UTF8)).Write(text);
                 if (type == 0)
                 {
-                    Script("afterSaveFile", new object[] { tab, path });
+                    Script("afterSaveFile", tab, path);
                 }
                 else
                 {

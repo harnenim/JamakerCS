@@ -125,8 +125,8 @@ namespace Jamaker
             OverrideInitAfterLoad();
         }
 
-        protected string Script(string name) { return Script(name, new object[] { }); }
-        protected string Script(string name, object arg)
+        protected string Script(string name, params object[] args) { return InScript(name, args); }
+        private string InScript(string name, object[] args)
         {
             object result = null;
 
@@ -134,11 +134,10 @@ namespace Jamaker
             {
                 if (InvokeRequired)
                 {
-                    result = Invoke(new Action(() => { Script(name, arg); }));
+                    result = Invoke(new Action(() => { InScript(name, args); }));
                 }
                 else
                 {
-                    object[] args = arg.GetType().IsArray ? (object[])arg : new object[] { arg };
                     mainView.ExecuteScriptAsync(name, args);
                 }
             }

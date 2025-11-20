@@ -73,7 +73,7 @@ namespace Jamaker
         }
         public void OverrideInitAfterLoad()
         {
-            Script("init", new object[] { settingJson });
+            Script("init", settingJson);
             AddFiles(args);
         }
 
@@ -126,7 +126,7 @@ namespace Jamaker
 
         private void OverrideDrop(int x, int y)
         {
-            Script("drop", new object[] { x, y });
+            Script("drop", x, y);
         }
 
         public void Compare(string file, string[] froms, string[] tos)
@@ -154,10 +154,10 @@ namespace Jamaker
             // TODO
 
             /*
-            Script("showPreview", new object[] { result.PreviewOrigin(), result.PreviewResult() });
+            Script("showPreview", result.PreviewOrigin(), result.PreviewResult() });
             if (result.count == 0)
             {
-                Script("alert", new object[] { "치환한 문자열이 없습니다." });
+                Script("alert", "치환한 문자열이 없습니다." });
             }
             */
         }
@@ -172,7 +172,7 @@ namespace Jamaker
 
             if (files.Length == 0)
             {
-                Script("alert", new object[] { "파일이 없습니다." });
+                Script("alert", "파일이 없습니다." });
             }
 
             List<Smi> originRange = new SmiFile().FromTxt(from).body;
@@ -342,7 +342,7 @@ namespace Jamaker
                 }
             }
 
-            Script("alert", new object[] { msg });
+            Script("alert", msg });
         }
         */
 
@@ -378,7 +378,7 @@ namespace Jamaker
                     }
                 }
 
-                Script("alert", new object[] { msg });
+                Script("alert", msg);
 
                 return;
             }
@@ -400,7 +400,7 @@ namespace Jamaker
             }
             finally { sr?.Close(); }
 
-            Script("replace", new object[] { index, text });
+            Script("replace", index, text);
         }
 
         public void SaveAndReplaceNext(int index, string text)
@@ -460,12 +460,12 @@ namespace Jamaker
                 FileInfo[] subFiles = dir.GetFiles();
                 foreach (FileInfo subFile in subFiles)
                 {
-                    Script("addFile", new object[] { subFile.FullName });
+                    Script("addFile", subFile.FullName);
                 }
             }
             else
             {
-                Script("addFile", new object[] { file });
+                Script("addFile", file);
             }
         }
         #endregion

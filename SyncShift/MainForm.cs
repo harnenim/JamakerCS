@@ -74,7 +74,7 @@ namespace Jamaker
         }
         public void OverrideInitAfterLoad()
         {
-            Script("init", new object[] { settingJson });
+            Script("init", settingJson);
         }
 
         private void BeforeExit(object sender, FormClosingEventArgs e)
@@ -126,7 +126,7 @@ namespace Jamaker
 
         private void OverrideDrop(int x, int y)
         {
-            Script("drop", new object[] { x, y });
+            Script("drop", x, y);
         }
 
         #region 파일
@@ -156,11 +156,11 @@ namespace Jamaker
         
         public void ShowProcessing(string message)
         {
-            Script("showProcessing", new object[] { message });
+            Script("showProcessing", message);
         }
         public void SetProgress(string progress, double status)
         {
-            Script("Progress.set", new object[] { progress, status });
+            Script("Progress.set", progress, status);
         }
         public void HideProcessing()
         {
@@ -194,11 +194,11 @@ namespace Jamaker
             {
                 if (isOrigin)
                 {
-                    Script("setOriginVideoFile", new object[] { (originVideoFile = video).path });
+                    Script("setOriginVideoFile", (originVideoFile = video).path);
                 }
                 else
                 {
-                    Script("setTargetVideoFile", new object[] { (targetVideoFile = video).path });
+                    Script("setTargetVideoFile", (targetVideoFile = video).path);
                 }
 
                 List<StreamAttr> streams = video.streams;
@@ -238,7 +238,7 @@ namespace Jamaker
                             string item = string.Format("{0}ː[{1}] {2}", audio.map, audio.language, title);
                             data = data == null ? item : (data + "|" + item);
                         }
-                        Script("showAudioSelector", new object[] { data, isOrigin, withSaveSkf, withKf });
+                        Script("showAudioSelector", data, isOrigin, withSaveSkf, withKf);
                         break;
                 }
             }
@@ -267,7 +267,7 @@ namespace Jamaker
             
             if (isOrigin)
             {
-                Script("refreshRangeAfterReadOriginVideoFile", new object[] { video.duration });
+                Script("refreshRangeAfterReadOriginVideoFile", video.duration);
             }
             else
             {
@@ -290,7 +290,7 @@ namespace Jamaker
             ShowProcessing("불러오는 중");
             if (isOrigin)
             {
-                Script("setOriginVideoFile", new object[] { path });
+                Script("setOriginVideoFile", path);
                 originVideoFile = VideoInfo.FromSkfFile(path);
                 new Thread(new ThreadStart(() =>
                 {
@@ -299,7 +299,7 @@ namespace Jamaker
             }
             else
             {
-                Script("setTargetVideoFile", new object[] { path });
+                Script("setTargetVideoFile", path);
                 targetVideoFile = VideoInfo.FromSkfFile(path);
                 new Thread(new ThreadStart(() =>
                 {
@@ -316,7 +316,7 @@ namespace Jamaker
                 sr = new StreamReader(path, DetectEncoding(path));
                 string text = sr.ReadToEnd();
 
-                Script("setOriginSubtitleFile", new object[] { path, text });
+                Script("setOriginSubtitleFile", path, text);
             }
             catch
             {
@@ -469,7 +469,7 @@ namespace Jamaker
 
                 if (sRanges.Length == 0)
                 {
-                    Script("addRange", new object[] { 0, originVideoFile.GetSfs().Count * 10 });
+                    Script("addRange", 0, originVideoFile.GetSfs().Count * 10);
                     ranges.Add(new Range(0, originVideoFile.GetSfs().Count));
                 }
                 else
@@ -513,7 +513,7 @@ namespace Jamaker
 
                 foreach (SyncShift shift in result)
                 {
-                    Script("addShift", new object[] { shift.start * 10, shift.shift * 10 });
+                    Script("addShift", shift.start * 10, shift.shift * 10);
                 }
 
                 List<int> kfs = targetVideoFile.GetKfs();
@@ -526,7 +526,7 @@ namespace Jamaker
                         strKfs += "," + kf;
                 }
                 strKfs += "]";
-                Script("setKfs", new object[] { strKfs });
+                Script("setKfs", strKfs);
 
                 HideProcessing();
                 SetProgress("#settingCalc", 0);
@@ -536,7 +536,7 @@ namespace Jamaker
         {
             if (targetVideoFile == null)
             {
-                Script("alert", new object[] { "목표 영상 파일을 선택해주세요." });
+                Script("alert", "목표 영상 파일을 선택해주세요.");
             }
             string path = targetVideoFile.path.Substring(0, targetVideoFile.path.Length - new FileInfo(targetVideoFile.path).Extension.Length) + "." + operation;
 
@@ -544,7 +544,7 @@ namespace Jamaker
             sw.Write(text);
             sw.Close();
 
-            Script("alert", new object[] { "저장했습니다." });
+            Script("alert", "저장했습니다.");
         }
     }
     public class WebProgress

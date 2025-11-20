@@ -74,7 +74,7 @@ namespace Jamaker
         }
         public void OverrideInitAfterLoad()
         {
-            Script("init", new object[] { settingJson });
+            Script("init", settingJson);
             AddFiles(args);
         }
 
@@ -127,7 +127,7 @@ namespace Jamaker
 
         private void OverrideDrop(int x, int y)
         {
-            Script("drop", new object[] { x, y });
+            Script("drop", x, y);
         }
 
         public void Compare(string file, string[] froms, string[] tos)
@@ -155,10 +155,10 @@ namespace Jamaker
             Replaced result = new Replaced(text, froms, tos);
             if (result == null) return;
 
-            Script("showPreview", new object[] { result.PreviewOrigin(), result.PreviewResult() });
+            Script("showPreview", result.PreviewOrigin(), result.PreviewResult());
             if (result.count == 0)
             {
-                Script("alert", new object[] { "치환한 문자열이 없습니다." });
+                Script("alert", "치환한 문자열이 없습니다.");
             }
 
         }
@@ -167,7 +167,7 @@ namespace Jamaker
             new Thread(() =>
             {
                 Script("showDragging");
-                Script("progress.set", new object[] { 0, files.Length });
+                Script("progress.set", 0, files.Length);
 
                 string text = null;
                 StreamReader sr = null;
@@ -211,7 +211,7 @@ namespace Jamaker
                     {
                         sw?.Close();
                     }
-                    Script("progress.set", new object[] { i, files.Length });
+                    Script("progress.set", i, files.Length);
                 }
 
                 Script("progress.hide");
@@ -222,7 +222,7 @@ namespace Jamaker
                 {
                     msg = $"{files.Length}개 파일 중 {fileCount}개 파일에 대해\n{count}곳을 치환했습니다.";
                 }
-                Script("alert", new object[] { msg });
+                Script("alert", msg);
             }).Start();
         }
 
@@ -252,7 +252,7 @@ namespace Jamaker
                 }
                 finally { sr?.Close(); }
 
-                Script("init", new object[] { settingJson = text });
+                Script("init", settingJson = text);
             }
         }
 
@@ -313,12 +313,12 @@ namespace Jamaker
                 FileInfo[] subFiles = dir.GetFiles();
                 foreach(FileInfo subFile in subFiles)
                 {
-                    Script("addFile", new object[] { subFile.FullName });
+                    Script("addFile", subFile.FullName);
                 }
             }
             else
             {
-                Script("addFile", new object[] { file });
+                Script("addFile", file);
             }
         }
         public void LoadSettingByDrag()

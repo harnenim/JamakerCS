@@ -197,7 +197,7 @@ namespace Jamaker
         private double dpi = 1;
         private void SetDpi()
         {
-            Script("setDpi", new object[] { dpi = DeviceDpi / 96 });
+            InScript("setDpi", new object[] { dpi = DeviceDpi / 96 });
         }
 
         private void OnDpiChanged(object sender, DpiChangedEventArgs e)
@@ -219,8 +219,8 @@ namespace Jamaker
             OverrideInitAfterLoad();
         }
 
-        protected string Script(string name) { return Script(name, new object[] { }); }
-        protected string Script(string name, object arg)
+        protected string Script(string name, params object[] args) { return InScript(name, args); }
+        private string InScript(string name, object[] args)
         {
             object result = null;
 
@@ -228,11 +228,10 @@ namespace Jamaker
             {
                 if (InvokeRequired)
                 {
-                    result = Invoke(new Action(() => { Script(name, arg); }));
+                    result = Invoke(new Action(() => { InScript(name, args); }));
                 }
                 else
                 {
-                    object[] args = arg.GetType().IsArray ? (object[])arg : new object[] { arg };
                     mainView.ExecuteScriptAsync(name, args);
                 }
             }
@@ -244,8 +243,10 @@ namespace Jamaker
             if (result == null) return null;
             return result.ToString();
         }
-        public string Script(IWebBrowser chromiumWebBrowser, string name) { return Script(chromiumWebBrowser, name, new object[] { }); }
-        public string Script(IWebBrowser chromiumWebBrowser, string name, object arg)
+        public string Script(IWebBrowser chromiumWebBrowser, string name, params object[] args) {
+            return InScript(chromiumWebBrowser, name, args);
+        }
+        private string InScript(IWebBrowser chromiumWebBrowser, string name, object[] args)
         {
             object result = null;
 
@@ -253,11 +254,10 @@ namespace Jamaker
             {
                 if (InvokeRequired)
                 {
-                    result = Invoke(new Action(() => { Script(name, arg); }));
+                    result = Invoke(new Action(() => { InScript(name, args); }));
                 }
                 else
                 {
-                    object[] args = arg.GetType().IsArray ? (object[])arg : new object[] { arg };
                     chromiumWebBrowser.ExecuteScriptAsync(name, args);
                 }
             }
@@ -338,7 +338,7 @@ namespace Jamaker
         protected void DragOverMain(object sender, DragEventArgs e)
         {
             try { e.Effect = DragDropEffects.All; } catch { }
-            Script("dragover", new object[] { (e.X - Location.X) / dpi, (e.Y - Location.Y) / dpi });
+            InScript("dragover", new object[] { (e.X - Location.X) / dpi, (e.Y - Location.Y) / dpi });
         }
         protected void DragDropMain(object sender, DragEventArgs e)
         {

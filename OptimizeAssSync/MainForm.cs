@@ -96,7 +96,7 @@ namespace Jamaker
 
         private void OverrideDrop(int x, int y)
         {
-            Script("drop", new object[] { x, y });
+            Script("drop", x, y);
         }
 
         public void CheckAndMakeFkf(string path)
@@ -114,7 +114,7 @@ namespace Jamaker
                     if (di.Exists)
                     {
                         VideoInfo.FromFkfFile(Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
-                        Script("Progress.set", new object[] { selector, 0 });
+                        Script("Progress.set", selector, 0);
                         Script("setFkfFile", fkfName);
                         return;
                     }
@@ -129,12 +129,12 @@ namespace Jamaker
                     // 없으면 새로 가져오기
                     new VideoInfo(path, (double ratio) =>
                     {
-                        Script("Progress.set", new object[] { selector, ratio });
+                        Script("Progress.set", selector, ratio);
                     }).RefreshInfo((VideoInfo videoInfo) =>
                     {
                         videoInfo.ReadKfs(true);
                         videoInfo.SaveFkf(Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
-                        Script("Progress.set", new object[] { selector, 0 });
+                        Script("Progress.set", selector, 0);
                         Script("setFkfFile", fkfName);
                     });
                 }
@@ -166,7 +166,7 @@ namespace Jamaker
                         string text = sr.ReadToEnd();
 
                         hasAss = true;
-                        Script("setAssFile", new object[] { file, text });
+                        Script("setAssFile", file, text);
 
                         string[] lines = text.Split('\n');
                         // TODO: 비디오 파일 정보 있을 때 처리
