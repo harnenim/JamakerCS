@@ -14,6 +14,9 @@ Binder.prototype.exitAfterSaveSetting = function(setting) {
 Binder.prototype.openFileDialog = function(type, withSaveSkf, withKf) {
 	this._.openFileDialog(type, withSaveSkf, withKf);
 }
+Binder.prototype.initOriginFiles = function(withSaveSkf) {
+	this._.initOriginFiles(withSaveSkf);
+}
 Binder.prototype.dropOriginFile = function(withSaveSkf) {
 	this._.dropOriginFile(withSaveSkf);
 }
@@ -218,7 +221,11 @@ window.main = new WebForm();
 			} 
 		}
 	}
-
+	
+	main.initOriginFiles = function(withSaveSkf) {
+		// C#에서 구현
+		// this.loadOriginFiles(args, withSaveSkf);
+	}
 	main.dropOriginFile = async function(withSaveSkf) {
 		console.log("DropOriginFile: {0}".split("{0}").join(withSaveSkf));
 		if (!this.droppedFiles) return;
@@ -226,43 +233,38 @@ window.main = new WebForm();
 			this.droppedFiles = null;
 			return;
 		}
+		this.loadOriginFiles(this.droppedFiles, withSaveSkf);
+	}
+	main.loadOriginFiles = async function(files, withSaveSkf) {
 		let hasVideo = false;
 		let hasSubtitle = false;
-		for (let i = 0; i < this.droppedFiles.length; i++) {
+		for (let i = 0; i < files.length; i++) {
 			try {
-				const file = this.droppedFiles[i];
+				const file = files[i];
 				const path = file.name;
-				const ext = path.substring(path.length - 4);
-				switch (ext) {
-					case ".avi":
-					case ".mkv":
-					case ".mp4":
-					case ".ts":
-					case ".m2ts": {
-						/*
-						if (hasVideo) break;
-						hasVideo = true;
-						main.withSaveSkf = withSaveSkf;
-						main.readVideoFile(file, true, withSaveSkf);
-						*/
-						if (hasVideo) break;
+				const ext = path.toLowerCase();
+				if (ext.endsWith(".avi")
+				 || ext.endsWith(".mkv")
+				 || ext.endsWith(".mp4")
+				 || ext.endsWith(".ts")
+				 || ext.endsWith(".m2ts")
+				) {
+					if (!hasVideo) {
 						hasVideo = true;
 						alert("웹버전은 동영상 대신 skf 파일만 지원합니다.");
-						break;
 					}
-					case ".skf": {
-						if (hasVideo) break;
+				} else if (ext.endsWith(".skf")) {
+					if (!hasVideo) {
 						hasVideo = true;
 						main.readSkfFile(file, true);
-						break;
 					}
-					case ".smi":
-					case ".ass":
-					case ".srt": {
-						if (hasSubtitle) break;
+				} else if (ext.endsWith(".smi")
+						|| ext.endsWith(".ass")
+						|| ext.endsWith(".srt")
+				) {
+					if (!hasSubtitle) {
 						hasSubtitle = true;
 						main.readSubtitleFile(file);
-						break;
 					}
 				}
 				if (hasVideo && hasSubtitle) {
@@ -285,26 +287,21 @@ window.main = new WebForm();
 			try {
 				const file = this.droppedFiles[i];
 				const path = file.name;
-				const ext = path.substring(path.length - 4);
-				switch (ext) {
-					case ".avi":
-					case ".mkv":
-					case ".mp4":
-					case ".ts":
-					case ".m2ts": {
-						/*
-						main.withSaveSkf = withSaveSkf;
-						main.readVideoFile(file, false, withSaveSkf, withKf);
-						*/
-						if (hasVideo) break;
+				const ext = path.toLowerCase();
+				if (ext.endsWith(".avi")
+				 || ext.endsWith(".mkv")
+				 || ext.endsWith(".mp4")
+				 || ext.endsWith(".ts")
+				 || ext.endsWith(".m2ts")
+				) {
+					if (!hasVideo) {
 						hasVideo = true;
 						alert("웹버전은 동영상 대신 skf 파일만 지원합니다.");
-						break;
 					}
-					case ".skf": {
+				} else if (ext.endsWith(".skf")) {
+					if (!hasVideo) {
 						hasVideo = true;
 						main.readSkfFile(file, false);
-						break;
 					}
 				}
 				if (hasVideo) {
@@ -398,15 +395,15 @@ window.main = new WebForm();
 		const types = [];
 		switch (operation) {
 			case "smi": {
-				types.push({ description: "SAMI", accept: { "text/sami": [".smi"] } });
+				types.push({ description: "SAMI 자막 파일", accept: { "text/sami": [".smi"] } });
 				break;
 			}
 			case "srt": {
-				types.push({ description: "SRT", accept: { "text/srt": [".srt"] } });
+				types.push({ description: "SRT 자막 파일", accept: { "text/srt": [".srt"] } });
 				break;
 			}
 			case "ass": {
-				types.push({ description: "ASS", accept: { "text/ass": [".ass"] } });
+				types.push({ description: "ASS 자막 파일", accept: { "text/ass": [".ass"] } });
 				break;
 			}
 		}

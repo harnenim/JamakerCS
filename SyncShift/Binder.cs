@@ -49,6 +49,10 @@
         {
             _.OpenFileDialog(type, withSaveSkf, withKf);
         }
+        public void InitOriginFiles(bool withSaveSkf)
+        {
+            _.InitOriginFiles(withSaveSkf);
+        }
         public void DropOriginFile(bool withSaveSkf)
         {
             _.DropOriginFile(withSaveSkf);

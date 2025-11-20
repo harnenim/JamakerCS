@@ -69,6 +69,8 @@ window.main = new WebForm();
 	main.initAfterLoad = function() {
 		this.super_initAfterLoad();
 		this.script("init", main.settingJson);
+		// C#에서 구현
+		// this.addFiles(args);
 	};
 	
 	main.beforeExit = function(e) {
@@ -92,8 +94,11 @@ window.main = new WebForm();
 			this.droppedFiles = null;
 			return;
 		}
-		for (let i = 0; i < this.droppedFiles.length; i++) {
-			const file = this.droppedFiles[i];
+		this.addFiles(this.droppedFiles);
+	}
+	main.addFiles = function(files) {
+		for (let i = 0; i < files.length; i++) {
+			const file = files[i];
 			main.fileMap[file.name] = file;
 			main.script("addFile", file.name);
 		}

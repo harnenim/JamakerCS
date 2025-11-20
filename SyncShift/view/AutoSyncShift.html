@@ -410,6 +410,7 @@ function init(setting) {
 //	$("#chkTrustKfTarget").prop("checked", setting.saveSkf.withKf);
 	$("#inputSeparator").val(setting.separators);
 	$("#inputMaxBlank").val(isFinite(setting.maxBlank) ? setting.maxBlank : 30);
+	binder.initOriginFiles(setting.saveSkf.origin);
 }
 function addRange(range=[0,0]) {
 	let body = $("#rangeList .list-body");

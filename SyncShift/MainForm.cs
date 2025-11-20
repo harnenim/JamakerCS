@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -14,6 +13,7 @@ namespace Jamaker
     public partial class MainForm : Form
     {
         private readonly string settingJson = "{\"saveSkf\":{\"origin\":true,\"target\":true},\"separators\":\"&nbsp;&nbsp;\\n하느@harne_\",\"maxBlank\":30}";
+        private string[] args;
 
         public MainForm(string[] args)
         {
@@ -66,6 +66,8 @@ namespace Jamaker
             mainView.JavascriptObjectRepository.Settings.LegacyBindingEnabled = true;
             mainView.JavascriptObjectRepository.Register("binder", new Binder(this), false, BindingOptions.DefaultBinder);
             mainView.RequestHandler = new RequestHandler(); // TODO: 팝업에서 이동을 막아야 되는데...
+
+            this.args = args;
 
             FormClosing += new FormClosingEventHandler(BeforeExit);
             FormClosed += new FormClosedEventHandler(WebFormClosed);
@@ -356,6 +358,10 @@ namespace Jamaker
 }
 	    }
 
+        public void InitOriginFiles(bool withSaveSkf)
+        {
+            LoadOriginFiles(args, withSaveSkf);
+        }
         public void DropOriginFile(bool withSaveSkf)
         {
             Console.WriteLine("DropOriginFile: {0}", withSaveSkf);
@@ -363,10 +369,13 @@ namespace Jamaker
             {
                 return;
             }
-
+            LoadOriginFiles(droppedFiles, withSaveSkf);
+        }
+        public void LoadOriginFiles(string[] files, bool withSaveSkf)
+        {
             var hasVideo = false;
             var hasSubtitle = false;
-            foreach (string path in droppedFiles)
+            foreach (string path in files)
             {
                 FileInfo file = new FileInfo(path);
                 string ext = file.Extension;

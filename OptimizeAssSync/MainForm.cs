@@ -10,6 +10,8 @@ namespace Jamaker
 {
     public partial class MainForm : Form
     {
+        private string[] args;
+
         public MainForm(string[] args)
         {
             string ProcName = Process.GetCurrentProcess().ProcessName;
@@ -58,9 +60,13 @@ namespace Jamaker
             mainView.JavascriptObjectRepository.Register("binder", new Binder(this), false, BindingOptions.DefaultBinder);
             mainView.RequestHandler = new RequestHandler(); // TODO: 팝업에서 이동을 막아야 되는데...
 
+            this.args = args;
+
             FormClosed += new FormClosedEventHandler(WebFormClosed);
         }
-        public void OverrideInitAfterLoad() {}
+        public void OverrideInitAfterLoad() {
+            LoadFiles(args);
+        }
 
         private void WebFormClosed(object sender, FormClosedEventArgs e)
         {
@@ -139,9 +145,13 @@ namespace Jamaker
         #region 파일
         public void DropFiles()
         {
+            LoadFiles(droppedFiles);
+        }
+        public void LoadFiles(string[] files)
+        {
             bool hasAss = false;
             bool hasVideo = false;
-            foreach (string file in droppedFiles)
+            foreach (string file in files)
             {
                 string ext = file.ToLower();
 

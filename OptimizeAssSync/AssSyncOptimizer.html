@@ -65,6 +65,8 @@ const main = new WebForm();
 	
 	main.initAfterLoad = function() {
 		this.super_initAfterLoad();
+		// C#에서 구현
+		// this.loadFiles(args);
 	};
 	
 	main.beforeExit = function(e) {
@@ -87,6 +89,9 @@ const main = new WebForm();
 			this.droppedFiles = null;
 			return;
 		}
+		this.loadFiles(this.droppedFiles);
+	}
+	main.loadFiles = async function(files) {
 		let hasAss = false;
 		let hasVideo = false;
 		for (let i = 0; i < this.droppedFiles.length; i++) {

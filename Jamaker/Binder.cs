@@ -91,6 +91,10 @@ namespace Jamaker
         {
             _.OpenFile();
         }
+        public void AfterInit(int limit)
+        {
+            _.AfterInit(limit);
+        }
         public void OpenFileForVideo()
         {
             _.OpenFileForVideo();

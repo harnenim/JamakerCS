@@ -1948,6 +1948,8 @@ function init(jsonSetting, isBackup=true) {
 	}, setting.tempSave * 1000);
 	
 	log("init end", funcSince);
+	
+	binder.afterInit(setting.useTab ? 4 : 1);
 }
 
 function setSetting(setting, initial=false) {

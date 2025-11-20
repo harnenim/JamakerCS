@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Text;
-using System.Windows.Forms;
-using CefSharp;
-using System.Diagnostics;
+﻿using CefSharp;
 using Jamaker.addon;
-using System.Reflection;
-using System.Threading;
-using System.Runtime.InteropServices;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
+using System.Windows.Forms;
 
 namespace Jamaker
 {
@@ -263,7 +263,6 @@ namespace Jamaker
             catch { }
             return 0;
         }
-        bool initialMoved = false;
         public void MoveWindow(string target, int x, int y, int width, int height, bool resizable)
         {
             try
@@ -300,27 +299,6 @@ namespace Jamaker
                         if (target.Equals("editor"))
                         {
                             Script("setDpiBy", width);
-
-                            if (!initialMoved)
-                            {
-                                initialMoved = true;
-
-                                // 최초 실행 시 ffmpeg 존재 여부 확인인데, 창 위치 잡아준 후에 alert 돌아가도록 함
-                                CheckFFmpegWithAlert();
-
-                                // 파일 드래그해서 실행하는 경우도 이쪽에서 받도록 함
-                                if (args.Length > 0)
-                                {
-                                    string strFile = args[0];
-                                    if (strFile.ToUpper().EndsWith(".SMI")
-                                     || strFile.ToUpper().EndsWith(".SRT")
-                                     || strFile.ToUpper().EndsWith(".ASS")
-                                     || strFile.ToUpper().EndsWith(".JMK"))
-                                    {
-                                        LoadFile(strFile);
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -1040,6 +1018,34 @@ namespace Jamaker
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
                     LoadFile(dialog.FileName);
+                }
+            }
+        }
+        public void AfterInit(int limit)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { AfterInit(limit); }));
+                return;
+            }
+
+            // 최초 실행 시 ffmpeg 존재 여부 확인인데, 창 위치 잡아준 후에 alert 돌아가도록 함
+            CheckFFmpegWithAlert();
+
+            int count = 0;
+            foreach (string path in args)
+            {
+                if (path.ToUpper().EndsWith(".SMI")
+                 || path.ToUpper().EndsWith(".SRT")
+                 || path.ToUpper().EndsWith(".ASS")
+                 || path.ToUpper().EndsWith(".JMK"))
+                {
+                    LoadFile(path);
+                    count++;
+                }
+                if (count >= limit)
+                {
+                    break;
                 }
             }
         }

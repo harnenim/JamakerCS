@@ -18,10 +18,6 @@
         {
             _.InitAfterLoad(title);
         }
-        public void SetVideoFile(string path)
-        {
-            _.CheckAndMakeFkf(path);
-        }
 
         public void ShowDragging()
         {
@@ -49,8 +45,7 @@
         {
             _.DropFiles();
         }
-
-        public void CheckAndMakeFkf(string path)
+        public void SetVideoFile(string path)
         {
             _.CheckAndMakeFkf(path);
         }
