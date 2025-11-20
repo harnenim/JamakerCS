@@ -487,23 +487,27 @@ $(() => {
 		}
 		
 		// 중간 싱크 재계산
-		let startIndex = -1;
-		for (let i = 1; i < smis.length; i++) {
-			if (smis[i].syncType == Subtitle.SyncType.inner) {
-				if (startIndex < 0) {
-					startIndex = i - 1;
-				}
-			} else {
-				if (startIndex >= 0) {
-					const endIndex = i;
-					const startSync = smis[startIndex].start;
-					const endSync   = smis[endIndex  ].start;
-					const count = endIndex - startIndex;
-
-					for (let j = 1; j < count; j++) {
-						smis[startIndex + j].start = Math.round(((count - j) * startSync + j * endSync) / count);
+		for (let oi = 0; oi < origins.length; oi++) {
+			const hold = smis[oi];
+			
+			let startIndex = -1;
+			for (let i = 1; i < hold.length; i++) {
+				if (hold[i].syncType == Subtitle.SyncType.inner) {
+					if (startIndex < 0) {
+						startIndex = i - 1;
 					}
-					startIndex = -1;
+				} else {
+					if (startIndex >= 0) {
+						const endIndex = i;
+						const startSync = hold[startIndex].start;
+						const endSync   = hold[endIndex  ].start;
+						const count = endIndex - startIndex;
+						
+						for (let j = 1; j < count; j++) {
+							hold[startIndex + j].start = Math.round(((count - j) * startSync + j * endSync) / count);
+						}
+						startIndex = -1;
+					}
 				}
 			}
 		}
