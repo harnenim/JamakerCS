@@ -195,19 +195,22 @@ function setOriginSubtitleFile(path, text) {
 		}, 1);
 	}
 	
-	{	const ext = path.substring(path.length - 4);
-		if (ext == ".smi") {
-			operation.type = "smi";
+	{	const ext = path.toLowerCase();
+		if (ext.endsWith(".smi")
+		 || ext.endsWith(".sami")
+		 || ext.endsWith(".jmk")
+		) {
+			operation.type = (ext.endsWith(".jmk") ? "jmk" : "smi");
 			operation.origin = new SmiFile(text);
 			operation.input = SmiFile.textToHolds(text);
 			operation.target = new SmiFile();
 			
-		} else if (ext == ".srt") {
+		} else if (ext.endsWith(".srt")) {
 			operation.type = "srt";
 			operation.origin = new SrtFile(text);
 			operation.target = new SrtFile();
 			
-		} else if (ext == ".ass") {
+		} else if (ext.endsWith(".ass")) {
 			operation.type = "ass";
 			operation.origin = (operation.originFile = new AssFile(text)).getEvents();
 			operation.target = (operation.targetFile = new AssFile()).getEvents();
@@ -223,7 +226,7 @@ function setOriginSubtitleFile(path, text) {
 		const item = sortedBody[i];
 		if (range[0] <= 0) {
 			// 새로운 범위를 시작해야 함
-			if (operation.type == "smi" && item.text.split("&nbsp;").join(" ").trim().length == 0) {
+			if ((operation.type == "smi" || operation.type == "jmk") && item.text.split("&nbsp;").join(" ").trim().length == 0) {
 				// 공백 싱크일 경우 넘기기
 				continue;
 			}
@@ -270,7 +273,8 @@ function refreshPreview(isTarget=false) {
 	let lastSync = 0;
 	let errCount = 0;
 	switch (operation.type) {
-		case "smi": {
+		case "smi":
+		case "jmk": {
 			const originBody = body;
 			body = [];
 			let last = {};
@@ -532,7 +536,8 @@ function apply() {
 	}
 	
 	switch (operation.type) {
-		case "smi": {
+		case "smi":
+		case "jmk": {
 			const origin = operation.origin;
 			const target = operation.target = new SmiFile();
 			target.header = origin.header;

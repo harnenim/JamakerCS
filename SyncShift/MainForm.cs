@@ -333,7 +333,7 @@ namespace Jamaker
                     OpenFileDialog(type, withSaveSkf, withKf);
                 }));
             }
-            string filter = "지원되는 자막 파일|*.smi;*.srt;*.ass";
+            string filter = "지원되는 자막 파일|*.smi;*.sami;*.srt;*.ass;*.jmk";
 		    if (type % 10 == 0) {
                 filter = "동영상 혹은 skf 파일|*.avi;*.mkv;*.mp4;*.ts;*.m2ts;*.skf";
             }
@@ -400,6 +400,7 @@ namespace Jamaker
                             break;
                         }
                     case ".smi":
+                    case ".sami":
                     case ".ass":
                     case ".srt":
                     case ".jmk":

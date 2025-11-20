@@ -193,7 +193,7 @@ window.main = new WebForm();
 		this.script("setOriginSubtitleFile", path, await file.text());
 	}
 	main.openFileDialog = async function(type, withSaveSkf, withKf) {
-		let setting = {types:[{description:'자막 파일',accept:{'text/*':['.smi', '.srt', '.ass']}}]};
+		let setting = {types:[{description:'자막 파일',accept:{'text/*':['.smi', '.sami', '.srt', '.ass', '.jmk']}}]};
 		if (type % 10 == 0) {
 			// 동영상 혹은 skf 파일
 			setting = { types: [{ description: '동영상 혹은 skf 파일', accept: { 'video/*': ['.avi', '.mkv', '.mp4', '.ts', '.m2ts', '.skf'] } }] };
@@ -259,8 +259,10 @@ window.main = new WebForm();
 						main.readSkfFile(file, true);
 					}
 				} else if (ext.endsWith(".smi")
+						|| ext.endsWith(".sami")
 						|| ext.endsWith(".ass")
 						|| ext.endsWith(".srt")
+						|| ext.endsWith(".jmk")
 				) {
 					if (!hasSubtitle) {
 						hasSubtitle = true;
@@ -395,7 +397,11 @@ window.main = new WebForm();
 		const types = [];
 		switch (operation) {
 			case "smi": {
-				types.push({ description: "SAMI 자막 파일", accept: { "text/sami": [".smi"] } });
+				types.push({ description: "SAMI 자막 및 프로젝트 파일", accept: { "text/sami": [".smi", ".sami", ".jmk"] } });
+				break;
+			}
+			case "jmk": {
+				types.push({ description: "SAMI 프로젝트 파일", accept: { "text/sami": [".jmk"] } });
 				break;
 			}
 			case "srt": {

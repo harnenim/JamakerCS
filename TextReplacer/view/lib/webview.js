@@ -119,6 +119,22 @@ $(() => {
 		}
 	}, { passive: false });
 	
+	// WebView2 전환 시 활용
+	if (window.chrome.webview) {
+		// 각 프로그램에서 필요한 경우 override 정의
+		window.sharedBufferReceived = (e) => {
+			// C#: PostSharedBufferToScript
+			// new Uint8Array(e.getBuffer());
+		}
+		window.chrome.webview.addEventListener("sharedbufferreceived", (e) => {
+			sharedBufferReceived(e);
+		});
+		// CefSharp에서와 동일하게 호출
+		if (chrome.webview.hostObjects && chrome.webview.hostObjects.binder) {
+			window.binder = chrome.webview.hostObjects.binder;
+		}
+	}
+	
 	if (window.binder) {
 		setTimeout(() => {
 			binder.initAfterLoad($("title").text());
@@ -144,6 +160,14 @@ $(() => {
 	
 	$("input").attr({ autocomplete: "off" });
 });
+
+// 팝업 재정의
+window.popup = function(url, name, w=1, h=1) {
+	window.open(url, name, ["scrollbar=no", "location=no", "width=" + w, "height=" + h].join(","));
+	
+	// TODO: window.open 말고 다른 걸 쓰려고 해봤는데, 이러면 opener 호출이 되나...?
+	// WebView2를 먼저 만져봐야 할 듯
+}
 
 window.Progress = function() {
 	this.div = $("<div>").css({

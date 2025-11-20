@@ -151,6 +151,7 @@ const window_open = function(url, name, options, opener) {
 		const file = this.droppedFiles[0];
 		const ext = file.name.toLowerCase();
 		if (ext.endsWith(".smi")
+		 || ext.endsWith(".sami")
 		 || ext.endsWith(".srt")
 		 || ext.endsWith(".ass")
 		 || ext.endsWith(".jmk")
@@ -748,7 +749,7 @@ window.MB = 9;
 			types: [
 				{	description: "지원되는 자막 파일"
 				,	accept: {
-							"text/sami": [".smi", ".jmk"]
+							"text/sami": [".smi", ".sami", ".jmk"]
 						,	"text/srt" : [".srt"]
 						,	"text/ass" : [".ass"]
 					}
