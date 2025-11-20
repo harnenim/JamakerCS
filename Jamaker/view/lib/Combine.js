@@ -1537,7 +1537,10 @@ if (SmiFile) {
 			}
 			
 		} else {
-			if (withComment < 0) { // 싱크 타입까지 제거
+			if (withComment < 0) {
+				// export 속성 제거
+				main.header = main.header.replace(/<sami( [^>]*)*>/gi, "<SAMI>");
+				// 싱크 타입까지 제거
 				for (let i = 0; i < main.body.length; i++) {
 					main.body[i].syncType = SyncType.normal;
 				}

@@ -260,6 +260,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			const match = /<sami( [^>]*)*>/gi.exec(this.text);
 			
 			let withSmi = false;
+			let withSrt = false;
 			let withAss = false;
 			
 			if (match && match[1]) {
@@ -267,12 +268,15 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 				for (let i = 0; i < attrs.length; i++) {
 					if (attrs[i] == "SMI") {
 						withSmi = true;
+					} else if (attrs[i] == "SRT") {
+						withSrt = true;
 					} else if (attrs[i] == "ASS") {
 						withAss = true;
 					}
 				}
 			}
 			tab.withSmi = withSmi;
+			tab.withSrt = withSrt;
 			if (tab.withAss != withAss) {
 				if (withAss) {
 					tab.withAss = true;
@@ -2417,21 +2421,51 @@ function saveFile(asNew, isExport) {
 		if (withSmi) {
 			// 프로젝트 파일 경로 기반으로
 			if (path) {
-				if (path.indexOf("\\") > 0 || path.indexOf("/") >= 0) {
-					// 웹샘플 파일명이면 여기로 못 들어옴
-					if (path.toLowerCase().endsWith(".smi")) {
-						withSmi = false; // smi 파일을 직접 프로젝트로 쓰는 경우 별도 저장 없음
-					} else if (path.toLowerCase().endsWith(".jmk")) {
-						smiPath = path.substring(0, path.length - 3) + "smi";
-					} else {
-						smiPath = path + ".smi";
+				if (path.toLowerCase().endsWith(".sami")
+				 || path.toLowerCase().endsWith(".smi")) {
+					withSmi = false; // smi 파일을 직접 프로젝트로 쓰는 경우 별도 저장 없음
+					
+				} else {
+					if (path.indexOf("\\") > 0 || path.indexOf("/") >= 0) {
+						// 웹샘플 파일명이면 여기로 못 들어옴
+						if (path.toLowerCase().endsWith(".jmk")) {
+							smiPath = path.substring(0, path.length - 3) + "smi";
+						} else {
+							smiPath = path + ".smi";
+						}
+					} else if (currentTab.smiPath) {
+						// 웹샘플에서 이미 저장한 적 있을 경우
+						smiPath = currentTab.smiPath;
 					}
-				} else if (currentTab.smiPath) {
-					// 웹샘플에서 이미 저장한 적 있을 경우
-					smiPath = currentTab.smiPath;
 				}
 			} else {
 				alert("최초 프로젝트 파일 생성 시엔 SMI 파일이 생성되지 않습니다.");
+				withSmi = false;
+			}
+		}
+		
+		let withSrt = !isExport && currentTab.withSrt; // SMI 내보내기 시엔 처리하지 않음
+		let srtPath = "";
+		if (withSrt) {
+			// 프로젝트 파일 경로 기반으로
+			if (path) {
+				if (path.indexOf("\\") > 0 || path.indexOf("/") >= 0) {
+					// 웹샘플 파일명이면 여기로 못 들어옴
+					if (path.toLowerCase().endsWith(".sami")) {
+						smiPath = path.substring(0, path.length - 4) + "srt";
+					} else if (path.toLowerCase().endsWith(".smi")) {
+						smiPath = path.substring(0, path.length - 3) + "srt";
+					} else if (path.toLowerCase().endsWith(".jmk")) {
+						smiPath = path.substring(0, path.length - 3) + "srt";
+					} else {
+						smiPath = path + ".srt";
+					}
+				} else if (currentTab.srtPath) {
+					// 웹샘플에서 이미 저장한 적 있을 경우
+					srtPath = currentTab.srtPath;
+				}
+			} else {
+				alert("최초 SMI 파일 생성 시엔 SRT 파일이 생성되지 않습니다.");
 				withSmi = false;
 			}
 		}
@@ -2550,7 +2584,9 @@ function saveFile(asNew, isExport) {
 			if (path) {
 				if (path.indexOf("\\") > 0 || path.indexOf("/") >= 0) {
 					// 웹샘플 파일명이면 여기로 못 들어옴
-					if (path.toLowerCase().endsWith(".smi")) {
+					if (path.toLowerCase().endsWith(".sami")) {
+						assPath = path.substring(0, path.length - 4) + "ass";
+					} else if (path.toLowerCase().endsWith(".smi")) {
 						assPath = path.substring(0, path.length - 3) + "ass";
 					} else if (path.toLowerCase().endsWith(".jmk")) {
 						assPath = path.substring(0, path.length - 3) + "ass";
@@ -2578,12 +2614,23 @@ function saveFile(asNew, isExport) {
 			binder.save(tab, saveText, path, 0);
 			log("binder.save end", saveFrom);
 			
-			if (withSmi) {
+			if (withSmi || withSrt) {
 				const smiText = currentTab.getSaveText(true, -1);
 				
-				const saveSmiFrom = log("binder.save smi start");
-				binder.save(tab, smiText, smiPath, 1);
-				log("binder.save smi end", saveSmiFrom);
+				if (withSmi) {
+					const saveSmiFrom = log("binder.save smi start");
+					binder.save(tab, smiText, smiPath, 1);
+					log("binder.save smi end", saveSmiFrom);
+				}
+				if (withSrt) {
+					// TODO: 위에서 getSaveText 구하는 중간 단계 SmiFile을 쓸 수 있으면 좀 더 효율적이겠지만...
+					const syncs = new SmiFile(smiText).toSyncs();
+					const srtFile = new SrtFile().fromSyncs(syncs);
+					binder.save(tab, srtFile.toText(), srtPath, 3);
+					const saveSrtFrom = log("binder.save srt start");
+					
+					log("binder.save srt end", saveSrtFrom);
+				}
 			}
 			if (withAss) {
 			    if (Subtitle.video.fs.length) {
@@ -2662,6 +2709,10 @@ function afterSaveSmiFile(tab, path) {
 // 웹버전에서만 활용
 function afterSaveAssFile(tab, path) {
 	tabs[tab].assPath = path;
+}
+// 웹버전에서만 활용
+function afterSaveSrtFile(tab, path) {
+	tabs[tab].srtPath = path;
 }
 
 // TODO: 임시 저장은 현재 탭만이 아니라 모든 탭에 동작해야 하나...?

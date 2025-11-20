@@ -47,7 +47,7 @@ Binder.prototype.runPlayer = function(path) {
 	this._.runPlayer(path);
 }
 
-Binder.prototype.save = function(tab, text, path, type=0) { // type 0: jmk / 1: smi / 2: ass
+Binder.prototype.save = function(tab, text, path, type=0) { // type 0: jmk / 1: smi / 2: ass / 3: srt
 	this._.requestSave(tab, text, path, type);
 }
 Binder.prototype.saveTemp = function(text, path) {
@@ -923,6 +923,7 @@ window.MB = 9;
 			case 0: editor.script("afterSaveFile"   , tab, path); break;
 			case 1: editor.script("afterSaveSmiFile", tab, path); break;
 			case 2: editor.script("afterSaveAssFile", tab, path); break;
+			case 3: editor.script("afterSaveSrtFile", tab, path); break;
 		}
 		editor.afterSave();
 	}
@@ -941,8 +942,9 @@ window.MB = 9;
 			const types = [];
 			switch (order.type) {
 				case 0:
-				case 1: types.push({ description: "SAMI 자막", accept: { "text/sami": [".smi"] } }); break;
+				case 1: types.push({ description: "SAMI 자막", accept: { "text/sami": [".smi", ".sami"] } }); break;
 				case 2: types.push({ description: "ASS 자막" , accept: { "text/ass" : [".ass"] } }); break;
+				case 3: types.push({ description: "SRT 자막" , accept: { "text/srt" : [".srt"] } }); break;
 			}
 			if (order.type == 0) {
 				types.push({ description: "자막 프로젝트", accept: { "text/sami": [".jmk"] } });

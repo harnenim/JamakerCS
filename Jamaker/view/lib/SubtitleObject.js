@@ -4462,7 +4462,11 @@ Srt.prototype.toSync = function() {
 Srt.prototype.fromSync = function(sync) {
 	this.start = sync.start;
 	this.end = sync.end;
-	this.fromAttrs(sync.text);
+	if (sync.origin && sync.origin.constructor == Smi) {
+		this.text = sync.origin.text.split("\n").join("").split("<br>").join("\n");
+	} else {
+		this.fromAttrs(sync.text);
+	}
 	return this;
 }
 
