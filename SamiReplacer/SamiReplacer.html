@@ -68,7 +68,7 @@ window.main = new WebForm();
 	
 	main.initAfterLoad = function() {
 		this.super_initAfterLoad();
-		this.script("init", [main.settingJson]);
+		this.script("init", main.settingJson);
 	};
 	
 	main.beforeExit = function(e) {
@@ -95,7 +95,7 @@ window.main = new WebForm();
 		for (let i = 0; i < this.droppedFiles.length; i++) {
 			const file = this.droppedFiles[i];
 			main.fileMap[file.name] = file;
-			main.script("addFile", [ file.name ]);
+			main.script("addFile", file.name);
 		}
 		this.droppedFiles = null;
 	}
@@ -113,7 +113,7 @@ window.main = new WebForm();
 		}
 		
 		const file = this.fileMap[this.files[index]];
-		this.script("replace", [index, await file.text()]);;
+		this.script("replace", index, await file.text());
 	}
 	main.saveAndReplaceNext = function(index, text) {
 		console.log(index, text);

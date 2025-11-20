@@ -97,7 +97,7 @@ const main = new WebForm();
 				if (hasAss) continue;
 				hasAss = true;
 				const text = await file.text();
-				main.script("setAssFile", [ file.name, text ]);
+				main.script("setAssFile", file.name, text);
 				
 				const lines = text.split("\n");
 				// TODO: 비디오 파일 정보 있을 때 처리
@@ -109,14 +109,14 @@ const main = new WebForm();
 					|| ext.endsWith(".m2ts")) {
 				if (hasVideo) continue;
 				hasVideo = true;
-				main.script("setVideoFile", [ file.name ]);
+				main.script("setVideoFile", file.name);
 				main.checkAndMakeFkf(file.name);
 				
 			} else if (ext.endsWith(".fkf")) {
 				if (hasVideo) continue;
 				hasVideo = true;
-				main.script("setVideoFile", [ file.name ]);
-				main.script("setFkfFile", [ file ]);
+				main.script("setVideoFile", file.name);
+				main.script("setFkfFile", file);
 			}
 		}
 		this.droppedFiles = null;

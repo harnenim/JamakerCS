@@ -163,7 +163,7 @@ const window_open = function(url, name, options, opener) {
 			}
 			*/
 			case ".fkf": {
-				await editor.script("loadFkfFile", [file]);
+				await editor.script("loadFkfFile", file);
 				break;
 			}
 		}
@@ -242,9 +242,9 @@ const window_open = function(url, name, options, opener) {
 		
 		this.windows[this.mainView.contentWindow.windowName] = window;
 		
-		this.script("init", [this.strSettingJson, false]); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
-		this.script("setPlayerDlls", [this.strBridgeList]);
-		this.script("setHighlights", [this.strHighlights]);
+		this.script("init", this.strSettingJson, false); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
+		this.script("setPlayerDlls", this.strBridgeList);
+		this.script("setHighlights", this.strHighlights);
 		
 		// 세팅 확인
 		WinAPI.GetWindowRect(this.getHwnd("editor"), this.lastOffset);
@@ -252,8 +252,8 @@ const window_open = function(url, name, options, opener) {
 		
 		// 실행 5초 후 동영상 불러온 것처럼 실행
 		setTimeout(() => {
-			this.script("setVideoInfo", [1920,1080,23976]);
-			this.script("eval", ["for (let i = 0; i < 200000; i++) { SmiEditor.video.fs.push(Math.round(i * SmiEditor.video.FL)); }"]);
+			this.script("setVideoInfo", 1920, 1080, 23976);
+			this.script("eval", "for (let i = 0; i < 200000; i++) { SmiEditor.video.fs.push(Math.round(i * SmiEditor.video.FL)); }");
 		}, 2000);
 	};
 	
@@ -264,7 +264,7 @@ const window_open = function(url, name, options, opener) {
 			 * C#에선 초기화 여부 체크하는 등의 코드가 들어감
 			 */
 			const time = this.player.getTime();
-			editor.script("refreshTime", [time]);
+			editor.script("refreshTime", time);
 			editor.updateViewerTime(time);
 		}
 	}
@@ -339,7 +339,7 @@ window.MB = 9;
 			if (hwnd) {
 				WinAPI.MoveWindow(hwnd, x - ML, y - MT, width + ML + MR, height + MB);
 				if (target == "editor") {
-					//this.script("setDpiBy", [width]);
+					//this.script("setDpiBy", width);
 				}
 				
 				// TODO C#: OnBeforePopup
@@ -386,12 +386,13 @@ window.MB = 9;
 			if (hwnd) {
 				const targetOffset = new RECT();
 				WinAPI.GetWindowRect(hwnd, targetOffset);
-				this.script("afterGetWindow", [ target
+				this.script("afterGetWindow"
+					, target
 					, targetOffset.left + ML
 					, targetOffset.top  + MT
 					, targetOffset.right - targetOffset.left - ML - MR
 					, targetOffset.bottom - targetOffset.top - MB
-				]);
+				);
 			}
 		}
 	}
@@ -459,34 +460,34 @@ window.MB = 9;
 		} else if (this.saveSettingAfter > 0) {
 			if (--this.saveSettingAfter == 0) {
 				WinAPI.GetWindowRect(this.getHwnd("editor"), this.offset);
-				this.script("eval", [
+				this.script("eval",
 					"setting.window.x = " + (this.offset.left + ML) + ";"
 				+	"setting.window.y = " + (this.offset.top  + MT) + ";"
 				+	"setting.window.width = "  + (this.offset.right  - this.offset.left - ML - MR) + ";"
 				+	"setting.window.height = " + (this.offset.bottom - this.offset.top  - MB) + ";"
-				]);
+				);
 				
 				const viewer = this.getHwnd("viewer");
 				if (viewer) {
 					WinAPI.GetWindowRect(viewer, this.viewerOffset);
-					this.script("eval", [
+					this.script("eval",
 						"setting.viewer.window.x = " + (this.viewerOffset.left + ML) + ";"
 					+	"setting.viewer.window.y = " + (this.viewerOffset.top  + MT) + ";"
 					+	"setting.viewer.window.width = "  + (this.viewerOffset.right  - this.viewerOffset.left - ML - MR) + ";"
 					+	"setting.viewer.window.height = " + (this.viewerOffset.bottom - this.viewerOffset.top  - MB) + ";"
-					]);
+					);
 				}
 				
 				const player = this.getHwnd("player");
 				if (player) {
 					const playerOffset = this.player.currentOffset;
 					WinAPI.GetWindowRect(player, playerOffset);
-					this.script("eval", [
+					this.script("eval",
 						"setting.player.window.x = " + (playerOffset.left + ML) + ";"
 					+	"setting.player.window.y = " + (playerOffset.top  + MT) + ";"
 					+	"setting.player.window.width = "  + (playerOffset.right  - playerOffset.left - ML - MR) + ";"
 					+	"setting.player.window.height = " + (playerOffset.bottom - playerOffset.top  - MB) + ";"
-					]);
+					);
 				}
 				this.script("saveSetting");
 			}
@@ -581,7 +582,7 @@ window.MB = 9;
 				this.strSettingJson = setting;
 			}
 		}
-		this.script("init", [this.strSettingJson, true]);
+		this.script("init", this.strSettingJson, true);
 	}
 	editor.saveSetting = function(setting) {
 		localStorage.setItem("setting", (this.strSettingJson = setting));
@@ -701,7 +702,7 @@ window.MB = 9;
 			const file = await fb[0].getFile();
 			const text = await file.text();
 			this.saveSetting(text);
-			this.script("init", [this.strSettingJson]);
+			this.script("init", this.strSettingJson);
 		}
 	};
 	$(() => {
@@ -777,11 +778,11 @@ window.MB = 9;
 			fileBuffers.push(fb);
 			const file = await fb.getFile();
 			const text = await file.text();
-			editor.script("openFile", [index + ":" + file.name, text, false]);
+			editor.script("openFile", index + ":" + file.name, text, false);
 		} else {
 			const file = fb;
 			const text = await file.text();
-			editor.script("openFile", [file.name, text, false]);
+			editor.script("openFile", file.name, text, false);
 		}
 	}
 	editor.loadAssFile = async function(fb) {
@@ -790,11 +791,11 @@ window.MB = 9;
 			fileBuffers.push(fb);
 			const file = await fb.getFile();
 			const text = await file.text();
-			editor.script("loadAssFile", [index + ":" + file.name, text]);
+			editor.script("loadAssFile", index + ":" + file.name, text);
 		} else {
 			const file = fb;
 			const text = await file.text();
-			editor.script("loadAssFile", [file.name, text]);
+			editor.script("loadAssFile", file.name, text);
 		}
 	}
 	editor.checkLoadVideoFile = function() { /* native */ }
@@ -839,9 +840,9 @@ window.MB = 9;
 					const cmdRen = "ren \"{from}\" \"{to}\"".split("{from}").join(from).split("{to}").join(to);
 				}
 				
-				editor.script("startRenderThumbnails", [begin, end, flag]);
+				editor.script("startRenderThumbnails", begin, end, flag);
 				setTimeout(() => {
-					editor.script("startCompareThumbnails", [begin, end, flag]);
+					editor.script("startCompareThumbnails", begin, end, flag);
 				}, 100);
 			}
 		}, 1);
@@ -903,9 +904,9 @@ window.MB = 9;
 		await stream.close();
 		
 		switch (type) {
-			case 0: editor.script("afterSaveFile"   , [tab, path]); break;
-			case 1: editor.script("afterSaveSmiFile", [tab, path]); break;
-			case 2: editor.script("afterSaveAssFile", [tab, path]); break;
+			case 0: editor.script("afterSaveFile"   , tab, path); break;
+			case 1: editor.script("afterSaveSmiFile", tab, path); break;
+			case 2: editor.script("afterSaveAssFile", tab, path); break;
 		}
 		editor.afterSave();
 	}
@@ -968,7 +969,7 @@ window.MB = 9;
 	
 	editor.runColorPicker = function() {
 		const color = prompt("색상 입력 테스트", "#ABCDEF");
-		editor.script("SmiEditor.inputText", [color]);
+		editor.script("SmiEditor.inputText", color);
 	}
 }
 {	// Designer

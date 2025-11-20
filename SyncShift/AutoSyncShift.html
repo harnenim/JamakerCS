@@ -82,7 +82,7 @@ window.main = new WebForm();
 	
 	main.initAfterLoad = function() {
 		this.super_initAfterLoad();
-		this.script("init", [main.settingJson]);
+		this.script("init", main.settingJson);
 	};
 	
 	main.beforeExit = function(e) {
@@ -109,10 +109,10 @@ window.main = new WebForm();
 	main.targetVideoFile = null;
 
 	main.showProcessing = function(message) {
-		main.script("showProcessing", [message]);
+		main.script("showProcessing", message);
 	}
 	main.setProgress = function(progress, status) {
-		main.script("Progress.set", [progress, status]);
+		main.script("Progress.set", progress, status);
 	}
 	main.hideProcessing = function() {
 		main.script("hideProcessing");
@@ -144,7 +144,7 @@ window.main = new WebForm();
 		let video = main.originVideoFile;
 		let progress = "#originVideo > .input";
 		if (isOrigin) {
-			main.script("refreshRangeAfterReadOriginVideoFile", [video.length]);
+			main.script("refreshRangeAfterReadOriginVideoFile", video.length);
 		} else {
 			video = main.targetVideoFile;
 			progress = "#targetVideo > .input";
@@ -165,21 +165,21 @@ window.main = new WebForm();
 		console.log("ReadSkfFile: {0}".split("{0}").join(path));
 		main.showProcessing("불러오는 중");
 		if (isOrigin) {
-			main.script("setOriginVideoFile", [path]);
+			main.script("setOriginVideoFile", path);
 			main.originVideoFile = new VideoInfo(file);
 			setTimeout(function() {
 				main.originVideoFile.RefreshSkf();
 				main.hideProcessing();
 			});
 		} else {
-			main.script("setTargetVideoFile", [path]);
+			main.script("setTargetVideoFile", path);
 			main.targetVideoFile = new VideoInfo(file);
 			setTimeout(function() {
 				main.targetVideoFile.RefreshSkf();
 				main.hideProcessing();
 				setTimeout(function() {
 					const kfs = main.targetVideoFile.GetKfs();
-					main.script("setKfs", ["[" + kfs.join(",") + "]"]);
+					main.script("setKfs", "[" + kfs.join(",") + "]");
 				}, 1000);
 			});
 		}
@@ -187,7 +187,7 @@ window.main = new WebForm();
 	main.readSubtitleFile = async function(file) {
 		const path = file.name;
 		console.log("ReadSubtitleFile: {0}".split("{0}").join(path));
-		this.script("setOriginSubtitleFile", [path, await file.text()]);
+		this.script("setOriginSubtitleFile", path, await file.text());
 	}
 	main.openFileDialog = async function(type, withSaveSkf, withKf) {
 		let setting = {types:[{description:'자막 파일',accept:{'text/*':['.smi', '.srt', '.ass']}}]};
@@ -198,7 +198,7 @@ window.main = new WebForm();
 			$.ajax({url: "view/LookBack.ass"
 				, dataType: "text"
 				, success: function(text) {
-					main.script("setOriginSubtitleFile", ["LookBack.ass", text]);
+					main.script("setOriginSubtitleFile", "LookBack.ass", text);
 				}
 			})
 			return;
@@ -318,7 +318,7 @@ window.main = new WebForm();
 		console.log("CalcShift: {0}, {1}".split("{0}").join(strRanges).split("{1}").join(strShifts));
 		
 		if (main.originVideoFile == null || main.targetVideoFile == null) {
-			main.script("alert", ["파일을 선택해주세요."]);
+			main.script("alert", "파일을 선택해주세요.");
 			return;
 		}
 		
@@ -330,7 +330,7 @@ window.main = new WebForm();
 			const ranges = [];
 			
 			if (sRanges.length == 0) {
-				main.script("addRange", [0, main.originVideoFile.GetSfs().Count * 10]);
+				main.script("addRange", 0, main.originVideoFile.GetSfs().Count * 10);
 				ranges.push(new Range(0, main.originVideoFile.GetSfs().length));
 			} else {
 				const shifts = [];
@@ -372,7 +372,7 @@ window.main = new WebForm();
 			
 			for (let i = 0; i < result.length; i++) {
 				const shift = result[i];
-				main.script("addShift", [shift.start * 10, shift.shift * 10]);
+				main.script("addShift", shift.start * 10, shift.shift * 10);
 			}
 			
 			main.hideProcessing();
@@ -383,7 +383,7 @@ window.main = new WebForm();
 		// 웹버전에선 특정 경로 파일 자동 생성 불가
 		/*
 		if (main.targetVideoFile == null) {
-			main.script("alert", ["목표 영상 파일을 선택해주세요."]);
+			main.script("alert", "목표 영상 파일을 선택해주세요.");
 			return;
 		}
 		const path = targetVideoFile.path.Substring(0, targetVideoFile.path.Length - new FileInfo(targetVideoFile.path).Extension.Length) + "." + operation;
@@ -392,7 +392,7 @@ window.main = new WebForm();
 		sw.Write(text);
 		sw.Close();
 		
-		main.script("alert", ["저장했습니다."]);
+		main.script("alert", "저장했습니다.");
 		*/
 		// 무조건 대화상자 열어야 함
 		const types = [];
@@ -415,7 +415,7 @@ window.main = new WebForm();
 			const stream = await fileBuffer.createWritable();
 			await stream.write("\ufeff" + text); // BOM 넣어줌
 			await stream.close();
- 			main.script("alert", ["저장했습니다."]);
+ 			main.script("alert", "저장했습니다.");
 		}
 	}
 }

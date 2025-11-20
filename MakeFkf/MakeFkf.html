@@ -77,7 +77,7 @@ window.main = new WebForm();
 		for (let i = 0; i < this.droppedFiles.length; i++) {
 			try {
 				const file = this.droppedFiles[i];
-				main.script("addFile", [ file.name ]);
+				main.script("addFile", file.name);
 				main.files[file.name] = file;
 			} catch (e) {}
 		}
@@ -92,11 +92,11 @@ window.main = new WebForm();
 	}
 	main.makeFkf = function(index) {
 		if (index < main.videos.length) {
-			main.script("scrollTo", [index]);
+			main.script("scrollTo", index);
 			let ratio = 0;
 			const thread = setInterval(() => {
 				ratio += 0.01;
-				main.script("Progress.set", ["#listFiles li:eq(" + index + ")", ratio, "calc((100vw - 19px) * [ratio])"]);
+				main.script("Progress.set", "#listFiles li:eq(" + index + ")", ratio, "calc((100vw - 19px) * [ratio])");
 				if (ratio >= 1) {
 					clearInterval(thread);
 					main.makeFkf(index + 1);

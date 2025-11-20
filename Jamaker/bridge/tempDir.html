@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
 function loadTmp(key) {
 	const text = localStorage.getItem(key);
 	if (opener) {
-		opener.editor.script("openFile", [key.substring(18), text, false]);
+		opener.editor.script("openFile", key.substring(18), text, false);
 	}
 }
 function clearTmp() {

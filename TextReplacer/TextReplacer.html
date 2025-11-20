@@ -86,7 +86,7 @@ window.main = new WebForm();
 	
 	main.initAfterLoad = function() {
 		this.super_initAfterLoad();
-		this.script("init", [main.settingJson]);
+		this.script("init", main.settingJson);
 	};
 	
 	main.beforeExit = function(e) {
@@ -118,7 +118,7 @@ window.main = new WebForm();
 		for (let i = 0; i < this.droppedFiles.length; i++) {
 			try {
 				const file = this.droppedFiles[i];
-				main.script("addFile", [ file.name ]);
+				main.script("addFile", file.name);
 				main.files[file.name] = file;
 			} catch (e) {}
 		}
@@ -130,16 +130,16 @@ window.main = new WebForm();
 			this.droppedFiles = null;
 			return;
 		}
-		main.script("init", [ await this.droppedFiles[0].text() ]);
+		main.script("init", await this.droppedFiles[0].text());
 		this.droppedFiles = null;
 	}
 	main.compare = async function(file, froms, tos) {
 		const replaced = new Replaced(await main.files[file].text(), froms, tos);
-		main.script("showPreview", [ replaced.previewOrigin(), replaced.previewResult() ]);
+		main.script("showPreview", replaced.previewOrigin(), replaced.previewResult());
 		if (replaced.count == 0) {
 			setTimeout(() => {
 				alert("치환한 문자열이 없습니다.");
-			}, 1);
+			}, 100);
 		}
 	}
 	main.replace = function(files, froms, tos) {
@@ -231,7 +231,7 @@ Replaced.prototype.preview = function(text, replacedList) {
 		if (fileBuffer && fileBuffer[0]) {
 			const file = await fileBuffer[0].getFile();
 			const text = await file.text();
-			main.script("init", [text]);
+			main.script("init", text);
 		}
 	};
 	main.exportSetting = async function(setting) {
