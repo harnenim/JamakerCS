@@ -349,7 +349,7 @@ $(() => {
 			
 			for (let i = 0; i < item.syncs.length; i++) {
 				const sync = item.syncs[i];
-
+				
 				if (!syncLines[sync.time]) {
 					syncLines[sync.time] = { type: sync.type, lines: [] };
 					syncLines[sync.time].lines.length = lineCount;

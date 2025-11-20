@@ -29,7 +29,7 @@ function init() {
 	}
 	origin.start = 0;
 	origin.end = 0;
-
+	
 	// 선택 범위만 작업
 	if (origin.selection[0] != origin.selection[1]) {
 		origin.start = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
@@ -37,7 +37,7 @@ function init() {
 	} else {
 		origin.end = origin.text.split("\n").length;
 	}
-
+	
 	$("#inputSync").val(origin.text.split("\n").slice(origin.start, origin.end).join("\n"));
 	resizeTextarea();
 }

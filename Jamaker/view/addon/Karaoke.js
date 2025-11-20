@@ -56,7 +56,7 @@ function afterLoadKanji(text) {
 			const version = dflt[0];
 			curr = curr.slice(1);
 			dflt = dflt.slice(1);
-
+			
 			const exists = {}; // 현재 설정에 있는 것 체크
 			for (let i = 0; i < curr.length; i++) {
 				exists[curr[i].substring(0, curr[i].length/2)] = i;
@@ -152,14 +152,14 @@ $(() => {
 			afterLoadKanji(savedKanjiList = text);
 		});
 	}
-
+	
 	const inputLyrics = $("#inputLyrics");
 	const inputDivider = $("#inputDivider");
 	
 	const inputOrig = $("#inputOrig");
 	const inputRead = $("#inputRead");
 	const inputTran = $("#inputTran");
-
+	
 	const formEditLine = $("#formEditLine");
 	const inputLineO = $("#inputLineO");
 	const inputLineR = $("#inputLineR");
@@ -175,12 +175,12 @@ $(() => {
 	const inputRColorFrom = $("#inputRColorFrom");
 	const inputRColorTo   = $("#inputRColorTo"  );
 	const inputTColor     = $("#inputTColor"    );
-
+	
 	const btnOpenKanji = $("#btnOpenKanji");
 	const formKanji = $("#formKanji");
 	const inputKanji = $("#inputKanji"); // 첫 줄은 기본값 버전이므로 제외
 	const btnApplyKanji = $("#btnApplyKanji");
-
+	
 	const lefts = [	null
 		,	"  30%"
 		,	" -30%"
@@ -355,7 +355,7 @@ $(() => {
 			}
 		}
 		runs[2] = run;
-
+		
 		let checker = null;
 		function runAfterCheck() {
 			const c = checker = new Date();
@@ -800,7 +800,7 @@ $(() => {
 								}
 							}
 							orir[0] = rCmp;
-	
+							
 							if (rSum == i) {
 								// 딱 맞을 경우 나머지 비활성색
 								orir[1] = null;
@@ -891,7 +891,7 @@ $(() => {
 		for (let i = 0; i <= 2; i += 2) {
 			if (line[i]) {
 				const lineI = [];
-
+				
 				// 후리가나 그룹으로 배열 분리
 				{	let nokori = line[i];
 					let begin;
@@ -1052,8 +1052,7 @@ $(() => {
 			output.val(html.join("\n").split("<RT>").join("<RP>(</RP><RT>").split("</RT>").join("</RT><RP>)</RP>"));
 		}
 		runs[4] = run;
-
-
+		
 		let checker = null;
 		function runAfterCheck() {
 			const c = checker = new Date();
@@ -1075,7 +1074,7 @@ $(() => {
 		}).on("change", "input", function() {
 			runAfterCheck();
 		});
-
+		
 		$("#page4 #formDesign").on("change", "input[type=color]", function() {
 			$(this).next().val($(this).val());
 		});

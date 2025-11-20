@@ -67,7 +67,7 @@ function shakeSync(lines, index, size) {
 			}
 		}
 	}
-
+	
 	{	// 상하로 흔들기
 		// 플레이어에서 사이즈 미지원하면 상하로 흔들리지 않음
 		if (step == 0 || step == 3 || step == 5) {
@@ -91,7 +91,7 @@ let end = 0;
 function shake() {
 	const speed = $("#inputSpeed").val();
 	const size  = $("#inputSize" ).val();
-
+	
 	const previewList = [];
 	const result = [];
 	const groups = [];
@@ -165,7 +165,7 @@ function setPreview(list, speed) {
 	if (refreshPreview) {
 		clearInterval(refreshPreview);
 	}
-
+	
 	const preview = $("#preview");
 	if (!list || !list.length) {
 		preview.html("");
@@ -280,7 +280,7 @@ $(() => {
 	if (!editor) {
 		alert("작업 대상이 없습니다.");
 	}
-
+	
 	setSetting(setting);
 	
 	start = 0;

@@ -80,7 +80,7 @@ $(() => {
 	if (origins.length) {
 		// 선택된 홀드만 작업
 		const origin = origins[0];
-
+		
 		const lines = origin.lines.slice(origin.start, origin.end);
 		for (let i = 0; i < lines.length; i++) {
 			lines[i] = lines[i].TEXT;
@@ -113,7 +113,7 @@ $(() => {
 			origins.push(origin);
 		}
 	}
-
+	
 	if (!count) {
 		alert("작업 대상이 없습니다.");
 		window.close();
@@ -129,7 +129,7 @@ $(() => {
 	const $tbody = $("#editor tbody").empty();
 	const $framesStorage = $("<div>"); // 객체 remove 하면 data가 날아가서 여기에 보관함
 	const frameSyncs = [];
-
+	
 	function setFrames($frames, frameIndex, flag) {
 		for (let j = -RANGE; j < RANGE; j++) {
 			const imgIndex = frameIndex + j;
@@ -182,7 +182,7 @@ $(() => {
 					$framesStorage.append($frames);
 					$tr.addClass("fs").append($("<td>")).append($sync);
 					frameSyncs.push($tr);
-	
+					
 					let flag = "";
 					if (fade == 1) {
 						// 페이드인 시작 이미지 밝게
@@ -201,13 +201,13 @@ $(() => {
 					count = 0;
 					
 					setFrames($frames, frameIndex, flag);
-	
+					
 				} else {
 					$tr.append($("<td>")).append($("<td>").addClass("sync").text(smi.syncType == Subtitle.SyncType.inner ? "~" : smi.start));
 					$tr.data({ index: (frameSyncs.length - 1) + (++count / 10000) }); // 10000개를 넘어갈 일은 없을 것
 				}
 				$tbody.append($tr.append($("<td>").text(smi.text.split("\n").join("")).attr("title", smi.text)));
-	
+				
 				lastFade = fade;
 			}
 		}
@@ -248,7 +248,7 @@ $(() => {
 				
 				{	// end
 					const $tr = $("<tr>").data({ ass: ass, type: "end", origin: end });
-	
+					
 					if (ass.checkEnd.prop("checked")) {
 						const frameIndex = Subtitle.findSyncIndex(end, fs);
 						const $frames = $("<div>").addClass("frames");
@@ -292,7 +292,7 @@ $(() => {
 		
 		for (let i = 0; i < datas.length; i++) {
 			const data = datas[i];
-
+			
 			const begin = data.offset + (data.frameIndex < RANGE ? 0 : data.frameIndex - RANGE);
 			const end   = data.offset + (data.frameIndex + RANGE > fs.length ? fs.length : data.frameIndex + RANGE);
 			
@@ -346,7 +346,7 @@ $(() => {
 		if (renderList.length == 0) {
 			return false;
 		}
-
+		
 		// 이미지 렌더링 요청
 		let params = [];
 		for (let i = 0; i < renderList.length; i++) {
@@ -367,7 +367,7 @@ $(() => {
 	opener.setThumbnailsFileSeq = function(thumbnailsFileSeq) {
 		fileSeq = thumbnailsFileSeq;
 	}
-
+	
 	// 렌더링 중일 때 색깔 넣어줌
 	opener.startRenderThumbnails = function(begin, end, flag) {
 		for (let i = begin; i < end; i++) {

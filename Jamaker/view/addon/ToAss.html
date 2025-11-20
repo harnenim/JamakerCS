@@ -51,7 +51,7 @@ $(() => {
 			const hold = holds[h];
 			const name = h == 0 ? "Default" : hold.name;
 			const style = hold.style ? hold.style : DefaultStyle;
-
+			
 			if (style.Fontsize == 0) {
 				// 크기 0은 ASS 변환 대상 제외
 				continue;

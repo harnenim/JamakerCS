@@ -28,7 +28,7 @@ function init() {
 	}
 	let start = 0;
 	let end = 0;
-
+	
 	// 선택 범위만 작업
 	if (origin.selection[0] != origin.selection[1]) {
 		start = origin.text.substring(0, origin.selection[0]).split("\n").length - 1;
@@ -36,14 +36,14 @@ function init() {
 	} else {
 		end = origin.text.split("\n").length;
 	}
-
+	
 	$("#input").val(origin.text.split("\n").slice(start, end).join("\n"));
 }
 
 function smiTrim(text, prev="", next="") {
 	text = text.trim();
 	let valid = true;
-
+	
 	while (text.startsWith("<")) {
 		const tagEnd = text.indexOf(">") + 1;
 		if (tagEnd <= 0) {
@@ -122,7 +122,7 @@ function devide() {
 			
 		} else {
 			const lineCount = keeps[0].text.length;
-
+			
 			// 맨 아랫줄 기준으로 함께 바뀌는 줄을 찾음
 			let devider = lineCount - 1;
 			for (let cut = 0; cut < lineCount; cut++) { // 자르는 기준선 늘려가며 테스트
@@ -272,7 +272,7 @@ function devide() {
 				list[i].text = last = text;
 			}
 		}
-
+		
 		for (let i = 0; i < list.length; i++) {
 			list[i] = list[i].sync + "\n" + list[i].text;
 		}

@@ -53,7 +53,7 @@ function convert() {
 			while ((k = line.indexOf("<", j)) >= 0) {
 				// 태그 열기
 				j = k + 1;
-	
+				
 				// 태그 닫힌 곳까지 탐색
 				const closeIndex = line.indexOf(">", j);
 				if (j < closeIndex) {
@@ -189,7 +189,7 @@ $(() => {
 		alert("작업 대상이 없습니다.");
 		return;
 	}
-
+	
 	setSetting(setting);
 	
 	start = 0;
