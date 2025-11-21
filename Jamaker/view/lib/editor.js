@@ -2452,13 +2452,13 @@ function saveFile(asNew, isExport) {
 				if (path.indexOf("\\") > 0 || path.indexOf("/") >= 0) {
 					// 웹샘플 파일명이면 여기로 못 들어옴
 					if (path.toLowerCase().endsWith(".sami")) {
-						smiPath = path.substring(0, path.length - 4) + "srt";
+						srtPath = path.substring(0, path.length - 4) + "srt";
 					} else if (path.toLowerCase().endsWith(".smi")) {
-						smiPath = path.substring(0, path.length - 3) + "srt";
+						srtPath = path.substring(0, path.length - 3) + "srt";
 					} else if (path.toLowerCase().endsWith(".jmk")) {
-						smiPath = path.substring(0, path.length - 3) + "srt";
+						srtPath = path.substring(0, path.length - 3) + "srt";
 					} else {
-						smiPath = path + ".srt";
+						srtPath = path + ".srt";
 					}
 				} else if (currentTab.srtPath) {
 					// 웹샘플에서 이미 저장한 적 있을 경우

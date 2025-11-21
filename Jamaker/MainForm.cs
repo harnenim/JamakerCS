@@ -1016,7 +1016,7 @@ namespace Jamaker
             }
             else
             {
-                OpenFileDialog dialog = new OpenFileDialog{ Filter = "지원되는 자막 파일|*.smi;*.jmk,*.srt;*.ass" };
+                OpenFileDialog dialog = new OpenFileDialog{ Filter = "지원되는 자막 파일|*.smi;*.sami;*.jmk,*.srt;*.ass" };
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
                     LoadFile(dialog.FileName);
@@ -1029,6 +1029,11 @@ namespace Jamaker
             {
                 Invoke(new Action(() => { AfterInit(limit); }));
                 return;
+            }
+
+            if (File.Exists(Path.Combine(Application.StartupPath, $"setting/.ShowDevTools")))
+            {
+                mainView.ShowDevTools();
             }
 
             // 최초 실행 시 ffmpeg 존재 여부 확인인데, 창 위치 잡아준 후에 alert 돌아가도록 함
@@ -1795,8 +1800,20 @@ namespace Jamaker
                     }
                 }
 
+                SaveOrder order = saveOrders[saveIndex];
+
+                string filter = "";
+			    switch (order.type) {
+				    case 0:
+				    case 1: filter = "SAMI 자막|*.smi;*.sami"; break;
+				    case 2: filter = "ASS 자막|*.ass"; break;
+				    case 3: filter = "SRT 자막|*.srt"; break;
+			    }
+			    if (order.type == 0) {
+				    filter += "|Jamakaer 프로젝트|*.jmk";
+			    }
                 SaveFileDialog dialog = new SaveFileDialog {
-                    Filter = "SAMI 자막 및 프로젝트 파일|*.smi;*.jmk"
+                    Filter = filter
                 ,   InitialDirectory = directory
                 ,   FileName = filename
                 };
@@ -1805,7 +1822,7 @@ namespace Jamaker
                     AfterSave();
                     return;
                 }
-                saveOrders[saveIndex].path = dialog.FileName;
+                order.path = dialog.FileName;
                 Save();
             }
         }
