@@ -4463,6 +4463,8 @@ Srt.prototype.fromSync = function(sync) {
 	this.start = sync.start;
 	this.end = sync.end;
 	if (sync.origin && sync.origin.constructor == Smi) {
+		this.start = Srt.toSrtTime(this.start);
+		this.end   = Srt.toSrtTime(this.end  );
 		this.text = sync.origin.text.split("\n").join("").split("<br>").join("\n");
 	} else {
 		this.fromAttrs(sync.text);
@@ -4470,6 +4472,25 @@ Srt.prototype.fromSync = function(sync) {
 	return this;
 }
 
+Srt.toSrtTime = (time=0, fromFrameSync=false) => {
+	if (time < 0) time = 0;
+	if (Subtitle.video.fs.length) {
+		const index = Subtitle.findSyncIndex(time);
+		if (index > 0) {
+			// 팟플레이어에서 ASS/SRT 자막의 경우
+			// 전후 프레임의 ⅔ 타이밍에 찍은 싱크부터 다음 프레임에 표시하는 것으로 보임
+			// fkf 파일 정수값이 반올림된 상태여서, 커트라인 잘못 넘어가지 않도록 1을 빼줌
+			time = (Subtitle.video.fs[index - 1] + Subtitle.video.fs[index] * 2) / 3 - 1;
+		} else {
+			time = Subtitle.video.fs[0];
+		}
+	} else {
+		if (fromFrameSync) {
+			time -= 15;
+		}
+	}
+	return time;
+}
 Srt.int2Time = (time) => {
 	const h = Math.floor(time / 3600000);
 	const m = Math.floor(time / 60000) % 60;
