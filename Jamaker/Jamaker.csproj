@@ -223,6 +223,9 @@
     <Content Include="view\help\aboutAss.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="view\help\aboutJmk.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="view\help\aboutSync.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -322,6 +325,7 @@
     <Content Include="view\lib\highlight\parser\withoutSync.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="view\lib\highlight\Readme.txt" />
     <Content Include="view\lib\highlight\styles\1c-light.css" />
     <Content Include="view\lib\highlight\styles\a11y-dark.css" />
     <Content Include="view\lib\highlight\styles\a11y-light.css" />

@@ -997,9 +997,9 @@ Tab.prototype.getAdditionalToAss = function(forSmi=false) {
 		return assFile;
 	}
 }
-Tab.prototype.getSaveText = function(withCombine=true, withComment=1) {
+Tab.prototype.getSaveText = function(withNormalize=true, withCombine=true, withComment=1) {
 	const funcSince = log("getSaveText start");
-	const result = SmiFile.holdsToText(this.holds, setting.saveWithNormalize, withCombine, withComment, Subtitle.video.FR / 1000)
+	const result = SmiFile.holdsToText(this.holds, withNormalize, withCombine, withComment, Subtitle.video.FR / 1000)
 		+ (((withComment > 0) && this.withAss) ? this.getAdditionalToAss(true) : ""); // ASS 추가 내용 footer에 넣어주기
 	log("getSaveText end", funcSince);
 	return result;
@@ -2608,14 +2608,16 @@ function saveFile(asNew, isExport) {
 		function saveAfterConfirm() {
 			lastSave = new Date().getTime();
 			
-			const saveText = currentTab.getSaveText(true, (exporting = isExport) ? -1 : 1);
+			const saveText = path.endsWith(".jmk")
+			               ? currentTab.getSaveText(false, false) // 프로젝트 파일에선 정규화하지 않고 원본 저장만 진행
+			               : currentTab.getSaveText(setting.saveWithNormalize, true, (exporting = isExport) ? -1 : 1);
 			
 			const saveFrom = log("binder.save start");
 			binder.save(tab, saveText, path, 0);
 			log("binder.save end", saveFrom);
 			
 			if (withSmi || withSrt) {
-				const smiText = currentTab.getSaveText(true, -1);
+				const smiText = currentTab.getSaveText(setting.saveWithNormalize, true, -1);
 				
 				if (withSmi) {
 					const saveSmiFrom = log("binder.save smi start");
@@ -2736,8 +2738,8 @@ function saveTemp() {
 	}
 	
 	if (isChanged) {
-		const path = currentTab.path ? currentTab.path : "\\new.smi";
-		binder.saveTemp(currentTab.getSaveText(false), path);
+		const path = currentTab.path ? currentTab.path : "\\new.jmk";
+		binder.saveTemp(currentTab.getSaveText(false, false), path);
 		for (let i = 0; i < currentTab.holds.length; i++) {
 			currentTab.holds[i].tempSavedText = texts[i];
 		}
