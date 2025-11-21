@@ -74,6 +74,10 @@ namespace Jamaker
         }
         public void OverrideInitAfterLoad()
         {
+            if (File.Exists(Path.Combine(Application.StartupPath, $"setting/.ShowDevTools")))
+            {
+                mainView.ShowDevTools();
+            }
             Script("init", settingJson);
             AddFiles(args);
         }
