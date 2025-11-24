@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11205.157 d18.0
+VisualStudioVersion = 18.0.11205.157
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jamaker", "Jamaker\Jamaker.csproj", "{E61B05F0-30E9-4CBA-B372-E25B91D6D927}"
 EndProject
@@ -22,6 +22,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MakeFkf", "MakeFkf\MakeFkf.csproj", "{57DF7E61-B5A6-4029-B61F-BDE82870D9DB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OptimizeAssSync", "OptimizeAssSync\OptimizeAssSync.csproj", "{ECF2578E-AA33-47E0-A152-84C05068480F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextReplacerWV2", "TextReplacerWV2\TextReplacerWV2.csproj", "{C192223C-6621-4F1A-A966-D60B58666BE1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +71,10 @@ Global
 		{ECF2578E-AA33-47E0-A152-84C05068480F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ECF2578E-AA33-47E0-A152-84C05068480F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ECF2578E-AA33-47E0-A152-84C05068480F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C192223C-6621-4F1A-A966-D60B58666BE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C192223C-6621-4F1A-A966-D60B58666BE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C192223C-6621-4F1A-A966-D60B58666BE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C192223C-6621-4F1A-A966-D60B58666BE1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
