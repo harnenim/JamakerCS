@@ -1,0 +1,936 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>미디어 라이브러리</title>
+	<script src="lib/jquery-3.7.1.min.js"></script>
+	<script src="lib/webview.js"></script>
+	<script src="lib/SearchTable.js"></script>
+	<script src="lib/sql-wasm.js"></script>
+	<script src="lib/OHLI.DB.js"></script>
+	<script src="lib/MediaLibrary.setting.js"></script>
+	<script src="lib/MediaLibrary.DAO.js"></script>
+	<script id="script for popup">
+$(function() {
+	$(document).on("click", ".popup .btn-close", function() {
+		$(this).parents(".popup").hide();
+	});
+});
+	</script>
+	<script>
+window.ML = {
+		dao: null
+	,	cols: {
+			origin  : { width: 300, name: "원제"      , display: function(value) { return value; } }
+		,	title   : { width: 300, name: "제목"      , display: function(value) { return value; } }
+		,	begin   : { width:  80, name: "방영(개봉)", display: function(value) { return value; } }
+		,	end     : { width:  80, name: "종영(발매)", display: function(value) { return value; } }
+		,	tag     : { width: 300, name: "태그"      , display: function(value) { return value; } }
+		,	path    : { width: 500, name: "경로"      , display: function(value) { return value; } }
+		,	status  : { width:  80, name: "상태"      , display: function(value) { return ["없음", "다운로드", "TV릴", "소장", "BDMV다운", "BDMV"][value ? value : 0]; } }
+		,	subtitle: { width:  50, name: "자막"      , display: function(value) { return ["X", "O", "제작"][value ? value : 0]; } }
+		,	check   : { width:  70, name: "검토"      , display: function(value) { return ["", "재감상", "미감상"][value ? value : 0]; } }
+	}
+};
+
+ML.init = function(setting, base64) {
+	const self = this;
+	
+	this.$form = $("#formSearch");
+	const $tl = this.$table = $("#tableList");
+	this.st = new SearchTable($tl);
+	
+	$(".tb-body").on("scroll", function() {
+		const body = $(this);
+		body.parent().find(".tb-head").scrollLeft(body.scrollLeft());
+	}).on("click", "tr", function(e) {
+		binder.openFolder($(this).data("path"));
+	}).on("contextmenu", "tr", function(e) {
+		self.openPopupEdit($(this).data("item"));
+	});
+	
+	$("#main").on("click", ".file-list .folder", function() {
+		binder.openFolder($(this).data("path"));
+	}).on("click", ".file-list .video-file", function() {
+		binder.runVideo($(this).data("path"));
+	}).on("click", ".folder .back", function() {
+		self.closeFolder();
+	}).on("click", ".folder .explorer", function() {
+		binder.openExplorer($(this).parent().data("path"));
+	});
+	
+	$("#btnAdd"    ).on("click", function() { self.openPopupEdit(); });
+	$("#btnAdds"   ).on("click", function() { binder.selectFolders("addSubFolders"); });
+	$("#btnOpenDB" ).on("click", function() { binder.openDB(); });
+	$("#btnSetting").on("click", function() { self.openPopupSetting(); });
+
+	const $po = $("#presetOrder")
+	for (let key in this.cols) {
+		const col = this.cols[key];
+		const $li = $("<li>");
+		$li.text(key + ": " + col.name + "");
+		$po.append($li);
+	}
+	$po.on("click", "li", function() {
+		const $li = $(this);
+		const col = $li.text().split(":")[0];
+		
+		const $input = $("input[name=order]");
+		let cols = $input.val();
+		if (cols) {
+			cols += "," + col;
+		} else {
+			cols = col;
+		}
+		$input.val(cols);
+	});
+	
+	$("#formEdit input[name=path]").on("dblclick", function() {
+		binder.selectFolder("setPathForEdit");
+	});
+	$("#btnDelete").on("click", function() {
+		self.deleteAnime();
+	});
+	
+	$("#btnFindPlayer").on("click", function() {
+		binder.findExe("setPlayer");
+	});
+	$("#btnFindBdPlayer").on("click", function() {
+		binder.findExe("setBdPlayer");
+	});
+	
+	$(document).on("keydown", function(e) {
+		if (e.keyCode == 27) {
+			self.closePopupOrFolder();
+		}
+	}).on("mousedown", function (e) {
+        if (e.button == 3) {
+            self.closePopupOrFolder();
+		}
+	});
+	
+	this.setSetting(setting);
+	
+	// DB 열기
+	ML.loadDB(base64);
+}
+ML.loadDB = function(base64=null) {
+	if (!base64) {
+		alert('DB가 없습니다.');
+	}
+	const file = Uint8Array.fromBase64(base64);
+	const self = this;
+	new MediaLibraryDAO(file, null, function(dao) {
+		self.dao = dao;
+		self.search();
+	}, function (e) {
+		alert('DB를 불러오지 못했습니다.');
+	});
+}
+ML.setSetting = function(setting) {
+	if (setting) {
+		if (typeof setting == "string") {
+			setting = JSON.parse(setting);
+		}
+		this.setting = setting;
+		$("#formSetting").hide();
+	}
+	const $tableHead = this.$table.find(".tb-head table");
+	const $tableBody = this.$table.find(".tb-body table");
+	{
+		const $colgroupH = $tableHead.find("colgroup").empty();
+		const $colgroupB = $tableBody.find("colgroup").empty();
+		const $tr = $tableHead.find("tr").empty();
+		
+		let width = 0;
+		for (let j = 0; j < this.setting.order.length; j++) {
+			const key = this.setting.order[j];
+			const col = this.cols[key];
+			$colgroupH.append($("<col>").css({ width: col.width }));
+			$colgroupB.append($("<col>").css({ width: col.width }));
+			width += col.width;
+			
+			$tr.append($("<th>").data(col).data({ order: key }).text(col.name));
+		}
+		$tableHead.css({ width: width });
+		$tableBody.css({ width: width });
+	}
+	this.st.orderBy = null;
+	this.st.direction = null;
+	this.search();
+}
+
+ML.search = function() {
+	if (!this.dao) return;
+	
+	const param = {};
+	const query = $("#inputQuery").val();
+	if (query) param.where = "origin,title,tag=" + query;
+	if (this.st.orderBy) {
+		param.order = this.st.orderBy + "/" + (this.st.direction == "DESC" ? "DESC" : "ASC");
+	} else {
+		param.order = "title/ASC";
+	}
+	
+	const list = this.dao.getList(param);
+	
+	const $tbody = this.$table.find(".tb-body tbody").empty();
+	for (let i = 0; i < list.length; i++) {
+		const item = list[i];
+		const $tr = $("<tr>").data({ item: item, path: item.path });
+		for (let j = 0; j < this.setting.order.length; j++) {
+			const key = this.setting.order[j];
+			$tr.append($("<td>").addClass("td-" + key).text(this.cols[key].display(item[key])));
+		}
+		$tbody.append($tr);
+	}
+	
+	return false;
+}
+
+ML.opened = [];
+ML.openFolder = function(path, files) {
+	if (typeof files == "string") files = JSON.parse(files);
+
+	const name = path.substring(path.lastIndexOf("/") + 1);
+	const folder = $("<div>").addClass("folder");
+	const title = $("<div>").addClass("title").data({ path: path })
+			.append($("<div>").addClass("back").text("←"))
+			.append($("<h3>").text(name))
+			.append($("<div>").addClass("explorer").text("탐색기"));
+	const fileList = $("<ul>").addClass("file-list");
+	folder.append(title).append(fileList);
+	
+	const otherFileListForVideo = {};
+	for (let i = 0; i < files.length; i++) {
+		const file = files[i];
+		if (file.dir) {
+			fileList.append($("<li>").addClass("folder").data("path", file.path).append($("<div>").attr("title", file.name).text(file.name)));
+		} else {
+			let isVideo = false;
+			let filename = file.name;
+			const index = filename.lastIndexOf(".");
+			if (index > 0) {
+				const ext = filename.substring(index + 1).toLowerCase();
+				for (let j = 0; j < this.setting.extsForVideo.length; j++) {
+					if (this.setting.extsForVideo[j] == ext) {
+						isVideo = true;
+						break;
+					}
+				}
+				filename = filename.substring(0, index);
+			}
+			if (isVideo) {
+				const li = $("<li>");
+				let otherFileList = otherFileListForVideo[filename];
+				if (otherFileList == null) {
+					otherFileList = otherFileListForVideo[filename] = $("<ul>").addClass("other-file-list");
+				}
+				li.append($("<div>").addClass("video-file").data("path", file.path).attr("title", file.name).text(file.name));
+				li.append(otherFileList);
+				fileList.append(li);
+			} else {
+				let otherFileList = otherFileListForVideo[filename];
+				if (otherFileList == null) {
+					fileList.append($("<li>").append(otherFileList = otherFileListForVideo[filename] = $("<ul>").addClass("other-file-list")));
+				}
+				otherFileList.append($("<li>").data("path", file.path).attr("title", file.name).text(file.name));
+			}
+		}
+		fileList.find("li").each(function() {
+			const li = $(this);
+			if (!li.html()) {
+				li.remove();
+			}
+		});
+	}
+	$("#main").append(folder);
+	this.opened.push(folder.css({ right: -folder.width() }));
+	
+	this.animateFolder();
+}
+ML.closeFolder = function() {
+	if (this.opened.length) {
+		const last = this.opened.pop();
+		last.animate({ right: -last.width() }, 300);
+		this.animateFolder();
+		setTimeout(function() {
+			last.remove();
+		}, 300);
+	}
+}
+ML.animateFolder = function() {
+	let left = 100;
+	for (let i = this.opened.length - 1; i >= 0; i--) {
+		this.opened[i].animate({ right: 100 - left }, 300);
+		left /= 2;
+	}
+}
+ML.closePopupOrFolder = function() {
+    let closed = false;
+    $(".popup").each(function () {
+        const popup = $(this);
+        if (popup.css("display") == "block") {
+            popup.hide();
+            closed = true;
+        }
+    });
+    if (!closed) {
+        this.closeFolder();
+    }
+}
+
+ML.openPopupEdit = function(item) {
+	const $form = $("#formEdit").show();
+	if (item) {
+		$form.find("input[name=_]"     ).val(item._     );
+		$form.find("input[name=path]"  ).val(item.path  );
+		$form.find("input[name=origin]").val(item.origin);
+		$form.find("input[name=title]" ).val(item.title );
+		$form.find("input[name=begin]" ).val(item.begin );
+		$form.find("input[name=end]"   ).val(item.end   );
+		$form.find("textarea[name=tag]").val(item.tag   );
+		$form.find("select[name=status]"  ).val(item.status  );
+		$form.find("select[name=subtitle]").val(item.subtitle);
+		$form.find("select[name=check]"   ).val(item.check   );
+		$("#btnDelete").show();
+	} else {
+		$form.find("input[name=_]"     ).val(0);
+		$form.find("input[name=path]"  ).val("");
+		$form.find("input[name=origin]").val("");
+		$form.find("input[name=title]" ).val("");
+		$form.find("input[name=begin]" ).val("");
+		$form.find("input[name=end]"   ).val("");
+        $form.find("textarea[name=tag]").val("");
+		$form.find("select[name=status]"  ).val(0);
+		$form.find("select[name=subtitle]").val(0);
+		$form.find("select[name=check]"   ).val(0);
+		$("#btnDelete").hide();
+	}
+}
+ML.edit = function() {
+	const $form = $("#formEdit");
+	const item = {};
+	item._        = $form.find("input[name=_]"     ).val();
+	item.path     = $form.find("input[name=path]"  ).val();
+	item.origin   = $form.find("input[name=origin]").val();
+	item.title    = $form.find("input[name=title]" ).val();
+	item.begin    = $form.find("input[name=begin]" ).val();
+	item.end      = $form.find("input[name=end]"   ).val();
+	item.tag      = $form.find("textarea[name=tag]").val();
+	item.status   = $form.find("select[name=status]"  ).val();
+	item.subtitle = $form.find("select[name=subtitle]").val();
+	item.check    = $form.find("select[name=check]"   ).val();
+	
+	const result = this.dao.insertOrUpdate(TABLE_ANIME, item);
+	if (result.error) {
+		alert("저장하지 못했습니다.");
+	} else {
+		this.dao.commit();
+		this.search();
+	}
+	$("#formEdit").hide();
+	
+	return false;
+}
+ML.deleteAnime = function() {
+	confirm("삭제하시겠습니까?", function() {
+		if (ML.dao.delete(TABLE_ANIME, $("#formEdit").find("input[name=_]").val())) {
+			ML.dao.commit();
+			$("#formEdit").hide();
+			ML.search();
+		} else {
+			alert("삭제하지 못했습니다.");
+		}
+	});
+}
+
+ML.addSubFolders = function(list) {
+    if (typeof list == "string") list = JSON.parse(list);
+
+	$("#formAddFolders").show();
+	const tbody = $("#formAddFolders .tb-body tbody").empty();
+	for (let i = 0; i < list.length; i++) {
+		const strPath = list[i].split("\\").join("/");
+		if (this.dao.isExistPath(strPath)) {
+			continue;
+		}
+        const path = strPath.split("/");
+		const orig = path[path.length - 1];
+		const tr = $("<tr>");
+		tr.append($("<td>").append($("<input>").attr({type:"checkbox",name:"add"}).prop({checked:true})).css({textAlign:"center"}));
+		tr.append($("<td>").append($("<input>").attr({type:"text",name:"path",readonly:true}).val(path.join("/"))));
+		tr.append($("<td>").append($("<input>").attr({type:"text",name:"orig"}).val(orig)));
+		tr.append($("<td>").append($("<input>").attr({ type: "text", name: "title" }).val(orig)));
+        tr.append($("<td>").append($("<input>").attr({ type: "text", name: "tag" })));
+		tbody.append(tr);
+	}
+}
+ML.addAnimes = function() {
+	const list = [];
+	$("#formAddFolders .tb-body tbody tr").each(function() {
+		const tr = $(this);
+		if (tr.find("input[name=add]").prop("checked")) {
+			list.push({
+				_     : 0
+			,	path  : tr.find("input[name=path]" ).val()
+			,	origin: tr.find("input[name=orig]" ).val()
+			,	title : tr.find("input[name=title]").val()
+			,	tag   : tr.find("input[name=tag]"  ).val()
+			});
+		}
+	});
+	const failed = [];
+	for (let i = 0; i < list.length; i++) {
+		const item = list[i];
+		const result = this.dao.insertOrUpdate(TABLE_ANIME, item);
+		if (result.error) {
+			failed.push(result);
+		}
+	}
+	if (failed.length) {
+		alert(list.length + "개 중 " + failed.length + "개 항목을 추가하지 못했습니다.");
+		console.log(failed);
+	}
+	ML.dao.commit();
+	this.search();
+	return false;
+}
+
+ML.openPopupSetting = function() {
+	const $form = $("#formSetting").show();
+	$form.find("input[name=order]"       ).val(this.setting.order       .join(","));
+	$form.find("input[name=extsForVideo]").val(this.setting.extsForVideo.join(","));
+	$form.find("input[name=player]"      ).val(this.setting.player      );
+	$form.find("input[name=bdPlayer]"    ).val(this.setting.bdPlayer    );
+}
+ML.setPlayer = function(path) {
+	$("#formSetting input[name=player]").val(path);
+}
+ML.setBdPlayer = function(path) {
+	$("#formSetting input[name=bdPlayer]").val(path);
+}
+ML.saveSetting = function() {
+	const $form = $("#formSetting");
+	const setting = {};
+	
+	const invalids = [];
+	setting.order = $form.find("input[name=order]").val().split(",");
+	for (let i = 0; i < setting.order.length; i++) {
+		const col = setting.order[i];
+		if (!ML.cols[col]) {
+			invalids.push(col);
+		}
+	}
+	if (invalids.length) {
+		alert("잘못된 컬럼이 있습니다.\n'" + invalids.join("','") + "'");
+		return false;
+	}
+	
+	setting.extsForVideo = $form.find("input[name=extsForVideo]").val().split(",");
+	setting.player       = $form.find("input[name=player]"      ).val();
+	setting.bdPlayer     = $form.find("input[name=bdPlayer]"    ).val();
+	
+	binder.saveSetting(JSON.stringify(setting));
+	this.search();
+	
+	return false;
+}
+
+ML.setPathForEdit = function(path) {
+	$("#formEdit input[name=path]").val(path.split("\\").join("/"));
+}
+	</script>
+	<link rel="stylesheet" type="text/css" href="lib/webview.css" />
+	<style>
+#main {
+	width: 100%;
+	height: 100%;
+}
+#main > * {
+	position: absolute;
+	top: 0;
+	width: 100%;
+	height: 100%;
+}
+button {
+	padding: 2px 4px;
+}
+table {
+	table-layout: fixed;
+	border-collapse: collapse;
+}
+td, th {
+	background: #fff;
+	border: 1px solid #aaa;
+	border-left : 1px dotted #ccc;
+	border-right: 1px dotted #ccc;
+	height: 30px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	padding: 2px;
+}
+thead th {
+	border-bottom: 3px double #aaa;
+}
+tbody tr { cursor: pointer; }
+tbody tr.on td,
+tbody tr:hover td { background: #eff; }
+#main > *:not(:last-child):after {
+	display: block;
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0,0,0,0.1);
+}
+	</style>
+	<style id="style for viewList">
+#viewList > * {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+#viewList > * > * {
+	position: absolute;
+}
+#formSearch {
+	top: 7px;
+	left: 0;
+	width: calc(100% - 200px);
+}
+#formSearch > * {
+	height: 20px;
+}
+#formSearch > input {
+	width: calc(100% - 50px);
+}
+#areaBtn {
+	top: 7px;
+	right: 0;
+}
+#tableList {
+	top: 30px;
+	width: 100%;
+	height: calc(100% - 30px);
+	position: relative;
+}
+.tb-head {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: calc(100% - 17px);
+	height: calc(100% + 20px);
+	overflow-x: scroll;
+	overflow-y: hidden;
+}
+.tb-body {
+	position: absolute;
+	top: 31px;
+	left: 0;
+	width: 100%;
+	height: calc(100% - 31px);
+	overflow: scroll;
+}
+.table-with-search > form th {
+	cursor: pointer;
+}
+.table-with-search > form th.asc:after  { content: "▲"; }
+.table-with-search > form th.desc:after { content: "▼"; }
+.td-begin, .td-end, .td-check, .td-status, .td-subtitle {
+	text-align: center;
+}
+	</style>
+	<style id="style for folder">
+#main > .folder {
+	right: 0;
+	width: calc(100% - 100px);
+	background: #fff;
+	border-left: 1px solid #aaa;
+	line-height: 30px;
+}
+.folder > .title {
+	height: 30px;
+}
+.folder > .title > .back {
+	float: left;
+	width: 50px;
+	padding: 0 10px;
+	text-align: center;
+	font-size: 24px;
+	font-weight: bold;
+	cursor: pointer;
+}
+.folder > .title > h3 {
+	float: left;
+	width: calc(100% - 120px);
+	overflow: hidden;
+    text-overflow: ellipsis;
+}
+.folder > .title > .explorer {
+	float: right;
+	width: 70px;
+	cursor: pointer;
+}
+.file-list {
+	height: calc(100% - 30px);
+	overflow-y: scroll;
+}
+.file-list > li,
+.file-list > li > .video-file,
+.file-list > li > .other-file-list,
+.file-list > li > .other-file-list > li {
+	margin: 5px;
+	border: 1px solid #aaa;
+	border-radius: 5px;
+	background: #eee;
+	overflow: hidden;
+    text-overflow: ellipsis;
+}
+.file-list > li > * {
+	float: left;
+	width: 50%;
+	width: calc(50% - 10px);
+	margin: 5px;
+}
+.file-list > li.folder > div {
+	width: 100%;
+}
+.file-list > li.folder,
+.file-list > li > .video-file {
+	background: #fff;
+	cursor: pointer;
+}
+.file-list > li > .other-file-list {
+	float: right;
+	min-height: 32px;
+}
+.file-list > li:after {
+	display: block;
+	content: "";
+	clear: both;
+}
+.file-list > li.folder:hover,
+.file-list > li > .video-file:hover {
+	background: #eff;
+}
+	</style>
+	<style id="style for popup">
+.popup {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0,0,0,0.1);
+}
+.popup > .popup-window {
+	position: absolute;
+	top: 100px;
+	left: 50%;
+	width: 400px;
+	margin-left: -200px;
+	background: #fff;
+	border: 1px solid #aaa;
+	border-radius: 10px;
+	padding: 10px;
+}
+.popup > .popup-window > .popup-head > h3 {
+	float: left;
+	font-size: 18px;
+}
+.popup > .popup-window > .popup-head > .btn-close {
+	float: right;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.popup > .popup-window > .popup-head:after {
+	display: block;
+	content: "";
+	clear: both;
+}
+.popup > .popup-window > .popup-foot {
+	text-align: right;
+}
+
+.popup-window label {
+	display: block;
+	margin: 8px 0;
+}
+.popup-window label > * {
+	display: block;
+	float: left;
+	height: 20px;
+	line-height: 16px;
+}
+.popup-window label > span {
+	width: 70px;
+	line-height: 20px;
+}
+.popup-window label > span+* {
+	width: calc(100% - 70px);
+	border: 1px solid #888;
+}
+.popup-window label > textarea {
+	height: 50px;
+}
+.popup-window label:after {
+	display: block;
+	content: "";
+	clear: both;
+}
+#formSetting label ol.preset {
+	float: none;
+	margin-left: 100px;
+}
+#formSetting label ol.preset li {
+	float: left;
+	margin: 2px 2px 0 0;
+	padding: 2px;
+	border: 1px solid #aaa;
+	border-radius: 4px;
+	cursor: pointer;
+}
+#formSetting label ol.preset li:hover {
+	background: #eff;
+}
+#formSetting label ol.preset:after {
+	clear: both;
+	content: "　";
+}
+
+#formSetting > .popup-window {
+	width: 600px;
+	margin-left: -300px;
+}
+#formSetting label > span {
+	width: 100px;
+}
+#formSetting label > span+* {
+	width: calc(100% - 170px);
+	border: 1px solid #888;
+}
+#formSetting label > span+*+button {
+	width: 70px;
+}
+
+#formAddFolders > .popup-window {
+	width: 800px;
+	margin-left: -400px;
+	bottom: 100px;
+}
+#formAddFolders .popup-body {
+	position: relative;
+	width: 100%;
+	height: calc(100% - 40px);
+	overflow: hidden;
+}
+#formAddFolders table {
+	width: 900px;
+}
+#formAddFolders tbody td {
+	padding: 0;
+}
+#formAddFolders tbody input[type=text] {
+	width: 100%;
+	height: 29px;
+	border: 0;
+	background: transparent;
+}
+
+	</style>
+</head>
+<body>
+	<div id="main">
+		<div id="viewList">
+			<div>
+				<form id="formSearch" onsubmit="return ML.search();">
+					<input type="text" id="inputQuery" /><button type="submit">검색</button>
+				</form>
+				<div id="areaBtn">
+					<button type="button" id="btnAdd">추가</button>
+					<button type="button" id="btnAdds">일괄추가</button>
+					<button type="button" id="btnOpenDB" style="display: none;">DB 열기</button><!-- 웹샘플에서만 동작 -->
+					<button type="button" id="btnSetting">설정</button>
+				</div>
+				<div id="tableList" class="table-with-search" data-func="ML.search">
+					<form class="tb-head"><table>
+						<colgroup>
+							<col style="width: 300px;" />
+							<col style="width: 300px;" />
+							<col style="width: 100px;" />
+							<col style="width: 100px;" />
+							<col style="width: 300px;" />
+						</colgroup>
+						<thead>
+							<tr>
+								<th>원제</th>
+								<th>제목</th>
+								<th>방영(개봉)</th>
+								<th>종영(발매)</th>
+								<th>태그</th>
+							</tr>
+						</thead>
+					</table><button type="submit" style="display: none;"></button></form>
+					<div class="tb-body"><table>
+						<colgroup>
+							<col style="width: 300px;" />
+							<col style="width: 300px;" />
+							<col style="width: 100px;" />
+							<col style="width: 100px;" />
+							<col style="width: 300px;" />
+						</colgroup>
+						<tbody>
+							<tr>
+								<td>원제</td>
+								<td>제목</td>
+								<td>방영</td>
+								<td>종영</td>
+								<td>태그</td>
+							</tr>
+						</tbody>
+					</table></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<form class="popup" id="formEdit" onsubmit="return ML.edit();">
+		<div class="popup-window">
+			<div class="popup-head">
+				<h3>항목 편집</h3>
+				<div class="btn-close">×</div>
+			</div>
+			<div class="popup-body">
+				<label><span>경로</span>
+					<input type="text" name="path" placeholder="더블클릭" />
+				</label>
+				<label><span>원제</span>
+					<input type="text" name="origin" />
+				</label>
+				<label><span>제목</span>
+					<input type="text" name="title" />
+				</label>
+				<label><span>방영(개봉)</span>
+					<input type="date" name="begin" />
+				</label>
+				<label><span>종영(발매)</span>
+					<input type="date" name="end" />
+				</label>
+				<label><span>검색용 태그</span>
+					<textarea type="text" name="tag"></textarea>
+				</label>
+				<label><span>상태</span>
+					<select name="status">
+						<option value="0">없음</option>
+						<option value="1">다운로드 중</option>
+						<option value="2">TV/OTT릴</option>
+						<option value="3">소장</option>
+						<option value="4">BDMV 다운 중</option>
+						<option value="5">BDMV</option>
+					</select>
+				</label>
+				<label><span>자막</span>
+					<select name="subtitle">
+						<option value="0">없음</option>
+						<option value="1">있음</option>
+						<option value="2">직접 제작</option>
+					</select>
+				</label>
+				<label><span>검토</span>
+					<select name="check">
+						<option value="0">소장</option>
+						<option value="1">재감상 후 삭제 검토</option>
+						<option value="2">미감상</option>
+					</select>
+				</label>
+			</div>
+			<div class="popup-foot">
+				<input type="hidden" name="_" />
+				<button type="button" id="btnDelete">삭제</button>
+				<button type="submit" accesskey="S">저장</button>
+			</div>
+		</div>
+	</form>
+	<form class="popup" id="formAddFolders" onsubmit="return ML.addAnimes()">
+		<div class="popup-window">
+			<div class="popup-head">
+				<h3>여러 폴더 추가</h3>
+				<div class="btn-close">×</div>
+			</div>
+			<div class="popup-body">
+				<div class="tb-head"><table>
+					<colgroup>
+						<col style="width:  20px;" />
+						<col style="width: 300px;" />
+						<col style="width: 300px;" />
+						<col style="width: 300px;" />
+						<col style="width: 300px;" />
+					</colgroup>
+					<thead>
+						<tr>
+							<th></th>
+							<th>경로</th>
+							<th>원제</th>
+							<th>제목</th>
+							<th>검색 태그</th>
+						</tr>
+					</thead>
+				</table></div>
+				<div class="tb-body"><table>
+					<colgroup>
+						<col style="width:  20px;" />
+						<col style="width: 300px;" />
+						<col style="width: 300px;" />
+						<col style="width: 300px;" />
+						<col style="width: 300px;" />
+					</colgroup>
+					<tbody>
+						<tr>
+							<td><input type="checkbox" name="add" /></td>
+							<td><input type="text" name="path" readonly /></td>
+							<td><input type="text" name="orig" /></td>
+							<td><input type="text" name="title" /></td>
+							<td><input type="text" name="tag" /></td>
+						</tr>
+					</tbody>
+				</table></div>
+			</div>
+			<div class="popup-foot">
+				<button type="submit">저장</button>
+			</div>
+		</div>
+	</form>
+	<form class="popup" id="formSetting" onsubmit="return ML.saveSetting()">
+		<div class="popup-window">
+			<div class="popup-head">
+				<h3>설정</h3>
+				<div class="btn-close">×</div>
+			</div>
+			<div class="popup-body">
+				<label><span>컬럼 순서 설정</span>
+					<input type="text" name="order" />
+					<ol class="preset" id="presetOrder"></ol>
+				</label>
+				<label><span>동영상 확장자</span>
+					<input type="text" name="extsForVideo" />
+				</label>
+				<label><span>플레이어</span>
+					<input type="text" name="player" />
+					<button type="button" id="btnFindPlayer">찾아보기</button>
+				</label>
+				<label><span>PowerDVD</span>
+					<input type="text" name="bdPlayer" />
+					<button type="button" id="btnFindBdPlayer">찾아보기</button>
+				</label>
+			</div>
+			<div class="popup-foot">
+				<button type="submit">저장</button>
+			</div>
+		</div>
+	</form>
+</body>
+</html>
