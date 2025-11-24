@@ -65,8 +65,12 @@ Binder.prototype.afterInit = function() {
 Binder.prototype.loadAssFile = function(path, tab) {
 	// 웹버전에선 바로 같이 열리도록 연동 불가능
 }
-Binder.prototype.checkLoadVideoFile = function(smiPath) {
-	this._.checkLoadVideoFile(smiPath);
+Binder.prototype.setPath = function(smiPath) {
+	this._.setPath(smiPath);
+}
+Binder.prototype.setPathAndCheckLoadVideoFile = function(smiPath) {
+	this._.setPath(smiPath);
+	this._.checkLoadVideoFile();
 }
 Binder.prototype.loadVideoFile = function(path) {
 	this._.loadVideoFile(path);
@@ -815,6 +819,15 @@ window.MB = 9;
 			editor.script("loadAssFile", file.name, text);
 		}
 	}
+	editor.setPath = function(path) {
+		this.smiPath = path;
+		let title = "";
+		if (path) {
+			const paths = path.split("\\").join("/").split("/");
+			title += " - " + paths[paths.length - 1];
+		}
+		$("title").text("Jamaker" + title);
+	}
 	editor.checkLoadVideoFile = function() { /* native */ }
 	editor.loadVideoFile = function(path) { /* native */ }
 	editor.requestFrames = function(path) { /* native */ }
@@ -921,7 +934,8 @@ window.MB = 9;
 		await stream.close();
 		
 		switch (type) {
-			case 0: editor.script("afterSaveFile"   , tab, path); break;
+			case 0: editor.setPath(paths[1]);
+			        editor.script("afterSaveFile"   , tab, path); break;
 			case 1: editor.script("afterSaveSmiFile", tab, path); break;
 			case 2: editor.script("afterSaveAssFile", tab, path); break;
 			case 3: editor.script("afterSaveSrtFile", tab, path); break;

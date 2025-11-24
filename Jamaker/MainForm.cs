@@ -1107,11 +1107,30 @@ namespace Jamaker
         }
 
         private string smiPath;
-        public void CheckLoadVideoFile(string path)
+        public void SetPath(string path)
+        {
+            smiPath = path;
+            string title = "Jamaker";
+            if (path.Length > 0)
+            {
+                string[] paths = path.Replace('\\', '/').Split('/');
+                title += " - " + paths[paths.Length - 1];
+            }
+            SetTitle(title);
+        }
+        public void SetTitle(string title)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { SetTitle(title); }));
+                return;
+            }
+            Text = title;
+        }
+        public void CheckLoadVideoFile()
         {
             // 파일명 수신 시 동작 설정
             afterGetFileName = new AfterGetString(CheckLoadVideoFileAfterGetVideoFileName);
-            smiPath = path;
             // player에 현재 재생 중인 파일명 요청
             player.GetFileName();
         }
@@ -1730,6 +1749,7 @@ namespace Jamaker
                 (sw = new StreamWriter(path, false, Encoding.UTF8)).Write(text);
                 if (type == 0)
                 {
+                    SetPath(path);
                     Script("afterSaveFile", tab, path);
                 }
                 else

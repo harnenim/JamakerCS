@@ -1525,8 +1525,11 @@ SmiEditor.selectTab = function(index=-1) {
 	currentTab.area.show();
 	if (_for_video_) { // 동영상 파일명으로 자막 파일을 연 경우 동영상 열기 불필요
 		_for_video_ = false;
+		binder.setPath(currentTab.path);
 	} else if (currentTab.path && currentTab.path.length > 4 && binder) {
-		binder.checkLoadVideoFile(currentTab.path);
+		binder.setPathAndCheckLoadVideoFile(currentTab.path);
+	} else {
+		binder.setPath("");
 	}
 	SmiEditor.selected = currentTab.holds[currentTab.hold];
 	SmiEditor.Viewer.refresh();
@@ -2626,6 +2629,7 @@ function saveFile(asNew, isExport) {
 				}
 				if (withSrt) {
 					// TODO: 위에서 getSaveText 구하는 중간 단계 SmiFile을 쓸 수 있으면 좀 더 효율적이겠지만...
+					// 홀드 결합 이전의 원본 그대로 SRT 자막을 만들면 홀드 상하 배치가 섞여버림
 					const syncs = new SmiFile(smiText).toSyncs();
 					const srtFile = new SrtFile().fromSyncs(syncs);
 					binder.save(tab, srtFile.toText(), srtPath, 3);

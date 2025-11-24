@@ -99,9 +99,14 @@ namespace Jamaker
         {
             _.OpenFileForVideo();
         }
-        public void CheckLoadVideoFile(string smiPath)
+        public void SetPath(string smiPath)
         {
-            _.CheckLoadVideoFile(smiPath);
+            _.SetPath(smiPath);
+        }
+        public void SetPathAndCheckLoadVideoFile(string smiPath)
+        {
+            _.SetPath(smiPath);
+            _.CheckLoadVideoFile();
         }
         public void LoadVideoFile(string path)
         {
