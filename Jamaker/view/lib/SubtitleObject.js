@@ -1011,6 +1011,26 @@ Color.prototype.ass = function(value, total) {
 	return "&H" + Color.hex(color[2]) + Color.hex(color[1]) + Color.hex(color[0]) + "&";
 }
 
+Subtitle.optimizeSync = (time=0, fromFrameSync=false) => {
+	if (time < 0) time = 0;
+	if (Subtitle.video.fs.length) {
+		const index = Subtitle.findSyncIndex(time);
+		if (index > 0) {
+			// 팟플레이어에서 ASS/SRT 자막의 경우
+			// 전후 프레임의 ⅔ 타이밍에 찍은 싱크부터 다음 프레임에 표시하는 것으로 보임
+			// fkf 파일 정수값이 반올림된 상태여서, 커트라인 잘못 넘어가지 않도록 1을 빼줌
+			time = (Subtitle.video.fs[index - 1] + Subtitle.video.fs[index] * 2) / 3 - 1;
+		} else {
+			time = Subtitle.video.fs[0];
+		}
+	} else {
+		if (fromFrameSync) {
+			time -= 15;
+		}
+	}
+	return time;
+}
+
 
 
 
@@ -1031,30 +1051,7 @@ window.AssEvent = Subtitle.AssEvent = function(start, end, style, text, layer=0)
 	this.Text = text;
 }
 AssEvent.toAssTime = (time=0, fromFrameSync=false) => {
-	/*
-	if (fromFrameSync) {
-		// TODO: 15ms는 경험적 값이라서, 정확한 계산식을 만드는 게 좋을 듯함
-		// 24fps에선 15ms로 문제없는데, 30fps에선 오차 발생 확인
-		// time = Math.floor((time - 5) / 10) * 10; // 저번에 이게 실패했었나?
-		time -= 15;
-	}
-	*/
-	if (time < 0) time = 0;
-	if (Subtitle.video.fs.length) {
-		const index = Subtitle.findSyncIndex(time);
-		if (index > 0) {
-			// 팟플레이어에서 ASS 자막의 경우
-			// 전후 프레임의 ⅔ 타이밍에 찍은 싱크부터 다음 프레임에 표시하는 것으로 보임
-			// fkf 파일 정수값이 반올림된 상태여서, 커트라인 잘못 넘어가지 않도록 1을 빼줌
-			time = Math.floor(((Subtitle.video.fs[index - 1] + Subtitle.video.fs[index] * 2) / 3 - 1) / 10) * 10;
-		} else {
-			time = Subtitle.video.fs[0];
-		}
-	} else {
-		if (fromFrameSync) {
-			time -= 15;
-		}
-	}
+	time = Subtitle.optimizeSync(time, fromFrameSync);
 	const h = Math.floor( time / 3600000);
 	const m = Math.floor( time /   60000) % 60;
 	const s = Math.floor( time /    1000) % 60;
@@ -4438,7 +4435,7 @@ window.Srt = Subtitle.Srt = function(start, end, text) {
 
 Srt.prototype.toTxt = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
 Srt.prototype.toText = function() {
-	return Srt.int2Time(this.start) + "-->" + Srt.int2Time(this.end) + "\n" + this.text + "\n";
+	return Srt.toSrtTime(this.start) + "-->" + Srt.toSrtTime(this.end) + "\n" + this.text + "\n";
 }
 Srt.srt2txt = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
 Srt.srt2text = (srts) => {
@@ -4463,8 +4460,6 @@ Srt.prototype.fromSync = function(sync) {
 	this.start = sync.start;
 	this.end = sync.end;
 	if (sync.origin && sync.origin.constructor == Smi) {
-		this.start = Srt.toSrtTime(this.start);
-		this.end   = Srt.toSrtTime(this.end  );
 		this.text = sync.origin.text.split("\n").join("").split("<br>").join("\n");
 	} else {
 		this.fromAttrs(sync.text);
@@ -4472,26 +4467,8 @@ Srt.prototype.fromSync = function(sync) {
 	return this;
 }
 
-Srt.toSrtTime = (time=0, fromFrameSync=false) => {
-	if (time < 0) time = 0;
-	if (Subtitle.video.fs.length) {
-		const index = Subtitle.findSyncIndex(time);
-		if (index > 0) {
-			// 팟플레이어에서 ASS/SRT 자막의 경우
-			// 전후 프레임의 ⅔ 타이밍에 찍은 싱크부터 다음 프레임에 표시하는 것으로 보임
-			// fkf 파일 정수값이 반올림된 상태여서, 커트라인 잘못 넘어가지 않도록 1을 빼줌
-			time = (Subtitle.video.fs[index - 1] + Subtitle.video.fs[index] * 2) / 3 - 1;
-		} else {
-			time = Subtitle.video.fs[0];
-		}
-	} else {
-		if (fromFrameSync) {
-			time -= 15;
-		}
-	}
-	return time;
-}
-Srt.int2Time = (time) => {
+Srt.toSrtTime = (time=0) => {
+	time = Subtitle.optimizeSync(time);
 	const h = Math.floor(time / 3600000);
 	const m = Math.floor(time / 60000) % 60;
 	const s = Math.floor(time / 1000) % 60;
