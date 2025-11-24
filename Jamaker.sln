@@ -23,8 +23,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MakeFkf", "MakeFkf\MakeFkf.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OptimizeAssSync", "OptimizeAssSync\OptimizeAssSync.csproj", "{ECF2578E-AA33-47E0-A152-84C05068480F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextReplacerWV2", "TextReplacerWV2\TextReplacerWV2.csproj", "{C192223C-6621-4F1A-A966-D60B58666BE1}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,10 +69,6 @@ Global
 		{ECF2578E-AA33-47E0-A152-84C05068480F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ECF2578E-AA33-47E0-A152-84C05068480F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ECF2578E-AA33-47E0-A152-84C05068480F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C192223C-6621-4F1A-A966-D60B58666BE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C192223C-6621-4F1A-A966-D60B58666BE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C192223C-6621-4F1A-A966-D60B58666BE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C192223C-6621-4F1A-A966-D60B58666BE1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
