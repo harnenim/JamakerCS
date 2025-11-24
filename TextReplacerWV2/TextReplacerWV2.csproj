@@ -49,9 +49,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="MediaLibrary.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -171,5 +168,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <Target Name="RemoveLangFolders" AfterTargets="PrepareForBuild">
+    <ItemGroup>
+      <LangFoldersToDelete Include="$(OutDir)\cs;$(OutDir)\de;$(OutDir)\es;$(OutDir)\fr;$(OutDir)\it;$(OutDir)\ja;$(OutDir)\ko;$(OutDir)\pl;$(OutDir)\pt-BR;$(OutDir)\ru;$(OutDir)\tr;$(OutDir)\zh-Hans;$(OutDir)\zh-Hant;" />
+    </ItemGroup>
+    <RemoveDir Directories="@(LangFoldersToDelete)" />
+  </Target>
 
 </Project>
