@@ -1,0 +1,265 @@
+@charset "utf-8";
+
+/*
+ * TODO: Jamaker.size.css 정도로 바꾸는 게 좋을 듯함...
+ */
+
+label, #showFps {
+	margin-left: calc(20px * 0.3);
+}
+#inputWeight { width: calc(20px * 2); }
+#inputUnit { width: calc(20px * 2.5); }
+
+#body > div:first-child {
+	height: calc(20px + 4px);
+}
+#body > div:first-child * {
+	font-size: calc(20px - 6px);
+	line-height: calc(20px - 6px);
+}
+#body > div:first-child button,
+#body > div:first-child input {
+	font-size: calc(20px - 7px);
+	line-height: calc(20px - 7px);
+	height: calc(20px - 3px);
+}
+#body > div:first-child input {
+	padding: 0 calc(20px / 10);
+}
+#body > div:first-child input[type=checkbox] {
+	height: calc(20px - 7px);
+}
+
+#tabSelector {
+	height: calc(20px + 6px);
+}
+.th {
+	font-size: calc(20px * 0.7);
+	line-height: calc(20px + 2px);
+}
+
+#editor {
+	height: calc(100% - 20px - 4px);
+}
+
+.use-tab #editor {
+	height: calc(100% - 50px);
+}
+
+.hold-selector {
+	height: calc(20px * 4);
+	font-size: calc(20px * 0.7);
+}
+.hold-selector > .selector .area-btn-hold {
+	width: calc(20px * 2);
+	right: calc(20px * -2);
+}
+.hold-selector > .selector button {
+	font-size: calc(20px * 0.6);
+}
+.hold-selector > .selector .btn-hold-remove {
+	font-size: 20px;
+}
+.hold-selector > .selector .btn-hold-upper:after,
+.hold-selector > .selector .btn-hold-lower:after {
+	font-size: calc(20px * 0.5);
+}
+.tab.with-hold .holds {
+	top: calc(20px * 4 + 4px);
+}
+.hold *,
+.tab-ass-area * {
+	font-size: calc(20px * 0.7);
+	line-height: 20px;
+}
+.hold > .col-sync,
+.hold > .col-sync-cover {
+	width: calc(20px * 5);
+}
+.hold > .input {
+	left: calc(20px * 5);
+}
+
+.sync.frame { line-height: calc(20px - 1px); }
+.col-sync .sync.normal:after,
+.col-sync .sync.frame:after {
+	width: calc(20px * 0.8);
+	text-decoration-thickness: calc(20px / 4);
+	font-size: calc(20px * 0.5);
+	line-height: calc(20px / 2);
+}
+.col-sync .sync.range:after {
+	height: 20px;
+}
+
+.highlight-textarea > div > span {
+	height: 20px;
+}
+.hljs-color {
+	height: 20px;
+}
+
+.hold .hold-style-area > form,
+.hold .hold-ass-area > form {
+	top: calc(20px * 0.5);
+	left: calc(20px * 0.5);
+	right: calc(20px * 0.5);
+	height: calc(100% - 20px);
+	border-radius: calc(20px * 0.4);
+	padding: calc(20px * 0.5);
+}
+#assSplitHoldSelectorPopup {
+	border-radius: calc(20px * 0.4);
+	padding: calc(20px * 0.5);
+}
+.hold .hold-style-area > form {
+	max-height: calc(20px * 3.8 + 153px);
+}
+.tab.ass .hold .hold-style-area > form {
+	max-height: calc(20px * 22.3 + 177px);
+}
+.tab.ass .hold.main .hold-style-area > form {
+	max-height: calc(20px * 20.8 + 177px);
+}
+#assSplitHoldSelectorPopup {
+	top: calc(20px * 10);
+	left: 50%;
+	width: calc(20px * 15);
+	margin-left: calc(-20px * 7.5);
+}
+.hold-style-area > form > button.btn-close-popup,
+.hold-ass-area > form > button.btn-close-popup {
+	top: calc(20px * 0.5);
+	right: calc(20px * 0.5);
+	width: calc(20px * 1.5);
+	height: calc(20px * 2);
+	font-size: calc(20px * 1.5);
+	padding-bottom: calc(20px * 0.5);
+}
+.btn-hold-style {
+	width: calc(20px * 3 + 2px);
+	height: calc(20px + 2px);
+}
+body.classic-scrollbar .btn-hold-style {
+	right: calc(20px * 0.8 + 1px);
+}
+.hold-style-preview {
+	margin-right: calc(20px * 2);
+}
+.hold-style-preview > textarea[name=script] {
+	height: calc(100% - 20px * 1.1);
+	padding: calc(20px * 0.1);
+}
+.hold-style-preview-color {
+	right: calc(20px * 2);
+}
+.hold-style-preview-toggle {
+	width: calc(20px * 2);
+}
+.hold-style fieldset {
+	padding: calc(20px * 0.2);
+}
+.hold-style-smi label {
+	min-width: calc(20px * 4);
+}
+.hold-style-ass label,
+.hold-style-ass div.label {
+	min-width: calc(20px * 6.5);
+}
+.hold-style-ass .hold-style-output label {
+	min-width: calc(20px * 4);
+}
+.hold-style div {
+	min-height: calc(20px * 1.4);
+}
+.hold-style span {
+	width: calc(20px * 3);
+}
+.hold-style legend span {
+	width: auto;
+	display: none;
+}
+.hold.main .hold-style legend span {
+	display: inline;
+}
+.hold-style input[type=text],
+.hold-style input[type=number],
+.hold-style input[type=color] { height: 20px; }
+.hold-style input[type=text]   { width: calc(20px * 5); }
+.hold-style input[type=number] { width: calc(20px * 2.5); text-align: right; }
+.hold-style input[type=text].color { width: calc(20px * 3); }
+
+.hold-style-alignment col:nth-child(1) { width: calc(20px * 3); }
+.hold-style-alignment col:nth-child(2) { width: calc(20px * 4); }
+.hold-style-alignment col:nth-child(3) { width: calc(20px * 2.5); }
+.hold-style-alignment col:nth-child(5) { width: calc(20px * 2.5); }
+.hold-style-alignment col:nth-child(6) { width: calc(20px * 4); }
+
+.hold-ass-script {
+    top: calc(20px * 2);
+    height: calc(100% - 20px * 2);
+}
+
+/*
+.tab-ass-btn {
+	top: calc(100% - 20px);
+	height: 20px;
+}
+.tab-ass-area {
+	padding: 0 calc(20px * 0.4);
+}
+.tab.edit-ass .tab-ass-btn {
+	height: calc(20px + 1px);
+}
+.tab.edit-ass .tab-ass-area {
+	top: 20px;
+	padding: calc(20px * 0.4);
+	height: calc(100% - 20px);
+}
+*/
+.tab-ass-area {
+	padding: 0 calc(20px * 0.4);
+	height: 100%;
+}
+.tab-ass-area span {
+	height: calc(20px * 1.5);
+	line-height: calc(20px * 1.5);
+	font-size: calc(20px * 0.7);
+}
+.tab-ass-area textarea,
+.tab-ass-script > div {
+	height: calc(100% - 20px * 2);
+}
+
+.hold-ass-events {
+	line-height: calc(20px * 2);
+}
+
+div.hold-ass-script {
+	top: calc(20px * 2.5);
+	left: calc(20px / 2);
+	width: calc(100% - 20px);
+	height: calc(100% - 20px * 3);
+}
+.ass-editor .item {
+	height: calc(20px * 3.5);
+}
+.ass-editor .item input[name=start],
+.ass-editor .item input[name=startFrame]  { top: 0; }
+.ass-editor .item input[name=end],
+.ass-editor .item input[name=endFrame] { bottom: calc(20px * 0.9); }
+.ass-editor .item input[name=start],
+.ass-editor .item input[name=end]     { width: calc(20px * 4 - 2px); }
+.ass-editor .item input[name=startFrame],
+.ass-editor .item input[name=endFrame] { left: calc(20px * 4 - 2px);
+	width: calc(20px + 2px);
+	height: calc(20px + 2px);
+}
+.ass-editor .item textarea[name=text] { left: calc(20px * 5); width: calc(100% - 20px * 6); }
+.ass-editor .item button { bottom: calc(20px * 0.9); width: 20px; }
+
+body .hljs ::-webkit-scrollbar,
+body.classic-scrollbar .hljs ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }
+body.classic-scrollbar .hljs ::-webkit-scrollbar-button:end { background-position-y: calc(20px * 0.8 + 1px); }
+body.classic-scrollbar .hljs ::-webkit-scrollbar-button:horizontal { background-position-x: calc(20px * 0.8 + 1px); }
+body:not(.classic-scrollbar) .hljs ::-webkit-scrollbar-thumb { border-radius: calc(20px * 0.7 - 4px); border: 4px solid transparent; }

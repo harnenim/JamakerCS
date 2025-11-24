@@ -1,0 +1,371 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>텍스트 일괄 치환</title>
+	<script src="lib/jquery-3.2.1.min.js"></script>
+	<script src="lib/webview.js"></script>
+	<script src="lib/ListView.js"></script>
+	<link rel="stylesheet" type="text/css" href="lib/webview.css" />
+	<link rel="stylesheet" type="text/css" href="lib/ListView.css" />
+	<script>
+function setTextareaHeight(obj) {
+	const lineCount = obj.val().split("\n").length;
+	obj.css("height", 4 + 14 * lineCount);
+}
+
+let listFiles;
+let inputFilters;
+let listReplacer;
+let progress;
+
+//C# 쪽에서 호출
+function init(jsonSetting) {
+	let tmp = {};
+	try {
+		tmp = JSON.parse(jsonSetting);
+	} catch (e) {
+		alert("설정 파일이 잘못됐습니다.");
+	}
+	const setting = tmp;
+	
+	if (!setting.filters) setting.filters = "*.txt, *.smi, *.ass";
+	if (!setting.replacers) setting.replacers = [];
+	
+	inputFilters.val(setting.filters ? setting.filters : "*.txt, *.smi, *.ass");
+	if (setting.replacers && setting.replacers.length) {
+		listReplacer.empty();
+		for (let i = 0; i < setting.replacers.length; i++) {
+			const item = setting.replacers[i];
+			const li = listReplacer.data("preset").clone();
+			li.find("[name=use]").prop("checked", item.use);
+			setTextareaHeight(li.find("[name=from]").val(item.from));
+			setTextareaHeight(li.find("[name=to]"  ).val(item.to));
+			listReplacer.append(li);
+		}
+	}
+	
+	progress = new Progress();
+}
+
+function addFile(file) {
+	const filters = inputFilters.val().split(",").join(";").split(";");
+	for (let i = 0; i < filters.length; i++) {
+		const regex = new RegExp("^" + filters[i].trim().split(".").join("\\.").split("*").join(".*") + "$");
+		if (regex.test(file)) {
+			listFiles.add(file, true);
+			return;
+		}
+	}
+}
+
+function findDragArea(x, y) {
+	const ids = ["#listFiles", "#areaRight"];
+	for (let i = 0; i < ids.length; i++) {
+		const id = ids[i];
+		const area = $(id);
+		if (x >= area.offset().left && y >= area.offset().top && x <= area.offset().left + area.outerWidth() && y <= area.offset().top + area.outerHeight()) {
+			return id;
+		}
+	}
+	return "#none";
+}
+function dragover(x, y) {
+	const area = findDragArea(x, y);
+	$(".hover").removeClass("hover");
+	$(area).addClass("hover");
+}
+function drop(x, y) {
+	$(".hover").removeClass("hover");
+	switch (findDragArea(x, y)) {
+		case "#listFiles": {
+			binder.addFilesByDrag();
+			break;
+		}
+		case "#areaRight": {
+			binder.loadSettingByDrag();
+			break;
+		}
+	}
+}
+
+function addReplacer(replacer) {
+	const li = listReplacer.data("preset").clone();
+	li.find("[name=use]").prop("checked", replacer.use);
+	setTextareaHeight(li.find("[name=from]").val(replacer.from));
+	setTextareaHeight(li.find("[name=to]"  ).val(replacer.to  ));
+	listReplacer.append(li);
+}
+function getSetting() {
+	const replacers = [];
+	listReplacer.find("li").each((_, el) => {
+		const li = $(el);
+		const from = li.find("[name=from]").val();
+		if (from == "") return;
+		const to = li.find("[name=to]").val();
+		const use = li.find("[name=use]").prop("checked");
+		replacers.push({ use: use, from: from, to: to });
+	});
+	return stringify({ filters: inputFilters.val(), replacers: replacers });
+}
+
+function selectView(index) {
+	$(".view").hide();
+	$(".view:eq("+index+")").show();
+}
+function showPreview(source, replaced) {
+	selectView(1);
+	$("#view1left").html(source.split("\n").join("<br />"));
+	$("#view1right").html(replaced.split("\n").join("<br />"));
+}
+function beforeExit() {
+	binder.exitAfterSaveSetting(getSetting());
+}
+
+function getReplacers() {
+	const froms = [];
+	const tos = [];
+	listReplacer.find("li").each((_, el) => {
+		const li = $(el);
+		if (!li.find("[name=use]").prop("checked")) return;
+		const from = li.find("[name=from]").val();
+		if (from == "") return;
+		const to = li.find("[name=to]").val();
+		froms.push(from);
+		tos.push(to);
+	});
+	return { froms: froms, tos: tos };
+}
+
+$(() => {
+	listFiles = new ListView($("#listFiles"));
+	listFiles.run = (item) => {
+		const replacers = getReplacers();
+		if (replacers.froms.length == 0) {
+			alert("변환할 문자열이 없습니다.");
+			return;
+		}
+		binder.compare(item.value, replacers.froms, replacers.tos);
+	}
+	
+	inputFilters = $("#inputFilters");
+	listReplacer = $("#listReplacer");
+	{
+		const preset = listReplacer.find("li.preset");
+		listReplacer.data("preset", preset.clone(true));
+		preset.remove();
+	}
+	
+	listReplacer.on("keyup", "textarea", function () {
+		setTextareaHeight($(this));
+	});
+	
+	listReplacer.on("click", ".btnDeleteReplacer", function() {
+		$(this).parents("li").remove();
+	});
+	$("#btnAddReplacer").on("click", function() {
+		addReplacer({ use: true, from: "", to: "" });
+	});
+	
+	$("#btnReplace").on("click", function() {
+		const files = [];
+		for (let i = 0; i < listFiles.list.length; i++) {
+			files.push(listFiles.list[i].value);
+		}
+		if (files.length == 0) {
+			alert("변환할 파일이 없습니다.");
+			return;
+		}
+		const replacers = getReplacers();
+		if (replacers.froms.length == 0) {
+			alert("변환할 문자열이 없습니다.");
+			return;
+		}
+		binder.replace(files, replacers.froms, replacers.tos);
+	});
+	$("#btnImportSetting").on("click", function() {
+		binder.importSetting();
+	});
+	$("#btnExportSetting").on("click", function() {
+		binder.exportSetting(getSetting());
+	});
+	
+	document.addEventListener("dragenter", (e) => {
+		e.preventDefault();
+		binder.showDragging();
+	});
+	$("#cover").on("click", function(e) {
+		binder.hideDragging();
+	});
+	
+	$("#view1left, #view1right").on("click", function() {
+		selectView(0);
+	});
+	selectView(0);
+});
+	</script>
+	<style>
+#view0left, #view0right,
+#view1left, #view1right {
+	float: left;
+	width: 50%;
+	padding: 1px;
+}
+#view0left, #view0right {
+	height: calc(100% - 32px);
+}
+
+#listFiles {
+	width: 100%;
+	height: calc(100% - 20px);
+}
+
+#areaFilters {
+	margin-top: 2px;
+}
+
+#areaFilters {
+	width: 100%;
+}
+
+label[for=inputFilters] {
+	display: inline-block;
+	width: 66px;
+}
+
+#inputFilters {
+	width: calc(100% - 72px);
+}
+
+#areaRight {
+	width: 100%;
+	height: 100%;
+	border: 1px solid #000;
+}
+#areaReplacer {
+	width: 100%;
+	height: calc(100% - 32px);
+	overflow-y: scroll;
+	padding: 2px;
+}
+#areaSetting {
+	width: 100%;
+	height: 32px;
+	padding: 1px;
+}
+#areaSetting > button {
+	width: calc(50% - 2px);
+	height: 28px;
+	margin: 1px;
+}
+
+#listReplacer > li {
+	width: 100%;
+	margin-bottom: 2px;
+}
+
+#listReplacer > li > * {
+	vertical-align: top;
+}
+
+#listReplacer > li > input[type=checkbox] {
+	width: 14px;
+	height: 14px;
+	margin: 2px;
+}
+#listReplacer > li > textarea {
+	width: calc(50% - 34px);
+	height: 16px;
+	overflow: hidden;
+	line-height: 14px;
+	white-space: pre-line;
+	resize: none;
+}
+
+#listReplacer > li > span {
+	display: inline-block;
+	width: 16px;
+	height: 14px;
+	margin-top: 2px;
+	text-align: center;
+}
+
+#listReplacer > li > button {
+	width: 32px;
+	height: 18px;
+	margin-left: 2px;
+}
+
+#btnAddReplacer {
+	width: 100%;
+	height: 26px;
+}
+
+#areaSubmit {
+	clear: both;
+	width: 100%;
+	height: 32px;
+	padding: 1px;
+}
+
+#btnReplace {
+	width: 100%;
+	height: 100%;
+}
+
+#view1left,
+#view1right {
+	overflow-x: scroll;
+	overflow-y: visible;
+	background: #fff;
+	min-height: 100%;
+}
+
+#view1left .highlight,
+#view1right .highlight {
+	font-weight: bold;
+	color: #f00;
+}
+
+body.drag-file #listFiles.hover,
+body.drag-file #areaRight.hover {
+	border: 2px solid #c66;
+}
+	</style>
+</head>
+<body>
+	<div class="view">
+		<div id="view0left">
+			<div id="listFiles"></div>
+			<div id="areaFilters">
+				<label for="inputFilters">파일명 필터</label>
+				<input type="text" id="inputFilters" value="*.txt, *.smi, *.ass" />
+			</div>
+		</div>
+		<div id="view0right">
+			<div id="areaRight">
+				<div id="areaReplacer">
+					<ol id="listReplacer">
+						<li class="preset">
+							<input type="checkbox" name="use" checked
+							/><textarea name="from" wrap="off"></textarea><span>→</span><textarea name="to" wrap="off"></textarea><button type="button" class="btnDeleteReplacer">삭제</button>
+						</li>
+					</ol>
+					<button type="button" id="btnAddReplacer">추가</button>
+				</div>
+				<div id="areaSetting"><button type="button" id="btnImportSetting">설정 가져오기</button><button type="button" id="btnExportSetting">설정 내보내기</button></div>
+			</div>
+		</div>
+		<div id="areaSubmit">
+			<button id="btnReplace">치환</button>
+		</div>
+	</div>
+	<div class="view" style="overflow-y: scroll">
+		<div id="view1left">
+		</div>
+		<div id="view1right">
+		</div>
+	</div>
+</body>
+</html>
