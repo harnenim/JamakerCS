@@ -1,8 +1,16 @@
-﻿using System;
+﻿using PlayerBridge;
+using System;
 using System.Runtime.InteropServices;
 
 namespace Jamaker
 {
+    public struct COPYUNICODESTRUCT
+    {
+        public IntPtr dwData;
+        public int cbData;
+        [MarshalAs(UnmanagedType.LPWStr)]
+        public string lpData;
+    }
     public struct RECT
     {
         public int left;
@@ -29,6 +37,9 @@ namespace Jamaker
 
         [DllImport("user32.dll", EntryPoint = "SetWindowLongW")]
         public static extern UIntPtr SetWindowLongPtr32(int hwnd, int nIndex, UIntPtr dwNewLong);
+
+        [DllImport("user32.dll")]
+        public static extern int SendMessage(int hwnd, int wMsg, int wParam, ref COPYUNICODESTRUCT lParam);
 
         public static void SetTaskbarHide(int hwnd)
         {

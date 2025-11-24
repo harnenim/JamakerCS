@@ -1,5 +1,6 @@
 ﻿using CefSharp;
 using Jamaker.addon;
+using PlayerBridge;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -28,8 +29,25 @@ namespace Jamaker
         public MainForm(string[] args)
         {
             string ProcName = Process.GetCurrentProcess().ProcessName;
-            if (Process.GetProcessesByName(ProcName).Length > 1) {
-                MessageBox.Show($"{ProcName}는 이미 실행 중입니다.");
+            Process[] processes = Process.GetProcessesByName(ProcName);
+            if (processes.Length > 1) {
+                if (args.Length > 0)
+                {
+                    int hwnd = processes[0].Handle.ToInt32();
+                    string path = args[0];
+                    COPYUNICODESTRUCT cds = new COPYUNICODESTRUCT
+                    {    dwData = new IntPtr(0x1234)
+                    ,    cbData = Encoding.Unicode.GetBytes(path).Length
+                    ,    lpData = path
+                    };
+                    Console.WriteLine($"Send: {hwnd}, {path}");
+                    WinAPI.SendMessage(hwnd, 0x1234, hwnd, ref cds);
+                    MessageBox.Show($"{ProcName}({hwnd})는 이미 실행 중입니다.");
+                }
+                else
+                {
+                    MessageBox.Show($"{ProcName}는 이미 실행 중입니다.");
+                }
                 Process.GetCurrentProcess().Kill();
             }
 
@@ -992,8 +1010,19 @@ namespace Jamaker
         private AfterGetString afterGetFileName = null;
         protected override void WndProc(ref Message m)
         {
+            Console.WriteLine($"WndProc: {m.HWnd}, {m.Msg}");
+
             // 파일명 말곤 수신할 일 없다는 가정
-            if (player != null)
+            if (m.Msg == 0x1234)
+            {
+                // 중복 실행 아규먼트 수신
+                byte[] buff = new byte[Marshal.ReadInt32(m.LParam, IntPtr.Size)];
+                IntPtr dataPtr = Marshal.ReadIntPtr(m.LParam, IntPtr.Size * 2);
+                Marshal.Copy(dataPtr, buff, 0, buff.Length);
+                string path = Encoding.UTF8.GetString(buff);
+                Console.WriteLine($"path: {path}");
+            }
+            else if (player != null)
             {
                 string path = player.AfterGetFileName(m);
                 if (path != null)
