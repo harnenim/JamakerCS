@@ -60,7 +60,7 @@ namespace Jamaker
             await mainView.EnsureCoreWebView2Async(null);
             mainView.Source = new Uri(Path.Combine(Directory.GetCurrentDirectory(), "view/TextReplacer.html"));
         }
-        public new void InitAfterLoad(string title)
+        public override void InitAfterLoad(string title)
         {
             base.InitAfterLoad(title);
             if (File.Exists(Path.Combine(Application.StartupPath, $"setting/.ShowDevTools")))
@@ -118,7 +118,7 @@ namespace Jamaker
             Process.GetCurrentProcess().Kill();
         }
 
-        private new void Drop(int x, int y)
+        protected override void Drop(int x, int y)
         {
             Script("drop", x, y);
         }

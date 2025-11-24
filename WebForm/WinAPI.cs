@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace Jamaker
 {
@@ -11,7 +10,7 @@ namespace Jamaker
         public int bottom;
     }
 
-    class WinAPI
+    public class WinAPI
     {
         [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(int hwnd);

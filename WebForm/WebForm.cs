@@ -53,7 +53,7 @@ namespace Jamaker
         }
         #endregion
 
-        protected void InitAfterLoad(string title)
+        public virtual void InitAfterLoad(string title)
         {
             windows.Add("editor", Handle.ToInt32());
             Text = title;
@@ -159,7 +159,7 @@ namespace Jamaker
             HideDragging();
             Drop((int) ((e.X - Location.X) / dpi), (int) ((e.Y - Location.Y) / dpi));
         }
-        protected void Drop(int x, int y) {}
+        protected virtual void Drop(int x, int y) {}
         private void ClickLayerForDrag(object sender, MouseEventArgs e)
         {
             // 레이어가 클릭됨 -> 드래그 끝났는데 안 사라진 상태
@@ -167,7 +167,7 @@ namespace Jamaker
         }
         #endregion
 
-        public async void InitializeAsync(string name, BaseBinder binder)
+        public async void InitializeAsync(string name, object binder)
         {
             InitializeComponent();
             Name = name;

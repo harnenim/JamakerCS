@@ -1,14 +1,12 @@
-﻿namespace Jamaker
+﻿using System.Runtime.InteropServices;
+
+namespace Jamaker
 {
 #pragma warning disable IDE1006 // 명명 스타일
-    public class BaseBinder
+    [ComVisible(true)]
+    public class BaseBinder(WebForm webForm)
     {
-        private readonly MainForm _;
-
-        public BaseBinder(MainForm webForm)
-        {
-            _ = webForm;
-        }
+        private readonly WebForm _ = webForm;
 
         public void focus(string target)
         {
