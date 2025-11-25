@@ -183,34 +183,6 @@ namespace Jamaker
 
             StandbyPopup();
         }
-
-        private PopupForm? tmpPopup;
-        private readonly Dictionary<string, PopupForm> popups = [];
-
-        private void OpenPopup(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
-        {
-            if (tmpPopup != null)
-            {
-                PopupForm popup = tmpPopup;
-                popup.Show();
-                StandbyPopup();
-                e.NewWindow = popup.mainView.CoreWebView2;
-
-                popups[e.Name] = popup;
-
-                switch (e.Name)
-                {
-                    case "test":
-                        {
-                            popup.MaximizeBox = false;
-                            popup.MinimizeBox = false;
-                            break;
-                        }
-                }
-                popup.Text = e.Name;
-            }
-            e.Handled = true;
-        }
         private void StandbyPopup()
         {
             if (InvokeRequired)
@@ -223,6 +195,43 @@ namespace Jamaker
             tmpPopup = new PopupForm(env!);
         }
 
+        private PopupForm? tmpPopup;
+        private readonly Dictionary<string, PopupForm> popups = [];
+        private readonly Dictionary<string, PopupForm> urlPopups = [];
+
+        private void OpenPopup(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
+        {
+            if (tmpPopup != null)
+            {
+                PopupForm popup = tmpPopup;
+                popup.Show();
+                StandbyPopup();
+                e.NewWindow = popup.mainView.CoreWebView2;
+
+                popups[e.Name] = urlPopups[e.Uri] = popup;
+
+                switch (e.Name)
+                {
+                    case "test":
+                        {
+                            popup.MaximizeBox = false;
+                            popup.MinimizeBox = false;
+                            popup.TopMost = true;
+                            break;
+                        }
+                }
+                popup.Text = e.Name;
+                popup.mainView.CoreWebView2.NavigationStarting += RefreshPopup;
+            }
+            e.Handled = true;
+        }
+
+
+        private void RefreshPopup(object? sender, CoreWebView2NavigationStartingEventArgs e)
+        {
+            PopupForm popup = urlPopups[e.Uri];
+            WinAPI.SetForegroundWindow(popup.Handle.ToInt32());
+        }
 
 
         public static Encoding DetectEncoding(string file)
