@@ -198,7 +198,7 @@ namespace Jamaker
             layerForDrag.Visible = false;
             Script("hideDragging");
         }
-        string[] droppedFiles = null;
+        protected string[] droppedFiles = null;
         protected void DragLeaveMain(object sender, EventArgs e) { HideDragging(); }
         protected void DragOverMain(object sender, DragEventArgs e)
         {

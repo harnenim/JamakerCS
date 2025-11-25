@@ -129,7 +129,7 @@ namespace Jamaker
             Process.GetCurrentProcess().Kill();
         }
 
-        private void OverrideDrop(int x, int y)
+        protected void OverrideDrop(int x, int y)
         {
             Script("drop", x, y);
         }
@@ -268,7 +268,7 @@ namespace Jamaker
                 return;
             }
 
-            SaveFileDialog dialog = new SaveFileDialog{ Filter = "JSON 파일|*.json" };
+            SaveFileDialog dialog = new SaveFileDialog { Filter = "JSON 파일|*.json" };
             if (dialog.ShowDialog() != DialogResult.OK)
             {   // 저장 취소
                 return;
@@ -310,12 +310,12 @@ namespace Jamaker
             {
                 DirectoryInfo dir = new DirectoryInfo(file);
                 DirectoryInfo[] subDirs = dir.GetDirectories();
-                foreach(DirectoryInfo subDir in subDirs)
+                foreach (DirectoryInfo subDir in subDirs)
                 {
                     GetFilesWithSubDir(subDir.FullName);
                 }
                 FileInfo[] subFiles = dir.GetFiles();
-                foreach(FileInfo subFile in subFiles)
+                foreach (FileInfo subFile in subFiles)
                 {
                     Script("addFile", subFile.FullName);
                 }
