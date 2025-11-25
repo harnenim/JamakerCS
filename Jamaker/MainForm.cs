@@ -1,6 +1,5 @@
 ﻿using CefSharp;
 using Jamaker.addon;
-using PlayerBridge;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,7 +23,7 @@ namespace Jamaker
         private string strBridgeList = "NoPlayer: (없음)"; // 기본값
         private string strHighlights = "SyncOnly: 싱크 줄 구분\neclipse: 이클립스 스타일";
         private readonly Dictionary<string, string> bridgeDlls = new Dictionary<string, string>();
-        private string[] args;
+        private readonly string[] args;
 
         public MainForm(string[] args)
         {
@@ -969,6 +968,7 @@ namespace Jamaker
         #endregion
 
         #region 파일 드래그 관련
+#pragma warning disable IDE0060 // 사용하지 않는 매개 변수를 제거하세요.
         private void OverrideDrop(int x, int y)
         {
             try
@@ -987,6 +987,7 @@ namespace Jamaker
             }
             catch { }
         }
+#pragma warning restore IDE0060 // 사용하지 않는 매개 변수를 제거하세요.
         #endregion
 
         #region 파일
@@ -1083,12 +1084,11 @@ namespace Jamaker
         }
         private void LoadFile(string path, bool forVideo)
         {
-            string text = "";
             StreamReader sr = null;
             try
             {
                 sr = new StreamReader(path, DetectEncoding(path));
-                text = sr.ReadToEnd();
+                string text = sr.ReadToEnd();
                 Script("openFile", path, text, forVideo);
             }
             catch (Exception e)

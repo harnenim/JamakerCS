@@ -371,7 +371,7 @@ namespace Jamaker
             // 브라우저 설정
             CefSettings settings = new CefSettings
             {   Locale = "ko"
-            ,   CachePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\" + (name == null ? @"CEF" : name)
+            ,   CachePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\" + (name ?? @"CEF")
             ,   CommandLineArgsDisabled = false
             };
             settings.CefCommandLineArgs.Add("disable-web-security");

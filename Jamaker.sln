@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextReplacerWV2", "TextRepl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebViewForm", "WebViewForm\WebViewForm.csproj", "{0305FF08-B116-8121-AA22-471A0BABCD4D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoInfo", "VideoInfo\VideoInfo.csproj", "{D37941C6-E733-47A7-B807-FCFA8C82BB54}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -141,6 +143,14 @@ Global
 		{0305FF08-B116-8121-AA22-471A0BABCD4D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0305FF08-B116-8121-AA22-471A0BABCD4D}.Release|x64.ActiveCfg = Release|x64
 		{0305FF08-B116-8121-AA22-471A0BABCD4D}.Release|x64.Build.0 = Release|x64
+		{D37941C6-E733-47A7-B807-FCFA8C82BB54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D37941C6-E733-47A7-B807-FCFA8C82BB54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D37941C6-E733-47A7-B807-FCFA8C82BB54}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D37941C6-E733-47A7-B807-FCFA8C82BB54}.Debug|x64.Build.0 = Debug|Any CPU
+		{D37941C6-E733-47A7-B807-FCFA8C82BB54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D37941C6-E733-47A7-B807-FCFA8C82BB54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D37941C6-E733-47A7-B807-FCFA8C82BB54}.Release|x64.ActiveCfg = Release|Any CPU
+		{D37941C6-E733-47A7-B807-FCFA8C82BB54}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
