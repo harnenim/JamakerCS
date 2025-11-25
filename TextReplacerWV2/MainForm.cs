@@ -181,7 +181,7 @@ namespace Jamaker
                     }
                     finally { sr?.Close(); }
 
-                    Replaced result = new Replaced(text, froms, tos);
+                    Replaced result = new(text, froms, tos);
                     if (result == null) continue;
 
                     if (result.count == 0) continue;

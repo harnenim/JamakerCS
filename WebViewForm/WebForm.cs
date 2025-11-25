@@ -91,6 +91,11 @@ namespace WebViewForm
         }
         public void InScript(string script)
         {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { InScript(script); }));
+                return;
+            }
             mainView.ExecuteScriptAsync(script);
         }
 
@@ -174,7 +179,7 @@ namespace WebViewForm
             Name = name;
 
             CoreWebView2EnvironmentOptions op = new CoreWebView2EnvironmentOptions("--disable-web-security");
-            env = await CoreWebView2Environment.CreateAsync(null, null, op);
+            env = await CoreWebView2Environment.CreateAsync(null, Path.Combine(Application.StartupPath, "temp"), op);
             await mainView.EnsureCoreWebView2Async(env);
             mainView.CoreWebView2.AddHostObjectToScript("binder", binder);
 

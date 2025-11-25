@@ -1,4 +1,7 @@
-﻿namespace Jamaker
+﻿using Newtonsoft.Json;
+using System;
+
+namespace Jamaker
 {
 #pragma warning disable IDE1006 // 명명 스타일
     public class Binder(MainForm mainForm) : WebViewForm.BaseBinder(mainForm)
@@ -14,14 +17,18 @@
             _.LoadSettingByDrag();
         }
 
-        public void compare(string file, string[] froms, string[] tos)
+        public void compare(string file, string froms, string tos)
         {
-            _.Compare(file, froms, tos);
+            _.Compare(file, JsonToStrings(froms), JsonToStrings(tos));
         }
 
-        public void replace(string[] files, string[] froms, string[] tos)
+        public void replace(string files, string froms, string tos)
         {
-            _.Replace(files, froms, tos);
+            _.Replace(JsonToStrings(files), JsonToStrings(froms), JsonToStrings(tos));
+        }
+        public static string[] JsonToStrings(string input)
+        {
+            return JsonConvert.DeserializeObject<string[]>(input)!;
         }
 
         public void importSetting()
