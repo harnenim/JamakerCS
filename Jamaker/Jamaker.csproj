@@ -322,260 +322,765 @@
     <Content Include="view\lib\highlight\parser\withoutSync.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="view\lib\highlight\Readme.txt" />
-    <Content Include="view\lib\highlight\styles\1c-light.css" />
-    <Content Include="view\lib\highlight\styles\a11y-dark.css" />
-    <Content Include="view\lib\highlight\styles\a11y-light.css" />
-    <Content Include="view\lib\highlight\styles\agate.css" />
-    <Content Include="view\lib\highlight\styles\an-old-hope.css" />
-    <Content Include="view\lib\highlight\styles\androidstudio.css" />
-    <Content Include="view\lib\highlight\styles\arduino-light.css" />
-    <Content Include="view\lib\highlight\styles\arta.css" />
-    <Content Include="view\lib\highlight\styles\ascetic.css" />
-    <Content Include="view\lib\highlight\styles\atom-one-dark-reasonable.css" />
-    <Content Include="view\lib\highlight\styles\atom-one-dark.css" />
-    <Content Include="view\lib\highlight\styles\atom-one-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\3024.css" />
-    <Content Include="view\lib\highlight\styles\base16\apathy.css" />
-    <Content Include="view\lib\highlight\styles\base16\apprentice.css" />
-    <Content Include="view\lib\highlight\styles\base16\ashes.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-cave-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-cave.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-dune-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-dune.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-estuary-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-estuary.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-forest-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-forest.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-heath-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-heath.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-lakeside-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-lakeside.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-plateau-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-plateau.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-savanna-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-savanna.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-seaside-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-seaside.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-sulphurpool-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\atelier-sulphurpool.css" />
-    <Content Include="view\lib\highlight\styles\base16\atlas.css" />
-    <Content Include="view\lib\highlight\styles\base16\bespin.css" />
-    <Content Include="view\lib\highlight\styles\base16\black-metal-bathory.css" />
-    <Content Include="view\lib\highlight\styles\base16\black-metal-burzum.css" />
-    <Content Include="view\lib\highlight\styles\base16\black-metal-dark-funeral.css" />
-    <Content Include="view\lib\highlight\styles\base16\black-metal-gorgoroth.css" />
-    <Content Include="view\lib\highlight\styles\base16\black-metal-immortal.css" />
-    <Content Include="view\lib\highlight\styles\base16\black-metal-khold.css" />
-    <Content Include="view\lib\highlight\styles\base16\black-metal-marduk.css" />
-    <Content Include="view\lib\highlight\styles\base16\black-metal-mayhem.css" />
-    <Content Include="view\lib\highlight\styles\base16\black-metal-nile.css" />
-    <Content Include="view\lib\highlight\styles\base16\black-metal-venom.css" />
-    <Content Include="view\lib\highlight\styles\base16\black-metal.css" />
-    <Content Include="view\lib\highlight\styles\base16\brewer.css" />
-    <Content Include="view\lib\highlight\styles\base16\bright.css" />
-    <Content Include="view\lib\highlight\styles\base16\brogrammer.css" />
-    <Content Include="view\lib\highlight\styles\base16\brush-trees-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\brush-trees.css" />
-    <Content Include="view\lib\highlight\styles\base16\chalk.css" />
-    <Content Include="view\lib\highlight\styles\base16\circus.css" />
-    <Content Include="view\lib\highlight\styles\base16\classic-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\classic-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\codeschool.css" />
-    <Content Include="view\lib\highlight\styles\base16\colors.css" />
-    <Content Include="view\lib\highlight\styles\base16\cupcake.css" />
-    <Content Include="view\lib\highlight\styles\base16\cupertino.css" />
-    <Content Include="view\lib\highlight\styles\base16\danqing.css" />
-    <Content Include="view\lib\highlight\styles\base16\darcula.css" />
-    <Content Include="view\lib\highlight\styles\base16\dark-violet.css" />
-    <Content Include="view\lib\highlight\styles\base16\darkmoss.css" />
-    <Content Include="view\lib\highlight\styles\base16\darktooth.css" />
-    <Content Include="view\lib\highlight\styles\base16\decaf.css" />
-    <Content Include="view\lib\highlight\styles\base16\default-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\default-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\dirtysea.css" />
-    <Content Include="view\lib\highlight\styles\base16\dracula.css" />
-    <Content Include="view\lib\highlight\styles\base16\edge-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\edge-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\eighties.css" />
-    <Content Include="view\lib\highlight\styles\base16\embers.css" />
-    <Content Include="view\lib\highlight\styles\base16\equilibrium-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\equilibrium-gray-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\equilibrium-gray-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\equilibrium-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\espresso.css" />
-    <Content Include="view\lib\highlight\styles\base16\eva-dim.css" />
-    <Content Include="view\lib\highlight\styles\base16\eva.css" />
-    <Content Include="view\lib\highlight\styles\base16\flat.css" />
-    <Content Include="view\lib\highlight\styles\base16\framer.css" />
-    <Content Include="view\lib\highlight\styles\base16\fruit-soda.css" />
-    <Content Include="view\lib\highlight\styles\base16\gigavolt.css" />
-    <Content Include="view\lib\highlight\styles\base16\github.css" />
-    <Content Include="view\lib\highlight\styles\base16\google-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\google-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\grayscale-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\grayscale-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\green-screen.css" />
-    <Content Include="view\lib\highlight\styles\base16\gruvbox-dark-hard.css" />
-    <Content Include="view\lib\highlight\styles\base16\gruvbox-dark-medium.css" />
-    <Content Include="view\lib\highlight\styles\base16\gruvbox-dark-pale.css" />
-    <Content Include="view\lib\highlight\styles\base16\gruvbox-dark-soft.css" />
-    <Content Include="view\lib\highlight\styles\base16\gruvbox-light-hard.css" />
-    <Content Include="view\lib\highlight\styles\base16\gruvbox-light-medium.css" />
-    <Content Include="view\lib\highlight\styles\base16\gruvbox-light-soft.css" />
-    <Content Include="view\lib\highlight\styles\base16\hardcore.css" />
-    <Content Include="view\lib\highlight\styles\base16\harmonic16-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\harmonic16-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\heetch-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\heetch-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\helios.css" />
-    <Content Include="view\lib\highlight\styles\base16\hopscotch.css" />
-    <Content Include="view\lib\highlight\styles\base16\horizon-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\horizon-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\humanoid-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\humanoid-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\ia-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\ia-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\icy-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\ir-black.css" />
-    <Content Include="view\lib\highlight\styles\base16\isotope.css" />
-    <Content Include="view\lib\highlight\styles\base16\kimber.css" />
-    <Content Include="view\lib\highlight\styles\base16\london-tube.css" />
-    <Content Include="view\lib\highlight\styles\base16\macintosh.css" />
-    <Content Include="view\lib\highlight\styles\base16\marrakesh.css" />
-    <Content Include="view\lib\highlight\styles\base16\materia.css" />
-    <Content Include="view\lib\highlight\styles\base16\material-darker.css" />
-    <Content Include="view\lib\highlight\styles\base16\material-lighter.css" />
-    <Content Include="view\lib\highlight\styles\base16\material-palenight.css" />
-    <Content Include="view\lib\highlight\styles\base16\material-vivid.css" />
-    <Content Include="view\lib\highlight\styles\base16\material.css" />
-    <Content Include="view\lib\highlight\styles\base16\mellow-purple.css" />
-    <Content Include="view\lib\highlight\styles\base16\mexico-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\mocha.css" />
-    <Content Include="view\lib\highlight\styles\base16\monokai.css" />
-    <Content Include="view\lib\highlight\styles\base16\nebula.css" />
-    <Content Include="view\lib\highlight\styles\base16\nord.css" />
-    <Content Include="view\lib\highlight\styles\base16\nova.css" />
-    <Content Include="view\lib\highlight\styles\base16\ocean.css" />
-    <Content Include="view\lib\highlight\styles\base16\oceanicnext.css" />
-    <Content Include="view\lib\highlight\styles\base16\one-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\onedark.css" />
-    <Content Include="view\lib\highlight\styles\base16\outrun-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\papercolor-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\papercolor-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\paraiso.css" />
-    <Content Include="view\lib\highlight\styles\base16\pasque.css" />
-    <Content Include="view\lib\highlight\styles\base16\phd.css" />
-    <Content Include="view\lib\highlight\styles\base16\pico.css" />
-    <Content Include="view\lib\highlight\styles\base16\pop.css" />
-    <Content Include="view\lib\highlight\styles\base16\porple.css" />
-    <Content Include="view\lib\highlight\styles\base16\qualia.css" />
-    <Content Include="view\lib\highlight\styles\base16\railscasts.css" />
-    <Content Include="view\lib\highlight\styles\base16\rebecca.css" />
-    <Content Include="view\lib\highlight\styles\base16\ros-pine-dawn.css" />
-    <Content Include="view\lib\highlight\styles\base16\ros-pine-moon.css" />
-    <Content Include="view\lib\highlight\styles\base16\ros-pine.css" />
-    <Content Include="view\lib\highlight\styles\base16\sagelight.css" />
-    <Content Include="view\lib\highlight\styles\base16\sandcastle.css" />
-    <Content Include="view\lib\highlight\styles\base16\seti-ui.css" />
-    <Content Include="view\lib\highlight\styles\base16\shapeshifter.css" />
-    <Content Include="view\lib\highlight\styles\base16\silk-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\silk-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\snazzy.css" />
-    <Content Include="view\lib\highlight\styles\base16\solar-flare-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\solar-flare.css" />
-    <Content Include="view\lib\highlight\styles\base16\solarized-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\solarized-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\spacemacs.css" />
-    <Content Include="view\lib\highlight\styles\base16\summercamp.css" />
-    <Content Include="view\lib\highlight\styles\base16\summerfruit-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\summerfruit-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\synth-midnight-terminal-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\synth-midnight-terminal-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\tango.css" />
-    <Content Include="view\lib\highlight\styles\base16\tender.css" />
-    <Content Include="view\lib\highlight\styles\base16\tomorrow-night.css" />
-    <Content Include="view\lib\highlight\styles\base16\tomorrow.css" />
-    <Content Include="view\lib\highlight\styles\base16\twilight.css" />
-    <Content Include="view\lib\highlight\styles\base16\unikitty-dark.css" />
-    <Content Include="view\lib\highlight\styles\base16\unikitty-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\vulcan.css" />
-    <Content Include="view\lib\highlight\styles\base16\windows-10-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\windows-10.css" />
-    <Content Include="view\lib\highlight\styles\base16\windows-95-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\windows-95.css" />
-    <Content Include="view\lib\highlight\styles\base16\windows-high-contrast-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\windows-high-contrast.css" />
-    <Content Include="view\lib\highlight\styles\base16\windows-nt-light.css" />
-    <Content Include="view\lib\highlight\styles\base16\windows-nt.css" />
-    <Content Include="view\lib\highlight\styles\base16\woodland.css" />
-    <Content Include="view\lib\highlight\styles\base16\xcode-dusk.css" />
-    <Content Include="view\lib\highlight\styles\base16\zenburn.css" />
-    <Content Include="view\lib\highlight\styles\brown-paper.css" />
-    <Content Include="view\lib\highlight\styles\brown-papersq.png" />
-    <Content Include="view\lib\highlight\styles\codepen-embed.css" />
-    <Content Include="view\lib\highlight\styles\color-brewer.css" />
-    <Content Include="view\lib\highlight\styles\dark.css" />
-    <Content Include="view\lib\highlight\styles\default.css" />
-    <Content Include="view\lib\highlight\styles\devibeans.css" />
-    <Content Include="view\lib\highlight\styles\docco.css" />
-    <Content Include="view\lib\highlight\styles\nscc4.css" />
-    <Content Include="view\lib\highlight\styles\eclipse.css" />
-    <Content Include="view\lib\highlight\styles\far.css" />
-    <Content Include="view\lib\highlight\styles\felipec.css" />
-    <Content Include="view\lib\highlight\styles\foundation.css" />
-    <Content Include="view\lib\highlight\styles\github-dark-dimmed.css" />
-    <Content Include="view\lib\highlight\styles\github-dark.css" />
-    <Content Include="view\lib\highlight\styles\github.css" />
-    <Content Include="view\lib\highlight\styles\gml.css" />
-    <Content Include="view\lib\highlight\styles\googlecode.css" />
-    <Content Include="view\lib\highlight\styles\gradient-dark.css" />
-    <Content Include="view\lib\highlight\styles\gradient-light.css" />
-    <Content Include="view\lib\highlight\styles\grayscale.css" />
-    <Content Include="view\lib\highlight\styles\hybrid.css" />
-    <Content Include="view\lib\highlight\styles\idea.css" />
-    <Content Include="view\lib\highlight\styles\intellij-light.css" />
-    <Content Include="view\lib\highlight\styles\ir-black.css" />
-    <Content Include="view\lib\highlight\styles\isbl-editor-dark.css" />
-    <Content Include="view\lib\highlight\styles\isbl-editor-light.css" />
-    <Content Include="view\lib\highlight\styles\kimbie-dark.css" />
-    <Content Include="view\lib\highlight\styles\kimbie-light.css" />
-    <Content Include="view\lib\highlight\styles\lightfair.css" />
-    <Content Include="view\lib\highlight\styles\lioshi.css" />
-    <Content Include="view\lib\highlight\styles\magula.css" />
-    <Content Include="view\lib\highlight\styles\mono-blue.css" />
-    <Content Include="view\lib\highlight\styles\monokai-sublime.css" />
-    <Content Include="view\lib\highlight\styles\monokai.css" />
-    <Content Include="view\lib\highlight\styles\night-owl.css" />
-    <Content Include="view\lib\highlight\styles\nnfx-dark.css" />
-    <Content Include="view\lib\highlight\styles\nnfx-light.css" />
-    <Content Include="view\lib\highlight\styles\nord.css" />
-    <Content Include="view\lib\highlight\styles\obsidian.css" />
-    <Content Include="view\lib\highlight\styles\panda-syntax-dark.css" />
-    <Content Include="view\lib\highlight\styles\panda-syntax-light.css" />
-    <Content Include="view\lib\highlight\styles\paraiso-dark.css" />
-    <Content Include="view\lib\highlight\styles\paraiso-light.css" />
-    <Content Include="view\lib\highlight\styles\pojoaque.css" />
-    <Content Include="view\lib\highlight\styles\pojoaque.jpg" />
-    <Content Include="view\lib\highlight\styles\purebasic.css" />
-    <Content Include="view\lib\highlight\styles\qtcreator-dark.css" />
-    <Content Include="view\lib\highlight\styles\qtcreator-light.css" />
-    <Content Include="view\lib\highlight\styles\rainbow.css" />
-    <Content Include="view\lib\highlight\styles\routeros.css" />
-    <Content Include="view\lib\highlight\styles\school-book.css" />
-    <Content Include="view\lib\highlight\styles\shades-of-purple.css" />
-    <Content Include="view\lib\highlight\styles\srcery.css" />
-    <Content Include="view\lib\highlight\styles\stackoverflow-dark.css" />
-    <Content Include="view\lib\highlight\styles\stackoverflow-light.css" />
-    <Content Include="view\lib\highlight\styles\sunburst.css" />
-    <Content Include="view\lib\highlight\styles\tokyo-night-dark.css" />
-    <Content Include="view\lib\highlight\styles\tokyo-night-light.css" />
-    <Content Include="view\lib\highlight\styles\tomorrow-night-blue.css" />
-    <Content Include="view\lib\highlight\styles\tomorrow-night-bright.css" />
-    <Content Include="view\lib\highlight\styles\vs.css" />
-    <Content Include="view\lib\highlight\styles\vs2015.css" />
-    <Content Include="view\lib\highlight\styles\xcode.css" />
-    <Content Include="view\lib\highlight\styles\xt256.css" />
+    <Content Include="view\lib\highlight\styles\1c-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\a11y-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\a11y-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\agate.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\an-old-hope.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\androidstudio.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\arduino-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\arta.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\ascetic.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\atom-one-dark-reasonable.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\atom-one-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\atom-one-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\3024.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\apathy.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\apprentice.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\ashes.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-cave-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-cave.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-dune-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-dune.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-estuary-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-estuary.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-forest-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-forest.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-heath-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-heath.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-lakeside-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-lakeside.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-plateau-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-plateau.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-savanna-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-savanna.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-seaside-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-seaside.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-sulphurpool-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atelier-sulphurpool.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\atlas.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\bespin.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\black-metal-bathory.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\black-metal-burzum.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\black-metal-dark-funeral.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\black-metal-gorgoroth.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\black-metal-immortal.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\black-metal-khold.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\black-metal-marduk.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\black-metal-mayhem.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\black-metal-nile.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\black-metal-venom.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\black-metal.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\brewer.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\bright.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\brogrammer.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\brush-trees-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\brush-trees.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\chalk.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\circus.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\classic-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\classic-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\codeschool.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\colors.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\cupcake.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\cupertino.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\danqing.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\darcula.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\dark-violet.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\darkmoss.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\darktooth.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\decaf.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\default-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\default-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\dirtysea.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\dracula.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\edge-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\edge-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\eighties.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\embers.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\equilibrium-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\equilibrium-gray-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\equilibrium-gray-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\equilibrium-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\espresso.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\eva-dim.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\eva.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\flat.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\framer.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\fruit-soda.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\gigavolt.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\github.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\google-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\google-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\grayscale-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\grayscale-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\green-screen.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\gruvbox-dark-hard.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\gruvbox-dark-medium.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\gruvbox-dark-pale.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\gruvbox-dark-soft.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\gruvbox-light-hard.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\gruvbox-light-medium.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\gruvbox-light-soft.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\hardcore.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\harmonic16-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\harmonic16-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\heetch-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\heetch-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\helios.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\hopscotch.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\horizon-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\horizon-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\humanoid-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\humanoid-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\ia-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\ia-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\icy-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\ir-black.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\isotope.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\kimber.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\london-tube.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\macintosh.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\marrakesh.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\materia.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\material-darker.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\material-lighter.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\material-palenight.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\material-vivid.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\material.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\mellow-purple.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\mexico-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\mocha.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\monokai.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\nebula.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\nord.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\nova.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\ocean.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\oceanicnext.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\one-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\onedark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\outrun-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\papercolor-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\papercolor-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\paraiso.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\pasque.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\phd.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\pico.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\pop.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\porple.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\qualia.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\railscasts.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\rebecca.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\ros-pine-dawn.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\ros-pine-moon.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\ros-pine.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\sagelight.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\sandcastle.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\seti-ui.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\shapeshifter.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\silk-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\silk-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\snazzy.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\solar-flare-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\solar-flare.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\solarized-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\solarized-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\spacemacs.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\summercamp.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\summerfruit-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\summerfruit-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\synth-midnight-terminal-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\synth-midnight-terminal-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\tango.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\tender.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\tomorrow-night.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\tomorrow.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\twilight.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\unikitty-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\unikitty-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\vulcan.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\windows-10-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\windows-10.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\windows-95-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\windows-95.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\windows-high-contrast-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\windows-high-contrast.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\windows-nt-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\windows-nt.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\woodland.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\xcode-dusk.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\base16\zenburn.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\brown-paper.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\brown-papersq.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\codepen-embed.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\color-brewer.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\default.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\devibeans.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\docco.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\nscc4.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\eclipse.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\far.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\felipec.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\foundation.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\github-dark-dimmed.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\github-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\github.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\gml.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\googlecode.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\gradient-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\gradient-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\grayscale.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\hybrid.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\idea.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\intellij-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\ir-black.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\isbl-editor-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\isbl-editor-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\kimbie-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\kimbie-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\lightfair.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\lioshi.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\magula.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\mono-blue.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\monokai-sublime.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\monokai.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\night-owl.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\nnfx-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\nnfx-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\nord.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\obsidian.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\panda-syntax-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\panda-syntax-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\paraiso-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\paraiso-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\pojoaque.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\pojoaque.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\purebasic.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\qtcreator-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\qtcreator-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\rainbow.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\routeros.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\school-book.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\shades-of-purple.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\srcery.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\stackoverflow-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\stackoverflow-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\sunburst.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\tokyo-night-dark.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\tokyo-night-light.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\tomorrow-night-blue.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\tomorrow-night-bright.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\vs.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\vs2015.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\xcode.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="view\lib\highlight\styles\xt256.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="view\lib\History.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
