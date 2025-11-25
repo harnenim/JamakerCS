@@ -1,4 +1,4 @@
-﻿namespace Jamaker
+﻿namespace WebViewForm
 {
     public partial class Prompt : Form
     {

@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Jamaker
+namespace WebViewForm
 {
 #pragma warning disable IDE1006 // 명명 스타일
     [ComVisible(true)]

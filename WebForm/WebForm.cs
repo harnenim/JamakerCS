@@ -1,8 +1,7 @@
 ﻿using Microsoft.Web.WebView2.Core;
-using Microsoft.Web.WebView2.WinForms;
 using System.Text;
 
-namespace Jamaker
+namespace WebViewForm
 {
     public partial class WebForm : Form
     {

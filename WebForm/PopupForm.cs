@@ -1,7 +1,6 @@
 ﻿using Microsoft.Web.WebView2.Core;
-using System.Windows.Controls.Primitives;
 
-namespace Jamaker
+namespace WebViewForm
 {
     public partial class PopupForm : Form
     {

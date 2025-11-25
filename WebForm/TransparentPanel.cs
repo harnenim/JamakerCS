@@ -1,6 +1,6 @@
 ﻿using Timer = System.Windows.Forms.Timer;
 
-namespace Jamaker
+namespace WebViewForm
 {
     public class TransparentPanel : Panel
     {

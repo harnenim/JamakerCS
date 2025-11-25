@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Jamaker
+namespace WebViewForm
 {
     public struct RECT
     {

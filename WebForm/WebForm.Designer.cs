@@ -1,4 +1,4 @@
-﻿namespace Jamaker
+﻿namespace WebViewForm
 {
     partial class WebForm
     {
@@ -30,7 +30,7 @@
         {
             mainView = new Microsoft.Web.WebView2.WinForms.WebView2();
             ((System.ComponentModel.ISupportInitialize)mainView).BeginInit();
-            layerForDrag = new Jamaker.TransparentPanel();
+            layerForDrag = new TransparentPanel();
             SuspendLayout();
             // 
             // layerForDrag
