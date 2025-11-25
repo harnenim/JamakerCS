@@ -26,10 +26,6 @@ namespace Jamaker
         {
             _.Replace(JsonToStrings(files), JsonToStrings(froms), JsonToStrings(tos));
         }
-        public static string[] JsonToStrings(string input)
-        {
-            return JsonConvert.DeserializeObject<string[]>(input)!;
-        }
 
         public void importSetting()
         {

@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using Newtonsoft.Json;
+using System.Runtime.InteropServices;
 
 namespace WebViewForm
 {
@@ -7,6 +8,11 @@ namespace WebViewForm
     public class BaseBinder(WebForm webForm)
     {
         private readonly WebForm _ = webForm;
+
+        public static string[] JsonToStrings(string input)
+        {
+            return JsonConvert.DeserializeObject<string[]>(input)!;
+        }
 
         public void focus(string target)
         {

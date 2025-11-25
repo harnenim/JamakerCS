@@ -130,7 +130,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AutoSyncShift.html" />
-    <Content Include="SyncShift.js" />
     <Content Include="jamaker.ico" />
     <Content Include="view\AutoSyncShift.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
