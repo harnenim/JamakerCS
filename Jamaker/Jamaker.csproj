@@ -53,10 +53,6 @@
     <Reference Include="CefSharp.WinForms, Version=141.0.110.0, Culture=neutral, PublicKeyToken=40c4b6fc221f4138, processorArchitecture=MSIL">
       <HintPath>..\packages\CefSharp.WinForms.141.0.110\lib\net462\CefSharp.WinForms.dll</HintPath>
     </Reference>
-    <Reference Include="PlayerBridge, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\dlls\PlayerBridge.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
@@ -1131,6 +1127,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\PlayerBridge\PlayerBridge\PlayerBridge.csproj">
+      <Project>{dfe0d759-c398-4e88-a957-8973a0941b13}</Project>
+      <Name>PlayerBridge</Name>
+    </ProjectReference>
     <ProjectReference Include="..\VideoInfo\VideoInfo.csproj">
       <Project>{d37941c6-e733-47a7-b807-fcfa8c82bb54}</Project>
       <Name>VideoInfo</Name>
