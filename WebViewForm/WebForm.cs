@@ -1,12 +1,14 @@
 ﻿using Microsoft.Web.WebView2.Core;
+using System.Runtime.Versioning;
 using System.Text;
 
 namespace WebViewForm
 {
+    [SupportedOSPlatform("windows7.0")]
     public partial class WebForm : Form
     {
         #region 창 조작
-        protected readonly Dictionary<string, int> windows = new Dictionary<string, int>();
+        protected readonly Dictionary<string, int> windows = [];
         public void SetWindow(string name, int hwnd)
         {
             RemoveWindow(name); // 남아있을 수 있음
@@ -44,7 +46,7 @@ namespace WebViewForm
         private double dpi = 1;
         private void SetDpi()
         {
-            Script("setDpi", new object[] { dpi = DeviceDpi / 96 });
+            Script("setDpi", [dpi = DeviceDpi / 96]);
         }
 
         private void OnDpiChanged(object sender, DpiChangedEventArgs e)
@@ -117,7 +119,7 @@ namespace WebViewForm
 
         public void Prompt(string target, string msg, string def)
         {
-            Prompt prompt = new Prompt(GetHwnd(target), msg, Text, def);
+            Prompt prompt = new(GetHwnd(target), msg, Text, def);
             DialogResult result = prompt.ShowDialog();
             if (result == DialogResult.OK)
             {
@@ -151,7 +153,7 @@ namespace WebViewForm
         protected void DragOverMain(object sender, DragEventArgs e)
         {
             try { e.Effect = DragDropEffects.All; } catch { }
-            Script("dragover", new object[] { (e.X - Location.X) / dpi, (e.Y - Location.Y) / dpi });
+            Script("dragover", [(e.X - Location.X) / dpi, (e.Y - Location.Y) / dpi]);
         }
         protected void DragDropMain(object sender, DragEventArgs e)
         {
@@ -178,7 +180,7 @@ namespace WebViewForm
             InitializeComponent();
             Name = name;
 
-            CoreWebView2EnvironmentOptions op = new CoreWebView2EnvironmentOptions("--disable-web-security");
+            CoreWebView2EnvironmentOptions op = new("--disable-web-security");
             env = await CoreWebView2Environment.CreateAsync(null, Path.Combine(Application.StartupPath, "temp"), op);
             await mainView.EnsureCoreWebView2Async(env);
             mainView.CoreWebView2.AddHostObjectToScript("binder", binder);
@@ -244,7 +246,7 @@ namespace WebViewForm
             FileStream? fs = null;
             try
             {
-                Ude.CharsetDetector cdet = new Ude.CharsetDetector();
+                Ude.CharsetDetector cdet = new();
                 cdet.Feed(fs = File.OpenRead(file));
                 cdet.DataEnd();
                 encoding = Encoding.GetEncoding(cdet.Charset);
