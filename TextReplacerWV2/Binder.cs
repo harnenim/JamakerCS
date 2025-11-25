@@ -19,12 +19,12 @@ namespace Jamaker
 
         public void compare(string file, string froms, string tos)
         {
-            _.Compare(file, JsonToStrings(froms), JsonToStrings(tos));
+            _.Compare(file, ParseJson<string[]>(froms), ParseJson<string[]>(tos));
         }
 
         public void replace(string files, string froms, string tos)
         {
-            _.Replace(JsonToStrings(files), JsonToStrings(froms), JsonToStrings(tos));
+            _.Replace(ParseJson<string[]>(files), ParseJson<string[]>(froms), ParseJson<string[]>(tos));
         }
 
         public void importSetting()

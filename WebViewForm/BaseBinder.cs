@@ -9,9 +9,9 @@ namespace WebViewForm
     {
         private readonly WebForm _ = webForm;
 
-        public static string[] JsonToStrings(string input)
+        public static T ParseJson<T>(string input)
         {
-            return JsonConvert.DeserializeObject<string[]>(input)!;
+            return JsonConvert.DeserializeObject<T>(input)!;
         }
 
         public void focus(string target)
