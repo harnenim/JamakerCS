@@ -1,4 +1,7 @@
-﻿namespace WebViewForm
+﻿using Microsoft.Web.WebView2.WinForms;
+using Timer = System.Windows.Forms.Timer;
+
+namespace WebViewForm
 {
     partial class WebForm
     {
@@ -28,9 +31,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            mainView = new Microsoft.Web.WebView2.WinForms.WebView2();
-            ((System.ComponentModel.ISupportInitialize)mainView).BeginInit();
+            components = new System.ComponentModel.Container();
             layerForDrag = new TransparentPanel();
+            timer = new Timer(components);
+            mainView = new WebView2();
+            ((System.ComponentModel.ISupportInitialize)mainView).BeginInit();
             SuspendLayout();
             // 
             // layerForDrag
@@ -43,16 +48,14 @@
             layerForDrag.Size = new Size(800, 450);
             layerForDrag.TabIndex = 7;
             layerForDrag.Visible = false;
-            layerForDrag.DragDrop += new DragEventHandler(DragDropMain);
-            layerForDrag.DragOver += new DragEventHandler(DragOverMain);
-            layerForDrag.DragLeave += new System.EventHandler(DragLeaveMain);
-            layerForDrag.MouseClick += new MouseEventHandler(ClickLayerForDrag);
+            layerForDrag.DragDrop += DragDropMain;
+            layerForDrag.DragOver += DragOverMain;
+            layerForDrag.DragLeave += DragLeaveMain;
+            layerForDrag.MouseClick += ClickLayerForDrag;
             // 
             // mainView
             // 
-            mainView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
+            mainView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             mainView.Location = new Point(0, 0);
             mainView.Margin = new Padding(0);
             mainView.Name = "mainView";
@@ -60,9 +63,9 @@
             mainView.TabIndex = 0;
             mainView.ZoomFactor = 1D;
             // 
-            // MainForm
+            // WebForm
             // 
-            AutoScaleDimensions = new SizeF(14F, 32F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
             Controls.Add(layerForDrag);
@@ -74,7 +77,8 @@
 
         #endregion
 
-        protected Microsoft.Web.WebView2.WinForms.WebView2 mainView;
+        protected WebView2 mainView;
         protected TransparentPanel layerForDrag;
+        protected Timer timer;
     }
 }

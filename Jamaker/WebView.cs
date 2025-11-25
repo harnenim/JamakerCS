@@ -28,7 +28,9 @@ namespace Jamaker
             , IPopupFeatures popupFeatures, IWindowInfo windowInfo, IBrowserSettings browserSettings
             , ref bool noJavascriptAccess, out IWebBrowser newBrowser)
         {
+#pragma warning disable IDE0059 // 불필요한 값 할당
             string name = targetFrameName;
+#pragma warning restore IDE0059 // 불필요한 값 할당
             if ((useCustomPopup > 0 && name.Equals("viewer")) || (useCustomPopup > 1 && name.Equals("finder")))
             {
                 Popup popup = mainForm.GetPopup(name);
@@ -160,8 +162,10 @@ namespace Jamaker
         {
             if (LSH.useCustomPopup > 0)
             {
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
                 requestFocus = hwnd;
                 return;
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
             }
             if (InvokeRequired)
             {

@@ -7,17 +7,17 @@ namespace Jamaker
     public partial class MainForm : WebForm
     {
         private string settingJson = "{\"filters\":\"*.txt, *.smi, *.sami, *.ass, *.jmk\",\"replacers\":[{\"use\":true,\"from\":\"다시 한번\",\"to\":\"다시 한 번\"},{\"use\":true,\"from\":\"그리고 보니\",\"to\":\"그러고 보니\"},{\"use\":true,\"from\":\"뒤쳐\",\"to\":\"뒤처\"},{\"use\":true,\"from\":\"제 정신\",\"to\":\"제정신\"},{\"use\":true,\"from\":\"스탠드 얼론\",\"to\":\"스탠드얼론\"},{\"use\":true,\"from\":\"멘테넌스\",\"to\":\"메인터넌스\"},{\"use\":true,\"from\":\"뒷처리\",\"to\":\"뒤처리\"},{\"use\":true,\"from\":\"스탭도\",\"to\":\"스태프도\"},{\"use\":true,\"from\":\"등 져선\",\"to\":\"등져선\"},{\"use\":true,\"from\":\"타코이즈\",\"to\":\"터쿼이즈\"},{\"use\":true,\"from\":\"쓰레드\",\"to\":\"스레드\"},{\"use\":true,\"from\":\"져버리지\",\"to\":\"저버리지\"},{\"use\":true,\"from\":\"글러먹\",\"to\":\"글러 먹\"}]}";
-        private string[] args;
+        private readonly string[] args;
 
         public MainForm(string[] args)
         {
             InitializeAsync("TextReplacer", new Binder(this));
 
-            int[] rect = { 0, 0, 1280, 800 };
+            int[] rect = [0, 0, 1280, 800];
             StreamReader? sr = null;
             try
             {   // 설정 파일 경로
-                sr = new StreamReader(Path.Combine(Application.StartupPath, "setting/TextReplacer.txt"), Encoding.UTF8);
+                sr = new(Path.Combine(Application.StartupPath, "setting/TextReplacer.txt"), Encoding.UTF8);
                 string strSetting = sr.ReadToEnd();
                 string[] strRect = strSetting.Split(',');
                 if (strRect.Length >= 4)
@@ -29,7 +29,7 @@ namespace Jamaker
                 }
                 if (strSetting.IndexOf('\n') > 0)
                 {
-                    settingJson = strSetting.Substring(strSetting.IndexOf('\n') + 1);
+                    settingJson = strSetting[(strSetting.IndexOf('\n') + 1)..];
                 }
             }
             catch (Exception e)
@@ -88,11 +88,11 @@ namespace Jamaker
             StreamWriter? sw = null;
             try
             {
-                RECT offset = new RECT();
-                WinAPI.GetWindowRect(Handle.ToInt32(), ref offset);
+                RECT offset = new();
+                int v = WinAPI.GetWindowRect(Handle.ToInt32(), ref offset);
 
                 // 설정 폴더 없으면 생성
-                DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "setting"));
+                DirectoryInfo di = new(Path.Combine(Application.StartupPath, "setting"));
                 if (!di.Exists)
                 {
                     di.Create();
@@ -228,7 +228,7 @@ namespace Jamaker
                 return;
             }
 
-            OpenFileDialog dialog = new OpenFileDialog { Filter = "JSON 파일|*.json" };
+            OpenFileDialog dialog = new() { Filter = "JSON 파일|*.json" };
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 string path = dialog.FileName;
@@ -257,7 +257,7 @@ namespace Jamaker
                 return;
             }
 
-            SaveFileDialog dialog = new SaveFileDialog { Filter = "JSON 파일|*.json" };
+            SaveFileDialog dialog = new() { Filter = "JSON 파일|*.json" };
             if (dialog.ShowDialog() != DialogResult.OK)
             {   // 저장 취소
                 return;
@@ -297,7 +297,7 @@ namespace Jamaker
         {
             if (Directory.Exists(file))
             {
-                DirectoryInfo dir = new DirectoryInfo(file);
+                DirectoryInfo dir = new(file);
                 DirectoryInfo[] subDirs = dir.GetDirectories();
                 foreach (DirectoryInfo subDir in subDirs)
                 {
@@ -352,9 +352,9 @@ namespace Jamaker
     public class Replaced
     {
         public readonly string origin;
-        private readonly List<int[]> originReplaced = new List<int[]>();
+        private readonly List<int[]> originReplaced = [];
         public readonly string result;
-        private readonly List<int[]> resultReplaced = new List<int[]>();
+        private readonly List<int[]> resultReplaced = [];
         public readonly int count = 0;
 
         public Replaced(string text, string[] froms, string[] tos)
@@ -393,8 +393,8 @@ namespace Jamaker
                     else
                     {
                         addLength = (before >= 0) ? originReplaced[before][1] - resultReplaced[before][1] : 0;
-                        originReplaced.Insert(rIndex, new int[] { rPos + addLength, rPos + froms[i].Length + addLength });
-                        resultReplaced.Insert(rIndex, new int[] { rPos, rPos + tos[i].Length });
+                        originReplaced.Insert(rIndex, [rPos + addLength, rPos + froms[i].Length + addLength]);
+                        resultReplaced.Insert(rIndex, [rPos, rPos + tos[i].Length]);
                     }
                     addLength = tos[i].Length - froms[i].Length;
                     for (int j = rIndex + 1; j < resultReplaced.Count; j++)
@@ -412,7 +412,7 @@ namespace Jamaker
                             resultReplaced.RemoveAt(rIndex);
                         }
                     }
-                    result = result.Substring(0, rPos) + tos[i] + result.Substring(rPos + froms[i].Length);
+                    result = string.Concat(result.AsSpan(0, rPos), tos[i], result.AsSpan(rPos + froms[i].Length));
                     pos = rPos + tos[i].Length;
                     count++;
                 }
@@ -426,7 +426,7 @@ namespace Jamaker
         {
             return Preview(result, resultReplaced);
         }
-        private string Preview(string text, List<int[]> replacedList)
+        private static string Preview(string text, List<int[]> replacedList)
         {
             string preview = "";
             int last = 0;
@@ -435,14 +435,14 @@ namespace Jamaker
                 int[] replaced = replacedList[i];
                 if (last < replaced[0])
                 {
-                    preview += (EscapeHtml(text.Substring(last, replaced[0] - last)));
+                    preview += (EscapeHtml(text[last..replaced[0]]));
                 }
-                preview += ("<span class='highlight'>" + EscapeHtml(text.Substring(replaced[0], replaced[1] - replaced[0])) + "</span>");
+                preview += ("<span class='highlight'>" + EscapeHtml(text[replaced[0]..replaced[1]]) + "</span>");
                 last = replaced[1];
             }
             if (last < text.Length)
             {
-                preview += (EscapeHtml(text.Substring(last)));
+                preview += (EscapeHtml(text[last..]));
             }
             return preview;
         }

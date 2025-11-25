@@ -513,6 +513,7 @@ namespace Jamaker
             ScriptToPopup("viewer", "refreshTime", time);
             if (LSH.useCustomPopup > 0)
             {
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
                 Popup viewer = GetPopup("viewer");
                 if (viewer != null)
                 {
@@ -523,6 +524,7 @@ namespace Jamaker
                     string title = $"미리보기 - {h}:{ (m > 9 ? "" : "0") + m }:{ (s > 9 ? "" : "0") + s }:{ (ms > 99 ? "" : "0") + (ms > 9 ? "" : "0") + ms }";
                     viewer.SetTitle(title);
                 }
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
             }
         }
         private string viewerLines = "[]";
@@ -970,6 +972,7 @@ namespace Jamaker
         #region 파일 드래그 관련
 #pragma warning disable IDE0060 // 사용하지 않는 매개 변수를 제거하세요.
         private void OverrideDrop(int x, int y)
+#pragma warning restore IDE0060 // 사용하지 않는 매개 변수를 제거하세요.
         {
             try
             {
@@ -987,7 +990,6 @@ namespace Jamaker
             }
             catch { }
         }
-#pragma warning restore IDE0060 // 사용하지 않는 매개 변수를 제거하세요.
         #endregion
 
         #region 파일
