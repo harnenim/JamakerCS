@@ -57,7 +57,6 @@ namespace Jamaker
 
         private async void InitWebView()
         {
-            await mainView.EnsureCoreWebView2Async(null);
             mainView.Source = new Uri(Path.Combine(Directory.GetCurrentDirectory(), "view/TextReplacer.html"));
         }
         public override void InitAfterLoad(string title)

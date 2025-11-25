@@ -30,31 +30,31 @@
         {
             mainView = new Microsoft.Web.WebView2.WinForms.WebView2();
             ((System.ComponentModel.ISupportInitialize)mainView).BeginInit();
-            this.layerForDrag = new Jamaker.TransparentPanel();
+            layerForDrag = new Jamaker.TransparentPanel();
             SuspendLayout();
             // 
             // layerForDrag
             // 
-            this.layerForDrag.AllowDrop = true;
-            this.layerForDrag.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.layerForDrag.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.layerForDrag.Location = new System.Drawing.Point(0, 0);
-            this.layerForDrag.Name = "layerForDrag";
-            this.layerForDrag.Size = new System.Drawing.Size(800, 450);
-            this.layerForDrag.TabIndex = 7;
-            this.layerForDrag.Visible = false;
-            this.layerForDrag.DragDrop += new System.Windows.Forms.DragEventHandler(this.DragDropMain);
-            this.layerForDrag.DragOver += new System.Windows.Forms.DragEventHandler(this.DragOverMain);
-            this.layerForDrag.DragLeave += new System.EventHandler(this.DragLeaveMain);
-            this.layerForDrag.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ClickLayerForDrag);
+            layerForDrag.AllowDrop = true;
+            layerForDrag.BackColor = SystemColors.ActiveCaption;
+            layerForDrag.Dock = DockStyle.Fill;
+            layerForDrag.Location = new Point(0, 0);
+            layerForDrag.Name = "layerForDrag";
+            layerForDrag.Size = new Size(800, 450);
+            layerForDrag.TabIndex = 7;
+            layerForDrag.Visible = false;
+            layerForDrag.DragDrop += new DragEventHandler(DragDropMain);
+            layerForDrag.DragOver += new DragEventHandler(DragOverMain);
+            layerForDrag.DragLeave += new System.EventHandler(DragLeaveMain);
+            layerForDrag.MouseClick += new MouseEventHandler(ClickLayerForDrag);
             // 
             // mainView
             // 
-            this.mainView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            mainView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.mainView.Location = new System.Drawing.Point(0, 0);
-            this.mainView.Margin = new System.Windows.Forms.Padding(0);
+            mainView.Location = new Point(0, 0);
+            mainView.Margin = new Padding(0);
             mainView.Name = "mainView";
             mainView.Size = new Size(800, 450);
             mainView.TabIndex = 0;
@@ -62,10 +62,10 @@
             // 
             // MainForm
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(14F, 32F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
-            this.Controls.Add(this.layerForDrag);
+            Controls.Add(layerForDrag);
             Controls.Add(mainView);
             Name = "WebForm";
             ((System.ComponentModel.ISupportInitialize)mainView).EndInit();

@@ -203,6 +203,10 @@ $(() => {
 		selectView(0);
 	});
 	selectView(0);
+
+	$("#btnTest").on("click", function() {
+		window.popup = window.open("test.html", "test", "scrollbars=no,location=no,width=500,height=500");
+	});
 });
 	</script>
 	<style>
@@ -367,5 +371,6 @@ body.drag-file #areaRight.hover {
 		<div id="view1right">
 		</div>
 	</div>
+	<button id="btnTest" style="position: fixed; top: 50%; left: 50%;">테스트</button>
 </body>
 </html>

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Web.WebView2.Core;
+using Microsoft.Web.WebView2.WinForms;
 using System.Text;
 
 namespace Jamaker
@@ -167,16 +168,62 @@ namespace Jamaker
         }
         #endregion
 
+        public CoreWebView2Environment? env;
         public async void InitializeAsync(string name, object binder)
         {
             InitializeComponent();
             Name = name;
 
             CoreWebView2EnvironmentOptions op = new CoreWebView2EnvironmentOptions("--disable-web-security");
-            CoreWebView2Environment env = await CoreWebView2Environment.CreateAsync(null, null, op);
+            env = await CoreWebView2Environment.CreateAsync(null, null, op);
             await mainView.EnsureCoreWebView2Async(env);
             mainView.CoreWebView2.AddHostObjectToScript("binder", binder);
+
+            mainView.CoreWebView2.NewWindowRequested += OpenPopup;
+
+            StandbyPopup();
         }
+
+        private PopupForm? tmpPopup;
+        private readonly Dictionary<string, PopupForm> popups = [];
+
+        private void OpenPopup(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
+        {
+            if (tmpPopup != null)
+            {
+                PopupForm popup = tmpPopup;
+                popup.Show();
+                StandbyPopup();
+                e.NewWindow = popup.mainView.CoreWebView2;
+
+                popups[e.Name] = popup;
+
+                switch (e.Name)
+                {
+                    case "test":
+                        {
+                            popup.MaximizeBox = false;
+                            popup.MinimizeBox = false;
+                            break;
+                        }
+                }
+                popup.Text = e.Name;
+            }
+            e.Handled = true;
+        }
+        private void StandbyPopup()
+        {
+            if (InvokeRequired)
+            {
+                tmpPopup = null;
+                Invoke(new Action(() => { StandbyPopup(); }));
+                return;
+            }
+            // 다음 팝업 미리 생성해두기
+            tmpPopup = new PopupForm(env!);
+        }
+
+
 
         public static Encoding DetectEncoding(string file)
         {
