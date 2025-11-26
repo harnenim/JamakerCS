@@ -289,6 +289,11 @@ namespace Jamaker
                         player.currentOffset.bottom = y + height;
                         if (hwnd > 0)
                         {
+                            RECT shadow = WinAPI.GetWindowShadow(hwnd);
+                            player.currentOffset.top += shadow.top;
+                            player.currentOffset.left += shadow.left;
+                            player.currentOffset.right += shadow.right;
+                            player.currentOffset.bottom += shadow.bottom;
                             player.MoveWindow();
                         }
                     }
@@ -297,7 +302,8 @@ namespace Jamaker
                 {
                     if (hwnd > 0)
                     {   // 윈도우 그림자 여백 보정
-                        WinAPI.MoveWindow(hwnd, x - 7, y, width + 14, height + 9, true);
+                        RECT shadow = WinAPI.GetWindowShadow(windows["editor"]);
+                        WinAPI.MoveWindow(hwnd, x - shadow.left, y - shadow.top, width + shadow.left - shadow.right, height + shadow.top - shadow.bottom, true);
                         if (target.Equals("editor"))
                         {
                             Script("setDpiBy", width);
