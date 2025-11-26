@@ -31,9 +31,52 @@ namespace Jamaker
         public static int CheckFFmpeg()
         {
         	int status = 0;
-        	status |= File.Exists(Path.Combine(exePath, "ffmpeg.exe" )) ? 1 : 0;
-            status |= File.Exists(Path.Combine(exePath, "ffprobe.exe")) ? 2 : 0;
+        	status |= File.Exists(Path.Combine(exePath, "ffmpeg.exe" )) ? 0b01 : 0;
+            status |= File.Exists(Path.Combine(exePath, "ffprobe.exe")) ? 0b10 : 0;
             return status;
+        }
+        public static string[] CheckFFmpegVersion()
+        {
+            return CheckFFmpegVersion(CheckFFmpeg());
+        }
+        public static string[] CheckFFmpegVersion(int status)
+        {
+            string[] version = { null, null };
+            if ((status & 0b01) > 0)
+            {
+                Process proc = GetFFmpeg(false);
+                proc.StartInfo.Arguments = "-version";
+                proc.Start();
+                string[] lines = proc.StandardOutput.ReadToEnd().Split(new char[] { '\n', '\r' });
+                proc.Close();
+
+                foreach (string line in lines)
+                {
+                    if (line.StartsWith("ffmpeg version "))
+                    {
+                        version[0] = line.Substring(15).Split(' ')[0];
+                        break;
+                    }
+                }
+            }
+            if ((status & 0b10) > 0)
+            {
+                Process proc = GetFFprobe(false);
+                proc.StartInfo.Arguments = "-version";
+                proc.Start();
+                string[] lines = proc.StandardOutput.ReadToEnd().Split(new char[] { '\n', '\r' });
+                proc.Close();
+
+                foreach (string line in lines)
+                {
+                    if (line.StartsWith("ffprobe version "))
+                    {
+                        version[1] = line.Substring(16).Split(' ')[0];
+                        break;
+                    }
+                }
+            }
+            return version;
         }
 
         public string path;
@@ -73,10 +116,6 @@ namespace Jamaker
             afterRefreshInfo(this);
         }
         
-        private static Process GetProcess(string exe)
-        {
-            return GetProcess(exe, false);
-        }
         private static Process GetProcess(string exe, bool withStandardError)
         {
         	Process proc = new Process();

@@ -639,6 +639,8 @@ Subtitle.video = {
 	,	FL: 1000000 / 23976
 	,	fs: []
 	,	kfs: []
+	,	ffmpeg: null
+	,	ffprobe: null
 }
 Subtitle.findSync = (sync, fs=null, findNear=true, from=0, to=-1) => {
 	if (fs == null) fs = Subtitle.video.fs;

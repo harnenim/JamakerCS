@@ -11,6 +11,8 @@
 windowName = "help";
 $(() => {
 	$("#version").text(opener.setting.version);
+	if (opener.Subtitle.video.ffmpeg ) { $("#ffmpeg" ).text(opener.Subtitle.video.ffmpeg ); } else { $("#ffmpeg" ).css({ color: "#888" }); }
+	if (opener.Subtitle.video.ffprobe) { $("#ffprobe").text(opener.Subtitle.video.ffprobe); } else { $("#ffprobe").css({ color: "#888" }); }
 });
 	</script>
 	<style>
@@ -19,11 +21,19 @@ body {
 	text-align: center;
 	overflow: scroll;
 }
+#ff {
+	font-size: 12px;
+	line-height: 16px;
+}
 	</style>
 </head>
 <body>
 	<img src="img/jamaker.png" title="자메이커 이미지" /><br />
 	Jamaker ver. <span id="version"></span><br />
+	<p id="ff">
+		FFmpeg: <span id="ffmpeg">(없음)</span><br />
+		FFprobe: <span id="ffprobe">(없음)</span>
+	</p>
 	<s>변태적인 SMI 자막 제작 기능을 위해 만든 허접한 프로그램</s><br />
 	<br />
 	파일 제어, 창 제어 등을 제외한 에디터 기능은<br />

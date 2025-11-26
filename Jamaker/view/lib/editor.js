@@ -2806,6 +2806,11 @@ function openNewTab(text, path, forVideo) {
 	return tab;
 }
 // C# 쪽에서 호출
+function setFFmpegVersion(ffmpeg, ffprobe) {
+	Subtitle.video.ffmpeg = ffmpeg;
+	Subtitle.video.ffprobe = ffprobe;
+}
+// C# 쪽에서 호출
 function confirmLoadVideo(path) {
 	setTimeout(() => {
 		confirm("동영상 파일을 같이 열까요?\n" + path, function() {

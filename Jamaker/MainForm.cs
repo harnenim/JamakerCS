@@ -1047,7 +1047,12 @@ namespace Jamaker
             }
 
             // 최초 실행 시 ffmpeg 존재 여부 확인인데, 창 위치 잡아준 후에 alert 돌아가도록 함
-            CheckFFmpegWithAlert();
+            int status = CheckFFmpegWithAlert();
+            new Thread(() =>
+            {
+                string[] strings = VideoInfo.CheckFFmpegVersion(status);
+                Script("setFFmpegVersion", strings[0], strings[1]);
+            }).Start();
 
             int count = 0;
             foreach (string path in args)
