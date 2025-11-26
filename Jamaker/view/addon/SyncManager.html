@@ -314,7 +314,7 @@ $(() => {
 			} else {
 				renderList.push(renderGroup = {
 						flag: data.flag
-					,	time: fs0 + 2 // 반올림되거나 한 경우 고려해서 +2ms
+					,	time: fs0 // 다시 테스트해보니 여긴 반올림 대신 버림 하는 게 맞음
 					,	begin: begin
 					,	end: end
 				});
@@ -351,8 +351,8 @@ $(() => {
 		let params = [];
 		for (let i = 0; i < renderList.length; i++) {
 			const group = renderList[i];
-			// [ 시작시간, 종료시간, 시작인덱스, 종료인덱스, 플래그 ]
-			params.push([group.time, fs[group.end] + 1 - group.time, group.begin, group.end, group.flag].join(","));
+			// [ 시작시간, 길이, 시작인덱스, 종료인덱스, 플래그 ]
+			params.push([group.time, fs[group.end] - group.time, group.begin, group.end, group.flag].join(","));
 		}
 		opener.binder.renderThumbnails(Subtitle.video.path, params.join("\n"));
 		return true;
