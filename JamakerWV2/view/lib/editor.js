@@ -1539,6 +1539,16 @@ SmiEditor.selectTab = function(index=-1) {
 	refreshPaddingBottom();
 }
 
+window.onresize = function() {
+	if (!tabs.length) return;
+	for (let t = 0; t < tabs.length; t++) {
+		const tab = tabs[t];
+		for (let h = 0; h < tab.holds.length; h++) {
+			tab.holds[h].render();
+		}
+	}
+}
+
 function deepCopyObj(obj) {
 	if (obj && typeof obj == "object") {
 		if (Array.isArray(obj)) {
