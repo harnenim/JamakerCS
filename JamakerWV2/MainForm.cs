@@ -1,4 +1,5 @@
 using Jamaker.addon;
+using JamakerWV2.Properties;
 using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Reflection;
@@ -10,7 +11,7 @@ namespace Jamaker
 {
     public partial class MainForm : WebForm
     {
-        public PlayerBridge.PlayerBridge player = null;
+        public PlayerBridge.PlayerBridge? player = null;
         private bool useMovePlayer = false;
 
         private string strSettingJson = "불러오기 실패 예제";
@@ -18,6 +19,9 @@ namespace Jamaker
         private string strHighlights = "SyncOnly: 싱크 줄 구분\neclipse: 이클립스 스타일";
         private readonly Dictionary<string, string> bridgeDlls = new Dictionary<string, string>();
         private readonly string[] args;
+
+        private MenuStrip menuStrip;
+        private MouseEventHandler clickMenuStrip;
 
         public MainForm(string[] args)
         {
@@ -32,9 +36,26 @@ namespace Jamaker
             */
 
             InitializeAsync("Jamaker", new Binder(this));
-            OverrideInitializeComponent();
+            Icon = Resources.JamakerIcon;
+            {
+                menuStrip = new MenuStrip
+                {
+                    Location = new Point(0, 0),
+                    Name = "menuStrip",
+                    Size = new Size(layerForDrag.Width, 0),
+                    TabIndex = 1,
+                    Text = "menuStrip"
+                };
+                menuStrip.MenuDeactivate += new EventHandler(EscapeMenuFocusAfterCheck);
+                menuStrip.KeyDown += new KeyEventHandler(KeyDownInMenuStrip);
+                menuStrip.LostFocus += new EventHandler(CloseMenuStrip);
+                Controls.Add(menuStrip);
+                MainMenuStrip = menuStrip;
 
-            menuStrip.MouseDown += (clickMenuStrip = new MouseEventHandler(MouseDownInMenuStrip)); // 디자이너에 넣으면 오류 발생
+                ResizeAfterRefreshMenuStrip();
+
+                menuStrip!.MouseDown += clickMenuStrip = new MouseEventHandler(MouseDownInMenuStrip);
+            }
 
             StartPosition = FormStartPosition.Manual;
             Location = new Point(-10000, -10000); // 처음에 안 보이게
@@ -63,26 +84,6 @@ namespace Jamaker
             InitWebView();
         }
 
-        private MenuStrip menuStrip;
-        private readonly MouseEventHandler clickMenuStrip;
-        private void OverrideInitializeComponent()
-        {
-            menuStrip = new MenuStrip
-            {
-                Location = new Point(0, 0),
-                Name = "menuStrip",
-                Size = new Size(layerForDrag.Width, 0),
-                TabIndex = 1,
-                Text = "menuStrip"
-            };
-            menuStrip.MenuDeactivate += new EventHandler(EscapeMenuFocusAfterCheck);
-            menuStrip.KeyDown += new KeyEventHandler(KeyDownInMenuStrip);
-            menuStrip.LostFocus += new EventHandler(CloseMenuStrip);
-            Controls.Add(menuStrip);
-            MainMenuStrip = menuStrip;
-
-            ResizeAfterRefreshMenuStrip();
-        }
         private void ResizeAfterRefreshMenuStrip()
         {
             layerForDrag.Visible = true;
@@ -92,6 +93,10 @@ namespace Jamaker
             mainView.Size = new Size(layerForDrag.Width, layerForDrag.Height);
             layerForDrag.Visible = false;
             ResumeLayout(false);
+        }
+        public override string GetTitle()
+        {
+            return "Jamaker";
         }
 
         private async void InitWebView()
@@ -110,11 +115,31 @@ namespace Jamaker
 
                 WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
             }
-            catch {}
+            catch { }
+        }
+        public override void AfterOpenPopup(string name, PopupForm popup)
+        {
+            popup.Icon = Resources.JamakerIcon;
+            switch (name)
+            {
+                case "viewer":
+                    {
+                        popup.MaximizeBox = false;
+                        popup.MinimizeBox = false;
+                        break;
+                    }
+                case "finder":
+                    {
+                        popup.MaximizeBox = false;
+                        popup.MinimizeBox = false;
+                        popup.TopMost = true;
+                        break;
+                    }
+            }
         }
 
         private int refreshPlayerIndex = 0;
-        private void RefreshPlayer(object sender, EventArgs e)
+        private void RefreshPlayer(object? sender, EventArgs e)
         {
             if (player != null)
             {
@@ -169,7 +194,7 @@ namespace Jamaker
             }
         }
 
-        private void BeforeExit(object sender, FormClosingEventArgs e)
+        private void BeforeExit(object? sender, FormClosingEventArgs e)
         {
             e.Cancel = true;
             Script("beforeExit");
@@ -181,18 +206,27 @@ namespace Jamaker
             {
                 if (resetPlayer)
                 {
-                    player.ResetPosition();
+                    player!.ResetPosition();
                 }
                 if (exitPlayer)
                 {
-                    player.DoExit();
+                    player!.DoExit();
                 }
             }
             swLogs?.Close();
             Process.GetCurrentProcess().Kill();
         }
 
-        private StreamWriter swLogs = null;
+        protected override int GetHwnd(string target)
+        {
+            if (target == "player")
+            {
+                return player!.hwnd;
+            }
+            return base.GetHwnd(target);
+        }
+
+        private StreamWriter? swLogs = null;
         private long lastLog = long.MaxValue;
         public void Log(string msg)
         {
@@ -227,7 +261,7 @@ namespace Jamaker
             if (swLogs == null) return;
             swLogs.WriteLine(msg);
         }
-        private void SaveLogs(object sender, EventArgs e)
+        private void SaveLogs(object? sender, EventArgs e)
         {
             if (swLogs != null && ((DateTime.Now.Ticks - lastLog) > 1000))
             {
@@ -236,7 +270,7 @@ namespace Jamaker
             }
         }
 
-        private void WebFormClosed(object sender, FormClosedEventArgs e)
+        private void WebFormClosed(object? sender, FormClosedEventArgs e)
         {
             Process.GetCurrentProcess().Kill();
         }
@@ -321,7 +355,7 @@ namespace Jamaker
             }
         }
         private int delayFocusing = 0;
-        private void FocusEditor(object sender, EventArgs e)
+        private void FocusEditor(object? sender, EventArgs e)
         {
             if (--delayFocusing == 0)
             {
@@ -373,7 +407,7 @@ namespace Jamaker
         bool useFollowWindow = false;
         RECT lastOffset, offset, viewerOffset;
         int saveSettingAfter = 0;
-        private void FollowWindow(object sender, EventArgs e)
+        private void FollowWindow(object? sender, EventArgs e)
         {
             if (!useFollowWindow)
             {
@@ -417,7 +451,7 @@ namespace Jamaker
                 {
                     int pMoveX = moveX;
                     int pMoveY = moveY;
-                    PlayerBridge.RECT playerOffset = this.player.GetWindowPosition();
+                    PlayerBridge.RECT playerOffset = this.player!.GetWindowPosition();
                     if (playerOffset.left - lastOffset.left > lastOffset.right - playerOffset.left)
                     {   // 오른쪽 경계에 더 가까울 땐 오른쪽을 따라감
                         pMoveX = offset.right - lastOffset.right;
@@ -458,7 +492,7 @@ namespace Jamaker
                         );
                     }
 
-                    int player = this.player.hwnd;
+                    int player = this.player!.hwnd;
                     if (player > 0)
                     {
                         PlayerBridge.RECT playerOffset = this.player.GetWindowPosition();
@@ -504,7 +538,7 @@ namespace Jamaker
         #region 설정
         private void LoadSetting()
         {
-            StreamReader sr = null;
+            StreamReader? sr = null;
             try
             {   // 설정 파일 경로
                 sr = new StreamReader(Path.Combine(Application.StartupPath, "setting/Jamaker.json"), Encoding.UTF8);
@@ -564,7 +598,7 @@ namespace Jamaker
             // 백지 상태에서 시작
             strSettingJson = "";
 
-            StreamReader sr = null;
+            StreamReader? sr = null;
             try
             {
                 // 설정 폴더 없으면 생성
@@ -667,7 +701,7 @@ namespace Jamaker
                         string dllPath = Path.Combine(Application.StartupPath, $"bridge/{dll}.dll");
                         Assembly asm = Assembly.LoadFile(dllPath);
                         Type[] types = asm.GetExportedTypes();
-                        player = (PlayerBridge.PlayerBridge)Activator.CreateInstance(types[0]);
+                        player = (PlayerBridge.PlayerBridge)Activator.CreateInstance(types[0])!;
                     }
                     catch
                     {
@@ -683,7 +717,8 @@ namespace Jamaker
 
                     if (withRun && player.hwnd == 0)
                     {
-                        new Thread(() => {
+                        new Thread(() =>
+                        {
                             try
                             {
                                 ProcessStartInfo startInfo = new ProcessStartInfo
@@ -710,7 +745,8 @@ namespace Jamaker
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() => {
+                Invoke(new Action(() =>
+                {
                     SelectPlayerPath();
                 }));
             }
@@ -830,11 +866,11 @@ namespace Jamaker
         #endregion
 
         #region 메뉴
-        private void MouseDownInMenuStrip(object sender, MouseEventArgs e)
+        private void MouseDownInMenuStrip(object? sender, MouseEventArgs e)
         {
             menuStrip.Focus();
         }
-        private void KeyDownInMenuStrip(object sender, KeyEventArgs e)
+        private void KeyDownInMenuStrip(object? sender, KeyEventArgs e)
         {
             switch (e.KeyCode)
             {
@@ -847,7 +883,7 @@ namespace Jamaker
                     break;
             }
         }
-        private void EscapeMenuFocusAfterCheck(object sender, EventArgs e)
+        private void EscapeMenuFocusAfterCheck(object? sender, EventArgs e)
         {
             foreach (ToolStripMenuItem item in menuStrip.Items)
             {
@@ -855,7 +891,7 @@ namespace Jamaker
             }
             mainView.Focus();
         }
-        private void CloseMenuStrip(object sender, EventArgs e)
+        private void CloseMenuStrip(object? sender, EventArgs e)
         {
             CloseMenuStrip();
         }
@@ -907,7 +943,8 @@ namespace Jamaker
                             ,
                                 Size = new Size(200, 22)
                             };
-                            subMenuItem.Click += new EventHandler(new EventHandler((sender, e) => {
+                            subMenuItem.Click += new EventHandler(new EventHandler((sender, e) =>
+                            {
                                 //Script("eval", tmp[1]);
                                 Console.WriteLine($"menu click: {tmp[1]}");
                                 mainView.ExecuteScriptAsync(tmp[1]);
@@ -923,7 +960,8 @@ namespace Jamaker
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() => {
+                Invoke(new Action(() =>
+                {
                     FocusToMenu(keyCode);
                 }));
             }
@@ -934,7 +972,7 @@ namespace Jamaker
                 ToolStripMenuItem toOpen = (ToolStripMenuItem)menuStrip.Items[0];
                 foreach (ToolStripItem item in menuStrip.Items)
                 {
-                    int index = item.Text.IndexOf("&") + 1;
+                    int index = item.Text!.IndexOf('&') + 1;
                     if (index > 0)
                     {
                         char key = item.Text.ToUpper().ToCharArray()[index];
@@ -952,13 +990,11 @@ namespace Jamaker
         #endregion
 
         #region 파일 드래그 관련
-#pragma warning disable IDE0060 // 사용하지 않는 매개 변수를 제거하세요.
-        private void OverrideDrop(int x, int y)
-#pragma warning restore IDE0060 // 사용하지 않는 매개 변수를 제거하세요.
+        protected override void Drop(int x, int y)
         {
             try
             {
-                foreach (string strFile in droppedFiles)
+                foreach (string strFile in droppedFiles!)
                 {
                     if (strFile.ToUpper().EndsWith(".SMI")
                      || strFile.ToUpper().EndsWith(".SRT")
@@ -977,7 +1013,7 @@ namespace Jamaker
         #region 파일
 
         private delegate void AfterGetString(string str);
-        private AfterGetString afterGetFileName = null;
+        private AfterGetString? afterGetFileName = null;
         protected override void WndProc(ref Message m)
         {
             if (player != null)
@@ -996,7 +1032,8 @@ namespace Jamaker
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() => {
+                Invoke(new Action(() =>
+                {
                     OpenFile();
                 }));
             }
@@ -1017,10 +1054,7 @@ namespace Jamaker
                 return;
             }
 
-            if (File.Exists(Path.Combine(Application.StartupPath, $"setting/.ShowDevTools")))
-            {
-                mainView.CoreWebView2.Settings.AreDevToolsEnabled = true;
-            }
+            mainView.CoreWebView2.Settings.AreDevToolsEnabled = File.Exists(Path.Combine(Application.StartupPath, $"setting/.ShowDevTools"));
 
             // 최초 실행 시 ffmpeg 존재 여부 확인인데, 창 위치 잡아준 후에 alert 돌아가도록 함
             int status = CheckFFmpegWithAlert();
@@ -1064,7 +1098,7 @@ namespace Jamaker
             // 파일명 수신 시 동작 설정
             afterGetFileName = new AfterGetString(OpenFileAfterGetVideoFileName);
             // player에 현재 재생 중인 파일명 요청
-            player.GetFileName();
+            _ = (player?.GetFileName());
         }
         private void OpenFileAfterGetVideoFileName(string path)
         {
@@ -1085,7 +1119,7 @@ namespace Jamaker
         }
         private void LoadFile(string path, bool forVideo)
         {
-            StreamReader sr = null;
+            StreamReader? sr = null;
             try
             {
                 sr = new StreamReader(path, DetectEncoding(path));
@@ -1097,7 +1131,7 @@ namespace Jamaker
                 if (path.EndsWith(".jmk"))
                 {
                     // 프로젝트 파일 없었으면 smi 파일로 재시도
-                    LoadFile(path.Substring(0, path.Length - 4) + ".smi", true);
+                    LoadFile(string.Concat(path.AsSpan(0, path.Length - 4), ".smi"), true);
                 }
                 else
                 {
@@ -1108,7 +1142,7 @@ namespace Jamaker
             finally { sr?.Close(); }
         }
 
-        private string smiPath;
+        private string? smiPath;
         public void SetPath(string path)
         {
             smiPath = path;
@@ -1134,15 +1168,15 @@ namespace Jamaker
             // 파일명 수신 시 동작 설정
             afterGetFileName = new AfterGetString(CheckLoadVideoFileAfterGetVideoFileName);
             // player에 현재 재생 중인 파일명 요청
-            player.GetFileName();
+            player?.GetFileName();
         }
         private void CheckLoadVideoFileAfterGetVideoFileName(string path)
         {
             afterGetFileName = null;
             if (path != null && path.Length > 0)
             {
-                string withoutExt = path.Substring(0, path.LastIndexOf('.'));
-                string smiWithoutExt = smiPath.Substring(0, smiPath.LastIndexOf('.'));
+                string withoutExt = path[..path.LastIndexOf('.')];
+                string smiWithoutExt = smiPath![..smiPath!.LastIndexOf('.')];
                 if (withoutExt.Equals(smiWithoutExt))
                 {
                     // 현재 열려있는 동영상 파일이 자막과 일치 -> 추가동작 없음
@@ -1163,9 +1197,9 @@ namespace Jamaker
         }
         public void LoadVideoFile(string path)
         {
-            player.OpenFile(path);
+            player?.OpenFile(path);
         }
-        private string requestFramesPath = null;
+        private string? requestFramesPath = null;
         public void RequestFrames(string path)
         {
             // 아주 오래 걸리진 않는 작업
@@ -1176,7 +1210,7 @@ namespace Jamaker
             {
                 // ffmpeg 없을 경우 - 처음에 만들었던 플레이어 의존 방식
                 // 해상도 없이 frame rate만 가져옴
-                Script("setVideoInfo", 1920, 1080, player.GetFps());
+                Script("setVideoInfo", 1920, 1080, player?.GetFps());
 
             }
             else
@@ -1193,8 +1227,8 @@ namespace Jamaker
                             proc.Start();
                             proc.BeginErrorReadLine();
 
-                            StreamReader sr = new StreamReader(proc.StandardOutput.BaseStream);
-                            string line;
+                            StreamReader sr = new(proc.StandardOutput.BaseStream);
+                            string? line;
                             int width = 1920;
                             int height = 1080;
                             int fr = 0;
@@ -1280,7 +1314,8 @@ namespace Jamaker
                         }
 
                         // 없으면 새로 가져오기
-                        new VideoInfo(path, (ratio) => {
+                        new VideoInfo(path, (ratio) =>
+                        {
                             if (requestFramesPath == path)
                             {   // 중간에 다른 파일 불러왔을 수도 있음
                                 Script("Progress.set", "#forFrameSync", ratio);
@@ -1306,7 +1341,7 @@ namespace Jamaker
         }
 
         private bool isThumbnailsRendering = false;
-        private string lastThumbnailsPath = null;
+        private string? lastThumbnailsPath = null;
         private int lastThumbnailsProcSeq = 0;
         private int lastThumbnailsFileSeq = 0;
 
@@ -1349,7 +1384,7 @@ namespace Jamaker
         }
         public void LoadThumbnailInfo()
         {
-            StreamReader sr = null;
+            StreamReader? sr = null;
             try
             {   // 설정 파일 경로
                 sr = new StreamReader(Path.Combine(Application.StartupPath, "temp/thumbnails/_.txt"), Encoding.UTF8);
@@ -1488,7 +1523,7 @@ namespace Jamaker
                         {
                             Script("startCompareThumbnails", begin, end, flag);
 
-                            Bitmap bLast = null;
+                            Bitmap? bLast = null;
                             for (int index = 0; index < (end - begin); index++)
                             {
                                 // 중간에 작업 끊었어도, 파일 자체가 바뀐 게 아니면 일단 진행
@@ -1755,13 +1790,13 @@ namespace Jamaker
                 textToSave = text;
                 afterGetFileName = new AfterGetString(SaveWithDialogAfterGetVideoFileName);
                 // player에 현재 재생 중인 파일명 요청
-                player.GetFileName();
+                player?.GetFileName();
 
                 //SaveWithDialog(text, null);
                 return;
             }
 
-            StreamWriter sw = null;
+            StreamWriter? sw = null;
             try
             {   // 무조건 UTF-8로 저장
                 (sw = new StreamWriter(path, false, Encoding.UTF8)).Write(text);
@@ -1822,8 +1857,8 @@ namespace Jamaker
             }
             else
             {
-                string directory = null;
-                string filename = null;
+                string? directory = null;
+                string? filename = null;
                 if (videoPath != null)
                 {
                     videoPath = videoPath.Replace('/', '\\');
@@ -1853,19 +1888,16 @@ namespace Jamaker
                     filter += "|Jamakaer 프로젝트|*.jmk";
                 }
                 SaveFileDialog dialog = new SaveFileDialog
-                {
-                    Filter = filter
-                ,
-                    InitialDirectory = directory
-                ,
-                    FileName = filename
+                {   Filter = filter
+                ,   InitialDirectory = directory
+                ,   FileName = filename
                 };
                 if (dialog.ShowDialog() != DialogResult.OK)
                 {   // 저장 취소
                     AfterSave();
                     return;
                 }
-                order.path = dialog.FileName;
+                order.path = dialog.FileName!;
                 Save();
             }
         }

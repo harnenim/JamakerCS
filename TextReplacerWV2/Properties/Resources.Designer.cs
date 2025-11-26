@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace MediaLibrary.Properties {
+namespace Jamaker.Properties {
     using System;
     
     
