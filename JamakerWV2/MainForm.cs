@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows.Controls.Primitives;
 using WebViewForm;
 
 namespace Jamaker
@@ -25,15 +26,14 @@ namespace Jamaker
 
         public MainForm(string[] args)
         {
-            /*
             string ProcName = Process.GetCurrentProcess().ProcessName;
             Process[] processes = Process.GetProcessesByName(ProcName);
             if (processes.Length > 1)
             {
-                MessageBox.Show($"{ProcName}는 이미 실행 중입니다.");
+                MessageBox.Show($"{ProcName}는 이미 실행 중입니다.", "Jamaker");
                 Process.GetCurrentProcess().Kill();
             }
-            */
+            Opacity = 0;
 
             InitializeAsync("Jamaker", new Binder(this));
             Icon = Resources.JamakerIcon;
@@ -57,9 +57,6 @@ namespace Jamaker
 
                 menuStrip!.MouseDown += clickMenuStrip = new MouseEventHandler(MouseDownInMenuStrip);
             }
-
-            StartPosition = FormStartPosition.Manual;
-            Location = new Point(-10000, -10000); // 처음에 안 보이게
 
             SetStyle(ControlStyles.SupportsTransparentBackColor, true);
             BackColor = Color.Transparent;
@@ -99,6 +96,7 @@ namespace Jamaker
         {
             return "Jamaker";
         }
+        public override void Alert(string target, string msg) { base.Alert(target == "finder" ? "editor" : target, msg); }
 
         private async void InitWebView()
         {
@@ -124,13 +122,18 @@ namespace Jamaker
             switch (name)
             {
                 case "viewer":
+                    popup.ShowInTaskbar = false;
                     popup.MaximizeBox = false;
                     popup.MinimizeBox = false;
                     break;
                 case "finder":
+                    popup.ShowInTaskbar = false;
                     popup.MaximizeBox = false;
                     popup.MinimizeBox = false;
                     popup.TopMost = true;
+                    popup.Opacity = 0.9;
+                    popup.Deactivate += (sender, e) => { popup.Opacity = 0.5; };
+                    popup.Activated += (sender, e) => { popup.Opacity = 0.9; };
                     break;
             }
         }
@@ -323,11 +326,26 @@ namespace Jamaker
                 {
                     if (hwnd > 0)
                     {   // 윈도우 그림자 여백 보정
-                        RECT shadow = WinAPI.GetWindowShadow(windows["editor"]);
-                        _ = WinAPI.MoveWindow(hwnd, x - shadow.left, y - shadow.top, width + shadow.left - shadow.right, height + shadow.top - shadow.bottom, true);
-                        if (target.Equals("editor"))
+                        Console.WriteLine($"hwnd = {hwnd}");
+                        RECT shadow = WinAPI.GetWindowShadow(Handle.ToInt32());
+
+                        if (popups.TryGetValue(target, out PopupForm? popup))
                         {
-                            Script("setDpiBy", width);
+                            popup.Location = new Point(x - shadow.left, y - shadow.top);
+                            popup.Size = new Size(width + shadow.left - shadow.right, height + shadow.top - shadow.bottom);
+                        }
+                        else
+                        {
+                            if (target.Equals("editor"))
+                            {
+                                Location = new Point(x - shadow.left, y - shadow.top);
+                                Size = new Size(width + shadow.left - shadow.right, height + shadow.top - shadow.bottom);
+                                Script("setDpiBy", width);
+                            }
+                            else
+                            {
+                                _ = WinAPI.MoveWindow(hwnd, x - shadow.left, y - shadow.top, width + shadow.left - shadow.right, height + shadow.top - shadow.bottom, true);
+                            }
                         }
                     }
                 }
@@ -376,27 +394,14 @@ namespace Jamaker
                 if (hwnd > 0)
                 {
                     RECT targetOffset = new();
-                    _ = WinAPI.GetWindowRect(hwnd, ref targetOffset);
-                    if (target.Equals("player"))
-                    {
-                        Script("afterGetWindow"
-                            , target
-                            , targetOffset.left
-                            , targetOffset.top
-                            , targetOffset.right - targetOffset.left
-                            , targetOffset.bottom - targetOffset.top
-                        );
-                    }
-                    else
-                    {
-                        Script("afterGetWindow"
-                            , target
-                            , targetOffset.left + 7
-                            , targetOffset.top
-                            , targetOffset.right - targetOffset.left - 14
-                            , targetOffset.bottom - targetOffset.top - 9
-                        );
-                    }
+                    _ = WinAPI.GetWindowRectWithoutShadow(hwnd, ref targetOffset);
+                    Script("afterGetWindow"
+                        , target
+                        , targetOffset.left
+                        , targetOffset.top
+                        , targetOffset.right - targetOffset.left
+                        , targetOffset.bottom - targetOffset.top
+                    );
                 }
             }
         }
@@ -1041,7 +1046,11 @@ namespace Jamaker
                 return;
             }
 
-            mainView.CoreWebView2.Settings.AreDevToolsEnabled = File.Exists(Path.Combine(Application.StartupPath, $"setting/.ShowDevTools"));
+            Opacity = 1;
+
+            bool showDevTools = File.Exists(Path.Combine(Application.StartupPath, $"setting/.ShowDevTools"));
+            mainView.CoreWebView2.Settings.AreDevToolsEnabled = showDevTools;
+            mainView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = showDevTools;
 
             // 최초 실행 시 ffmpeg 존재 여부 확인인데, 창 위치 잡아준 후에 alert 돌아가도록 함
             int status = CheckFFmpegWithAlert();

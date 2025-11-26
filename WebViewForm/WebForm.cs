@@ -125,11 +125,11 @@ namespace WebViewForm
         {
             return Text;
         }
-        public void Alert(string target, string msg)
+        public virtual void Alert(string target, string msg)
         {
             MessageBoxEx.Show(GetHwnd(target), msg, GetTitle());
         }
-        public void Confirm(string target, string msg)
+        public virtual void Confirm(string target, string msg)
         {
             if (MessageBoxEx.Show(GetHwnd(target), msg, GetTitle(), MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
@@ -141,7 +141,7 @@ namespace WebViewForm
             }
         }
 
-        public void Prompt(string target, string msg, string def)
+        public virtual void Prompt(string target, string msg, string def)
         {
             Prompt prompt = new(GetHwnd(target), msg, GetTitle(), def);
             DialogResult result = prompt.ShowDialog();
@@ -236,6 +236,7 @@ namespace WebViewForm
                 PopupForm popup = tmpPopup;
                 tmpPopup = null;
                 new Thread(() => { StandbyPopup(); }).Start();
+                popup.Opacity = 1;
                 popup.Show();
                 e.NewWindow = popup.mainView.CoreWebView2;
 
@@ -246,7 +247,11 @@ namespace WebViewForm
                 popup.mainView.CoreWebView2.NavigationStarting += RefreshPopup;
                 popup.mainView.CoreWebView2.WindowCloseRequested += (s2, e2) =>
                 {
-                    popup.Close();
+                    try
+                    {
+                        popup.Close();
+                    }
+                    catch { }
                 };
                 AfterOpenPopup(e.Name, popup);
             }

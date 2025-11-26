@@ -3616,7 +3616,7 @@ $(() => {
 	SmiEditor.refreshHighlight();
 	
 	if (window.Frame) {
-		SmiEditor.Finder = SmiEditor.Finder2;
+		SmiEditor.Finder = SmiEditor.Finder1;
 		SmiEditor.Finder.window = new Frame("finder.html", "finder", "", () => {
 			// 좌우 크기만 조절 가능
 			SmiEditor.Finder.window.frame.find(".tl, .t, .tr, .bl, .b, .br").remove();
