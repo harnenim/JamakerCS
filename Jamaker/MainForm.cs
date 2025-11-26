@@ -302,7 +302,7 @@ namespace Jamaker
                 {
                     if (hwnd > 0)
                     {   // 윈도우 그림자 여백 보정
-                        RECT shadow = WinAPI.GetWindowShadow(windows["editor"]);
+                        RECT shadow = WinAPI.GetWindowShadow(hwnd);
                         WinAPI.MoveWindow(hwnd, x - shadow.left, y - shadow.top, width + shadow.left - shadow.right, height + shadow.top - shadow.bottom, true);
                         if (target.Equals("editor"))
                         {
@@ -355,7 +355,7 @@ namespace Jamaker
                 if (hwnd > 0)
                 {
                     RECT targetOffset = new RECT();
-                    WinAPI.GetWindowRect(hwnd, ref targetOffset);
+                    WinAPI.GetWindowRectWithoutShadow(hwnd, ref targetOffset);
                     if (target.Equals("player"))
                     {
                         Script("afterGetWindow"
@@ -370,10 +370,10 @@ namespace Jamaker
                     {
                         Script("afterGetWindow"
                             , target
-                            , targetOffset.left + 7
+                            , targetOffset.left
                             , targetOffset.top
-                            , targetOffset.right - targetOffset.left - 14
-                            , targetOffset.bottom - targetOffset.top - 9
+                            , targetOffset.right - targetOffset.left
+                            , targetOffset.bottom - targetOffset.top
                         );
                     }
                 }
@@ -448,23 +448,24 @@ namespace Jamaker
             {
                 if (--saveSettingAfter == 0)
                 {
-                    WinAPI.GetWindowRect(windows["editor"], ref offset);
+                    //RECT shadow = WinAPI.GetWindowShadow(windows["editor"]);
+                    WinAPI.GetWindowRectWithoutShadow(windows["editor"], ref offset);
                     Script("eval", 
-                        $"setting.window.x = { offset.left + 7 };"
+                        $"setting.window.x = { offset.left };"
                     +   $"setting.window.y = { offset.top };"
-                    +   $"setting.window.width = { offset.right - offset.left - 14 };"
-                    +   $"setting.window.height = { offset.bottom - offset.top - 9 };"
+                    +   $"setting.window.width = { offset.right - offset.left };"
+                    +   $"setting.window.height = { offset.bottom - offset.top };"
                     );
 
                     int viewer = windows["viewer"];
                     if (viewer > 0)
                     {
-                        WinAPI.GetWindowRect(viewer, ref viewerOffset);
+                        WinAPI.GetWindowRectWithoutShadow(viewer, ref viewerOffset);
                         Script("eval",
-                            $"setting.viewer.window.x = { viewerOffset.left + 7};"
+                            $"setting.viewer.window.x = { viewerOffset.left };"
                         +   $"setting.viewer.window.y = { viewerOffset.top };"
-                        +   $"setting.viewer.window.width = { viewerOffset.right - viewerOffset.left - 14 };"
-                        +   $"setting.viewer.window.height = { viewerOffset.bottom - viewerOffset.top - 9 };"
+                        +   $"setting.viewer.window.width = { viewerOffset.right - viewerOffset.left };"
+                        +   $"setting.viewer.window.height = { viewerOffset.bottom - viewerOffset.top };"
                         );
                     }
 
