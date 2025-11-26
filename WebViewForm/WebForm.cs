@@ -28,7 +28,7 @@ namespace WebViewForm
             }
             mainView.Focus();
         }
-        protected int GetHwnd(string target)
+        protected virtual int GetHwnd(string target)
         {
             try
             {
@@ -121,14 +121,17 @@ namespace WebViewForm
             popup.mainView.ExecuteScriptAsync(script);
         }
 
-
+        public virtual string GetTitle()
+        {
+            return Text;
+        }
         public void Alert(string target, string msg)
         {
-            MessageBoxEx.Show(GetHwnd(target), msg, Text);
+            MessageBoxEx.Show(GetHwnd(target), msg, GetTitle());
         }
         public void Confirm(string target, string msg)
         {
-            if (MessageBoxEx.Show(GetHwnd(target), msg, Text, MessageBoxButtons.YesNo) == DialogResult.Yes)
+            if (MessageBoxEx.Show(GetHwnd(target), msg, GetTitle(), MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 Script("afterConfirmYes");
             }
@@ -140,7 +143,7 @@ namespace WebViewForm
 
         public void Prompt(string target, string msg, string def)
         {
-            Prompt prompt = new(GetHwnd(target), msg, Text, def);
+            Prompt prompt = new(GetHwnd(target), msg, GetTitle(), def);
             DialogResult result = prompt.ShowDialog();
             if (result == DialogResult.OK)
             {
@@ -174,7 +177,7 @@ namespace WebViewForm
         protected void DragOverMain(object sender, DragEventArgs e)
         {
             try { e.Effect = DragDropEffects.All; } catch { }
-            Script("dragover", [(e.X - Location.X) / dpi, (e.Y - Location.Y) / dpi]);
+            Script("dragover", (e.X - Location.X) / dpi, (e.Y - Location.Y) / dpi);
         }
         protected void DragDropMain(object sender, DragEventArgs e)
         {
@@ -210,6 +213,7 @@ namespace WebViewForm
 
             StandbyPopup();
         }
+        // 다음 팝업 미리 생성해두기
         private void StandbyPopup()
         {
             if (InvokeRequired)
@@ -218,7 +222,6 @@ namespace WebViewForm
                 Invoke(new Action(() => { StandbyPopup(); }));
                 return;
             }
-            // 다음 팝업 미리 생성해두기
             tmpPopup = new PopupForm(env!);
         }
 
@@ -231,36 +234,34 @@ namespace WebViewForm
             if (tmpPopup != null)
             {
                 PopupForm popup = tmpPopup;
+                tmpPopup = null;
+                new Thread(() => { StandbyPopup(); }).Start();
                 popup.Show();
-                StandbyPopup();
                 e.NewWindow = popup.mainView.CoreWebView2;
 
                 popups[e.Name] = urlPopups[e.Uri] = popup;
                 windows[e.Name] = popup.Handle.ToInt32();
 
-                switch (e.Name)
-                {
-                    case "test":
-                        {
-                            popup.MaximizeBox = false;
-                            popup.MinimizeBox = false;
-                            popup.TopMost = true;
-                            break;
-                        }
-                }
                 popup.Text = e.Name;
                 popup.mainView.CoreWebView2.NavigationStarting += RefreshPopup;
+                popup.mainView.CoreWebView2.WindowCloseRequested += (s2, e2) =>
+                {
+                    popup.Close();
+                };
+                AfterOpenPopup(e.Name, popup);
             }
             e.Handled = true;
         }
-
+        public virtual void AfterOpenPopup(string name, PopupForm popup)
+        {
+            // 각 프로그램에서 필요 시 override
+        }
 
         private void RefreshPopup(object? sender, CoreWebView2NavigationStartingEventArgs e)
         {
             PopupForm popup = urlPopups[e.Uri];
             WinAPI.SetForegroundWindow(popup.Handle.ToInt32());
         }
-
 
         public static Encoding DetectEncoding(string file)
         {

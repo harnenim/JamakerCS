@@ -103,7 +103,7 @@ namespace Jamaker
         private double dpi = 1;
         private void SetDpi()
         {
-            Script("setDpi", new object[] { dpi = DeviceDpi / 96 });
+            Script("setDpi", dpi = DeviceDpi / 96);
         }
 
         private void OnDpiChanged(object sender, DpiChangedEventArgs e)
@@ -198,12 +198,12 @@ namespace Jamaker
             layerForDrag.Visible = false;
             Script("hideDragging");
         }
-        string[] droppedFiles = null;
+        protected string[] droppedFiles = null;
         protected void DragLeaveMain(object sender, EventArgs e) { HideDragging(); }
         protected void DragOverMain(object sender, DragEventArgs e)
         {
             try { e.Effect = DragDropEffects.All; } catch { }
-            Script("dragover", new object[] { (e.X - Location.X) / dpi, (e.Y - Location.Y) / dpi });
+            Script("dragover", (e.X - Location.X) / dpi, (e.Y - Location.Y) / dpi);
         }
         protected void DragDropMain(object sender, DragEventArgs e)
         {

@@ -39,6 +39,9 @@ input, textarea, button {
 body:not(.drag-file) #cover {
 	display: none;
 }
+body.drag-file #cover {
+	display: block;
+}
 .progress {
 	position: relative;
 }

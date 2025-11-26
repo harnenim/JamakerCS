@@ -19,6 +19,9 @@ html, body {
 body:not(.drag-file) #cover {
 	display: none;
 }
+body.drag-file #cover {
+	display: block;
+}
 button {
 	border-width: 1px;
 	padding: 1px;
