@@ -15,10 +15,10 @@ Binder.prototype.loadSettingByDrag = function() {
 	this._.loadSettingByDrag();
 }
 Binder.prototype.compare = function(file, froms, tos) {
-	this._.compare(file, froms, tos);
+	this._.compare(file, JSON.parse(froms), JSON.parse(tos));
 }
 Binder.prototype.replace = function(files, froms, tos) {
-	this._.replace(files, froms, tos);
+	this._.replace(JSON.parse(files), JSON.parse(froms), JSON.parse(tos));
 }
 Binder.prototype.importSetting = function() {
 	this._.importSetting();

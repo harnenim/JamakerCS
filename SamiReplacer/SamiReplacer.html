@@ -12,7 +12,7 @@ Binder.prototype.addFilesByDrag = function() {
 	this._.addFilesByDrag();
 }
 Binder.prototype.startReplace = function(files) {
-	this._.startReplace(files);
+	this._.startReplace(JSON.parse(files));
 }
 Binder.prototype.saveAndReplaceNext = function(index, text) {
 	this._.saveAndReplaceNext(index, text);

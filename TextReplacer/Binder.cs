@@ -1,4 +1,6 @@
-﻿namespace Jamaker
+﻿using Newtonsoft.Json;
+
+namespace Jamaker
 {
     class BaseBinder
     {
@@ -7,6 +9,11 @@
         public BaseBinder(MainForm webForm)
         {
             _ = webForm;
+        }
+
+        public static T ParseJson<T>(string input)
+        {
+            return JsonConvert.DeserializeObject<T>(input);
         }
 
         public void Focus(string target)
@@ -50,14 +57,14 @@
             _.LoadSettingByDrag();
         }
 
-        public void Compare(string file, string[] froms, string[] tos)
+        public void Compare(string file, string froms, string tos)
         {
-            _.Compare(file, froms, tos);
+            _.Compare(file, ParseJson<string[]>(froms), ParseJson<string[]>(tos));
         }
 
-        public void Replace(string[] files, string[] froms, string[] tos)
+        public void Replace(string files, string froms, string tos)
         {
-            _.Replace(files, froms, tos);
+            _.Replace(ParseJson<string[]>(files), ParseJson<string[]>(froms), ParseJson<string[]>(tos));
         }
 
         public void ImportSetting()

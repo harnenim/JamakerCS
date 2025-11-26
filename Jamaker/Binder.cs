@@ -1,10 +1,16 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 
 namespace Jamaker
 {
     class BaseBinder
     {
         private readonly MainForm _;
+
+        public static T ParseJson<T>(string input)
+        {
+            return JsonConvert.DeserializeObject<T>(input);
+        }
 
         public BaseBinder(MainForm webForm)
         {
@@ -53,9 +59,9 @@ namespace Jamaker
             _.SetFollowWindow(follow);
         }
 
-        public void SetMenus(string[][] menus)
+        public void SetMenus(string menus)
         {
-            _.SetMenus(menus);
+            _.SetMenus(ParseJson<string[][]>(menus));
         }
         public void FocusToMenu(int keyCode)
         {
@@ -145,7 +151,7 @@ namespace Jamaker
             _.SendMsg(target, msg);
         }
         // setting.html
-        public void GetWindows(string[] targets) { _.GetWindows(targets); }
+        public void GetWindows(string targets) { _.GetWindows(ParseJson<string[]>(targets)); }
         public void SelectPlayerPath() { _.SelectPlayerPath(); }
 
         // addon 설정용

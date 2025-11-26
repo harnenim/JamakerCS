@@ -195,7 +195,7 @@ $(() => {
 				hasNewFrameSync = true;
 			}
 		}
-		binder.startReplace(files);
+		binder.startReplace(JSON.stringify(files));
 	});
 	
 	document.addEventListener("dragenter", function(e) {

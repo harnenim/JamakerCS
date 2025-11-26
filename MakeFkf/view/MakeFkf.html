@@ -86,7 +86,7 @@ $(() => {
 		}
 		listFiles.area.find(".progress-bar").css({ width: 0 });
 		listFiles.area.scrollLeft(0);
-		binder.makeFkfs(files);
+		binder.makeFkfs(JSON.stringify(files));
 	});
 });
 	</script>

@@ -1,8 +1,15 @@
-﻿namespace Jamaker
+﻿using Newtonsoft.Json;
+
+namespace Jamaker
 {
     class BaseBinder
     {
         private readonly MainForm _;
+
+        public static T ParseJson<T>(string input)
+        {
+            return JsonConvert.DeserializeObject<T>(input);
+        }
 
         public BaseBinder(MainForm webForm)
         {
@@ -46,9 +53,9 @@
             _.AddFilesByDrag();
         }
 
-        public void MakeFkfs(string[] files)
+        public void MakeFkfs(string files)
         {
-            _.MakeFkfs(files);
+            _.MakeFkfs(ParseJson<string[]>(files));
         }
     }
 }

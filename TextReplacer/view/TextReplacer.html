@@ -146,7 +146,7 @@ $(() => {
 			alert("변환할 문자열이 없습니다.");
 			return;
 		}
-		binder.compare(item.value, replacers.froms, replacers.tos);
+		binder.compare(item.value, JSON.stringify(replacers.froms), JSON.stringify(replacers.tos));
 	}
 	
 	inputFilters = $("#inputFilters");
@@ -182,7 +182,7 @@ $(() => {
 			alert("변환할 문자열이 없습니다.");
 			return;
 		}
-		binder.replace(files, replacers.froms, replacers.tos);
+		binder.replace(JSON.stringify(files), JSON.stringify(replacers.froms), JSON.stringify(replacers.tos));
 	});
 	$("#btnImportSetting").on("click", function() {
 		binder.importSetting();

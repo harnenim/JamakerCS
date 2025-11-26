@@ -12,7 +12,7 @@ Binder.prototype.addFilesByDrag = function() {
 	this._.addFilesByDrag();
 }
 Binder.prototype.makeFkfs = function(files) {
-	this._.makeFkfs(files);
+	this._.makeFkfs(JSON.parse(files));
 }
 </script>
 <script src="bridge/WebForm.js"></script>

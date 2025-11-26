@@ -267,7 +267,7 @@ $(() => {
 		};
 		
 		$("#btnGetWindows").on("click", function() {
-			opener.binder.getWindows(["editor", "viewer", "player"]);
+			opener.binder.getWindows(JSON.stringify(["editor", "viewer", "player"]));
 		});
 		// C#에서 Script("afterGetWindow", object[] { "editor", x, y, w, h });
 		opener.afterGetWindow = (id, x, y, w, h) => {

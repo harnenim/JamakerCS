@@ -2184,7 +2184,7 @@ function setSetting(setting, initial=false) {
 	$("input[name=Fontname]").attr({ placeholder: Subtitle.DefaultStyle.Fontname });
 	SmiEditor.stylePreset.find("input[name=Fontname]").attr({ placeholder: Subtitle.DefaultStyle.Fontname });
 	
-	binder.setMenus(setting.menu);
+	binder.setMenus(JSON.stringify(setting.menu));
 	
 	window.setting = JSON.parse(JSON.stringify(setting));
 	

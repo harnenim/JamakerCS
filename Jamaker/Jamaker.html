@@ -24,7 +24,7 @@ Binder.prototype.setFollowWindow = function(follow) {
 	this._.setFollowWindow(follow);
 }
 Binder.prototype.setMenus = function(menus) {
-	this._.setMenus(menus);
+	this._.setMenus(JSON.parse(menus));
 }
 
 Binder.prototype.focusToMenu = function(keyCode) {
@@ -101,7 +101,7 @@ Binder.prototype.sendMsg = function(target, msg) {
 }
 
 // setting.html
-Binder.prototype.getWindows = function(targets) { this._.getWindows(targets); }
+Binder.prototype.getWindows = function(targets) { this._.getWindows(JSON.parse(targets); }
 Binder.prototype.selectPlayerPath = function() { alert("C#에서 동작합니다."); }
 
 // addon 설정 용
