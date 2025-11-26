@@ -49,6 +49,7 @@ namespace Jamaker
                 menuStrip.MenuDeactivate += new EventHandler(EscapeMenuFocusAfterCheck);
                 menuStrip.KeyDown += new KeyEventHandler(KeyDownInMenuStrip);
                 menuStrip.LostFocus += new EventHandler(CloseMenuStrip);
+                menuStrip.TabIndex = 10;
                 Controls.Add(menuStrip);
                 MainMenuStrip = menuStrip;
 
@@ -915,13 +916,10 @@ namespace Jamaker
             foreach (string[] menu in menus)
             {
                 string menuName = menu[0];
-                ToolStripMenuItem menuItem = new ToolStripMenuItem
-                {
-                    Text = menuName
-                ,
-                    Name = menuName.Split('(')[0]
-                ,
-                    Size = new Size(60, 20)
+                ToolStripMenuItem menuItem = new()
+                {   Text = menuName
+                ,   Name = menuName.Split('(')[0]
+                ,   Size = new Size(60, 20)
                 };
                 menuItem.MouseDown += clickMenuStrip;
                 menuStrip.Items.Add(menuItem);
@@ -935,20 +933,15 @@ namespace Jamaker
                         string subMenuFunc = tmp[1];
                         if (subMenuFunc.Length > 0)
                         {
-                            ToolStripMenuItem subMenuItem = new ToolStripMenuItem
-                            {
-                                Text = subMenuName
-                            ,
-                                Name = subMenuName.Split('(')[0]
-                            ,
-                                Size = new Size(200, 22)
+                            ToolStripMenuItem subMenuItem = new()
+                            {   Text = subMenuName
+                            ,   Name = subMenuName.Split('(')[0]
+                            ,   Size = new Size(200, 22)
                             };
-                            subMenuItem.Click += new EventHandler(new EventHandler((sender, e) =>
+                            subMenuItem.Click += new((sender, e) =>
                             {
-                                //Script("eval", tmp[1]);
-                                Console.WriteLine($"menu click: {tmp[1]}");
                                 mainView.ExecuteScriptAsync(tmp[1]);
-                            }));
+                            });
                             menuItem.DropDownItems.Add(subMenuItem);
                         }
                     }
