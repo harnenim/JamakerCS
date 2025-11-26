@@ -1,0 +1,58 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>홀드에 대하여</title>
+	<script src="../lib/jquery-3.2.1.min.js"></script>
+	<script src="../lib/popup.js"></script>
+	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
+	<script>
+windowName = "help";
+	</script>
+	<style>
+body {
+	overflow-y: scroll;
+	padding: 8px;
+}
+table { width: 100%; }
+th, td {
+	padding: 4px;
+	font-size: 14px;
+}
+tr.editable th {
+	background: #ffb;
+}
+img {
+	display: block;
+	margin: 10px auto;
+	border: 1px solid #aaa;
+	max-width: 100%;
+}
+hr {
+	margin: 10px 0;
+}
+	</style>
+</head>
+<body>
+	UI는 CC4의 홀드 기능과 비슷한 면이 있으나, 기능적으로 상당한 차이가 있습니다.<br />
+	<hr />
+	<img src="img/hold1.png" title="홀드 UI 이미지" />
+	<hr />
+	홀드는 별도 파일이 아닌 하나의 파일로 저장되며<br />
+	기존 부가기능의 '겹치는 싱크 결합' 작업이 자동으로 이뤄집니다.<br />
+	<br />
+	홀드 선택기의 좌우 위치는 싱크의 절대값이 아닌 전후관계로 계산됩니다.<br />
+	위아래로 출력 위치를 바꿀 수 있으며<br />
+	이름을 더블클릭하면 수정하실 수 있습니다.<br />
+	<br />
+	결합 과정에서 플레이어 설정이 왼쪽 정렬일 경우를 고려하여<br />
+	흔들림을 최소화하기 위해 좌우에 공백 문자가 붙는데<br />
+	이는 사용자의 설정에 따라 불완전할 수 있으며, 미리보기 폰트 설정을 따라갑니다.<br />
+	<hr />
+	<img src="img/hold2.png" title="홀드 저장 결과 이미지" />
+	<hr />
+	저장 시엔 최종 변환 결과와 함께, 작업 중이던 원본 형태가 주석 형태로 함께 저장되며<br />
+	내보내기 기능을 사용하면 실제 출력 내용만 남게 됩니다.(용량 최적화)
+</body>
+</html>

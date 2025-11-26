@@ -1,0 +1,130 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>화면 싱크 매니저 도움말</title>
+	<script src="../lib/jquery-3.2.1.min.js"></script>
+	<script src="../lib/popup.js"></script>
+	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
+	<script>
+windowName = "help";
+
+$(() => {
+	$("#comment").on("mouseover", "li", function() {
+		$(".area.select").removeClass("select");
+		const area = (""+$(this).data("area")).split("-");
+		for (let i = 0; i < area[0].length; i++) {
+			$("#preview_" + area[0][i]).addClass("input");
+		}
+		if (area.length < 2) return;
+		for (let i = 0; i < area[1].length; i++) {
+			$("#preview_" + area[1][i]).addClass("output");
+		}
+	}).on("mouseout", function() {
+		$(".area.input" ).removeClass("input" );
+		$(".area.output").removeClass("output");
+	});
+});
+	</script>
+	<style>
+#preview {
+	position: relative;
+	margin: 20px auto;
+	width: 640px;
+	height: 360px;
+}
+#preview > * { position: absolute; }
+#preview_img { top: 0  ; left:   0  ; width: 640px; height: 360px; }
+#preview_1 { top:   0  ; left:   0  ; width: 194px; height: 182px; }
+#preview_2 { top: 178px; left:   0  ; width: 194px; height: 182px; }
+#preview_3 { top:   0  ; left: 190px; width: 450px; height: 182px; }
+#preview_4 { top: 178px; left: 190px; width: 206px; height: 182px; }
+#preview_5 { top: 178px; left: 392px; width: 248px; height: 182px; }
+.area {
+	color: #f80;
+	font-size: 28px;
+	font-weight: bold;
+	line-height: 172px;
+	text-align: center;
+	border: 4px solid #fb8;
+	z-index: 1;
+}
+.area.input {
+	border-color: #f80;
+	background: rgba(255,127,0,0.1);
+	z-index: 2;
+}
+.area.output {
+	color: #f40;
+	border-color: #f40;
+	background: rgba(255,63,0,0.1);
+	z-index: 2;
+}
+
+#comment {
+	overflow-y: scroll;
+	height: calc(100% - 500px);
+	background: #fff;
+}
+#comment li {
+	list-style: decimal;
+	margin: 24px;
+	font-size: 16px;
+	line-height: 24px;
+	color: #444;
+}
+#comment li:hover {
+	color: #000;
+}
+#comment li > span {
+	font-size: 14px;
+}
+ruby > rt {
+	font-size: 80%;
+}
+	</style>
+</head>
+<body>
+<p style="height: 100px; padding: 20px 20px 0;">
+	이 도움말은 구버전에 대한 도움말입니다.<br />
+	현재는 Aegisub 같은 프로그램의 도움 없이 기능이 내재화되어 있습니다.<br />
+	<br />
+	기존 버전에서 업데이트한 경우 메뉴에 도움말 링크가 남아있어서 남겨둔 페이지입니다.
+</p>
+<div id="preview">
+	<img id="preview_img" src="img/SyncManager.png" alt="화면 싱크 매니저 화면 이미지" />
+	<div id="preview_1" class="area">①</div>
+	<div id="preview_2" class="area">②</div>
+	<div id="preview_3" class="area">③</div>
+	<div id="preview_4" class="area">④</div>
+	<div id="preview_5" class="area">⑤</div>
+</div>
+<ol id="comment">
+	<li data-area="1-23">
+		최초 실행 시 에디터 전체 혹은 선택 영역에 대해 <b>일반 싱크는 ①</b>로, <b>화면 싱크는 ②</b>로 분리되며<br />
+		<b>③에는 화면 싱크를 ASS 자막으로</b> 변환한 결과가 나옵니다. 
+	</li>
+	<li data-area="-3">
+		③의 ASS 자막 형태 변환값을 Aegisub에 복사해서 싱크를 프레임 단위로 맞춰줍니다.<br />
+		<b>시작 싱크 작업 대상은 '［', 종료 싱크 작업 대상은 '］'</b>으로 표현되며, Aegisub상에서 색상으로도 구별할 수 있습니다.<br />
+		<span>※ Ctrl+3/4 단축키를 숙지하면 편리합니다.</span><br />
+		<span>※ 메뉴/단축키 설정에 'SyncManager' 대신 'SyncManager0'을 사용하면 시작 싱크를 맞추는 형식으로 통일됩니다.</span>
+	</li>
+	<li data-area="3-4">
+		Aegisub에서 작업한 결과물을 다시 <b>③에 붙여넣고</b> <ruby><b>[∨]버튼</b><rt>Alt+1</rt></ruby>을 누르면 <b>④에 SMI로 변환한 결과물</b>이 나옵니다.
+	</li>
+	<li data-area="2-4">
+		원래 싱크와 작업한 싱크의 오차가 0.2초를 넘을 경우 빨간색으로 경고가 표시됩니다.<br />
+		0.5초가 넘는 수정이나 싱크 누락·겹침이 발생할 경우 진행이 차단됩니다.<br />
+		<span>※ 실제로 0.5초 이상 옮겨야 할 경우 ②의 싱크를 임의로 수정할 수 있습니다.</span>
+	</li>
+	<li data-area="24-5">
+		진행이 가능한 경우 <ruby><b>[&gt;]버튼</b><rt>Alt+2</rt></ruby>을 누르면 <b>②의 텍스트와 ④의 싱크를 결합</b>한 결과물을 <b>⑤에 출력</b>합니다.
+	</li>
+	<li data-area="-15">
+		최종적으로 <ruby><b>[적용]버튼</b><rt>Alt+3</rt></ruby>을 누르면 <b>①과 ⑤를 합친 결과물</b>을 에디터에 적용합니다.
+	</li>
+</ol>
+</body>
+</html>

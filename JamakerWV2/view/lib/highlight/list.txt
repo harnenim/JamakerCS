@@ -1,0 +1,75 @@
+eclipse            : Eclipse
+vs                 : Visual Studio
+vs2015?dark        : Visual Studio 2015
+intellij-light     : IntelliJ
+xcode              : Xcode
+androidstudio?dark : Android Studio
+github             : Github
+github-dark        : Github Dark
+github-dark-dimmed : Github Dark Dimmed
+stackoverflow-light: StackOverflow
+stackoverflow-dark : StackOverflow(dark)
+nscc4              : NS Caption Creator 4
+1c-light
+a11y-light
+a11y-dark
+agate?dark
+an-old-hope?dark
+arduino-light
+arta?dark
+ascetic
+atom-one-light
+atom-one-dark
+atom-one-dark-reasonable
+brown-paper
+codepen-embed?dark
+color-brewer
+dark?dark
+default
+devibeans?dark
+docco
+far?dark
+felipec?dark
+foundation?dark
+gml?dark
+googlecode
+gradient-light
+gradient-dark
+grayscale
+hybrid?dark
+idea
+ir-black?dark
+isbl-editor-light
+isbl-editor-dark
+kimbie-dark
+kimbie-light
+lightfair
+lioshi?dark
+magula
+mono-blue?dark
+monokai-sublime?dark
+monokai?dark
+night-owl?dark
+nnfx-dark
+nnfx-light
+nord?dark
+obsidian?dark
+panda-syntax-light
+panda-syntax-dark
+paraiso-dark
+paraiso-light
+pojoaque?dark
+purebasic
+qtcreator-dark
+qtcreator-light
+rainbow?dark
+routeros
+school-book
+shades-of-purple?dark
+srcery?dark
+sunburst?dark
+tokyo-night-dark
+tokyo-night-light
+tomorrow-night-blue?dark
+tomorrow-night-bright?dark
+xt256?dark

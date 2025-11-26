@@ -23,6 +23,25 @@ namespace WebViewForm
         public static extern int MoveWindow(int hwnd, int x, int y, int nWidth, int nHeight, bool bRepaint);
         // TODO: DwmSetWindowAttribute
 
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmGetWindowAttribute(int hwnd, int attr, out RECT rect, int size);
+        public static int GetWindowRectWithShadow(int hwnd, ref RECT rect)
+        {
+            return DwmGetWindowAttribute(hwnd, 9/*DWMWA_EXTENDED_FRAME_BOUNDS*/, out rect, Marshal.SizeOf(typeof(RECT)));
+        }
+        public static RECT GetWindowShadow(int hwnd)
+        {
+            RECT defaults = new RECT();
+            RECT shadowed = new RECT();
+            _ = GetWindowRect(hwnd, ref defaults);
+            _ = GetWindowRectWithShadow(hwnd, ref shadowed);
+            shadowed.top -= defaults.top;
+            shadowed.left -= defaults.left;
+            shadowed.right -= defaults.right;
+            shadowed.bottom -= defaults.bottom;
+            return shadowed;
+        }
+
         [DllImport("user32.dll", EntryPoint = "GetWindowLong")]
         public static extern UIntPtr GetWindowLongPtr(int hwnd, int nIndex);
 

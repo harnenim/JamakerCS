@@ -1,0 +1,367 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1100">
+<title>노래방 자막</title>
+<script src="../lib/jquery-3.2.1.min.js"></script>
+<script src="../lib/popup.js"></script>
+<script src="Karaoke.js"></script>
+<style>
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	font-size: 12px;
+	line-height: 16px;
+	white-space: nowrap;
+	word-break: keep-all;
+}
+html, body {
+	width: 100%;
+	height: 100%;
+}
+textarea {
+	resize: none;
+}
+table {
+	border-collapse: collapse;
+}
+rt, rt * { font-size: 6px; }
+
+body {
+	overflow: hidden;
+	background: #ddd;
+}
+#total {
+	position: absolute;
+	top: 0;
+	left: 30%;
+	height: 100%;
+	width: 1000%;
+}
+#total > * {
+	float: left;
+	height: 100%;
+	border-right: 1px solid #000;
+	position: relative;
+	background: #fff;
+}
+#page1 { width: 4%; }
+#page2 { width: 8%; }
+#page3 { width: 4%; }
+#page4 { width: 6%; }
+
+.button {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(127,127,127,0.2);
+	color: transparent;
+}
+.button.hide { display: none; }
+.button.active:hover {
+	background: rgba(222,222,222,0.7);
+	color: #000;
+	padding: 200px 0 0 20px;
+}
+.button > div {
+	position: absolute;
+	top: 0;
+	width: 60px;
+	bottom: 0;
+	font-size: 32px;
+	font-weight: bold;
+	line-height: 50px;
+	word-break: break-all;
+	white-space: normal;
+	text-align: center;
+	user-select: none;
+}
+.button > div:first-child { left: 0; }
+.button > div:last-child { right: 0; }
+
+#page3 > div:first-child {
+	height: 100%;
+	overflow-y: scroll;
+}
+#page3 .line {
+	margin-bottom: 40px;
+}
+#page3 td { text-align: center; }
+#page3 td:not(.sum) { vertical-align: bottom; }
+#page3 td.sum { padding: 4px; cursor: pointer; }
+#page3 .line.error td.sum { color: #f00; }
+#page3 input[type=text] {
+	width: 12px;
+	height: 14px;
+	text-align: center;
+}
+#page3 #formEditLine {
+	position: absolute;
+	top: 200px;
+	left: 30px;
+	width: 300px;
+	border: 1px solid #000;
+	background: #fff;
+	display: none;
+}
+#page3 #formEditLine > * {
+	width: 100%;
+}
+
+#page4 #preview,
+#page4 #formDesign {
+	height: 60%;
+}
+#page4 #output {
+	top: 60%;
+}
+#page4 #preview {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 200px;
+	background: #000;
+	overflow-y: scroll;
+	color: #fff;
+	text-align: center;
+}
+#page4 #preview p {
+	margin-bottom: 20px;
+}
+#page4 #formDesign {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 200px;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+#page4 #formDesign input[type=color] {
+	width: 40px;
+	border: 0;
+	padding: 0;
+	height: 16px;
+	background: #fff;
+}
+#page4 #formDesign input.color {
+	width: calc(100% - 50px);
+}
+#page4 #output {
+	position: absolute;
+	left: 0;
+	width: 100%;
+	bottom: 0;
+}
+
+#btnOpenKanji {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 24px;
+	height: 24px;
+}
+#formKanji {
+	position: fixed;
+	top: 50px;
+	left: calc(50% - 100px);
+	width: 200px;
+	bottom: 50px;
+	border: 1px solid #000;
+	background: #fff;
+	display: none;
+}
+#inputKanji {
+	width: 100%;
+	height: calc(100% - 24px);
+}
+#btnApplyKanji {
+	width: 100%;
+}
+</style>
+</head>
+<body>
+	<div id="total">
+		<div id="page1">
+			<textarea id="inputLyrics" style="width: 100%; height: calc(100% - 30px);">All is calm All is bright
+
+
+囁く天使は堕ちて
+사사야쿠 테은시와 오치테
+속삭이는 천사는 추락하고
+
+
+優しく食むわ　あなたの全てを
+야사시쿠 하무와 아나타노 스베테오
+야금야금 좀먹네, 그대의 모든 걸
+
+
+It's my guilty
+
+
+
+
+気づく
+키즈쿠
+깨닫네
+
+
+目を見開いてる
+메오 미히라이테루
+눈을 부릅뜨고 있단 걸
+
+
+仄青い混凝土
+호노아오이 콘크리-토
+푸르스름한 콘크리트가
+
+
+冷たく私を
+츠메타쿠 와타시오
+차가운 시선으로 나를
+
+
+Call my name and give me a kiss
+
+
+そして抱きしめて
+소시테 다키시메테
+그리고 끌어안아 줘
+
+
+あなたのいないその体で
+아나타노 이나이 소노 카라다데
+그대가 결여된 그 몸뚱이로
+
+
+
+
+吐き出したその[生命|いのち]は
+하키다시타 소노 이노치와
+내뱉어진 그 생명은
+
+
+まだ形を残しているわ
+마다 카타치오 노코시테 이루와
+아직 형체를 남기고 있어
+
+
+紅く鮮やかな永遠が見えて
+아카쿠 아자야카나 에이엥가 미에테
+붉게 선명한 영원이 보이고
+
+
+隣でそれは歌いだす
+토나리데 소레와 우타이다스 
+곁에서 그것이 노래하기 시작해
+
+
+What was I born for
+
+
+ねえ　私を愛して
+네에 와타시오 아이시테
+이봐, 나를 사랑해줘
+
+
+離さないから
+하나사나이카라
+놓지 않을 테니까
+
+
+
+
+Hello mmmmmyyyyy name iiiiiiiisssss</textarea>
+			<div style="width: 100%; height: 30px; text-align: right;">
+				<label>줄바꿈 제거 반복 횟수: <input type="number" id="inputDivider" style="width: 40px;" value="2" /></label>
+			</div>
+			<div data-step="1" class="button hide">
+				<div>가사 입력 단계로</div>
+				<div>가사 입력 단계로</div>
+			</div>
+		</div>
+		<div id="page2"><!--
+			--><textarea id="inputOrig" style="width: 34%; height: 100%;" tabindex="-1"></textarea><!--
+			--><textarea id="inputRead" style="width: 33%; height: 100%;" tabindex="-1"></textarea><!--
+			--><textarea id="inputTran" style="width: 33%; height: 100%;" tabindex="-1"></textarea>
+			<div data-step="2" class="button active">
+				<div>가사 분리 단계로</div>
+				<div>가사 분리 단계로</div>
+			</div>
+		</div>
+		<div id="page3">
+			<div></div>
+			<form id="formEditLine">
+				<input type="text" id="inputLineO" /><br />
+				<input type="text" id="inputLineR" /><br />
+				<input type="text" id="inputLineT" /><br />
+				<button type="button">적용</button>
+			</form>
+			<button type="button" id="btnOpenKanji">&#1758;</button>
+			<div data-step="3" class="button">
+				<div>음절 처리 단계로</div>
+				<div>음절 처리 단계로</div>
+			</div>
+		</div>
+		<div id="page4">
+			<div id="preview"></div>
+			<form id="formDesign">
+				원문 활성 색<br />
+				<input type="color" value="#00ffff" />
+				<input type="text" class="color" id="inputOColorTo"   value="#00ffff" /><br />
+				<br />
+				원문 비활성 색<br />
+				<input type="color" value="#0000ff" />
+				<input type="text" class="color" id="inputOColorFrom" value="#0000ff" /><br />
+				<br />
+				독음 활성 색<br />
+				<input type="color" value="#00ffff" />
+				<input type="text" class="color" id="inputRColorTo"   value="#00ffff" /><br />
+				<br />
+				독음 비활성 색<br />
+				<input type="color" value="#0000ff" />
+				<input type="text" class="color" id="inputRColorFrom" value="#0000ff" /><br />
+				<br />
+				번역 색<br />
+				<input type="color" value="#ffffff" />
+				<input type="text" class="color" id="inputTColor"     value="#ffffff" /><br />
+				<br />
+				<fieldset>
+					<legend>프리셋</legend>
+					<label>
+						<input type="radio" name="preset" value="Ot" checked />
+						[원문](번역)
+					</label>
+					<br />
+					<label>
+						<input type="radio" name="preset" value="OT" />
+						[원문][번역]
+					</label>
+					<br />
+					<label>
+						<input type="radio" name="preset" value="ORT" />
+						[원문][독음][번역]
+					</label>
+					<br />
+					<label>
+						<input type="radio" name="preset" value="rOT" />
+						(독음)[원문][번역]
+					</label>
+				</fieldset>
+			</form>
+			<textarea id="output"></textarea>
+			<div data-step="4" class="button">
+				<div>최종 디자인 단계로</div>
+				<div>최종 디자인 단계로</div>
+			</div>
+		</div>
+	</div>
+	<form id="formKanji"><!--
+	--><textarea id="inputKanji"></textarea><br /><!--
+	--><button id="btnApplyKanji" type="button">적용</button>
+	</form>
+</body>
+</html>

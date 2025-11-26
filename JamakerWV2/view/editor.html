@@ -1,0 +1,164 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Jamaker</title>
+<script src="lib/jquery-3.2.1.min.js"></script>
+<script src="lib/SubtitleObject.js"></script>
+<script src="lib/Combine.js"></script>
+<script src="lib/webview.js"></script>
+<script src="lib/setting.js"></script>
+<script src="lib/Frame.js"></script>
+<script src="lib/AutoCompleteTextarea.js"></script>
+<script src="lib/History.js"></script>
+<script src="lib/SmiEditor.js"></script>
+<script src="lib/AssEditor.js"></script>
+<script src="lib/editor.js"></script>
+<link rel="stylesheet" type="text/css" href="lib/Frame.css" />
+<link rel="stylesheet" type="text/css" href="lib/AutoCompleteTextarea.css" />
+<link rel="stylesheet" type="text/css" href="lib/Jamaker.css" />
+<link rel="stylesheet" type="text/css" href="lib/SmiEditor.css" />
+<link rel="stylesheet" type="text/css" href="lib/AssEditor.css" />
+</head>
+<body id="body">
+	<div><!--
+	--><button type="button" id="btnAddHold">홀드 추가</button><!--
+	--><label>가중치<input type="text" id="inputWeight" value="0" /></label><!--
+	--><label title="선택영역 혹은 전체 싱크를 조절합니다.">싱크 조절<input type="text" id="inputUnit" value="0" /></label><!--
+	--><button type="button" id="btnMoveToBack"  title="싱크 당기기(Ctrl+Shift+↓)">－</button><!--
+	--><button type="button" id="btnMoveToForward" title="싱크 밀기(Ctrl+Shift+↑)">＋</button><!--
+	--><label title="현재 재생 위치로 커서가 자동으로 이동합니다."><input type="checkbox" id="checkAutoFindSync" />검수모드</label><!--
+	--><label id="forFrameSync" class="for-frame-sync disabled" title="화면 싱크를 가급적 키프레임에 맞춰줍니다.\nOTT 영상에선 맞지 않는 경우가 많습니다."
+		><input type="checkbox" id="checkTrustKeyframe" disabled /><span>키프레임 신뢰</span></label><!--
+--></div>
+	<div id="tabSelector"><div class="th" id="btnNewTab">＋</div></div>
+	<div id="editor">
+		<div id="tabPreset" class="tab">
+			<div class="hold-selector"></div>
+			<div class="holds"></div>
+		</div>
+	</div>
+	<form id="assHoldPreset" class="tab-ass-area">
+		<div class="tab-ass-appends">
+			<span>[추가 정보]</span>
+			<textarea spellcheck="false" tabindex="-1" style="cursor: text;"></textarea>
+		</div>
+		<div class="tab-ass-script">
+			<span>[Events]
+				<button type="button" class="btn-add-event" title="ASS 전용 스크립트를 추가합니다. 해당 기능은 권장하지 않습니다.">＋</button>
+				<button type="button" class="btn-split-hold" title="신규 홀드를 만들어 스크립트 분리를 시도합니다.">홀드 분리</button>
+			</span>
+			<div class="ass-editor"></div>
+		</div>
+	</form>
+	<form id="holdStylePreset" class="hold-style">
+		<button type="button" class="btn-close-popup"></button>
+		<div class="hold-style-preview" style="background: #888;">
+			<div class="hold-style-preview-shadow"></div>
+			<div class="hold-style-preview-outline"></div>
+			<div class="hold-style-preview-main" contenteditable="true" spellcheck="false">Jamaker 0123 語 한글</div>
+			<textarea name="script" readonly></textarea>
+			<input type="color" value="#888888" class="hold-style-preview-color" />
+			<button type="button" class="hold-style-preview-toggle">↔</button>
+		</div>
+		<div class="hold-style-setting">
+			<fieldset class="hold-style-smi">
+				<legend>홀드 기본 스타일<span>&nbsp;(메인 홀드 스타일은 ASS에만 적용)</span></legend>
+				<div>
+					<label><span title="#000000일 경우 SMI 출력물에선 무시됩니다.">
+								기본색</span><input type="color" name="PrimaryColour" value="#FFFFFF" /><input type="text" class="color" /></label>
+					<label><input type="checkbox" name="Italic" /> 기울임</label>
+					<label><input type="checkbox" name="Underline" /> 밑줄</label>
+					<label><input type="checkbox" name="StrikeOut" /> 취소선</label>
+				</div>
+			</fieldset>
+			<fieldset class="hold-style-ass">
+				<legend>ASS 변환용 스타일</legend>
+				<div class="hold-style-output">
+					<span>출력</span>
+					<label><input type="radio" name="output" value="3" checked />SMI+ASS</label>
+					<label><input type="radio" name="output" value="1" />SMI만</label>
+					<label><input type="radio" name="output" value="2" />ASS만</label>
+				</div>
+				<div>
+					<label><span>글꼴  </span><input type="text" name="Fontname" placeholder="맑은 고딕" />　</label>
+					<label><span style="width: auto;">크기　</span><input type="number" name="Fontsize" value="80" />px</label>
+					<label><input type="checkbox" name="Bold" checked="checked" /> 굵게</label>
+				</div>
+				<div>
+					<label><span>투명도</span><input type="range" name="PrimaryOpacity"   min="0" max="255" step="1" value="255" /></label>
+				</div>
+				<div>
+					<label><span>보조색</span><input type="color" name="SecondaryColour" value="#FF0000" /><input type="text" class="color" /></label><br />
+					<label><span>　　　</span><input type="range" name="SecondaryOpacity" min="0" max="255" step="1" value="255" /></label>
+				</div>
+				<div>
+					<label><span>외곽선</span><input type="color" name="OutlineColour"   value="#000000" /><input type="text" class="color" /><input type="number" name="Outline" value="4" />px</label><br />
+					<label><span>　　　</span><input type="range" name="OutlineOpacity"   min="0" max="255" step="1" value="255" /></label>
+				</div>
+				<div>
+					<label><span>그림자</span><input type="color" name="BackColour"      value="#000000" /><input type="text" class="color" /><input type="number" name="Shadow" value="0" />px</label><br />
+					<label><span>　　　</span><input type="range" name="BackOpacity"      min="0" max="255" step="1" value="255" /></label>
+				</div>
+				<div>
+					<label><span>fscx: </span><input type="number" name="ScaleX" value="100" />%</label>
+					<label><span>fscy: </span><input type="number" name="ScaleY" value="100" />%</label>
+					<label><span>자간: </span><input type="number" name="Spacing" value="0" />%</label>
+				</div>
+				<div>
+					<label><span>회전: </span><input type="number" name="Angle" value="0" />º</label>
+					<label><input type="checkbox" name="BorderStyle" /> Opaque Box</label>
+				</div>
+				<div class="label">
+					<table class="hold-style-alignment">
+						<colgroup>
+							<col />
+							<col />
+							<col />
+							<col />
+							<col />
+							<col />
+						</colgroup>
+						<tbody>
+							<tr>
+								<td rowspan="4">위치</td>
+								<td rowspan="3"><label>여백<br />
+									↔<br />
+									<input type="number" name="MarginL" value="64" />px
+								</label></td>
+								<td class="arrow"><label><input type="radio" name="Alignment" value="7" />↖</label></td>
+								<td class="arrow"><label><input type="radio" name="Alignment" value="8" />↑</label></td>
+								<td class="arrow"><label><input type="radio" name="Alignment" value="9" />↗</label></td>
+								<td rowspan="3"><label>여백<br />
+									↔<br />
+									<input type="number" name="MarginR" value="64" />px
+								</label></td>
+							</tr>
+							<tr>
+								<td class="arrow"><label><input type="radio" name="Alignment" value="4" />←</label></td>
+								<td class="arrow"><label><input type="radio" name="Alignment" value="5" />※</label></td>
+								<td class="arrow"><label><input type="radio" name="Alignment" value="6" />→</label></td>
+							</tr>
+							<tr>
+								<td class="arrow"><label><input type="radio" name="Alignment" value="1" />↙</label></td>
+								<td class="arrow"><label><input type="radio" name="Alignment" value="2" checked />↓</label></td>
+								<td class="arrow"><label><input type="radio" name="Alignment" value="3" />↘</label></td>
+							</tr>
+							<tr>
+								<td></td>
+								<td colspan="3"><label>여백↕
+									<input type="number" name="MarginV" value="40" />px
+								</label></td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</fieldset>
+		</div>
+	</form>
+	<div id="assSplitHoldSelector">
+		<div id="assSplitHoldSelectorPopup"></div>
+	</div>
+</body>
+</html>

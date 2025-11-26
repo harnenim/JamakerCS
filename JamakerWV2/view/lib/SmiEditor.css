@@ -1,0 +1,493 @@
+@charset "utf-8";
+
+/*
+ * TODO: 가급적 여기엔 SmiEditor 관련만 남기고 Jamaker.css 쪽으로 빼주는 게 좋을 듯함
+ *       홀드나 ASS 관련 부분이 이쪽에 섞임...
+ */
+
+.hold {
+	overflow: hidden;
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+.hold > * {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+}
+.hold * {
+	font-family: '맑은 고딕';
+	outline: 0;
+}
+.hold > .col-sync,
+.hold > .col-sync-cover {
+	left: 0;
+	height: 100%;
+	text-align: center;
+	border: 1px solid transparent;
+}
+.hold > .col-sync {
+	overflow-y: scroll;
+}
+.hold > .col-sync::-webkit-scrollbar { width: 0; height: 0; }
+.hold > .col-sync-cover {
+	overflow: hidden;
+	background: transparent;
+	display: none;
+}
+.hold > .input {
+	right: 0;
+}
+.highlight-textarea {
+	border-width: 1px 0 0 1px;
+	overflow: hidden;
+}
+textarea,
+.highlight-textarea > * {
+	white-space: pre;
+}
+.highlight-textarea > div,
+.highlight-textarea > div > div,
+.highlight-textarea > textarea {
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+.highlight-textarea > textarea {
+	right: 0;
+	bottom: 0;
+}
+.highlight-textarea > div {
+	right: 0;
+	bottom: 0; /* 스크롤바에 가려지는 영역까지 확장 */
+	overflow: hidden;
+	pointer-events: none;
+}
+body.classic-scrollbar .highlight-textarea > div {
+	bottom: 17px;
+}
+.highlight-textarea > div * {
+	font-weight: normal; /* 굵게 하면 글자폭이 달라짐 */
+}
+.highlight-textarea > div > div > span {
+	display: block;
+	position: absolute;
+}
+.highlight-textarea > div span.enter {
+	opacity: 0.5;
+	font-style: normal;
+	font-family: Arial; /* 특정 상황에서 폰트 유지 안 됨 */
+}
+.highlight-textarea > textarea {
+	background: transparent;
+	color: transparent;
+	overflow: scroll;
+	resize: none;
+}
+.hold > .input > textarea {
+	border: 0;
+	padding: 0;
+}
+.hold-style-area,
+.hold-ass-area,
+#assSplitHoldSelector {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: #7f7f7f7f;
+	z-index: 9999;
+	display: none;
+}
+.hold.style .hold-style-area,
+.hold.ass .hold-ass-area {
+	display: block;
+}
+.hold-style-area > form,
+.hold-ass-area > form,
+#assSplitHoldSelectorPopup {
+	position: absolute;
+	border: 1px solid #000;
+}
+.hold-style-area > form > button.btn-close-popup,
+.hold-ass-area > form > button.btn-close-popup {
+	position: absolute;
+	background: transparent;
+	border: 0;
+	cursor: pointer;
+}
+.hold-style-area > form > button.btn-close-popup:after,
+.hold-ass-area > form > button.btn-close-popup:after {
+	content: "×";
+}
+
+#assSplitHoldSelectorPopup button {
+	display: block;
+	width: 100%;
+	margin-bottom: 8px;
+}
+#assSplitHoldSelectorPopup button:last-child {
+	margin-bottom: 0;
+}
+
+#editor.trust-keyframe .sync.keyframe { font-weight: bold; }
+.sync.frame > span { border-top-width: 1px; }
+.sync.range { opacity: 0.5; }
+.sync {
+	position: absolute;
+	width: 100%;
+	text-align: center;
+}
+.col-sync .sync.normal:after,
+.col-sync .sync.frame:after {
+	display: none;
+	content: "▲\A▼";
+	white-space: pre;
+	position: absolute;
+	top: 0;
+	right: 0;
+	text-align: center;
+}
+.col-sync:hover .sync.normal:after,
+.col-sync:hover .sync.frame:after {
+	display: block;
+}
+.col-sync .sync.range:after {
+	display: block;
+	content: "";
+	width: 0;
+	margin: 0 auto;
+	border-width: 0 0 0 1px;
+	border-style: dotted;
+}
+
+.btn-hold-style {
+	position: absolute;
+	top: 0;
+	right: 0;
+	opacity: 0.3;
+	transition: 0.2s;
+}
+.hold.main .btn-hold-style,
+.hold.main .hold-style-ass .hold-style-output {
+	display: none;
+}
+.tab.ass .hold.main .btn-hold-style {
+	display: block;
+}
+.btn-hold-style:hover {
+	opacity: 1;
+}
+
+.hljs-color {
+	display: inline-block;
+	border-bottom-width: 3px;
+}
+.hljs-zw {
+	display: inline-block;
+	border-width: 0 1px 0 0;
+	margin: 0 -1px 0 0;
+	opacity: 0.2;
+}
+
+/* 찾기/바꾸기 창 그림자 */
+.window-frame {
+	box-shadow: 0 0 4px 4px #00000022;
+}
+
+/* 색상 설정 불러온 후 덮어 써질 내용 */
+
+/* 기본 배경 색 */
+.hold > .col-sync {
+	background: #f0f0f0;
+}
+/* 홀드/에디터 테두리 색 */
+.highlight-textarea {
+	border-color: #aaaaaa;
+}
+
+/* 에디터 배경 색 */
+.highlight-textarea.nonactive > textarea {
+	background: #ffffff;
+}
+/* 기본 글씨 색 */
+.hljs.nonactive textarea {
+	color: #000000;
+	caret-color: #000000;
+}
+.hljs-zw {
+	border-color: #000000;
+}
+
+/* 싱크 구분 색 */
+.sync,.sync > span { border-color: #000000; }
+.sync.error > span { background: #ff8888; }
+.sync.equal > span { background: #88ff88; }
+.col-sync .sync.normal:after,
+.col-sync .sync.frame:after {
+	text-decoration-color: #f0f0f0;
+}
+
+/* 배율 설정 불러온 후 덮어 써질 내용 */
+
+.hold * {
+	font-size: calc(20px * 0.7);
+	line-height: 20px;
+}
+.hold > .col-sync,
+.hold > .col-sync-cover {
+	width: calc(20px * 5);
+}
+.hold > .input {
+	left: calc(20px * 5);
+}
+
+.sync.frame { line-height: calc(20px - 1px); }
+.col-sync .sync.normal:after,
+.col-sync .sync.frame:after {
+	width: calc(20px * 0.8);
+	text-decoration-thickness: calc(20px / 4);
+	font-size: calc(20px * 0.5);
+	line-height: calc(20px / 2);
+}
+.col-sync .sync.range:after {
+	height: 20px;
+}
+
+.highlight-textarea > div > span {
+	height: 20px;
+}
+.hljs-color {
+	height: 20px;
+}
+
+#holdStylePreset {
+	display: none;
+}
+.hold-style-preview {
+	position: relative;
+	height: 150px;
+	border: 1px solid #000;
+	white-space: pre;
+	text-align: center;
+	overflow: hidden;
+}
+.hold-style-preview > * {
+	position: absolute;
+}
+.hold-style-preview > div {
+	top: 50%;
+	left: 50%;
+	width: 1000%;
+	height: 100px;
+	line-height: 100px;
+	margin: -50px -500%;
+}
+.hold-style-preview > textarea[name=script] {
+	display: none;
+	top: 0;
+	left: 0;
+	width: 100%;
+	border-width: 0 0 1px;
+	resize: none;
+}
+.hold-style-preview.script > div {
+	display: none;
+}
+.hold-style-preview.script > textarea[name=script] {
+	display: block;
+}
+.hold-style-preview-color {
+	bottom: 0;
+}
+.hold-style-preview-toggle {
+	right: 0;
+	bottom: 0;
+	padding: 0;
+}
+.hold-style-setting {
+	height: calc(100% - 150px);
+	overflow-y: scroll;
+}
+.hold-style fieldset {
+	padding: calc(20px * 0.2);
+	border: 1px solid #aaa;
+}
+.hold.main .hold-style-smi,
+.hold-style-ass {
+	display: none;
+}
+.tab.ass .hold.main .hold-style-smi,
+.tab.ass .hold-style-ass {
+	display: block;
+}
+.hold-style label,
+.hold-style div.label {
+	display: inline-block;
+	margin: 0;
+	min-width: calc(20px * 6.5);
+}
+.hold-style span {
+	display: inline-block;
+	width: calc(20px * 3);
+}
+.hold-style-alignment {
+	display: inline-block;
+	border-collapse: collapse;
+	text-align: center;
+}
+.hold-style-alignment td {
+	border: 1px solid #aaa;
+}
+.hold-style .hold-style-alignment label {
+	min-width: 0;
+}
+.hold-style input { vertical-align: middle; }
+.hold-style input[type=number] { text-align: right; }
+.hold-style input[type=range]  { width: 300px; }
+/*
+.hold-style-alignment tr:first-child td:not(:first-child):not(:last-child) {
+	border-width: 1px 0 0;
+}
+.hold-style-alignment tr:not(:first-child):not(:last-child) td {
+	border: 0;
+}
+*/
+.hold-style-alignment td {
+	border-width: 1px;
+}
+.hold-style-alignment tr:first-child td:first-child {
+	border: 0;
+}
+.hold-style-alignment tr:not(:first-child) td.arrow {
+	border-top: 0;
+}
+.hold-style-alignment td.arrow {
+	border-right: 0;
+	border-bottom: 0;
+}
+.hold-style-alignment td.arrow+td.arrow {
+	border-left: 0;
+}
+
+.hold-ass-script {
+    position: relative;
+    width: 100%;
+    top: 40px;
+    height: calc(100% - 40px);
+    white-space: pre;
+    resize: none;
+}
+
+.tab-ass-back {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: #7f7f7f33;
+	display: none;
+	z-index:9999;
+}
+.tab-ass-btn {
+	position: absolute;
+	top: calc(100% - 20px);
+	left: 0;
+	height: 20px;
+	border-width: 1px 1px 0 0;
+	transition: 0.3s;
+	display: none;
+	z-index:9999;
+}
+.tab.ass .tab-ass-btn {
+	display: block;
+}
+.tab-ass-btn:after {
+	content: "▲";
+}
+.ass-hold > * {
+	position: initial;
+}
+/*
+.tab-ass-area {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	width: 100%;
+	height: 0;
+	border-top: 0 solid #aaa;
+	padding: 0 calc(20px * 0.4);
+	transition: 0.3s;
+	z-index:9999;
+}
+.tab.edit-ass .tab-ass-back {
+	display: block;
+}
+.tab.edit-ass .tab-ass-btn {
+	top: 0;
+	height: calc(20px + 1px);
+}
+.tab.edit-ass .tab-ass-btn:after {
+	content: "▼";
+}
+.tab.edit-ass .tab-ass-area {
+	top: 20px;
+	border-top-width: 1px;
+	padding: calc(20px * 0.4);
+	height: calc(100% - 20px);
+}
+*/
+.tab-ass-area {
+	
+}
+.tab-ass-appends {
+	height: 40%;
+}
+.tab-ass-script {
+	height: 60%;
+}
+/*
+.tab-ass-area > div {
+	이게 없으면 최초 로딩 시 하단 여백 생김
+	display: none;
+}
+*/
+.tab.edit-ass .tab-ass-area > div {
+	display: block;
+}
+.tab-ass-area span {
+	display: block;
+	height: calc(20px * 1.5);
+	line-height: calc(20px * 1.5);
+	font-size: calc(20px * 0.7);
+}
+.tab-ass-area textarea,
+.tab-ass-script > div {
+	width: 100%;
+	height: calc(100% - 20px * 2);
+	resize: none;
+}
+
+.hold-ass-events {
+	display: block;
+	position: absolute;
+	line-height: calc(20px * 2);
+}
+
+div.hold-ass-script {
+	position: absolute;
+	top: calc(20px * 2.5);
+	left: calc(20px / 2);
+	width: calc(100% - 20px);
+	height: calc(100% - 20px * 3);
+}
+
+.input ::-webkit-scrollbar-thumb { background-clip: content-box; }
+.input ::-webkit-scrollbar-button { width: 0; height: 0; }
+.input ::-webkit-scrollbar,
+.input ::-webkit-scrollbar-corner,
+.input ::-webkit-scrollbar-button,
+.input ::-webkit-scrollbar-track,
+.input ::-webkit-scrollbar-thumb { background-color: transparent; }

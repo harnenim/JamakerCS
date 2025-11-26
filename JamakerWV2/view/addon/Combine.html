@@ -1,0 +1,271 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>겹치는 싱크 결합</title>
+	<script src="../lib/jquery-3.2.1.min.js"></script>
+	<script src="../lib/popup.js"></script>
+	<script src="../lib/setting.js"></script>
+	<script src="../lib/AutoCompleteTextarea.js"></script>
+	<script src="../lib/SubtitleObject.js"></script>
+	<script src="../lib/Combine.js"></script>
+	<script src="../lib/History.js"></script>
+	<script src="../lib/SmiEditor.js"></script>
+	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
+	<link rel="stylesheet" type="text/css" href="../lib/AutoCompleteTextarea.css" />
+	<script>
+windowName = "addon";
+if (LOG == undefined) {
+	LOG = false;
+}
+
+$(() => {
+	if (opener) {
+		setting = opener.setting;
+	}
+});
+
+let style = null;
+function setSetting(setting) {
+	if (style == null) {
+		$("head").append(style = $("<style>"));
+	}
+	style.html("#preview {\n" + setting.viewer.css + "\nfont-size: calc(" + setting.viewer.size + "vw / 5.86);\n}");
+	Combine.css = { font: $("#preview").css("font") };
+}
+
+$(() => {
+	//$("#preview").css(defaultCss);
+	setSetting(setting);
+	
+	$("#btnCombine").on("click", function() {
+		// [[시작,종료,대사,줄수], ...]
+		// {lines:[시작,종료,위,아래], maxLines:[1,1]}//, maxWidth: 100
+		
+		const lines = Combine.combine($("#inputUpper").val(), $("#inputLower").val());
+		$("#output").val(lines.join("\n"));
+		
+		// preview 돌리기
+		const list = [];
+		for (let i = 0; i < lines.length; i++) {
+			if (i % 2) { // 짝수: 싱크 / 홀수: 대사
+				let line = lines[i].split("\n").join("");
+				{	// font size 추가 작업
+					let j = 0;
+					let begin = 0;
+					while ((begin = line.toUpperCase().indexOf("<FONT", j)) >= 0) {
+						if (begin > line.length) {
+							break;
+						}
+						let end = line.indexOf(">", begin);
+						if (end < 0) break;
+						
+						let tag = line.substring(begin, end);
+						let index = tag.toUpperCase().indexOf("SIZE=");
+						if (index > 0) {
+							let q = tag[index + 5];
+							let size = 0;
+							let qEnd = 0;
+							if (q == '"' || q == "'") {
+								qEnd = tag.indexOf(q, index + 7);
+								if (qEnd > 0) {
+									try {
+										size = Number(tag.substring(index + 6, qEnd));
+										qEnd++;
+									} catch (e) { }
+								}
+							} else {
+								q = "";
+							}
+							if (size == 0) {
+								for (qEnd = index + 5 + q.length; qEnd < tag.length; qEnd++) {
+									let c = tag[qEnd];
+									if (isFinite(c)) {
+										size = size * 10 + Number(c);
+									} else {
+										break;
+									}
+								}
+							}
+							if (size) {
+								let style = 'style="font-size: calc(' + size + 'vw / 5.86);"';
+								line = line.substring(0, begin + index) + style + line.substring(begin + qEnd);
+								end = end - qEnd + index + style.length;
+							}
+						}
+						j = end;
+					}
+				}
+				
+				list.push(line);
+			}
+		}
+		setPreview(list);
+	});
+	
+	if (setting) {
+		SmiEditor.setSetting(setting);
+	}
+	const inputUpper = $("#inputUpper");
+	const inputLower = $("#inputLower");
+	const upper = new SmiEditor(inputUpper.val());
+	const lower = new SmiEditor(inputLower.val());
+	inputUpper.remove();
+	inputLower.remove();
+	
+	$("body").prepend(lower.input.attr("id", "inputLower"));
+	$("body").prepend(upper.input.attr("id", "inputUpper"));
+	upper.input.on("focus", function() { SmiEditor.selected = upper; });
+	lower.input.on("focus", function() { SmiEditor.selected = lower; });
+	SmiEditor.activateKeyEvent();
+	
+	LH = Number(upper.input.css("line-height").split("px")[0]);
+});
+let refreshPreview = 0;
+function setPreview(list) {
+	if (refreshPreview) {
+		clearInterval(refreshPreview);
+	}
+	
+	const preview = $("#preview");
+	let i = 0;
+	refreshPreview = setInterval(() => {
+		while (i >= list.length) {
+			i -= list.length;
+		}
+		preview.html(list[i++]);
+	}, 333);
+}
+	</script>
+	<style>
+body > * {
+	position: absolute;
+}
+
+textarea {
+	position: absolute;
+	width: calc(50% - 10px);
+	border-width: 0;
+}
+#inputUpper {
+	top: 0;
+	left: 0;
+	height: calc(50% - 1px);
+	border-bottom-width: 1px;
+}
+#inputLower {
+	top: 50%;
+	left: 0;
+	height: 50%;
+}
+#output {
+	top: 200px;
+	left: calc(50% + 10px);
+	height: calc(100% - 200px);
+}
+#btnCombine {
+	position: absolute;
+	top: 0;
+	left: calc(50% - 10px);
+	width: 20px;
+	height: 100%;
+}
+#preview {
+	top: 0;
+	left: calc(50% + 10px);
+	width: calc(50% - 10px);
+	height: 200px;
+	border-bottom: 1px solid #000;
+	background: #000;
+	text-align: left;
+	white-space: pre;
+	color: #fff;
+}
+	</style>
+</head>
+<body>
+	<textarea id="inputUpper" spellcheck="false">&lt;Sync Start=589368&gt;&lt;P Class=KRCC&gt;
+노래하지 마!
+&lt;Sync Start=590777&gt;&lt;P Class=KRCC&gt;
+&amp;nbsp;
+&lt;Sync Start=597997&gt;&lt;P Class=KRCC&gt;
+현혹되지 마라&lt;br&gt;룬으로 느껴라!
+&lt;Sync Start=600437&gt;&lt;P Class=KRCC&gt;
+&amp;nbsp;
+&lt;Sync Start=620892&gt;&lt;P Class=KRCC&gt;
+프레이야
+&lt;Sync Start=621974&gt;&lt;P Class=KRCC &gt;
+&amp;nbsp;
+&lt;Sync Start=623620&gt;&lt;P Class=KRCC&gt;
+괜찮아? 미라미라
+&lt;Sync Start=625292&gt;&lt;P Class=KRCC&gt;
+혼자 설 수 있겠어?
+&lt;Sync Start=626854&gt;&lt;P Class=KRCC &gt;
+&amp;nbsp;
+&lt;Sync Start=628340&gt;&lt;P Class=KRCC&gt;
+당연하지
+&lt;Sync Start=629444&gt;&lt;P Class=KRCC&gt;
+&amp;nbsp;
+&lt;Sync Start=645212&gt;&lt;P Class=KRCC&gt;
+산개해서 각자 쫓아라!
+&lt;Sync Start=647353&gt;&lt;P Class=KRCC&gt;
+유적의 폴드 에너지가&lt;br&gt;급속히 활성화
+&lt;Sync Start=650396&gt;&lt;P Class=KRCC&gt;
+발퀴레의 폴드파에&lt;br&gt;감응하는 것 같습니다
+&lt;Sync Start=653044&gt;&lt;P Class=KRCC &gt;
+&amp;nbsp;</textarea>
+	<textarea id="inputLower" spellcheck="false">&lt;Sync Start=579908&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;서로 눈이 맞고 사랑을 하고&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=582972&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;정신없이 뒤쫓아가고&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=585940&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;그래도 더 자세히 알고 싶어서&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=588316&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;활활 불타올라&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=590924&gt;&lt;P Class=KRCC&gt;
+&amp;nbsp;
+&lt;Sync Start=591892&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;원할수록 의문이 늘고&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=594806&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;생각할수록 열이 올라&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=597806&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;그래서 더 뛰어드는 거야&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=600311&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;미지의 세계로 ah&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=604624&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;사랑이나 꿈 같은 건&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=607525&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;누구나 믿지만&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=610525&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;거기 거기 공략 안 하면 재미없지&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=616317&gt;&lt;P Class=KRCC&gt;
+&amp;nbsp;
+&lt;Sync Start=616973&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;아슬아슬 사랑&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=619262&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;위태로운 보더라인&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=622310&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;난이도 G라도&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=624454&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;모든 걸 부숴주겠어&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=628966&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;빙글빙글 날며&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=631182&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;한층 더 G로&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=634183&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;의식이 녹아드네&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=636399&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;몸은 제어불능&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=640118&gt;&lt;P Class=KRCC&gt;
+&lt;i&gt;&lt;font color="#ff88ff"&gt;가버리겠어&lt;/font&gt;&lt;/i&gt;
+&lt;Sync Start=643750&gt;&lt;P Class=KRCC&gt;
+&amp;nbsp;</textarea>
+	<button id="btnCombine">＞</button>
+	<div id="preview"></div>
+	<textarea id="output" spellcheck="false">
+현재 홀드 기능을 활용하면 자동으로 결합 작업이 이뤄지지만
+변칙적인 효과를 만들 경우를 위해 보조용으로 남겨둔 기능입니다.
+	</textarea>
+</body>
+</html>

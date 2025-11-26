@@ -1,0 +1,37 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>싱크 표현에 대하여</title>
+	<script src="../lib/jquery-3.2.1.min.js"></script>
+	<script src="../lib/popup.js"></script>
+	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
+	<script>
+windowName = "help";
+	</script>
+	<style>
+p { margin: 16px; }
+	</style>
+</head>
+<body>
+<p>
+본 프로그램에선 일반적인 프로그램과 달리, 화면 싱크 기능이 존재합니다.<br />
+화면 싱크는 싱크 줄 맨 뒤의 닫는 꺽쇠(>) 앞의 공백문자로 구분되며<br />
+화면 싱크 매니저를 통해 프레임 단위로 정확히 맞출 수 있도록 지원합니다.
+</p>
+<p>
+그 외에, 탭문자로 중간 싱크를 체크하고 있으며<br />
+여러 줄에 대해 자동으로 중간 싱크를 생성하는 기능도 있습니다.<br />
+중간 싱크는 꺽쇠 앞의 탭문자로 구분되며, 필요 시 재계산됩니다.<br />
+</p>
+<p>
+덧붙여서, 싱크를 찍을 때 수치는 1ms 단위로 찍히지 않고<br />
+동영상 프레임 단위에 따른 보정이 들어갑니다.(설정 변경 가능)
+</p>
+<p>
+대사와 대사 사이에 공백 줄이 있을 경우<br />
+싱크를 찍을 때 자동으로 '&amp;nbsp;'를 생성합니다.
+</p>
+</body>
+</html>

@@ -1,0 +1,631 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>니코동 효과</title>
+	<script src="../lib/jquery-3.2.1.min.js"></script>
+	<script src="../lib/popup.js"></script>
+	<script src="../lib/setting.js"></script>
+	<script src="../lib/SubtitleObject.js"></script>
+	<script src="../lib/SmiEditor.js"></script>
+	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
+	<style>
+body > * {
+	position: absolute;
+}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+}
+	</style>
+	<script>
+windowName = "addon";
+
+let FR = 23976;
+let FL = 1000000 / FR;
+
+$(() => {
+	if (opener) {
+		setting = opener.setting;
+		FR = opener.Subtitle.video.FR;
+		FL = opener.Subtitle.video.FL;
+	}
+});
+
+let style = null;
+function setSetting(setting) {
+	if (style == null) {
+		$("head").append(style = $("<style>"));
+	}
+	style.html("#preview {\n" + setting.viewer.css + "}");
+}
+
+function getWidth(smi, css) {
+	if (!css) {
+		// 가능하면 미리보기 폰트 설정을 따라감
+		//css = defaultCss;
+		css = { font: $("#preview").css("font") };
+	}
+	// RUBY태그 문법이 미묘하게 달라서 가공 필요
+	smi = smi.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
+	const checker = $("<span>").css(css).html(smi);
+	$("body").append(checker);
+	const width = checker.width();
+	checker.remove();
+	return width;
+}
+function nbsp(text) {
+	return text.split(" ").join("&nbsp;");
+}
+	</script>
+	<style>
+#input {
+	position: absolute;
+	top: 0;
+	width: calc(50% - 10px);
+	height: 100%;
+	border: 0;
+}
+
+#input {
+	left: 0;
+}
+
+input[type=number] {
+	width: 50px;
+}
+
+#width {
+	position: absolute;
+	padding: 4px;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 28px;
+}
+#lines {
+	position: absolute;
+	top: 28px;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+
+#lines {
+	overflow-y: scroll;
+}
+
+#lines div.line {
+	width: 100%;
+	height: 20px;
+	position: relative;
+}
+
+#lines div.line > * {
+	position: absolute;
+}
+
+#lines > div.line > input {
+	background: transparent;
+	border: 0;
+	text-align: center;
+}
+#lines div.line input.line  { left:   0  ; width: 40px; }
+#lines div.line input.start { left:  40px; width: 60px; }
+#lines div.line input.end   { left: 100px; width: 60px; }
+#lines div.line input.color { left: 160px; width: 60px; }
+#lines div.line input.text  { left: 220px; width: calc(100% - 220px); }
+#lines div.line button.removeLine {
+	right: 0;
+	width: 20px;
+}
+
+#addLine {
+	width: 100%;
+}
+
+#btnNico {
+	position: absolute;
+	top: 0;
+	left: calc(50% - 10px);
+	width: 20px;
+	height: 100%;
+}
+
+#preview {
+	position: absolute;
+	left: calc(50% + 10px);
+	right: 0;
+	height: 180px;
+	padding: 10px;
+	color: #fff;
+	text-align: center;
+}
+#preview,
+#preview *,
+#preview span {
+	background: #000;
+	font-family: 'Malgun Gothic';
+	font-size: 20px;
+	white-space: pre;
+}
+
+#output {
+	top: 180px;
+	left: calc(50% + 10px);
+	right: 0;
+	bottom: 0;
+	font-family: 'Malgun Gothic';
+}
+	</style>
+	<script>
+$(() => {
+	const list = $("#list");
+	$("#addLine").on("click", function() {
+		list.append(
+			$("<div>").addClass("line")
+				.append($("<input>" ).attr("type", "number").addClass("line" ).val("1"))
+				.append($("<input>" ).attr("type", "number").addClass("start").val("1000"))
+				.append($("<input>" ).attr("type", "number").addClass("end"  ).val("2000"))
+				.append($("<input>" ).attr("type", "text"  ).addClass("color").val("#ffffff"))
+				.append($("<input>" ).attr("type", "text"  ).addClass("text" ))
+				.append($("<button>").attr("type", "button").addClass("removeLine").text("✕"))
+		);
+	});
+	list.on("click", ".removeLine", function() {
+		const line = $(this).parent();
+		confirm("삭제하시겠습니까?", () => {
+			line.remove();
+		});
+	});
+	
+	$("#btnNico").on("click", function() {
+		const width = Number($("#width input").val());
+		let emptyLine = "";
+		for (let i = 0; i < width; i++) { emptyLine += " "; }
+		const targetWidth = getWidth(nbsp(emptyLine));
+		
+		const requiredSyncs = {};
+		let lineCount = 0;
+		const items = [];
+		list.children().each((_, el) => {
+			const line = $(el);
+			const item = {
+					line : Number(line.find(".line" ).val()) - 1
+				,	start: Number(line.find(".start").val())
+				,	end  : Number(line.find(".end"  ).val())
+				,	color:        line.find(".color").val()
+				,	text :        line.find(".text" ).val()
+				,	skips: []
+				,	syncs: []
+			};
+			lineCount = Math.max(lineCount, item.line + 1);
+			
+			let left = emptyLine;
+			let showing = "";
+			let right = "";
+			let index = 0;
+			
+			const texts = [];
+			
+			// 모든 글자가 출력될 때까지
+			for (let i = 0; index < item.text.length; i++) {
+				if (left.length) {
+					left = left.substring(1);
+				} else {
+					showing = showing.substring(1);
+					const width1 = getWidth(nbsp(" "  + showing + right));
+					const width2 = getWidth(nbsp("  " + showing + right));
+					if (targetWidth <= width2) {
+						if (targetWidth - width1 < width2 - targetWidth) {
+							left = "";
+						} else {
+							left = " ";
+						}
+					} else {
+						const width3 = getWidth(nbsp("   " + showing + right));
+						if (targetWidth - width2 < width3 - targetWidth) {
+							left = " ";
+						} else {
+							left = "  ";
+						}
+					}
+				}
+				const width0 = getWidth(nbsp(left + showing + item.text[index]));
+				if (width0 <= targetWidth) {
+					showing += item.text[index++];
+					const width1 = getWidth(nbsp(left + showing + " "));
+					if (targetWidth - width0 < width1 - targetWidth) {
+						right = "";
+					} else {
+						right = " ";
+					}
+					
+				} else {
+					const width1 = getWidth(nbsp(left + showing + " "));
+					if (targetWidth - width1 < width0 - targetWidth) {
+						right = " ";
+					} else {
+						const width2 = getWidth(nbsp(left + showing + "  "));
+						if (targetWidth - width2 < width0 - targetWidth) {
+							right = "  ";
+						} else {
+							showing += item.text[index++];
+							right = "";
+						}
+					}
+				}
+				texts.push([left, showing, right]);
+			}
+			
+			// 오른쪽 공백 채워질 때까지
+			for (let i = 0; i < width - 1; i++) {
+				if (left.length) {
+					left = left.substring(1);
+				} else {
+					showing = showing.substring(1);
+					const width1 = getWidth(nbsp(" "  + showing + right));
+					const width2 = getWidth(nbsp("  " + showing + right));
+					if (targetWidth <= width2) {
+						if (targetWidth - width1 < width2 - targetWidth) {
+							left = "";
+						} else {
+							left = " ";
+						}
+					} else {
+						const width3 = getWidth(nbsp("   " + showing + right));
+						if (targetWidth - width2 < width3 - targetWidth) {
+							left = " ";
+						} else {
+							left = "  ";
+						}
+					}
+				}
+				right += " ";
+				texts.push([left, showing, right]);
+			}
+			
+			requiredSyncs[item.start = SmiEditor.getSyncTime(item.start)] = true;
+			requiredSyncs[item.end   = SmiEditor.getSyncTime(item.end  )] = true;
+			item.syncs.push({
+					time: item.start
+				,	type: TYPE.FRAME
+				,	text: [texts[0][0], [texts[0][1], item.color], texts[0][2]]
+			});
+			for (let i = 1; i < texts.length; i++) {
+				const time = SmiEditor.getSyncTime((item.start * (texts.length - i) + item.end * i) / texts.length);
+				requiredSyncs[time] = true;
+				const sync = {
+						time: time
+					,	type: TYPE.RANGE
+					,	text: [texts[i][0], [texts[i][1], item.color], texts[i][2]]
+				};
+				if (item.syncs[item.syncs.length - 1].time == sync.time) {
+					item.syncs[item.syncs.length - 1] = sync;
+				} else {
+					item.syncs.push(sync);
+				}
+			}
+			const sync = {
+					time: item.end
+				,	type: TYPE.FRAME
+				,	text: ["", "", emptyLine]
+			};
+			if (item.syncs[item.syncs.length - 1].time == sync.time) {
+				item.syncs[item.syncs.length - 1] = sync;
+			} else {
+				item.syncs.push(sync);
+			}
+			
+			items.push(item);
+		});
+		
+		const syncLines = {};
+		for (let ii = 0; ii < items.length; ii++) {
+			const item = items[ii];
+			
+			// 다른 줄에서 생성한 싱크를 현재 줄에서 건너뛴 게 있는지 확인
+			for (let sync in requiredSyncs) {
+				if (item.start < sync && sync < item.end) {
+					let i;
+					for (i = 0; i < item.syncs.length; i++) {
+						if (item.syncs[i].time >= sync) { // 현재 싱크에 해당하는 것 찾음
+							if (item.syncs[i].time == sync) { // 일치하는 경우 복사 불필요
+								i = -1;
+							} else { // 일치하지 않는 경우 복사 필요
+								i--;
+							}
+							break;
+						}
+					}
+					// 싱크 내용물 없었으면 생성
+					if (i >= 0) {
+						const last = item.syncs[i];
+						item.syncs.splice(i, 0, { time: Number(sync), type: last.type, text: last.text });
+					}
+				}
+			}
+			
+			for (let i = 0; i < item.syncs.length; i++) {
+				const sync = item.syncs[i];
+				
+				if (!syncLines[sync.time]) {
+					syncLines[sync.time] = { type: sync.type, lines: [] };
+					syncLines[sync.time].lines.length = lineCount;
+				}
+				const syncLine = syncLines[sync.time];
+				if (syncLine.lines[item.line]) {
+					// 겹치는 것 존재
+					if (sync.type == TYPE.FRAME) {
+						syncLine.type = TYPE.FRAME;
+					}
+					
+					const line = [];
+					const backItems = syncLine.lines[item.line];
+					
+					if (sync.text[0].length) {
+						// 왼쪽 여백에 남을 덩어리
+						const left = [];
+						const leftWidth = getWidth(nbsp(sync.text[0]));
+						let backItem = null;
+						let backItemText = null;
+						let leftText = "";
+						
+						let j = 0;
+						for (j = 0; j < backItems.length; j++) {
+							backItem = backItems[j];
+							backItemText = ((typeof backItem == "string") ? backItem : backItem[0]);
+							if (leftWidth < getWidth(nbsp(leftText + backItemText))) {
+								break;
+							}
+							leftText += backItemText;
+							left.push(backItem);
+						}
+						if (j == backItems.length) {
+							// 왼쪽 여백 추가로 채우기...는 존재할 리가 없구나
+							
+						} else {
+							// 왼쪽 여백에 남을 글자
+							let lastLeft = "";
+							let width0 = 0;
+							let c = "";
+							for (j = 0; j < backItemText.length; j++) {
+								c = backItemText[j];
+								if (leftWidth < (width0 = getWidth(nbsp(leftText + c)))) {
+									break;
+								}
+								leftText += c;
+								lastLeft += c;
+							}
+							
+							{	// 적절한 여백 찾기
+								const width1 = getWidth(nbsp(leftText + " "));
+								if (leftWidth - width1 < width0 - leftWidth) {
+									lastLeft += " ";
+								} else {
+									const width2 = getWidth(nbsp(leftText + "  "));
+									if (leftWidth - width2 < width0 - leftWidth) {
+										lastLeft += "  ";
+									} else {
+										lastLeft += c;
+									}
+								}
+							}
+							
+							if (lastLeft.length) {
+								left.push((typeof backItem == "string") ? lastLeft : [lastLeft, backItem[1]]);
+							}
+						}
+						
+						line.push(...left);
+					}
+					
+					line.push(sync.text[1]);
+					
+					{	// 오른쪽 여백에 남을 덩어리
+						const right = [];
+						const rightWidth = getWidth(nbsp(sync.text[2]));
+						let backItem = null;
+						let backItemText = null;
+						let rightText = "";
+						
+						let j = 0;
+						for (j = backItems.length - 1; j >= 0; j--) {
+							backItem = backItems[j];
+							backItemText = ((typeof backItem == "string") ? backItem : backItem[0]);
+							if (rightWidth < getWidth(nbsp(rightText + backItemText))) {
+								break;
+							}
+							rightText = backItemText + rightText;
+							right.unshift(backItem);
+						}
+						if (j == backItems.length) {
+							// 오른쪽 여백 추가로 채우기...는 존재할 리가 없구나
+							
+						} else {
+							// 오른쪽 여백에 남을 글자
+							let lastRight = "";
+							let width0 = 0;
+							let c = "";
+							for (j = backItemText.length - 1; j >= 0; j--) {
+								c = backItemText[j];
+								if (rightWidth < (width0 = getWidth(nbsp(rightText + c)))) {
+									break;
+								}
+								rightText = c + rightText;
+								lastRight = c + lastRight;
+							}
+							
+							{	// 적절한 여백 찾기
+								const width1 = getWidth(nbsp(" " + rightText));
+								if (rightWidth - width1 < width0 - rightWidth) {
+									lastRight = " " + lastRight;
+								} else {
+									const width2 = getWidth(nbsp("  " + rightText));
+									if (rightWidth - width2 < width0 - rightWidth) {
+										lastRight = "  " + lastRight;
+									} else {
+										lastRight = c + lastRight;
+									}
+								}
+							}
+							
+							if (lastRight.length) {
+								right.unshift((typeof backItem == "string") ? lastRight : [lastRight, backItem[1]]);
+							}
+						}
+						
+						line.push(...right);
+					}
+					
+					syncLine.lines[item.line] = line;
+					
+				} else {
+					syncLine.lines[item.line] = sync.text;
+				}
+			}
+		}
+		
+		const result = [];
+		const previewLines = [];
+		for (let time in syncLines) {
+			const syncLine = syncLines[time];
+			const text = syncLineToText(syncLine);
+			result.push(SmiEditor.makeSyncLine(time, syncLine.type));
+			result.push(text);
+			previewLines.push(text);
+		}
+		
+		$("#output").val(result.join("\n"));
+		
+		// preview 돌리기
+		for (let i = 0; i < previewLines.length; i++) {
+			let text = previewLines[i];
+			// 공백문자 무시되지 않도록 조정
+			// 팟플레이어 특성이긴 한데, 애초에 왼쪽 정렬 자체가 거의 팟플레이어이므로
+			const a = text.split("<");
+			text = [a[0].split(" ").join("&nbsp;")];
+			for (let j = 1; j < a.length; j++) {
+				const b = a[j].split(">");
+				const c = [b[0]];
+				for (let k = 1; k < b.length; k++) {
+					c.push(b[k].split(" ").join("&nbsp;"));
+				}
+				text.push(c.join(">"));
+			}
+			previewLines[i] = text.join("<");
+		}
+		setPreview(previewLines);
+	});
+});
+function syncLineToText(syncLine) {
+	const lines = [];
+	let lineCount = 0; // 실제 줄 개수 체크
+	for (let i = 0; i < syncLine.lines.length; i++) {
+		const line = syncLine.lines[i];
+		if (line) {
+			const items = [];
+			let textCount = 0;
+			for (let j = 0; j < line.length; j++) {
+				const item = line[j];
+				if (typeof item == "string") {
+					items.push(item);
+				} else {
+					textCount++;
+					items.push("<font color=\"" + item[1] + "\">" + item[0] + "</font>");
+				}
+			}
+			if (textCount) {
+				lines.push("​" + items.join("") + "​");
+				lineCount++;
+			} else {
+				lines.push("<b>　</b>");
+			}
+		} else {
+			lines.push("<b>　</b>");
+		}
+	}
+	return lineCount ? lines.join("<br>") : "&nbsp;"; // 모든 줄이 공백이면 공백 싱크
+}
+let refreshPreview = 0;
+function setPreview(list) {
+	if (refreshPreview) {
+		clearInterval(refreshPreview);
+	}
+	
+	const preview = $("#preview");
+	let i = 0;
+	refreshPreview = setInterval(() => {
+		while (i >= list.length) {
+			i -= list.length;
+		}
+		preview.html(list[i++]);
+	}, FL);
+}
+	</script>
+</head>
+<body>
+	<div id="input">
+		<div id="width">
+			<span>좌우 폭(맑은 고딕 기준 전각문자 하나당 3)</span>
+			<input type="number" value="50" />
+		</div>
+		<div id="lines">
+			<div class="line">
+				<input disabled type="text" class="line"  value="줄번호" />
+				<input disabled type="text" class="start" value="시작" />
+				<input disabled type="text" class="end"   value="종료" />
+				<input disabled type="text" class="color" value="색상" />
+				<input disabled type="text" class="text"  value="내용" />
+			</div>
+			<div id="list">
+				<div class="line">
+					<input  type="number" class="line"  value="1" />
+					<input  type="number" class="start" value="2000" />
+					<input  type="number" class="end"   value="5000" />
+					<input  type="text"   class="color" value="#ff0000" />
+					<input  type="text"   class="text"  value="테스트 테스트 테스트입니다." />
+					<button type="button" class="removeLine">✕</button>
+				</div>
+				<div class="line">
+					<input  type="number" class="line"  value="2" />
+					<input  type="number" class="start" value="1000" />
+					<input  type="number" class="end"   value="7000" />
+					<input  type="text"   class="color" value="#00ff00" />
+					<input  type="text"   class="text"  value="테스트 좀 많이 긴 텍스트, 한 번에 다 안 보이는 텍스트" />
+					<button type="button" class="removeLine">✕</button>
+				</div>
+				<div class="line">
+					<input  type="number" class="line"  value="1" />
+					<input  type="number" class="start" value="3000" />
+					<input  type="number" class="end"   value="4000" />
+					<input  type="text"   class="color" value="#00ffff" />
+					<input  type="text"   class="text"  value="테스트" />
+					<button type="button" class="removeLine">✕</button>
+				</div>
+				<div class="line">
+					<input  type="number" class="line"  value="3" />
+					<input  type="number" class="start" value="111" />
+					<input  type="number" class="end"   value="7777" />
+					<input  type="text"   class="color" value="#ffff00" />
+					<input  type="text"   class="text"  value="awedpopawhgwaafwe" />
+					<button type="button" class="removeLine">✕</button>
+				</div>
+				<div class="line">
+					<input  type="number" class="line"  value="1" />
+					<input  type="number" class="start" value="4000" />
+					<input  type="number" class="end"   value="5200" />
+					<input  type="text"   class="color" value="#ff00ff" />
+					<input  type="text"   class="text"  value="ㅁㄴㅇㄹ" />
+					<button type="button" class="removeLine">✕</button>
+				</div>
+			</div>
+			<button type="button" id="addLine">＋</button>
+		</div>
+	</div>
+	<button id="btnNico">＞</button>
+	<div id="preview"></div>
+	<textarea id="output"></textarea>
+</body>
+</html>

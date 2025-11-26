@@ -61,7 +61,7 @@ namespace WebViewForm
             Text = title;
             SetDpi();
         }
-        public void Script(string name, params object?[] args)
+        private static string ScriptToEval(string name, object?[] args)
         {
             string script = name + "(";
             for (int i = 0; i < args.Length; i++)
@@ -78,10 +78,13 @@ namespace WebViewForm
                 if (type == typeof(int)
                     || type == typeof(long)
                     || type == typeof(double)
-                    || type == typeof(bool)
                     )
                 {
                     script += arg;
+                }
+                else if (type == typeof(bool))
+                {
+                    script += (bool)arg ? "true" : "false";
                 }
                 else if (type == typeof(string))
                 {
@@ -89,7 +92,11 @@ namespace WebViewForm
                 }
             }
             script += ")";
-            InScript(script);
+            return script;
+        }
+        public void Script(string func, params object?[] args)
+        {
+            InScript(ScriptToEval(func, args));
         }
         public void InScript(string script)
         {
@@ -100,6 +107,20 @@ namespace WebViewForm
             }
             mainView.ExecuteScriptAsync(script);
         }
+        public void ScriptToPopup(string name, string func, params object[] args)
+        {
+            InScript(popups[name], ScriptToEval(func, args));
+        }
+        public void InScript(PopupForm popup, string script)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => { InScript(popup, script); }));
+                return;
+            }
+            popup.mainView.ExecuteScriptAsync(script);
+        }
+
 
         public void Alert(string target, string msg)
         {
@@ -202,7 +223,7 @@ namespace WebViewForm
         }
 
         private PopupForm? tmpPopup;
-        private readonly Dictionary<string, PopupForm> popups = [];
+        protected readonly Dictionary<string, PopupForm> popups = [];
         private readonly Dictionary<string, PopupForm> urlPopups = [];
 
         private void OpenPopup(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
@@ -215,6 +236,7 @@ namespace WebViewForm
                 e.NewWindow = popup.mainView.CoreWebView2;
 
                 popups[e.Name] = urlPopups[e.Uri] = popup;
+                windows[e.Name] = popup.Handle.ToInt32();
 
                 switch (e.Name)
                 {

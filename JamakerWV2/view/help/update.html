@@ -1,0 +1,86 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>업데이트 확인</title>
+	<script src="../lib/jquery-3.2.1.min.js"></script>
+	<script src="../lib/popup.js"></script>
+	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
+	<script>
+windowName = "help";
+$(() => {
+	$("#version").text(opener.setting.version);
+	
+	const url = (opener && opener.binder && !opener.binder._)
+		? /* C# 프로그램에서 서버 호출 */ "https://harnenim.github.io/Jamaker/updates.json?" + Math.random()
+		: /* 웹버전 내부에서 로컬 호출 */ "../../updates.json"
+		;
+	$.ajax({url : url
+		,	success: (updates) => {
+				let isLatest = true;
+				const log = [];
+				const files = [];
+				for (let i = 0; i < updates.length; i++) {
+					const update = updates[i];
+					if (update.version > opener.setting.version) {
+						isLatest = false;
+						for (let j = 0; j < update.files.length; j++) {
+							const file = update.files[j];
+							if (files.indexOf(file) < 0) {
+								files.push(file);
+							}
+						}
+						log.push("===========================");
+					} else {
+						log.push("---------------------------");
+					}
+					log.push("");
+					log.push("　" + update.version);
+					log.push("");
+					for (let j = 0; j < update.comment.length; j++) {
+						log.push("　" + update.comment[j]);
+					}
+					log.push("");
+					log.push("");
+				}
+				$("#taLog").text(log.join("\n"));
+				if (isLatest) {
+					$("#btnUpdate").text("현재 최신 버전입니다.").attr({ disabled: true });
+				} else {
+					$("#btnUpdate").text(updates[0].version + "으로 업데이트").attr({ disabled: false });
+				}
+			}
+		,	error: (e) => {
+				alert("업데이트 확인 실패");
+				console.log(e);
+			}
+	});
+	
+	$("#btnUpdate").on("click", function() {
+		alert("업데이트 기능은 추후 지원 예정입니다.");
+	});
+});
+	</script>
+	<style>
+#taLog {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	bottom: 30px;
+}
+#btnUpdate {
+	position: fixed;
+	left: 0;
+	width: 100%;
+	bottom: 0;
+	height: 30px;
+}
+	</style>
+</head>
+<body>
+	<textarea id="taLog" readonly></textarea>
+	<button type="button" id="btnUpdate" disabled>현재 최신 버전입니다.</button>
+</body>
+</html>
