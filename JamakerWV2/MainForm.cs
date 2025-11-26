@@ -17,11 +17,11 @@ namespace Jamaker
         private string strSettingJson = "불러오기 실패 예제";
         private string strBridgeList = "NoPlayer: (없음)"; // 기본값
         private string strHighlights = "SyncOnly: 싱크 줄 구분\neclipse: 이클립스 스타일";
-        private readonly Dictionary<string, string> bridgeDlls = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> bridgeDlls = [];
         private readonly string[] args;
 
-        private MenuStrip menuStrip;
-        private MouseEventHandler clickMenuStrip;
+        private readonly MenuStrip menuStrip;
+        private readonly MouseEventHandler clickMenuStrip;
 
         public MainForm(string[] args)
         {
@@ -114,7 +114,7 @@ namespace Jamaker
                 Script("setHighlights", strHighlights);
                 Script("setDroppable");
 
-                WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
+                _ = WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
             }
             catch { }
         }
@@ -238,7 +238,7 @@ namespace Jamaker
                 try
                 {
                     // 설정 폴더 없으면 생성
-                    DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp"));
+                    DirectoryInfo di = new(Path.Combine(Application.StartupPath, "temp"));
                     if (!di.Exists) { di.Create(); }
                     di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp/logs"));
                     if (!di.Exists) { di.Create(); }
@@ -297,7 +297,7 @@ namespace Jamaker
                 int hwnd = GetHwnd(target);
                 if (!target.Equals("editor"))
                 {   // follow window 동작 일시정지
-                    WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
+                    _ = WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
                 }
                 if (!resizable)
                 {
@@ -328,7 +328,7 @@ namespace Jamaker
                     if (hwnd > 0)
                     {   // 윈도우 그림자 여백 보정
                         RECT shadow = WinAPI.GetWindowShadow(windows["editor"]);
-                        WinAPI.MoveWindow(hwnd, x - shadow.left, y - shadow.top, width + shadow.left - shadow.right, height + shadow.top - shadow.bottom, true);
+                        _ = WinAPI.MoveWindow(hwnd, x - shadow.left, y - shadow.top, width + shadow.left - shadow.right, height + shadow.top - shadow.bottom, true);
                         if (target.Equals("editor"))
                         {
                             Script("setDpiBy", width);
@@ -368,7 +368,7 @@ namespace Jamaker
         {
             if (follow)
             {
-                WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
+                _ = WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
             }
             useFollowWindow = follow;
         }
@@ -379,8 +379,8 @@ namespace Jamaker
                 int hwnd = GetHwnd(target);
                 if (hwnd > 0)
                 {
-                    RECT targetOffset = new RECT();
-                    WinAPI.GetWindowRect(hwnd, ref targetOffset);
+                    RECT targetOffset = new();
+                    _ = WinAPI.GetWindowRect(hwnd, ref targetOffset);
                     if (target.Equals("player"))
                     {
                         Script("afterGetWindow"
@@ -414,7 +414,7 @@ namespace Jamaker
             {
                 return;
             }
-            WinAPI.GetWindowRect(windows["editor"], ref offset);
+            _ = WinAPI.GetWindowRect(windows["editor"], ref offset);
             if ((lastOffset.top != offset.top
                  || lastOffset.left != offset.left
                  || lastOffset.right != offset.right
@@ -433,7 +433,7 @@ namespace Jamaker
                     {
                         int vMoveX = moveX;
                         int vMoveY = moveY;
-                        WinAPI.GetWindowRect(viewer, ref viewerOffset);
+                        _ = WinAPI.GetWindowRect(viewer, ref viewerOffset);
                         if (viewerOffset.left - lastOffset.left > lastOffset.right - viewerOffset.left)
                         {   // 오른쪽 경계에 더 가까울 땐 오른쪽을 따라감
                             vMoveX = offset.right - lastOffset.right;
@@ -473,7 +473,7 @@ namespace Jamaker
             {
                 if (--saveSettingAfter == 0)
                 {
-                    WinAPI.GetWindowRect(windows["editor"], ref offset);
+                    _ = WinAPI.GetWindowRect(windows["editor"], ref offset);
                     Script("eval",
                         $"setting.window.x = {offset.left + 7};"
                     + $"setting.window.y = {offset.top};"
@@ -484,7 +484,7 @@ namespace Jamaker
                     int viewer = windows["viewer"];
                     if (viewer > 0)
                     {
-                        WinAPI.GetWindowRect(viewer, ref viewerOffset);
+                        _ = WinAPI.GetWindowRect(viewer, ref viewerOffset);
                         Script("eval",
                             $"setting.viewer.window.x = {viewerOffset.left + 7};"
                         + $"setting.viewer.window.y = {viewerOffset.top};"
@@ -585,10 +585,10 @@ namespace Jamaker
             for (int i = 0; i < bridgeList.Length; i++)
             {
                 string strBridge = bridgeList[i].Trim();
-                int devider = strBridge.IndexOf(":");
+                int devider = strBridge.IndexOf(':');
                 if (devider > 0)
                 {
-                    string[] bridge = { strBridge.Substring(0, devider).Trim(), strBridge.Substring(devider + 1).Trim() };
+                    string[] bridge = [strBridge[..devider].Trim(), strBridge[(devider + 1)..].Trim()];
                     bridgeDlls.Add(bridge[0], bridge[1]);
                 }
             }
@@ -603,7 +603,7 @@ namespace Jamaker
             try
             {
                 // 설정 폴더 없으면 생성
-                DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "setting"));
+                DirectoryInfo di = new(Path.Combine(Application.StartupPath, "setting"));
                 if (!di.Exists)
                 {
                     di.Create();
@@ -640,7 +640,7 @@ namespace Jamaker
             try
             {
                 // 설정 폴더 없으면 생성
-                DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "setting"));
+                DirectoryInfo di = new(Path.Combine(Application.StartupPath, "setting"));
                 if (!di.Exists)
                 {
                     di.Create();
@@ -655,7 +655,7 @@ namespace Jamaker
                     File.Move(Path.Combine(Application.StartupPath, "setting/Jamaker.json"), Path.Combine(Application.StartupPath, "setting/Jamaker.json.bak"));
                 }
 
-                StreamWriter sw = new StreamWriter(Path.Combine(Application.StartupPath, "setting/Jamaker.json"), false, Encoding.UTF8);
+                StreamWriter sw = new(Path.Combine(Application.StartupPath, "setting/Jamaker.json"), false, Encoding.UTF8);
                 sw.Write(strSettingJson);
                 sw.Close();
             }
@@ -668,7 +668,7 @@ namespace Jamaker
             UpdateViewerSetting();
         }
 
-        private string[] videoExts = new string[] { "mkv", "mp4", "avi", "wmv", "m2ts", "ts" };
+        private string[] videoExts = ["mkv", "mp4", "avi", "wmv", "m2ts", "ts"];
         public void SetVideoExts(string exts)
         {
             videoExts = exts.Split(',');
@@ -692,7 +692,7 @@ namespace Jamaker
                 }
 
                 string[] paths = path.Replace('\\', '/').Split('/');
-                string exe = paths[paths.Length - 1];
+                string exe = paths[^1]; // paths[paths.Length - 1]
 
                 // 잔여 플레이어가 없으면 실행
                 if (player == null)
@@ -722,11 +722,9 @@ namespace Jamaker
                         {
                             try
                             {
-                                ProcessStartInfo startInfo = new ProcessStartInfo
-                                {
-                                    FileName = path
-                                ,
-                                    Arguments = null
+                                ProcessStartInfo startInfo = new()
+                                {   FileName = path
+                                ,   Arguments = null
                                 };
                                 Process.Start(startInfo);
                             }
@@ -753,7 +751,7 @@ namespace Jamaker
             }
             else
             {
-                OpenFileDialog dialog = new OpenFileDialog { Filter = "실행 파일|*.exe" };
+                OpenFileDialog dialog = new() { Filter = "실행 파일|*.exe" };
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
                     Script("afterSelectPlayerPath", dialog.FileName);
@@ -771,7 +769,7 @@ namespace Jamaker
             string setting = "";
             try
             {   // addon 설정 파일 경로
-                StreamReader sr = new StreamReader(Path.Combine(Application.StartupPath, $"setting/addon_{path}"), Encoding.UTF8);
+                StreamReader sr = new(Path.Combine(Application.StartupPath, $"setting/addon_{path}"), Encoding.UTF8);
                 setting = sr.ReadToEnd();
                 sr.Close();
             }
@@ -781,7 +779,7 @@ namespace Jamaker
                 PassiveLog(e.ToString());
                 try
                 {   // 구버전 addon 설정 파일 경로
-                    StreamReader sr = new StreamReader(Path.Combine(Application.StartupPath, $"view/addon/{path}"), Encoding.UTF8);
+                    StreamReader sr = new(Path.Combine(Application.StartupPath, $"view/addon/{path}"), Encoding.UTF8);
                     setting = sr.ReadToEnd();
                     sr.Close();
                 }
@@ -798,13 +796,13 @@ namespace Jamaker
             try
             {
                 // 설정 폴더 없으면 생성
-                DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "setting"));
+                DirectoryInfo di = new(Path.Combine(Application.StartupPath, "setting"));
                 if (!di.Exists)
                 {
                     di.Create();
                 }
 
-                StreamWriter sw = new StreamWriter(Path.Combine(Application.StartupPath, $"setting/addon_{path}"), false, Encoding.UTF8);
+                StreamWriter sw = new(Path.Combine(Application.StartupPath, $"setting/addon_{path}"), false, Encoding.UTF8);
                 sw.Write(text);
                 sw.Close();
             }
@@ -819,7 +817,7 @@ namespace Jamaker
         public void GetSubDirs(string dir)
         {
             string dirs = "";
-            DirectoryInfo di = new DirectoryInfo(dir);
+            DirectoryInfo di = new(dir);
             if (di.Exists)
             {
                 DirectoryInfo[] subDirs = di.GetDirectories();
@@ -836,7 +834,7 @@ namespace Jamaker
         }
         public void SearchFiles(string dir, string query)
         {
-            DirectoryInfo di = new DirectoryInfo(dir);
+            DirectoryInfo di = new(dir);
             if (di.Exists)
             {
                 FileInfo[] files = di.GetFiles();
@@ -846,11 +844,11 @@ namespace Jamaker
                     {
                         try
                         {
-                            StreamReader sr = new StreamReader(file.FullName, Encoding.UTF8);
+                            StreamReader sr = new(file.FullName, Encoding.UTF8);
                             string text = sr.ReadToEnd();
                             sr.Close();
 
-                            if (text.IndexOf(query) >= 0)
+                            if (text.Contains(query))
                             {
                                 Script("afterFound", file.Name, text);
                             }
@@ -1032,7 +1030,7 @@ namespace Jamaker
             }
             else
             {
-                OpenFileDialog dialog = new OpenFileDialog { Filter = "지원되는 자막 파일|*.smi;*.sami;*.jmk,*.srt;*.ass" };
+                OpenFileDialog dialog = new() { Filter = "지원되는 자막 파일|*.smi;*.sami;*.jmk,*.srt;*.ass" };
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
                     LoadFile(dialog.FileName);
@@ -1101,7 +1099,7 @@ namespace Jamaker
                 int index = path.LastIndexOf('.');
                 if (index > 0)
                 {
-                    LoadFile(path.Substring(0, index) + ".jmk", true);
+                    LoadFile(string.Concat(path.AsSpan(0, index), ".jmk"), true);
                 }
             }
         }
@@ -1143,7 +1141,7 @@ namespace Jamaker
             if (path.Length > 0)
             {
                 string[] paths = path.Replace('\\', '/').Split('/');
-                title += " - " + paths[paths.Length - 1];
+                title += " - " + paths[^1]; // paths[paths.Length - 1]
             }
             SetTitle(title);
         }
@@ -1212,7 +1210,7 @@ namespace Jamaker
                 {
                     try
                     {
-                        FileInfo info = new FileInfo(path);
+                        FileInfo info = new(path);
 
                         {
                             Process proc = VideoInfo.GetFFprobe(true);
@@ -1231,16 +1229,16 @@ namespace Jamaker
                                 {
                                     if (line.StartsWith("width="))
                                     {
-                                        width = int.Parse(line.Substring(6));
+                                        width = int.Parse(line[6..]);
                                     }
                                     else if (line.StartsWith("height="))
                                     {
-                                        height = int.Parse(line.Substring(7));
+                                        height = int.Parse(line[7..]);
                                     }
                                     else if (line.StartsWith("r_frame_rate="))
                                     {
                                         if (fr > 0) continue;
-                                        string[] strFrs = line.Substring(13).Split('/');
+                                        string[] strFrs = line[13..].Split('/');
                                         if (strFrs.Length > 1)
                                         {
                                             fr = (int)Math.Round(double.Parse(strFrs[0]) / double.Parse(strFrs[1]) * 1000);
@@ -1262,12 +1260,12 @@ namespace Jamaker
                             Script("setVideoInfo", width, height, fr);
                         }
 
-                        string fkfName = $"{info.Name.Substring(0, info.Name.Length - info.Extension.Length)}.{info.Length}.fkf";
+                        string fkfName = $"{info.Name[..^info.Extension.Length]}.{info.Length}.fkf";
 
                         // 기존에 있으면 가져오기
                         try
                         {
-                            DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp/fkf"));
+                            DirectoryInfo di = new(Path.Combine(Application.StartupPath, "temp/fkf"));
                             if (di.Exists)
                             {
                                 VideoInfo.FromFkfFile(Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
@@ -1285,7 +1283,7 @@ namespace Jamaker
                         // 기존 버전에선 fkf 폴더 없이 그냥 temp 폴더에 있었음
                         try
                         {
-                            DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp"));
+                            DirectoryInfo di = new(Path.Combine(Application.StartupPath, "temp"));
                             if (di.Exists)
                             {
                                 di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp/fkf"));
@@ -1351,7 +1349,7 @@ namespace Jamaker
         }
         private static Bitmap ByteArrayToBitmap(byte[] bytes)
         {
-            Bitmap bitmap = new Bitmap(TX, TY);
+            Bitmap bitmap = new(TX, TY);
             BitmapData data = bitmap.LockBits(new Rectangle(0, 0, TX, TY), ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
             Marshal.Copy(bytes, 0, data.Scan0, TX * TY * 3);
             bitmap.UnlockBits(data);
@@ -1363,7 +1361,7 @@ namespace Jamaker
             lastThumbnailsPath = path;
             try
             {
-                StreamWriter sw = new StreamWriter(Path.Combine(Application.StartupPath, "temp/thumbnails/_.txt"), false, Encoding.UTF8);
+                StreamWriter sw = new(Path.Combine(Application.StartupPath, "temp/thumbnails/_.txt"), false, Encoding.UTF8);
                 sw.Write($"{path}\n{TX}\n{TY}");
                 sw.Close();
             }
@@ -1380,7 +1378,7 @@ namespace Jamaker
             StreamReader? sr = null;
             try
             {   // 설정 파일 경로
-                sr = new StreamReader(Path.Combine(Application.StartupPath, "temp/thumbnails/_.txt"), Encoding.UTF8);
+                sr = new(Path.Combine(Application.StartupPath, "temp/thumbnails/_.txt"), Encoding.UTF8);
                 string[] info = sr.ReadToEnd().Split('\n');
                 lastThumbnailsPath = info[0];
                 TX = int.Parse(info[1]);
@@ -1414,7 +1412,7 @@ namespace Jamaker
             new Thread(() =>
             {
                 string dir = Path.Combine(Application.StartupPath, "temp/thumbnails");
-                DirectoryInfo di = new DirectoryInfo(dir);
+                DirectoryInfo di = new(dir);
                 if (!di.Exists)
                 {
                     di.Create();
@@ -1693,7 +1691,7 @@ namespace Jamaker
         public void ClearThumbnails()
         {
             string dir = Path.Combine(Application.StartupPath, "temp/thumbnails");
-            DirectoryInfo di = new DirectoryInfo(dir);
+            DirectoryInfo di = new(dir);
             if (di.Exists)
             {
                 FileInfo[] files = di.GetFiles();
@@ -1712,26 +1710,19 @@ namespace Jamaker
             }
         }
 
-        private class SaveOrder
+        private class SaveOrder(int tab, string text, string path, int type)
         {
-            public int tab;
-            public string text;
-            public string path;
-            public int type;
-            public SaveOrder(int tab, string text, string path, int type)
-            {
-                this.tab = tab;
-                this.text = text;
-                this.path = path;
-                this.type = type;
-            }
+            public int tab = tab;
+            public string text = text;
+            public string path = path;
+            public int type = type;
         }
-        private readonly List<SaveOrder> saveOrders = new List<SaveOrder>();
+        private readonly List<SaveOrder> saveOrders = [];
         private int saveIndex = 0;
         public void Save(int tab, string text, string path, int type)
         {
             Console.WriteLine($"Save({tab}, {path}, {type}), count: {saveOrders.Count}");
-            SaveOrder order = new SaveOrder(tab, text, path, type);
+            SaveOrder order = new(tab, text, path, type);
 
             if (saveOrders.Count == 0)
             {
@@ -1857,11 +1848,11 @@ namespace Jamaker
                     videoPath = videoPath.Replace('/', '\\');
                     if (videoPath.IndexOf('\\') > 0)
                     {
-                        directory = videoPath.Substring(0, videoPath.LastIndexOf('\\'));
-                        filename = videoPath.Substring(directory.Length + 1);
-                        if (filename.IndexOf('.') >= 0)
+                        directory = videoPath[..videoPath.LastIndexOf('\\')];
+                        filename = videoPath[(directory.Length + 1)..];
+                        if (filename.Contains('.'))
                         {
-                            filename = filename.Substring(0, filename.LastIndexOf('.')) + ".smi";
+                            filename = string.Concat(filename.AsSpan(0, filename.LastIndexOf('.')), ".smi");
                         }
                     }
                 }
@@ -1880,7 +1871,7 @@ namespace Jamaker
                 {
                     filter += "|Jamakaer 프로젝트|*.jmk";
                 }
-                SaveFileDialog dialog = new SaveFileDialog
+                SaveFileDialog dialog = new()
                 {   Filter = filter
                 ,   InitialDirectory = directory
                 ,   FileName = filename
@@ -1896,12 +1887,12 @@ namespace Jamaker
         }
         public void SaveTemp(string text, string path)
         {   // 임시 파일 저장
-            int index = path.LastIndexOf("\\");
-            string filename = path.Substring(index + 1);
+            int index = path.LastIndexOf('\\');
+            string filename = path[(index + 1)..];
 
             try
             {   // 임시 파일 폴더 없으면 생성
-                DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp"));
+                DirectoryInfo di = new(Path.Combine(Application.StartupPath, "temp"));
                 if (!di.Exists)
                 {
                     di.Create();
@@ -1909,7 +1900,7 @@ namespace Jamaker
 
                 // 임시 파일 저장
                 long now = DateTime.Now.Ticks;
-                StreamWriter sw = new StreamWriter(Path.Combine(Application.StartupPath, "temp/" + now + "_" + filename), false, Encoding.UTF8);
+                StreamWriter sw = new(Path.Combine(Application.StartupPath, "temp/" + now + "_" + filename), false, Encoding.UTF8);
                 sw.Write(text);
                 sw.Close();
             }
