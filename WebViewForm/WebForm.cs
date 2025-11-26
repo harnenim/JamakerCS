@@ -244,15 +244,6 @@ namespace WebViewForm
                 windows[e.Name] = popup.Handle.ToInt32();
 
                 popup.Text = e.Name;
-                popup.mainView.CoreWebView2.NavigationStarting += RefreshPopup;
-                popup.mainView.CoreWebView2.WindowCloseRequested += (s2, e2) =>
-                {
-                    try
-                    {
-                        popup.Close();
-                    }
-                    catch { }
-                };
                 AfterOpenPopup(e.Name, popup);
             }
             e.Handled = true;
@@ -260,12 +251,6 @@ namespace WebViewForm
         public virtual void AfterOpenPopup(string name, PopupForm popup)
         {
             // 각 프로그램에서 필요 시 override
-        }
-
-        private void RefreshPopup(object? sender, CoreWebView2NavigationStartingEventArgs e)
-        {
-            PopupForm popup = urlPopups[e.Uri];
-            WinAPI.SetForegroundWindow(popup.Handle.ToInt32());
         }
 
         public static Encoding DetectEncoding(string file)

@@ -132,6 +132,7 @@ namespace Jamaker
                     popup.MinimizeBox = false;
                     popup.TopMost = true;
                     popup.Opacity = 0.9;
+                    popup.FormBorderStyle = FormBorderStyle.FixedSingle;
                     popup.Deactivate += (sender, e) => { popup.Opacity = 0.5; };
                     popup.Activated += (sender, e) => { popup.Opacity = 0.9; };
                     break;
@@ -217,15 +218,6 @@ namespace Jamaker
             Process.GetCurrentProcess().Kill();
         }
 
-        protected override int GetHwnd(string target)
-        {
-            if (target == "player")
-            {
-                return player!.hwnd;
-            }
-            return base.GetHwnd(target);
-        }
-
         private StreamWriter? swLogs = null;
         private long lastLog = long.MaxValue;
         public void Log(string msg)
@@ -276,18 +268,14 @@ namespace Jamaker
         }
 
         #region √¢ ¡∂¿€
-        private int OverrideGetHwnd(string target)
+
+        protected override int GetHwnd(string target)
         {
-            try
+            if (target == "player")
             {
-                if (target.Equals("player"))
-                {
-                    return player == null ? 0 : player.hwnd;
-                }
-                return windows[target];
+                return player == null ? 0 : player.hwnd;
             }
-            catch { }
-            return 0;
+            return base.GetHwnd(target);
         }
         public void MoveWindow(string target, int x, int y, int width, int height, bool resizable)
         {
