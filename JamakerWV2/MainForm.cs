@@ -124,18 +124,14 @@ namespace Jamaker
             switch (name)
             {
                 case "viewer":
-                    {
-                        popup.MaximizeBox = false;
-                        popup.MinimizeBox = false;
-                        break;
-                    }
+                    popup.MaximizeBox = false;
+                    popup.MinimizeBox = false;
+                    break;
                 case "finder":
-                    {
-                        popup.MaximizeBox = false;
-                        popup.MinimizeBox = false;
-                        popup.TopMost = true;
-                        break;
-                    }
+                    popup.MaximizeBox = false;
+                    popup.MinimizeBox = false;
+                    popup.TopMost = true;
+                    break;
             }
         }
 
