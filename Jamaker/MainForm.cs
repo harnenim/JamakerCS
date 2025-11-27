@@ -68,6 +68,12 @@ namespace Jamaker
             // 마지막 섬네일 정보 가져오기
             new Thread(() => { LoadThumbnailInfo(); }).Start();
         }
+
+        public string GetTitle()
+        {
+            return "Jamaker";
+        }
+
         private void OverrideInitializeComponent() {}
 
         public void OverrideInitAfterLoad()

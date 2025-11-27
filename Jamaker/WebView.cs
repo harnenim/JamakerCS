@@ -273,6 +273,12 @@ namespace Jamaker
             return result.ToString();
         }
 
+        /*
+        public virtual string GetTitle()
+        {
+            return Text;
+        }
+        */
         public void Alert(string target, string msg)
         {
             if (InvokeRequired)
@@ -280,7 +286,7 @@ namespace Jamaker
                 Invoke(new Action(() => { Alert(target, msg); }));
                 return;
             }
-            MessageBoxEx.Show(GetHwnd(target), msg, Text);
+            MessageBoxEx.Show(GetHwnd(target), msg, GetTitle());
         }
         public void Confirm(string target, string msg)
         {
@@ -290,7 +296,7 @@ namespace Jamaker
                 return;
             }
 
-            if (MessageBoxEx.Show(GetHwnd(target), msg, Text, MessageBoxButtons.YesNo) == DialogResult.Yes)
+            if (MessageBoxEx.Show(GetHwnd(target), msg, GetTitle(), MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 Script("afterConfirmYes");
             }
@@ -307,7 +313,7 @@ namespace Jamaker
                 Invoke(new Action(() => { Prompt(target, msg, def); }));
                 return;
             }
-            Prompt prompt = new Prompt(GetHwnd(target), msg, Text, def);
+            Prompt prompt = new Prompt(GetHwnd(target), msg, GetTitle(), def);
             DialogResult result = prompt.ShowDialog();
             if (result == DialogResult.OK)
             {
