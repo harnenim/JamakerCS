@@ -425,7 +425,7 @@ namespace Jamaker
                 {
                     //RECT shadow = WinAPI.GetWindowShadow(windows["editor"]);
                     WinAPI.GetWindowRectWithoutShadow(windows["editor"], ref offset);
-                    Script("eval", 
+                    Script("eval",
                         $"setting.window.x = { offset.left };"
                     +   $"setting.window.y = { offset.top };"
                     +   $"setting.window.width = { offset.right - offset.left };"
@@ -487,11 +487,13 @@ namespace Jamaker
         public void RunReplace   (string param) { Script("SmiEditor.Finder.runReplace"   , param); }
         public void RunReplaceAll(string param) { Script("SmiEditor.Finder.runReplaceAll", param); }
 
-        public void UpdateViewerSetting(     ) {
+        public void UpdateViewerSetting()
+        {
             ScriptToPopup("viewer", "setSetting", strSettingJson);
             ScriptToPopup("viewer", "setLines", viewerLines);
         }
-        private void UpdateViewerTime(int time) {
+        private void UpdateViewerTime(int time)
+        {
             ScriptToPopup("viewer", "refreshTime", time);
             if (LSH.useCustomPopup > 0)
             {
@@ -510,15 +512,16 @@ namespace Jamaker
             }
         }
         private string viewerLines = "[]";
-        public void UpdateViewerLines(string lines) {
-        	ScriptToPopup("viewer", "setLines", viewerLines = lines);
+        public void UpdateViewerLines(string lines)
+        {
+            ScriptToPopup("viewer", "setLines", viewerLines = lines);
         }
         #endregion
 
         #region 설정
         private void LoadSetting()
         {
-        	StreamReader sr = null;
+            StreamReader sr = null;
             try
             {   // 설정 파일 경로
                 sr = new StreamReader(Path.Combine(Application.StartupPath, "setting/Jamaker.json"), Encoding.UTF8);
@@ -541,7 +544,8 @@ namespace Jamaker
                 sr = new StreamReader(Path.Combine(Application.StartupPath, "bridge/list.txt"), Encoding.UTF8);
                 strBridgeList = sr.ReadToEnd();
             }
-            catch (Exception e) {
+            catch (Exception e)
+            {
                 Console.WriteLine(e);
                 PassiveLog(e.ToString());
             }
@@ -552,7 +556,8 @@ namespace Jamaker
                 sr = new StreamReader(Path.Combine(Application.StartupPath, "view/lib/highlight/list.txt"), Encoding.UTF8);
                 strHighlights = sr.ReadToEnd();
             }
-            catch (Exception e) {
+            catch (Exception e)
+            {
                 Console.WriteLine(e);
                 PassiveLog(e.ToString());
             }
@@ -562,7 +567,7 @@ namespace Jamaker
             for (int i = 0; i < bridgeList.Length; i++)
             {
                 string strBridge = bridgeList[i].Trim();
-                int devider = strBridge.IndexOf(":");
+                int devider = strBridge.IndexOf(':');
                 if (devider > 0)
                 {
                     string[] bridge = { strBridge.Substring(0, devider).Trim(), strBridge.Substring(devider + 1).Trim() };
@@ -599,7 +604,8 @@ namespace Jamaker
                     }
                 }
             }
-            catch (Exception e) {
+            catch (Exception e)
+            {
                 Console.WriteLine(e);
                 PassiveLog(e.ToString());
             }
@@ -654,10 +660,7 @@ namespace Jamaker
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() =>
-                {
-                    SetPlayer(dll, path, withRun, useMove);
-                }));
+                Invoke(new Action(() => { SetPlayer(dll, path, withRun, useMove); }));
                 return;
             }
             // 플레이어 선택이 바뀌었으면 연결 끊기
@@ -693,19 +696,20 @@ namespace Jamaker
 
                 if (withRun && player.hwnd == 0)
                 {
-                    new Thread(() => {
-	                    try
-	                    {
-	                        ProcessStartInfo startInfo = new ProcessStartInfo
-	                        {   FileName = path
-	                        ,   Arguments = null
-	                        };
-	                        Process.Start(startInfo);
-	                    }
-	                    catch
-	                    {
-	                        Script("alert", "플레이어를 실행하지 못했습니다.\n설정을 확인하시기 바랍니다.");
-	                    }
+                    new Thread(() =>
+                    {
+                        try
+                        {
+                            ProcessStartInfo startInfo = new ProcessStartInfo
+                            {   FileName = path
+                            ,   Arguments = null
+                            };
+                            Process.Start(startInfo);
+                        }
+                        catch
+                        {
+                            Script("alert", "플레이어를 실행하지 못했습니다.\n설정을 확인하시기 바랍니다.");
+                        }
                     }).Start();
                 }
             }
@@ -713,18 +717,25 @@ namespace Jamaker
             useMovePlayer = useMove;
         }
         
-        public void SelectPlayerPath() {
+        public void SelectPlayerPath()
+        {
             if (InvokeRequired)
             {
-                Invoke(new Action(() => {
-                    SelectPlayerPath();
-                }));
+                Invoke(new Action(() => { SelectPlayerPath(); }));
                 return;
             }
-            OpenFileDialog dialog = new OpenFileDialog{ Filter = "실행 파일|*.exe" };
-            if (dialog.ShowDialog() == DialogResult.OK)
+            
+            string filename = null;
             {
-                Script("afterSelectPlayerPath", dialog.FileName);
+                OpenFileDialog dialog = new OpenFileDialog{ Filter = "실행 파일|*.exe" };
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    filename = dialog.FileName;
+                }
+            }
+            if (filename != null)
+            {
+                Script("afterSelectPlayerPath", filename);
             }
         }
 
@@ -881,10 +892,18 @@ namespace Jamaker
                 Invoke(new Action(() => { OpenFile(); }));
                 return;
             }
-            OpenFileDialog dialog = new OpenFileDialog{ Filter = "지원되는 자막 파일|*.smi;*.sami;*.jmk;*.srt;*.ass" };
-            if (dialog.ShowDialog() == DialogResult.OK)
+            
+            string filename = null;
             {
-                LoadFile(dialog.FileName, false, true);
+                OpenFileDialog dialog = new OpenFileDialog{ Filter = "지원되는 자막 파일|*.smi;*.sami;*.jmk;*.srt;*.ass" };
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    filename = dialog.FileName;
+                }
+            }
+            if (filename != null)
+            {
+                LoadFile(filename, false, true);
             }
         }
         public void AfterInit(int limit)
@@ -962,7 +981,7 @@ namespace Jamaker
             {
                 if (path.EndsWith(".jmk"))
                 {
-                	// 프로젝트 파일 없었으면 smi 파일로 재시도
+                    // 프로젝트 파일 없었으면 smi 파일로 재시도
                     LoadFile(path.Substring(0, path.Length - 4) + ".smi", true, confirmed);
                 }
                 else
@@ -1036,133 +1055,139 @@ namespace Jamaker
         {
             // 아주 오래 걸리진 않는 작업
             // 키프레임 신뢰 버튼 쪽에 프로그레스
-        	requestFramesPath = path;
-        	
-        	if ((VideoInfo.CheckFFmpeg() & 1) == 0) {
-        		// ffmpeg 없을 경우 - 처음에 만들었던 플레이어 의존 방식
-        		// 해상도 없이 frame rate만 가져옴
-                Script("setVideoInfo", 1920, 1080, player.GetFps());
-        		
-        	} else {
-            new Thread(() =>
-            {
-                try
-                {
-                    FileInfo info = new FileInfo(path);
+            requestFramesPath = path;
 
+            if ((VideoInfo.CheckFFmpeg() & 1) == 0)
+            {
+                // ffmpeg 없을 경우 - 처음에 만들었던 플레이어 의존 방식
+                // 해상도 없이 frame rate만 가져옴
+                Script("setVideoInfo", 1920, 1080, player.GetFps());
+
+            }
+            else
+            {
+                new Thread(() =>
+                {
+                    try
                     {
-                        Process proc = VideoInfo.GetFFprobe(true);
-                        proc.StartInfo.Arguments = $"-v error -select_streams v -show_entries stream=width,height,r_frame_rate \"{path}\"";
-                        proc.Start();
-                        proc.BeginErrorReadLine();
-                        
-                        StreamReader sr = new StreamReader(proc.StandardOutput.BaseStream);
-                        string line;
-                        int width = 1920;
-                        int height = 1080;
-                        int fr = 0;
-                        while ((line = sr.ReadLine()) != null)
+                        FileInfo info = new FileInfo(path);
+
                         {
-                            try
+                            Process proc = VideoInfo.GetFFprobe(true);
+                            proc.StartInfo.Arguments = $"-v error -select_streams v -show_entries stream=width,height,r_frame_rate \"{path}\"";
+                            proc.Start();
+                            proc.BeginErrorReadLine();
+
+                            StreamReader sr = new StreamReader(proc.StandardOutput.BaseStream);
+                            string line;
+                            int width = 1920;
+                            int height = 1080;
+                            int fr = 0;
+                            while ((line = sr.ReadLine()) != null)
                             {
-                                if (line.StartsWith("width="))
+                                try
                                 {
-                                    width = int.Parse(line.Substring(6));
-                                }
-                                else if (line.StartsWith("height="))
-                                {
-                                    height = int.Parse(line.Substring(7));
-                                }
-                                else if (line.StartsWith("r_frame_rate="))
-                                {
-                                    if (fr > 0) continue;
-                                    string[] strFrs = line.Substring(13).Split('/');
-                                    if (strFrs.Length > 1)
+                                    if (line.StartsWith("width="))
                                     {
-                                        fr = (int)Math.Round(double.Parse(strFrs[0]) / double.Parse(strFrs[1]) * 1000);
-                                    } else
+                                        width = int.Parse(line.Substring(6));
+                                    }
+                                    else if (line.StartsWith("height="))
                                     {
-                                        fr = (int)Math.Round(double.Parse(strFrs[0]));
+                                        height = int.Parse(line.Substring(7));
+                                    }
+                                    else if (line.StartsWith("r_frame_rate="))
+                                    {
+                                        if (fr > 0) continue;
+                                        string[] strFrs = line.Substring(13).Split('/');
+                                        if (strFrs.Length > 1)
+                                        {
+                                            fr = (int)Math.Round(double.Parse(strFrs[0]) / double.Parse(strFrs[1]) * 1000);
+                                        }
+                                        else
+                                        {
+                                            fr = (int)Math.Round(double.Parse(strFrs[0]));
+                                        }
                                     }
                                 }
+                                catch (Exception e)
+                                {
+                                    PassiveLog(e.ToString());
+                                }
                             }
-                            catch (Exception e)
-                            {
-                                PassiveLog(e.ToString());
-                            }
+                            proc.Close();
+
+                            Console.WriteLine($"setVideoInfo: {width}, {height}, {fr}");
+                            Script("setVideoInfo", width, height, fr);
                         }
-                        proc.Close();
 
-                        Console.WriteLine($"setVideoInfo: {width}, {height}, {fr}");
-                        Script("setVideoInfo", width, height, fr);
-                    }
+                        string fkfName = $"{info.Name.Substring(0, info.Name.Length - info.Extension.Length)}.{info.Length}.fkf";
 
-                    string fkfName = $"{info.Name.Substring(0, info.Name.Length - info.Extension.Length)}.{info.Length}.fkf";
-
-                    // 기존에 있으면 가져오기
-                    try
-                    {
-                        DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp/fkf"));
-                        if (di.Exists)
+                        // 기존에 있으면 가져오기
+                        try
                         {
-                            VideoInfo.FromFkfFile(Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
-                            Script("Progress.set", "#forFrameSync", 1);
-                            Script("loadFkf", fkfName);
-                            return;
+                            DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp/fkf"));
+                            if (di.Exists)
+                            {
+                                VideoInfo.FromFkfFile(Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
+                                Script("Progress.set", "#forFrameSync", 1);
+                                Script("loadFkf", fkfName);
+                                return;
+                            }
                         }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                            PassiveLog(e.ToString());
+                        }
+
+                        // 기존 버전에선 fkf 폴더 없이 그냥 temp 폴더에 있었음
+                        try
+                        {
+                            DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp"));
+                            if (di.Exists)
+                            {
+                                di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp/fkf"));
+                                if (!di.Exists)
+                                {
+                                    di.Create();
+                                }
+                                File.Move(Path.Combine(Application.StartupPath, "temp/" + fkfName), Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
+                                VideoInfo.FromFkfFile(Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
+                                Script("Progress.set", "#forFrameSync", 1);
+                                Script("loadFkf", fkfName);
+                                return;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                            PassiveLog(e.ToString());
+                        }
+
+                        // 없으면 새로 가져오기
+                        new VideoInfo(path, (ratio) =>
+                        {
+                            if (requestFramesPath == path)
+                            {   // 중간에 다른 파일 불러왔을 수도 있음
+                                Script("Progress.set", "#forFrameSync", ratio);
+                            }
+                        }).RefreshInfo((videoInfo) =>
+                        {
+                            Script("Progress.set", "#forFrameSync", 1);
+                            videoInfo.ReadKfs(true);
+                            videoInfo.SaveFkf("temp/fkf/" + fkfName);
+                            if (requestFramesPath == path)
+                            {   // 중간에 다른 파일 불러왔을 수도 있음
+                                Script("loadFkf", fkfName);
+                            }
+                        });
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
                         PassiveLog(e.ToString());
                     }
-
-                    // 기존 버전에선 fkf 폴더 없이 그냥 temp 폴더에 있었음
-                    try
-                    {
-                        DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp"));
-                        if (di.Exists)
-                        {
-                            di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp/fkf"));
-                            if (!di.Exists)
-                            {
-                                di.Create();
-                            }
-                            File.Move(Path.Combine(Application.StartupPath, "temp/" + fkfName), Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
-                            VideoInfo.FromFkfFile(Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
-                            Script("Progress.set", "#forFrameSync", 1);
-                            Script("loadFkf", fkfName);
-                            return;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                        PassiveLog(e.ToString());
-                    }
-
-                    // 없으면 새로 가져오기
-                    new VideoInfo(path, (ratio) => {
-                        if (requestFramesPath == path)
-                        {   // 중간에 다른 파일 불러왔을 수도 있음
-                            Script("Progress.set", "#forFrameSync", ratio);
-                        }
-                    }).RefreshInfo((videoInfo) =>
-                    {
-                        Script("Progress.set", "#forFrameSync", 1);
-                        videoInfo.ReadKfs(true);
-                        videoInfo.SaveFkf("temp/fkf/" + fkfName);
-                        if (requestFramesPath == path)
-                        {   // 중간에 다른 파일 불러왔을 수도 있음
-                            Script("loadFkf", fkfName);
-                        }
-                    });
-                }
-                catch (Exception e) {
-                    Console.WriteLine(e);
-                    PassiveLog(e.ToString());
-                }
-            }).Start();
+                }).Start();
             }
         }
         
@@ -1210,7 +1235,7 @@ namespace Jamaker
         }
         public void LoadThumbnailInfo()
         {
-        	StreamReader sr = null;
+            StreamReader sr = null;
             try
             {   // 설정 파일 경로
                 sr = new StreamReader(Path.Combine(Application.StartupPath, "temp/thumbnails/_.txt"), Encoding.UTF8);
@@ -1228,12 +1253,12 @@ namespace Jamaker
         }
         public void SetThumbnailSize(int width, int height)
         {
-        	if (TX != width || TY != height)
-    		{
-        		ClearThumbnails();
-        		TX = width;
-        		TY = height;
-    		}
+            if (TX != width || TY != height)
+            {
+                ClearThumbnails();
+                TX = width;
+                TY = height;
+            }
         }
         public void RenderThumbnails(string path, string paramsStr)
         {
@@ -1241,7 +1266,7 @@ namespace Jamaker
             isThumbnailsRendering = true;
             int procSeq = ++lastThumbnailsProcSeq;
             int fileSeq = lastThumbnailsFileSeq;
-            
+
             string[] list = paramsStr.Split('\n');
 
             new Thread(() =>
@@ -1398,21 +1423,21 @@ namespace Jamaker
                                         double[] sums = new double[TY];
                                         for (int y = 0; y < TY; y++)
                                         {
-                                        	// int y = get_global_id(0);
-                    	        			int pixel;
-                    	        			
+                                            // int y = get_global_id(0);
+                                            int pixel;
+
                                             sums[y] = 0;
                                             for (int x = 0; x < TX; x++)
                                             {
-                                            	pixel = (TX * y + x) * 3;
-                    	        				sums[y] += 0.299 * (arrDiff[pixel+0] = arrPrev[pixel+0] - arrTrgt[pixel+0]);
-                    	        				sums[y] += 0.587 * (arrDiff[pixel+1] = arrPrev[pixel+1] - arrTrgt[pixel+1]);
-                    	        				sums[y] += 0.114 * (arrDiff[pixel+2] = arrPrev[pixel+2] - arrTrgt[pixel+2]);
+                                                pixel = (TX * y + x) * 3;
+                                                sums[y] += 0.299 * (arrDiff[pixel+0] = arrPrev[pixel+0] - arrTrgt[pixel+0]);
+                                                sums[y] += 0.587 * (arrDiff[pixel+1] = arrPrev[pixel+1] - arrTrgt[pixel+1]);
+                                                sums[y] += 0.114 * (arrDiff[pixel+2] = arrPrev[pixel+2] - arrTrgt[pixel+2]);
                                             }
                                         }
                                         for (int y = 0; y < TY; y++)
                                         {
-                                        	sum += sums[y];
+                                            sum += sums[y];
                                         }
 
                                         // 페이드 효과에 대해선 더 잘 보이도록
@@ -1429,28 +1454,28 @@ namespace Jamaker
 
                                             for (int x = 0; x < TX; x++)
                                             {
-                                            	pixel = (TX * y + x) * 3;
-                                            	
+                                                pixel = (TX * y + x) * 3;
+
                                                 // 이전 프레임과 차이
-                                            	v = arrDiff[pixel+0] * a; if (v < 0) v = -v; arr2[pixel+0] = (byte)(v < 255 ? v : 255);
-                                            	v = arrDiff[pixel+1] * a; if (v < 0) v = -v; arr2[pixel+1] = (byte)(v < 255 ? v : 255);
-                                            	v = arrDiff[pixel+2] * a; if (v < 0) v = -v; arr2[pixel+2] = (byte)(v < 255 ? v : 255);
+                                                v = arrDiff[pixel+0] * a; if (v < 0) v = -v; arr2[pixel+0] = (byte)(v < 255 ? v : 255);
+                                                v = arrDiff[pixel+1] * a; if (v < 0) v = -v; arr2[pixel+1] = (byte)(v < 255 ? v : 255);
+                                                v = arrDiff[pixel+2] * a; if (v < 0) v = -v; arr2[pixel+2] = (byte)(v < 255 ? v : 255);
 
                                                 // 밝기 변화량
                                                 //v = (int)((arrDiff[pixel+0] + arrDiff[pixel+1] + arrDiff[pixel+2]) * a);
                                                 // RGB 중에 가장 조금 변화한 것만 확인
-                                                diffR = arrDiff[pixel + 0]; if (diffR < 0) diffR = -diffR; v = diffR;
-                                                diffG = arrDiff[pixel + 1]; if (diffG < 0) diffG = -diffG; v = (v < diffG ? v : diffG);
-                                                diffB = arrDiff[pixel + 2]; if (diffG < 0) diffG = -diffB; v = (v < diffB ? v : diffB);
+                                                diffR = arrDiff[pixel+0]; if (diffR < 0) diffR = -diffR; v = diffR;
+                                                diffG = arrDiff[pixel+1]; if (diffG < 0) diffG = -diffG; v = (v < diffG ? v : diffG);
+                                                diffB = arrDiff[pixel+2]; if (diffG < 0) diffG = -diffB; v = (v < diffB ? v : diffB);
                                                 v *= a;
 
                                                 if (v > 0) {
-                                                	arr3[pixel+0] = (byte)(v < 255 ? v : 255);
-                                                	arr3[pixel+2] = 0;
+                                                    arr3[pixel+0] = (byte)(v < 255 ? v : 255);
+                                                    arr3[pixel+2] = 0;
                                                 } else {
-                                                	v = -v;
-                                                	arr3[pixel+0] = 0;
-                                                	arr3[pixel+2] = (byte)(v < 255 ? v : 255);
+                                                    v = -v;
+                                                    arr3[pixel+0] = 0;
+                                                    arr3[pixel+2] = (byte)(v < 255 ? v : 255);
                                                 }
                                                 arr3[pixel+1] = (byte)avg;
                                             }
@@ -1497,7 +1522,7 @@ namespace Jamaker
 
             }).Start();
         }
-        
+
         public void CancelRenderThumbnails()
         {
             if (isThumbnailsRendering)
@@ -1671,6 +1696,7 @@ namespace Jamaker
                 Invoke(new Action(() => { SaveWithDialog(videoPath); }));
                 return;
             }
+
             string directory = null;
             string filename = null;
             if (videoPath != null)
@@ -1690,27 +1716,39 @@ namespace Jamaker
             SaveOrder order = saveOrders[saveIndex];
 
             string filter = "";
-			switch (order.type) {
-				case 0:
-				case 1: filter = "SAMI 자막|*.smi;*.sami"; break;
-				case 2: filter = "ASS 자막|*.ass"; break;
-				case 3: filter = "SRT 자막|*.srt"; break;
-			}
-			if (order.type == 0) {
-				filter += "|Jamakaer 프로젝트|*.jmk";
-			}
-            SaveFileDialog dialog = new SaveFileDialog {
-                Filter = filter
-            ,   InitialDirectory = directory
-            ,   FileName = filename
-            };
-            if (dialog.ShowDialog() != DialogResult.OK)
-            {   // 저장 취소
-                AfterSave();
-                return;
+            switch (order.type) {
+                case 0:
+                case 1: filter = "SAMI 자막|*.smi;*.sami"; break;
+                case 2: filter = "ASS 자막|*.ass"; break;
+                case 3: filter = "SRT 자막|*.srt"; break;
             }
-            order.path = dialog.FileName;
-            Save();
+            if (order.type == 0) {
+                filter += "|Jamakaer 프로젝트|*.jmk";
+            }
+
+            bool saved = false;
+            {
+                SaveFileDialog dialog = new SaveFileDialog
+                {   Filter = filter
+                ,   InitialDirectory = directory
+                ,   FileName = filename
+                };
+                if (saved = (dialog.ShowDialog() == DialogResult.OK))
+                {
+                    filename = dialog.FileName;
+                }
+            }
+
+            if (saved)
+            {
+                order.path = filename;
+                Save();
+            }
+            else
+            {
+                // 저장 취소
+                AfterSave();
+            }
         }
         public void SaveTemp(string text, string path)
         {   // 임시 파일 저장

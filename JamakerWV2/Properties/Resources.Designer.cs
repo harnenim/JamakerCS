@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace JamakerWV2.Properties {
+namespace Jamaker.Properties {
     using System;
     
     

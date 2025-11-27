@@ -1,5 +1,4 @@
 using Jamaker.addon;
-using JamakerWV2.Properties;
 using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Reflection;
@@ -32,7 +31,7 @@ namespace Jamaker
             Opacity = 0;
 
             InitializeAsync("Jamaker", new Binder(this));
-            Icon = Resources.JamakerIcon;
+            Icon = Properties.Resources.JamakerIcon;
 
             SetStyle(ControlStyles.SupportsTransparentBackColor, true);
             BackColor = Color.Transparent;
@@ -84,7 +83,7 @@ namespace Jamaker
         }
         public override void AfterOpenPopup(string name, PopupForm popup)
         {
-            popup.Icon = Resources.JamakerIcon;
+            popup.Icon = Properties.Resources.JamakerIcon;
             switch (name)
             {
                 case "viewer":
@@ -392,7 +391,7 @@ namespace Jamaker
             }
             RECT shadow = WinAPI.GetWindowShadow(Handle.ToInt32());
             _ = WinAPI.GetWindowRect(windows["editor"], ref offset);
-            if ((lastOffset.top != offset.top
+            if ((   lastOffset.top != offset.top
                  || lastOffset.left != offset.left
                  || lastOffset.right != offset.right
                  || lastOffset.bottom != offset.bottom
@@ -402,7 +401,7 @@ namespace Jamaker
             {
                 int moveX = offset.left - lastOffset.left;
                 int moveY = offset.top - lastOffset.top;
-
+            	
                 try
                 {
                     if (popups.TryGetValue("viewer", out PopupForm? popup))
@@ -478,19 +477,19 @@ namespace Jamaker
                 {
                     _ = WinAPI.GetWindowRectWithoutShadow(windows["editor"], ref offset);
                     Script("eval",
-                        $"setting.window.x = {offset.left};"
-                      + $"setting.window.y = {offset.top};"
-                      + $"setting.window.width = {offset.right - offset.left};"
-                      + $"setting.window.height = {offset.bottom - offset.top};"
+                        $"setting.window.x = { offset.left };"
+                    +   $"setting.window.y = { offset.top };"
+                    +   $"setting.window.width = { offset.right - offset.left };"
+                    +   $"setting.window.height = { offset.bottom - offset.top };"
                     );
 
                     if (popups.TryGetValue("viewer", out PopupForm? popup))
                     {
                         Script("eval",
-                            $"setting.viewer.window.x = {popup.Location.X + shadow.left};"
-                          + $"setting.viewer.window.y = {popup.Location.Y + shadow.top};"
-                          + $"setting.viewer.window.width = {popup.Size.Width - shadow.left + shadow.right};"
-                          + $"setting.viewer.window.height = {popup.Size.Height - shadow.top + shadow.bottom};"
+                            $"setting.viewer.window.x = { popup.Location.X + shadow.left };"
+                        +   $"setting.viewer.window.y = { popup.Location.Y + shadow.top };"
+                        +   $"setting.viewer.window.width = { popup.Size.Width - shadow.left + shadow.right };"
+                        +   $"setting.viewer.window.height = { popup.Size.Height - shadow.top + shadow.bottom };"
                         );
                     }
                     else
@@ -500,10 +499,10 @@ namespace Jamaker
                         {
                             _ = WinAPI.GetWindowRect(viewer, ref viewerOffset);
                             Script("eval",
-                                $"setting.viewer.window.x = {viewerOffset.left - shadow.left};"
-                              + $"setting.viewer.window.y = {viewerOffset.top - shadow.top};"
-                              + $"setting.viewer.window.width = {viewerOffset.right - viewerOffset.left + shadow.left - shadow.right};"
-                              + $"setting.viewer.window.height = {viewerOffset.bottom - viewerOffset.top + shadow.bottom - shadow.top};"
+                                $"setting.viewer.window.x = { viewerOffset.left - shadow.left };"
+                            +   $"setting.viewer.window.y = { viewerOffset.top - shadow.top };"
+                            +   $"setting.viewer.window.width = { viewerOffset.right - viewerOffset.left + shadow.left - shadow.right };"
+                            +   $"setting.viewer.window.height = { viewerOffset.bottom - viewerOffset.top + shadow.bottom - shadow.top };"
                             );
                         }
                     }
@@ -513,10 +512,10 @@ namespace Jamaker
                     {
                         PlayerBridge.RECT playerOffset = this.player.GetWindowPosition();
                         Script("eval",
-                            $"setting.player.window.x = {playerOffset.left};"
-                          + $"setting.player.window.y = {playerOffset.top};"
-                          + $"setting.player.window.width = {playerOffset.right - playerOffset.left};"
-                          + $"setting.player.window.height = {playerOffset.bottom - playerOffset.top};"
+                            $"setting.player.window.x = { playerOffset.left };"
+                        +   $"setting.player.window.y = { playerOffset.top };"
+                        +   $"setting.player.window.width = { playerOffset.right - playerOffset.left };"
+                        +   $"setting.player.window.height = { playerOffset.bottom - playerOffset.top };"
                         );
                     }
                     Script("saveSetting");
@@ -530,9 +529,9 @@ namespace Jamaker
         // Finder, Viewer는 팝업 형태 제한
         public void SendMsg(string target, string msg) { ScriptToPopup(target, "sendMsg", msg); }
         public void OnloadFinder() { Script("SmiEditor.Finder.onload"); }
-        public void OnloadFinder(string last) { ScriptToPopup("finder", "init", last); }
-        public void RunFind(string param) { Script("SmiEditor.Finder.runFind", param); }
-        public void RunReplace(string param) { Script("SmiEditor.Finder.runReplace", param); }
+        public void OnloadFinder (string last ) { ScriptToPopup("finder", "init", last); }
+        public void RunFind      (string param) { Script("SmiEditor.Finder.runFind"      , param); }
+        public void RunReplace   (string param) { Script("SmiEditor.Finder.runReplace"   , param); }
         public void RunReplaceAll(string param) { Script("SmiEditor.Finder.runReplaceAll", param); }
 
         public void UpdateViewerSetting()
@@ -749,7 +748,7 @@ namespace Jamaker
 
             useMovePlayer = useMove;
         }
-
+        
         public void SelectPlayerPath()
         {
             if (InvokeRequired)
@@ -757,7 +756,7 @@ namespace Jamaker
                 Invoke(new Action(() => { SelectPlayerPath(); }));
                 return;
             }
-
+            
             string? filename = null;
 
             RunDialog(() =>
@@ -986,6 +985,7 @@ namespace Jamaker
             }
         }
 
+        // 공통 웹폼에 VideoInfo 참조 넣기는 좀 미묘...
         public int CheckFFmpegWithAlert()
         {
             int status = VideoInfo.CheckFFmpeg();
@@ -1016,7 +1016,7 @@ namespace Jamaker
                 }
             }
         }
-
+        
         private void LoadFile(string path)
         {
             LoadFile(path, false, false);
@@ -1438,28 +1438,22 @@ namespace Jamaker
 
                                 // 실제 필요한 이미지 경로
                                 string img1 = Path.Combine(Application.StartupPath, $"{dir}/{fileSeq}_{begin + index}{flag}.jpg");
-                                try
-                                {
+                                try {
                                     if (File.Exists(img1)) File.Delete(img1);
                                     File.Move(img0, img1);
-                                }
-                                catch (Exception e) { Console.WriteLine(e); }
+                                } catch (Exception e) { Console.WriteLine(e); }
 
                                 // 프레임 간 차이 이미지 경로
                                 string img2 = Path.Combine(Application.StartupPath, $"{dir}/{fileSeq}_{begin + index}{flag}_.jpg");
-                                try
-                                {
+                                try {
                                     if (File.Exists(img2)) File.Delete(img2);
-                                }
-                                catch (Exception e) { Console.WriteLine(e); }
+                                } catch (Exception e) { Console.WriteLine(e); }
 
                                 // 밝기 변화 이미지 경로
                                 string img3 = Path.Combine(Application.StartupPath, $"{dir}/{fileSeq}_{begin + index}{flag}~.jpg");
-                                try
-                                {
+                                try {
                                     if (File.Exists(img3)) File.Delete(img3);
-                                }
-                                catch (Exception e) { Console.WriteLine(e); }
+                                } catch (Exception e) { Console.WriteLine(e); }
 
                                 if (bLast != null)
                                 {
@@ -1489,9 +1483,9 @@ namespace Jamaker
                                             for (int x = 0; x < TX; x++)
                                             {
                                                 pixel = (TX * y + x) * 3;
-                                                sums[y] += 0.299 * (arrDiff[pixel + 0] = arrPrev[pixel + 0] - arrTrgt[pixel + 0]);
-                                                sums[y] += 0.587 * (arrDiff[pixel + 1] = arrPrev[pixel + 1] - arrTrgt[pixel + 1]);
-                                                sums[y] += 0.114 * (arrDiff[pixel + 2] = arrPrev[pixel + 2] - arrTrgt[pixel + 2]);
+                                                sums[y] += 0.299 * (arrDiff[pixel + 0] = arrPrev[pixel+0] - arrTrgt[pixel+0]);
+                                                sums[y] += 0.587 * (arrDiff[pixel + 1] = arrPrev[pixel+1] - arrTrgt[pixel+1]);
+                                                sums[y] += 0.114 * (arrDiff[pixel + 2] = arrPrev[pixel+2] - arrTrgt[pixel+2]);
                                             }
                                         }
                                         for (int y = 0; y < TY; y++)
@@ -1516,30 +1510,27 @@ namespace Jamaker
                                                 pixel = (TX * y + x) * 3;
 
                                                 // 이전 프레임과 차이
-                                                v = arrDiff[pixel + 0] * a; if (v < 0) v = -v; arr2[pixel + 0] = (byte)(v < 255 ? v : 255);
-                                                v = arrDiff[pixel + 1] * a; if (v < 0) v = -v; arr2[pixel + 1] = (byte)(v < 255 ? v : 255);
-                                                v = arrDiff[pixel + 2] * a; if (v < 0) v = -v; arr2[pixel + 2] = (byte)(v < 255 ? v : 255);
+                                                v = arrDiff[pixel+0] * a; if (v < 0) v = -v; arr2[pixel+0] = (byte)(v < 255 ? v : 255);
+                                                v = arrDiff[pixel+1] * a; if (v < 0) v = -v; arr2[pixel+1] = (byte)(v < 255 ? v : 255);
+                                                v = arrDiff[pixel+2] * a; if (v < 0) v = -v; arr2[pixel+2] = (byte)(v < 255 ? v : 255);
 
                                                 // 밝기 변화량
                                                 //v = (int)((arrDiff[pixel+0] + arrDiff[pixel+1] + arrDiff[pixel+2]) * a);
                                                 // RGB 중에 가장 조금 변화한 것만 확인
-                                                diffR = arrDiff[pixel + 0]; if (diffR < 0) diffR = -diffR; v = diffR;
-                                                diffG = arrDiff[pixel + 1]; if (diffG < 0) diffG = -diffG; v = (v < diffG ? v : diffG);
-                                                diffB = arrDiff[pixel + 2]; if (diffG < 0) diffG = -diffB; v = (v < diffB ? v : diffB);
+                                                diffR = arrDiff[pixel+0]; if (diffR < 0) diffR = -diffR; v = diffR;
+                                                diffG = arrDiff[pixel+1]; if (diffG < 0) diffG = -diffG; v = (v < diffG ? v : diffG);
+                                                diffB = arrDiff[pixel+2]; if (diffG < 0) diffG = -diffB; v = (v < diffB ? v : diffB);
                                                 v *= a;
 
-                                                if (v > 0)
-                                                {
-                                                    arr3[pixel + 0] = (byte)(v < 255 ? v : 255);
-                                                    arr3[pixel + 2] = 0;
-                                                }
-                                                else
-                                                {
+                                                if (v > 0) {
+                                                    arr3[pixel+0] = (byte)(v < 255 ? v : 255);
+                                                    arr3[pixel+2] = 0;
+                                                } else {
                                                     v = -v;
-                                                    arr3[pixel + 0] = 0;
-                                                    arr3[pixel + 2] = (byte)(v < 255 ? v : 255);
+                                                    arr3[pixel+0] = 0;
+                                                    arr3[pixel+2] = (byte)(v < 255 ? v : 255);
                                                 }
-                                                arr3[pixel + 1] = (byte)avg;
+                                                arr3[pixel+1] = (byte)avg;
                                             }
                                         }
 
@@ -1548,8 +1539,7 @@ namespace Jamaker
 
                                         Script("setDiff", $"{begin + index}{flag}", sum);
 
-                                    }
-                                    catch (Exception e) { Console.WriteLine(e); }
+                                    } catch (Exception e) { Console.WriteLine(e); }
                                 }
                                 else
                                 {
@@ -1562,8 +1552,7 @@ namespace Jamaker
                                         File.Copy(img1, img3);
                                         */
                                         bLast = new Bitmap(img1);
-                                    }
-                                    catch (Exception e) { Console.WriteLine(e); }
+                                    } catch (Exception e) { Console.WriteLine(e); }
                                 }
                             }
 
@@ -1773,15 +1762,13 @@ namespace Jamaker
             SaveOrder order = saveOrders[saveIndex];
 
             string filter = "";
-            switch (order.type)
-            {
+            switch (order.type) {
                 case 0:
                 case 1: filter = "SAMI 자막|*.smi;*.sami"; break;
                 case 2: filter = "ASS 자막|*.ass"; break;
                 case 3: filter = "SRT 자막|*.srt"; break;
             }
-            if (order.type == 0)
-            {
+            if (order.type == 0) {
                 filter += "|Jamakaer 프로젝트|*.jmk";
             }
 
@@ -1809,7 +1796,6 @@ namespace Jamaker
             {
                 // 저장 취소
                 AfterSave();
-                return;
             }
         }
         public void SaveTemp(string text, string path)
