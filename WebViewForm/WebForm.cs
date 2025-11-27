@@ -143,11 +143,29 @@ namespace WebViewForm
 
         public virtual void Prompt(string target, string msg, string def)
         {
+            WinAPI.EnableWindow(Handle, false);
+
+            string? value = null;
             Prompt prompt = new(GetHwnd(target), msg, GetTitle(), def);
-            DialogResult result = prompt.ShowDialog();
-            if (result == DialogResult.OK)
+
+            Thread thread = new(() =>
             {
-                Script("afterPrompt", prompt.value);
+                DialogResult result = prompt.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    value = prompt.value;
+                }
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+
+            WinAPI.EnableWindow(Handle, true);
+            Activate();
+
+            if (value != null)
+            {
+                Script("afterPrompt", value);
             }
         }
 

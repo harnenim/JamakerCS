@@ -35,6 +35,6 @@ namespace WebViewForm
 
         public void alert(string target, string msg) { _.Alert(target, msg); }
         public void confirm(string target, string msg) { _.Confirm(target, msg); }
-        public void Prompt(string target, string msg, string def) { _.Prompt(target, msg, def); }
+        public void prompt(string target, string msg, string def) { _.Prompt(target, msg, def); }
     }
 }

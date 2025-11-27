@@ -693,66 +693,61 @@ namespace Jamaker
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() =>
-                {
-                    SetPlayer(dll, path, withRun, useMove);
-                }));
+                Invoke(new Action(() => { SetPlayer(dll, path, withRun, useMove); }));
+                return;
             }
-            else
+            // 플레이어 선택이 바뀌었으면 연결 끊기
+            if (player != null && !dll.Equals(player.GetType().Name))
             {
-                // 플레이어 선택이 바뀌었으면 연결 끊기
-                if (player != null && !dll.Equals(player.GetType().Name))
-                {
-                    player = null;
-                }
-
-                string[] paths = path.Replace('\\', '/').Split('/');
-                string exe = paths[^1]; // paths[paths.Length - 1]
-
-                // 잔여 플레이어가 없으면 실행
-                if (player == null)
-                {
-                    try
-                    {   // DLL 파일 동적 호출
-                        string dllPath = Path.Combine(Application.StartupPath, $"bridge/{dll}.dll");
-                        Assembly asm = Assembly.LoadFile(dllPath);
-                        Type[] types = asm.GetExportedTypes();
-                        player = (PlayerBridge.PlayerBridge)Activator.CreateInstance(types[0])!;
-                    }
-                    catch
-                    {
-                        Script("alert", "플레이어 브리지 라이브러리가 없습니다.");
-                    }
-                    player?.SetEditorHwnd(Handle.ToInt32());
-                }
-
-                // 플레이어 있으면 exe 파일 설정
-                if (player != null)
-                {
-                    player.FindPlayer(exe);
-
-                    if (withRun && player.hwnd == 0)
-                    {
-                        new Thread(() =>
-                        {
-                            try
-                            {
-                                ProcessStartInfo startInfo = new()
-                                {   FileName = path
-                                ,   Arguments = null
-                                };
-                                Process.Start(startInfo);
-                            }
-                            catch
-                            {
-                                Script("alert", "플레이어를 실행하지 못했습니다.\n설정을 확인하시기 바랍니다.");
-                            }
-                        }).Start();
-                    }
-                }
-
-                useMovePlayer = useMove;
+                player = null;
             }
+
+            string[] paths = path.Replace('\\', '/').Split('/');
+            string exe = paths[^1]; // paths[paths.Length - 1]
+
+            // 잔여 플레이어가 없으면 실행
+            if (player == null)
+            {
+                try
+                {   // DLL 파일 동적 호출
+                    string dllPath = Path.Combine(Application.StartupPath, $"bridge/{dll}.dll");
+                    Assembly asm = Assembly.LoadFile(dllPath);
+                    Type[] types = asm.GetExportedTypes();
+                    player = (PlayerBridge.PlayerBridge)Activator.CreateInstance(types[0])!;
+                }
+                catch
+                {
+                    Script("alert", "플레이어 브리지 라이브러리가 없습니다.");
+                }
+                player?.SetEditorHwnd(Handle.ToInt32());
+            }
+
+            // 플레이어 있으면 exe 파일 설정
+            if (player != null)
+            {
+                player.FindPlayer(exe);
+
+                if (withRun && player.hwnd == 0)
+                {
+                    new Thread(() =>
+                    {
+                        try
+                        {
+                            ProcessStartInfo startInfo = new()
+                            {   FileName = path
+                            ,   Arguments = null
+                            };
+                            Process.Start(startInfo);
+                        }
+                        catch
+                        {
+                            Script("alert", "플레이어를 실행하지 못했습니다.\n설정을 확인하시기 바랍니다.");
+                        }
+                    }).Start();
+                }
+            }
+
+            useMovePlayer = useMove;
         }
 
         public void SelectPlayerPath()
