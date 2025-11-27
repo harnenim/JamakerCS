@@ -128,33 +128,3 @@ WebForm.prototype.initAfterLoad = function() {
 	this.windows[this.mainView.contentWindow.windowName] = window;
 };
 WebForm.prototype.beforeExit = (e) => {}
-
-function MenuStrip() {
-	const self = this;
-	this.view = $("<ol>").addClass("menustrip").css({
-			position: "absolute"
-		,	top: 0
-		,	left: 0
-		,	width: "100%"
-	}).on("click", "li", function(e) {
-		e.preventDefault();
-		const menu = $(this);
-		const submenu = menu.data("submenu");
-		if (submenu.hasClass("open")) {
-			submenu.removeClass("open");
-		} else {
-			self.openMenu(menu, submenu);
-		}
-	}).on("mouseover", "li", function() {
-		if ($(".submenu.open").length) {
-			self.openMenu($(this));
-		}
-	});
-	
-};
-MenuStrip.prototype.openMenu = function(menu, submenu) {
-	submenu = submenu ? submenu : menu.data("submenu");
-	$(".submenu.open").removeClass("open");
-	submenu.addClass("open").css({ left: menu.offset().left });
-	submenu.find("li:eq(0)").focus();
-};
