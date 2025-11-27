@@ -1861,11 +1861,15 @@ namespace Jamaker
             if (InvokeRequired)
             {
                 Invoke(new Action(() => { RunColorPicker(); }));
+                return;
             }
-            else
+
+            Thread thread = new(() =>
             {
-                new ColorPicker(this).ShowDialog(this);
-            }
+                new ColorPicker(this).ShowDialog();
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
         }
 
         public void InputText(string text)

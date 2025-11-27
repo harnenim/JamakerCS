@@ -9,9 +9,8 @@ namespace Jamaker.addon
         private MainForm _;
 
         public Bitmap buffer = new Bitmap(1, 1);
-        public Graphics pixel = null;
-        public Color color;
-        public string code;
+        public Graphics pixel;
+        public string? code;
 
         public ColorPicker(MainForm _)
         {
@@ -22,7 +21,7 @@ namespace Jamaker.addon
             MouseClick += OnMouseClickForColorPicker;
             KeyDown += OnKeyDownForColorPicker;
         }
-        public void OnMouseMoveForColorPicker(object sender, MouseEventArgs e)
+        public void OnMouseMoveForColorPicker(object? sender, MouseEventArgs e)
         {
             // 창 이동
             // TODO: 듀얼 모니터로, 서브모니터를 좌측에 두는 경우는??
@@ -30,7 +29,7 @@ namespace Jamaker.addon
 
             // 색상 뽑기
             pixel.CopyFromScreen(e.X, e.Y, 0, 0, new Size(1, 1));
-            color = buffer.GetPixel(0, 0);
+            Color color = buffer.GetPixel(0, 0);
             code = "#" + BitConverter.ToString(new byte[] { color.R, color.G, color.B }).Replace("-", "");
 
             border.Top = e.Y + 4;
@@ -41,13 +40,13 @@ namespace Jamaker.addon
             labelColor.Text = code;
             labelColor.ForeColor = border.BackColor = (color.R + color.G + color.B < 256) ? Color.White : Color.Black;
         }
-        public void OnMouseClickForColorPicker(object sender, MouseEventArgs e)
+        public void OnMouseClickForColorPicker(object? sender, MouseEventArgs e)
         {
-            _.InputText(code);
+            _.InputText(code!);
             Close();
         }
 
-        public void OnKeyDownForColorPicker(object sender, KeyEventArgs e)
+        public void OnKeyDownForColorPicker(object? sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Escape)
             {
