@@ -752,18 +752,31 @@ namespace Jamaker
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() =>
-                {
-                    SelectPlayerPath();
-                }));
+                Invoke(new Action(() => { SelectPlayerPath(); }));
+                return;
             }
-            else
+
+            WinAPI.EnableWindow(Handle, false);
+
+            string? filename = null;
+            Thread thread = new(() =>
             {
                 OpenFileDialog dialog = new() { Filter = "실행 파일|*.exe" };
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
-                    Script("afterSelectPlayerPath", dialog.FileName);
+                    filename = dialog.FileName;
                 }
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+
+            WinAPI.EnableWindow(Handle, true);
+            Activate();
+
+            if (filename != null)
+            {
+                Script("afterSelectPlayerPath", filename);
             }
         }
 
@@ -918,10 +931,28 @@ namespace Jamaker
                 Invoke(new Action(() => { OpenFile(); }));
                 return;
             }
-            OpenFileDialog dialog = new() { Filter = "지원되는 자막 파일|*.smi;*.sami;*.jmk;*.srt;*.ass" };
-            if (dialog.ShowDialog() == DialogResult.OK)
+
+            WinAPI.EnableWindow(Handle, false);
+
+            string? filename = null;
+            Thread thread = new(() =>
             {
-                LoadFile(dialog.FileName, false, true);
+                OpenFileDialog dialog = new() { Filter = "지원되는 자막 파일|*.smi;*.sami;*.jmk;*.srt;*.ass" };
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    filename = dialog.FileName;
+                }
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+
+            WinAPI.EnableWindow(Handle, true);
+            Activate();
+
+            if (filename != null)
+            {
+                LoadFile(filename, false, true);
             }
         }
         public void AfterInit(int limit)
@@ -1729,51 +1760,72 @@ namespace Jamaker
             if (InvokeRequired)
             {
                 Invoke(new Action(() => { SaveWithDialog(videoPath); }));
+                return;
             }
-            else
+
+            string? directory = null;
+            string? filename = null;
+            if (videoPath != null)
             {
-                string? directory = null;
-                string? filename = null;
-                if (videoPath != null)
+                videoPath = videoPath.Replace('/', '\\');
+                if (videoPath.IndexOf('\\') > 0)
                 {
-                    videoPath = videoPath.Replace('/', '\\');
-                    if (videoPath.IndexOf('\\') > 0)
+                    directory = videoPath[..videoPath.LastIndexOf('\\')];
+                    filename = videoPath[(directory.Length + 1)..];
+                    if (filename.Contains('.'))
                     {
-                        directory = videoPath[..videoPath.LastIndexOf('\\')];
-                        filename = videoPath[(directory.Length + 1)..];
-                        if (filename.Contains('.'))
-                        {
-                            filename = string.Concat(filename.AsSpan(0, filename.LastIndexOf('.')), ".smi");
-                        }
+                        filename = string.Concat(filename.AsSpan(0, filename.LastIndexOf('.')), ".smi");
                     }
                 }
+            }
 
-                SaveOrder order = saveOrders[saveIndex];
+            SaveOrder order = saveOrders[saveIndex];
 
-                string filter = "";
-                switch (order.type)
-                {
-                    case 0:
-                    case 1: filter = "SAMI 자막|*.smi;*.sami"; break;
-                    case 2: filter = "ASS 자막|*.ass"; break;
-                    case 3: filter = "SRT 자막|*.srt"; break;
-                }
-                if (order.type == 0)
-                {
-                    filter += "|Jamakaer 프로젝트|*.jmk";
-                }
+            string filter = "";
+            switch (order.type)
+            {
+                case 0:
+                case 1: filter = "SAMI 자막|*.smi;*.sami"; break;
+                case 2: filter = "ASS 자막|*.ass"; break;
+                case 3: filter = "SRT 자막|*.srt"; break;
+            }
+            if (order.type == 0)
+            {
+                filter += "|Jamakaer 프로젝트|*.jmk";
+            }
+
+            WinAPI.EnableWindow(Handle, false);
+
+            bool saved = false;
+            Thread thread = new(() =>
+            {
                 SaveFileDialog dialog = new()
                 {   Filter = filter
                 ,   InitialDirectory = directory
                 ,   FileName = filename
                 };
-                if (dialog.ShowDialog() != DialogResult.OK)
-                {   // 저장 취소
-                    AfterSave();
-                    return;
+                if (saved = (dialog.ShowDialog() == DialogResult.OK))
+                {
+                    filename = dialog.FileName;
                 }
-                order.path = dialog.FileName!;
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+
+            WinAPI.EnableWindow(Handle, true);
+            Activate();
+
+            if (saved)
+            {
+                order.path = filename!;
                 Save();
+            }
+            else
+            {
+                // 저장 취소
+                AfterSave();
+                return;
             }
         }
         public void SaveTemp(string text, string path)

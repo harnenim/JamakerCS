@@ -82,5 +82,8 @@ namespace WebViewForm
                 , true
             );
         }
+
+        [DllImport("user32.dll")]
+        public static extern bool EnableWindow(IntPtr hWnd, bool enable);
     }
 }
