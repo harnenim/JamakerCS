@@ -129,6 +129,11 @@ Binder.prototype.moveTo  = function(time) { this._.player.moveTo(time); }
 
 // 부가기능
 Binder.prototype.runColorPicker = function() { this._.runColorPicker(); }
+
+// 웹샘플용
+Binder.prototype.openTempDir = function() { this._.openTempDir() };
+Binder.prototype.exportSetting = function() { this._.exportSetting() };
+Binder.prototype.importSetting = function() { this._.importSetting() };
 </script>
 <script src="bridge/WebForm.js"></script>
 <script>
@@ -206,9 +211,11 @@ const window_open = function(url, name, options, opener) {
 					e.preventDefault();
 					editor.showDragging();
 				});
+				/*
 				$(cd).on("click", "*", function() {
 					$(".submenu.open").removeClass("open");
 				}).on("keydown", editor.keyDownForMenu);
+				*/
 			};
 			
 			setTimeout(() => {
@@ -635,57 +642,6 @@ window.MB = 9;
 {	// 메뉴
 	editor.menuKeys = {};
 	
-	editor.setMenus = function(menus) {
-		const body = $("body");
-		body.find(".submenu").remove();
-		this.menustrip.view.empty();
-		editor.menuKeys = {};
-		
-		menus = menus.concat([["샘플용"
-			, "GitHub실행|window.open('https://github.com/harnenim/Jamaker')"
-			, "플레이어 실행|binder.runPlayer()"
-			, "임시 저장 파일 확인하기|Jamaker.openTempDir()"
-			, "설정 export|Jamaker.exportSetting()"
-			, "설정 import|Jamaker.importSetting()"
-			, "가상 프레임 시간 생성|prompt('fps 값을 입력해 주세요.', (fps) => {"
-				+ "if (isFinite(fps)) {"
-				+ "    Subtitle.video.FL = 1000000 / (Subtitle.video.FR = Math.round(fps * 1000));"
-				+ "    Subtitle.video.fs.length = 0;"
-				+ "    for (let i = 0; i < 200000; i++) {"
-				+ "        Subtitle.video.fs.push(Math.round(i * Subtitle.video.FL));"
-				+ "    }"
-				+ "    afterSetFkf();"
-				+ "} else {"
-				+ "    alert('올바른 값이 아닙니다.');"
-				+ "}"
-			+ "}, Subtitle.video.FR / 1000);"
-			]]);
-		editor.mainView.contentWindow.Jamaker = editor;
-		
-		for (let i = 0; i < menus.length; i++) {
-			const list = menus[i];
-			const li = $("<li>").text(list[0]);
-			let menuKey = null;
-			if (list[0][list[0].length-4]=="(" && list[0][list[0].length-3]=="&" && list[0][list[0].length-1]==")") {
-				menuKey = list[0][list[0].length-2];
-				li.html(list[0].substring(0, list[0].length - 3) + "<u>"+menuKey+"</u>)");
-				editor.menuKeys[menuKey] = li;
-			}
-			const ol = $("<ol>").addClass("submenu").data("menu", li);
-			for (let j = 1; j < list.length; j++) {
-				const menu = list[j].split("|");
-				
-				ol.append($("<li tabindex='1'>").html(menu[0]).data("func", menu[1]).on("click", function() {
-					$(".submenu.open").removeClass("open");
-					const func = $(this).data("func");
-					editor.mainView.contentWindow.eval(func);
-				}));
-			}
-			body.append(ol);
-			li.data("submenu", ol);
-			this.menustrip.view.append(li);
-		}
-	}
 	editor.exportSetting = async function() {
 		const fb = await window.showSaveFilePicker({types:[{description:'JSON',accept:{'text/json':['.json']}}]});
 		if (fb) {
@@ -995,7 +951,7 @@ window.MB = 9;
 		localStorage.setItem(key, text);
 	}
 	editor.openTempDir = function() {
-		const hwnd = window.open("bridge/tempDir.html", "tempDir", "location=no,width=1,height=1");
+		const hwnd = window.open("../bridge/tempDir.html", "tempDir", "location=no,width=1,height=1");
 		const rect = editor.mainView.contentWindow.setting.player.window;
 		WinAPI.MoveWindow(hwnd, rect.x + 40, rect.y + 40, rect.width - 80, rect.height - 80);
 	}
@@ -1014,10 +970,11 @@ window.MB = 9;
 			,	textAlign: "center"
 			,	fontSize: 20
 		}).html("웹 간이 버전에서 드래그로 열 경우<br />저장 파일을 재지정해줘야 합니다.");
-		
+		/*
 		$("body").append((this.menustrip = new MenuStrip()).view);
 		this.mainView.style.top = "20px";
 		this.mainView.style.height = "calc(100% - 20px)";
+		*/
 	}
 }
 $(() => {

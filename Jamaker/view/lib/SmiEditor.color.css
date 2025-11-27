@@ -99,6 +99,30 @@ button:hover,
 	border-color: [notSaved];
 }
 
+/* 메뉴 */
+.menustrip {
+	background: [background];
+	color: [text];
+}
+.menustrip li:hover {
+	background: #99D1FF3F;
+	border-color: #99D1FF7F;
+}
+.menustrip li:focus,
+.menustrip li.open {
+	background: #99D1FF7F;
+	border-color: #99D1FF;
+}
+.submenu {
+	background: [background];
+	border-color: [selector];
+}
+.submenu li:hover,
+.submenu li:focus {
+	background: #91C9F7;
+	color: #000;
+}
+
 /* 스크롤바(배경색 기반)... */
 .input ::-webkit-scrollbar-thumb:hover { background-color: [border]; }
 .input .scrolling::-webkit-scrollbar-thumb { background-color: [tabBorder]7f; }

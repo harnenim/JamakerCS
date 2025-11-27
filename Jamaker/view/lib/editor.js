@@ -1,5 +1,7 @@
 window.time = 0;
 
+window.menustrip = null;
+
 window.tabs = [];
 window.tab = 0;
 window.closingTab = null;
@@ -2194,7 +2196,39 @@ function setSetting(setting, initial=false) {
 	$("input[name=Fontname]").attr({ placeholder: Subtitle.DefaultStyle.Fontname });
 	SmiEditor.stylePreset.find("input[name=Fontname]").attr({ placeholder: Subtitle.DefaultStyle.Fontname });
 	
-	binder.setMenus(JSON.stringify(setting.menu));
+	{
+		if (!menustrip) {
+			const $body = $("body");
+			$body.append((menustrip = new MenuStrip()).view);
+		}
+		
+		let menus = setting.menu;
+		if (binder
+		 && binder._
+		 && (typeof binder._ != "function") // WebView2에서는 선언 안 했어도 function을 반환함
+		) {
+			menus = menus.concat([["샘플용"
+				, "GitHub실행|window.open('https://github.com/harnenim/Jamaker')"
+				, "플레이어 실행|binder.runPlayer()"
+				, "임시 저장 파일 확인하기|binder.openTempDir()"
+				, "설정 export|binder.exportSetting()"
+				, "설정 import|binder.importSetting()"
+				, "가상 프레임 시간 생성|prompt('fps 값을 입력해 주세요.', (fps) => {"
+					+ "if (isFinite(fps)) {"
+					+ "    Subtitle.video.FL = 1000000 / (Subtitle.video.FR = Math.round(fps * 1000));"
+					+ "    Subtitle.video.fs.length = 0;"
+					+ "    for (let i = 0; i < 200000; i++) {"
+					+ "        Subtitle.video.fs.push(Math.round(i * Subtitle.video.FL));"
+					+ "    }"
+					+ "    afterSetFkf();"
+					+ "} else {"
+					+ "    alert('올바른 값이 아닙니다.');"
+					+ "}"
+				+ "}, Subtitle.video.FR / 1000);"
+			]]);
+		}
+		menustrip.setMenus(menus);
+	}
 	
 	window.setting = JSON.parse(JSON.stringify(setting));
 	

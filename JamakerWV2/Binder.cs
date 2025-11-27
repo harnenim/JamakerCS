@@ -17,15 +17,6 @@ namespace Jamaker
             _.SetFollowWindow(follow);
         }
 
-        public void setMenus(string menus)
-        {
-            _.SetMenus(ParseJson<string[][]>(menus));
-        }
-        public void focusToMenu(int keyCode)
-        {
-            _.FocusToMenu(keyCode);
-        }
-
         public void repairSetting()
         {
             _.RepairSetting();
@@ -131,10 +122,10 @@ namespace Jamaker
         #endregion
 
         #region 플레이어
-        public void playOrPause() { _.player.PlayOrPause(); }
-        public void play() { _.player.Play(); }
-        public void stop() { _.player.Stop(); }
-        public void moveTo(int time) { _.player.MoveTo(time); }
+        public void playOrPause() { _.player?.PlayOrPause(); }
+        public void play() { _.player?.Play(); }
+        public void stop() { _.player?.Stop(); }
+        public void moveTo(int time) { _.player?.MoveTo(time); }
         #endregion
 
         #region 부가기능

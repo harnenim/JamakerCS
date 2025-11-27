@@ -21,9 +21,6 @@ namespace Jamaker
         private readonly Dictionary<string, string> bridgeDlls = [];
         private readonly string[] args;
 
-        private readonly MenuStrip menuStrip;
-        private readonly MouseEventHandler clickMenuStrip;
-
         public MainForm(string[] args)
         {
             string ProcName = Process.GetCurrentProcess().ProcessName;
@@ -37,26 +34,6 @@ namespace Jamaker
 
             InitializeAsync("Jamaker", new Binder(this));
             Icon = Resources.JamakerIcon;
-            {
-                menuStrip = new MenuStrip
-                {
-                    Location = new Point(0, 0),
-                    Name = "menuStrip",
-                    Size = new Size(layerForDrag.Width, 0),
-                    TabIndex = 1,
-                    Text = "menuStrip"
-                };
-                menuStrip.MenuDeactivate += new EventHandler(EscapeMenuFocusAfterCheck);
-                menuStrip.KeyDown += new KeyEventHandler(KeyDownInMenuStrip);
-                menuStrip.LostFocus += new EventHandler(CloseMenuStrip);
-                menuStrip.TabIndex = 10;
-                Controls.Add(menuStrip);
-                MainMenuStrip = menuStrip;
-
-                ResizeAfterRefreshMenuStrip();
-
-                menuStrip!.MouseDown += clickMenuStrip = new MouseEventHandler(MouseDownInMenuStrip);
-            }
 
             SetStyle(ControlStyles.SupportsTransparentBackColor, true);
             BackColor = Color.Transparent;
@@ -82,16 +59,6 @@ namespace Jamaker
             InitWebView();
         }
 
-        private void ResizeAfterRefreshMenuStrip()
-        {
-            layerForDrag.Visible = true;
-            ResumeLayout(false);
-
-            mainView.Location = new Point(0, menuStrip.Height);
-            mainView.Size = new Size(layerForDrag.Width, layerForDrag.Height);
-            layerForDrag.Visible = false;
-            ResumeLayout(false);
-        }
         public override string GetTitle()
         {
             return "Jamaker";
@@ -849,122 +816,6 @@ namespace Jamaker
                         }
                     }
                 }
-            }
-        }
-        #endregion
-
-        #region ¸Þ´º
-        private void MouseDownInMenuStrip(object? sender, MouseEventArgs e)
-        {
-            menuStrip.Focus();
-        }
-        private void KeyDownInMenuStrip(object? sender, KeyEventArgs e)
-        {
-            switch (e.KeyCode)
-            {
-                case Keys.Tab: // ¾È ¸ÔÈû...
-                case Keys.Alt: // Alt·Î´Â ¾È ¸ÔÈ÷°í
-                case Keys.Menu: // Menu·Î ¸ÔÈû
-                case Keys.Escape:
-                    e.Handled = true;
-                    mainView.Focus();
-                    break;
-            }
-        }
-        private void EscapeMenuFocusAfterCheck(object? sender, EventArgs e)
-        {
-            foreach (ToolStripMenuItem item in menuStrip.Items)
-            {
-                if (item.Checked) return;
-            }
-            mainView.Focus();
-        }
-        private void CloseMenuStrip(object? sender, EventArgs e)
-        {
-            CloseMenuStrip();
-        }
-        private void CloseMenuStrip()
-        {
-            foreach (ToolStripMenuItem item in menuStrip.Items)
-            {
-                item.Checked = false;
-                item.HideDropDown();
-            }
-        }
-
-        public void SetMenus(string[][] menus)
-        {
-            if (InvokeRequired)
-            {
-                Invoke(new Action(() => { SetMenus(menus); }));
-                return;
-            }
-            menuStrip.Items.Clear();
-            foreach (string[] menu in menus)
-            {
-                string menuName = menu[0];
-                ToolStripMenuItem menuItem = new()
-                {   Text = menuName
-                ,   Name = menuName.Split('(')[0]
-                ,   Size = new Size(60, 20)
-                };
-                menuItem.MouseDown += clickMenuStrip;
-                menuStrip.Items.Add(menuItem);
-
-                for (int i = 1; i < menu.Length; i++)
-                {
-                    string[] tmp = menu[i].Split('|');
-                    string subMenuName = tmp[0];
-                    if (tmp.Length == 2)
-                    {
-                        string subMenuFunc = tmp[1];
-                        if (subMenuFunc.Length > 0)
-                        {
-                            ToolStripMenuItem subMenuItem = new()
-                            {   Text = subMenuName
-                            ,   Name = subMenuName.Split('(')[0]
-                            ,   Size = new Size(200, 22)
-                            };
-                            subMenuItem.Click += new((sender, e) =>
-                            {
-                                mainView.ExecuteScriptAsync(tmp[1]);
-                            });
-                            menuItem.DropDownItems.Add(subMenuItem);
-                        }
-                    }
-                }
-            }
-            ResizeAfterRefreshMenuStrip();
-        }
-        public void FocusToMenu(int keyCode)
-        {
-            if (InvokeRequired)
-            {
-                Invoke(new Action(() =>
-                {
-                    FocusToMenu(keyCode);
-                }));
-            }
-            else
-            {
-                // ¸Þ´º¿¡ Æ÷Ä¿½º ÁÖ±â
-                menuStrip.Focus();
-                ToolStripMenuItem toOpen = (ToolStripMenuItem)menuStrip.Items[0];
-                foreach (ToolStripItem item in menuStrip.Items)
-                {
-                    int index = item.Text!.IndexOf('&') + 1;
-                    if (index > 0)
-                    {
-                        char key = item.Text.ToUpper().ToCharArray()[index];
-                        if (key == keyCode)
-                        {
-                            toOpen = (ToolStripMenuItem)item;
-                            break;
-                        }
-                    }
-                }
-                toOpen.ShowDropDown();
-                toOpen.Select();
             }
         }
         #endregion

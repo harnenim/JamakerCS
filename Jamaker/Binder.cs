@@ -59,15 +59,6 @@ namespace Jamaker
             _.SetFollowWindow(follow);
         }
 
-        public void SetMenus(string menus)
-        {
-            _.SetMenus(ParseJson<string[][]>(menus));
-        }
-        public void FocusToMenu(int keyCode)
-        {
-            _.FocusToMenu(keyCode);
-        }
-
         public void RepairSetting()
         {
             _.RepairSetting();

@@ -374,7 +374,7 @@ SmiEditor.setSetting = (setting) => {
 				if (index > 0 && index < menu.length) {
 					const key = menu[index];
 					if ("A" <= key && key <= "Z") {
-						SmiEditor.withAlts[key] = "/*메뉴 접근*/ binder.focusToMenu(" + key.charCodeAt() + ");";
+						SmiEditor.withAlts[key] = "/*메뉴 접근*/";
 						SmiEditor.withAlts.reserved += key;
 					}
 				}
@@ -1210,18 +1210,6 @@ SmiEditor.activateKeyEvent = function() {
 					}
 					log("단축키 실행 end", funcSince);
 				}
-			}
-		}
-	}).on("keyup", function(e) {
-		switch (e.keyCode) {
-			case 18: {
-				if (lastKeyDown == 18) {
-					// Alt키만 눌렀다 뗐을 경우 메뉴에 포커스 넘기기
-					e.preventDefault();
-					binder.focusToMenu(0);
-				}
-				lastKeyDown = null;
-				break;
 			}
 		}
 	});
@@ -3616,7 +3604,7 @@ $(() => {
 	SmiEditor.refreshHighlight();
 	
 	if (window.Frame) {
-		SmiEditor.Finder = SmiEditor.Finder1;
+		SmiEditor.Finder = SmiEditor.Finder2;
 		SmiEditor.Finder.window = new Frame("finder.html", "finder", "", () => {
 			// 좌우 크기만 조절 가능
 			SmiEditor.Finder.window.frame.find(".tl, .t, .tr, .bl, .b, .br").remove();

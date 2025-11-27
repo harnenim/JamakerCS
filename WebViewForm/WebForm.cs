@@ -236,7 +236,6 @@ namespace WebViewForm
                 PopupForm popup = tmpPopup;
                 tmpPopup = null;
                 new Thread(() => { StandbyPopup(); }).Start();
-                popup.Opacity = 1;
                 popup.Show();
                 e.NewWindow = popup.mainView.CoreWebView2;
 
@@ -245,6 +244,7 @@ namespace WebViewForm
 
                 popup.Text = e.Name;
                 AfterOpenPopup(e.Name, popup);
+                popup.Opacity = 1;
             }
             e.Handled = true;
         }

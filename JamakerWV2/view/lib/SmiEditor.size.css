@@ -4,6 +4,28 @@
  * TODO: Jamaker.size.css 정도로 바꾸는 게 좋을 듯함...
  */
 
+body {
+	padding-top: 20px;
+}
+.menustrip {
+	height: 20px;
+}
+.menustrip li {
+	height: 20px;
+	padding: 0 calc(20px * 0.4);
+	border: 1px solid transparent;
+	font-size: calc(20px * 0.6);
+	line-height: calc(20px - 2px);
+}
+.submenu {
+	top: 20px;
+}
+.submenu li {
+	padding: 0 20px;
+	font-size: calc(20px * 0.6);
+	line-height: calc(20px * 1.1);
+}
+
 label, #showFps {
 	margin-left: calc(20px * 0.3);
 }
