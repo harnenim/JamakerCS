@@ -5,9 +5,6 @@ using System.Drawing.Imaging;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Windows.Controls.Primitives;
-using System.Windows.Forms;
-using System.Windows.Media.Media3D;
 using WebViewForm;
 
 namespace Jamaker
@@ -918,18 +915,13 @@ namespace Jamaker
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() =>
-                {
-                    OpenFile();
-                }));
+                Invoke(new Action(() => { OpenFile(); }));
+                return;
             }
-            else
+            OpenFileDialog dialog = new() { Filter = "지원되는 자막 파일|*.smi;*.sami;*.jmk;*.srt;*.ass" };
+            if (dialog.ShowDialog() == DialogResult.OK)
             {
-                OpenFileDialog dialog = new() { Filter = "지원되는 자막 파일|*.smi;*.sami;*.jmk,*.srt;*.ass" };
-                if (dialog.ShowDialog() == DialogResult.OK)
-                {
-                    LoadFile(dialog.FileName);
-                }
+                LoadFile(dialog.FileName, false, true);
             }
         }
         public void AfterInit(int limit)
@@ -998,30 +990,30 @@ namespace Jamaker
                 int index = path.LastIndexOf('.');
                 if (index > 0)
                 {
-                    LoadFile(string.Concat(path.AsSpan(0, index), ".jmk"), true);
+                    LoadFile(string.Concat(path.AsSpan(0, index), ".jmk"), true, false);
                 }
             }
         }
 
         private void LoadFile(string path)
         {
-            LoadFile(path, false);
+            LoadFile(path, false, false);
         }
-        private void LoadFile(string path, bool forVideo)
+        private void LoadFile(string path, bool forVideo, bool confirmed)
         {
             StreamReader? sr = null;
             try
             {
                 sr = new StreamReader(path, DetectEncoding(path));
                 string text = sr.ReadToEnd();
-                Script("openFile", path, text, forVideo);
+                Script("openFile", path, text, forVideo, confirmed);
             }
             catch (Exception e)
             {
                 if (path.EndsWith(".jmk"))
                 {
                     // 프로젝트 파일 없었으면 smi 파일로 재시도
-                    LoadFile(string.Concat(path.AsSpan(0, path.Length - 4), ".smi"), true);
+                    LoadFile(string.Concat(path.AsSpan(0, path.Length - 4), ".smi"), true, confirmed);
                 }
                 else
                 {

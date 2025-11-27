@@ -717,7 +717,7 @@ window.MB = 9;
 			]
 		});
 		if (fileBuffer && fileBuffer[0]) {
-			editor.loadFile(fileBuffer[0]);
+			editor.loadFile(fileBuffer[0], true);
 		}
 	}
 	editor.openFileForVideo = function() {
@@ -727,22 +727,20 @@ window.MB = 9;
 		editor.player.getFileName();
 	}
 	editor.openFileAfterGetVideoFileName = function(path) { /* Native */ }
-	editor.loadFile = async function(fb) {
+	editor.loadFile = async function(fb, confirmed=false) {
 		if (fb.createWritable) {
 			const index = fileBuffers.length;
 			fileBuffers.push(fb);
 			const file = await fb.getFile();
 			const text = await file.text();
-			editor.script("openFile", index + ":" + file.name, text, false);
+			editor.script("openFile", index + ":" + file.name, text, false, confirmed);
 		} else {
 			const file = fb;
 			const text = await file.text();
-			editor.script("openFile", file.name, text, false);
+			editor.script("openFile", file.name, text, false, confirmed);
 		}
 	}
 	editor.afterInit = function(limit=1) {
-		// TODO: ffmpeg 확인도 이쪽으로 옮길 것
-		
 		/*
 		C#에서 args 처리
 		let count = 0;
@@ -760,6 +758,8 @@ window.MB = 9;
 				count++;
 			}
 		}
+		
+		check ffmpeg도 돌림
 		*/
 	}
 	editor.loadAssFile = async function(fb) {

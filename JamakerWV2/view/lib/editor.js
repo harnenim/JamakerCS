@@ -2377,7 +2377,7 @@ function newFile() {
 	runIfCanOpenNewTab(openNewTab);
 }
 
-function openFile(path, text, forVideo) {
+function openFile(path, text, forVideo, confirmed=false) {
 	const funcSince = log("openFile start");
 	
 	$("#assSplitHoldSelector").hide();
@@ -2385,6 +2385,10 @@ function openFile(path, text, forVideo) {
 	if (path && path.toLowerCase().endsWith(".ass")) {
 		// 연동 ASS 파일 열기
 		loadAssFile(path, text);
+		
+	} else if (confirmed) {
+		// 현재 파일 닫는 걸 승인하고 파일 열기 대화상자를 거쳐서 온 경우
+		openNewTab(text, path, forVideo);
 		
 	} else {
 		// C#에서 파일 열 동안 canOpenNewTab 결과가 달라질 리는 없겠지만, 일단은 바깥에서 감싸주기
