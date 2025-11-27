@@ -6,6 +6,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Controls.Primitives;
+using System.Windows.Forms;
+using System.Windows.Media.Media3D;
 using WebViewForm;
 
 namespace Jamaker
@@ -281,7 +283,6 @@ namespace Jamaker
                 {
                     if (hwnd > 0)
                     {   // 윈도우 그림자 여백 보정
-                        Console.WriteLine($"hwnd = {hwnd}");
                         RECT shadow = WinAPI.GetWindowShadow(Handle.ToInt32());
 
                         if (popups.TryGetValue(target, out PopupForm? popup))
@@ -345,18 +346,33 @@ namespace Jamaker
         {
             foreach (string target in targets)
             {
-                int hwnd = GetHwnd(target);
-                if (hwnd > 0)
+                RECT shadow = WinAPI.GetWindowShadow(Handle.ToInt32());
+
+                if (popups.TryGetValue(target, out PopupForm? popup))
                 {
-                    RECT targetOffset = new();
-                    _ = WinAPI.GetWindowRectWithoutShadow(hwnd, ref targetOffset);
                     Script("afterGetWindow"
                         , target
-                        , targetOffset.left
-                        , targetOffset.top
-                        , targetOffset.right - targetOffset.left
-                        , targetOffset.bottom - targetOffset.top
+                        , popup.Location.X + shadow.left
+                        , popup.Location.Y + shadow.top
+                        , popup.Size.Width - shadow.left + shadow.right
+                        , popup.Size.Height - shadow.top + shadow.bottom
                     );
+                }
+                else
+                {
+                    int hwnd = GetHwnd(target);
+                    if (hwnd > 0)
+                    {
+                        RECT targetOffset = new();
+                        _ = WinAPI.GetWindowRectWithoutShadow(hwnd, ref targetOffset);
+                        Script("afterGetWindow"
+                            , target
+                            , targetOffset.left
+                            , targetOffset.top
+                            , targetOffset.right - targetOffset.left
+                            , targetOffset.bottom - targetOffset.top
+                        );
+                    }
                 }
             }
         }
@@ -370,6 +386,7 @@ namespace Jamaker
             {
                 return;
             }
+            RECT shadow = WinAPI.GetWindowShadow(Handle.ToInt32());
             _ = WinAPI.GetWindowRect(windows["editor"], ref offset);
             if ((lastOffset.top != offset.top
                  || lastOffset.left != offset.left
@@ -384,12 +401,15 @@ namespace Jamaker
 
                 try
                 {
-                    int viewer = windows["viewer"];
-                    if (viewer > 0)
+                    if (popups.TryGetValue("viewer", out PopupForm? popup))
                     {
+                        viewerOffset.top = popup.Location.Y;
+                        viewerOffset.left = popup.Location.X;
+                        viewerOffset.right = popup.Location.X + popup.Size.Width;
+                        viewerOffset.bottom = popup.Location.Y + popup.Size.Height;
+
                         int vMoveX = moveX;
                         int vMoveY = moveY;
-                        _ = WinAPI.GetWindowRect(viewer, ref viewerOffset);
                         if (viewerOffset.left - lastOffset.left > lastOffset.right - viewerOffset.left)
                         {   // 오른쪽 경계에 더 가까울 땐 오른쪽을 따라감
                             vMoveX = offset.right - lastOffset.right;
@@ -398,7 +418,30 @@ namespace Jamaker
                         {   // 아래쪽 경계에 더 가까울 땐 아래쪽을 따라감
                             vMoveY = offset.bottom - lastOffset.bottom;
                         }
-                        WinAPI.MoveWindow(viewer, vMoveX, vMoveY, ref viewerOffset);
+                        viewerOffset.top += vMoveY;
+                        viewerOffset.left += vMoveX;
+                        viewerOffset.right += vMoveX;
+                        viewerOffset.bottom += vMoveY;
+                        popup.Location = new Point(viewerOffset.left, viewerOffset.top);
+                    }
+                    else
+                    {
+                        int viewer = windows["viewer"];
+                        if (viewer > 0)
+                        {
+                            int vMoveX = moveX;
+                            int vMoveY = moveY;
+                            _ = WinAPI.GetWindowRect(viewer, ref viewerOffset);
+                            if (viewerOffset.left - lastOffset.left > lastOffset.right - viewerOffset.left)
+                            {   // 오른쪽 경계에 더 가까울 땐 오른쪽을 따라감
+                                vMoveX = offset.right - lastOffset.right;
+                            }
+                            if (viewerOffset.top - lastOffset.top > lastOffset.top - viewerOffset.top)
+                            {   // 아래쪽 경계에 더 가까울 땐 아래쪽을 따라감
+                                vMoveY = offset.bottom - lastOffset.bottom;
+                            }
+                            WinAPI.MoveWindow(viewer, vMoveX, vMoveY, ref viewerOffset);
+                        }
                     }
                 }
                 catch { }
@@ -429,24 +472,36 @@ namespace Jamaker
             {
                 if (--saveSettingAfter == 0)
                 {
-                    _ = WinAPI.GetWindowRect(windows["editor"], ref offset);
+                    _ = WinAPI.GetWindowRectWithoutShadow(windows["editor"], ref offset);
                     Script("eval",
-                        $"setting.window.x = {offset.left + 7};"
-                    + $"setting.window.y = {offset.top};"
-                    + $"setting.window.width = {offset.right - offset.left - 14};"
-                    + $"setting.window.height = {offset.bottom - offset.top - 9};"
+                        $"setting.window.x = {offset.left};"
+                      + $"setting.window.y = {offset.top};"
+                      + $"setting.window.width = {offset.right - offset.left};"
+                      + $"setting.window.height = {offset.bottom - offset.top};"
                     );
 
-                    int viewer = windows["viewer"];
-                    if (viewer > 0)
+                    if (popups.TryGetValue("viewer", out PopupForm? popup))
                     {
-                        _ = WinAPI.GetWindowRect(viewer, ref viewerOffset);
                         Script("eval",
-                            $"setting.viewer.window.x = {viewerOffset.left + 7};"
-                        + $"setting.viewer.window.y = {viewerOffset.top};"
-                        + $"setting.viewer.window.width = {viewerOffset.right - viewerOffset.left - 14};"
-                        + $"setting.viewer.window.height = {viewerOffset.bottom - viewerOffset.top - 9};"
+                            $"setting.viewer.window.x = {popup.Location.X + shadow.left};"
+                          + $"setting.viewer.window.y = {popup.Location.Y + shadow.top};"
+                          + $"setting.viewer.window.width = {popup.Size.Width - shadow.left + shadow.right};"
+                          + $"setting.viewer.window.height = {popup.Size.Height - shadow.top + shadow.bottom};"
                         );
+                    }
+                    else
+                    {
+                        int viewer = windows["viewer"];
+                        if (viewer > 0)
+                        {
+                            _ = WinAPI.GetWindowRect(viewer, ref viewerOffset);
+                            Script("eval",
+                                $"setting.viewer.window.x = {viewerOffset.left - shadow.left};"
+                              + $"setting.viewer.window.y = {viewerOffset.top - shadow.top};"
+                              + $"setting.viewer.window.width = {viewerOffset.right - viewerOffset.left + shadow.left - shadow.right};"
+                              + $"setting.viewer.window.height = {viewerOffset.bottom - viewerOffset.top + shadow.bottom - shadow.top};"
+                            );
+                        }
                     }
 
                     int player = this.player!.hwnd;
@@ -455,9 +510,9 @@ namespace Jamaker
                         PlayerBridge.RECT playerOffset = this.player.GetWindowPosition();
                         Script("eval",
                             $"setting.player.window.x = {playerOffset.left};"
-                        + $"setting.player.window.y = {playerOffset.top};"
-                        + $"setting.player.window.width = {playerOffset.right - playerOffset.left};"
-                        + $"setting.player.window.height = {playerOffset.bottom - playerOffset.top};"
+                          + $"setting.player.window.y = {playerOffset.top};"
+                          + $"setting.player.window.width = {playerOffset.right - playerOffset.left};"
+                          + $"setting.player.window.height = {playerOffset.bottom - playerOffset.top};"
                         );
                     }
                     Script("saveSetting");

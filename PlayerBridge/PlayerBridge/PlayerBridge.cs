@@ -76,7 +76,7 @@ namespace PlayerBridge
         /// <returns>최초 창의 위치</returns>
         public RECT? GetWindowInitialPosition()
         {
-            WinAPI.GetWindowRect(hwnd, ref initialOffset);
+            WinAPI.GetWindowRectWithoutShadow(hwnd, ref initialOffset);
             return (initialOffset.top + 100 < initialOffset.bottom) ? initialOffset : (RECT?)null;
         }
         /// <summary>
@@ -85,7 +85,7 @@ namespace PlayerBridge
         /// <returns>현재 창의 위치</returns>
         public RECT GetWindowPosition()
         {
-            WinAPI.GetWindowRect(hwnd, ref currentOffset);
+            WinAPI.GetWindowRectWithoutShadow(hwnd, ref currentOffset);
             return currentOffset;
         }
 

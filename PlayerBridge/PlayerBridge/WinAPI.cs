@@ -52,5 +52,24 @@ namespace PlayerBridge
         [DllImport("user32.dll")]
         public static extern int MoveWindow(int hwnd, int x, int y, int nWidth, int nHeight, bool bRepaint);
         // TODO: DwmSetWindowAttribute
+
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmGetWindowAttribute(int hwnd, int attr, out RECT rect, int size);
+        public static int GetWindowRectWithoutShadow(int hwnd, ref RECT rect)
+        {
+            return DwmGetWindowAttribute(hwnd, 9/*DWMWA_EXTENDED_FRAME_BOUNDS*/, out rect, Marshal.SizeOf(typeof(RECT)));
+        }
+        private static RECT shadow = new RECT();
+        public static RECT GetWindowShadow(int hwnd)
+        {
+            RECT defaults = new RECT();
+            _ = GetWindowRect(hwnd, ref defaults);
+            _ = GetWindowRectWithoutShadow(hwnd, ref shadow);
+            shadow.top -= defaults.top;
+            shadow.left -= defaults.left;
+            shadow.right -= defaults.right;
+            shadow.bottom -= defaults.bottom;
+            return shadow;
+        }
     }
 }
