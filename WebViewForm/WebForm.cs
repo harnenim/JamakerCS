@@ -143,12 +143,10 @@ namespace WebViewForm
 
         public virtual void Prompt(string target, string msg, string def)
         {
-            WinAPI.EnableWindow(Handle, false);
-
             string? value = null;
             Prompt prompt = new(GetHwnd(target), msg, GetTitle(), def);
 
-            Thread thread = new(() =>
+            RunDialog(() =>
             {
                 DialogResult result = prompt.ShowDialog();
                 if (result == DialogResult.OK)
@@ -156,17 +154,24 @@ namespace WebViewForm
                     value = prompt.value;
                 }
             });
+
+            if (value != null)
+            {
+                Script("afterPrompt", value);
+            }
+        }
+
+        public void RunDialog(ThreadStart action)
+        {
+            WinAPI.EnableWindow(Handle, false);
+
+            Thread thread = new(action);
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
             thread.Join();
 
             WinAPI.EnableWindow(Handle, true);
             Activate();
-
-            if (value != null)
-            {
-                Script("afterPrompt", value);
-            }
         }
 
         #region 파일 드래그

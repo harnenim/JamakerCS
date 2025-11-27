@@ -758,10 +758,9 @@ namespace Jamaker
                 return;
             }
 
-            WinAPI.EnableWindow(Handle, false);
-
             string? filename = null;
-            Thread thread = new(() =>
+
+            RunDialog(() =>
             {
                 OpenFileDialog dialog = new() { Filter = "실행 파일|*.exe" };
                 if (dialog.ShowDialog() == DialogResult.OK)
@@ -769,12 +768,6 @@ namespace Jamaker
                     filename = dialog.FileName;
                 }
             });
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
-            thread.Join();
-
-            WinAPI.EnableWindow(Handle, true);
-            Activate();
 
             if (filename != null)
             {
@@ -934,10 +927,9 @@ namespace Jamaker
                 return;
             }
 
-            WinAPI.EnableWindow(Handle, false);
-
             string? filename = null;
-            Thread thread = new(() =>
+
+            RunDialog(() =>
             {
                 OpenFileDialog dialog = new() { Filter = "지원되는 자막 파일|*.smi;*.sami;*.jmk;*.srt;*.ass" };
                 if (dialog.ShowDialog() == DialogResult.OK)
@@ -945,12 +937,6 @@ namespace Jamaker
                     filename = dialog.FileName;
                 }
             });
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
-            thread.Join();
-
-            WinAPI.EnableWindow(Handle, true);
-            Activate();
 
             if (filename != null)
             {
@@ -1799,10 +1785,9 @@ namespace Jamaker
                 filter += "|Jamakaer 프로젝트|*.jmk";
             }
 
-            WinAPI.EnableWindow(Handle, false);
-
             bool saved = false;
-            Thread thread = new(() =>
+
+            RunDialog(() =>
             {
                 SaveFileDialog dialog = new()
                 {   Filter = filter
@@ -1814,12 +1799,6 @@ namespace Jamaker
                     filename = dialog.FileName;
                 }
             });
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
-            thread.Join();
-
-            WinAPI.EnableWindow(Handle, true);
-            Activate();
 
             if (saved)
             {
