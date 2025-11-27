@@ -1001,7 +1001,7 @@ namespace Jamaker
             if (path.Length > 0)
             {
                 string[] paths = path.Replace('\\', '/').Split('/');
-                title += " - " + paths[paths.Length - 1];
+                title = $"{paths[paths.Length - 1]} - Jamaker";
             }
             SetTitle(title);
         }
