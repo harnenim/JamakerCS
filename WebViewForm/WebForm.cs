@@ -96,26 +96,26 @@ namespace WebViewForm
         }
         public void Script(string func, params object?[] args)
         {
-            InScript(ScriptToEval(func, args));
+            Eval(ScriptToEval(func, args));
         }
-        public void InScript(string script)
+        public void Eval(string script)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() => { InScript(script); }));
+                Invoke(new Action(() => { Eval(script); }));
                 return;
             }
             mainView.ExecuteScriptAsync(script);
         }
         public void ScriptToPopup(string name, string func, params object[] args)
         {
-            InScript(popups[name], ScriptToEval(func, args));
+            Eval(popups[name], ScriptToEval(func, args));
         }
-        public void InScript(PopupForm popup, string script)
+        public void Eval(PopupForm popup, string script)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() => { InScript(popup, script); }));
+                Invoke(new Action(() => { Eval(popup, script); }));
                 return;
             }
             popup.mainView.ExecuteScriptAsync(script);
@@ -204,7 +204,7 @@ namespace WebViewForm
             InitializeComponent();
             Name = name;
 
-            CoreWebView2EnvironmentOptions op = new("--disable-web-security");
+            CoreWebView2EnvironmentOptions op = new("--disable-web-security --disable-scroll-anchoring");
             env = await CoreWebView2Environment.CreateAsync(null, Path.Combine(Application.StartupPath, "temp"), op);
             await mainView.EnsureCoreWebView2Async(env);
             mainView.CoreWebView2.AddHostObjectToScript("binder", binder);
@@ -234,16 +234,29 @@ namespace WebViewForm
             if (tmpPopup != null)
             {
                 PopupForm popup = tmpPopup;
-                tmpPopup = null;
-                new Thread(() => { StandbyPopup(); }).Start();
+                if (popups.TryGetValue(e.Name, out var oldPopup))
+                {
+                    popup = oldPopup;
+                }
+                else
+                {
+                    tmpPopup = null;
+                    new Thread(() => { StandbyPopup(); }).Start();
+                }
                 popup.Show();
-                e.NewWindow = popup.mainView.CoreWebView2;
+                if (!popup.fixedUrl)
+                {
+                    e.NewWindow = popup.mainView.CoreWebView2;
+                }
 
                 popups[e.Name] = urlPopups[e.Uri] = popup;
                 windows[e.Name] = popup.Handle.ToInt32();
 
                 popup.Text = e.Name;
                 AfterOpenPopup(e.Name, popup);
+                popup.FormClosed += (s2, e2) => {
+                    popups.Remove(e.Name);
+                };
                 popup.Opacity = 1;
             }
             e.Handled = true;

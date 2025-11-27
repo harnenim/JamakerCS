@@ -62,7 +62,7 @@ namespace Jamaker
         {
             return "Jamaker";
         }
-        public override void Alert(string target, string msg) { base.Alert(target == "finder" ? "editor" : target, msg); }
+//        public override void Alert(string target, string msg) { base.Alert(target == "finder" ? "editor" : target, msg); }
 
         private async void InitWebView()
         {
@@ -91,16 +91,23 @@ namespace Jamaker
                     popup.ShowInTaskbar = false;
                     popup.MaximizeBox = false;
                     popup.MinimizeBox = false;
+                    popup.fixedUrl = true;
                     break;
                 case "finder":
                     popup.ShowInTaskbar = false;
                     popup.MaximizeBox = false;
                     popup.MinimizeBox = false;
+                    popup.fixedUrl = true;
                     popup.TopMost = true;
                     popup.Opacity = 0.9;
                     popup.FormBorderStyle = FormBorderStyle.FixedSingle;
                     popup.Deactivate += (sender, e) => { popup.Opacity = 0.5; };
                     popup.Activated += (sender, e) => { popup.Opacity = 0.9; };
+                    popup.FormClosing += (sender, e) =>
+                    {   // 찾기/바꾸기 창은 끄지 않고 숨기기만 함
+                        e.Cancel = true;
+                        popup.Hide();
+                    };
                     break;
             }
         }
@@ -250,7 +257,7 @@ namespace Jamaker
                 int hwnd = GetHwnd(target);
                 if (!target.Equals("editor"))
                 {   // follow window 동작 일시정지
-                    _ = WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
+                    _ = WinAPI.GetWindowRectWithoutShadow(windows["editor"], ref lastOffset);
                 }
                 if (!resizable)
                 {
@@ -968,6 +975,9 @@ namespace Jamaker
             bool showDevTools = File.Exists(Path.Combine(Application.StartupPath, $"setting/.ShowDevTools"));
             mainView.CoreWebView2.Settings.AreDevToolsEnabled = showDevTools;
             mainView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = showDevTools;
+
+            // CefSharp에선 안 그랬는데, WebView2에서 자꾸 스크롤이 내려감
+            Eval("$('textarea').scrollTop(0);");
 
             // 최초 실행 시 ffmpeg 존재 여부 확인인데, 창 위치 잡아준 후에 alert 돌아가도록 함
             int status = CheckFFmpegWithAlert();

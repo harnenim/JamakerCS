@@ -647,8 +647,6 @@ SmiEditor.prototype.bindEvent = function() {
 	
 	{
 		// 싱크 영역에서 휠 돌리는 경우
-		let targetScrollTop = 0;
-		let lastScrollStart = -1;
 		this.colSync.on("scroll", function(e) {
 			if (e.ctrlKey || e.shiftKey || e.altKey) {
 				return;

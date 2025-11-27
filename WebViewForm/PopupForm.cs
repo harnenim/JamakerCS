@@ -1,5 +1,4 @@
 ﻿using Microsoft.Web.WebView2.Core;
-using System.Windows.Controls.Primitives;
 
 namespace WebViewForm
 {
@@ -12,14 +11,14 @@ namespace WebViewForm
             InitWebView(env);
         }
 
+        public bool fixedUrl = false;
+
         private async void InitWebView(CoreWebView2Environment env)
         {
             await mainView.EnsureCoreWebView2Async(env);
-            mainView.Source = new Uri(Path.Combine(Directory.GetCurrentDirectory(), "view/test.html"));
-
             mainView.CoreWebView2.DocumentTitleChanged += (s, e) => { try { Text = mainView.CoreWebView2.DocumentTitle; } catch { } };
-            mainView.CoreWebView2.NavigationStarting += (s, e) => { Activate(); };
-            mainView.CoreWebView2.WindowCloseRequested += (s2, e2) => { try { Close(); } catch { } };
+            mainView.NavigationStarting += (s, e) => { Activate(); };
+            mainView.CoreWebView2.WindowCloseRequested += (s, e) => { try { Close(); } catch { } };
         }
     }
 }
