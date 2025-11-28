@@ -29,6 +29,7 @@ namespace Jamaker
                 Process.GetCurrentProcess().Kill();
             }
             Opacity = 0;
+            _ = WinAPI.MoveWindow(Handle.ToInt32(), -10000, -10000, Width, Height, true);
 
             InitializeAsync("Jamaker", new Binder(this));
             Icon = Properties.Resources.JamakerIcon;

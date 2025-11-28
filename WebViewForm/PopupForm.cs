@@ -6,7 +6,6 @@ namespace WebViewForm
     {
         public PopupForm(CoreWebView2Environment env)
         {
-            Opacity = 0;
             InitializeComponent();
             InitWebView(env);
         }

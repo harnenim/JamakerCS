@@ -273,6 +273,8 @@ namespace WebViewForm
                 return;
             }
             tmpPopup = new PopupForm(env!);
+            tmpPopup.Opacity = 0;
+            _ = WinAPI.MoveWindow(tmpPopup.Handle.ToInt32(), -10000, -10000, tmpPopup.Width, tmpPopup.Height, true);
         }
 
         private PopupForm? tmpPopup;
