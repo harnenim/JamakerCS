@@ -1,9 +1,11 @@
 using Jamaker.addon;
+using Microsoft.Web.WebView2.Core;
 using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows.Controls.Primitives;
 using WebViewForm;
 
 namespace Jamaker
@@ -81,35 +83,52 @@ namespace Jamaker
             }
             catch { }
         }
-        public override void AfterOpenPopup(string name, PopupForm popup)
+        public override void AfterOpenPopup(string name, PopupForm popup, bool reuse)
         {
             popup.Icon = Properties.Resources.JamakerIcon;
             switch (name)
             {
                 case "viewer":
-                    popup.ShowInTaskbar = false;
-                    popup.MaximizeBox = false;
-                    popup.MinimizeBox = false;
-                    popup.fixedUrl = true;
+                    if (!reuse)
+                    {
+                        popup.ShowInTaskbar = false;
+                        popup.MaximizeBox = false;
+                        popup.MinimizeBox = false;
+                        popup.fixedUrl = true;
+                    }
                     break;
                 case "finder":
-                    popup.ShowInTaskbar = false;
-                    popup.MaximizeBox = false;
-                    popup.MinimizeBox = false;
-                    popup.fixedUrl = true;
-                    popup.TopMost = true;
-                    popup.Opacity = 0.9;
-                    popup.FormBorderStyle = FormBorderStyle.FixedSingle;
-                    popup.Deactivate += (sender, e) => { popup.Opacity = 0.5; };
-                    popup.Activated += (sender, e) => { popup.Opacity = 0.9; };
-                    popup.FormClosing += (sender, e) =>
-                    {   // 찾기/바꾸기 창은 끄지 않고 숨기기만 함
-                        e.Cancel = true;
-                        popup.Hide();
-                    };
+                    if (!reuse)
+                    {
+                        popup.ShowInTaskbar = false;
+                        popup.MaximizeBox = false;
+                        popup.MinimizeBox = false;
+                        popup.fixedUrl = true;
+                        popup.TopMost = true;
+                        popup.FormBorderStyle = FormBorderStyle.FixedSingle;
+                        Deactivate += (sender, e) => { popup.Opacity = 0.9; };
+                        Activated  += (sender, e) => { popup.Opacity = 0.5; };
+                        popup.FormClosing += (sender, e) =>
+                        {   // 찾기/바꾸기 창은 끄지 않고 숨기기만 함
+                            e.Cancel = true;
+                            popup.Hide();
+                        };
+                        //popup.mainView.NavigationCompleted += HideFirst;
+                    }
+                    else
+                    {
+                        popup.Opacity = 0.9;
+                        Eval("SmiEditor.Finder.onload()");
+                    }
                     break;
             }
         }
+        private static EventHandler<CoreWebView2NavigationCompletedEventArgs> HideFirst = static (sender, e) =>
+        {   // 최초 실행 완료 후 바로 숨기기
+            PopupForm? popup = sender as PopupForm;
+            popup!.Opacity = 0.1;
+            popup.mainView.NavigationCompleted -= HideFirst;
+        };
 
         private int refreshPlayerIndex = 0;
         private void RefreshPlayer(object? sender, EventArgs e)
@@ -958,6 +977,9 @@ namespace Jamaker
 
             // CefSharp에선 안 그랬는데, WebView2에서 자꾸 스크롤이 내려감
             Eval("$('textarea').scrollTop(0);");
+
+            // 찾기/바꾸기 최초 1회 실행 후 숨기기
+            Eval("SmiEditor.Finder.open()");
 
             // 최초 실행 시 ffmpeg 존재 여부 확인인데, 창 위치 잡아준 후에 alert 돌아가도록 함
             int status = CheckFFmpegWithAlert();

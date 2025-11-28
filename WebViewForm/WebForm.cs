@@ -109,7 +109,11 @@ namespace WebViewForm
         }
         public void ScriptToPopup(string name, string func, params object[] args)
         {
-            Eval(popups[name], ScriptToEval(func, args));
+            ScriptToPopup(popups[name], func, args);
+        }
+        public void ScriptToPopup(PopupForm popup, string func, params object[] args)
+        {
+            Eval(popup, ScriptToEval(func, args));
         }
         public void Eval(PopupForm popup, string script)
         {
@@ -127,7 +131,15 @@ namespace WebViewForm
         }
         public virtual void Alert(string target, string msg)
         {
-            MessageBoxEx.Show(GetHwnd(target), msg, GetTitle());
+            //MessageBoxEx.Show(GetHwnd(target), msg, GetTitle());
+
+            Form form = this;
+            if (popups.TryGetValue(target, out PopupForm? popup)) { form = popup; }
+
+            RunDialog(form, () =>
+            {
+                new Alert(form, msg, GetTitle()).ShowDialog();
+            });
         }
         public virtual void Confirm(string target, string msg)
         {
@@ -143,10 +155,13 @@ namespace WebViewForm
 
         public virtual void Prompt(string target, string msg, string def)
         {
-            string? value = null;
-            Prompt prompt = new(GetHwnd(target), msg, GetTitle(), def);
+            Form form = this;
+            if (popups.TryGetValue(target, out PopupForm? popup)) { form = popup; }
 
-            RunDialog(() =>
+            string? value = null;
+            Prompt prompt = new(form, msg, GetTitle(), def);
+
+            RunDialog(form, () =>
             {
                 DialogResult result = prompt.ShowDialog();
                 if (result == DialogResult.OK)
@@ -163,15 +178,19 @@ namespace WebViewForm
 
         public void RunDialog(ThreadStart action)
         {
-            WinAPI.EnableWindow(Handle, false);
+            RunDialog(this, action);
+        }
+        public static void RunDialog(Form form, ThreadStart action)
+        {
+            WinAPI.EnableWindow(form.Handle, false);
 
             Thread thread = new(action);
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
             thread.Join();
 
-            WinAPI.EnableWindow(Handle, true);
-            Activate();
+            WinAPI.EnableWindow(form.Handle, true);
+            form.Activate();
         }
 
         #region 파일 드래그
@@ -256,9 +275,11 @@ namespace WebViewForm
         {
             if (tmpPopup != null)
             {
+                bool reuse = false;
                 PopupForm popup = tmpPopup;
                 if (popups.TryGetValue(e.Name, out var oldPopup))
                 {
+                    reuse = true;
                     popup = oldPopup;
                 }
                 else
@@ -276,15 +297,16 @@ namespace WebViewForm
                 windows[e.Name] = popup.Handle.ToInt32();
 
                 popup.Text = e.Name;
-                AfterOpenPopup(e.Name, popup);
+                popup.Opacity = 1;
+
+                AfterOpenPopup(e.Name, popup, reuse);
                 popup.FormClosed += (s2, e2) => {
                     popups.Remove(e.Name);
                 };
-                popup.Opacity = 1;
             }
             e.Handled = true;
         }
-        public virtual void AfterOpenPopup(string name, PopupForm popup)
+        public virtual void AfterOpenPopup(string name, PopupForm popup, bool reuse)
         {
             // 각 프로그램에서 필요 시 override
         }

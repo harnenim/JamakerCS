@@ -2,15 +2,15 @@
 {
     public partial class Prompt : Form
     {
-        public Prompt(int hwnd, string msg, string title, string def)
+        public Prompt(Form form, string msg, string title, string def)
         {
             InitializeComponent();
 
-            RECT offset = new RECT();
-            WinAPI.GetWindowRect(hwnd, ref offset);
-
             StartPosition = FormStartPosition.Manual;
-            Location = new Point((offset.left + offset.right) / 2 - (Width / 2), (offset.top + offset.bottom) / 2 - (Height / 2));
+            Location = new Point(
+                form.Location.X + (form.Width / 2) - (Width / 2)
+            ,   form.Location.Y + (form.Height) / 2 - (Height / 2)
+            );
 
             labelMsg.Text = msg;
             textBoxValue.Text = def;
