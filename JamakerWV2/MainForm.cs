@@ -1,11 +1,9 @@
 using Jamaker.addon;
-using Microsoft.Web.WebView2.Core;
 using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Windows.Controls.Primitives;
 using WebViewForm;
 
 namespace Jamaker
@@ -85,7 +83,6 @@ namespace Jamaker
         }
         public override void AfterOpenPopup(string name, PopupForm popup, bool reuse)
         {
-            popup.Icon = Properties.Resources.JamakerIcon;
             switch (name)
             {
                 case "viewer":

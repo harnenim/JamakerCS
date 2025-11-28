@@ -51,7 +51,7 @@
             textBoxValue.Name = "textBoxValue";
             textBoxValue.Size = new Size(199, 23);
             textBoxValue.TabIndex = 1;
-            textBoxValue.KeyDown += EnterValue;
+            textBoxValue.KeyDown += OnKeyDown;
             // 
             // buttonSubmit
             // 
@@ -63,7 +63,7 @@
             buttonSubmit.TabIndex = 2;
             buttonSubmit.Text = "입력";
             buttonSubmit.UseVisualStyleBackColor = true;
-            buttonSubmit.Click += SubmitValue;
+            buttonSubmit.Click += OnClick;
             // 
             // Prompt
             // 
@@ -74,7 +74,6 @@
             Controls.Add(textBoxValue);
             Controls.Add(labelMsg);
             FormBorderStyle = FormBorderStyle.FixedDialog;
-            Icon = (Icon)resources.GetObject("$this.Icon");
             Margin = new Padding(3, 4, 3, 4);
             MaximizeBox = false;
             MinimizeBox = false;

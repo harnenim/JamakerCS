@@ -36,20 +36,25 @@
             // 
             mainView.AllowExternalDrop = false;
             mainView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            mainView.CreationProperties = null;
+            mainView.DefaultBackgroundColor = Color.White;
             mainView.Location = new Point(0, 0);
             mainView.Margin = new Padding(0);
             mainView.Name = "mainView";
-            mainView.Size = new Size(800, 450);
+            mainView.Size = new Size(400, 211);
             mainView.TabIndex = 0;
             mainView.ZoomFactor = 1D;
             // 
             // PopupForm
             // 
-            AutoScaleDimensions = new SizeF(14F, 32F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(400, 211);
             Controls.Add(mainView);
+            Margin = new Padding(2, 1, 2, 1);
             Name = "PopupForm";
+            ShowIcon = false;
+            Text = "Popup";
             ((System.ComponentModel.ISupportInitialize)mainView).EndInit();
             ResumeLayout(false);
         }

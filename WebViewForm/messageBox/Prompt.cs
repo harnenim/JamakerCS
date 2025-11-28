@@ -8,8 +8,8 @@
 
             StartPosition = FormStartPosition.Manual;
             Location = new Point(
-                form.Location.X + (form.Width / 2) - (Width / 2)
-            ,   form.Location.Y + (form.Height) / 2 - (Height / 2)
+                form.Location.X + (form.Width  / 2) - (Width  / 2)
+            ,   form.Location.Y + (form.Height / 2) - (Height / 2)
             );
 
             labelMsg.Text = msg;
@@ -20,7 +20,7 @@
 
         public string? value;
 
-        private void EnterValue(object sender, KeyEventArgs e)
+        private void OnKeyDown(object sender, KeyEventArgs e)
         {
             switch (e.KeyCode)
             {
@@ -35,7 +35,7 @@
             }
         }
 
-        private void SubmitValue(object sender, EventArgs e)
+        private void OnClick(object sender, EventArgs e)
         {
             DialogResult = DialogResult.OK;
             SubmitValue();

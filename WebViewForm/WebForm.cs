@@ -1,4 +1,5 @@
 ﻿using Microsoft.Web.WebView2.Core;
+using Newtonsoft.Json.Linq;
 using System.Runtime.Versioning;
 using System.Text;
 
@@ -131,8 +132,6 @@ namespace WebViewForm
         }
         public virtual void Alert(string target, string msg)
         {
-            //MessageBoxEx.Show(GetHwnd(target), msg, GetTitle());
-
             Form form = this;
             if (popups.TryGetValue(target, out PopupForm? popup)) { form = popup; }
 
@@ -143,7 +142,18 @@ namespace WebViewForm
         }
         public virtual void Confirm(string target, string msg)
         {
-            if (MessageBoxEx.Show(GetHwnd(target), msg, GetTitle(), MessageBoxButtons.YesNo) == DialogResult.Yes)
+            Form form = this;
+            if (popups.TryGetValue(target, out PopupForm? popup)) { form = popup; }
+
+            bool isConfirmed = false;
+            Confirm confirm = new(form, msg, GetTitle());
+
+            RunDialog(form, () =>
+            {
+                isConfirmed = (confirm.ShowDialog() == DialogResult.OK);
+            });
+
+            if (isConfirmed)
             {
                 Script("afterConfirmYes");
             }
@@ -163,8 +173,7 @@ namespace WebViewForm
 
             RunDialog(form, () =>
             {
-                DialogResult result = prompt.ShowDialog();
-                if (result == DialogResult.OK)
+                if (prompt.ShowDialog() == DialogResult.OK)
                 {
                     value = prompt.value;
                 }
