@@ -286,6 +286,7 @@ namespace WebViewForm
                 {
                     tmpPopup = null;
                     new Thread(() => { StandbyPopup(); }).Start();
+                    popup.Text = e.Name;
                 }
                 popup.Show();
                 if (!popup.fixedUrl)
@@ -296,7 +297,6 @@ namespace WebViewForm
                 popups[e.Name] = urlPopups[e.Uri] = popup;
                 windows[e.Name] = popup.Handle.ToInt32();
 
-                popup.Text = e.Name;
                 popup.Opacity = 1;
 
                 AfterOpenPopup(e.Name, popup, reuse);

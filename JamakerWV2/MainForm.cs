@@ -113,7 +113,12 @@ namespace Jamaker
                             e.Cancel = true;
                             popup.Hide();
                         };
-                        //popup.mainView.NavigationCompleted += HideFirst;
+                        popup.Opacity = 0;
+                        new Thread(() =>
+                        {
+                            Thread.Sleep(1000);
+                            Eval(popup, "window.close();");
+                        }).Start();
                     }
                     else
                     {
@@ -123,12 +128,6 @@ namespace Jamaker
                     break;
             }
         }
-        private static EventHandler<CoreWebView2NavigationCompletedEventArgs> HideFirst = static (sender, e) =>
-        {   // 최초 실행 완료 후 바로 숨기기
-            PopupForm? popup = sender as PopupForm;
-            popup!.Opacity = 0.1;
-            popup.mainView.NavigationCompleted -= HideFirst;
-        };
 
         private int refreshPlayerIndex = 0;
         private void RefreshPlayer(object? sender, EventArgs e)
