@@ -45,7 +45,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
@@ -165,4 +165,12 @@
     <Error Condition="!Exists('..\packages\CefSharp.Common.141.0.110\build\CefSharp.Common.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefSharp.Common.141.0.110\build\CefSharp.Common.targets'))" />
   </Target>
   <Import Project="..\packages\CefSharp.Common.141.0.110\build\CefSharp.Common.targets" Condition="Exists('..\packages\CefSharp.Common.141.0.110\build\CefSharp.Common.targets')" />
+  <Target Name="TrimCefSharpLocales" AfterTargets="AfterBuild">
+    <ItemGroup>
+      <LocaleFilesToDelete Include="$(OutputPath)locales\*.pak" />
+      <LocaleFilesToDelete Remove="$(OutputPath)locales\en-US*" />
+      <LocaleFilesToDelete Remove="$(OutputPath)locales\ko*" />
+    </ItemGroup>
+    <Delete Files="@(LocaleFilesToDelete)" />
+  </Target>
 </Project>

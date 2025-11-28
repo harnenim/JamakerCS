@@ -1058,6 +1058,9 @@
     <None Update="view\viewer.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="**\*.xml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <Target Name="RemoveLangFolders" AfterTargets="AfterBuild">
