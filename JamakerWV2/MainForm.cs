@@ -78,7 +78,7 @@ namespace Jamaker
                 Script("setHighlights", strHighlights);
                 Script("setDroppable");
 
-                _ = WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
+                _ = WinAPI.GetWindowRectWithoutShadow(windows["editor"], ref lastOffset);
             }
             catch { }
         }
@@ -357,7 +357,7 @@ namespace Jamaker
         {
             if (follow)
             {
-                _ = WinAPI.GetWindowRect(windows["editor"], ref lastOffset);
+                _ = WinAPI.GetWindowRectWithoutShadow(windows["editor"], ref lastOffset);
             }
             useFollowWindow = follow;
         }
@@ -406,7 +406,7 @@ namespace Jamaker
                 return;
             }
             RECT shadow = WinAPI.GetWindowShadow(Handle.ToInt32());
-            _ = WinAPI.GetWindowRect(windows["editor"], ref offset);
+            _ = WinAPI.GetWindowRectWithoutShadow(windows["editor"], ref offset);
             if ((   lastOffset.top != offset.top
                  || lastOffset.left != offset.left
                  || lastOffset.right != offset.right
