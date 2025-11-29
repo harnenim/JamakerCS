@@ -158,10 +158,10 @@ namespace Jamaker
             // TODO
 
             /*
-            Script("showPreview", result.PreviewOrigin(), result.PreviewResult() });
+            Script("showPreview", result.PreviewOrigin(), result.PreviewResult());
             if (result.count == 0)
             {
-                Script("alert", "치환한 문자열이 없습니다." });
+                Script("alert", "치환한 문자열이 없습니다.");
             }
             */
         }

@@ -159,7 +159,7 @@ namespace Jamaker
                 }
                 if (lastStream != null && isMetadata)
                 {
-                    string pattern = "^      (.*): (.*)$";
+                    string pattern = "^      (.*?): (.*?)$";
                     System.Text.RegularExpressions.Match m = System.Text.RegularExpressions.Regex.Match(line, pattern);
                     if (m.Success)
                     {
@@ -187,9 +187,11 @@ namespace Jamaker
                 }
                 else if (trimmed.StartsWith("Stream #"))
                 {
-                    string pattern = "Stream #([0-9]+:[0-9])+(\\[(.*)\\])?(\\((.*)\\))?: (.*): ";
+                    Console.WriteLine(trimmed);
+                    string pattern = @"Stream #(\d+:\d)+(\[(.*?)\])?(\((.*?)\))?: (.*?): ";
                     System.Text.RegularExpressions.Match m = System.Text.RegularExpressions.Regex.Match(line, pattern);
                     System.Text.RegularExpressions.GroupCollection groups = m.Groups;
+                    Console.WriteLine($"{groups[0]}, {groups[1]}, {groups[2]}, {groups[3]}, {groups[4]}, {groups[5]}, {groups[6]}");
                     streams.Add(lastStream = new StreamAttr()
                     {   map = groups[1].Value
                       , type = groups[6].Value.ToLower()
