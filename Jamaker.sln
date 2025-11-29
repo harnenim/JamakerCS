@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 18
-VisualStudioVersion = 18.0.11205.157
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36705.20 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jamaker", "Jamaker\Jamaker.csproj", "{E61B05F0-30E9-4CBA-B372-E25B91D6D927}"
 EndProject
@@ -23,18 +23,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MakeFkf", "MakeFkf\MakeFkf.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OptimizeAssSync", "OptimizeAssSync\OptimizeAssSync.csproj", "{ECF2578E-AA33-47E0-A152-84C05068480F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextReplacerWV2", "TextReplacerWV2\TextReplacerWV2.csproj", "{EE2B4AB2-3746-F0B1-688A-F1B4B8BB0E33}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebViewForm", "WebViewForm\WebViewForm.csproj", "{0305FF08-B116-8121-AA22-471A0BABCD4D}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoInfo", "VideoInfo\VideoInfo.csproj", "{D37941C6-E733-47A7-B807-FCFA8C82BB54}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1E22375D-64BE-46D7-BEA3-8311B00A64A3}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JamakerWV2", "JamakerWV2\JamakerWV2.csproj", "{B6A5EA83-BAA8-E413-B8A5-EFAE07B3535B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -124,22 +118,6 @@ Global
 		{ECF2578E-AA33-47E0-A152-84C05068480F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{ECF2578E-AA33-47E0-A152-84C05068480F}.Release|x64.ActiveCfg = Release|Any CPU
 		{ECF2578E-AA33-47E0-A152-84C05068480F}.Release|x64.Build.0 = Release|Any CPU
-		{EE2B4AB2-3746-F0B1-688A-F1B4B8BB0E33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EE2B4AB2-3746-F0B1-688A-F1B4B8BB0E33}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EE2B4AB2-3746-F0B1-688A-F1B4B8BB0E33}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{EE2B4AB2-3746-F0B1-688A-F1B4B8BB0E33}.Debug|x64.Build.0 = Debug|Any CPU
-		{EE2B4AB2-3746-F0B1-688A-F1B4B8BB0E33}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EE2B4AB2-3746-F0B1-688A-F1B4B8BB0E33}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EE2B4AB2-3746-F0B1-688A-F1B4B8BB0E33}.Release|x64.ActiveCfg = Release|Any CPU
-		{EE2B4AB2-3746-F0B1-688A-F1B4B8BB0E33}.Release|x64.Build.0 = Release|Any CPU
-		{0305FF08-B116-8121-AA22-471A0BABCD4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0305FF08-B116-8121-AA22-471A0BABCD4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0305FF08-B116-8121-AA22-471A0BABCD4D}.Debug|x64.ActiveCfg = Debug|x64
-		{0305FF08-B116-8121-AA22-471A0BABCD4D}.Debug|x64.Build.0 = Debug|x64
-		{0305FF08-B116-8121-AA22-471A0BABCD4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0305FF08-B116-8121-AA22-471A0BABCD4D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0305FF08-B116-8121-AA22-471A0BABCD4D}.Release|x64.ActiveCfg = Release|x64
-		{0305FF08-B116-8121-AA22-471A0BABCD4D}.Release|x64.Build.0 = Release|x64
 		{D37941C6-E733-47A7-B807-FCFA8C82BB54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D37941C6-E733-47A7-B807-FCFA8C82BB54}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D37941C6-E733-47A7-B807-FCFA8C82BB54}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -148,14 +126,6 @@ Global
 		{D37941C6-E733-47A7-B807-FCFA8C82BB54}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D37941C6-E733-47A7-B807-FCFA8C82BB54}.Release|x64.ActiveCfg = Release|Any CPU
 		{D37941C6-E733-47A7-B807-FCFA8C82BB54}.Release|x64.Build.0 = Release|Any CPU
-		{B6A5EA83-BAA8-E413-B8A5-EFAE07B3535B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B6A5EA83-BAA8-E413-B8A5-EFAE07B3535B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B6A5EA83-BAA8-E413-B8A5-EFAE07B3535B}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{B6A5EA83-BAA8-E413-B8A5-EFAE07B3535B}.Debug|x64.Build.0 = Debug|Any CPU
-		{B6A5EA83-BAA8-E413-B8A5-EFAE07B3535B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B6A5EA83-BAA8-E413-B8A5-EFAE07B3535B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B6A5EA83-BAA8-E413-B8A5-EFAE07B3535B}.Release|x64.ActiveCfg = Release|Any CPU
-		{B6A5EA83-BAA8-E413-B8A5-EFAE07B3535B}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

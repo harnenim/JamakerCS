@@ -1,2 +1,0 @@
-﻿NoPlayer: (없음)
-PotPlayer: 팟플레이어
