@@ -124,7 +124,7 @@ body.classic-scrollbar .highlight-textarea > div {
 
 /* 색상 설정 따로 넣기 전에도 기본값은 있어야 함 */
 .input ::-webkit-scrollbar-thumb:hover { background-color: #aaaaaa; }
-.input .disable-scroll-x::-webkit-scrollbar-corner,
-.input .disable-scroll-x::-webkit-scrollbar-track:horizontal { background: linear-gradient(#ffffff3f, #ffffffff); }
+.input ::-webkit-scrollbar-corner,
+.input ::-webkit-scrollbar-track:horizontal { background: linear-gradient(#ffffff3f, #ffffffff); }
 .input .scrolling::-webkit-scrollbar-thumb { background-color: #8888887f; }
 .input .scrolling::-webkit-scrollbar-corner { background: #dddddd; }
