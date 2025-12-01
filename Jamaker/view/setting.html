@@ -761,7 +761,7 @@ $(() => {
 				resizeNewFile = true;
 			});
 			$(document).on("mousemove", function() {
-				editorNewFile.area.height(editorNewFile.input.outerHeight());
+				editorNewFile.area.height(editorNewFile.input.outerHeight() + 2);
 			}).on("mouseup", function() {
 				resizeNewFile = false;
 			});
@@ -1376,6 +1376,7 @@ fieldset ol button,
 }
 #areaNewFile .hold > .input {
 	left: 0;
+	height: 100%;
 }
 #areaNewFile .highlight-textarea {
 	border: 1px solid #888;
