@@ -499,6 +499,10 @@ SmiEditor.prototype.bindEvent = function() {
 	this.render();
 	
 	this.input.on("scroll", function(e) {
+		if (editor.input.scrollTop() == 1) {
+			// 커서 위치를 맨 위로 올려도 화면 싱크 표시 영역 1px은 바로 스크롤되지 않음
+			editor.input.scrollTop(0);
+		}
 		const scrollTop  = editor.input.scrollTop ();
 		const scrollLeft = editor.input.scrollLeft();
 		
@@ -3601,7 +3605,7 @@ if (window.AutoCompleteTextarea) {
 $(() => {
 	SmiEditor.refreshHighlight();
 	
-	if (window.Frame) {
+	if (window.Frame && !binder._) { // CefShar에선 binder._ 값이 없음
 		SmiEditor.Finder = SmiEditor.Finder2;
 		SmiEditor.Finder.window = new Frame("finder.html", "finder", "", () => {
 			// 좌우 크기만 조절 가능
