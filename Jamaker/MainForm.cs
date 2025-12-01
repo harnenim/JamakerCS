@@ -47,7 +47,7 @@ namespace Jamaker
 
             mainView.LifeSpanHandler = new LSH(this);
             LoadSetting();
-            mainView.LoadUrl(Path.Combine(Application.StartupPath, "view/editor.html"));
+            mainView.LoadUrl(Path.Combine(Application.StartupPath, "view/Jamaker.html"));
             mainView.JavascriptObjectRepository.Settings.LegacyBindingEnabled = true;
             mainView.JavascriptObjectRepository.Register("binder", new Binder(this), false, BindingOptions.DefaultBinder);
             mainView.RequestHandler = new RequestHandler(); // TODO: 팝업에서 이동을 막아야 되는데...

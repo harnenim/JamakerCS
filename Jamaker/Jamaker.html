@@ -187,7 +187,7 @@ const window_open = function(url, name, options, opener) {
 		}
 		
 		this.loadSetting(() => {
-			editor.mainView.src = "view/editor.html";
+			editor.mainView.src = "view/Jamaker.html";
 			editor.mainView.onload = function() {
 				// 브라우저 샘플에선 url 변형 필요
 				editor.mainView.contentWindow._open_ = editor.mainView.contentWindow.open;

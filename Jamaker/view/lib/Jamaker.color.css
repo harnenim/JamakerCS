@@ -125,6 +125,8 @@ button:hover,
 
 /* 스크롤바(배경색 기반)... */
 .input ::-webkit-scrollbar-thumb:hover { background-color: [border]; }
+.input .disable-scroll-x::-webkit-scrollbar-corner,
+.input .disable-scroll-x::-webkit-scrollbar-track:horizontal { background: linear-gradient([editor]3f, [editor]ff); }
 .input .scrolling::-webkit-scrollbar-thumb { background-color: [tabBorder]7f; }
 .input .scrolling::-webkit-scrollbar-corner { background: [tab]; }
 

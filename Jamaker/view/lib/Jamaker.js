@@ -2029,7 +2029,7 @@ function setSetting(setting, initial=false) {
 			c.fill();
 			disabled = SmiEditor.canvas.toDataURL();
 		}
-		$.ajax({url: "lib/SmiEditor.color.css"
+		$.ajax({url: "lib/Jamaker.color.css"
 			,	dataType: "text"
 			,	success: (preset) => {
 					for (let name in setting.color) {
@@ -2060,7 +2060,7 @@ function setSetting(setting, initial=false) {
 		}
 	}
 	if (initial || (oldSetting.size != setting.size)) {
-		$.ajax({url: "lib/SmiEditor.size.css"
+		$.ajax({url: "lib/Jamaker.size.css"
 			,	dataType: "text"
 				,	success: (preset) => {
 					preset = preset.split("20px").join((LH = (20 * setting.size)) + "px");
@@ -2203,10 +2203,7 @@ function setSetting(setting, initial=false) {
 		}
 		
 		let menus = setting.menu;
-		if (binder
-		 && binder._
-		 && (typeof binder._ != "function") // WebView2에서는 선언 안 했어도 function을 반환함
-		) {
+		if (binder && binder._ && (typeof binder._ != "function")) { // WebView2에서는 선언 안 했어도 function을 반환함
 			menus = menus.concat([["샘플용"
 				, "GitHub실행|window.open('https://github.com/harnenim/Jamaker')"
 				, "플레이어 실행|binder.runPlayer()"
