@@ -46,6 +46,7 @@ function MenuStrip($ol=null) {
 		}).on("keyup", function(e) {
 			e.stopPropagation();
 			if (e.keyCode == 18) {
+				e.preventDefault(); // 기본적으로 Alt+Spacebar 메뉴로 포커스됨
 				if (lastKey == 18) {
 					// Alt+키 조합이 아닌, Alt만 눌렀다 뗌
 					if ($(".menustrip li.open").length) {
@@ -119,6 +120,7 @@ function MenuStrip($ol=null) {
 			e.stopPropagation();
 			switch (e.keyCode) {
 				case 18:   // Alt
+					lastKey = null; // 포커스 반환 직후 다시 Alt 메뉴 열리는 것 방지
 				case 27: { // Esc
 					self.unfocus();
 					break;
