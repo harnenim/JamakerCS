@@ -39,14 +39,14 @@ function MenuStrip($ol=null) {
 					// Alt+키 조합으로 메뉴 열기
 					e.stopPropagation();
 					self.rememberFocus();
-					self.openMenu(menu);
+					self.openMenu(menu, true);
 				}
 			}
 			
 		}).on("keyup", function(e) {
 			e.stopPropagation();
 			if (e.keyCode == 18) {
-				e.preventDefault(); // 기본적으로 Alt+Spacebar 메뉴로 포커스됨
+				e.preventDefault(); // 이게 없으면 Alt+Spacebar 메뉴로 포커스됨
 				if (lastKey == 18) {
 					// Alt+키 조합이 아닌, Alt만 눌렀다 뗌
 					if ($(".menustrip li.open").length) {
@@ -57,13 +57,6 @@ function MenuStrip($ol=null) {
 						// 닫혀있었으면 원래 포커스 기억하고 메뉴에 포커스
 						self.rememberFocus();
 						$(".menustrip li:eq(0)").focus();
-					}
-				} else {
-					// Alt+키 조합으로 메뉴 열었을 때 첫 항목 선택
-					// 원래 MenuStrip은 keydown에서 동작하지만, 웹에선 keyup 이전에 포커스를 놔주지 않음
-					const menu = $(".menustrip li.open");
-					if (menu.length) {
-						$(".submenu.open li:eq(0)").focus();
 					}
 				}
 			}
@@ -100,6 +93,12 @@ function MenuStrip($ol=null) {
 					self.openMenu(menu, true); // 방향키 이동으로 연 하위 메뉴에 포커스
 					break;
 				}
+				case 18:   // Alt
+					lastKey = null; // 포커스 반환 직후 다시 Alt 메뉴 열리는 것 방지
+				case 27: { // Esc
+					self.unfocus();
+					break;
+				}
 				default: {
 					if (isOpened) {
 						// 하위 메뉴 열려있을 때 - 키 조합 실행
@@ -114,16 +113,6 @@ function MenuStrip($ol=null) {
 							targetMenu.click();
 						}
 					}
-				}
-			}
-		}).on("keydown", ".menustrip li", function(e) {
-			e.stopPropagation();
-			switch (e.keyCode) {
-				case 18:   // Alt
-					lastKey = null; // 포커스 반환 직후 다시 Alt 메뉴 열리는 것 방지
-				case 27: { // Esc
-					self.unfocus();
-					break;
 				}
 			}
 		}).on("keydown", ".submenu.open li", function(e) {
@@ -168,9 +157,13 @@ function MenuStrip($ol=null) {
 					li.click();
 					break;
 				}
-				case 18:   // Alt
+				case 18: { // Alt
+					lastKey = null; // 포커스 반환 직후 다시 Alt 메뉴 열리는 것 방지
+					self.unfocus(); // 메뉴 닫고 포커스 반환
+					break;
+				}
 				case 27: { // Esc
-					self.close();
+					self.close(); // 메뉴 닫기만 하고 상위 메뉴에 포커스
 					break;
 				}
 				default: {
@@ -202,6 +195,9 @@ function MenuStrip($ol=null) {
 	}
 };
 // 메뉴 재생성
+// TODO: 원래 C#에서 구현하기 위해 억지로 이중 배열 형태로 맞췄는데
+//       웹에서 구현할 거면 객체 구조를 재정의하는 게 나을지도?
+//       ... 근데 그러면 설정에 저장된 값까지 갈아엎어야 함...
 MenuStrip.prototype.setMenus = function(menus) {
 	const $body = $("body");
 	$body.find(".submenu").remove();
