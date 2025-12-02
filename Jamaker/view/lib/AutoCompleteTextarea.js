@@ -272,7 +272,6 @@ AutoCompleteTextarea.prototype.onCheck = function(e) {
 AutoCompleteTextarea.getList = function(text, pos, list) {
 	return list;
 }
-//TODO: 구분자 더 필요한가...?
 AutoCompleteTextarea.wordBreaker = " \t\r\n()<>[]{},.`'\"?!;:/\\";
 AutoCompleteTextarea.prototype.onCheckWord = function(e) {
 	const text = this.ta.val();

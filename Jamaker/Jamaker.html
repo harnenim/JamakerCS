@@ -248,6 +248,35 @@ const window_open = function(url, name, options, opener) {
 		
 		this.windows[this.mainView.contentWindow.windowName] = window;
 		
+		// 찾기/바꾸기 창 항상 위에 - 웹샘플에서만 작동
+		this.mainView.contentWindow.SmiEditor.Finder1.useFocus = true;
+		
+		// 웹샘플 전용 메뉴 추가
+		{	const MenuStrip = this.mainView.contentWindow.MenuStrip;
+			MenuStrip.prototype._setMenus = MenuStrip.prototype.setMenus;
+			MenuStrip.prototype.setMenus = function(menus) {
+				this._setMenus(menus.concat([["샘플용"
+					, "GitHub실행|window.open('https://github.com/harnenim/Jamaker')"
+					, "플레이어 실행|binder.runPlayer()"
+					, "임시 저장 파일 확인하기|binder.openTempDir()"
+					, "설정 export|binder.exportSetting()"
+					, "설정 import|binder.importSetting()"
+					, "가상 프레임 시간 생성|prompt('fps 값을 입력해 주세요.', (fps) => {"
+						+ "if (isFinite(fps)) {"
+						+ "    Subtitle.video.FL = 1000000 / (Subtitle.video.FR = Math.round(fps * 1000));"
+						+ "    Subtitle.video.fs.length = 0;"
+						+ "    for (let i = 0; i < 200000; i++) {"
+						+ "        Subtitle.video.fs.push(Math.round(i * Subtitle.video.FL));"
+						+ "    }"
+						+ "    afterSetFkf();"
+						+ "} else {"
+						+ "    alert('올바른 값이 아닙니다.');"
+						+ "}"
+					+ "}, Subtitle.video.FR / 1000);"
+				]]));
+			};
+		}
+		
 		this.script("init", this.strSettingJson, false); // C#에서 객체 그대로 못 보내주므로 json string 만드는 걸로
 		this.script("setPlayerDlls", this.strBridgeList);
 		this.script("setHighlights", this.strHighlights);
@@ -259,7 +288,7 @@ const window_open = function(url, name, options, opener) {
 		// 실행 5초 후 동영상 불러온 것처럼 실행
 		setTimeout(() => {
 			this.script("setVideoInfo", 1920, 1080, 23976);
-			this.script("eval", "for (let i = 0; i < 200000; i++) { SmiEditor.video.fs.push(Math.round(i * SmiEditor.video.FL)); }");
+			this.script("eval", "for (let i = 0; i < 200000; i++) { Subtitle.video.fs.push(Math.round(i * Subtitle.video.FL)); }");
 		}, 2000);
 	};
 	
@@ -330,7 +359,7 @@ window.MB = 9;
 			WinAPI.GetWindowRect(this.getHwnd("editor"), this.lastOffset);
 		}
 		if (!resizable) {
-			// TODO: 안 됨.............
+			// 웹샘플에서는 안 됨.............
 			//WinAPI.DisableResize(hwnd);
 		}
 		if (target == "player") {
@@ -348,7 +377,6 @@ window.MB = 9;
 					//this.script("setDpiBy", width);
 				}
 				
-				// TODO C#: OnBeforePopup
 				//hwnd.binder = editor.binder;
 				hwnd.onload = function() {
 					//hwnd.binder = editor.binder;
@@ -501,7 +529,7 @@ window.MB = 9;
 	};
 }
 {
-	// TODO C#
+	// C#에서 별도 구현
 	editor.sendMsg = function(target, msg) {
 		this.getHwnd(target).sendMsg(msg);
 	}
@@ -578,7 +606,7 @@ window.MB = 9;
 		// 백지 상태에서 시작
 		this.strSettingJson = "";
 		
-		// TODO: 설정 파일 존재하면 삭제
+		// 설정 파일 존재하면 삭제: C#에서만 구현
 		
 		// 백업 파일 존재하는지 확인
 		if (true) {

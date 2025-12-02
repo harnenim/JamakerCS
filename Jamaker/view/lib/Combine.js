@@ -755,7 +755,6 @@ window.Combine = {
 		for (let gi = 0; gi < groups.length; gi++) {
 			const group = groups[gi];
 			const forEmpty = [[], []];
-			// TODO: 윗줄은 안 채워주는 게 나으려나?
 			for (let i = 0; i < 2; i++) {
 				for (let j = 0; j < group.maxLines[i]; j++) {
 					forEmpty[i].push("<b>　</b>");
@@ -871,17 +870,6 @@ if (SmiFile) {
 		holds[0] = normalized[0];
 		holds.push(...normalized.slice(1));
 		
-		if (holds[0].isWithSplit()) {
-			// 대사 사이 1프레임 공백 싱크 제거
-			const body = holds[0].body;
-			for (let i = 1; i < body.length; i++) {
-				const smi = body[i];
-				if (smi.syncType == SyncType.split) {
-					body[i - 1].text = smi.text;
-					body.splice(i, 1);
-				}
-			}
-		}
 		{	// 메인 홀드 ASS 변환용 스타일: footer 확인
 			let footer = holds[0].footer.split("\n<!-- Style\n"); // <!-- Style이 두 번 있는 경우는 오류로, 상정하지 않음
 			if (footer.length > 1) {
@@ -975,11 +963,6 @@ if (SmiFile) {
 		return holds;
 	}
 	
-	// TODO: <BODY split> 형식일 때 동작 - 기능이 필요할까...? 일단 개발 보류
-	SmiFile.prototype.isWithSplit = function() {
-		const match = /<body( [^>]*)*>/gi.exec(this.header);
-		return match && (match[0].indexOf("split") > 0);
-	}
 	SmiFile.holdsToTexts = (origHolds, withNormalize=true, withCombine=true, withComment=1, fps=23.976) => {
 		// withComment: 원래 true/false였는데, 1: true / 0: false / -1: Jamaker 전용 싱크 표시 같은 것까지 제거하도록 변경
 		
@@ -991,54 +974,6 @@ if (SmiFile) {
 		
 		// .text 동기화 안 끝났을 가능성 고려, 현재 값 다시 불러옴
 		const main = new SmiFile(origHolds[0].input ? origHolds[0].input.val() : origHolds[0].text);
-		if (main.isWithSplit()) { // 메인 홀드 이외에도 지원이 필요한가...?
-			// 대사 사이 1프레임 공백 싱크 생성
-			const body = main.body;
-			const add = Math.round(1000 / fps);
-			let before = null;
-			for (let i = 0; i < body.length; i++) {
-				const smi = body[i];
-				if (smi.isEmpty()) {
-					before = null;
-				} else {
-					if (smi.text.indexOf(" fade=") > 0) {
-						before = null;
-						// 페이드인일 경우 끊기지 않도록 다음 싱크도 건너뛰기
-						i++;
-						continue;
-					}
-					
-					// TODO: 설정에 따른 예외처리 넣기? 정규식으로?
-					if (smi.text.indexOf("harne") >= 0) {
-						before = null;
-						continue;
-					}
-					if (smi.text.startsWith("[")) {
-						before = null;
-						continue;
-					}
-					
-					if (before) {
-						// 대사끼리 붙어있을 때 1프레임 공백 싱크 생성
-						const splitted = new Smi((smi.start + add), SyncType.split, (before = smi.text));
-						body.splice(++i, 0, splitted);
-						smi.text = "&nbsp;";
-						/*
-					} else if (smi.syncType == SyncType.frame) { // TODO: 설정으로 on/off? <BODY> 태그 플래그로?
-						// 대사 사이 싱크가 화면 싱크일 때
-						const splitted = new Smi((smi.start + add), SyncType.split, (before = smi.text));
-						body.splice(++i, 0, splitted);
-						smi.text = "&nbsp;";
-						
-						// TODO: 여기서 작업한 결과는 아래에 주석 생성 없도록 만들어야 함
-						//*/
-					} else {
-						before = smi.text;
-					}
-				}
-			}
-		}
-		//console.log(JSON.parse(JSON.stringify(body)));
 		{	// 메인 홀드 스타일 저장
 			const style = SmiFile.toSaveStyle(origHolds[0].style);
 			if (style) {

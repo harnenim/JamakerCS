@@ -427,12 +427,6 @@ SmiEditor.limitKeyFrame = 200;
 SmiEditor.trustKeyFrame = false;
 SmiEditor.followKeyFrame = false;
 
-// TODO: SmiEditor에서 Subtitle로 옮기는 중. 레거시 호환으로 남겨둠
-// SMI와 무관한 부분에서 종속성이 자꾸 발생함
-SmiEditor.video = Subtitle.video;
-SmiEditor.findSync = Subtitle.findSync;
-SmiEditor.findSyncIndex = Subtitle.findSyncIndex;
-
 SmiEditor.getSyncTime = (sync, forKeyFrame=false, output={}) => { /* output: 리턴값은 숫자여야 하는데, 키프레임 상태값 반환이 필요해져서 C# out처럼 만듦 */
 	if (!sync) {
 		sync = (time + SmiEditor.sync.weight);
@@ -1190,15 +1184,8 @@ SmiEditor.activateKeyEvent = function() {
 					e.preventDefault();
 					
 					// 에디터로 포커스 이동
-					if (!hasFocus && editor) {
-						// TODO: 순수 SmiEditor 기능이 아닌 건 다른 곳으로 빼는 게 좋을 듯함...
-						if (editor.area.hasClass("style")) {
-							// 스타일 편집 중일 때 포커스 이동 방지
-						} else if (editor.area.hasClass("ass")) {
-							// ASS 편집 중일 때 포커스 이동 방지
-						} else {
-							editor.input.focus();
-						}
+					if (SmiEditor.focusRequired()) {
+						editor.input.focus();
 					}
 					
 					const funcSince = log("단축키 실행 start");
@@ -1206,7 +1193,7 @@ SmiEditor.activateKeyEvent = function() {
 					if (type == "function") {
 						log(String.fromCharCode(e.keyCode) + " / func: " + f.name);
 						f();
-					} else if (type == "string") {
+					} else if (type == "string" && f.trim().length) {
 						log(String.fromCharCode(e.keyCode) + " / func: " + f.split("\n")[0]);
 						eval("(() => { " + f + "// */\n})()"); // 내용물이 주석으로 끝날 수도 있음
 					}
@@ -1217,6 +1204,11 @@ SmiEditor.activateKeyEvent = function() {
 	});
 	log("activateKeyEvent end", funcSince);
 };
+SmiEditor.focusRequired = function() {
+	const editor = SmiEditor.selected;
+	const hasFocus = editor && editor.input.is(":focus");
+	return (!hasFocus && editor);
+}
 
 SmiEditor.prototype.historyForward = function() {
 	this.history.forward();
@@ -1366,7 +1358,7 @@ SmiEditor.prototype.inputText = function(input, standCursor) {
 }
 SmiEditor.prototype.inputTextLikeNative = function(input) {
 	// TODO: 횡스크롤을 안 잡고 있음...
-	// 좌우 스크롤까지 하는 건 연산량 부담...
+	// 좌우 스크롤까지 하는 건 연산량 부담..이 별로 안 되나?
 	// 애초에 예외적인 경우에 필요한 기능이긴 한데...
 	const text = this.input.val();
 	const selection = this.getCursor();
@@ -1555,7 +1547,6 @@ SmiEditor.prototype.insertSync = function(mode=0) {
 		}
 		
 		// 윗줄 내용이 없으면 공백 싱크 채워주기
-		// TODO: 설정이 필요한가...?
 		if (lineNo > 0) {
 			const prevLine = this.lines[lineNo-1];
 			if (prevLine.SYNC) {
@@ -2245,7 +2236,6 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 		range[1] = this.text.substring(0, cursor[1]).split("\n").length;
 	}
 	
-	// TODO: 렌더링 뜯어고쳤더니... 괜히 기교 안 부리고 그냥 전체 업데이트 돌아가는 게 맞을 것 같기도...?
 	for (let i = range[0]; i < range[1]; i++) {
 		const line = lines[i];
 		if ((line.TYPE == TYPE.FRAME) || (!frameSyncOnly && (line.TYPE == TYPE.BASIC))) {
@@ -2549,20 +2539,11 @@ SmiEditor.prototype.moveToSide = function(direction) {
 SmiEditor.Finder1 = {
 		last: { find: "", replace: "", withCase: false, reverse: false }
 	,	open: function(isReplace) {
-			// TODO: 근데... 전역변수 setting 값 가져오는 건 editor.js에서 구현하는 게 맞나...?
-			const ratio = DPI ? DPI : 1;
-			const w = 440 * ratio;
-			const h = 220 * ratio;
-			const x = Math.ceil((setting.window.x + (setting.window.width  / 2)) - (w / 2));
-			const y = Math.ceil((setting.window.y + (setting.window.height / 2)) - (h / 2));
-			
 			this.onload = (isReplace ? this.onloadReplace : this.onloadFind);
-			
-			this.window = window.open("finder.html", "finder", "scrollbars=no,location=no,width="+w+",height="+h);
-			binder.moveWindow("finder", x, y, w, h, false);
+			this.window = window.open("finder.html", "finder", "scrollbars=no,location=no,width=400,height=220");
 			binder.focus("finder");
 		}
-	,	onloadFind: function(isReplace) {
+	,	onloadFind: function(isReplace=false) {
 			this.last.toFocus = "[name=find]";
 			
 			if (SmiEditor.selected) {
@@ -2721,9 +2702,11 @@ SmiEditor.Finder1 = {
 			}, 100);
 		}
 		
-		// 찾기/바꾸기 창 항상 위에
+		// 찾기/바꾸기 창 항상 위에 - 웹샘플에서만 작동
+	,	useFocus: false
 	,	lastFocus: 0
 	,	focus: function(delay=1000) {
+			if (!this.useFocus) return;
 			if (!this.window) return;
 			
 			const now = this.lastFocus = new Date().getTime();
@@ -2741,9 +2724,8 @@ SmiEditor.Finder1 = {
 SmiEditor.Finder2 = {
 		last: { find: "", replace: "", withCase: false, reverse: false }
 	,	open: function(isReplace) {
-			const ratio = setting ? Number(setting.size) : 1;
-			const w = 440 * ratio;
-			const h = 220 * ratio;
+			const w = 440;
+			const h = 220;
 			this.window.frame.css({
 					top: (window.innerHeight - h) / 2
 				,	left: (window.innerWidth - w) / 2
@@ -2751,11 +2733,6 @@ SmiEditor.Finder2 = {
 				,	height: h
 				,	zIndex: 99999
 			}).show();
-			SmiEditor.Finder.window.iframe.contentWindow.setSize(ratio);
-			
-			if (setting && setting.color) {
-				SmiEditor.Finder.window.iframe.contentWindow.setColor(setting.color);
-			}
 			
 			this.window.iframe.focus();
 			if (isReplace) {
@@ -2937,22 +2914,11 @@ SmiEditor.Viewer = {
 		window: null
 	,	open: function() {
 			this.window = window.open("viewer.html", "viewer", "scrollbars=no,location=no,width=1,height=1");
-			this.moveWindowToSetting();
 			binder.focus("viewer");
 			setTimeout(() => {
 				binder.focus("editor");
 			}, 100);
 			return this.window;
-		}
-	,	moveWindowToSetting: function() {
-			// CefSharp 쓴 경우 window.moveTo 같은 걸로 못 움직임. 네이티브로 해야 함
-			// TODO: 근데... 전역변수 setting 값 가져오는 건 editor.js에서 구현하는 게 맞나...?
-			binder.moveWindow("viewer"
-					, setting.viewer.window.x
-					, setting.viewer.window.y
-					, setting.viewer.window.width
-					, setting.viewer.window.height
-					, true);
 		}
 	,	refresh: function() {
 			setTimeout(() => {
@@ -2971,9 +2937,8 @@ SmiEditor.Viewer = {
 						for (let i = 0; i < holds.length; i++) {
 							if (holds[i].style) {
 								// 홀드 스타일 있을 경우 반영
-								// TODO: 성능 부하가 얼마나 되지?
-								//       미리보기 쪽에서 필요 시 렌더링?
-								// TODO: 수정된 영역만 업데이트하는 게 제일 좋긴 한데...
+								// TODO: 성능 부하가 얼마나 되지? 미리보기 쪽에서 필요 시 렌더링?
+								//       수정된 영역만 업데이트하는 게 제일 좋긴 한데...
 								const tag = SmiFile.styleToSmi(holds[i].style);
 								const holdLines = holds[i].lines;
 								const newLines = []; // 싱크 내 줄바꿈 뭉쳐서 보냄
@@ -3059,219 +3024,16 @@ SmiEditor.Viewer = {
 					// 열린 게 없어도 오류 나지 않도록
 					lines.push([new Line()]);
 				}
-				binder.updateViewerLines(JSON.stringify(lines));
+				// C#을 거쳐서 미리보기 창과 통신한다는 가정하에 JSON을 거쳤었는데
+				// 그냥 팝업으로 통신하는 걸로
+//				binder.updateViewerLines(JSON.stringify(lines));
+				if (SmiEditor.Viewer.window
+				 && SmiEditor.Viewer.window.setLines) {
+					SmiEditor.Viewer.window.setLines(lines);
+				}
 			}, 1);
 		}
 };
-
-SmiEditor.Addon = {
-		windows: {}
-	,	open: function(name, target="addon") {
-			binder.setAfterInitAddon("");
-			const url = (name.substring(0, 4) == "http") ? name : "addon/" + name.split("..").join("").split(":").join("") + ".html";
-			this.windows[target] = window.open(url, target, "scrollbars=no,location=no,width=1,height=1");
-			setTimeout(() => { // 웹버전에서 딜레이 안 주면 위치를 못 잡는 경우가 있음
-				SmiEditor.Addon.moveWindowToSetting(target);
-			}, 1);
-			binder.focus(target);
-		}
-	,	openExtSubmit: function(method, url, values) {
-			this.ext = {
-					method: method
-				,	url: url
-				,	values: values
-			}
-			this.windows.addon = window.open("addon/ExtSubmit.html", "addon", "scrollbars=no,location=no,width=1,height=1");
-			setTimeout(() => {
-				SmiEditor.Addon.moveWindowToSetting("addon");
-			}, 1);
-			binder.focus("addon");
-		}
-	,	openExt: function(url, afterInit) {
-			binder.setAfterInitAddon(afterInit);
-			this.windows.addon = window.open(url, "addon", "location=no,width=1,height=1");
-			setTimeout(() => {
-				SmiEditor.Addon.moveWindowToSetting("addon");
-			}, 1);
-			binder.focus("addon");
-		}
-	,	onloadExtSubmit: function() {
-			let w = this.windows.addon;
-			if (w.iframe) {
-				w = w.iframe.contentWindow;
-			}
-			w.submit(this.ext.method, this.ext.url, this.ext.values);
-		}
-	,	moveWindowToSetting: function(target) {
-			// 플레이어 창 위에
-			const margin = 40 * DPI;
-			const targets = [];
-			if (target) {
-				targets.push(target);
-			} else {
-				for (let key in this.windows) {
-					targets.push(key);
-				}
-			}
-			for (let i = 0; i < targets.length; i++) {
-				// TODO: 근데... 전역변수 setting 값 가져오는 건 editor.js에서 구현하는 게 맞나...?
-				let x1 = setting.player.window.x;
-				let y1 = setting.player.window.y;
-				let x2 = x1 + setting.player.window.width;
-				let y2 = y1 + setting.player.window.height;
-				
-				do {
-					// 플레이어와 미리보기 창의 x축 위치가 유사할 경우 y축 확장
-					if (Math.abs(setting.viewer.window.x - x1) > margin) break;
-					if (Math.abs(setting.viewer.window.x + setting.viewer.window.width - x2) > margin) break;
-					
-					y1 = Math.min(y1, setting.viewer.window.y);
-					y2 = Math.max(y2, setting.viewer.window.y + setting.viewer.window.height);
-					
-				} while(false);
-				
-				binder.moveWindow(targets[i]
-						, x1 + margin
-						, y1 + margin
-						, (x2 - x1) - (margin * 2)
-						, (y2 - y1) - (margin * 2)
-						, true);
-			}
-		}
-};
-function openAddon(name, target) { SmiEditor.Addon.open(name, target); }
-function extSubmit(method, url, values, withoutTag=true) {
-	if (typeof values == "string") {
-		let name = values;
-		let editor = SmiEditor.selected;
-		if (editor) {
-			const text = editor.getText();
-			let value = "";
-			if (text.selection[0] < text.selection[1]) {
-				// 선택된 내용물 가져오기
-				value = text.text.substring(text.selection[0], text.selection[1]);
-				
-			} else {
-				// 선택된 게 없으면
-				const lines = text.text.split("\n");
-				const lineNo = text.text.substring(0, text.selection[0]).split("\n").length - 1;
-				
-				// 현재 문단 or 싱크 맨 윗줄 찾기
-				let syncLineNo = lineNo;
-				while (syncLineNo >= 0) {
-					const line = lines[syncLineNo];
-					if (!line || line.substring(0, 6).toUpperCase() == "<SYNC ") {
-						break;
-					}
-					syncLineNo--;
-				}
-				
-				if (syncLineNo >= 0) {
-					// 다음 문단 or 싱크 라인 찾기
-					let nextSyncLineNo = syncLineNo + 1;
-					while (nextSyncLineNo < lines.length) {
-						const line = lines[nextSyncLineNo];
-						if (!line || line.substring(0, 6).toUpperCase() == "<SYNC ") {
-							break;
-						}
-						nextSyncLineNo++;
-					}
-					
-					if (nextSyncLineNo < lines.length) {
-						// 현재 싱크 내용물 선택
-						value = lines.slice(syncLineNo + 1, nextSyncLineNo).join("\n");
-						
-					} else {
-						// 현재 줄 선택
-						value = lines[lineNo];
-					}
-				}
-			}
-			
-			// 맞춤법 검사기 같은 데에 보내기 전에 태그 탈출 처리
-			if (withoutTag) {
-				Subtitle.$tmp.html(value.split(/<br>/gi).join(" "));
-				Subtitle.$tmp.find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
-				value = Subtitle.$tmp.text();
-				value = value.split("​").join("").split("　").join(" ").split(" ").join(" ");
-				while (value.indexOf("  ") >= 0) {
-					value = value.split("  ").join(" ");
-				}
-				while (value.indexOf("  ") >= 0) { // &nbsp;에서 만들어진 건 이쪽으로 옴
-					value = value.split("  ").join(" ");
-				}
-			}
-			
-			const params = {};
-			params[name] = value;
-			SmiEditor.Addon.openExtSubmit(method, url, params);
-		}
-	} else {
-		SmiEditor.Addon.openExtSubmit(method, url, params);
-	}
-}
-function extSubmitSpeller() {
-	let editor = SmiEditor.selected;
-	if (editor) {
-		const text = editor.getText();
-		let value = "";
-		if (text.selection[0] < text.selection[1]) {
-			// 선택된 내용물 가져오기
-			value = text.text.substring(text.selection[0], text.selection[1]);
-			
-		} else {
-			// 선택된 게 없으면
-			const lines = text.text.split("\n");
-			const lineNo = text.text.substring(0, text.selection[0]).split("\n").length - 1;
-			
-			// 현재 문단 or 싱크 맨 윗줄 찾기
-			let syncLineNo = lineNo;
-			while (syncLineNo >= 0) {
-				const line = lines[syncLineNo];
-				if (!line || line.substring(0, 6).toUpperCase() == "<SYNC ") {
-					break;
-				}
-				syncLineNo--;
-			}
-			
-			if (syncLineNo >= 0) {
-				// 다음 문단 or 싱크 라인 찾기
-				let nextSyncLineNo = syncLineNo + 1;
-				while (nextSyncLineNo < lines.length) {
-					const line = lines[nextSyncLineNo];
-					if (!line || line.substring(0, 6).toUpperCase() == "<SYNC ") {
-						break;
-					}
-					nextSyncLineNo++;
-				}
-				
-				if (nextSyncLineNo < lines.length) {
-					// 현재 싱크 내용물 선택
-					value = lines.slice(syncLineNo + 1, nextSyncLineNo).join("\n");
-					
-				} else {
-					// 현재 줄 선택
-					value = lines[lineNo];
-				}
-			}
-		}
-		
-		// 태그 탈출 처리
-		value = $("<p>").html(value.split(/<br>/gi).join(" ")).text();
-		
-		// 신버전용으로 시도 중
-		SmiEditor.Addon.openExt("https://nara-speller.co.kr/speller"
-			,	"const chekcer = setInterval(() => {\n"
-			+	"	const $ta = document.getElementsByTagName('textarea')[0];\n"
-			+	"	if ($ta) clearInterval(checker);\n"
-			+	"	else return;\n"
-			+	"	$ta.value = " + JSON.stringify(value) + ";\n"
-			+	"	$ta.dispatchEvent(new Event('input', { bubbles: true }));\n"
-			+	"	setTimeout(() => { document.getElementByTagName('button')[3].click(); });\n"
-			+	"}, 100);"
-		);
-	}
-}
 
 // 선택영역 C# 특수 가공 처리
 SmiEditor.transforming = {};
@@ -3605,7 +3367,7 @@ if (window.AutoCompleteTextarea) {
 $(() => {
 	SmiEditor.refreshHighlight();
 	
-	if (window.Frame && !binder._) { // CefShar에선 binder._ 값이 없음
+	if (window.Frame) {
 		SmiEditor.Finder = SmiEditor.Finder2;
 		SmiEditor.Finder.window = new Frame("finder.html", "finder", "", () => {
 			// 좌우 크기만 조절 가능

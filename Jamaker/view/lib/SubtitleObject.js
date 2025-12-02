@@ -52,7 +52,7 @@ setTimeout(() => { // 생성자 선언보다 나중에 돌아야 함
 	}
 	Typing.toTypeCharacter = (johap) => {
 		const result = [];
-		let mode = null; // TODO: 여기에 &, < 구분이 필요하던가...?
+		let mode = null;
 		let cs = "";
 		for (let i = 0; i < johap.length; i++) {
 			const c = johap[i];
@@ -1550,7 +1550,7 @@ AssEvent.fromSync = function(sync, style=null) {
 			let y = style.pos[1];
 			
 			// RUBY 태그 등을 레이어 둘 이상으로 나눴으면 pos 같게 고정 필요
-			// TODO: ... 레이어 번호 다르게 했으면 pos 떼도 되나?
+			// ... 레이어 번호 다르게 했으면 pos 떼도 될 것 같지만, 혹시 모르므로 남겨둠
 			let moved = (texts.length > 1);
 			
 			// 다른 홀드랑 겹쳐서 기본적으로 올려야 하는 내용물
@@ -3259,7 +3259,8 @@ Smi.Color = Subtitle.Color;
 
 // 여기선 forConvert를 앞으로 가져옴
 Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps=null) {
-	// TODO: 그러고 보니 fps 기준을 이대로 두는 게 맞나...
+	// TODO: fps 기준을 이대로 두는 게 맞나...
+	//       VFR 같은 걸 고려해서 아예 프레임 시간 배열 뽑아오면 너무 산으로 가는 것 같기도?
 	if (fps == null) {
 		fps = Subtitle.video.FR / 1000;
 	}
@@ -3970,10 +3971,6 @@ SmiFile.prototype.toSyncs = function() {
 	const result = [];
 	
 	if (this.body.length > 0) {
-		// TODO: normalize 작업 필요??
-		// 단순 페이드는 예외 처리
-		// origin은 어떻게?
-		
 		let i = 0;
 		let last = null;
 		for (; i + 1 < this.body.length; i++) {
@@ -3984,7 +3981,7 @@ SmiFile.prototype.toSyncs = function() {
 			
 			const next = this.body[i + 1];
 			const end = (next.start) > 0 ? next.start : 0;
-			const normalized = item.normalize(end, true);
+			const normalized = item.normalize(end, true); // forConvert=true - 페이드는 normalize하지 않고 유지
 			if (normalized.length > 1) {
 				for (let j = 0; j < normalized.length - 1; j++) {
 					const sync = normalized[j].toSync();
@@ -4125,12 +4122,12 @@ SmiFile.fromAssStyle = function(assStyle, smiStyle=null) {
 	return smiStyle;
 }
 
-// TODO: 이렇게 두면 안 될 듯...? 결국 toSaveStyle 말곤 쓰는 데도 없음
-const styleForSmi = Subtitle.styleForSmi = ["PrimaryColour","Italic","Underline","StrikeOut"];
-const styleForAss = Subtitle.styleForAss = ["Fontname","Fontsize","SecondaryColour","OutlineColour","BackColour","PrimaryOpacity","SecondaryOpacity","OutlineOpacity","BackOpacity","Bold","ScaleX","ScaleY","Spacing","Angle","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV"];
 
 SmiFile.toSaveStyle = function(style) {
 	if (!style) return "";
+	
+	const styleForSmi = ["PrimaryColour","Italic","Underline","StrikeOut"];
+	const styleForAss = ["Fontname","Fontsize","SecondaryColour","OutlineColour","BackColour","PrimaryOpacity","SecondaryOpacity","OutlineOpacity","BackOpacity","Bold","ScaleX","ScaleY","Spacing","Angle","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV"];
 	
 	let forSmi = false;
 	for (let i = 0; i < styleForSmi.length; i++) {
@@ -4165,7 +4162,7 @@ SmiFile.toSaveStyle = function(style) {
 		
 	} else if (forSmi) {
 		// 기본 스타일
-		result.push(style.Fontname); // TODO: SMI에선 빼는 게 좋을 듯함
+		result.push(style.Fontname);
 		result.push(style.PrimaryColour);
 		result.push(style.Italic    ? 1 : 0);
 		result.push(style.Underline ? 1 : 0);
@@ -4427,7 +4424,7 @@ SmiFile.prototype.antiNormalize = function() {
 
 
 
-// TODO: SRT
+// SRT
 
 window.Srt = Subtitle.Srt = function(start, end, text) {
 	this.start = start ? Math.round(start) : 0;

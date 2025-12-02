@@ -17,9 +17,9 @@ window.AssEditor = function(view, events=[], frameSyncs=null) {
 		});
 	});
 }
-//TODO: 일단 여기 적었는데, editor.js 등에서 쓸 방안을 강구하는 게?
 AssEditor.FormatToEdit = ["Layer", "Style", "Text"];
 // 여기서 start/end는 소문자임
+// ASS 출력물이 아닌 프로젝트를 저장할 땐 ASS용 시간값이 아닌 프레임 시간 ms 단위를 저장
 AssEditor.FormatToSave = ["Layer", "start", "end", "Style", "Name", "MarginL", "MarginR", "MarginV", "Effect", "Text"];
 AssEditor.FormatSimple = ["Layer", "Style", "Text"];
 

@@ -163,9 +163,6 @@ $(() => {
 // 팝업 재정의
 window.popup = function(url, name, w=1, h=1) {
 	window.open(url, name, ["scrollbar=no", "location=no", "width=" + w, "height=" + h].join(","));
-	
-	// TODO: window.open 말고 다른 걸 쓰려고 해봤는데, 이러면 opener 호출이 되나...?
-	// WebView2를 먼저 만져봐야 할 듯
 }
 
 window.Progress = function() {

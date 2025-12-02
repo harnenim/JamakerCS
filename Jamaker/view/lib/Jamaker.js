@@ -475,7 +475,7 @@ SmiEditor.prototype.refreshStyle = function() {
 	this.afterChangeSaved(this.isSaved());
 }
 
-// TODO: 비홀드 ASS 에디터는 어떻게 동작하지...?
+// TODO: 비홀드 ASS 에디터에도 history 필요한가...?
 
 SmiEditor.prototype._historyForward = SmiEditor.prototype.historyForward;
 SmiEditor.prototype.historyForward = function(e) {
@@ -531,9 +531,8 @@ SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 	if (this.area.hasClass("style")) return;
 	
 	// ASS 편집일 때 동작
-	if (this.isAssHold || this.area.hasClass("ass")) {
-		// TODO: ASS 에디터에 대해서만 동작?
-		// 이거 자체를 쓸 일이 있나?
+	if (this.isAssHold) {
+		// TODO: ASS 에디터에서 쓸 일이 있나?
 		alert("ASS 에디터에선 사용하실 수 없습니다.");
 		return;
 	}
@@ -1421,7 +1420,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 	}
 	
 	// TODO: ASS 에디터에 레이어 재계산치 반영 가능한가...?
-	// 애초에 여긴 SMI 저장 이후에 돌아가는 부분인데?
+	//       애초에 여긴 SMI 저장 이후에 돌아가는 부분인데 패스?
 	
 	log("toAss end", funcSince);
 	
@@ -2050,13 +2049,17 @@ function setSetting(setting, initial=false) {
 				}
 		});
 		
-		// 찾기/바꾸기 내재화했을 경우
-		if (SmiEditor.Finder
-		 && SmiEditor.Finder.window
-		 && SmiEditor.Finder.window.iframe
-		 && SmiEditor.Finder.window.iframe.contentWindow
-		 && SmiEditor.Finder.window.iframe.contentWindow.setColor) {
-			SmiEditor.Finder.window.iframe.contentWindow.setColor(setting.color);
+		if (SmiEditor.Finder && SmiEditor.Finder.window) {
+			if (SmiEditor.Finder.window.iframe
+			 && SmiEditor.Finder.window.iframe.contentWindow
+			 && SmiEditor.Finder.window.iframe.contentWindow.setColor) {
+				// 찾기/바꾸기 내재화했을 경우
+				SmiEditor.Finder.window.iframe.contentWindow.setColor(setting.color);
+				
+			} else if (SmiEditor.Finder.window.setColor) {
+				// 찾기/바꾸기 별도 창일 경우
+				SmiEditor.Finder.window.setColor(setting.color);
+			}
 		}
 	}
 	if (initial || (oldSetting.size != setting.size)) {
@@ -2198,33 +2201,9 @@ function setSetting(setting, initial=false) {
 	
 	{
 		if (!menustrip) {
-			const $body = $("body");
-			$body.append((menustrip = new MenuStrip()).view);
+			$("body").append((menustrip = new MenuStrip()).view);
 		}
-		
-		let menus = setting.menu;
-		if (binder && binder._ && (typeof binder._ != "function")) { // WebView2에서는 선언 안 했어도 function을 반환함
-			menus = menus.concat([["샘플용"
-				, "GitHub실행|window.open('https://github.com/harnenim/Jamaker')"
-				, "플레이어 실행|binder.runPlayer()"
-				, "임시 저장 파일 확인하기|binder.openTempDir()"
-				, "설정 export|binder.exportSetting()"
-				, "설정 import|binder.importSetting()"
-				, "가상 프레임 시간 생성|prompt('fps 값을 입력해 주세요.', (fps) => {"
-					+ "if (isFinite(fps)) {"
-					+ "    Subtitle.video.FL = 1000000 / (Subtitle.video.FR = Math.round(fps * 1000));"
-					+ "    Subtitle.video.fs.length = 0;"
-					+ "    for (let i = 0; i < 200000; i++) {"
-					+ "        Subtitle.video.fs.push(Math.round(i * Subtitle.video.FL));"
-					+ "    }"
-					+ "    afterSetFkf();"
-					+ "} else {"
-					+ "    alert('올바른 값이 아닙니다.');"
-					+ "}"
-				+ "}, Subtitle.video.FR / 1000);"
-			]]);
-		}
-		menustrip.setMenus(menus);
+		menustrip.setMenus(setting.menu);
 	}
 	
 	window.setting = JSON.parse(JSON.stringify(setting));
@@ -2674,6 +2653,9 @@ function saveFile(asNew, isExport) {
 				}
 				if (withSrt) {
 					// TODO: 위에서 getSaveText 구하는 중간 단계 SmiFile을 쓸 수 있으면 좀 더 효율적이겠지만...
+					//       C# out 쓰듯이 파라미터 추가하기엔 이미 너무 많음
+					//       이제 와서 getSaveText 리턴값을 재정의하는 건 미묘
+					//       ... getSaveObj 함수 같은 단계를 추가할까?
 					// 홀드 결합 이전의 원본 그대로 SRT 자막을 만들면 홀드 상하 배치가 섞여버림
 					const syncs = new SmiFile(smiText).toSyncs();
 					const srtFile = new SrtFile().fromSyncs(syncs);
@@ -2766,8 +2748,8 @@ function afterSaveSrtFile(tab, path) {
 	tabs[tab].srtPath = path;
 }
 
-// TODO: 임시 저장은 현재 탭만이 아니라 모든 탭에 동작해야 하나...?
-// 근데 그렇게 쓸 일 자체가 없을 듯하긴 함
+// TODO: 임시 저장은 현재 탭에서만 동작 중
+//       모든 탭에 대해 진행할 필요가 있는지?
 function saveTemp() {
 	const currentTab = tabs[tab];
 	if (!currentTab) {
@@ -2902,7 +2884,8 @@ function setVideoInfo(w=1920, h=1080, fr=23976) {
 	Subtitle.video.width = w;
 	Subtitle.video.height = h;
 	
-	// TODO: fps 관련은 이제 날리는 게 맞나...?
+	// 프레임 시간을 직접 활용하면서 fps값은 거의 안 쓰이게 됐지만
+	// fkf 생성에 오래 걸리거나 할 수 있으므로 일단 남겨둠
 	if (fr == 23975) {
 		fr = 23975.7; // 일부 영상 버그
 	}
@@ -2915,7 +2898,8 @@ function setVideoInfo(w=1920, h=1080, fr=23976) {
 // C# 쪽에서 호출 - requestFrames
 function loadFkf(fkfName) {
 	log("loadFkf start");
-	// C# 파일 객체를 js 쪽에 전달할 수 없으므로, 정해진 경로의 파일을 ajax 형태로 가져옴
+	// C# 파일 객체를 직접 js 쪽에 전달할 수 없으므로, 정해진 경로의 파일을 ajax 형태로 가져옴
+	// base64 거치는 방법도 있긴 한데, 어차피 캐시를 재활용하는 경우라면 한 번만 거치는 게 나음
 	const req = new XMLHttpRequest();
 	req.open("GET", "../temp/fkf/" + encodeURIComponent(fkfName));
 	req.responseType = "arraybuffer";
@@ -3301,7 +3285,7 @@ function loadAssFile(path, text, target=-1) {
 								}
 								
 								// SMI 기반 생성물 앞뒤에 내용물을 추가해서 구현 가능한지 확인
-								// TODO: 중간 내용물 추가도 필요한가...?
+								// 중간 내용물 추가된 경우까지 고려하는 건 비현실적, 사용자의 의도에 따른 작업이 더 나음
 								const index = targetText.indexOf(originText);
 								if (index >= 0) {
 									let convertable = true;
@@ -3351,7 +3335,7 @@ function loadAssFile(path, text, target=-1) {
 										let originSmi = o.origin.origin.text;
 										if (attrs.length < o.origin.text.length) {
 											// 비교 전에 제거한 게 있었으면 SMI 재구성
-											// TODO: 완전 재구성보다는 ass 태그만 삭제할 수 있으면 그게 더 좋을 듯?
+											// TODO: 완전 재구성보다는 ass 태그만 삭제할 수 있으면 그게 더 좋을지도?
 											originSmi = Smi.fromAttrs(attrs).split("\n").join("<br>");
 											delCount++;
 										}
@@ -4105,6 +4089,7 @@ function srt2smi(text) {
 /**
  * frameSyncOnly: 화면 싱크만 맞춰주기
  * add: 과거 반프레임 보정치 안 넣었던 것들을 위해 추가
+ * ... 아마도 나만 쓸 기능 같아서 기본 설정엔 안 넣음
  */
 function fitSyncsToFrame(frameSyncOnly=false, add=0) {
 	if (!Subtitle.video.fs.length) {
@@ -4155,6 +4140,22 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 	} else {
 		this._fitSyncsToFrame(frameSyncOnly, add);
 	}
+}
+
+//포커스 요청 기준 재정의
+SmiEditor.focusRequired = function() {
+	const editor = SmiEditor.selected;
+	const hasFocus = editor && editor.input.is(":focus");
+	if (!hasFocus && editor) {
+		if (editor.area.hasClass("style")) {
+			// 스타일 편집 중일 때 포커스 이동 방지
+		} else if (editor.area.hasClass("ass")) {
+			// ASS 편집 중일 때 포커스 이동 방지
+		} else {
+			return true;
+		}
+	}
+	return false;
 }
 
 function generateSmiFromAss(keepHoldsAss=true) {
@@ -4325,7 +4326,7 @@ function generateSmiFromAss(keepHoldsAss=true) {
 					if (text.indexOf("{", 1) > 0) {
 						// 맨 앞 말고도 태그가 있으면 SMI로 구현 불가
 						// TODO: 줄표에 따른 fscx 정도는 없애는 것도? - 태그로 공백문자만 감싼 경우 걸러내기?
-						// TODO: 위에서 중간 태그 없애기 성공한다면 SMI 구현 가능 상태로 남겨서 아래 로직을 태울 것
+						//       중간 태그 없애기 성공한다면 SMI 역변환 가능 상태로 남겨서 아래 로직을 태울 것
 						isPure = false;
 					}
 				}
@@ -4436,4 +4437,265 @@ function generateSmiFromAss(keepHoldsAss=true) {
 	}
 	
 	log("generateSmiFromAss end", funcSince);
+}
+
+// SmiEditor 팝업 재정의
+SmiEditor.Finder1._open = SmiEditor.Finder1.open;
+SmiEditor.Finder1.open = function(isReplace=false) {
+	this._open(isReplace);
+	const ratio = DPI ? DPI : 1;
+	const w = 440 * ratio;
+	const h = 220 * ratio;
+	const x = Math.ceil((setting.window.x + (setting.window.width  / 2)) - (w / 2));
+	const y = Math.ceil((setting.window.y + (setting.window.height / 2)) - (h / 2));
+	binder.moveWindow("finder", x, y, w, h, false);
+};
+SmiEditor.Finder1._onloadFind = SmiEditor.Finder1.onloadFind;
+SmiEditor.Finder1.onloadFind = function(isReplace) {
+	if (setting && setting.color) {
+		this.window.setColor(setting.color);
+	}
+	this._onloadFind(isReplace);
+};
+SmiEditor.Finder2._open = SmiEditor.Finder2.open;
+SmiEditor.Finder2.open = function(isReplace) {
+	this._open(isReplace);
+	const ratio = setting ? Number(setting.size) : 1;
+	const w = 440 * ratio;
+	const h = 220 * ratio;
+	this.window.frame.css({
+			top: (window.innerHeight - h) / 2
+		,	left: (window.innerWidth - w) / 2
+		,	width: w
+		,	height: h
+	});
+	SmiEditor.Finder.window.iframe.contentWindow.setSize(ratio);
+	
+	if (setting && setting.color) {
+		SmiEditor.Finder.window.iframe.contentWindow.setColor(setting.color);
+	}
+};
+
+SmiEditor.Viewer._open = SmiEditor.Viewer.open;
+SmiEditor.Viewer.open = function() {
+	this._open();
+	this.moveWindowToSetting();
+	return this.window;
+}
+SmiEditor.Viewer.moveWindowToSetting = function() {
+	// CefSharp 쓴 경우 window.moveTo 같은 걸로 못 움직임. 네이티브로 해야 함
+	binder.moveWindow("viewer"
+			, setting.viewer.window.x
+			, setting.viewer.window.y
+			, setting.viewer.window.width
+			, setting.viewer.window.height
+			, true);
+}
+
+SmiEditor.Addon = {
+		windows: {}
+	,	open: function(name, target="addon") {
+			binder.setAfterInitAddon("");
+			const url = (name.substring(0, 4) == "http") ? name : "addon/" + name.split("..").join("").split(":").join("") + ".html";
+			this.windows[target] = window.open(url, target, "scrollbars=no,location=no,width=1,height=1");
+			setTimeout(() => { // 웹버전에서 딜레이 안 주면 위치를 못 잡는 경우가 있음
+				SmiEditor.Addon.moveWindowToSetting(target);
+			}, 1);
+			binder.focus(target);
+		}
+	,	openExtSubmit: function(method, url, values) {
+			this.ext = {
+					method: method
+				,	url: url
+				,	values: values
+			}
+			this.windows.addon = window.open("addon/ExtSubmit.html", "addon", "scrollbars=no,location=no,width=1,height=1");
+			setTimeout(() => {
+				SmiEditor.Addon.moveWindowToSetting("addon");
+			}, 1);
+			binder.focus("addon");
+		}
+	,	openExt: function(url, afterInit) {
+			binder.setAfterInitAddon(afterInit);
+			this.windows.addon = window.open(url, "addon", "location=no,width=1,height=1");
+			setTimeout(() => {
+				SmiEditor.Addon.moveWindowToSetting("addon");
+			}, 1);
+			binder.focus("addon");
+		}
+	,	onloadExtSubmit: function() {
+			let w = this.windows.addon;
+			if (w.iframe) {
+				w = w.iframe.contentWindow;
+			}
+			w.submit(this.ext.method, this.ext.url, this.ext.values);
+		}
+	,	moveWindowToSetting: function(target) {
+			// 플레이어 창 위에
+			const margin = 40 * DPI;
+			const targets = [];
+			if (target) {
+				targets.push(target);
+			} else {
+				for (let key in this.windows) {
+					targets.push(key);
+				}
+			}
+			for (let i = 0; i < targets.length; i++) {
+				let x1 = setting.player.window.x;
+				let y1 = setting.player.window.y;
+				let x2 = x1 + setting.player.window.width;
+				let y2 = y1 + setting.player.window.height;
+				
+				do {
+					// 플레이어와 미리보기 창의 x축 위치가 유사할 경우 y축 확장
+					if (Math.abs(setting.viewer.window.x - x1) > margin) break;
+					if (Math.abs(setting.viewer.window.x + setting.viewer.window.width - x2) > margin) break;
+					
+					y1 = Math.min(y1, setting.viewer.window.y);
+					y2 = Math.max(y2, setting.viewer.window.y + setting.viewer.window.height);
+					
+				} while(false);
+				
+				binder.moveWindow(targets[i]
+						, x1 + margin
+						, y1 + margin
+						, (x2 - x1) - (margin * 2)
+						, (y2 - y1) - (margin * 2)
+						, true);
+			}
+		}
+};
+function openAddon(name, target) { SmiEditor.Addon.open(name, target); }
+function extSubmit(method, url, values, withoutTag=true) {
+	if (typeof values == "string") {
+		let name = values;
+		let editor = SmiEditor.selected;
+		if (editor) {
+			const text = editor.getText();
+			let value = "";
+			if (text.selection[0] < text.selection[1]) {
+				// 선택된 내용물 가져오기
+				value = text.text.substring(text.selection[0], text.selection[1]);
+				
+			} else {
+				// 선택된 게 없으면
+				const lines = text.text.split("\n");
+				const lineNo = text.text.substring(0, text.selection[0]).split("\n").length - 1;
+				
+				// 현재 문단 or 싱크 맨 윗줄 찾기
+				let syncLineNo = lineNo;
+				while (syncLineNo >= 0) {
+					const line = lines[syncLineNo];
+					if (!line || line.substring(0, 6).toUpperCase() == "<SYNC ") {
+						break;
+					}
+					syncLineNo--;
+				}
+				
+				if (syncLineNo >= 0) {
+					// 다음 문단 or 싱크 라인 찾기
+					let nextSyncLineNo = syncLineNo + 1;
+					while (nextSyncLineNo < lines.length) {
+						const line = lines[nextSyncLineNo];
+						if (!line || line.substring(0, 6).toUpperCase() == "<SYNC ") {
+							break;
+						}
+						nextSyncLineNo++;
+					}
+					
+					if (nextSyncLineNo < lines.length) {
+						// 현재 싱크 내용물 선택
+						value = lines.slice(syncLineNo + 1, nextSyncLineNo).join("\n");
+						
+					} else {
+						// 현재 줄 선택
+						value = lines[lineNo];
+					}
+				}
+			}
+			
+			// 맞춤법 검사기 같은 데에 보내기 전에 태그 탈출 처리
+			if (withoutTag) {
+				Subtitle.$tmp.html(value.split(/<br>/gi).join(" "));
+				Subtitle.$tmp.find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
+				value = Subtitle.$tmp.text();
+				value = value.split("​").join("").split("　").join(" ").split(" ").join(" ");
+				while (value.indexOf("  ") >= 0) {
+					value = value.split("  ").join(" ");
+				}
+				while (value.indexOf("  ") >= 0) { // &nbsp;에서 만들어진 건 이쪽으로 옴
+					value = value.split("  ").join(" ");
+				}
+			}
+			
+			const params = {};
+			params[name] = value;
+			SmiEditor.Addon.openExtSubmit(method, url, params);
+		}
+	} else {
+		SmiEditor.Addon.openExtSubmit(method, url, params);
+	}
+}
+function extSubmitSpeller() {
+	let editor = SmiEditor.selected;
+	if (editor) {
+		const text = editor.getText();
+		let value = "";
+		if (text.selection[0] < text.selection[1]) {
+			// 선택된 내용물 가져오기
+			value = text.text.substring(text.selection[0], text.selection[1]);
+			
+		} else {
+			// 선택된 게 없으면
+			const lines = text.text.split("\n");
+			const lineNo = text.text.substring(0, text.selection[0]).split("\n").length - 1;
+			
+			// 현재 문단 or 싱크 맨 윗줄 찾기
+			let syncLineNo = lineNo;
+			while (syncLineNo >= 0) {
+				const line = lines[syncLineNo];
+				if (!line || line.substring(0, 6).toUpperCase() == "<SYNC ") {
+					break;
+				}
+				syncLineNo--;
+			}
+			
+			if (syncLineNo >= 0) {
+				// 다음 문단 or 싱크 라인 찾기
+				let nextSyncLineNo = syncLineNo + 1;
+				while (nextSyncLineNo < lines.length) {
+					const line = lines[nextSyncLineNo];
+					if (!line || line.substring(0, 6).toUpperCase() == "<SYNC ") {
+						break;
+					}
+					nextSyncLineNo++;
+				}
+				
+				if (nextSyncLineNo < lines.length) {
+					// 현재 싱크 내용물 선택
+					value = lines.slice(syncLineNo + 1, nextSyncLineNo).join("\n");
+					
+				} else {
+					// 현재 줄 선택
+					value = lines[lineNo];
+				}
+			}
+		}
+		
+		// 태그 탈출 처리
+		value = $("<p>").html(value.split(/<br>/gi).join(" ")).text();
+		
+		// 신버전용으로 시도 중
+		SmiEditor.Addon.openExt("https://nara-speller.co.kr/speller"
+			,	"const chekcer = setInterval(() => {\n"
+			+	"	const $ta = document.getElementsByTagName('textarea')[0];\n"
+			+	"	if ($ta) clearInterval(checker);\n"
+			+	"	else return;\n"
+			+	"	$ta.value = " + JSON.stringify(value) + ";\n"
+			+	"	$ta.dispatchEvent(new Event('input', { bubbles: true }));\n"
+			+	"	setTimeout(() => { document.getElementByTagName('button')[3].click(); });\n"
+			+	"}, 100);"
+		);
+	}
 }

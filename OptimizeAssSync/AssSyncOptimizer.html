@@ -105,7 +105,7 @@ const main = new WebForm();
 				main.script("setAssFile", file.name, text);
 				
 				const lines = text.split("\n");
-				// TODO: 비디오 파일 정보 있을 때 처리
+				// C#에서 비디오 파일 정보 있을 때 처리
 				
 			} else if (ext.endsWith(".avi")
 					|| ext.endsWith(".mp4")
@@ -127,11 +127,11 @@ const main = new WebForm();
 		this.droppedFiles = null;
 	}
 	main.checkAndMakeFkf = function(videoFile) {
-		// TODO: ffmpeg 작업
+		// C# ffmpeg 작업
 		// Progress.set("#labelVideo", 0.8)
 	}
 	main.saveFile = function(name, text) {
-		// TODO
+		// C#에서 구현
 	}
 }
 {

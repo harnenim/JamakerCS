@@ -32,9 +32,8 @@ function setSetting(jsonSetting) {
 let lines = [[],[],[]];
 let viewer = null;
 let viewers = [];
-// TODO: 사실 window.open이 아닌 별도 창을 띄울 경우를 위해 변수 공유 안 하고 이렇게 받은 거였는데...
 function setLines(newLines) {
-	lines = JSON.parse(newLines);
+	lines = (typeof newLines == "string") ? JSON.parse(newLines) : newLines;
 	normalizedLines.length = 0;
 	
 	let receiveTime = time;
