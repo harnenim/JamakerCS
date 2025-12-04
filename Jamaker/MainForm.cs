@@ -1127,6 +1127,7 @@ namespace Jamaker
                         }
 
                         string fkfName = $"{info.Name.Substring(0, info.Name.Length - info.Extension.Length)}.{info.Length}.fkf";
+                        string fkfPath = Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName);
 
                         // 기존에 있으면 가져오기
                         try
@@ -1134,7 +1135,7 @@ namespace Jamaker
                             DirectoryInfo di = new DirectoryInfo(Path.Combine(Application.StartupPath, "temp/fkf"));
                             if (di.Exists)
                             {
-                                VideoInfo.FromFkfFile(Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
+                                VideoInfo.FromFkfFile(fkfPath);
                                 Script("Progress.set", "#forFrameSync", 1);
                                 Script("loadFkf", fkfName);
                                 return;
@@ -1157,8 +1158,8 @@ namespace Jamaker
                                 {
                                     di.Create();
                                 }
-                                File.Move(Path.Combine(Application.StartupPath, "temp/" + fkfName), Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
-                                VideoInfo.FromFkfFile(Path.Combine(Application.StartupPath, "temp/fkf/" + fkfName));
+                                File.Move(Path.Combine(Application.StartupPath, "temp/" + fkfName), fkfPath);
+                                VideoInfo.FromFkfFile(fkfPath);
                                 Script("Progress.set", "#forFrameSync", 1);
                                 Script("loadFkf", fkfName);
                                 return;
@@ -1181,7 +1182,7 @@ namespace Jamaker
                         {
                             Script("Progress.set", "#forFrameSync", 1);
                             videoInfo.ReadKfs(true);
-                            videoInfo.SaveFkf("temp/fkf/" + fkfName);
+                            videoInfo.SaveFkf(fkfPath);
                             if (requestFramesPath == path)
                             {   // 중간에 다른 파일 불러왔을 수도 있음
                                 Script("loadFkf", fkfName);
