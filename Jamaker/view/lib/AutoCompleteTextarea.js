@@ -1,11 +1,9 @@
 window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 	if (ta.length) { // jQuery인 경우
-		this.ta = ta[0];
 		ta.ac = this;
-		ta = this.ta;
-	} else {
-		this.ta = ta;
+		ta = ta[0];
 	}
+	this.ta = ta;
 	ta.ac = this;
 	
 	this.sets = sets ? sets : [];
