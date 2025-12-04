@@ -10,45 +10,66 @@
 
 // 입력에서 삭제로 전환 시 기록 
 
-window.History = function(input, limit, doAfter) {
-	this.input = input;
+window.History = function(input, limit, doAfter, activateDefaultKeyEvent=true) {
+	this.input = input.length ? input[0] : input; // jQuery일 경우 0번 객체 선택
 	this.limit = (limit ? limit : 32);
 	this.doAfter = doAfter;
 	this.data = new Array(limit);
 	this.range = [0, 0];
 	
-	const text = this.lastText = input.val();
+	const text = this.lastText = this.input.value;
 	this.last = this.data[this.cnt = 0] = [this.lastText = text, [this.lastCursor = 0, -1]]; // [텍스트, [현재값 됐을 때 커서, 값 변경 직전 커서]]
 	this.isInserting = false;
 	
 	this.lastLogged = this.lastChanged = new Date().getTime();
 	const history = this;
-	input.on("input propertychange", function() {
+	this.input.addEventListener("input", (e) => {
 		history.passiveLog();
 		history.updateCursor();
 	});
-	input.on("click", function() {
+	this.input.addEventListener("click", (e) => {
 		// 내용 수정 후 히스토리 로깅 안 된 상태에서 클릭으로 커서 옮겼을 경우 기존 커서 기억
 		// 수정 없었을 경우 무시해야 함
 		history.log(null, true);
 		history.updateCursor();
 	});
-	/* 방향키는 에디터에서 logIfCursorMoved 구현하는 걸로
-	input.on("keydown", function() {
-		history.updateCursor();
-	});
-	*/
+	if (activateDefaultKeyEvent) {
+		// 독립적인 라이브러리로 기능할 때 기본 키 입력 활성화
+		this.input.addEventListener("keydown", (e) => {
+			switch (e.keyCode) {
+				case 33: // PgUp
+				case 34: // PgDn
+				case 35: // End
+				case 36: // Home
+				case 38: // ↑
+				case 40: // ↓
+				case 37: // ←
+				case 39: // →
+					history.logIfCursorMoved();
+					break;
+				case 90: { // Z
+					if (!e.ctrlKey || e.shiftKey || e.altKey)  break;
+					history.back();
+					break;
+				}
+				case 89: { // Y
+					if (!e.ctrlKey || e.shiftKey || e.altKey)  break;
+					history.forward();
+					break;
+				}
+			}
+		});
+	}
 };
 History.prototype.test = function() {
 	for (let i = this.range[0]; i < this.range[1]; i++) {
 		const data = this.data[i % this.limit];
-		console.log(data[1]);
 	}
 }
 History.prototype.log = function(text, withoutCursor=false) {
 	// 마지막 로그와 차이가 없으면 취소
 	if (!text) {
-		text = this.input.val();
+		text = this.input.value;
 	}
 	if (this.last[0] == text) {
 		if (!withoutCursor) {
@@ -85,7 +106,7 @@ History.prototype.passiveLog = function() {
 		this.last[1][1] = this.lastCursor;
 	}
 	
-	const text = this.input.val();
+	const text = this.input.value;
 	
 	if (this.isInserting && text.length < this.lastText.length) {
 		// 입력에서 삭제로 전환 시 기록
@@ -115,8 +136,8 @@ History.prototype.back = function() {
 	if (this.cnt <= this.range[0]) return;
 
 	this.last = this.data[--this.cnt % this.limit];
-	this.input.val(this.last[0]);
-	this.input[0].setSelectionRange(this.last[1][1], this.last[1][1]);
+	this.input.value = this.last[0];
+	this.input.setSelectionRange(this.last[1][1], this.last[1][1]);
 	
 	if (this.doAfter) {
 		this.doAfter();
@@ -125,24 +146,24 @@ History.prototype.back = function() {
 History.prototype.forward = function() {
 	if (this.cnt >= this.range[1]) return;
 	
-	if (this.last[0] != this.input.val()) {
+	if (this.last[0] != this.input.value) {
 		// 마지막 로그와 차이가 있으면 정지
 		this.range[1] = this.cnt;
 		return;
 	}
 	this.last = this.data[++this.cnt % this.limit];
-	this.input.val(this.last[0]);
-	this.input[0].setSelectionRange(this.last[1][0], this.last[1][0]);
+	this.input.value = this.last[0];
+	this.input.setSelectionRange(this.last[1][0], this.last[1][0]);
 	
 	if (this.doAfter) {
 		this.doAfter();
 	}
 };
 History.prototype.updateCursor = function() {
-	return this.lastCursor = this.input[0].selectionEnd;
+	return this.lastCursor = this.input.selectionEnd;
 };
 History.prototype.logIfCursorMoved = function() {
-	const cursor = this.input[0].selectionEnd;
+	const cursor = this.input.selectionEnd;
 	if (cursor != this.lastCursor) {
 		this.log();
 	}
