@@ -226,7 +226,7 @@ function setOriginSubtitleFile(path, text) {
 		const item = sortedBody[i];
 		if (range[0] <= 0) {
 			// 새로운 범위를 시작해야 함
-			if ((operation.type == "smi" || operation.type == "jmk") && item.text.split("&nbsp;").join(" ").trim().length == 0) {
+			if ((operation.type == "smi" || operation.type == "jmk") && item.text.replaceAll("&nbsp;", " ").trim().length == 0) {
 				// 공백 싱크일 경우 넘기기
 				continue;
 			}
@@ -286,7 +286,7 @@ function refreshPreview(isTarget=false) {
 				}
 				
 				// 줄바꿈 예외 처리 및 주석 숨기기
-				let text = item.text.split("\n").join("").split(/<br>/gi).join("\n").split("<!--");
+				let text = item.text.replaceAll("\n", "").replaceAll(/<br>/gi, "\n").split("<!--");
 				for (let j = 1; j < text.length; j++) {
 					const index = text[j].indexOf("-->");
 					if (index >= 0) {
@@ -312,11 +312,11 @@ function refreshPreview(isTarget=false) {
 				item.me = item.ms + 1000;
 				
 				// 줄바꿈, &nbsp; 등 처리
-				const $line = getLine(item, item.start, text.join("").split("\n").join("<br />").split("&").join("&amp;"));
+				const $line = getLine(item, item.start, text.join("").replaceAll("\n", "<br />").replaceAll("&", "&amp;"));
 				item.previewText = $line.text();
 				body.push(item);
 				
-				if ($line.find(".text").text().split("&nbsp;").join(" ").trim().length) {
+				if ($line.find(".text").text().replaceAll("&nbsp;", " ").trim().length) {
 					last = item;
 				} else {
 					last = {};
@@ -340,7 +340,7 @@ function refreshPreview(isTarget=false) {
 		case "srt": {
 			for (let i = 0; i < body.length; i++) {
 				const item = body[i];
-				const $line = getLine(item, item.start, item.text.split("\n").join("<br />"));
+				const $line = getLine(item, item.start, item.text.replaceAll("\n", "<br />"));
 				item.previewText = $line.text();
 				
 				// ms 단위 표현
@@ -385,7 +385,7 @@ function refreshPreview(isTarget=false) {
 				}
 				
 				// 줄바꿈 처리
-				const $line = getLine(item, item.ms, text.split("\\N").join("<br />"));
+				const $line = getLine(item, item.ms, text.replaceAll("\\N", "<br />"));
 				item.previewText = $line.text();
 				
 				// 싱크 역전 오류
@@ -580,7 +580,7 @@ function apply() {
 					if (item.text.startsWith("<!-- End=")) {
 						const commentEnd = item.text.indexOf("-->");
 						if (commentEnd > 0) {
-							let comment = item.text.substring(9, commentEnd).trim().split("<​").join("<").split("​>").join(">");
+							let comment = item.text.substring(9, commentEnd).trim().replaceAll("<​", "<").replaceAll("​>", ">");
 							afterComment = item.text.substring(commentEnd + 3).trim();
 							
 							const index = comment.indexOf("\n");
@@ -592,7 +592,7 @@ function apply() {
 								if (comment.length > 6 && comment.substring(0, 6).toUpperCase() == "<SYNC ") {
 									comment = shiftHold(new SmiFile(comment)).toText().trim();
 								}
-								comment = comment.trim().split("<").join("<​").split(">").join("​>");
+								comment = comment.trim().replaceAll("<", "<​").replaceAll(">", "​>");
 								item.text = "<!-- End=" + syncEnd + "\n" + comment + "\n-->\n" + afterComment;
 							}
 						}
@@ -1201,7 +1201,7 @@ h4 {
 		<div id="settingSeparator" title="자막 파일을 불러올 때\n가중치 계산 범위를 나눌 구분자입니다.">
 			<label>
 				<h4>범위 구분자</h4>
-				<textarea id="inputSeparator" spellcheck="false"></textarea>
+				<textarea id="inputSeparator"></textarea>
 			</label>
 			<label>
 				<input type="text" id="inputMaxBlank" />초 이상의 공백

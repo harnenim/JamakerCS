@@ -176,7 +176,7 @@ CheckString.prototype.getParam = function() {
 	for (let i = 0; i < this.parts.length; i++) {
 		text += this.parts[i].param.text;
 	}
-	return text.split("\n").join("\r\n");
+	return text.replaceAll("\n", "\r\n");
 }
 CheckString.prototype.setReplacers = function(replacers) {
 	this.replacers = replacers;
@@ -421,7 +421,7 @@ function setChecker(i, j=-1) {
 }
 
 function html(text) {
-	return text.split("<").join("&lt;").split("\n").join("<br />");
+	return text.replaceAll("<", "&lt;").replaceAll("\n", "<br />");
 }
 function refreshOutput() {
 	operation.doReplace();

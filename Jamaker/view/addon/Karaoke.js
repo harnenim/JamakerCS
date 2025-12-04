@@ -1049,7 +1049,7 @@ $(() => {
 			}
 			
 			preview.html("<p>" + html.join("</p><p>") + "</p>");
-			output.val(html.join("\n").split("<RT>").join("<RP>(</RP><RT>").split("</RT>").join("</RT><RP>)</RP>"));
+			output.val(html.join("\n").replaceAll("<RT>", "<RP>(</RP><RT>").replaceAll("</RT>", "</RT><RP>)</RP>"));
 		}
 		runs[4] = run;
 		

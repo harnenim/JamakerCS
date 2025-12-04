@@ -40,8 +40,8 @@ function selectView(index) {
 }
 function showPreview(source, replaced) {
 	selectView(1);
-	$("#view1left").html(source.split("\n").join("<br />"));
-	$("#view1right").html(replaced.split("\n").join("<br />"));
+	$("#view1left" ).html(source  .replaceAll("\n", "<br />"));
+	$("#view1right").html(replaced.replaceAll("\n", "<br />"));
 }
 function beforeExit() {
 	binder.exitAfterSaveSetting(JSON.stringify({ from: $("#vFrom").val(), to: $("#vTo").val() }));
@@ -274,7 +274,7 @@ body.drag-file #listFiles {
 		<div id="view0left">
 			<div id="listFiles"></div>
 		</div>
-		<div id="view0right"><textarea id="vFrom" spellcheck="false"></textarea><span>→</span><textarea id="vTo" spellcheck="false"></textarea></div>
+		<div id="view0right"><textarea id="vFrom"></textarea><span>→</span><textarea id="vTo"></textarea></div>
 		<div id="areaSubmit">
 			<button id="btnReplace">변환</button>
 		</div>

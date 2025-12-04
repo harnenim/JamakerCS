@@ -65,7 +65,7 @@ $(() => {
 });
 function convertValue(value) {
 	for (let i = 0; i < replaceList.length; i++) {
-		value = value.split(replaceList[i][0]).join(replacer[replaceList[i][1]]);
+		value = value.replaceAll(replaceList[i][0], replacer[replaceList[i][1]]);
 	}
 	return value;
 }

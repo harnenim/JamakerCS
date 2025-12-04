@@ -86,7 +86,7 @@ function fusion() {
 function apply() {
 	let text = $("#output").val();
 	while (text.indexOf("\n\n") >= 0) {
-		text = text.split("\n\n").join("\n");
+		text = text.replaceAll("\n\n", "\n");
 	}
 	
 	// 해당 줄 앞뒤 전체 선택되도록 조정
@@ -176,12 +176,12 @@ div.scroll > textarea {
 </head>
 <body>
 	<div class="scroll">
-		<textarea tabindex="1" id="inputSync" spellcheck="false"></textarea>
-		<textarea tabindex="2" id="inputText" spellcheck="false">
+		<textarea tabindex="1" id="inputSync"></textarea>
+		<textarea tabindex="2" id="inputText">
 주로 임시 가사에서 정식 가사로 교체할 때
 쓰려고 만든 기능입니다.
 		</textarea>
-		<textarea tabindex="4" id="output" spellcheck="false" readonly></textarea>
+		<textarea tabindex="4" id="output" readonly></textarea>
 	</div>
 	<button tabindex="3" type="button" id="btnFusion">＞</button>
 	<button tabindex="5" type="button" id="btnApply">적용</button>

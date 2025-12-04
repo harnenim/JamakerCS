@@ -20,7 +20,7 @@ setColor = function(color) {
 
 	let preset = styleColorAppendPreset;
 	for (let name in color) {
-		preset = preset.split("[" + name + "]").join(color[name]);
+		preset = preset.replaceAll("["+name+"]", color[name]);
 	}
 	$("#styleColorAppend").html(preset);;
 }
@@ -126,9 +126,9 @@ $(() => {
 			const input = $(el);
 			let name = input.attr("name");
 			if (name.indexOf("what") > 0) {
-				name = name.split("what").join(setting.player.control.dll);
+				name = name.replaceAll("what", setting.player.control.dll);
 			}
-			const value = eval("setting['" + name.split("_").join("']['") + "']");
+			const value = eval("setting['" + name.replaceAll("_", "']['") + "']");
 			if (typeof value == "number" || typeof value == "string") {
 				input.val(value);
 			} else if (value && value.join) {
@@ -139,14 +139,14 @@ $(() => {
 			const input = $(el);
 			let name = input.attr("name");
 			if (name.indexOf("what")) {
-				name = name.split("what").join(setting.player.control.dll);
+				name = name.replaceAll("what", setting.player.control.dll);
 			}
-			input.prop("checked", eval("setting['" + name.split("_").join("']['") + "']"));
+			input.prop("checked", eval("setting['" + name.replaceAll("_", "']['") + "']"));
 		});
 		form.find("select[name]").each((_, el) => {
 			const select = $(el);
 			const name = select.attr("name");
-			const value = eval("setting." + name.split("_").join("."));
+			const value = eval("setting." + name.replaceAll("_", "."));
 			select.data({value: value});
 		});
 	}
@@ -601,7 +601,7 @@ $(() => {
 		submitFuncs["ac"] = () => {
 			$("#ac").find("textarea").each((_, el) => {
 				const textarea = $(el);
-				const name = "setting['" + textarea.attr("name").split("_").join("']['") + "']";
+				const name = "setting['" + textarea.attr("name").replaceAll("_", "']['") + "']";
 				let value = textarea.val();
 				if (value) {
 					value = value.split("\n");
@@ -1590,7 +1590,7 @@ body {
 		<input type="hidden" id="inputCommandName" />
 		<label>조합 <input type="text" id="inputCommandKey" readonly style="width: 100px;" /> (← 여기를 선택한 상태에서 단축키를 입력할 수 있습니다.)</label>
 		<br />
-		<textarea id="inputCommandFunc" spellcheck="false"></textarea>
+		<textarea id="inputCommandFunc"></textarea>
 		
 		<fieldset id="areaFunctions" style="height: 364px; overflow-y: scroll;">
 			<legend>사용자 정의 명령 함수 지원</legend>
@@ -1701,37 +1701,37 @@ body {
 		<br />
 		<label>일반 문자열 (단어 입력 중 Ctrl+스페이스바 혹은 Tab키)<br />
 			이곳에 입력한 값은 맞춤법 검사기 등을 사용할 때 예외처리에도 사용됩니다.
-			<textarea name="autoComplete_0_1"   spellcheck="false"></textarea>
+			<textarea name="autoComplete_0_1"></textarea>
 		</label>
 		<label>@
-			<textarea name="autoComplete_50_1"  spellcheck="false"></textarea>
+			<textarea name="autoComplete_50_1"></textarea>
 		</label>
 		<label>#
-			<textarea name="autoComplete_51_1"  spellcheck="false"></textarea>
+			<textarea name="autoComplete_51_1"></textarea>
 		</label>
 		<label>$
-			<textarea name="autoComplete_52_1"  spellcheck="false"></textarea>
+			<textarea name="autoComplete_52_1"></textarea>
 		</label>
 		<label>%
-			<textarea name="autoComplete_53_1"  spellcheck="false"></textarea>
+			<textarea name="autoComplete_53_1"></textarea>
 		</label>
 		<label>^
-			<textarea name="autoComplete_54_1"  spellcheck="false"></textarea>
+			<textarea name="autoComplete_54_1"></textarea>
 		</label>
 		<label>&
-			<textarea name="autoComplete_55_1"  spellcheck="false"></textarea>
+			<textarea name="autoComplete_55_1"></textarea>
 		</label>
 		<label>(
-			<textarea name="autoComplete_57_1"  spellcheck="false"></textarea>
+			<textarea name="autoComplete_57_1"></textarea>
 		</label>
 		<label>)
-			<textarea name="autoComplete_48_1"  spellcheck="false"></textarea>
+			<textarea name="autoComplete_48_1"></textarea>
 		</label>
 		<label>&lt;
-			<textarea name="autoComplete_188_1" spellcheck="false"></textarea>
+			<textarea name="autoComplete_188_1"></textarea>
 		</label>
 		<label>&gt;
-			<textarea name="autoComplete_190_1" spellcheck="false"></textarea>
+			<textarea name="autoComplete_190_1"></textarea>
 		</label>
 	</form>
 	
@@ -1839,7 +1839,7 @@ body {
 			</div>
 		</fieldset>
 		<label for="taViewerCss">미리보기</label>
-		<textarea id="taViewerCss" name="viewer_css" spellcheck="false" style="height: 300px;"></textarea>
+		<textarea id="taViewerCss" name="viewer_css" style="height: 300px;"></textarea>
 	</form>
 	
 	<form id="player">

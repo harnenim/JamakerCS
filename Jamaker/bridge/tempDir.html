@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	const keys = localStorage.getItem("tmpKeys").split(":");
 	for (let i = 0; i < keys.length; i++) {
 		const key = keys[i];
-		document.body.append(newEl("<a href='javascript:loadTmp(\""+key.split("\\").join("\\\\")+"\")'>" + key + "</a>"));
+		document.body.append(newEl("<a href='javascript:loadTmp(\""+key.replaceAll("\\", "\\\\")+"\")'>" + key + "</a>"));
 	}
 });
 function loadTmp(key) {

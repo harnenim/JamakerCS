@@ -835,7 +835,7 @@ Attr.junkAss = function(ass) {
 	return attr;
 }
 Attr.prototype.isEmpty = function () {
-	return this.text.split(" ").join("").split("　").join("").split("\n").join("").length == 0;
+	return this.text.replaceAll(" ", "").replaceAll("　", "").replaceAll("\n", "").length == 0;
 }
 
 Attr.prototype.getWidth = function() {
@@ -918,7 +918,7 @@ Attr.prototype.toHtml = function() {
 	if (this.fn != null && this.fn.length > 0) css += "font-family: '" + this.fn + "';";
 	if (this.fc != null && this.fc.length > 0) css += "color: #" + this.fc + ";";
 	return "<span" + (css.length > 0 ? " style=\"" + css + "\"" : "") + ">"
-		+ Subtitle.$tmp.text(text).html().split(" ").join("&nbsp;").split("\n").join("​<br>​")
+		+ Subtitle.$tmp.text(text).html().replaceAll(" ", "&nbsp;").replaceAll("\n", "​<br>​")
 		+ "</span>";
 }
 Attr.toHtml = (attrs) => {
@@ -1063,7 +1063,7 @@ AssEvent.toAssTime = (time=0, fromFrameSync=false) => {
 }
 AssEvent.fromAssTime = (assTime, toFrameSync=false) => {
 	const vs = assTime.split(':');
-	let time = ((Number(vs[0]) * 360000) + (Number(vs[1]) * 6000) + (Number(vs[2].split(".").join("")))) * 10;
+	let time = ((Number(vs[0]) * 360000) + (Number(vs[1]) * 6000) + (Number(vs[2].replaceAll(".", "")))) * 10;
 	if (toFrameSync) {
 		time = AssEvent.optimizeSync(time);
 	}
@@ -1499,7 +1499,7 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 		last = attr;
 	}
 	
-	return [text.split("\n").join("\\N")];
+	return [text.replaceAll("\n", "\\N")];
 }
 
 // 뒤쪽에 붙은 군더더기 종료태그 삭제
@@ -1541,7 +1541,7 @@ AssEvent.fromSync = function(sync, style=null) {
 	for (let i = 0; i < texts.length; i++) {
 		let text = texts[i];
 		if (text.indexOf("[FADE_LENGTH]") > 0) {
-			text = text.split("[FADE_LENGTH]").join(end - start);
+			text = text.replaceAll("[FADE_LENGTH]", end - start);
 		}
 		
 		// ASS에선 필요 없는 공백문자 군더더기 제거
@@ -1685,8 +1685,8 @@ AssEvent.fromSync = function(sync, style=null) {
 						}
 					}
 					
-					line = line.split("​").join("");
-					if (line.split("　").join("").trim().length == 0) {
+					line = line.replaceAll("​", "");
+					if (line.replaceAll("　", "").trim().length == 0) {
 						// 비어있는 줄이면 무시
 						continue;
 					}
@@ -1746,7 +1746,7 @@ AssEvent.fromSync = function(sync, style=null) {
 		}
 		
 		// 군더더기 제거
-		text = text.split("{\\ass1}").join("").split("{\\ass0}").join("").split("}{").join("");
+		text = text.replaceAll("{\\ass1}", "").replaceAll("{\\ass0}", "").replaceAll("}{", "");
 		
 		if (text) {
 			// 메인(+유사메인) 홀드에 대해서 줄표 달린 것들 정렬 맞춰주기
@@ -1771,7 +1771,7 @@ AssEvent.fromSync = function(sync, style=null) {
 					lines = lines.split("\\N");
 					const pureLines = [];
 					for (let i = 0; i < lines.length; i++) {
-						let pureLine = Subtitle.$tmp.html(lines[i].split("{").join("<span ").split("}").join(">")).text();
+						let pureLine = Subtitle.$tmp.html(lines[i].replaceAll("{", "<span ").replaceAll("}", ">")).text();
 						if (pureLine.startsWith("-")) {
 							pureLines.push({ i: i, text: pureLine });
 						}
@@ -1779,7 +1779,7 @@ AssEvent.fromSync = function(sync, style=null) {
 					if (pureLines.length == 0) {
 						// 반각 줄표 없으면 전각 줄표로 재확인
 						for (let i = 0; i < lines.length; i++) {
-							let pureLine = Subtitle.$tmp.html(lines[i].split("{").join("<span ").split("}").join(">")).text();
+							let pureLine = Subtitle.$tmp.html(lines[i].replaceAll("{", "<span ").replaceAll("}", ">")).text();
 							if (pureLine.startsWith("－")) {
 								pureLines.push({ i: i, text: pureLine });
 							}
@@ -1805,7 +1805,7 @@ AssEvent.fromSync = function(sync, style=null) {
 						if (frontTag) {
 							text = (frontTag + text);
 						}
-						text = text.split("}{").join("");
+						text = text.replaceAll("}{", "");
 					}
 				}
 			}
@@ -1829,9 +1829,9 @@ AssEvent.fromSync = function(sync, style=null) {
 			for (let i = 0; i < texts.length; i++) {
 				const text = texts[i];
 				if (i == 0) {
-					ass.Text = origin.split("[SMI]").join(text).split("}{").join("");
+					ass.Text = origin.replaceAll("[SMI]", text).replaceAll("}{", "");
 				} else {
-					const event = new AssEvent(ass.start, ass.end, ass.Style, origin.split("[SMI]").join(text).split("}{").join(""), ass.Layer);
+					const event = new AssEvent(ass.start, ass.end, ass.Style, origin.replaceAll("[SMI]", text).replaceAll("}{", ""), ass.Layer);
 					event.owner = ass.owner;
 					event.comment = ass.comment;
 					events.push(event);
@@ -2212,7 +2212,7 @@ Smi.smi2txt = (smis) => {
 	return result;
 }
 Smi.prototype.isEmpty = function() {
-	return (this.text.split("&nbsp;").join("").trim().length == 0);
+	return (this.text.replaceAll("&nbsp;", "").trim().length == 0);
 }
 
 function sToAttrColor(soColor) {
@@ -3011,7 +3011,7 @@ Smi.prototype.fromAttrs = function(attrs, forConvert=false) {
 			}
 		}
 	}
-	text += Smi.fromAttrs(attrs, 0, true, true, forConvert).split("\n").join("<br>");
+	text += Smi.fromAttrs(attrs, 0, true, true, forConvert).replaceAll("\n", "<br>");
 	this.text = text;
 	return this;
 }
@@ -3344,7 +3344,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 	if (end < 0) {
 		// 종료태그 없는 경우, 그라데이션만 동작
 		if (hasGradation && withComment) {
-			smi.text = "<!-- End=999999999\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smi.text;
+			smi.text = "<!-- End=999999999\n" + smiText.replaceAll("<", "<​").replaceAll(">", "​>") + "\n-->\n" + smi.text;
 		}
 		return [smi];
 	}
@@ -3404,7 +3404,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 		attrs[shakeRange[1]-1].text = attrs[shakeRange[1]-1].text + "{SR}​";
 		for (let j = shakeRange[0]; j < shakeRange[1]; j++) {
 			if (attrs[j].text.indexOf("\n") >= 0) {
-				attrs[j].text = attrs[j].text.split("\n").join("{SR}​\n​{\SL}");
+				attrs[j].text = attrs[j].text.replaceAll("\n", "{SR}​\n​{\SL}");
 			}
 		}
 		
@@ -3491,21 +3491,21 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 					setFadeColor(attr, j, count);
 				}
 			}
-			let text = Smi.fromAttrs(attrs).split("\n").join("<br>");
+			let text = Smi.fromAttrs(attrs).replaceAll("\n", "<br>");
 			
 			// 좌우로 흔들기
 			switch (step) {
 				case 2:
 				case 5:
 				case 7:
-					text = text.split("{SL}").join(LRmin).split("{SR}").join(LRmax);
+					text = text.replaceAll("{SL}", LRmin).replaceAll("{SR}", LRmax);
 					break;
 				case 0:
 				case 4:
-					text = text.split("{SL}").join(LRmid).split("{SR}").join(LRmid);
+					text = text.replaceAll("{SL}", LRmid).replaceAll("{SR}", LRmid);
 					break;
 				default:
-					text = text.split("{SL}").join(LRmax).split("{SR}").join(LRmin);
+					text = text.replaceAll("{SL}", LRmax).replaceAll("{SR}", LRmin);
 			}
 			
 			// 상하로 흔들기
@@ -3513,20 +3513,20 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 				case 0:
 				case 3:
 				case 5:
-					text = text.split("{ST}").join(TBmin + "<br>").split("{SB}").join("<br>" + TBmax);
+					text = text.replaceAll("{ST}", TBmin + "<br>").replaceAll("{SB}", "<br>" + TBmax);
 					break;
 				case 2:
 				case 6:
-					text = text.split("{ST}").join(TBmid + "<br>").split("{SB}").join("<br>" + TBmid);
+					text = text.replaceAll("{ST}", TBmid + "<br>").replaceAll("{SB}", "<br>" + TBmid);
 					break;
 				default:
-					text = text.split("{ST}").join(TBmax + "<br>").split("{SB}").join("<br>" + TBmin);
+					text = text.replaceAll("{ST}", TBmax + "<br>").replaceAll("{SB}", "<br>" + TBmin);
 			}
 			
 			smis.push(new Smi((start * (count - j) + end * (j)) / count, (j == 0 ? smi.syncType : SyncType.inner), text));
 		}
 		if (withComment) {
-			smis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[0].text;
+			smis[0].text = "<!-- End=" + end + "\n" + smiText.replaceAll("<", "<​").replaceAll(">", "​>") + "\n-->\n" + smis[0].text;
 		}
 		
 	} else if (hasTyping) {
@@ -3683,7 +3683,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 			realJ++;
 		}
 		if (withComment) {
-			smis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[0].text;
+			smis[0].text = "<!-- End=" + end + "\n" + smiText.replaceAll("<", "<​").replaceAll(">", "​>") + "\n-->\n" + smis[0].text;
 		}
 		
 	} else if (!forConvert && hasFade) {
@@ -3730,7 +3730,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 		}
 		if (withComment) {
 			if (smis.length) {
-				smis[0].text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + smis[0].text;
+				smis[0].text = "<!-- End=" + end + "\n" + smiText.replaceAll("<", "<​").replaceAll(">", "​>") + "\n-->\n" + smis[0].text;
 			} else {
 				// 싱크 길이가 1프레임 미만이면 변환결과가 없을 수도 있음
 			}
@@ -3742,7 +3742,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 			this.text = smi.text;
 			// 주석 추가
 			if (withComment) {
-				this.text = "<!-- End=" + end + "\n" + smiText.split("<").join("<​").split(">").join("​>") + "\n-->\n" + this.text;
+				this.text = "<!-- End=" + end + "\n" + smiText.replaceAll("<", "<​").replaceAll(">", "​>") + "\n-->\n" + this.text;
 			}
 		}
 		smis.push(this);
@@ -3825,7 +3825,7 @@ Smi.fillEmptySync = (smis) => {
 	for (let i = 0; i < smis.length - 1; i++) {
 		const smi = smis[i];
 		
-		const lines = smi.text.split("\r\n").join("\n").split('\n');
+		const lines = smi.text.replaceAll("\r\n", "\n").split('\n');
 		if (lines.length < 2) {
 			// 한 줄이면 필요 없음
 			continue;
@@ -3852,9 +3852,9 @@ window.SmiFile = Subtitle.SmiFile = function(text) {
 SmiFile.prototype.toTxt = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
 SmiFile.prototype.toText = function() {
 	return this.text
-	   = ( this.header.split("\r\n").join("\n")
+	   = ( this.header.replaceAll("\r\n", "\n")
 	     + Smi.smi2txt(this.body)
-	     + this.footer.split("\r\n").join("\n")
+	     + this.footer.replaceAll("\r\n", "\n")
 	     ).trim();
 }
 Smi.getSyncType = function(syncLine) {
@@ -3874,7 +3874,7 @@ Smi.getSyncType = function(syncLine) {
 }
 SmiFile.prototype.fromTxt = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
 SmiFile.prototype.fromText = function(text) {
-	text = (this.text = text).split("\r\n").join("\n");
+	text = (this.text = text).replaceAll("\r\n", "\n");
 	this.header = "";
 	this.footer = "";
 	this.body = [];
@@ -4000,7 +4000,7 @@ SmiFile.prototype.toSyncs = function() {
 		// 마지막 싱크
 		{
 			const item = this.body[i];
-			if (!item.skip && item.text.split("&nbsp;").join("").length > 0) {
+			if (!item.skip && item.text.replaceAll("&nbsp;", "").length > 0) {
 				result.push(last = item.toSync());
 				last.origin = item;
 			}
@@ -4246,7 +4246,7 @@ SmiFile.prototype.normalize = function(withComment=false, fps=null) {
 	if (preset) {
 		for (let i = 0; i < smis.length; i++) {
 			const smi = smis[i];
-			if (Subtitle.$tmp.html(smi.text).text().split("　").join(" ").trim()) {
+			if (Subtitle.$tmp.html(smi.text).text().replaceAll("　", " ").trim()) {
 				smi.text = preset.join(smi.text);
 				// 태그 재구성
 				smi.fromAttrs(smi.toAttrs(false));
@@ -4280,7 +4280,7 @@ SmiFile.prototype.antiNormalize = function() {
 		let comment = smi.text.substring(9, commentEnd).trim();
 		const afterComment = smi.text.substring(commentEnd + 3).trim();
 		
-		comment = comment.split("<​").join("<").split("​>").join(">");
+		comment = comment.replaceAll("<​", "<").replaceAll("​>", ">");
 		try {
 			const index = comment.indexOf("\n");
 			const syncEnd = Number(index < 0 ? comment : comment.substring(0, index));
@@ -4304,16 +4304,16 @@ SmiFile.prototype.antiNormalize = function() {
 			if (comment.length > 6 && comment.substring(0, 6).toUpperCase() == "<SYNC ") {
 				let newBody = new SmiFile(comment).body;
 				if (i > 0) {
-					if (!newBody  [0    ].text.split("&nbsp;").join("").trim()
-					 && !this.body[i - 1].text.split("&nbsp;").join("").trim()) {
+					if (!newBody  [0    ].text.replaceAll("&nbsp;", "").trim()
+					 && !this.body[i - 1].text.replaceAll("&nbsp;", "").trim()) {
 						// 메인홀드 앞쪽이 공백싱크면서 주석 내용물도 공백싱크로 시작할 경우 중복 제거
 						newBody = newBody.slice(1);
 					}
 					newBody = this.body.slice(0, i).concat(newBody);
 				}
 				if (removeEnd < this.body.length
-						&& !this.body[removeEnd         ].text.split("&nbsp;").join("").trim()
-						&& !newBody  [newBody.length - 1].text.split("&nbsp;").join("").trim()) {
+						&& !this.body[removeEnd         ].text.replaceAll("&nbsp;", "").trim()
+						&& !newBody  [newBody.length - 1].text.replaceAll("&nbsp;", "").trim()) {
 					this.body = newBody.concat(this.body.slice(removeEnd + 1));
 				} else {
 					this.body = newBody.concat(this.body.slice(removeEnd));
@@ -4351,7 +4351,7 @@ SmiFile.prototype.antiNormalize = function() {
 		let comment = smi.text.substring(9, commentEnd).trim();
 		const afterComment = smi.text.substring(commentEnd + 3).trim();
 		
-		comment = comment.split("<​").join("<").split("​>").join(">");
+		comment = comment.replaceAll("<​", "<").replaceAll("​>", ">");
 		try {
 			const index = comment.indexOf("\n");
 			const syncEnd = Number(index < 0 ? comment : comment.substring(0, index));
@@ -4380,7 +4380,7 @@ SmiFile.prototype.antiNormalize = function() {
 			
 			let removeStart = i;
 			if (removeEnd < this.body.length
-					&& !this.body[removeEnd].text.split("&nbsp;").join("").trim()) {
+					&& !this.body[removeEnd].text.replaceAll("&nbsp;", "").trim()) {
 				// 바로 다음이 공백 싱크면 내포 홀드에 포함
 				removeEnd++;
 			}
@@ -4405,7 +4405,7 @@ SmiFile.prototype.antiNormalize = function() {
 			result.push(hold);
 			
 			if (removeStart > 0
-					&& !!this.body[removeStart - 1].text.split("&nbsp;").join("").trim()) {
+					&& !!this.body[removeStart - 1].text.replaceAll("&nbsp;", "").trim()) {
 				// 내포 홀드 분리 후 메인 홀드에 종료싱크 넣어줘야 하는 경우
 				const newBody = this.body.slice(0, removeStart);
 				newBody.push(new Smi(hold.body[0].start, hold.body[0].syncType, "&nbsp;"));
@@ -4448,7 +4448,7 @@ Srt.srt2text = (srts) => {
 Srt.colorToAttr   = Smi.colorToAttr;
 Srt.colorFromAttr = Smi.colorFromAttr
 Srt.prototype.toAttr = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
-Srt.prototype.toAttrs = function() { return Smi.toAttrs(this.text.split("\n").join("<br>")); };
+Srt.prototype.toAttrs = function() { return Smi.toAttrs(this.text.replaceAll("\n", "<br>")); };
 Srt.prototype.fromAttr = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
 Srt.prototype.fromAttrs = Smi.prototype.fromAttrs;
 
@@ -4459,7 +4459,7 @@ Srt.prototype.fromSync = function(sync) {
 	this.start = sync.start;
 	this.end = sync.end;
 	if (sync.origin && sync.origin.constructor == Smi) {
-		this.text = sync.origin.text.split("\n").join("").split("<br>").join("\n");
+		this.text = sync.origin.text.replaceAll("\n", "").replaceAll("<br>", "\n");
 	} else {
 		this.fromAttrs(sync.text);
 	}
@@ -4492,7 +4492,7 @@ SrtFile.prototype.toText = function() {
 SrtFile.REG_SRT_SYNC = /^([0-9]{2}:){1,2}[0-9]{2}[,.][0-9]{2,3}( )*-->( )*([0-9]{2}:){1,2}[0-9]{2}[,.][0-9]{2,3}( )*$/;
 SrtFile.prototype.fromTxt = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
 SrtFile.prototype.fromText = function(text) {
-	const lines = text.split("\r\n").join("\n").split("\n");
+	const lines = text.replaceAll("\r\n", "\n").split("\n");
 	const items = [];
 	let last = { start: 0, end: 0, lines: [], length: 0 };
 	let lastLength = 0;
@@ -4513,7 +4513,7 @@ SrtFile.prototype.fromText = function(text) {
 					items.push(last = { start: 0, end: 0, lines: [], length: 0 });
 					const syncs = line.split("-->");
 					{	// 시작 싱크
-						const times = syncs[0].trim().split(",").join(".").split(":");
+						const times = syncs[0].trim().replaceAll(",", ".").split(":");
 						let start = Number(times[0]) * 60 + Number(times[1]);
 						if (times.length > 2) {
 							start = start * 60 + Number(times[2]);
@@ -4521,7 +4521,7 @@ SrtFile.prototype.fromText = function(text) {
 						last.start = Math.round(start * 1000);
 					}
 					{	// 종료 싱크
-						const times = syncs[1].trim().split(",").join(".").split(":");
+						const times = syncs[1].trim().replaceAll(",", ".").split(":");
 						let end = Number(times[0]) * 60 + Number(times[1]);
 						if (times.length > 2) {
 							end = end * 60 + Number(times[2]);

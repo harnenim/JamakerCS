@@ -50,9 +50,9 @@ function init(jsonSetting) {
 }
 
 function addFile(file) {
-	const filters = inputFilters.val().split(",").join(";").split(";");
+	const filters = inputFilters.val().replaceAll(",", ";").split(";");
 	for (let i = 0; i < filters.length; i++) {
-		const regex = new RegExp("^" + filters[i].trim().split(".").join("\\.").split("*").join(".*") + "$");
+		const regex = new RegExp("^" + filters[i].trim().replaceAll(".", "\\.").replaceAll("*", ".*") + "$");
 		if (regex.test(file)) {
 			listFiles.add(file, true);
 			return;
@@ -116,8 +116,8 @@ function selectView(index) {
 }
 function showPreview(source, replaced) {
 	selectView(1);
-	$("#view1left").html(source.split("\n").join("<br />"));
-	$("#view1right").html(replaced.split("\n").join("<br />"));
+	$("#view1left" ).html(source  .replaceAll("\n", "<br />"));
+	$("#view1right").html(replaced.replaceAll("\n", "<br />"));
 }
 function beforeExit() {
 	binder.exitAfterSaveSetting(getSetting());

@@ -47,7 +47,7 @@ $(() => {
     const TY = (opener.setting.sync.uiHeight ? opener.setting.sync.uiHeight : 54);
     {
 	    const $styleSize = $("#styleSize");
-	    $styleSize.html($styleSize.html().split("96px").join(TX + "px").split("54px").join(TY + "px"));
+	    $styleSize.html($styleSize.html().replaceAll("96px", TX + "px").replaceAll("54px", TY + "px"));
     }
 	
 	{
@@ -210,7 +210,7 @@ $(() => {
 					$tr.append($("<td>")).append($("<td>").addClass("sync").text(smi.syncType == Subtitle.SyncType.inner ? "~" : smi.start));
 					$tr.data({ index: (frameSyncs.length - 1) + (++count / 10000) }); // 10000개를 넘어갈 일은 없을 것
 				}
-				$tbody.append($tr.append($("<td>").text(smi.text.split("\n").join("")).attr("title", smi.text)));
+				$tbody.append($tr.append($("<td>").text(smi.text.replaceAll("\n", "")).attr("title", smi.text)));
 				
 				lastFade = fade;
 			}
@@ -247,7 +247,7 @@ $(() => {
 						$tr.data({ index: (frameSyncs.length - 1) + (++count / 1000) }); // 1000개를 넘어갈 일은 없을 것
 					}
 					const assText = ass.inputText.val();
-					$tbody.append($tr.append($("<td>").attr({ rowspan: 2 }).text(assText).attr("title", assText.split("{").join("\n{").split("}").join("}\n"))));
+					$tbody.append($tr.append($("<td>").attr({ rowspan: 2 }).text(assText).attr("title", assText.replaceAll("{", "\n{").replaceAll("}", "}\n"))));
 				}
 				
 				{	// end

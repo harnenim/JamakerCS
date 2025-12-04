@@ -131,7 +131,7 @@ function shake() {
 			for (let i = 0; i < groups.length - 1; i++) {
 				group = groups[i];
 				const text = group.text.join(" ");
-				if (text.split("&nbsp;").join("").trim().length == 0) {
+				if (text.replaceAll("&nbsp;", "").trim().length == 0) {
 					shaked.push({ time: group.start, type: group.type, text: "&nbsp;" });
 					
 				} else {
@@ -182,7 +182,7 @@ function setPreview(list, speed) {
 }
 function toShowText(showText) {
 	// RUBY태그 문법이 미묘하게 달라서 가공 필요
-	showText = showText.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
+	showText = showText.replaceAll("<RP", "<!--RP").replaceAll("</RP>", "</RP-->");
 	// font size도 추가 작업
 	{	let j = 0;
 		let begin = 0;
@@ -237,11 +237,11 @@ function toShowText(showText) {
 	}
 	{	// 팟플레이어에선 공백문자 그대로 표시됨
 		const a = showText.split("<");
-		a[0] = a[0].split(" ").join("&nbsp;");
+		a[0] = a[0].replaceAll(" ", "&nbsp;");
 		for (let j = 1; j < a.length; j++) {
 			const b = a[j].indexOf(">");
 			if (b >= 0) {
-				a[j] = a[j].substring(0, b) + ">" + a[j].substring(b+1).split(" ").join("&nbsp;");
+				a[j] = a[j].substring(0, b) + ">" + a[j].substring(b+1).replaceAll(" ", "&nbsp;");
 			}
 		}
 		showText = a.join("<");
@@ -252,7 +252,7 @@ function toShowText(showText) {
 			const line = showLines[0];
 			if ($("<span>").html(line).text() == "　") {
 				if (line.indexOf("font-size:") > 0) {
-					showLines[0] = line.split("<font style=\"font-size:").join("<div style=\"height:").split("</font>").join("</div>");
+					showLines[0] = line.replaceAll("<font style=\"font-size:", "<div style=\"height:").replaceAll("</font>", "</div>");
 				}
 			}
 		}
@@ -354,7 +354,7 @@ $(() => {
 </head>
 <body>
 	<div id="areaInput">
-		<textarea id="input" spellcheck="false" readonly></textarea>
+		<textarea id="input" readonly></textarea>
 		<label>속도: <input type="number" id="inputSpeed" value="125" />ms</label>
 		<label>흔들림 크기: <input type="number" id="inputSize" value="1" /></label>
 	</div>

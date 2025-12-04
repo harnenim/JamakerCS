@@ -33,7 +33,7 @@ function setAssFile(name, text) {
 			} else if (line.startsWith("Video File: ")) {
 				let videoFile = line.substring(12);
 				if (videoFile.indexOf(":") < 0) {
-					videoFile = name.substring(0, name.split("/").join("\\").lastIndexOf("\\") + 1) + videoFile;
+					videoFile = name.substring(0, name.replaceAll("/", "\\").lastIndexOf("\\") + 1) + videoFile;
 				}
 				setVideoFile(videoFile);
 				binder.setVideoFile(videoFile);
@@ -53,7 +53,7 @@ function setVideoFile(name) {
 }
 function setFkfFile(file) {
 	if (typeof file == "string") {
-		const paths = file.split("\\").join("/").split("/");
+		const paths = file.replaceAll("\\", "/").split("/");
 		paths[paths.length - 1] = encodeURIComponent(paths[paths.length - 1]);
 		const path = (paths.length > 1 ? ("file://" + paths.join("/")) : ("../temp/fkf/" + paths[0]));
 		const req = new XMLHttpRequest();
@@ -248,9 +248,9 @@ textarea { border: 0; }
 		<div id="labelAss"><span></span></div>
 		<div id="labelVideo"><span></span></div>
 	</div>
-	<textarea id="origin" spellcheck="false" placeholder="입력 파일"></textarea>
+	<textarea id="origin" placeholder="입력 파일"></textarea>
 	<button id="btnOptimize">→</button>
-	<textarea id="result" spellcheck="false" placeholder="출력 파일"></textarea>
+	<textarea id="result" placeholder="출력 파일"></textarea>
 	<button id="btnSave">저장</button>
 </body>
 </html>

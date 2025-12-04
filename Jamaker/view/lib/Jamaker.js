@@ -845,9 +845,9 @@ Tab.prototype.replaceBeforeSave = function() {
 		for (let j = 0; j < setting.replace.length; j++) {
 			const item = setting.replace[j];
 			if (item.use) {
-				if (text[0].indexOf(item.from) >= 0) { text[0] = text[0].split(item.from).join(item.to); changed = true; }
-				if (text[1].indexOf(item.from) >= 0) { text[1] = text[1].split(item.from).join(item.to); changed = true; }
-				if (text[2].indexOf(item.from) >= 0) { text[2] = text[2].split(item.from).join(item.to); changed = true; }
+				if (text[0].indexOf(item.from) >= 0) { text[0] = text[0].replaceAll(item.from, item.to); changed = true; }
+				if (text[1].indexOf(item.from) >= 0) { text[1] = text[1].replaceAll(item.from, item.to); changed = true; }
+				if (text[2].indexOf(item.from) >= 0) { text[2] = text[2].replaceAll(item.from, item.to); changed = true; }
 			}
 		}
 		cursor = [text[0].length, text[0].length + text[1].length];
@@ -860,7 +860,7 @@ Tab.prototype.replaceBeforeSave = function() {
 				if (item.use) {
 					const index = text[0].indexOf(item.from);
 					if (index >= 0) {
-						text[0] = text[0].split(item.from).join(item.to);
+						text[0] = text[0].replaceAll(item.from, item.to);
 						cursor[0] = index + item.to.length;
 						cursor[1] += item.to.length - item.from.length;
 						changed = true;
@@ -879,7 +879,7 @@ Tab.prototype.replaceBeforeSave = function() {
 				if (item.use) {
 					const index = text.indexOf(item.from);
 					if (index >= 0) {
-						text = text.split(item.from).join(item.to);
+						text = text.replaceAll(item.from, item.to);
 						cursor[1] = index;
 						changed = true;
 					}
@@ -928,8 +928,8 @@ Tab.prototype.getAdditionalToAss = function(forSmi=false) {
 	let videoPath = Subtitle.video.path;
 	if (videoPath && this.path) {
 		// 상대경로로 바꿔줌
-		videoPath = videoPath.split("/").join("\\").split("\\");
-		let smiPath = this.path.split("/").join("\\").split("\\");
+		videoPath = videoPath.replaceAll("/", "\\").split("\\");
+		let smiPath = this.path.replaceAll("/", "\\").split("\\");
 		let i = 0;
 		for (; i < videoPath.length && smiPath.length; i++) {
 			if (videoPath[i] != smiPath[i]) {
@@ -1137,15 +1137,15 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			}
 			
 			// ASS 주석에 [TEXT] 있을 경우 넣을 내용물 ([SMI]는 후처리 필요해서 빼둠)
-			let smiText = Subtitle.$tmp.html(smi.text.split(/<br>/gi).join("\\N")).text();
-			while (smiText.indexOf("\\N　\\N") >= 0) { smiText = smiText.split("\\N　\\N").join("\\N"); }
-			while (smiText.indexOf("\\N\\N"  ) >= 0) { smiText = smiText.split("\\N\\N"  ).join("\\N"); }
+			let smiText = Subtitle.$tmp.html(smi.text.replaceAll(/<br>/gi, "\\N")).text();
+			while (smiText.indexOf("\\N　\\N") >= 0) { smiText = smiText.replaceAll("\\N　\\N", "\\N"); }
+			while (smiText.indexOf("\\N\\N"  ) >= 0) { smiText = smiText.replaceAll("\\N\\N"  , "\\N"); }
 			
 			// ASS 주석에서 복원
 			for (let j = 0; j < assTexts.length; j++) {
 				const assText = assTexts[j];
-				let ass = assText.split("[TEXT]").join(smiText)
-				                 .split("\n").join("") // 비태그 줄바꿈은 무시해야 함
+				let ass = assText.replaceAll("[TEXT]", smiText)
+				                 .replaceAll("\n", "") // 비태그 줄바꿈은 무시해야 함
 				                 .split(",");
 				
 				let layer = 0;
@@ -1731,7 +1731,7 @@ function init(jsonSetting, isBackup=true) {
 											let dMenuFunc = dMenu1.substring(dLen + 1);
 											if (sMenuFunc != dMenuFunc) {
 												// 기능이 바뀐 경우
-												sMenuFunc = dMenuFunc + " /* " + DEFAULT_SETTING.version + " 이전: " + sMenuFunc.split("*/").join("*​/") + " */";
+												sMenuFunc = dMenuFunc + " /* " + DEFAULT_SETTING.version + " 이전: " + sMenuFunc.replaceAll("*/", "*​/") + " */";
 												updated = true;
 											}
 											if (updated) {
@@ -2032,10 +2032,10 @@ function setSetting(setting, initial=false) {
 			,	dataType: "text"
 			,	success: (preset) => {
 					for (let name in setting.color) {
-						preset = preset.split("[" + name + "]").join(setting.color[name]);
+						preset = preset.replaceAll("["+name+"]", setting.color[name]);
 					}
 					if (button.length) {
-						preset = preset.split("[button]").join(button).split("[buttonDisabled]").join(disabled);
+						preset = preset.replaceAll("[button]", button).replaceAll("[buttonDisabled]", disabled);
 						$("body").addClass("classic-scrollbar");
 					} else {
 						$("body").removeClass("classic-scrollbar");
@@ -2066,7 +2066,7 @@ function setSetting(setting, initial=false) {
 		$.ajax({url: "lib/Jamaker.size.css"
 			,	dataType: "text"
 				,	success: (preset) => {
-					preset = preset.split("20px").join((LH = (20 * setting.size)) + "px");
+					preset = preset.replaceAll("20px", (LH = (20 * setting.size)) + "px");
 					
 					let $style = $("#styleSize");
 					if (!$style.length) {
@@ -2297,7 +2297,7 @@ function refreshPaddingBottom() {
 }
 
 function openHelp(name) {
-	const url = (name.substring(0, 4) == "http") ? name : "help/" + name.split("..").join("").split(":").join("") + ".html";
+	const url = (name.substring(0, 4) == "http") ? name : "help/" + name.replaceAll("..", "").replaceAll(":", "") + ".html";
 	SmiEditor.helpWindow = window.open(url, "help", "scrollbars=no,location=no,resizable=no,width=1,height=1");
 	binder.moveWindow("help"
 			, (setting.window.x < setting.player.window.x && setting.window.width < 880)
@@ -3147,7 +3147,7 @@ function loadAssFile(path, text, target=-1) {
 		const appendEvents = appendFile.getEvents().body;
 		
 		for (let i = 0; i < targetEvents.length; i++) {
-			let assText = targetEvents[i].Text.split("}{").join("");
+			let assText = targetEvents[i].Text.replaceAll("}{", "");
 			
 			// 뒤쪽에 붙은 군더더기 종료태그 삭제
 			while (assText.endsWith("}")) {
@@ -3336,7 +3336,7 @@ function loadAssFile(path, text, target=-1) {
 										if (attrs.length < o.origin.text.length) {
 											// 비교 전에 제거한 게 있었으면 SMI 재구성
 											// TODO: 완전 재구성보다는 ass 태그만 삭제할 수 있으면 그게 더 좋을지도?
-											originSmi = Smi.fromAttrs(attrs).split("\n").join("<br>");
+											originSmi = Smi.fromAttrs(attrs).replaceAll("\n", "<br>");
 											delCount++;
 										}
 										o.origin.origin.text = prev + originSmi + next;
@@ -4310,12 +4310,12 @@ function generateSmiFromAss(keepHoldsAss=true) {
 				
 				// 문자열이 아닌 배경색 용도
 				if (text.indexOf("■") >= 0) {
-					text = text.split("■").join(" ");
+					text = text.replaceAll("■", " ");
 					isPure = false;
 					skipCount++;
 				}
 				if (text.indexOf("●") >= 0) {
-					text = text.split("●").join(" ");
+					text = text.replaceAll("●", " ");
 					isPure = false;
 					skipCount++;
 				}
@@ -4395,7 +4395,7 @@ function generateSmiFromAss(keepHoldsAss=true) {
 						keepAss = false;
 					}
 				} else {
-					text = Subtitle.$tmp.html(text.split("{").join("<a ").split("}").join(">")).text();
+					text = Subtitle.$tmp.html(text.replaceAll("{", "<a ").replaceAll("}", ">")).text();
 				}
 				if (!text.trim()) {
 					continue;
@@ -4406,7 +4406,7 @@ function generateSmiFromAss(keepHoldsAss=true) {
 			
 			let smiText = texts.join(texts.length > 2 ? "<br>\n" : "<br>");
 			while (smiText.indexOf("<br>\n<br>") > 0) { // ASS에서 의도적으로 줄바꿈 반복한 경우가 있음
-				smiText = smiText.split("<br>\n<br>").join("<br>");
+				smiText = smiText.replaceAll("<br>\n<br>", "<br>");
 			}
 			if (keepAss) {
 				// SMI로 구현 성공했어도 ASS 원형을 유지
@@ -4496,7 +4496,7 @@ SmiEditor.Addon = {
 		windows: {}
 	,	open: function(name, target="addon") {
 			binder.setAfterInitAddon("");
-			const url = (name.substring(0, 4) == "http") ? name : "addon/" + name.split("..").join("").split(":").join("") + ".html";
+			const url = (name.substring(0, 4) == "http") ? name : "addon/" + name.replaceAll("..", "").replaceAll(":", "") + ".html";
 			this.windows[target] = window.open(url, target, "scrollbars=no,location=no,width=1,height=1");
 			setTimeout(() => { // 웹버전에서 딜레이 안 주면 위치를 못 잡는 경우가 있음
 				SmiEditor.Addon.moveWindowToSetting(target);
@@ -4617,15 +4617,15 @@ function extSubmit(method, url, values, withoutTag=true) {
 			
 			// 맞춤법 검사기 같은 데에 보내기 전에 태그 탈출 처리
 			if (withoutTag) {
-				Subtitle.$tmp.html(value.split(/<br>/gi).join(" "));
+				Subtitle.$tmp.html(value.replaceAll(/<br>/gi, " "));
 				Subtitle.$tmp.find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
 				value = Subtitle.$tmp.text();
-				value = value.split("​").join("").split("　").join(" ").split(" ").join(" ");
+				value = value.replaceAll("​", "").replaceAll("　", " ").replaceAll(" ", " ");
 				while (value.indexOf("  ") >= 0) {
-					value = value.split("  ").join(" ");
+					value = value.replaceAll("  ", " ");
 				}
 				while (value.indexOf("  ") >= 0) { // &nbsp;에서 만들어진 건 이쪽으로 옴
-					value = value.split("  ").join(" ");
+					value = value.replaceAll("  ", " ");
 				}
 			}
 			
@@ -4684,7 +4684,7 @@ function extSubmitSpeller() {
 		}
 		
 		// 태그 탈출 처리
-		value = $("<p>").html(value.split(/<br>/gi).join(" ")).text();
+		value = $("<p>").html(value.replaceAll(/<br>/gi, " ")).text();
 		
 		// 신버전용으로 시도 중
 		SmiEditor.Addon.openExt("https://nara-speller.co.kr/speller"

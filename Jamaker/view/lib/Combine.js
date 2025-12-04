@@ -143,7 +143,7 @@ window.Combine = {
 	
 	function toText(html, checker) {
 		// RUBY태그 없애고 계산
-		return checker.html(html.split("<RT").join("<!--RT").split("</RT>").join("</RT-->")).text();
+		return checker.html(html.replaceAll("<RT", "<!--RT").replaceAll("</RT>", "</RT-->")).text();
 	}
 	function isClear(attr, br=null) {
 		// 공백문자가 들어가도 무관한 속성
@@ -172,7 +172,7 @@ window.Combine = {
 	function getAttrWidth(attrs, checker, withFs=false) {
 		const cAttrs = [];
 		function append(attr) {
-			const cAttr = new Attr(attr, attr.text.split("&nbsp;").join(" "), true);
+			const cAttr = new Attr(attr, attr.text.replaceAll("&nbsp;", " "), true);
 			cAttr.fs = ((withFs && cAttr.fs) ? cAttr.fs : Combine.defaultSize);
 			if (cAttr.fn && cAttr.fn != "맑은 고딕") {
 				// 팟플레이어 폰트 크기 보정
@@ -191,7 +191,7 @@ window.Combine = {
 				append(attrs[i]);
 			}
 		}
-		const width = checker.html(Smi.fromAttr(cAttrs, Combine.defaultSize).split("\n").join("<br>")).width();
+		const width = checker.html(Smi.fromAttr(cAttrs, Combine.defaultSize).replaceAll("\n", "<br>")).width();
 		if (LOG) console.log(width, attrs);
 		return width;
 	}
@@ -239,7 +239,7 @@ window.Combine = {
 					smi.text = smi.text.substring(commentEnd + 4);
 				}
 			}
-			if (smi.text.split("&nbsp;").join("").trim()) {
+			if (smi.text.replaceAll("&nbsp;", "").trim()) {
 				const lineCount = smi.text.split(/<br>/gi).length;
 				
 				const attrs = smi.toAttrs(false);
@@ -385,7 +385,7 @@ window.Combine = {
 								for (let ki = 0; ki < subAttrs.length; ki++) {
 									const subAttr = subAttrs[ki];
 									if (subAttr.text) {
-										if (!subAttr.text.split("　").join("").split("​").join("").trim()) {
+										if (!subAttr.text.replaceAll("　", "").replaceAll("​", "").trim()) {
 											continue;
 										}
 										if (attr.fs) {
@@ -398,7 +398,7 @@ window.Combine = {
 								}
 								
 							} else if (attr.text) {
-								if (!attr.text.split("　").join("").split("​").join("").trim()) {
+								if (!attr.text.replaceAll("　", "").replaceAll("​", "").trim()) {
 									continue;
 								}
 								if (attr.fs) {
@@ -419,7 +419,7 @@ window.Combine = {
 								if (sync[WIDTH] > groupMaxWidth) {
 									// 크기 조절 안 했을 때의 폭을 이미 넘어섰으면 작업 안 함
 									if (LOG) console.log("width over");
-									sync[TEXT] = Smi.fromAttr(attrs).split("\n").join("<br>");
+									sync[TEXT] = Smi.fromAttr(attrs).replaceAll("\n", "<br>");
 									continue;
 								}
 								*/
@@ -441,7 +441,7 @@ window.Combine = {
 								if (attrs[k].attrs) {
 									const subAttrs = attrs[k].attrs;
 									for (let ki = 0; ki < subAttrs.length; ki++) {
-										const attrText = subAttrs[ki].text.split("​").join("");
+										const attrText = subAttrs[ki].text.replaceAll("​", "");
 										let attr = new Attr(subAttrs[ki], attrText, true);
 										
 										if (attrText.length == 0) {
@@ -453,13 +453,13 @@ window.Combine = {
 											trimedLine.attrs.push(attr);
 										}
 										wasClear = isClear(attr, br);
-										if (trimedLine.isEmpty && attr.text.split("　").join("").trim().length) {
+										if (trimedLine.isEmpty && attr.text.replaceAll("　", "").trim().length) {
 											trimedLine.isEmpty = isEmpty = false;
 										}
 									}
 									continue;
 								}
-								const attrText = attrs[k].text.split("​").join("");
+								const attrText = attrs[k].text.replaceAll("​", "");
 								let attr = new Attr(attrs[k], attrText, true);
 								
 								if (attrText.length == 0) {
@@ -489,13 +489,13 @@ window.Combine = {
 										wasClear = false;
 									}
 									
-									if (trimedLine.isEmpty && attr.text.split("　").join("").trim().length) {
+									if (trimedLine.isEmpty && attr.text.replaceAll("　", "").trim().length) {
 										trimedLine.isEmpty = isEmpty = false;
 									}
 									
 									for (let l = 1; l < attrLines.length; l++) {
 										attr = new Attr(attr, attrLines[l], true);
-										const isEmptyAttr = (attr.text.split("​").join("").trim().length == 0);
+										const isEmptyAttr = (attr.text.replaceAll("​", "").trim().length == 0);
 										if ((l == attrLines.length - 1) && isEmptyAttr) {
 											// 마지막 줄바꿈 후에 내용 없으면 건너뜀
 											trimedLines.push(trimedLine = { attrs: [], isEmpty: true });
@@ -513,7 +513,7 @@ window.Combine = {
 										trimedLine.attrs.push(attr);
 									}
 									wasClear = isClear(attr, br);
-									if (trimedLine.isEmpty && attr.text.split("　").join("").trim().length) {
+									if (trimedLine.isEmpty && attr.text.replaceAll("　", "").trim().length) {
 										trimedLine.isEmpty = isEmpty = false;
 									}
 								}
@@ -661,10 +661,10 @@ window.Combine = {
 								if (LOG) console.log(padsAttrs, width);
 							}
 							
-							sync[TEXT] = Smi.fromAttr(padsAttrs).split("\n").join("<br>");
+							sync[TEXT] = Smi.fromAttr(padsAttrs).replaceAll("\n", "<br>");
 							
 						} else {
-							sync[TEXT] = Smi.fromAttr(attrs).split("\n").join("<br>");
+							sync[TEXT] = Smi.fromAttr(attrs).replaceAll("\n", "<br>");
 						}
 					}
 				}
@@ -828,7 +828,7 @@ if (SmiFile) {
 	SmiFile.textToHolds = (text) => {
 		const funcFrom = window.log ? log("textToHolds start") : 0;
 		
-		const texts = text.split("\r\n").join("\n").split("\n<!-- Hold=");
+		const texts = text.replaceAll("\r\n", "\n").split("\n<!-- Hold=");
 		let holds = [{ text: texts[0] }];
 		for (let i = 1; i < texts.length; i++) {
 			const hold = texts[i];
@@ -856,7 +856,7 @@ if (SmiFile) {
 			holds.push({
 					pos: pos
 				,	name: name
-				,	text: hold.substring(begin, end).trim().split("<​").join("<").split("​>").join(">")
+				,	text: hold.substring(begin, end).trim().replaceAll("<​", "<").replaceAll("​>", ">")
 			});
 		}
 		
@@ -1006,7 +1006,7 @@ if (SmiFile) {
 						hold.exportName += "|" + hold.style.output;
 					}
 				}
-				result[hold.resultIndex = (hi + 1)] = "<!-- Hold=" + hold.pos + "|" + hold.exportName + "\n" + text.split("<").join("<​").split(">").join("​>") + "\n-->";
+				result[hold.resultIndex = (hi + 1)] = "<!-- Hold=" + hold.pos + "|" + hold.exportName + "\n" + text.replaceAll("<", "<​").replaceAll(">", "​>") + "\n-->";
 				hold.imported = false;
 				hold.afterMain = false;
 				
@@ -1212,7 +1212,7 @@ if (SmiFile) {
 								syncText = syncText.substring(endComment + 3).trim();
 							}
 						}
-						if (syncText.split("&nbsp;").join("").trim().length == 0) {
+						if (syncText.replaceAll("&nbsp;", "").trim().length == 0) {
 							smi.body[i].text = "&nbsp;";
 						}
 					}
@@ -1458,7 +1458,7 @@ if (SmiFile) {
 					origin.body = originBody.slice(log.from[0], log.from[1]);
 					let comment = origin.toText().trim();
 					
-					main.body[log.to[0]].text = "<!-- End=" + log.end + "\n" + (comment.split("<").join("<​").split(">").join("​>")) + "\n-->\n" + main.body[log.to[0]].text;
+					main.body[log.to[0]].text = "<!-- End=" + log.end + "\n" + (comment.replaceAll("<", "<​").replaceAll(">", "​>")) + "\n-->\n" + main.body[log.to[0]].text;
 				}
 			}
 		}
@@ -1481,7 +1481,7 @@ if (SmiFile) {
 				}
 			}
 			for (let i = 0; i < main.body.length; i++) {
-				main.body[i].text = main.body[i].text.split("\n").join("");
+				main.body[i].text = main.body[i].text.replaceAll("\n", "");
 			}
 			result[0] = main.toText();
 			result.length = 1;

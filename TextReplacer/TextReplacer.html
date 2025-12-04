@@ -221,13 +221,13 @@ Replaced.prototype.preview = function(text, replacedList) {
 	for (let i = 0; i < replacedList.length; i++) {
 		const replaced = replacedList[i];
 		if (last < replaced[0]) {
-			preview.push(text.substring(last, replaced[0]).split("<").join("&lt;").split(">").join("&gt;"));
+			preview.push(text.substring(last, replaced[0]).replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
 		}
-		preview.push("<span class='highlight'>" + text.substring(replaced[0], replaced[1]).split("<").join("&lt;").split(">").join("&gt;") + "</span>");
+		preview.push("<span class='highlight'>" + text.substring(replaced[0], replaced[1]).replaceAll("<", "&lt;").replaceAll(">", "&gt;") + "</span>");
 		last = replaced[1];
 	}
 	if (last < text.length) {
-		preview.push(text.substring(last).split("<").join("&lt;").split(">").join("&gt;"));
+		preview.push(text.substring(last).replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
 	}
 	return preview.join("");
 }

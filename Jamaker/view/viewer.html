@@ -173,7 +173,7 @@ function refreshTime(receiveTime, withoutTitle) {
 
 function setTextToView(text, hold) {
 	// RUBY태그 문법이 미묘하게 달라서 가공 필요
-	text = text.split("<RP").join("<!--RP").split("</RP>").join("</RP-->");
+	text = text.replaceAll("<RP", "<!--RP").replaceAll("</RP>", "</RP-->");
 	
 	{	// 흔들기 효과 상하 공백줄 처리 -> 맨 윗줄만
 		let showLines = text.split(/<br>/gi);
@@ -181,7 +181,7 @@ function setTextToView(text, hold) {
 			let line = showLines;
 			if (htmlToText(line) == "　") {
 				if (line.indexOf("font-size:") > 0) {
-					showlines[hold] = line.split("<font style=\"font-size:").join("<div style=\"height:").split("</font>").join("</div>");
+					showlines[hold] = line.replaceAll("<font style=\"font-size:", "<div style=\"height:").replaceAll("</font>", "</div>");
 				}
 			}
 		}
@@ -189,7 +189,7 @@ function setTextToView(text, hold) {
 	}
 	
 	// 비어있으면 높이 차지하지 않게 내용 없애기
-	if (!text.split("&nbsp;").join(" ").trim().length) {
+	if (!text.replaceAll("&nbsp;", " ").trim().length) {
 		text = "";
 	}
 	

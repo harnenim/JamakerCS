@@ -214,7 +214,7 @@ Line.prototype.renderHighlight = function(last, forced=false) {
 		
 		// 공백 싱크인 경우 싱크 투명도 따라감
 		{	const html = $view.html();
-			if (html.split("&amp;nbsp;").join("").trim().length == 0) {
+			if (html.replaceAll("&amp;nbsp;", "").trim().length == 0) {
 				$view.html($("<span class='hljs-sync'>").html(html));
 			}
 		}
@@ -244,12 +244,11 @@ window.SmiEditor = function(text) {
 			this.hArea.append(inner);
 		}
 		this.hArea.append(this.input = $("<textarea spellcheck='false'>"));
-//		this.hArea.append(this.input = $("<textarea spellcheck='false' class='scrollTop scrollLeft'>"));
 		this.area.append(this.hArea);
 	}
 	this.colSync.append(this.colSyncSizer = $('<div class="sync">&nbsp;</div>'));
 	if (text) {
-		text = text.split("\r\n").join("\n");
+		text = text.replaceAll("\r\n", "\n");
 		
 		// 싱크 라인 분리되도록 양식 변환
 		const lines = text.split("\n");
@@ -299,10 +298,10 @@ window.SmiEditor = function(text) {
 	this.history = new History(this.input, 32, () => {
 		editor.scrollToCursor();
 		editor.render([0, editor.lines.length]); // 실행취소일 땐 전체 갱신하도록
-	});
+	}, false);
 	setTimeout(() => {
 		if (SmiEditor.autoComplete.length) {
-			editor.act = new AutoCompleteTextarea(editor.input, SmiEditor.autoComplete, () => {
+			editor.act = new AutoCompleteTextarea(editor.input[0], SmiEditor.autoComplete, () => {
 				editor.history.log();
 				editor.render();
 			});
@@ -465,7 +464,7 @@ SmiEditor.getSyncTime = (sync, forKeyFrame=false, output={}) => { /* output: 리
 	return output.sync = sync;
 }
 SmiEditor.makeSyncLine = (time, type) => {
-	return SmiEditor.sync.preset.split("{sync}").join(Math.floor(time)).split("{lang}").join(SmiEditor.sync.lang).split("{type}").join(TIDs[type ? type : 1]);
+	return SmiEditor.sync.preset.replaceAll("{sync}", Math.floor(time)).replaceAll("{lang}", SmiEditor.sync.lang).replaceAll("{type}", TIDs[type ? type : 1]);
 }
 
 SmiEditor.prototype.isSaved = function() {
@@ -729,6 +728,7 @@ SmiEditor.activateKeyEvent = function() {
 								e.preventDefault();
 							}
 						}
+						editor.history.logIfCursorMoved();
 					}
 					break;
 				}
@@ -736,6 +736,7 @@ SmiEditor.activateKeyEvent = function() {
 					if (hasFocus) {
 						// 커서가 원래부터 맨 앞에 있는 경우엔 커서 이동이 없어서, 알아서 스크롤이 안 됨
 						editor.input.scrollLeft(0);
+						editor.history.logIfCursorMoved();
 					}
 					break;
 				}
@@ -1137,7 +1138,7 @@ SmiEditor.activateKeyEvent = function() {
 						// Ctrl + -/= 확대축소 방지
 						e.preventDefault();
 					}
-					break
+					break;
 				}
 			}
 			
@@ -1191,10 +1192,10 @@ SmiEditor.activateKeyEvent = function() {
 					const funcSince = log("단축키 실행 start");
 					const type = typeof f;
 					if (type == "function") {
-						log(String.fromCharCode(e.keyCode) + " / func: " + f.name);
+						log(e.keyCode + "(" + key + ") / func: " + f.name);
 						f();
 					} else if (type == "string" && f.trim().length) {
-						log(String.fromCharCode(e.keyCode) + " / func: " + f.split("\n")[0]);
+						log(e.keyCode + "(" + key + ") / func: " + f.split("\n")[0]);
 						eval("(() => { " + f + "// */\n})()"); // 내용물이 주석으로 끝날 수도 있음
 					}
 					log("단축키 실행 end", funcSince);
@@ -1448,7 +1449,7 @@ SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 					const sync = line.SYNC;
 					const newSync = sync + add;
 					// 싱크 줄에는 다른 숫자가 없다고 가정
-					lines.push(new Line(line.TEXT.split(sync).join(newSync), newSync, line.TYPE));
+					lines.push(new Line(line.TEXT.replaceAll(sync, newSync), newSync, line.TYPE));
 				} else {
 					lines.push(line);
 				}
@@ -1470,7 +1471,7 @@ SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 				const sync = line.SYNC;
 				const newSync = sync + add;
 				// 싱크 줄에는 다른 숫자가 없다고 가정
-				lines.push(new Line(line.TEXT.split(sync).join(newSync), newSync, line.TYPE));
+				lines.push(new Line(line.TEXT.replaceAll(sync, newSync), newSync, line.TYPE));
 			} else {
 				lines.push(line);
 			}
@@ -1513,7 +1514,7 @@ SmiEditor.prototype.insertSync = function(mode=0) {
 	if (lineSync) {
 		// 싱크 줄에서 싱크 삽입할 경우엔 싱크 수정
 		// 싱크 줄에는 다른 숫자가 없다고 가정
-		let lineText = this.lines[lineNo].TEXT.split(lineSync).join(sync);
+		let lineText = this.lines[lineNo].TEXT.replaceAll(lineSync, sync);
 		let type = this.lines[lineNo].TYPE;
 		// 여기서 토글은 없는 게 나을 듯... TODO: 설정으로?
 		let toggleWithUpdate = false;
@@ -1525,7 +1526,7 @@ SmiEditor.prototype.insertSync = function(mode=0) {
 				}
 				type = TYPE.FRAME;
 			} else if (type == TYPE.FRAME && !forFrame) {
-				lineText = lineText.split(" >").join(">");
+				lineText = lineText.replaceAll(" >", ">");
 				type = TYPE.BASIC;
 			}
 		}
@@ -2085,7 +2086,7 @@ SmiEditor.prototype.moveSync = function(toForward) {
 				if (sync >= 36000000) { // 잠정 오류 조치 싱크 보정
 					sync -= 36000000;
 				}
-				this.lines[i].TEXT = this.lines[i].TEXT.split(this.lines[i].SYNC).join(sync); // 싱크 줄에 싱크 이외의 숫자가 없다고 가정
+				this.lines[i].TEXT = this.lines[i].TEXT.replaceAll(this.lines[i].SYNC, sync); // 싱크 줄에 싱크 이외의 숫자가 없다고 가정
 				this.lines[i].SYNC = sync;
 			}
 		}
@@ -2096,7 +2097,7 @@ SmiEditor.prototype.moveSync = function(toForward) {
 				if (sync <= 0) { // 0 이하일 경우 10시간 옮겨서 경고
 					sync += 36000000;
 				}
-				this.lines[i].TEXT = this.lines[i].TEXT.split(this.lines[i].SYNC).join(sync); // 싱크 줄에 싱크 이외의 숫자가 없다고 가정
+				this.lines[i].TEXT = this.lines[i].TEXT.replaceAll(this.lines[i].SYNC, sync); // 싱크 줄에 싱크 이외의 숫자가 없다고 가정
 				this.lines[i].SYNC = sync;
 			}
 		}
@@ -2353,10 +2354,10 @@ SmiEditor.prototype.moveToSide = function(direction) {
 	for (let i = 0; i < textLines.length; i++) {
 		textLines[i] = textLines[i].TEXT;
 	}
-	textLines = textLines.join("").split("\n").join("").split("​").join("").split(/<br>/gi);
+	textLines = textLines.join("").replaceAll("\n", "").replaceAll("​", "").split(/<br>/gi);
 	
 	// 내용물 비었으면 무시
-	if ($("<span>").html(textLines.join("").split("　").join(" ")).text().trim().length == 0) {
+	if ($("<span>").html(textLines.join("").replaceAll("　", " ")).text().trim().length == 0) {
 		return;
 	}
 	
@@ -2391,7 +2392,7 @@ SmiEditor.prototype.moveToSide = function(direction) {
 				prev: linePrev
 			,	text: lineText
 			,	next: lineNext
-			,	skip: (lineText.split("　").join("").split("&nbsp;").join(" ").trim().length == 0)
+			,	skip: (lineText.replaceAll("　", "").replaceAll("&nbsp;", " ").trim().length == 0)
 		};
 	}
 	
@@ -2963,7 +2964,7 @@ SmiEditor.Viewer = {
 												}
 											}
 											// <br> 뒤의 줄바꿈은 일단 제거
-											let text = texts.join("\n").split(/<br>\n/gi).join("<br>");
+											let text = texts.join("\n").replaceAll(/<br>\n/gi, "<br>");
 											{	// 주석 제거한 후 줄바꿈 확인
 												const commentStart = text.indexOf("<!--");
 												if (commentStart >= 0) {
@@ -2984,8 +2985,8 @@ SmiEditor.Viewer = {
 											// 3줄 넘어가면 줄바꿈 살림
 											text = texts.join((texts.length - pass > 3) ? "<br>" : "");
 											
-											if (text.split("&nbsp;").join("").trim()) { // 공백 싱크는 제외
-												newLines.push({ SYNC: 0, TYPE: null, TEXT: Smi.fromAttrs(Smi.toAttrs(tag[0] + text + tag[1], false)).split("\n").join("<br>") })
+											if (text.replaceAll("&nbsp;", "").trim()) { // 공백 싱크는 제외
+												newLines.push({ SYNC: 0, TYPE: null, TEXT: Smi.fromAttrs(Smi.toAttrs(tag[0] + text + tag[1], false)).replaceAll("\n", "<br>") })
 											}
 										}
 										// 싱크 줄은 그냥 그대로
@@ -3007,8 +3008,8 @@ SmiEditor.Viewer = {
 									// 3줄 넘어가면 줄바꿈 살림
 									const text = texts.join((texts.length - pass > 3) ? "<br>" : "");
 									
-									if (text.split("&nbsp;").join("").trim()) { // 공백 싱크는 제외
-										newLines.push({ SYNC: 0, TYPE: null, TEXT: Smi.fromAttrs(Smi.toAttrs(tag[0] + text + tag[1], false)).split("\n").join("<br>") })
+									if (text.replaceAll("&nbsp;", "").trim()) { // 공백 싱크는 제외
+										newLines.push({ SYNC: 0, TYPE: null, TEXT: Smi.fromAttrs(Smi.toAttrs(tag[0] + text + tag[1], false)).replaceAll("\n", "<br>") })
 									}
 								}
 								lines.push(newLines);
@@ -3080,7 +3081,7 @@ SmiEditor.prototype.getTransformText = function() {
 };
 SmiEditor.afterTransform = (result) => { // 주로 C#에서 호출
 	// 해당 줄 앞뒤 전체 선택되도록 조정
-	result = result.split("\r\n").join("\n");
+	result = result.replaceAll("\r\n", "\n");
 	const origin = SmiEditor.transforming;
 	const origLines = origin.text.split("\n");
 	const front = origLines.slice(0, origin.start);

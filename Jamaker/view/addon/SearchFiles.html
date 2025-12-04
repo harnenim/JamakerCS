@@ -27,7 +27,7 @@ $(() => {
 	
 	const smiPath = opener.getCurrentTab().path;
 	if (smiPath) {
-		const dirs = smiPath.split("/").join("\\").split("\\");
+		const dirs = smiPath.replaceAll("/", "\\").split("\\");
 		$dirCurrent.text(dirs.slice(0, dirs.length - 1).join("\\"));
 		$("#labelCurrent input[name=dir]").click();
 	} else {
@@ -104,7 +104,7 @@ $(() => {
 	}
 	
 	$inputDir.on("input propertychange", () => {
-		const value = $inputDir.val().split("/").join("\\");
+		const value = $inputDir.val().replaceAll("/", "\\");
 		if (value) {
 			$inputDir.attr({ list: "dlSubDirs" });
 			const index = value.lastIndexOf("\\");
@@ -160,7 +160,7 @@ $(() => {
 			}
 			
 			const $line = $("<li>").addClass("line").text(line).data({ line: i, pos: offset + index });
-			$ol.append($line.html("Line " + (i + 1) + ": " + $line.html().split(query).join("<b>" + query + "</b>")));
+			$ol.append($line.html("Line " + (i + 1) + ": " + $line.html().replaceAll(query, "<b>" + query + "</b>")));
 			
 			offset += line.length + 1;
 		}
@@ -244,10 +244,10 @@ button[type=submit] { width: 50px; }
 		</label>
 		<label id="labelInput" title="Alt+2">
 			<input type="radio" name="dir" value="input" accesskey="2"
-			/><span class="label">직접 입력: </span><input type="text" id="inputDir" placeholder="폴더 경로" autocomplete="off" list="dlLastDirs" />
+			/><span class="label">직접 입력: </span><input type="text" id="inputDir" placeholder="폴더 경로" list="dlLastDirs" />
 		</label>
 		<div><input type="text" id="inputQuery" accesskey="f" title="Alt+F"
-				placeholder="검색어" autocomplete="off" list="dlLastQuerys" /><button type="submit">검색</button></div>
+				placeholder="검색어" list="dlLastQuerys" /><button type="submit">검색</button></div>
 			<datalist id="dlSubDirs"></datalist>
 			<datalist id="dlLastDirs"></datalist>
 			<datalist id="dlLastQuerys"></datalist>

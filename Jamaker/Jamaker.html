@@ -656,7 +656,7 @@ window.MB = 9;
 		$.ajax({"url" : "setting/addon_" + path
 			,	"dataType": "text"
 			,	"success": (setting) => {
-					editor.mainView.contentWindow.afterLoadAddonSetting(setting.split("\r\n").join("\n"));
+					editor.mainView.contentWindow.afterLoadAddonSetting(setting.replaceAll("\r\n", "\n"));
 				}
 			,	"error": () => {
 					editor.mainView.contentWindow.afterLoadAddonSetting("");
@@ -805,12 +805,12 @@ window.MB = 9;
 	}
 	editor.setPath = function(path) {
 		this.smiPath = path;
-		let title = "";
+		let title = "Jamaker";
 		if (path) {
-			const paths = path.split("\\").join("/").split("/");
-			title += " - " + paths[paths.length - 1];
+			const paths = path.replaceAll("\\", "/").split("/");
+			title = paths[paths.length - 1] + " - Jamaker";
 		}
-		$("title").text("Jamaker" + title);
+		$("title").text(title);
 	}
 	editor.checkLoadVideoFile = function() { /* native */ }
 	editor.loadVideoFile = function(path) { /* native */ }
@@ -838,11 +838,11 @@ window.MB = 9;
 				let timeStr = ((100 + h) * 100 + m) * 100000 + ms + "";
 				timeStr = timeStr.substring(1, 3) + ":" + timeStr.substring(3, 5) + ":" + timeStr.substring(5, 7) + "." + timeStr.substring(7, 10);
 				const args = "-ss {ss} -t {length} -i \"{path}\" -s 96x54 -f image2 \"tmp/thumbnails/{begin}{flag}_%d.jpg\""
-				.split("{ss}"    ).join(timeStr)
-				.split("{length}").join(length / 1000)
-				.split("{path}"  ).join("~")
-				.split("{begin}" ).join(begin)
-				.split("{flag}"  ).join(flag)
+				.replaceAll("{ss}"    , timeStr)
+				.replaceAll("{length}", length / 1000)
+				.replaceAll("{path}"  , "~")
+				.replaceAll("{begin}" , begin)
+				.replaceAll("{flag}"  , flag)
 				;
 				console.log(args);
 				await sleep(0.1);
@@ -850,8 +850,8 @@ window.MB = 9;
 				for (let index = 0; index < (end - begin); index++) {
 					const from = "tmp/thumbnails/" + begin + flag + "_" + (index + 1) + ".jpg";
 					const to = "tmp/thumbnails/" + (begin + index) + flag + ".jpg";
-					const cmdDel = "del \"{to}\"".split("{to}").join(to);
-					const cmdRen = "ren \"{from}\" \"{to}\"".split("{from}").join(from).split("{to}").join(to);
+					const cmdDel = "del \"{to}\"".replaceAll("{to}", to);
+					const cmdRen = "ren \"{from}\" \"{to}\"".replaceAll("{from}", from).replaceAll("{to}", to);
 				}
 				
 				editor.script("startRenderThumbnails", begin, end, flag);
@@ -997,7 +997,7 @@ window.MB = 9;
 				padding: 80
 			,	textAlign: "center"
 			,	fontSize: 20
-		}).html("웹 간이 버전에서 드래그로 열 경우<br />저장 파일을 재지정해줘야 합니다.");
+		}).html("웹 간이 버전에서 드래그로 열 경우<br />저장 파일을 재지정해 줘야 합니다.");
 		/*
 		$("body").append((this.menustrip = new MenuStrip()).view);
 		this.mainView.style.top = "20px";

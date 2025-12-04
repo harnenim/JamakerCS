@@ -26,7 +26,7 @@ function smi2assTime(ms) {
 }
 function ass2smiTime(time) {
 	const vs = time.split(":");
-	return (Number(vs[0]) * 3600000) + (Number(vs[1]) * 60000) + (Number(vs[2].split(".").join("")) * 10);
+	return (Number(vs[0]) * 3600000) + (Number(vs[1]) * 60000) + (Number(vs[2].replaceAll(".", "")) * 10);
 }
 
 requestClose = confirmCancel;
@@ -138,11 +138,11 @@ function splitOrigin() {
 		const sync = syncs[i];
 		if (sync.startType == 1) {
 			forBasic.push(sync.start);
-			forBasic.push(sync.lines.join("\n").split("\n<~>\n").join("<~>"));
+			forBasic.push(sync.lines.join("\n").replaceAll("\n<~>\n", "<~>"));
 		} else {
 			forFrameSmi.push(SmiEditor.makeSyncLine(sync.start, TYPE.FRAME));
 			// 싱크 내 줄바꿈은 임시로 존재하지 않는 문법 </>로 교체
-			forFrameSmi.push(sync.lines.join("</>").split("</><~></>").join("<~>"));
+			forFrameSmi.push(sync.lines.join("</>").replaceAll("</><~></>", "<~>"));
 		}
 	}
 	{	// forBasic
@@ -168,7 +168,7 @@ function splitOrigin() {
 		const sync = syncs[i];
 		if (sync.end == 0) sync.end = 35999999; // 마지막 싱크는 종료 시간이 없을 수 있음
 		if (sync.startType == 2) {
-			let text = $("<span>").html(sync.lines.join("\\N").split(/<br>/gi).join("\\N")).text().trim();
+			let text = $("<span>").html(sync.lines.join("\\N").replaceAll(/<br>/gi,"\\N")).text().trim();
 			if (requiredEnd) { // []
 				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.end   - add) + "," + smi2assTime(sync.end   + add) + ",［）,,0000,0000,0000,,&nbsp;");
 				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.start - add) + "," + smi2assTime(sync.start + add) + ",［）,,0000,0000,0000,," + text);
@@ -188,7 +188,7 @@ function splitOrigin() {
 			
 		} else {
 			if (requiredEnd) { // (]
-				let text = $("<span>").html(sync.lines.join("\\N").split(/<br>/gi).join("\\N")).text().trim();
+				let text = $("<span>").html(sync.lines.join("\\N").replaceAll(/<br>/gi, "\\N")).text().trim();
 				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.end - add) + "," + smi2assTime(sync.end + add) + ",［）,,0000,0000,0000,,&nbsp;");
 				requiredEnd = false;
 			}
@@ -223,7 +223,7 @@ function frameAssToSmi() {
 				lines.push(SmiEditor.makeSyncLine(SmiEditor.getSyncTime(start == "0:00:00.00" ? 1 : (ass2smiTime(start) + add))));
 				let splitTag = text.split("}");
 				splitTag = splitTag[splitTag.length == 1 ? 0 : 1]
-				lines.push(splitTag.split("\\N").join("<br>"));
+				lines.push(splitTag.replaceAll("\\N", "<br>"));
 			} else if (last) {
 				lines.push("&nbsp;");
 			}
@@ -613,16 +613,16 @@ body > * {
 	</style>
 </head>
 <body>
-	<textarea id="originBasicSmi" spellcheck="false" readonly></textarea>
-	<textarea id="originFrameAss" spellcheck="false"></textarea>
+	<textarea id="originBasicSmi" readonly></textarea>
+	<textarea id="originFrameAss"></textarea>
 	<button id="btnFrameAssToSmi" accesskey="1" title="Alt+1">∨</button>
 	<div id="areaFrameSmi">
 		<div id="checker"></div>
-		<textarea id="originFrameSmi" spellcheck="false"></textarea>
-		<textarea id="targetFrameSmi" spellcheck="false"></textarea>
+		<textarea id="originFrameSmi"></textarea>
+		<textarea id="targetFrameSmi"></textarea>
 	</div>
 	<button id="btnJoinFrame" accesskey="2" title="Alt+2">&gt;</button>
-	<textarea id="resultFrameSmi" spellcheck="false" readonly></textarea>
+	<textarea id="resultFrameSmi" readonly></textarea>
 	<button id="btnApply" accesskey="3" title="Alt+3">적용</button>
 </body>
 </html>

@@ -40,7 +40,7 @@ function getParams() {
 }
 
 function setSize(size) {
-	$("#styleSize").html(styleSizePreset.split("20px").join((20 * size) + "px"));
+	$("#styleSize").html(styleSizePreset.replaceAll("20px", (20 * size) + "px"));
 }
 
 $(() => {
@@ -162,12 +162,12 @@ textarea {
 	<form class="modal-main">
 		<label id="labelFind">
 			<span>찾을 내용(<u>N</u>)</span>
-			<textarea name="find" accesskey="N" spellcheck="false" placeholder="줄바꿈 = Ctrl+Enter"></textarea>
+			<textarea name="find" accesskey="N" placeholder="줄바꿈 = Ctrl+Enter"></textarea>
 		</label>
 		<button type="button" class="button-find" accesskey="F" id="btnFind">찾기(<u>F</u>)</button>
 		<label id="labelReplace">
 			<span>바꿀 내용(<u>P</u>)</span>
-			<textarea name="replace" accesskey="P" spellcheck="false" placeholder="줄바꿈 = Ctrl+Enter"></textarea>
+			<textarea name="replace" accesskey="P" placeholder="줄바꿈 = Ctrl+Enter"></textarea>
 		</label>
 		<button type="button" class="button-replace" accesskey="R" id="btnReplace">바꾸기(<u>R</u>)</button>
 		<button type="button" class="button-replace-all" accesskey="A" id="btnReplaceAll">모두 바꾸기(<u>A</u>)</button>

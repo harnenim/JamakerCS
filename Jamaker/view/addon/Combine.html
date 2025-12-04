@@ -50,7 +50,7 @@ $(() => {
 		const list = [];
 		for (let i = 0; i < lines.length; i++) {
 			if (i % 2) { // 짝수: 싱크 / 홀수: 대사
-				let line = lines[i].split("\n").join("");
+				let line = lines[i].replaceAll("\n", "");
 				{	// font size 추가 작업
 					let j = 0;
 					let begin = 0;
@@ -185,7 +185,7 @@ textarea {
 	</style>
 </head>
 <body>
-	<textarea id="inputUpper" spellcheck="false">&lt;Sync Start=589368&gt;&lt;P Class=KRCC&gt;
+	<textarea id="inputUpper">&lt;Sync Start=589368&gt;&lt;P Class=KRCC&gt;
 노래하지 마!
 &lt;Sync Start=590777&gt;&lt;P Class=KRCC&gt;
 &amp;nbsp;
@@ -215,7 +215,7 @@ textarea {
 발퀴레의 폴드파에&lt;br&gt;감응하는 것 같습니다
 &lt;Sync Start=653044&gt;&lt;P Class=KRCC &gt;
 &amp;nbsp;</textarea>
-	<textarea id="inputLower" spellcheck="false">&lt;Sync Start=579908&gt;&lt;P Class=KRCC&gt;
+	<textarea id="inputLower">&lt;Sync Start=579908&gt;&lt;P Class=KRCC&gt;
 &lt;i&gt;&lt;font color="#ff88ff"&gt;서로 눈이 맞고 사랑을 하고&lt;/font&gt;&lt;/i&gt;
 &lt;Sync Start=582972&gt;&lt;P Class=KRCC&gt;
 &lt;i&gt;&lt;font color="#ff88ff"&gt;정신없이 뒤쫓아가고&lt;/font&gt;&lt;/i&gt;
@@ -263,7 +263,7 @@ textarea {
 &amp;nbsp;</textarea>
 	<button id="btnCombine">＞</button>
 	<div id="preview"></div>
-	<textarea id="output" spellcheck="false">
+	<textarea id="output">
 현재 홀드 기능을 활용하면 자동으로 결합 작업이 이뤄지지만
 변칙적인 효과를 만들 경우를 위해 보조용으로 남겨둔 기능입니다.
 	</textarea>
