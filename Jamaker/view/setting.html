@@ -1108,7 +1108,7 @@ $(() => {
 			refreshTableCommand();
 		};
 	}
-	
+
 	$("#btnLoadSetting").on("click", function() {
 		const refreshFunc = refreshFuncs[opened];
 		if (refreshFunc) {
@@ -1130,6 +1130,7 @@ $(() => {
 	
 	$("form").each((_, el) => {
 		const form = $(el);
+		form.attr({ novalidate: true });
 		form.on("submit", function(e) {
 			e.preventDefault();
 			submitFuncs[form.attr("id")]();
