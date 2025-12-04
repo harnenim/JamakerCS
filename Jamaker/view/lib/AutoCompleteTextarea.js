@@ -1,8 +1,16 @@
 window.AutoCompleteTextarea = function(ta, sets, onSelect) {
-	this.ta = ta;
+	if (ta.length) { // jQuery인 경우
+		this.ta = ta[0];
+		ta.ac = this;
+		ta = this.ta;
+	} else {
+		this.ta = ta;
+	}
+	ta.ac = this;
+	
 	this.sets = sets ? sets : [];
 	this.onSelect = onSelect;
-	if (this.sets[0]) {
+	if (this.sets.length) {
 		// 일반 단어 자동완성은 정렬해서 표시
 		this.sets[0][1].sort();
 	} else {
@@ -10,15 +18,21 @@ window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 	}
 	
 	if (!AutoCompleteTextarea.view) {
-		AutoCompleteTextarea.view = $("<ol class='act-select'>").hide().on("click", "li", function() {
-			const act = AutoCompleteTextarea.opened;
-			act.input($(this));
-			act.close();
-			if (act.onSelect) {
-				act.onSelect();
+		const view = AutoCompleteTextarea.view = document.createElement("ol");
+		view.classList.add("act-select");
+		view.style.display = "none";
+		view.addEventListener("click", (e) => {
+			const li = e.target.closest("li");
+			if (li) {
+				const act = AutoCompleteTextarea.opened;
+				act.input(li);
+				act.close();
+				if (act.onSelect) {
+					act.onSelect();
+				}
 			}
 		});
-		$("body").append(AutoCompleteTextarea.view);
+		document.body.append(view);
 	}
 	this.resize();
 	this.SB = 16; // 스크롤바 폭 계산하는 걸 만드는 게?
@@ -29,22 +43,12 @@ window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 	this.lis = [];	// 선택 <li>
 	this.selected = -1; // 선택 항목
 	
-	ta.ac = this;
-	
-	ta.on("keydown", function(e) {
+	ta.addEventListener("keydown", (e) => {
 		if (ta.ac.selected >= 0) {
-			switch (e.keyCode) {
-				case 38: // ↑
-				case 40: // ↓
-				case 13: // Enter
-				{	// 스크롤 튀는 것 방지
-					e.preventDefault();
-					break;
-				}
-			}
+			ta.ac.onKeydown(e);
 		}
 	});
-	ta.on("keyup", function(e) {
+	ta.addEventListener("keyup", (e) => {
 		if (ta.ac.selected >= 0) {
 			ta.ac.onKeyup(e);
 		}
@@ -58,28 +62,26 @@ window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 			}
 		}
 	});
-	ta.on("click", function() {
+	ta.addEventListener("click", (e) => {
 		ta.ac.close();
 	});
 }
 AutoCompleteTextarea.prototype.resize = function() {
-	const font = getComputedStyle(this.ta[0]);
-	this.font = {
-			"font-family": font.fontFamily
-		,	"font-size"  : font.fontSize
-		,	"font-weight": font.fontWeight
-		,	"line-height": font.lineHeight
-	};
-	AutoCompleteTextarea.view.css(this.font);
-	this.LH = Number(this.font["line-height"].split("px")[0]);
+	const font = getComputedStyle(this.ta);
+	this.font = {};
+	AutoCompleteTextarea.view.style.fontFamily = this.font.fontFamily = font.fontFamily;
+	AutoCompleteTextarea.view.style.fontSize   = this.font.fontSize   = font.fontSize  ;
+	AutoCompleteTextarea.view.style.fontWeight = this.font.fontWeight = font.fontWeight;
+	AutoCompleteTextarea.view.style.lineHeight = this.font.lineHeight = font.lineHeight;
+	this.LH = Number(font.lineHeight.split("px")[0]);
 }
 // 선택
 AutoCompleteTextarea.prototype.select = function(index) {
 	if (this.selected >= 0) {
 		// 기존 항목 선택 해제
-		this.lis[this.selected].removeClass("selected");
+		this.lis[this.selected].classList.remove("selected");
 	}
-	this.lis[this.selected = index].addClass("selected");
+	this.lis[this.selected = index].classList.add("selected");
 	
 	// 스크롤됐을 수 있으므로 좌표도 한 번 갱신
 	this.setPos();
@@ -90,24 +92,26 @@ AutoCompleteTextarea.prototype.open = function(list) {
 		this.resize();
 		this.list = list;
 		this.lis = [];
-		AutoCompleteTextarea.view.empty();
+		AutoCompleteTextarea.view.innerHTML = "";
 		for (let i = 0; i < list.length; i++) {
-			const li = $("<li>").text(list[i]);
+			const li = document.createElement("li");
+			li.innerText = list[i];
 			this.lis.push(li);
 			AutoCompleteTextarea.view.append(li);
 		}
-		AutoCompleteTextarea.view.height(this.lis.length * this.LH);
+		AutoCompleteTextarea.view.style.height = (this.lis.length * this.LH) + "px";
 		this.select(0);
 		this.setPos();
-		AutoCompleteTextarea.view.show();
+		AutoCompleteTextarea.view.style.display = "block";
 		AutoCompleteTextarea.opened = this;
 	}
 };
 // 닫기
 AutoCompleteTextarea.prototype.close = function() {
-	AutoCompleteTextarea.view.hide();
+	AutoCompleteTextarea.view.style.display = "none";
 	this.selected = -1;
 	this.openedByCtrl = false;
+	this.ta.focus();
 };
 // 커서 위치에 선택기 이동
 AutoCompleteTextarea.prototype.setPos = function() {
@@ -116,34 +120,43 @@ AutoCompleteTextarea.prototype.setPos = function() {
 	const css = {};
 	
 	// 입력 위치 이전 내용
-	let tmp = this.ta.val().substring(0, this.pos).split("\n");
+	const prevLines = this.ta.value.substring(0, this.pos).split("\n");
 	
 	// 줄 높이로 top 계산
-	css.top = offset.top + tmp.length * this.LH - this.ta.scrollTop();
+	css.top = offset.top + prevLines.length * this.LH - this.ta.scrollTop;
 	
 	// 마지막 줄 width 계산해서 left로 활용
-	tmp = tmp[tmp.length - 1];
-	this.ta.parent().append(tmp = $("<span>").css(this.font).text(tmp));
-	css.left = tmp.width() - (this.ta.scrollLeft() - offset.left);
-	tmp.remove();
+	const lastPrevLine = prevLines[prevLines.length - 1];
+	const span = document.createElement("span");
+	span.style.fontFamily = this.font.fontFamily;
+	span.style.fontSize   = this.font.fontSize  ;
+	span.style.fontWeight = this.font.fontWeight;
+	span.style.lineHeight = this.font.lineHeight;
+	span.innerText = lastPrevLine;
+	this.ta.parentElement.append(span);
+	
+	css.left = span.offsetWidth - (this.ta.scrollLeft - offset.left);
+	span.remove();
 	
 	// 아래쪽에 넘칠 경우 맞춤
-	if (css.top + AutoCompleteTextarea.view.height() > offset.top + this.ta.outerHeight() - this.SB) {
-		css.top -= (AutoCompleteTextarea.view.height() + LH);
+	if (css.top + AutoCompleteTextarea.view.clientHeight > offset.top + this.ta.offsetHeight - this.SB) {
+		css.top -= (AutoCompleteTextarea.view.clientHeight + LH);
 	}
 	
 	// 오른쪽에 넘칠 경우 맞춤
-	css.left = Math.min(css.left, offset.left + this.ta.width() - this.SB - AutoCompleteTextarea.view.width());
+	css.left = Math.min(css.left, offset.left + this.ta.clientWidth - this.SB - AutoCompleteTextarea.view.clientWidth);
 	
-	AutoCompleteTextarea.view.css(css);
+	AutoCompleteTextarea.view.style.top  = css.top  + "px";
+	AutoCompleteTextarea.view.style.left = css.left + "px";
 }
 AutoCompleteTextarea.prototype.getOffset = function() {
-	const offset = this.ta.offset();
-	offset.top  += Number(this.ta.css("padding-top" ).split("px")[0]);
-	offset.left += Number(this.ta.css("padding-left").split("px")[0]);
+	const offset = this.ta.getBoundingClientRect();
+	const css = getComputedStyle(this.ta);
+	offset.top  += Number(css.paddingTop .split("px")[0]);
+	offset.left += Number(css.paddingLeft.split("px")[0]);
 	return offset;
 }
-AutoCompleteTextarea.prototype.onKeyup = function(e) {
+AutoCompleteTextarea.prototype.onKeydown = function(e) {
 	switch (e.keyCode) {
 		case 38: { // ↑
 			e.preventDefault();
@@ -163,16 +176,28 @@ AutoCompleteTextarea.prototype.onKeyup = function(e) {
 			}
 			break;
 		}
+		case 13: // Enter
+		{	// 스크롤 튀는 것 방지
+			e.preventDefault();
+			break;
+		}
+	}
+};
+AutoCompleteTextarea.prototype.onKeyup = function(e) {
+	switch (e.keyCode) {
+		case 38: // ↑
+		case 40: // ↓
+			// keydown에서 동작 완료
+			e.preventDefault();
+			break;
 		case 17: // Ctrl
-		{
 			if (this.openedByCtrl) {
 				// Ctrl+SpaceBar로 연 직후
 				e.preventDefault();
 				this.openedByCtrl = false;
 				break;
 			}
-			// Alt/Esc와 마찬가지로 끄기
-		}
+			// 아니면 Alt/Esc와 같은 동작
 		case 18: // Alt
 		case 27: // Esc
 		{
@@ -203,7 +228,7 @@ AutoCompleteTextarea.prototype.onKeyup = function(e) {
 		}
 		default: {
 			// 백스페이스든 방향키든 뒤로 간 경우: 선택 취소
-			if (this.ta[0].selectionEnd <= this.pos) {
+			if (this.ta.selectionEnd <= this.pos) {
 				this.close();
 				break;
 			}
@@ -214,40 +239,48 @@ AutoCompleteTextarea.prototype.onKeyup = function(e) {
 };
 AutoCompleteTextarea.prototype.input = function(li) {
 	let pos = this.pos;
-	let value = li.text();
+	let value = li.innerText;
 	if (value.indexOf("|") > 0) {
 		value = value.split("|")[1];
 	}
-	this.ta.val(this.text.substring(0, pos) + value + this.text.substring(this.end));
+	this.ta.value = (this.text.substring(0, pos) + value + this.text.substring(this.end));
 	pos += value.length;
-	this.ta[0].setSelectionRange(pos, pos);
+	this.ta.setSelectionRange(pos, pos);
 	
 	// 커서 위치에 맞게 스크롤 이동
-	let tmp = this.ta.val().substring(0, pos).split("\n");
-	tmp = tmp[tmp.length - 1];
-	this.ta.parent().append(tmp = $("<span>").text(tmp));
-	const targetLeft = tmp.width() - this.ta.width() + this.SB;
-	tmp.remove();
-	if (targetLeft > this.ta.scrollLeft()) {
-		this.ta.scrollLeft(targetLeft);
+	const prevLines = this.ta.value.substring(0, pos).split("\n");
+	const lastPrevLine = prevLines[prevLines.length - 1];
+	const span = document.createElement("span");
+	span.style.fontFamily = this.font.fontFamily;
+	span.style.fontSize   = this.font.fontSize  ;
+	span.style.fontWeight = this.font.fontWeight;
+	span.style.lineHeight = this.font.lineHeight;
+	span.innerText = lastPrevLine;
+	this.ta.parentElement.append(span);
+	
+	const targetLeft = span.clientWidth - this.ta.clientWidth + this.SB;
+	span.remove();
+	if (targetLeft > this.ta.scrollLeft) {
+		this.ta.scrollLeft = targetLeft;
 	}
 }
 AutoCompleteTextarea.prototype.afterInput = function() {
 	// 최초 리스트에서 현재 입력값에 대해 검색
-	const value = this.ta.val().substring(this.pos, this.ta[0].selectionEnd);
+	const value = this.ta.value.substring(this.pos, this.ta.selectionEnd);
 	this.lis = [];
-	AutoCompleteTextarea.view.empty();
+	AutoCompleteTextarea.view.innerHTML = "";
 	for (let i = 0; i < this.list.length; i++) {
 		// 설정 순서대로 표시하려고 정렬 없이 전체 비교를 돌리는데
 		// 기능 특성상 전체를 돌려도 연산량이 과도하진 않을 듯함
 		if (this.list[i].substring(0, value.length) == value) {
-			const li = $("<li>").text(this.list[i]);
+			const li = document.createElement("li");
+			li.innerText = this.list[i];
 			this.lis.push(li);
 			AutoCompleteTextarea.view.append(li);
 		}
 	}
 	if (this.lis.length) {
-		AutoCompleteTextarea.view.height(this.lis.length * this.LH);
+		AutoCompleteTextarea.view.style.height = (this.lis.length * this.LH) + "px";
 		// 첫 번째 항목 선택
 		this.select(0);
 		
@@ -258,8 +291,8 @@ AutoCompleteTextarea.prototype.afterInput = function() {
 }
 AutoCompleteTextarea.prototype.onCheck = function(e) {
 	const c = e.keyCode;
-	const text = this.ta.val();
-	const pos = this.ta[0].selectionEnd - 1;
+	const text = this.ta.value;
+	const pos = this.ta.selectionEnd - 1;
 	
 	const sets = this.sets[""+e.keyCode];
 	if (sets && sets[0] == text[pos]) {
@@ -274,10 +307,10 @@ AutoCompleteTextarea.getList = function(text, pos, list) {
 }
 AutoCompleteTextarea.wordBreaker = " \t\r\n()<>[]{},.`'\"?!;:/\\";
 AutoCompleteTextarea.prototype.onCheckWord = function(e) {
-	const text = this.ta.val();
+	const text = this.ta.value;
 	
-	const end = this.ta[0].selectionEnd;
-	let start = this.ta[0].selectionStart;
+	const end = this.ta.selectionEnd;
+	let start = this.ta.selectionStart;
 	
 	if (start == end) {
 		// 블록지정 없을 때
@@ -295,14 +328,11 @@ AutoCompleteTextarea.prototype.onCheckWord = function(e) {
 		return;
 	}
 	
-	const word = text.substring(start, end);
-	{
-		this.text = text;
-		this.pos = start;
-		this.end = end;
-		this.open(this.sets[0][1]);
-		this.afterInput();
-	}
+	this.text = text;
+	this.pos = start;
+	this.end = end;
+	this.open(this.sets[0][1]);
+	this.afterInput();
 }
 AutoCompleteTextarea.prototype.on = function(a, b) {
 	this.ta.on(a, b);

@@ -3,11 +3,10 @@ function setShowDrag(dragging) {
 	showDrag = dragging;
 }
 function setDroppable() {
-	const doc = $(document);
-	doc.on("dragleave", function() {
+	document.addEventListener("dragleave", () => {
 		return false;
 	});
-	doc.on("dragover", function() {
+	document.addEventListener("dragover", () => {
 		if (!showDrag) {
 			binder.showDragging();
 		}
@@ -85,10 +84,10 @@ function stringify(obj, depth=0, pad=2, isChild=false) {
 }
 
 function showDragging() {
-	$("body").addClass("drag-file");
+	document.body.classList.add("drag-file");
 }
 function hideDragging() {
-	$("body").removeClass("drag-file");
+	document.body.classList.remove("drag-file");
 }
 
 // 각각에서 재정의 필요
@@ -101,9 +100,20 @@ function setDpi(dpi) {
 	DPI = dpi;
 }
 
+/* 어디선가 순서 꼬임
+function ready(fn) {
+	if (document.readyState === "loading") {
+		console.log("addEventListener");
+		document.addEventListener("DOMContentLoaded", fn);
+	} else {
+		fn();
+	}
+}
+*/
 $(() => {
 	// 우클릭 방지
-	$(document).on("contextmenu", function() {
+	document.addEventListener("contextmenu", () => {
+		// TODO: 우클릭 메뉴 뭐라도 만들까?
 		return false;
 	});
 	window.onkeydown = (e) => {
@@ -112,8 +122,8 @@ $(() => {
 		}
 	};
 	window.addEventListener("mousewheel", (e) => {
-		// 확대/축소 방지
 		if (e.ctrlKey) {
+			// 확대/축소 방지
 			e.preventDefault();
 		}
 	}, { passive: false });
@@ -136,28 +146,35 @@ $(() => {
 	
 	if (window.binder) {
 		setTimeout(() => {
-			binder.initAfterLoad($("title").text());
+			binder.initAfterLoad(document.getElementsByTagName("title")[0].innerText);
 		}, 1);
 	}
-	$("body").append($("<div>").attr({ id: "cover" }).css({
-			position: "fixed"
-		,	top: "0"
-		,	left: "0"
-		,	width: "100%"
-		,	height: "100%"
-		,	background: "rgba(127,127,127,0.2)"
-		,	zIndex: "9999"
-	}));
+	{	const cover = document.createElement("div");
+		cover.id = "cover";
+		cover.style.position   = "fixed";
+		cover.style.top        = 0;
+		cover.style.left       = 0;
+		cover.style.width      = "100%";
+		cover.style.height     = "100%";
+		cover.style.background = "rgba(127,127,127,0.2)";
+		cover.style.zIndex     = 9999;
+		document.body.append(cover);
+		
+	}
 	
-	$("[title]").each((_, el) => {
-		const obj = $(el);
-		const title = obj.attr("title").split("\\n");
+	document.querySelectorAll("[title]").forEach((obj) => {
+		const title = obj.title.split("\\n");
 		if (title.length > 1) {
-			obj.attr("title", title.join("\n"));
+			obj.title = title.join("\n");
 		}
 	});
-	
-	$("input").attr({ autocomplete: "off" });
+
+	[...document.getElementsByTagName("textarea")].forEach((input) => {
+		input.setAttribute("spellcheck", false);
+	});
+	[...document.getElementsByTagName("input")].forEach((input) => {
+		input.setAttribute("autocomplete", "off");
+	});
 });
 
 // 팝업 재정의
@@ -166,32 +183,39 @@ window.popup = function(url, name, w=1, h=1) {
 }
 
 window.Progress = function() {
-	this.div = $("<div>").css({
-			position: "fixed"
-		,	top: "calc(50% - 20px)"
-		,	left: "calc(50% - 100px)"
-		,	width: "200px"
-		,	height: "40px"
-		,	textAlign: "center"
-		,	background: "rgba(242,242,242,0.7)"
-		,	zIndex: "99999"
-	});
-	this.bar = $("<div>").css({
-			height: "100%"
-		,	background: "#69f"
-	});
-	this.text = $("<span>").css({ lineHeight: "20px" });
-	this.div.append($("<div>").css({
-				height: "20px"
-			,	border: "1px solid #000"
-			,	padding: "2px"
-			,	background: "#fff"
-		}).append(this.bar)
-	).append(this.text);
-	$("body").append(this.div.hide());
+	// TODO: 설정에서 CSS 크기 조절 필요한가?
+	{	this.div = document.createElement("div");
+		this.div.style.position   = "fixed";
+		this.div.style.top        = "calc(50% - 20px)";
+		this.div.style.left       = "calc(50% - 100px)";
+		this.div.style.width      = "200px";
+		this.div.style.height     = "40px";
+		this.div.style.textAlign  = "center";
+		this.div.style.background = "rgba(242,242,242,0.7)";
+		this.div.style.zIndex     = "99999";
+		this.div.style.display    = "none";
+	}
+	{	this.bar = document.createElement("div");
+		this.bar.style.height     = "100%";
+		this.bar.style.background = "#69f";
+	}
+	{	this.text = document.createElement("span");
+		this.text.style.lineHeight = "20px";
+	}
+	{	this.inner = document.createElement("div");
+		this.inner.style.height     = "20px";
+		this.inner.style.border     = "1px solid #000";
+		this.inner.style.padding    = "2px";
+		this.inner.style.background = "#fff";
+		this.inner.append(this.bar);
+	}
+	this.div.append(this.inner);
+	this.div.append(this.text);
+	document.body.append(this.div);
 	this.last = 0;
 };
 Progress.prototype.set = function (value, total) {
+	const ratio = (total == 0) ? 1 : (value / total);
 	if (0 < ratio && ratio < 1) { // 0, 1일 땐 무조건 실행
 		// 과도한 UI 갱신 방지
 		const now = new Date().getTime();
@@ -200,12 +224,12 @@ Progress.prototype.set = function (value, total) {
 		}
 		this.last = now;
 	}
-	this.bar.css({ width: "calc(" + (value / total * 100) + "%)"});
-	this.text.text(value + "/" + total);
-	this.div.show();
+	this.bar.style.width = "calc(" + (ratio * 100) + "%)";
+	this.text.innerText = (value + "/" + total);
+	this.div.style.display = "block";
 }
 Progress.prototype.hide = function() {
-	this.div.hide();
+	this.div.style.display    = "none";
 }
 // Progress 객체 없이 직접 다루는 경우
 Progress.bars = {};
@@ -221,9 +245,11 @@ Progress.set = (selector, ratio, unit="calc([ratio] * 100%)") => {
 	}
 	let bar = Progress.bars[selector];
 	if (bar == null) {
-		const area = $(selector);
-		Progress.bars[selector] = bar = $("<div>").addClass("progress-bar");
-		area.addClass("progress").prepend(bar);
+		const area = document.querySelector(selector);
+		Progress.bars[selector] = bar = document.createElement("div");
+		bar.classList.add("progress-bar");
+		area.classList.add("progress");
+		area.prepend(bar);
 	}
-	bar.width(unit.split("[ratio]").join(ratio));
+	bar.style.width = (unit.replaceAll("[ratio]", ratio));
 }

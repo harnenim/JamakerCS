@@ -1,4 +1,4 @@
-$(document).on("keydown", function(e) {
+document.addEventListener("keydown", function(e) {
 	switch (e.keyCode) {
 		case 27: { // Esc
 			requestClose();
@@ -121,7 +121,7 @@ function setColor(color) {
 		,	dataType: "text"
 		,	success: (preset) => {
 				for (let name in color) {
-					preset = preset.split("[" + name + "]").join(color[name]);
+					preset = preset.replaceAll("["+name+"]", color[name]);
 				}
 				
 				let $style = $("#styleColor");
@@ -134,6 +134,10 @@ function setColor(color) {
 }
 
 $(() => {
-	$("textarea").attr({ spellcheck: false });
-	$("input").attr({ autocomplete: "off" });
+	[...document.getElementsByTagName("textarea")].forEach((input) => {
+		input.setAttribute("spellcheck", false);
+	});
+	[...document.getElementsByTagName("input")].forEach((input) => {
+		input.setAttribute("autocomplete", "off");
+	});
 });
