@@ -179,6 +179,11 @@ AutoCompleteTextarea.prototype.onKeydown = function(e) {
 			e.preventDefault();
 			break;
 		}
+		case 9: // Tab
+		{	// 포커스 이동 방지
+			e.preventDefault();
+			break;
+		}
 	}
 };
 AutoCompleteTextarea.prototype.onKeyup = function(e) {
