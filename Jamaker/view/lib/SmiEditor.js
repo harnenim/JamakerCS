@@ -412,7 +412,7 @@ SmiEditor.setSetting = (setting) => {
 			} else {
 				SmiEditor.contextmenu = null;
 			}
-		} else if (window.chrome.webview) { // 샘플 코드는 WebView2에서만 활성화 - CefSharp 클립보드 권한 필요
+		} else {
 			// 설정 기능 자체가 없을 때 동작
 			// TODO: 설정 만들려면 <input>이 아니라 <textarea> 써야 하나?
 			//       메뉴 활성화 여부까지 필요한가...?
@@ -438,8 +438,9 @@ SmiEditor.setSetting = (setting) => {
 					+	"	let cursor = SmiEditor.selected.getCursor();"
 					+	"	let text = SmiEditor.selected.input.val();"
 					+	"	navigator.clipboard.readText().then((paste) => {"
+					+	"		paste = paste.replaceAll('\\r\\n', '\\n');"
 					+	"		text = text.substring(0, cursor[0]) + paste + text.substring(cursor[1]);"
-					+	"		cursor = cursor[0] + cursor.length;"
+					+	"		cursor = cursor[0] + paste.length;"
 					+	"		SmiEditor.selected.setText(text, [cursor, cursor]);"
 					+	"	});"
 					+	"})()"

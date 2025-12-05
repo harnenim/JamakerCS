@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using CefSharp;
+using CefSharp.Handler;
 using CefSharp.WinForms;
 using Jamaker.addon;
 
@@ -385,12 +386,24 @@ namespace Jamaker
             };
             settings.CefCommandLineArgs.Add("disable-web-security");
             settings.CefCommandLineArgs.Add("disable-popup-blocking");
+            settings.CefCommandLineArgs.Add("unsafely-treat-insecure-origin-as-secure", "file:///");
             Cef.Initialize(settings);
             CefSharpSettings.ShutdownOnExit = true; // Release일 땐 false 해줘야 함
 
             InitializeComponent();
+
+            mainView.BrowserSettings = new BrowserSettings() { JavascriptAccessClipboard = CefState.Enabled, };
+            mainView.PermissionHandler = new MyPermissionHandler();
         }
-        
+        public class MyPermissionHandler : PermissionHandler
+        {
+            protected override bool OnShowPermissionPrompt(IWebBrowser chromiumWebBrowser, IBrowser browser, ulong promptId, string requestingOrigin, PermissionRequestType requestedPermissions, IPermissionPromptCallback callback)
+            {
+                callback.Continue(PermissionRequestResult.Accept);
+                return true;
+            }
+        }
+
         public static Encoding DetectEncoding(string file)
         {
             Encoding encoding = Encoding.UTF8;
