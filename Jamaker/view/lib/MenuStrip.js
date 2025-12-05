@@ -119,7 +119,7 @@ function MenuStrip(ol=null) {
 						if (!prev) {
 							prev = li.parentElement.lastChild;
 						}
-						if (!prev.classList.contains("line")) break;
+						if (!prev.classList.contains("line") && !prev.classList.contains("disable")) break;
 					} while (prev != li);
 					prev.focus();
 					break;
@@ -131,7 +131,7 @@ function MenuStrip(ol=null) {
 						if (!next) {
 							next = li.parentElement.firstChild;
 						}
-						if (!next.classList.contains("line")) break;
+						if (!next.classList.contains("line") && !next.classList.contains("disable")) break;
 					} while (next != li);
 					next.focus();
 					break;
@@ -207,7 +207,7 @@ function MenuStrip(ol=null) {
 					const lis = contextmenu.childNodes;
 					for (let i = lis.length - 1; i >= 0; i--) {
 						const li = lis[i];
-						if (li.classList.contains("line")) continue;
+						if (li.classList.contains("line") || li.classList.contains("disable")) continue;
 						li.focus();
 						break;
 					}
@@ -218,7 +218,7 @@ function MenuStrip(ol=null) {
 					const lis = contextmenu.childNodes;
 					for (let i = 0; i < lis.length; i++) {
 						const li = lis[i];
-						if (li.classList.contains("line")) continue;
+						if (li.classList.contains("line") || li.classList.contains("disable")) continue;
 						li.focus();
 						break;
 					}
@@ -276,7 +276,7 @@ function MenuStrip(ol=null) {
 					const lis = menustrip.opened.submenu.childNodes;
 					for (let i = 0; i < lis.length; i++) {
 						const li = lis[i];
-						if (li.classList.contains("line")) continue;
+						if (li.classList.contains("line") || li.classList.contains("disable")) continue;
 						li.focus();
 						break;
 					}
@@ -287,6 +287,9 @@ function MenuStrip(ol=null) {
 	document.addEventListener("mouseover", (e) => {
 		const li = e.target.closest(".submenu.open li");
 		if (li) {
+			// 비활성 메뉴 무시
+			if (li.classList.contains("line") || li.classList.contains("disable")) return;
+
 			// 하위 메뉴에 마우스 올렸을 때
 			li.focus();
 		}
@@ -306,11 +309,17 @@ function MenuStrip(ol=null) {
 	document.addEventListener("click", (e) => {
 		const li = e.target.closest(".submenu li");
 		if (li) {
+			// 비활성 메뉴 무시
+			if (li.classList.contains("line") || li.classList.contains("disable")) return;
+
 			// 하위 메뉴 클릭하면 메뉴 닫고 실행
-			eval(li.func);
+			eval("(() => { " + li.func + "// */\n})()"); // 내용물이 주석으로 끝날 수도 있음
 			focusedMenu.unfocus();
 			return;
 		}
+		// 구분선 여백이 눌리는 경우가 있음
+		if (e.target.closest(".submenu")) return;
+
 		// 메뉴가 아닌 다른 곳을 클릭하면 포커스 반환
 		focusedMenu && focusedMenu.unfocus();
 	});
@@ -363,23 +372,30 @@ MenuStrip.createSubMenu = function(menus=[]) {
 	const ol = document.createElement("ol");
 	ol.classList.add("submenu");
 	for (let j = 0; j < menus.length; j++) {
-		const menu = menus[j].split("|");
+		let menu = menus[j];
+		if (typeof menu == "string") {
+			menu = menu.split("|");
+			menu = {
+				name: menu[0]
+			,	func: menu.slice(1).join("|")
+			,	perm: true
+			};
+		}
 		const subLi = document.createElement("li");
 		
-		const text = subLi.innerText = menu[0];
-		if (text) {
-			subLi.tabIndex = 1;
-			subLi.func = menu.slice(1).join("|");
-			index = text.indexOf("&");
+		if (subLi.innerText = menu.name) {
+			subLi.func = menu.func;
+			index = menu.name.indexOf("&");
 			if (index > 0) {
-				if (text.length > index + 1) {
-					menuKey = text[index + 1];
+				if (menu.name.length > index + 1) {
+					menuKey = menu.name[index + 1];
 					if (('A' <= menuKey && menuKey <= 'Z') || ('0' <= menuKey && menuKey <= '9')) {
-						subLi.innerHTML = (text.substring(0, index) + "<u>"+menuKey.toUpperCase()+"</u>" + text.substring(index + 2));
+						subLi.innerHTML = (menu.name.substring(0, index) + "<u>" + menuKey.toUpperCase() + "</u>" + menu.name.substring(index + 2));
 						menuKeys[menuKey.toLowerCase()] = subLi;
 					}
 				}
 			}
+			subLi.perm = menu.perm;
 		} else {
 			subLi.classList.add("line");
 		}
@@ -410,6 +426,15 @@ MenuStrip.prototype.openMenu = function(menu=null, withFocus=false) {
 		menu.classList.add("open")
 		submenu.classList.add("open");
 		submenu.style.left = menu.offsetLeft + "px";
+		submenu.childNodes.forEach(async (li) => {
+			if (await eval(li.perm)) {
+				li.tabIndex = 1;
+				li.classList.remove("disable");
+			} else {
+				li.removeAttribute("tabindex");
+				li.classList.add("disable");
+			}
+		});
 	}
 	if (withFocus) {
 		// 하위 메뉴 첫 항목에 포커스
@@ -460,12 +485,20 @@ ContextMenu.prototype.remove = function() {
 	this.view.remove();
 }
 ContextMenu.prototype.open = function(e, owner) {
-	console.log("open", e, owner);
 	if (window.focusedMenu && focusedMenu != this) focusedMenu.unfocus(false);
 	window.focusedMenu = this; // 열려있는 메뉴는 한 번에 하나만 존재
 	
 	this.owner = (owner ? owner : owner = document.body);
-	console.log("owner", this.owner);
+
+	this.view.childNodes.forEach((li) => {
+		if (eval(li.perm)) {
+			li.tabIndex = 1;
+			li.classList.remove("disable");
+		} else {
+			li.removeAttribute("tabindex");
+			li.classList.add("disable");
+		}
+	});
 
 	this.view.style.top  = 0;
 	this.view.style.left = 0;
@@ -488,7 +521,6 @@ ContextMenu.prototype.unfocus = function(withReturnFocus=true) {
 	window.focusedMenu = null;
 	this.view.classList.remove("open");
 	if (withReturnFocus) {
-		console.log(this.owner);
 		this.owner.focus();
 	}
 }

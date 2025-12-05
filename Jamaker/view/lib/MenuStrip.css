@@ -48,6 +48,9 @@
 	font-size: calc(20px * 0.6);
 	line-height: calc(20px * 1.1);
 }
+.submenu li.disable {
+	color: #6b6b6b;
+}
 .submenu li.line {
 	margin: calc(20px * 0.15);
 	margin-left: calc(20px * 0.7);
@@ -55,8 +58,11 @@
 	height: calc(20px * 0.05);
 	background: #d7d7d7;
 }
-.submenu li:not(.line):hover,
+.submenu li:hover:not(.disable):not(.line),
 .submenu li:focus {
 	background: #91C9F7;
 	outline: 0;
+}
+.submenu li.disable:hover {
+	background: #e6e6e6;
 }

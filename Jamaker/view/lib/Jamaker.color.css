@@ -113,14 +113,21 @@ button:hover,
 	background: [background];
 	border-color: [selector];
 }
+.submenu li.disable {
+	color: [tabBorder];
+}
 .submenu li.line {
 	background: [tab];
 }
-.submenu li:not(.line):hover,
+.submenu li:hover:not(.disable):not(.line),
 .submenu li:focus {
 	background: #91C9F7;
 	color: #000;
 }
+.submenu li.disable:hover {
+	background: [tab];
+}
+
 
 /* 스크롤바(배경색 기반)... */
 .input ::-webkit-scrollbar-thumb:hover { background-color: [border]; }
