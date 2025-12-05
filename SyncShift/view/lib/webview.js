@@ -112,9 +112,9 @@ function ready(fn) {
 */
 $(() => {
 	// 우클릭 방지
-	document.addEventListener("contextmenu", () => {
+	document.addEventListener("contextmenu", (e) => {
 		// TODO: 우클릭 메뉴 뭐라도 만들까?
-		return false;
+		e.preventDefault();
 	});
 	window.onkeydown = (e) => {
 		switch(e.keyCode) {

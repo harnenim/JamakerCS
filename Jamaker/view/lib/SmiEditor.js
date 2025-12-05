@@ -401,6 +401,60 @@ SmiEditor.setSetting = (setting) => {
 			}
 		}
 	}
+	
+	{	// contextmenu
+		if (SmiEditor.contextmenu) {
+			SmiEditor.contextmenu.remove();
+		}
+		if (setting.contextmenu) {
+			if (setting.contextmenu.length) {
+				SmiEditor.contextmenu = new ContextMenu(setting.contextmenu);
+			} else {
+				SmiEditor.contextmenu = null;
+			}
+		} else if (window.chrome.webview) { // 샘플 코드는 WebView2에서만 활성화 - CefSharp 클립보드 권한 필요
+			// 설정 기능 자체가 없을 때 동작
+			// TODO: 설정 만들려면 <input>이 아니라 <textarea> 써야 하나?
+			//       메뉴 활성화 여부까지 필요한가...?
+			SmiEditor.contextmenu = new ContextMenu([
+					"실행 취소(&Z)|SmiEditor.selected.history.back();"
+				,	"다시 실행(&Y)|SmiEditor.selected.history.forward();"
+				,	""
+				,	"잘라내기(&X)|(() => {"
+					+	"	let cursor = SmiEditor.selected.getCursor();"
+					+	"	if (cursor[0] == cursor[1]) return;"
+					+	"	let text = SmiEditor.selected.input.val();"
+					+	"	navigator.clipboard.writeText(text.substring(cursor[0], cursor[1]));"
+					+	"	text = text.substring(0, cursor[0]) + text.substring(cursor[1]);"
+					+	"	SmiEditor.selected.setText(text, [cursor[0], cursor[0]]);"
+					+	"})()"
+				,	"복사(&C)|(() => {"
+					+	"	let cursor = SmiEditor.selected.getCursor();"
+					+	"	if (cursor[0] == cursor[1]) return;"
+					+	"	let text = SmiEditor.selected.input.val();"
+					+	"	navigator.clipboard.writeText(text.substring(cursor[0], cursor[1]));"
+					+	"})()"
+				,	"붙여넣기(&P)|(() => {"
+					+	"	let cursor = SmiEditor.selected.getCursor();"
+					+	"	let text = SmiEditor.selected.input.val();"
+					+	"	navigator.clipboard.readText().then((paste) => {"
+					+	"		text = text.substring(0, cursor[0]) + paste + text.substring(cursor[1]);"
+					+	"		cursor = cursor[0] + cursor.length;"
+					+	"		SmiEditor.selected.setText(text, [cursor, cursor]);"
+					+	"	});"
+					+	"})()"
+				,	"삭제(&D)|(() => {"
+					+	"	let cursor = SmiEditor.selected.getCursor();"
+					+	"	if (cursor[0] == cursor[1]) return;"
+					+	"	let text = SmiEditor.selected.input.val();"
+					+	"	text = text.substring(0, cursor[0]) + text.substring(cursor[1]);"
+					+	"	SmiEditor.selected.setText(text, [cursor[0], cursor[0]]);"
+					+	"})()"
+				,	""
+				,	"찾기/바꾸기(&F)|SmiEditor.Finder.open();"
+			]);
+		}
+	}
 }
 SmiEditor.scrollShow = 1;
 
@@ -415,6 +469,7 @@ SmiEditor.sync = {
 ,	frame: true
 };
 SmiEditor.autoComplete = [];
+SmiEditor.contextmenu = null;
 SmiEditor.PlayerAPI = {
 		playOrPause: (    ) => { binder.playOrPause(); }
 	,	play       : (    ) => { binder.play(); }
@@ -620,6 +675,10 @@ SmiEditor.prototype.bindEvent = function() {
 		editor.showBlockArea();
 	}).on("focus", function() {
 		editor.block.hide();
+	}).on("contextmenu", function(e) {
+		if (SmiEditor.contextmenu) {
+			SmiEditor.contextmenu.open(e, SmiEditor.selected.input[0]);
+		}
 	});
 	
 	// 개발용 임시

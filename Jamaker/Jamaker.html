@@ -256,8 +256,8 @@ const window_open = function(url, name, options, opener) {
 			MenuStrip.prototype._setMenus = MenuStrip.prototype.setMenus;
 			MenuStrip.prototype.setMenus = function(menus) {
 				this._setMenus(menus.concat([["샘플용"
-					, "GitHub실행|window.open('https://github.com/harnenim/Jamaker')"
 					, "플레이어 실행|binder.runPlayer()"
+					, ""
 					, "임시 저장 파일 확인하기|binder.openTempDir()"
 					, "설정 export|binder.exportSetting()"
 					, "설정 import|binder.importSetting()"
@@ -273,6 +273,8 @@ const window_open = function(url, name, options, opener) {
 						+ "    alert('올바른 값이 아닙니다.');"
 						+ "}"
 					+ "}, Subtitle.video.FR / 1000);"
+					, ""
+					, "GitHub 열기|window.open('https://github.com/harnenim/Jamaker')"
 				]]));
 			};
 		}

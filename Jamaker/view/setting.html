@@ -995,29 +995,30 @@ $(() => {
 			fieldset.append(ol);
 			
 			for (let j = 1; j < menus.length; j++) {
-				const menu = menus[j];
-				const div = menu.indexOf("|");
-				const name = (div > 0) ? menu.substring(0, div) : menu;
-				const func = (div > 0) ? menu.substring(div + 1) : "";
+				const menu = menus[j].split("|");
+				const name = menu[0];
+				const func = menu.slice(1).join("|");
 				appendSubMenu(ol, name, func);
 			}
 			
 			fieldset.append($("<button type='button' class='add-menu'>").text("추가"));
 			
-			menuList.append($("<li>").append(fieldset));
+			const li = $("<li>").append(fieldset);
+			menuList.append(li);
+			return li;
 		}
 		function appendSubMenu(ol, name, func) {
 			if (!ol) return;
 			if (!name) name = "";
 			if (!func) func = "";
-			ol.append(
-				$("<li>")
-					.append($("<input type='text'>").val(name))
+			const li = $("<li>")
+					.append($("<input type='text' placeholder='이름을 비우면 구분선이 됩니다.'>").val(name))
 					.append($("<button type='button' class='prev'>").text("∧"))
 					.append($("<button type='button' class='next'>").text("∨"))
 					.append($("<input type='text' class='menu-func'>").val(func))
-					.append($("<button type='button' class='remove'>").text("✕"))
-			);
+					.append($("<button type='button' class='remove'>").text("✕"));
+			ol.append(li);
+			return li;
 		}
 		(refreshFuncs["menu"] = (setting) => {
 			menuList.empty();
@@ -1028,29 +1029,33 @@ $(() => {
 		})(setting);
 		
 		$("#menu > .add-menu").on("click", function() {
-			appendMenu();
+			appendMenu().find("input:eq(0)").focus();
 			setSaved("menu", false);
 		});
 		
 		menuList.on("click", ".add-menu", function() {
-			appendSubMenu($(this).parent().find("ol"));
+			appendSubMenu($(this).parent().find("ol")).find("input:eq(0)").focus();
 			setSaved("menu", false);
 		});
 		
 		menuList.on("click", "legend > button.prev", function() {
-			const menu = $(this).parents("li");
+			const btn = $(this);
+			const menu = btn.parents("li");
 			const prev = menu.prev();
 			if (prev.length) {
 				prev.before(menu);
 				setSaved("menu", false);
+				btn.focus();
 			}
 		});
 		menuList.on("click", "legend > button.next", function() {
-			const menu = $(this).parents("li");
+			const btn = $(this);
+			const menu = btn.parents("li");
 			const next = menu.next();
 			if (next.length) {
 				next.after(menu);
 				setSaved("menu", false);
+				btn.focus();
 			}
 		});
 		menuList.on("click", "legend > button.remove", function() {
@@ -1062,19 +1067,23 @@ $(() => {
 		});
 		
 		menuList.on("click", "ol > li > button.prev", function() {
-			const subMenu = $(this).parent();
+			const btn = $(this);
+			const subMenu = btn.parent();
 			const prev = subMenu.prev();
 			if (prev.length) {
 				prev.before(subMenu);
 				setSaved("menu", false);
+				btn.focus();
 			}
 		});
 		menuList.on("click", "ol > li > button.next", function() {
-			const subMenu = $(this).parent();
+			const btn = $(this);
+			const subMenu = btn.parent();
 			const next = subMenu.next();
 			if (next.length) {
 				next.after(subMenu);
 				setSaved("menu", false);
+				btn.focus();
 			}
 		});
 		menuList.on("click", "ol > li > button.remove", function() {

@@ -113,7 +113,10 @@ button:hover,
 	background: [background];
 	border-color: [selector];
 }
-.submenu li:hover,
+.submenu li.line {
+	background: [tab];
+}
+.submenu li:not(.line):hover,
 .submenu li:focus {
 	background: #91C9F7;
 	color: #000;
