@@ -491,7 +491,6 @@ ContextMenu.prototype.open = function(e, owner) {
 	this.owner = (owner ? owner : owner = document.body);
 
 	this.view.childNodes.forEach(async (li) => {
-		console.log(li);
 		if (await eval(li.perm)) {
 			li.tabIndex = 1;
 			li.classList.remove("disable");
