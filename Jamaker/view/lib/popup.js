@@ -134,6 +134,10 @@ function setColor(color) {
 }
 
 $(() => {
+	// 우클릭 방지
+	document.addEventListener("contextmenu", (e) => {
+		e.preventDefault();
+	});
 	[...document.getElementsByTagName("textarea")].forEach((input) => {
 		input.setAttribute("spellcheck", false);
 	});

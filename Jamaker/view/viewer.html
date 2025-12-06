@@ -221,10 +221,21 @@ function setTextToView(text, hold) {
 }
 
 $(() => {
+	// 우클릭 방지
+	document.addEventListener("contextmenu", (e) => {
+		// TODO: 우클릭 메뉴 뭐라도 만들까?
+		e.preventDefault();
+	});
+	window.onkeydown = (e) => {
+		switch(e.keyCode) {
+			case 116: return false; // F5 새로고침 방지
+		}
+	};
 	viewer = $("#viewer");
 	if (opener) {
 		SmiEditor = opener.SmiEditor;
 		opener.binder.updateViewerSetting();
+		opener.SmiEditor.Viewer.refresh();
 	} else if (binder && binder.onloadViewer) {
 		binder.onloadViewer();
 	}
