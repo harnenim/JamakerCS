@@ -244,8 +244,15 @@ Progress.set = (selector, ratio, unit="calc([ratio] * 100%)") => {
 		Progress.last = now;
 	}
 	let bar = Progress.bars[selector];
-	if (bar == null) {
-		const area = document.querySelector(selector);
+	if (!bar) {
+		let area = null;
+		if (selector.indexOf(":eq(") > 0) {
+			const parts = selector.split(":eq(");
+			const index = Number(parts[1].split(")")[0]);
+			area = document.querySelectorAll(parts[0])[index];
+		} else {
+			area = document.querySelector(selector);
+		}
 		Progress.bars[selector] = bar = document.createElement("div");
 		bar.classList.add("progress-bar");
 		area.classList.add("progress");
