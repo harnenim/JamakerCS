@@ -2032,7 +2032,11 @@ function setSetting(setting, initial=false) {
 			,	dataType: "text"
 			,	success: (preset) => {
 					for (let name in setting.color) {
-						preset = preset.replaceAll("["+name+"]", setting.color[name]);
+						preset = preset.replaceAll("[" + name + "]", setting.color[name]);
+					}
+					{	// TODO: 문법 하이라이트 로딩 후 이쪽은 재처리 필요
+						//       이게 되려면 ajax 호출을 병렬에서 직렬로 바꿔야 함
+						preset = preset.replaceAll("[editorHL]", setting.color.editor);
 					}
 					if (button.length) {
 						preset = preset.replaceAll("[button]", button).replaceAll("[buttonDisabled]", disabled);
@@ -2120,6 +2124,7 @@ function setSetting(setting, initial=false) {
 					editors.push(tabs[i].holds[j]);
 				}
 			}
+			// TODO: color 세팅과 직렬화 후 [editorHL] 처리 필요
 			return editors;
 		});
 	}
