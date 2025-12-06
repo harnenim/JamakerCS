@@ -5,9 +5,11 @@ namespace Jamaker
 {
     public class SyncShift
     {
+#pragma warning disable CA2211 // 비상수 필드는 표시할 수 없습니다.
         public static int CHECK_RANGE = 500;
         public static double MAX_POINT = 0.5;
         public static bool WITH_KEYFRAME = false;
+#pragma warning restore CA2211 // 비상수 필드는 표시할 수 없습니다.
         
         public int start;
         public int shift;
@@ -47,7 +49,7 @@ namespace Jamaker
         {
             progress.Set((double) range.start / origin.Count);
 
-            List<SyncShift> shifts = new List<SyncShift>();
+            List<SyncShift> shifts = new List<SyncShift>();;
             int start = range.start;
             int shift = range.shift;
             int limitOfOrigin = Math.Min(range.end, origin.Count);
@@ -65,30 +67,30 @@ namespace Jamaker
 
             for (int add = 0; (doPlus || doMinus); add++)
             {
-		        if (doPlus) {
-		            int tShift = shift + add;
-		            if (start + tShift + CHECK_RANGE > target.Count) {
+                if (doPlus) {
+                    int tShift = shift + add;
+                    if (start + tShift + CHECK_RANGE > target.Count) {
                         Console.WriteLine("탐색 범위 벗어남({0} + {1}): {2} > {3}", shift, add, (start + tShift + CHECK_RANGE), target.Count);
                         doPlus = false;
                         continue;
-		            }
-			        List<double> ratios = new List<double>();
-			        for (int i = 0; i < CHECK_RANGE; i++) {
-				        ratios.Add(Math.Log10((origin[start + i] + 0.000001) / (target[start + tShift + i] + 0.000001)));
-			        }
+                    }
+                    List<double> ratios = new List<double>();
+                    for (int i = 0; i < CHECK_RANGE; i++) {
+                        ratios.Add(Math.Log10((origin[start + i] + 0.000001) / (target[start + tShift + i] + 0.000001)));
+                    }
                     StDev point = new StDev(ratios);
-			        if (minPoint == null || point.value < minPoint.value) {
-				        // 오차가 기존값보다 작음
-				        Console.WriteLine("오차가 기존값보다 작음({0} + {1})", shift, add);
-				        minPoint = point;
-				        minShift = tShift;
+                    if (minPoint == null || point.value < minPoint.value) {
+                        // 오차가 기존값보다 작음
+                        Console.WriteLine("오차가 기존값보다 작음({0} + {1})", shift, add);
+                        minPoint = point;
+                        minShift = tShift;
                         Console.WriteLine(point.value);
-				        if (point.value == 0.0) {
-					        Console.WriteLine("완전히 일치: 정답 찾음");
-					        // 완전히 일치: 정답 찾음
-					        break;
-				        }
-			        }
+                        if (point.value == 0.0) {
+                            Console.WriteLine("완전히 일치: 정답 찾음");
+                            // 완전히 일치: 정답 찾음
+                            break;
+                        }
+                    }
                     else if (point.value > minPoint.value * 20)
                     {
                         Console.WriteLine("오차가 기존값에 비해 지나치게 큼{0} + {1})", shift, add);
@@ -110,6 +112,16 @@ namespace Jamaker
                             doMinus = false;
                             continue;
                         }
+                    }
+                    if (originStart < 0
+                     || originStart + tShift < 0
+                     || originStart + CHECK_RANGE > origin.Count
+                     || originStart + tShift + CHECK_RANGE > target.Count
+                    )
+                    {
+                        Console.WriteLine("탐색 범위 벗어남({0} - {1})", shift, add);
+                        doMinus = false;
+                        continue;
                     }
                     List<double> ratios = new List<double>();
                     for (int i = 0; i < CHECK_RANGE; i++)
