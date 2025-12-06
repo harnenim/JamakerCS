@@ -224,6 +224,10 @@ function MenuStrip(ol=null) {
 					}
 					break;
 				}
+				case 27: { // Esc
+					focusedMenu.unfocus();
+					break;
+				}
 				case 9: // Tab
 				{	// 포커스 이동 방지
 					e.preventDefault();
