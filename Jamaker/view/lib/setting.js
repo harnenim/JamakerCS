@@ -37,11 +37,11 @@ let checkVersion;
 	const lastNotifyForCommand = "2025.07.30.v1";
 	const lastNotifyForAutoComplete = "2025.04.19.v1";
 	const lastNotifyForStyle = "2025.03.07.v1";
-	const lastNotifyForMenu = "2025.11.22.v1";
+	const lastNotifyForMenu = "2025.12.06.v1";
 }
 
 window.DEFAULT_SETTING =
-{	version: "2025.11.29.v1"
+{	version: "2025.12.06.v1"
 ,	menu:
 	[	[	"파일(&F)"
 		,	"새 파일(&N)|newFile()"
