@@ -2619,7 +2619,8 @@ SmiEditor.Finder1 = {
 		last: { find: "", replace: "", withCase: false, reverse: false }
 	,	open: function(isReplace) {
 			this.onload = (isReplace ? this.onloadReplace : this.onloadFind);
-			this.window = window.open("finder.html", "finder", "scrollbars=no,location=no,width=400,height=220");
+			let newWindow = window.open("finder.html", "finder", "scrollbars=no,location=no,width=400,height=220");
+			if (newWindow) this.window = newWindow; // WebView2에서 팝업 재활용할 경우 null이 될 수 있음
 			binder.focus("finder");
 		}
 	,	onloadFind: function(isReplace=false) {
