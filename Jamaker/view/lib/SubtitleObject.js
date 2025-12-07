@@ -639,6 +639,8 @@ Subtitle.video = {
 	,	FL: 1000000 / 23976
 	,	fs: []
 	,	kfs: []
+	,	width: 1920
+	,	height: 1080
 	,	ffmpeg: null
 	,	ffprobe: null
 }

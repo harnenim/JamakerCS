@@ -2854,7 +2854,7 @@ function confirmLoadVideo(path) {
 // C# 쪽에서 호출
 function setVideo(path) {
 	if (Subtitle.video.path == path) return;
-	log("setVideo");
+	log("setVideo: " + path);
 	
 	Subtitle.video.path = path;
 	Subtitle.video.fs = [];
@@ -2884,7 +2884,7 @@ function setVideo(path) {
 }
 // C# 쪽에서 호출 - requestFrames
 function setVideoInfo(w=1920, h=1080, fr=23976) {
-	log("setVideoInfo");
+	log("setVideoInfo: " + w + ", " + h);
 	
 	Subtitle.video.width = w;
 	Subtitle.video.height = h;
@@ -2902,7 +2902,7 @@ function setVideoInfo(w=1920, h=1080, fr=23976) {
 }
 // C# 쪽에서 호출 - requestFrames
 function loadFkf(fkfName) {
-	log("loadFkf start");
+	log("loadFkf start: " + fkfName);
 	// C# 파일 객체를 직접 js 쪽에 전달할 수 없으므로, 정해진 경로의 파일을 ajax 형태로 가져옴
 	// base64 거치는 방법도 있긴 한데, 어차피 캐시를 재활용하는 경우라면 한 번만 거치는 게 나음
 	const req = new XMLHttpRequest();

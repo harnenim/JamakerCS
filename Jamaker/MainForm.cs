@@ -1086,8 +1086,8 @@ namespace Jamaker
 
                             StreamReader sr = new StreamReader(proc.StandardOutput.BaseStream);
                             string line;
-                            int width = 1920;
-                            int height = 1080;
+                            int width = 0;
+                            int height = 0;
                             int fr = 0;
                             while ((line = sr.ReadLine()) != null)
                             {
@@ -1095,10 +1095,12 @@ namespace Jamaker
                                 {
                                     if (line.StartsWith("width="))
                                     {
+                                        if (width > 0) continue;
                                         width = int.Parse(line.Substring(6));
                                     }
                                     else if (line.StartsWith("height="))
                                     {
+                                        if (height > 0) continue;
                                         height = int.Parse(line.Substring(7));
                                     }
                                     else if (line.StartsWith("r_frame_rate="))
@@ -1121,6 +1123,9 @@ namespace Jamaker
                                 }
                             }
                             proc.Close();
+
+                            if (width == 0) width = 1920;
+                            if (height == 0) height = 1080;
 
                             Console.WriteLine($"setVideoInfo: {width}, {height}, {fr}");
                             Script("setVideoInfo", width, height, fr);
