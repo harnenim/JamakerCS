@@ -712,7 +712,7 @@ function apply() {
 					,	style: holdInfo.style
 				});
 			}
-			const withCombine = !$("#chkCombine").prop("checked");
+			const withCombine = (operation.type == "smi") && !$("#chkCombine").prop("checked");
 			operation.output = SmiFile.holdsToText(holds, withCombine, withCombine) + assFoot;
 			refreshPreview(true);
 			break;
