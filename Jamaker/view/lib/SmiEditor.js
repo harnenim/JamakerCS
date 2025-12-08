@@ -693,7 +693,7 @@ SmiEditor.prototype.bindEvent = function() {
 	}).on("blur", function() {
 		editor.showBlockArea();
 	}).on("focus", function() {
-		editor.block.hide();
+		editor.block.hide().empty();
 	}).on("contextmenu", function(e) {
 		if (SmiEditor.contextmenu) {
 			SmiEditor.contextmenu.open(e, SmiEditor.selected.input[0]);
