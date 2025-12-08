@@ -100,16 +100,28 @@ function setDpi(dpi) {
 	DPI = dpi;
 }
 
-/* 어디선가 순서 꼬임
+//* 적용해 봤는데 어디선가 꼬임
 function ready(fn) {
 	if (document.readyState === "loading") {
-		console.log("addEventListener");
-		document.addEventListener("DOMContentLoaded", fn);
+		if (window.onloads) { // 대기열 추가
+			onloads.push(fn);
+		} else {
+			window.onloads = [fn];
+			document.addEventListener("DOMContentLoaded", () => {
+				onloads.forEach((fn) => {
+					try { fn(); } catch (e) {};
+				});
+			});
+		}
 	} else {
-		fn();
+		try { fn(); } catch (e) {};
 	}
 }
-*/
+/*/
+function ready(fn) {
+	$(fn);
+}
+// */
 $(() => {
 	// 우클릭 방지
 	document.addEventListener("contextmenu", (e) => {
