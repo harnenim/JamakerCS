@@ -13,7 +13,7 @@ const POT_GET_PLAYFILE_NAME= 0x6020;
 const POT_SET_PLAYFILE     =   1000;
 
 function WebPlayerBridge() {
-	this.hwnd = this.findPotPlayer();
+	this.hwnd = this.findPlayer();
 	this.initialOffset = new RECT();
 	this.currentOffset = new RECT();
 }
@@ -64,7 +64,7 @@ function WebPlayerBridge() {
 		WinAPI.postMessage(this.hwnd, 0x0010, 0, 0);
 	}
 	
-	WebPlayerBridge.prototype.findPotPlayer = function() { }
+	WebPlayerBridge.prototype.findPlayer    = function() { }
 	WebPlayerBridge.prototype.openFile  = function(path) { }
 	WebPlayerBridge.prototype.getFps        = function() { }
 	WebPlayerBridge.prototype.playOrPause   = function() { }
@@ -75,7 +75,7 @@ function WebPlayerBridge() {
 	WebPlayerBridge.prototype.moveTo    = function(time) { }
 }
 {	// override
-	WebPlayerBridge.prototype.findPotPlayer = function() {
+	WebPlayerBridge.prototype.findPlayer = function() {
 		if (!this.hwnd) {
 			this.hwnd = {
 				wndProc: function(m) {

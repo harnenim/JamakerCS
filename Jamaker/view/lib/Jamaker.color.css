@@ -132,8 +132,10 @@ button:hover,
 /* 스크롤바(배경색 기반)... */
 .input ::-webkit-scrollbar-thumb:hover { background-color: [border]; }
 .input ::-webkit-scrollbar-corner,
-.input ::-webkit-scrollbar-track:horizontal { background: linear-gradient([editorHL]3f, [editorHL]ff); }
+.input ::-webkit-scrollbar-track:horizontal { background: linear-gradient([editorHL]00, [editorHL]af, [editorHL]ff); }
+.input .hover-scroll::-webkit-scrollbar-thumb,
 .input .scrolling::-webkit-scrollbar-thumb { background-color: [tabBorder]7f; }
+.input .hover-scroll::-webkit-scrollbar-corner,
 .input .scrolling::-webkit-scrollbar-corner { background: [tab]; }
 
 body.classic-scrollbar .input ::-webkit-scrollbar { background: #8080801f; }

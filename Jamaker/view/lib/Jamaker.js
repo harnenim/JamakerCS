@@ -1919,7 +1919,12 @@ function init(jsonSetting, isBackup=true) {
 	// ::-webkit-scrollbar에 대해 CefSharp에서 커서 모양이 안 바뀜
 	// ... 라이브러리 버그? 업데이트하면 달라지나?
 	$("body").on("mousemove", "textarea", function(e) {
-		$(this).css({ cursor: ((this.clientWidth <= e.offsetX) || (this.clientHeight <= e.offsetY) ? "default" : "text") });
+		const hoverScroll = (this.clientWidth <= e.offsetX) || (this.clientHeight <= e.offsetY);
+		if (hoverScroll) {
+			this.classList.add("hover-scroll");
+		} else {
+			this.classList.remove("hover-scroll");
+		}
 	});
 	
 	SmiEditor.activateKeyEvent();
@@ -1983,13 +1988,24 @@ function setSetting(setting, initial=false) {
 	}
 	
 	SmiEditor.setSetting(setting);
-	if (initial && oldSetting.scrollShow == undefined) {
-		setting.scrollShow = 0; // 기존 사용자는 0초로 초기화
+	if (initial) {
+		if (setting.useHighlight == false) {
+			// 문법 하이라이트 없는 버전에서 업데이트 시 기본값
+			setting.highlight = { parser: "", style: "eclipse" };
+			delete(setting.useHighlight);
+		} else if (setting.useHighlight) {
+			delete(setting.useHighlight);
+		}
+		if (oldSetting.scrollShow == undefined) {
+			// 기존 사용자는 기존 스타일 스크롤바로 초기화
+			setting.scrollShow = 0;
+		}
 	}
 	if (initial
 	 || (               oldSetting.size       !=                setting.size      )
 	 || (               oldSetting.scrollShow !=                setting.scrollShow)
 	 || (JSON.stringify(oldSetting.color)     != JSON.stringify(setting.color)    )
+	 || (JSON.stringify(oldSetting.highlight) != JSON.stringify(setting.highlight))
 	) {
 		// 스타일 바뀌었을 때만 재생성
 		if (setting.css) {
@@ -2031,13 +2047,11 @@ function setSetting(setting, initial=false) {
 		$.ajax({url: "lib/Jamaker.color.css"
 			,	dataType: "text"
 			,	success: (preset) => {
-					for (let name in setting.color) {
-						preset = preset.replaceAll("[" + name + "]", setting.color[name]);
+					let $style = $("#styleColor");
+					if (!$style.length) {
+						$("head").append($style = $("<style id='styleColor'>"));
 					}
-					{	// TODO: 문법 하이라이트 로딩 후 이쪽은 재처리 필요
-						//       이게 되려면 ajax 호출을 병렬에서 직렬로 바꿔야 함
-						preset = preset.replaceAll("[editorHL]", setting.color.editor);
-					}
+					
 					if (button.length) {
 						preset = preset.replaceAll("[button]", button).replaceAll("[buttonDisabled]", disabled);
 						$("body").addClass("classic-scrollbar");
@@ -2045,11 +2059,55 @@ function setSetting(setting, initial=false) {
 						$("body").removeClass("classic-scrollbar");
 					}
 					
-					let $style = $("#styleColor");
-					if (!$style.length) {
-						$("head").append($style = $("<style id='styleColor'>"));
+					for (let name in setting.color) {
+						preset = preset.replaceAll("[" + name + "]", setting.color[name]);
 					}
-					$style.html(preset);
+					function setStyleWithHighlight() {
+						// 문법 하이라이트 배경색 가져오기
+						let editorHL = setting.color.editor;
+						if (setting.highlight && setting.highlight.parser) {
+							let hljs = $(".hljs");
+							if (hljs.length) {
+								hljs = hljs[0];
+							} else {
+								if (window.tempHljs) {
+									hljs = window.tempHljs;
+								} else {
+									hljs = document.createElement("div");
+									hljs.classList.add("hljs");
+									hljs.style.display = "none";
+									document.body.append(hljs);
+								}
+							}
+							try {
+								const rgb = getComputedStyle(hljs).backgroundColor;
+								const rgbMatch = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/);
+								if (rgbMatch) {
+									editorHL = "#" + Color.hex(rgbMatch[1]) + Color.hex(rgbMatch[2]) + Color.hex(rgbMatch[3]);
+								}
+							} catch (e) {}
+						}
+						$style.html(preset.replaceAll("[editorHL]", editorHL));
+					}
+					
+					if (initial || (JSON.stringify(oldSetting.highlight) != JSON.stringify(setting.highlight))) {
+						// 문법 하이라이트 양식 바뀌었을 때만 재생성
+						// 문법 하이라이트 세팅 중에 내용이 바뀔 수 있어서
+						// 에디터 목록을 만들어서 넘기지 않고, 함수 형태로 넘김
+						SmiEditor.setHighlight(setting.highlight, () => {
+							const editors = [];
+							for (let i = 0; i < tabs.length; i++) {
+								for (let j = 0; j < tabs[i].holds.length; j++) {
+									editors.push(tabs[i].holds[j]);
+								}
+							}
+							setStyleWithHighlight();
+							
+							return editors;
+						});
+					} else {
+						setStyleWithHighlight()
+					}
 				}
 		});
 		
@@ -2106,27 +2164,6 @@ function setSetting(setting, initial=false) {
 				,	height: h
 			});
 		}
-	}
-	if (initial || (JSON.stringify(oldSetting.highlight) != JSON.stringify(setting.highlight))) {
-		// 문법 하이라이트 양식 바뀌었을 때만 재생성
-		if (setting.useHighlight == false) {
-			setting.highlight = { parser: "", style: "eclipse" };
-			delete(setting.useHighlight);
-		} else if (setting.useHighlight) {
-			delete(setting.useHighlight);
-		}
-		// 문법 하이라이트 세팅 중에 내용이 바뀔 수 있어서
-		// 에디터 목록을 만들어서 넘기지 않고, 함수 형태로 넘김
-		SmiEditor.setHighlight(setting.highlight, () => {
-			const editors = [];
-			for (let i = 0; i < tabs.length; i++) {
-				for (let j = 0; j < tabs[i].holds.length; j++) {
-					editors.push(tabs[i].holds[j]);
-				}
-			}
-			// TODO: color 세팅과 직렬화 후 [editorHL] 처리 필요
-			return editors;
-		});
 	}
 	{
 		if (setting.sync.kLimit == undefined) {

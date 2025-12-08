@@ -493,7 +493,7 @@ ContextMenu.prototype.open = function(e, owner) {
 	window.focusedMenu = this; // 열려있는 메뉴는 한 번에 하나만 존재
 	
 	this.owner = (owner ? owner : owner = document.body);
-
+	
 	this.view.childNodes.forEach(async (li) => {
 		if (await eval(li.perm)) {
 			li.tabIndex = 1;
