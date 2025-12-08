@@ -965,7 +965,7 @@ namespace Jamaker
                 int index = path.LastIndexOf('.');
                 if (index > 0)
                 {
-                    LoadFile(path.Substring(0, index) + ".jmk", true, false);
+                    LoadFile(path.Substring(0, index) + ".jmk", true, true);
                 }
             }
         }
