@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>WebPlayer</title>
+<link rel="stylesheet" type="text/css" href="WebForm.css" />
+<script src="../view/lib/jquery-3.2.1.min.js"></script>
+<script src="WinAPI.js"></script>
+<script src="Binder.js"></script>
+<script>
+Binder.prototype.openFileByDrag = function() {
+    this._.openFileByDrag();
+}
+Binder.prototype.openFileDialog = function() {
+	this._.openFileDialog();
+}
+Binder.prototype.close = function() {
+	this._.close();
+}
+</script>
+<script src="WebForm.js"></script>
+<script>
+getFps      = function() { return main.mainView.contentWindow.getFps     (); }
+playOrPause = function() { return main.mainView.contentWindow.playOrPause(); }
+pause       = function() { return main.mainView.contentWindow.pause      (); }
+play        = function() { return main.mainView.contentWindow.play       (); }
+stop        = function() { return main.mainView.contentWindow.stop       (); }
+getTime     = function() { return main.mainView.contentWindow.getTime    (); }
+moveTo  = function(time) { return main.mainView.contentWindow.moveTo (time); }
+
+window.main = new WebForm();
+{	// main
+	main.run = function() {
+		this.initializeComponent();
+		
+		main.mainView.src = "../view/player.html";
+		main.mainView.onload = function() {
+			// 브라우저 샘플에선 url 변형 필요
+			main.mainView.contentWindow._open_ = main.mainView.contentWindow.open;
+			main.mainView.contentWindow.open = function(url, name, options) {
+				if (url.substring(0, 4) != "http") {
+					url = location.href.substring(0, location.href.lastIndexOf("/")) + "/view/" + url;
+				}
+				return main.windows[name] = window_open(url, name, options, main.mainView.contentWindow);
+			}
+			
+			main.mainView.contentWindow.binder = main.binder = new Binder(main);
+			
+			const cd = main.mainView.contentDocument;
+			cd.addEventListener("dragenter", (e) => {
+				e.preventDefault();
+				main.showDragging();
+			});
+		};
+	}
+}
+{
+	main.files = {};
+	main.openFileByDrag = function() {
+		if (!this.droppedFiles) return;
+		if (this.droppedFiles.length < 1) {
+			this.droppedFiles = null;
+			return;
+        }
+		this.openFile(this.droppedFiles[0]);
+	}
+	main.openFileDialog = async function(type, withSaveSkf, withKf) {
+		const setting = { types: [{ description: '동영상 파일', accept: { 'video/*': ['.avi', '.mkv', '.mp4', '.ts', '.m2ts'] } }] };
+		const fb = await window.showOpenFilePicker(setting);
+		if (fb && fb[0]) {
+			main.openFile(await fb[0].getFile());
+		}
+	}
+	main.openFile = async function(file) {
+		main.mainView.contentWindow.openFile(file);
+		this.droppedFiles = null;
+	}
+	
+	main.close = function() {
+		window.close();
+	}
+}
+$(() => {
+	main.run();
+});
+</script>
+<style>
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+html, body {
+	width: 100%;
+	height: 100%;
+	border: 0;
+	overflow: hidden;
+}
+</style>
+</head>
+<body></body>
+</html>

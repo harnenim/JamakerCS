@@ -128,3 +128,30 @@ WebForm.prototype.initAfterLoad = function() {
 	this.windows[this.mainView.contentWindow.windowName] = window;
 };
 WebForm.prototype.beforeExit = (e) => {}
+
+/* 어디선가 순서 꼬임
+function ready(fn) {
+	setTimeout(() => {
+		if (document.readyState === "loading") {
+			console.log("addEventListener");
+			if (window.onloads) { // 대기열 추가
+				onloads.push(fn);
+			} else {
+				window.onloads = [fn];
+				document.addEventListener("DOMContentLoaded", () => {
+					console.log("DOMContentLoaded");
+					onloads.forEach((fn) => {
+						console.log(fn);
+						try { fn(); } catch (e) {};
+					});
+				});
+			}
+		} else {
+			try { fn(); } catch (e) {};
+		}
+	});
+}
+/*/
+function ready(fn) {
+	$(fn);
+}

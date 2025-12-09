@@ -8,6 +8,12 @@
 	list-style: none;
 	cursor: default;
 }
+.menustrip li,
+.submenu   li,
+.menustrip li *,
+.submenu   li * {
+	font-family: 맑은 고딕;
+}
 .menustrip li {
 	float: left;
 	height: 20px;

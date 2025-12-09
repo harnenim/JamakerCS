@@ -3,21 +3,18 @@
 <head>
 <meta charset="utf-8">
 <title>플레이어</title>
+<script src="lib/jquery-3.2.1.min.js"></script>
+<script src="lib/webview.js"></script>
+<script src="lib/MenuStrip.js"></script>
+<link rel="stylesheet" type="text/css" href="lib/webview.css" />
+<link rel="stylesheet" type="text/css" href="lib/MenuStrip.css" />
 <script>
-// 팟플레이어 SDK 값 가져옴
-const WM_USER = 0x0400;
-const POT_COMMAND = WM_USER;
-const POT_GET_CURRENT_TIME = 0x5004;
-const POT_SET_CURRENT_TIME = 0x5005;
-const POT_SET_PLAY_STATUS  = 0x5007;
-const POT_SET_PLAY_CLOSE   = 0x5009;
-const POT_GET_VIDEO_FPS    = 0x6032;
-
 let video = null;
 let status = 0;
 let viewJunkTime = null;
 const junk = { time: 0, play: null };
-document.addEventListener("DOMContentLoaded", function () {
+
+ready(() => {
 	video = document.getElementById("video");
 	video.onplaying = function() { status = 2; }
 	video.onpause = function() { status = 1; }
@@ -26,38 +23,23 @@ document.addEventListener("DOMContentLoaded", function () {
 		if (junk.play) {
 			clearInterval(play);
 		}
+		document.getElementById("junkLayer").remove();
 	}
-	
-	const dropLayer = document.getElementById("dropLayer");
-	
-	document.addEventListener("dragenter", (e) => {
-		e.preventDefault();
-		dropLayer.style.display = "";
-	});
-	dropLayer.addEventListener("dragleave", (e) => {
-		e.preventDefault();
-		dropLayer.style.display = "none";
-	});
-	dropLayer.addEventListener("dragover", (e) => {
-		e.preventDefault();
-	});
-	dropLayer.addEventListener("drop", (e) => {
-		e.preventDefault();
-		if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
-			const file = e.dataTransfer.files[0];
-			const ext = file.name.substring(file.name.length - 4);
-			switch (ext.toLowerCase()) {
-				case ".mp4":
-				case ".mkv": {
-					video.src = URL.createObjectURL(file);
-					break;
-				}
-			}
-		}
-		dropLayer.style.display = "none";
-	});
-	
 	viewJunkTime = document.getElementById("viewJunkTime");
+	
+	const contextMenu = new ContextMenu([
+		{ name: "파일 열기(&O)"
+		, func: "binder.openFileDialog();"
+		, perm: true
+		}
+	,	{ name: "종료(&C)"
+		, func: "binder.close();"
+		, perm: true
+		}
+	]);
+	$(document).on("contextmenu", function(e) {
+		contextMenu.open(e, document.body);
+	});
 });
 function showJunkTime(time) {
 	let h = time;
@@ -65,32 +47,32 @@ function showJunkTime(time) {
 	const s  = h %   60; h = (h -  s) /   60;
 	const m  = h %   60; h = (h -  m) /   60;
 	viewJunkTime.innerText = h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms;
+	}
+
+drop = function () {
+    binder.openFileByDrag();
 }
 
-wndProc = function(m) {
-	switch (m.wParam) {
-		case POT_SET_PLAY_STATUS : {
-			return setStatus(m.lParam);
-		}
-		case POT_SET_PLAY_CLOSE : {
-			return stop();
-		}
-		case POT_GET_CURRENT_TIME: {
-			return getTime();
-		}
-		case POT_SET_CURRENT_TIME: {
-			return moveTo(m.lParam);
-		}
-		case POT_GET_VIDEO_FPS   : {
-			return getFps();
-		}
-		case 0x0010: {
-			window.close();
+openFile = function(file) {
+	let path = file;
+	let name = path;
+	if (typeof file != "string") {
+		// 웹샘플에서 받아온 file 객체
+		path = URL.createObjectURL(file);
+		name = file.name;
+	}
+	
+	const ext = name.substring(name.length - 4);
+	switch (ext.toLowerCase()) {
+		case ".mp4":
+		case ".mkv": {
+			video.src = path;
 			break;
 		}
 	}
-};
-
+	const $junkLayer = document.getElementById("junkLayer");
+	if ($junkLayer) $junkLayer.remove();
+}
 
 setStatus = function(stat) {
 	switch (stat) {
@@ -160,15 +142,35 @@ getFps = function() {
 }
 </script>
 <style>
-* { margin: 0; padding: 0; overflow: hidden; }
-html, body, video { width: 100%; height: 100%; background: #000; }
+body > * {
+	position: fixed;
+	top: 0;
+	left: 0;
+}
+#video, #junkPlayer {
+	width: 100%;
+	height: 100%;
+}
+#video {
+	background: #000;
+}
+#junkLayer {
+	inset: 0px;
+	background: rgb(255, 255, 255);
+	opacity: 0.5;
+	padding: 40px;
+	text-align: center;
+	font-family: '맑은 고딕';
+	font-size: 20px;
+}
 </style>
 </head>
 <body>
 	<video id="video" controls></video>
-	<div id="dropLayer" style="position: absolute; inset: 0px; background: rgb(255, 255, 255); opacity: 0.5; padding: 40px; text-align: center; font-size: 20px;">
-		동영상 파일을 드래그해서 가져옵니다.<br />
+	<div id="junkLayer">
 		동영상이 없을 경우 정크 플레이어로 동작합니다.<br />
+		<br />
+		우클릭 메뉴를 사용할 수 있습니다.<br />
 		<br />
 		<span id="viewJunkTime"></span>
 	</div>

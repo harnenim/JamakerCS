@@ -4557,8 +4557,8 @@ SmiEditor.Addon = {
 			}, 1);
 			binder.focus("addon");
 		}
-	,	openExt: function(url, afterInit) {
-			binder.setAfterInitAddon(afterInit);
+	,	openExt: async function(url, afterInit) {
+			await binder.setAfterInitAddon(afterInit);
 			this.windows.addon = window.open(url, "addon", "location=no,width=1,height=1");
 			setTimeout(() => {
 				SmiEditor.Addon.moveWindowToSetting("addon");
@@ -4728,15 +4728,15 @@ function extSubmitSpeller() {
 		// 태그 탈출 처리
 		value = $("<p>").html(value.replaceAll(/<br>/gi, " ")).text();
 		
-		// 신버전용으로 시도 중
+		// 신버전 창 켜진 후 스크립트로 검사 실행
 		SmiEditor.Addon.openExt("https://nara-speller.co.kr/speller"
-			,	"const chekcer = setInterval(() => {\n"
+			,	"window.chekcer = setInterval(() => {\n"
 			+	"	const $ta = document.getElementsByTagName('textarea')[0];\n"
-			+	"	if ($ta) clearInterval(checker);\n"
+			+	"	if ($ta) clearInterval(window.checker);\n"
 			+	"	else return;\n"
 			+	"	$ta.value = " + JSON.stringify(value) + ";\n"
 			+	"	$ta.dispatchEvent(new Event('input', { bubbles: true }));\n"
-			+	"	setTimeout(() => { document.getElementByTagName('button')[3].click(); });\n"
+			+	"	setTimeout(() => { document.getElementsByTagName('button')[3].click(); });\n"
 			+	"}, 100);"
 		);
 	}
