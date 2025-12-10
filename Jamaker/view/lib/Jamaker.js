@@ -4731,7 +4731,16 @@ function extSubmitSpeller() {
 		}
 		
 		// 태그 탈출 처리
-		value = $("<p>").html(value.replaceAll(/<br>/gi, " ")).text();
+		Subtitle.$tmp.html(value.replaceAll(/<br>/gi, " "));
+		Subtitle.$tmp.find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
+		value = Subtitle.$tmp.text();
+		value = value.replaceAll("​", "").replaceAll("　", " ").replaceAll(" ", " ");
+		while (value.indexOf("  ") >= 0) {
+			value = value.replaceAll("  ", " ");
+		}
+		while (value.indexOf("  ") >= 0) { // &nbsp;에서 만들어진 건 이쪽으로 옴
+			value = value.replaceAll("  ", " ");
+		}
 		
 		// 신버전 창 켜진 후 스크립트로 검사 실행
 		SmiEditor.Addon.openExt("https://nara-speller.co.kr/speller"
