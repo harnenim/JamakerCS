@@ -165,7 +165,7 @@ let $labelVideo = null;
 let $origin = null;
 let $result = null;
 
-$(() => {
+ready(() => {
 	document.addEventListener("dragenter", (e) => {
 		e.preventDefault();
 		binder.showDragging();

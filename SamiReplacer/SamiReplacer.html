@@ -63,6 +63,8 @@ window.main = new WebForm();
 				e.preventDefault();
 				main.showDragging();
 			});
+			
+			main.mainView.contentWindow.afterReady();
 		};
 	}
 	
@@ -129,7 +131,7 @@ window.main = new WebForm();
 		localStorage.setItem("setting.SamiReplacer", setting);
 	}
 }
-$(() => {
+ready(() => {
 	main.run();
 	window.addEventListener("beforeunload", (e) => {
 		main.beforeExit(e);

@@ -138,7 +138,7 @@ function getReplacers() {
 	return { froms: froms, tos: tos };
 }
 
-$(() => {
+ready(() => {
 	listFiles = new ListView($("#listFiles"));
 	listFiles.run = (item) => {
 		const replacers = getReplacers();

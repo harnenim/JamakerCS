@@ -66,18 +66,14 @@ window.main = new WebForm();
 			}
 			
 			main.mainView.contentWindow.binder = main.binder = new Binder(main);
-			// 브라우저 샘플에선 이게 안 도는 경우가 있나?
-			/*
-			setTimeout(() => {
-				main.mainView.contentWindow.binder.initAfterLoad();
-			}, 1000);
-			*/
 			
 			const cd = main.mainView.contentDocument;
 			cd.addEventListener("dragenter", (e) => {
 				e.preventDefault();
 				main.showDragging();
 			});
+			
+			main.mainView.contentWindow.afterReady();
 		};
 		
 		//FormClosing += new FormClosingEventHandler(BeforeExit);
@@ -256,7 +252,7 @@ Replaced.prototype.preview = function(text, replacedList) {
 		localStorage.setItem("setting.TextReplacer", setting);
 	}
 }
-$(() => {
+ready(() => {
 	main.run();
 	window.addEventListener("beforeunload", (e) => {
 		main.beforeExit(e);

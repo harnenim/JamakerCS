@@ -50,21 +50,21 @@ function setProgress(index, ratio) {
 	["#listFiles li:eq(" + index + ")", ratio, "calc((100vw - 19px) * [ratio])"]
 }
 function scrollTo(index) {
-	const li = listFiles.area.find("li:eq(" + index + ")");
+	const li = $(listFiles.area).find("li:eq(" + index + ")");
 	const offsetTop = li.offset().top;
-	const top = listFiles.area.scrollTop() + offsetTop - 1;
+	const top = $(listFiles.area).scrollTop() + offsetTop - 1;
 	if (offsetTop < 0) {
-		listFiles.area.scrollTop(top);
+		$(listFiles.area).scrollTop(top);
 	} else {
 		const bottom = top + li.height();
-		const limit = listFiles.area.height() - 19;
+		const limit = $(listFiles.area).height() - 19;
 		if (bottom > limit) {
-			listFiles.area.scrollTop(bottom - limit);
+			$(listFiles.area).scrollTop(bottom - limit);
 		}
 	}
 }
 
-$(() => {
+ready(() => {
 	listFiles = new ListView($("#listFiles"));
 	
 	document.addEventListener("dragenter", (e) => {
@@ -84,8 +84,8 @@ $(() => {
 			alert("작업할 파일이 없습니다.");
 			return;
 		}
-		listFiles.area.find(".progress-bar").css({ width: 0 });
-		listFiles.area.scrollLeft(0);
+		$(listFiles.area).find(".progress-bar").css({ width: 0 });
+		$(listFiles.area).scrollLeft(0);
 		binder.makeFkfs(JSON.stringify(files));
 	});
 });

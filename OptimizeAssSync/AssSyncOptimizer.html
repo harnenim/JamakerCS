@@ -60,6 +60,8 @@ const main = new WebForm();
 				e.preventDefault();
 				main.showDragging();
 			});
+			
+			main.mainView.contentWindow.afterReady();
 		};
 	}
 	
@@ -139,7 +141,7 @@ const main = new WebForm();
 		localStorage.setItem("setting.AssSyncOptimizer", setting);
 	}
 }
-$(() => {
+ready(() => {
 	main.run();
 	window.addEventListener("beforeunload", (e) => {
 		main.beforeExit(e);

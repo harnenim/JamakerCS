@@ -139,7 +139,7 @@ function replace(index, text) {
 	return;
 }
 
-$(() => {
+ready(() => {
 	listFiles = new ListView($("#listFiles"));
 	listFiles.run = function(item) {
 		const from = $("#vFrom").val();

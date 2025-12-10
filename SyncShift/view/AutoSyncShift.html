@@ -32,7 +32,7 @@ function showAudioSelector(list, isOrigin, withSaveSkf, trustKf) {
 		,	trustKf: trustKf
 	});
 }
-$(() => {
+ready(() => {
 	const sa = $("#selectAudio");
 	sa.find(".list").on("click", "li", function() {
 		binder.selectAudio($(this).text().split("ː")[0], sa.data("isOrigin"), sa.data("withSaveSkf"), sa.data("trustKf"));
@@ -53,7 +53,7 @@ function syncText(sync) {
 	return h + ":" + (m > 9 ? "" : "0") + m + ":" + (s > 9 ? "" : "0") + s + ":" + (ms > 99 ? "" : "0") + (ms > 9 ? "" : "0") + ms;
 }
 
-$(() => {
+ready(() => {
 	$(".preset").each((_, el) => {
 		const preset = $(el);
 		preset.parent().data("preset", preset.clone().removeClass("preset"));

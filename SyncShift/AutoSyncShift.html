@@ -77,6 +77,8 @@ window.main = new WebForm();
 				e.preventDefault();
 				main.showDragging();
 			});
+			
+			main.mainView.contentWindow.afterReady();
 		};
 		
 		//FormClosing += new FormClosingEventHandler(BeforeExit);
@@ -437,7 +439,7 @@ function Range(start, end, shift=0) {
 	this.shift = shift;
 }
 
-$(function() {
+ready(() => {
 	main.run();
 	window.addEventListener("beforeunload", function(e) {
 		main.beforeExit(e);
