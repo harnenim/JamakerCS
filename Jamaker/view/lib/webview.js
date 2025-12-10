@@ -100,33 +100,35 @@ function setDpi(dpi) {
 	DPI = dpi;
 }
 
-/* 어디선가 순서 꼬임
-function ready(fn) {
-	setTimeout(() => {
-		if (document.readyState === "loading") {
-			console.log("addEventListener");
-			if (window.onloads) { // 대기열 추가
-				onloads.push(fn);
-			} else {
-				window.onloads = [fn];
-				document.addEventListener("DOMContentLoaded", () => {
-					console.log("DOMContentLoaded");
-					onloads.forEach((fn) => {
-						console.log(fn);
-						try { fn(); } catch (e) {};
-					});
+{
+	window.onloads = [];
+	window.ready = (fn) => {
+		if (window.onloads != null) {
+			window.onloads.push(fn);
+			if (window.onloads.length == 1) {
+				window.addEventListener("load", () => {
+					if (window.binder) {
+						// CefSharp인 경우 실행
+						afterReady();
+					} else if (window.chrome && window.chrome.webview) {
+						// WebView2인 경우 실행
+						afterReady();
+					}
+					// 웹샘플 iframe일 경우 부모창에서 binder 등록 후 onload로 실행
 				});
 			}
 		} else {
 			try { fn(); } catch (e) {};
 		}
-	});
+	}
+	window.afterReady = () => {
+		window.onloads && onloads.forEach((fn) => {
+			try { fn(); } catch (e) {};
+		});
+		window.onloads = null;
+	}
 }
-/*/
-function ready(fn) {
-	$(fn);
-}
-// */
+
 ready(() => {
 	// 우클릭 방지
 	document.addEventListener("contextmenu", (e) => {

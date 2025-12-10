@@ -254,7 +254,7 @@ CheckString.prototype.doReplace = function() {
 //초기 상태 기억
 let origin = null;
 let operation = null;
-$(() => {
+ready(() => {
 	if (opener && opener.SmiEditor && opener.SmiEditor.selected) {
 		origin = opener.SmiEditor.selected.getText();
 	} else {
@@ -373,7 +373,7 @@ function parseResultData(data) {
 	refreshOutput();
 }
 
-$(() => {
+ready(() => {
 	const olResult = $("#olResult");
 	{	const preset = olResult.find(".preset").removeClass("preset");
 		olResult.data({ preset: preset.clone() });

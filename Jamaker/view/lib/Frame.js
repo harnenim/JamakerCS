@@ -104,6 +104,10 @@ Frame.prototype.close = function() {
 	delete Frame.names[this.name];
 	this.name = null;
 }
+Frame.prototype.sendMsg = function(msg) {
+	this.iframe.contentWindow.sendMsg(msg);
+}
+
 Frame.names = {};
 Frame.order = [];
 Frame.add = function (frame, name) {

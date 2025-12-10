@@ -20,7 +20,7 @@ if (LOG == undefined) {
 	LOG = false;
 }
 
-$(() => {
+ready(() => {
 	if (opener) {
 		setting = opener.setting;
 	}
@@ -35,7 +35,7 @@ function setSetting(setting) {
 	Combine.css = { font: $("#preview").css("font") };
 }
 
-$(() => {
+ready(() => {
 	//$("#preview").css(defaultCss);
 	setSetting(setting);
 	

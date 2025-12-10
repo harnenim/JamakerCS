@@ -3457,7 +3457,6 @@ function loadAssFile(path, text, target=-1) {
 		funcSince = log("loadAssFile - 비교 완료", funcSince);
 		
 		if (changedStyles.length + addCount + delCount > 0) {
-			console.log(changedStyles);
 			let msg = "스타일 수정 내역이 " + changedStyles.length + "건 있습니다. 적용하시겠습니까?";
 			if (addCount + delCount) {
 				let countMsg = [];
@@ -4495,7 +4494,13 @@ SmiEditor.Finder1.open = function(isReplace=false) {
 SmiEditor.Finder1._onloadFind = SmiEditor.Finder1.onloadFind;
 SmiEditor.Finder1.onloadFind = function(isReplace) {
 	if (setting && setting.color) {
-		this.window.setColor(setting.color);
+		if (this.window.setColor) {
+			this.window.setColor(setting.color);
+		} else if (this.window.iframe
+		        && this.window.iframe.contentWindow
+		        && this.window.iframe.contentWindow.setColor) {
+			this.window.iframe.contentWindow.setColor(setting.color);
+		}
 	}
 	this._onloadFind(isReplace);
 };
@@ -4511,10 +4516,10 @@ SmiEditor.Finder2.open = function(isReplace) {
 		,	width: w
 		,	height: h
 	});
-	SmiEditor.Finder.window.iframe.contentWindow.setSize(ratio);
+	this.window.iframe.contentWindow.setSize(ratio);
 	
 	if (setting && setting.color) {
-		SmiEditor.Finder.window.iframe.contentWindow.setColor(setting.color);
+		this.window.iframe.contentWindow.setColor(setting.color);
 	}
 };
 

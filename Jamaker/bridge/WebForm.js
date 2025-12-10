@@ -43,12 +43,12 @@ WebForm.prototype.script = function(names, ...args) {
 	eval(script);
 }
 WebForm.prototype.alert = function(name, msg) {
-	const hwnd = this.getHwnd(name);
+	let hwnd = this.getHwnd(name);
 	if (hwnd.iframe) hwnd = hwnd.iframe.contentWindow;
 	hwnd._alert(msg);
 }
 WebForm.prototype.confirm = function(name, msg) {
-	const hwnd = this.getHwnd(name);
+	let hwnd = this.getHwnd(name);
 	if (hwnd.iframe) hwnd = hwnd.iframe.contentWindow;
 	if (hwnd._confirm(msg)) {
 		this.mainView.contentWindow.afterConfirmYes();
@@ -57,7 +57,7 @@ WebForm.prototype.confirm = function(name, msg) {
 	}
 }
 WebForm.prototype.prompt = function(name, msg, def) {
-	const hwnd = this.getHwnd(name);
+	let hwnd = this.getHwnd(name);
 	if (hwnd.iframe) hwnd = hwnd.iframe.contentWindow;
 	this.mainView.contentWindow.afterPrompt(hwnd._prompt(msg, def));
 }
@@ -129,29 +129,24 @@ WebForm.prototype.initAfterLoad = function() {
 };
 WebForm.prototype.beforeExit = (e) => {}
 
-/* 어디선가 순서 꼬임
-function ready(fn) {
-	setTimeout(() => {
-		if (document.readyState === "loading") {
-			console.log("addEventListener");
-			if (window.onloads) { // 대기열 추가
-				onloads.push(fn);
-			} else {
-				window.onloads = [fn];
-				document.addEventListener("DOMContentLoaded", () => {
-					console.log("DOMContentLoaded");
-					onloads.forEach((fn) => {
-						console.log(fn);
-						try { fn(); } catch (e) {};
-					});
+{
+	window.onloads = [];
+	window.ready = (fn) => {
+		if (window.onloads != null) {
+			window.onloads.push(fn);
+			if (window.onloads.length == 1) {
+				window.addEventListener("load", () => {
+					afterReady();
 				});
 			}
 		} else {
 			try { fn(); } catch (e) {};
 		}
-	});
-}
-/*/
-function ready(fn) {
-	$(fn);
+	}
+	window.afterReady = () => {
+		window.onloads && onloads.forEach((fn) => {
+			try { fn(); } catch (e) {};
+		});
+		window.onloads = null;
+	}
 }

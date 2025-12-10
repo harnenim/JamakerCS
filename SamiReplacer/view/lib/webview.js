@@ -100,29 +100,32 @@ function setDpi(dpi) {
 	DPI = dpi;
 }
 
-//* 적용해 봤는데 어디선가 꼬임
-function ready(fn) {
-	if (document.readyState === "loading") {
-		if (window.onloads) { // 대기열 추가
-			onloads.push(fn);
-		} else {
-			window.onloads = [fn];
-			document.addEventListener("DOMContentLoaded", () => {
-				onloads.forEach((fn) => {
-					try { fn(); } catch (e) {};
+{
+	window.onloads = [];
+	window.ready = (fn) => {
+		if (window.onloads != null) {
+			if (!window.onloads.length) {
+				window.onloads = [fn];
+				window.addEventListener("load", () => {
+					if (window.parent) return; // 웹샘플 iframe일 경우 부모창에서 onload로 실행
+					afterReady();
 				});
-			});
+			} else { // 대기열 추가
+				window.onloads.push(fn);
+			}
+		} else {
+			try { fn(); } catch (e) {};
 		}
-	} else {
-		try { fn(); } catch (e) {};
+	}
+	window.afterReady = () => {
+		window.onloads && onloads.forEach((fn) => {
+			try { fn(); } catch (e) {};
+		});
+		window.onloads = null;
 	}
 }
-/*/
-function ready(fn) {
-	$(fn);
-}
-// */
-$(() => {
+
+ready(() => {
 	// 우클릭 방지
 	document.addEventListener("contextmenu", (e) => {
 		// TODO: 우클릭 메뉴 뭐라도 만들까?

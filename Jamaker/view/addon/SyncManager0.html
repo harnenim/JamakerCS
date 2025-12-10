@@ -504,7 +504,7 @@ function apply() {
 	window.close();
 }
 
-$(() => {
+ready(() => {
 	tab = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
 	origin = tab ? tab.getText() : null;
 	if (tab) {

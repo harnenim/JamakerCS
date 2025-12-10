@@ -4,7 +4,6 @@
 <title>미리보기</title>
 <script src="lib/jquery-3.2.1.min.js"></script>
 <script src="lib/SubtitleObject.js"></script>
-<script src="lib/SmiEditor.js"></script>
 <script>
 let title = document.getElementsByTagName("title")[0];
 let lastTab = null;
@@ -220,6 +219,7 @@ function setTextToView(text, hold) {
 	}
 }
 
+//window.addEventListener("load", () => {
 $(() => {
 	// 우클릭 방지
 	document.addEventListener("contextmenu", (e) => {
@@ -232,23 +232,32 @@ $(() => {
 		}
 	};
 	viewer = $("#viewer");
-	if (opener) {
-		SmiEditor = opener.SmiEditor;
+	
+	if (opener) { // 웹브라우저 샘플 실행 시
+		window.PlayerAPI = opener.SmiEditor.PlayerAPI;
 		opener.binder.updateViewerSetting();
 		opener.SmiEditor.Viewer.refresh();
-	} else if (binder && binder.onloadViewer) {
+		
+	} else if (window.binder && binder.onloadViewer) {
+		window.PlayerAPI = {
+				playOrPause: (    ) => { binder.playOrPause(); }
+			,	play       : (    ) => { binder.play(); }
+			,	stop       : (    ) => { binder.stop(); }
+			,	moveTo     : (time) => { binder.moveTo(time); }
+			,	move       : (move) => { binder.moveTo(time + move); }
+		};
 		binder.onloadViewer();
 	}
 });
 
-$(document).on("keydown", function(e) {
+document.addEventListener("keydown", (e) => {
 	switch (e.keyCode) {
 		case 37: { // ←
 			if (!e.shiftKey && !e.ctrlKey && e.altKey) {
 				// 뒤로
 				e.preventDefault();
-				SmiEditor.PlayerAPI.move(-SmiEditor.sync.move);
-				SmiEditor.PlayerAPI.play();
+				PlayerAPI.move(-SmiEditor.sync.move);
+				PlayerAPI.play();
 			}
 			break;
 		}
@@ -256,24 +265,24 @@ $(document).on("keydown", function(e) {
 			if (!e.shiftKey && !e.ctrlKey && e.altKey) {
 				// 앞으로
 				e.preventDefault();
-				SmiEditor.PlayerAPI.move(SmiEditor.sync.move);
-				SmiEditor.PlayerAPI.play();
+				PlayerAPI.move(SmiEditor.sync.move);
+				PlayerAPI.play();
 			}
 			break;
 		}
 		case 120: { // F9: 재생/일시정지
 			e.preventDefault();
-			SmiEditor.PlayerAPI.playOrPause();
+			PlayerAPI.playOrPause();
 			break;
 		}
 		case 121: { // F10: 재생
 			e.preventDefault();
-			SmiEditor.PlayerAPI.play();
+			PlayerAPI.play();
 			break;
 		}
 		case 122: { // F11: 정지
 			e.preventDefault();
-			SmiEditor.PlayerAPI.stop();
+			PlayerAPI.stop();
 			break;
 		}
 	}

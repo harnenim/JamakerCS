@@ -19,7 +19,7 @@ const RANGE = 10; // 현재 싱크 전후로 렌더링할 범위
 let mode = 1;
 const M = [null, "", "_", "~"]; // 모드에 따른 파일명 끝 표시
 
-$(() => {
+ready(() => {
 	if (opener && opener.tabs && opener.tabs.length) {
 		tab = opener.tabs[opener.tab];
 		Subtitle.video = opener.Subtitle.video;

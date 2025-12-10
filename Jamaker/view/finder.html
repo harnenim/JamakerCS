@@ -43,7 +43,7 @@ function setSize(size) {
 	$("#styleSize").html(styleSizePreset.replaceAll("20px", (20 * size) + "px"));
 }
 
-$(() => {
+ready(() => {
 	if (typeof binder == "undefined") {
 		if (opener && opener.SmiEditor && opener.SmiEditor.Finder) {
 			$(".button-find"       ).on("click", function() { opener.SmiEditor.Finder.runFind      (getParams()); });

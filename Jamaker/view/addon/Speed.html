@@ -13,7 +13,7 @@
 	<script>
 windowName = "addon";
 
-$(() => {
+ready(() => {
 	if (opener) {
 		setting = opener.setting;
 	}
@@ -178,7 +178,7 @@ function convert() {
 	$("#input").scroll();
 }
 
-$(() => {
+ready(() => {
 	$("#btnConvert").on("click", convert);
 	
 	if (!opener) {

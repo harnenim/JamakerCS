@@ -25,7 +25,7 @@ windowName = "addon";
 let FR = 23976;
 let FL = 1000000 / FR;
 
-$(() => {
+ready(() => {
 	if (opener) {
 		setting = opener.setting;
 		FR = opener.Subtitle.video.FR;
@@ -160,7 +160,7 @@ input[type=number] {
 }
 	</style>
 	<script>
-$(() => {
+ready(() => {
 	const list = $("#list");
 	$("#addLine").on("click", function() {
 		list.append(

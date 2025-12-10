@@ -42,6 +42,9 @@ $(() => {
 		w.editor.initAfterLoad = function() {
 			this._initAfterLoad();
 			this.windows["editor"] = fEditor;
+			
+			// 창 설정에 따라 다시 이동
+			w.editor.mainView.contentWindow.moveWindowsToSetting();
 		}
 	});
 });

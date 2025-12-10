@@ -1494,7 +1494,7 @@ if (SmiFile) {
 		return SmiFile.holdsToTexts(origHolds, withNormalize, withCombine, withComment, fps).join("\n");
 	}
 }
-$(() => {
+ready(() => {
 	if (window.SmiEditor) {
 		TIDs[5] = Smi.TypeParser[4];
 		TIDs[6] = Smi.TypeParser[5];

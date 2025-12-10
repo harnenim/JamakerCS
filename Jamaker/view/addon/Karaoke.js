@@ -146,7 +146,7 @@ for (let i = 0; i < gana.length; i++) {
 	vws[gana[i]] = vw;
 }
 
-$(() => {
+ready(() => {
 	if (loadAddonSetting) {
 		loadAddonSetting(KANJI_FILE, (text) => {
 			afterLoadKanji(savedKanjiList = text);

@@ -9,7 +9,7 @@
 	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
 	<script>
 windowName = "help";
-$(() => {
+ready(() => {
 	$("#version").text(opener.setting.version);
 	if (opener.Subtitle.video.ffmpeg ) { $("#ffmpeg" ).text(opener.Subtitle.video.ffmpeg ); } else { $("#ffmpeg" ).css({ color: "#888" }); }
 	if (opener.Subtitle.video.ffprobe) { $("#ffprobe").text(opener.Subtitle.video.ffprobe); } else { $("#ffprobe").css({ color: "#888" }); }

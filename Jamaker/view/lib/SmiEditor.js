@@ -3108,9 +3108,14 @@ SmiEditor.Viewer = {
 				// C#을 거쳐서 미리보기 창과 통신한다는 가정하에 JSON을 거쳤었는데
 				// 그냥 팝업으로 통신하는 걸로
 //				binder.updateViewerLines(JSON.stringify(lines));
-				if (SmiEditor.Viewer.window
-				 && SmiEditor.Viewer.window.setLines) {
-					SmiEditor.Viewer.window.setLines(lines);
+				if (SmiEditor.Viewer.window) {
+					if (SmiEditor.Viewer.window.setLines) {
+						SmiEditor.Viewer.window.setLines(lines);
+					} else if (SmiEditor.Viewer.window.iframe
+					        && SmiEditor.Viewer.window.iframe.contentWindow
+					        && SmiEditor.Viewer.window.iframe.contentWindow.setLines) {
+						SmiEditor.Viewer.window.iframe.contentWindow.setLines(lines);
+					}
 				}
 			}, 1);
 		}

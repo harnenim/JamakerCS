@@ -15,7 +15,7 @@ windowName = "addon";
 
 let editor = null;
 
-$(() => {
+ready(() => {
 	if (opener && opener.SmiEditor) {
 		editor = opener.SmiEditor.selected;
 	} else {

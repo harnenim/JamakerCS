@@ -13,7 +13,7 @@
 	<script>
 windowName = "addon";
 
-$(() => {
+ready(() => {
 	if (opener) {
 		setting = opener.setting;
 	}
@@ -276,7 +276,7 @@ function apply() {
 	window.close();
 }
 
-$(() => {
+ready(() => {
 	if (!editor) {
 		alert("작업 대상이 없습니다.");
 	}
