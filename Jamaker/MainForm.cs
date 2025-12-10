@@ -666,6 +666,12 @@ namespace Jamaker
             // 플레이어 선택이 바뀌었으면 연결 끊기
             if (player != null && !dll.Equals(player.GetType().Name))
             {
+                int playerHwnd = GetHwnd("player");
+                if (playerHwnd > 0)
+                {   // 기존 플레이어 종료
+                    player.ResetPosition();
+                    player.DoExit();
+                }
                 player = null;
             }
 
