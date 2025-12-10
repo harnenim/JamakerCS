@@ -50,7 +50,9 @@ window.main = new WebForm();
 			cd.addEventListener("dragenter", (e) => {
 				e.preventDefault();
 				main.showDragging();
-			});
+            });
+			
+            main.mainView.contentWindow.afterReady();
 		};
 	}
 }
