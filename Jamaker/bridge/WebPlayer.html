@@ -8,9 +8,6 @@
 <script src="WinAPI.js"></script>
 <script src="Binder.js"></script>
 <script>
-Binder.prototype.openFileByDrag = function() {
-    this._.openFileByDrag();
-}
 Binder.prototype.openFileDialog = function() {
 	this._.openFileDialog();
 }
@@ -20,20 +17,45 @@ Binder.prototype.close = function() {
 </script>
 <script src="WebForm.js"></script>
 <script>
-getFps      = function() { return main.mainView.contentWindow.getFps     (); }
-playOrPause = function() { return main.mainView.contentWindow.playOrPause(); }
-pause       = function() { return main.mainView.contentWindow.pause      (); }
-play        = function() { return main.mainView.contentWindow.play       (); }
-stop        = function() { return main.mainView.contentWindow.stop       (); }
-getTime     = function() { return main.mainView.contentWindow.getTime    (); }
-moveTo  = function(time) { return main.mainView.contentWindow.moveTo (time); }
+// 팟플레이어 SDK 값 가져옴
+const WM_USER = 0x0400;
+const POT_COMMAND = WM_USER;
+const POT_GET_CURRENT_TIME = 0x5004;
+const POT_SET_CURRENT_TIME = 0x5005;
+const POT_SET_PLAY_STATUS  = 0x5007;
+const POT_SET_PLAY_CLOSE   = 0x5009;
+const POT_GET_VIDEO_FPS    = 0x6032;
+
+wndProc = function(m) {
+	switch (m.wParam) {
+		case POT_SET_PLAY_STATUS : {
+			return main.mainView.contentWindow.setStatus(m.lParam);
+		}
+		case POT_SET_PLAY_CLOSE : {
+			return main.mainView.contentWindow.stop();
+		}
+		case POT_GET_CURRENT_TIME: {
+			return main.mainView.contentWindow.getTime();
+		}
+		case POT_SET_CURRENT_TIME: {
+			return main.mainView.contentWindow.moveTo(m.lParam);
+		}
+		case POT_GET_VIDEO_FPS   : {
+			return main.mainView.contentWindow.getFps();
+		}
+		case 0x0010: {
+			window.close();
+			break;
+		}
+	}
+};
 
 window.main = new WebForm();
 {	// main
 	main.run = function() {
 		this.initializeComponent();
 		
-		main.mainView.src = "../view/player.html";
+		main.mainView.src = "../view/WebPlayer.html";
 		main.mainView.onload = function() {
 			// 브라우저 샘플에선 url 변형 필요
 			main.mainView.contentWindow._open_ = main.mainView.contentWindow.open;
@@ -50,9 +72,9 @@ window.main = new WebForm();
 			cd.addEventListener("dragenter", (e) => {
 				e.preventDefault();
 				main.showDragging();
-            });
+			});
 			
-            main.mainView.contentWindow.afterReady();
+			main.mainView.contentWindow.afterReady();
 		};
 	}
 }
@@ -63,7 +85,7 @@ window.main = new WebForm();
 		if (this.droppedFiles.length < 1) {
 			this.droppedFiles = null;
 			return;
-        }
+		}
 		this.openFile(this.droppedFiles[0]);
 	}
 	main.openFileDialog = async function(type, withSaveSkf, withKf) {
@@ -82,7 +104,7 @@ window.main = new WebForm();
 		window.close();
 	}
 }
-$(() => {
+ready(() => {
 	main.run();
 });
 </script>

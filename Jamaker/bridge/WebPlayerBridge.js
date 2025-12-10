@@ -118,11 +118,11 @@ function WebPlayerBridge() {
 	WebPlayerBridge.prototype.getFileName = function() {
 		alert("이 플레이어에선 지원되지 않습니다.");
 	}
-	WebPlayerBridge.prototype.getFps      = function() { return (this.hwnd && this.hwnd.window) ? this.hwnd.window.getFps     () : 23976; }
-	WebPlayerBridge.prototype.playOrPause = function() { return (this.hwnd && this.hwnd.window) ? this.hwnd.window.playOrPause() : 0; }
-	WebPlayerBridge.prototype.pause       = function() { return (this.hwnd && this.hwnd.window) ? this.hwnd.window.pause      () : 0; }
-	WebPlayerBridge.prototype.play        = function() { return (this.hwnd && this.hwnd.window) ? this.hwnd.window.play       () : 0; }
-	WebPlayerBridge.prototype.stop        = function() { return (this.hwnd && this.hwnd.window) ? this.hwnd.window.stop       () : 0; }
-	WebPlayerBridge.prototype.getTime     = function() { return (this.hwnd && this.hwnd.window) ? this.hwnd.window.getTime    () : 0; }
-	WebPlayerBridge.prototype.moveTo  = function(time) { return (this.hwnd && this.hwnd.window) ? this.hwnd.window.moveTo (time) : 0; }
+	WebPlayerBridge.prototype.getFps      = function() { return this.sendMessage(POT_COMMAND, POT_GET_VIDEO_FPS   , 0); }
+	WebPlayerBridge.prototype.playOrPause = function() { return this.sendMessage(POT_COMMAND, POT_SET_PLAY_STATUS , 0); }
+	WebPlayerBridge.prototype.pause       = function() { return this.sendMessage(POT_COMMAND, POT_SET_PLAY_STATUS , 1); }
+	WebPlayerBridge.prototype.play        = function() { return this.sendMessage(POT_COMMAND, POT_SET_PLAY_STATUS , 2); }
+	WebPlayerBridge.prototype.stop        = function() { return this.sendMessage(POT_COMMAND, POT_SET_PLAY_CLOSE  , 0); }
+	WebPlayerBridge.prototype.getTime     = function() { return this.sendMessage(POT_COMMAND, POT_GET_CURRENT_TIME, 1); }
+	WebPlayerBridge.prototype.moveTo  = function(time) { return this.sendMessage(POT_COMMAND, POT_SET_CURRENT_TIME, time); }
 }
