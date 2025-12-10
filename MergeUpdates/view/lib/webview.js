@@ -104,14 +104,18 @@ function setDpi(dpi) {
 	window.onloads = [];
 	window.ready = (fn) => {
 		if (window.onloads != null) {
-			if (!window.onloads.length) {
-				window.onloads = [fn];
+			window.onloads.push(fn);
+			if (window.onloads.length == 1) {
 				window.addEventListener("load", () => {
-					if (window.parent) return; // 웹샘플 iframe일 경우 부모창에서 onload로 실행
-					afterReady();
+					if (window.binder) {
+						// CefSharp인 경우 실행
+						afterReady();
+					} else if (window.chrome && window.chrome.webview) {
+						// WebView2인 경우 실행
+						afterReady();
+					}
+					// 웹샘플 iframe일 경우 부모창에서 binder 등록 후 onload로 실행
 				});
-			} else { // 대기열 추가
-				window.onloads.push(fn);
 			}
 		} else {
 			try { fn(); } catch (e) {};

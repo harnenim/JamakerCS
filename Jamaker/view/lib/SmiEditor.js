@@ -1222,7 +1222,25 @@ SmiEditor.activateKeyEvent = function() {
 			
 			{	// 단축키 설정
 				let f = null;
-				const key = (e.keyCode == 192) ? '`' : String.fromCharCode(e.keyCode);
+				let key = e.key.toUpperCase();
+				if (key.length > 1 && key.startsWith("F")) {
+					const fn = key.substring(1);
+					switch (fn) {
+						case  "1": key = 'p'; break;
+						case  "2": key = 'q'; break;
+						case  "3": key = 'r'; break;
+						case  "4": key = 's'; break;
+						case  "5": key = 't'; break;
+						case  "6": key = 'u'; break;
+						case  "7": key = 'v'; break;
+						case  "8": key = 'w'; break;
+						case  "9": key = 'x'; break;
+						case "10": key = 'y'; break;
+						case "11": key = 'z'; break;
+						case "12": key = '{'; break;
+					}
+				}
+				
 				if (e.shiftKey) {
 					if (e.ctrlKey) {
 						if (e.altKey) {

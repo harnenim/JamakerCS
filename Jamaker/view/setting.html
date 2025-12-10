@@ -78,7 +78,7 @@ $(() => {
 	}).on("keyup", function(e) {
 		if (e.altKey && e.keyCode == 83) {
 			// Alt+S 했을 땐 포커스 원위치
-			lastFocus.focus();
+			lastFocus && lastFocus.focus();
 		}
 	});
 	let opened = null;
@@ -342,8 +342,8 @@ $(() => {
 		
 		const tbody = tableCommand.find("tbody");
 		const withs = ["withCtrls", "withAlts", "withCtrlAlts", "withCtrlShifts"];
-		const keys = "pqrstuvwxyz{ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890";
-		const keyNames = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"].concat("ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890".split(""));
+		const keys = "pqrstuvwxyz{ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=";
+		const keyNames = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"].concat("ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=".split(""));
 		(refreshTableCommand = () => {
 			tbody.empty();
 			for (let i = 0; i < keys.length; i++) {
@@ -370,7 +370,7 @@ $(() => {
 						,	"func": func
 					});
 				}
-				const tr = $("<tr>").addClass("key-" + (keyName=='`' ? '-' : keyName)).append(th);
+				const tr = $("<tr>").addClass("key-" + (keyName=='`' ? 'ㄹ' : (keyName=='=' ? '＝' : keyName))).append(th);
 				for (let j = 0; j < withs.length; j++) {
 					const w = withs[j];
 					const td = $("<td>");
@@ -460,16 +460,18 @@ $(() => {
 			let name = "";
 			let key = String.fromCharCode(e.keyCode);
 			let func = "";
-			if (e.keyCode == 192) {
-				key = '`';
+			switch (e.keyCode) {
+				case 192: key = '`'; break;
+				case 189: key = '-'; break;
+				case 187: key = '='; break;
 			}
 			
 			if (keys.indexOf(key) >= 0) {
-				let keyName = (111 < e.keyCode && e.keyCode < 192)
+				let keyName = (111 < e.keyCode && e.keyCode < 124)
 				            ? ("F" + (e.keyCode - 111))
 				            : key;
 				const keyIndex = keyNames.indexOf(keyName);
-				const selector = "tr.key-" + (keyName == '`' ? '-' : keyName);
+				const selector = "tr.key-" + (keyName=='`' ? 'ㄹ' : (keyName=='=' ? '＝' : keyName));
 				
 				let w = null;
 				if (e.shiftKey) {
