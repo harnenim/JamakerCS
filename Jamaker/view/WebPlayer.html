@@ -3,28 +3,31 @@
 <head>
 <meta charset="utf-8">
 <title>플레이어</title>
-<script src="lib/jquery-3.2.1.min.js"></script>
 <script src="lib/webview.js"></script>
 <script src="lib/MenuStrip.js"></script>
 <link rel="stylesheet" type="text/css" href="lib/webview.css" />
 <link rel="stylesheet" type="text/css" href="lib/MenuStrip.css" />
 <script>
 let video = null;
-let status = 0;
+let playStatus = 0;
 let viewJunkTime = null;
+let openWithPlay = false;
 const junk = { time: 0, play: null };
 
 ready(() => {
 	video = document.getElementById("video");
-	video.onplaying = function() { status = 2; }
-	video.onpause = function() { status = 1; }
+	video.onplaying = function() { playStatus = 2; }
+	video.onpause = function() { playStatus = 1; }
 	video.onload = function() {
 		video.currentTime = 0;
 		if (junk.play) {
-			clearInterval(play);
+			clearInterval(junk.play);
 		}
 		document.getElementById("junkLayer").remove();
 	}
+	video.addEventListener("loadedmetadata", () => {
+		openWithPlay && video.play();
+	});
 	viewJunkTime = document.getElementById("viewJunkTime");
 	
 	const contextMenu = new ContextMenu([
@@ -37,8 +40,106 @@ ready(() => {
 		, perm: true
 		}
 	]);
-	$(document).on("contextmenu", function(e) {
+	document.addEventListener("contextmenu", (e) => {
+		e.preventDefault();
 		contextMenu.open(e, document.body);
+	});
+	document.addEventListener("keydown", (e) => {
+		if (video && video.src) return; // 정크 플레이어에서만 동작
+		switch (e.keyCode) {
+			case 32: { // Spacebar
+				playOrPause();
+				break;
+			}
+			case 37: { // ←
+				if (playStatus == 0) return;
+				let time = getTime() - 2000;
+				moveTo(time < 0 ? 0 : time);
+				break;
+			}
+			case 39: { // →
+				if (playStatus == 0) return;
+				moveTo(getTime() + 2000);
+				break;
+			}
+		}
+	});
+	
+	setInterval(() => {
+		binder.setTime(getTime());
+	}, 5);
+	
+	document.addEventListener("mouseover", (e) => {
+		const title = e.target.closest("#title");
+		if (title) {
+			document.body.classList.add("hover");
+			return;
+		}
+		const border = e.target.closest(".border");
+		if (border) {
+			document.body.classList.add("hover");
+			return;
+		}
+	});
+	document.addEventListener("mouseout", (e) => {
+		const title = e.target.closest("#title");
+		if (title) {
+			document.body.classList.remove("hover");
+			return;
+		}
+		const border = e.target.closest(".border");
+		if (border) {
+			document.body.classList.remove("hover");
+			return;
+		}
+	});
+	{
+		const HTCAPTION = 2;
+		const HTLEFT        = 10;
+		const HTRIGHT       = 11;
+		const HTTOP         = 12;
+		const HTTOPLEFT     = 13;
+		const HTTOPRIGHT    = 14;
+		const HTBOTTOM      = 15;
+		const HTBOTTOMLEFT  = 16;
+		const HTBOTTOMRIGHT = 17;
+		
+		document.addEventListener("mousedown", (e) => {
+			if (e.target.closest("button")) {
+				// 버튼 클릭은 이쪽에 들어오면 안 됨
+				return;
+			}
+			
+			let type = 0;
+			if (e.target.closest("#title")) {
+				type = HTCAPTION;
+			} else {
+				const border = e.target.closest(".border");
+				if (border) {
+		            switch (border.classList[1])
+		            {
+		                case "nw": type =    HTTOPLEFT ; break;
+		                case "n" : type =    HTTOP     ; break;
+		                case "ne": type =    HTTOPRIGHT; break;
+		                case  "e": type =       HTRIGHT; break;
+		                case "se": type = HTBOTTOMRIGHT; break;
+		                case "s" : type = HTBOTTOM     ; break;
+		                case "sw": type = HTBOTTOMLEFT ; break;
+		                case  "w": type =       HTLEFT ; break;
+		            }
+				}
+			}
+			if (type) {
+				document.body.classList.add("moving");
+				binder.startResizeWindow(type);
+			}
+		});
+	}
+	document.getElementById("btnOpenFile").addEventListener("click", (e) => {
+		binder.openFileDialog();
+	});
+	document.getElementById("btnClose").addEventListener("click", (e) => {
+		binder.close();
 	});
 });
 function showJunkTime(time) {
@@ -47,69 +148,80 @@ function showJunkTime(time) {
 	const s  = h %   60; h = (h -  s) /   60;
 	const m  = h %   60; h = (h -  m) /   60;
 	viewJunkTime.innerText = h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms;
-	}
+}
 
-drop = function () {
+window.endResize = function() {
+	document.body.classList.remove("moving");
+}
+
+window.drop = function () {
     binder.openFileByDrag();
 }
 
-openFile = function(file) {
+window.openFile = function(file, withPlay=false) {
 	let path = file;
 	let name = path;
 	if (typeof file != "string") {
 		// 웹샘플에서 받아온 file 객체
 		path = URL.createObjectURL(file);
 		name = file.name;
+	} else {
+		name = name.replaceAll('\\', '/').split('/');
+		name = name[name.length - 1];
 	}
 	
 	const ext = name.substring(name.length - 4);
 	switch (ext.toLowerCase()) {
 		case ".mp4":
 		case ".mkv": {
+			openWithPlay = withPlay;
 			video.src = path;
+            document.getElementById("title_text").innerText = name;
+            
+            // 파일 열기 성공했으면 정크 레이어 제거
+			const junkLayer = document.getElementById("junkLayer");
+			if (junkLayer) junkLayer.remove();
 			break;
 		}
 	}
-	const $junkLayer = document.getElementById("junkLayer");
-	if ($junkLayer) $junkLayer.remove();
 }
 
-setStatus = function(stat) {
+window.setStatus = function(stat) {
 	switch (stat) {
 		case 0: return this.playOrPause();
 		case 1: return this.pause();
 		case 2: return this.play();
 	}
 }
-playOrPause = function() {
-	if (status == 2) {
+window.playOrPause = function() {
+	if (playStatus == 2) {
 		this.pause();
 	} else {
 		this.play();
 	}
 }
-play = function() {
+window.play = function() {
 	if (video && video.src) {
 		video.play();
 	} else {
 		if (!junk.play) {
 			junk.play = setInterval(() => {
-				showJunkTime(junk.time += 10);
-			}, 10);
+				showJunkTime(junk.time += 5);
+			}, 5);
 		}
-		status = 2;
+		playStatus = 2;
 	}
 }
-pause = function() {
+window.pause = function() {
 	if (video && video.src) {
 		video.pause();
 	} else {
 		clearInterval(junk.play);
 		junk.play = null;
-		status = 1;
+		playStatus = 1;
 	}
 }
-stop = function() {
+window.stop = function() {
 	if (video && video.src) {
 		video.pause();
 		video.currentTime = 0;
@@ -118,36 +230,34 @@ stop = function() {
 		junk.play = null;
 		showJunkTime(junk.time = 0);
 	}
-	status = 0;
+	playStatus = 0;
 }
-getTime = function() {
+window.getTime = function() {
 	if (video && video.src) {
 		return Math.round(video.currentTime * 1000);
 	} else {
 		return junk.time;
 	}
 }
-moveTo = function(time) {
+window.moveTo = function(time) {
 	if (time < 0) {
 		time = 0;
 	}
 	if (video && video.src) {
 		video.currentTime = time / 1000;
 	} else {
-		junk.time = time;
+		showJunkTime(junk.time = time);
 	}
 }
-getFps = function() {
+window.getFps = function() {
 	return null;
 }
 </script>
 <style>
-body > * {
+#video, #junkLayer, #title, .border, #title > * {
 	position: fixed;
-	top: 0;
-	left: 0;
 }
-#video, #junkPlayer {
+#video, #junkLayer {
 	width: 100%;
 	height: 100%;
 }
@@ -163,16 +273,99 @@ body > * {
 	font-family: '맑은 고딕';
 	font-size: 20px;
 }
+
+#title, .border {
+	display: none;
+	opacity: 0;
+	transition: 0.3s;
+	position: fixed;
+	user-select: none;
+}
+body.borderless #title,
+body.borderless .border { display: block; }
+body.hover #title,
+body.hover .border,
+body.moving #title,
+body.moving .border { opacity: 1; }
+#title * {
+	position: fixed;
+	user-select: none;
+}
+.border.n  { top   : 0px; height: 5px; left : 5px; right: 5px; cursor: n-resize; background: linear-gradient(  0deg, #fff0, #0008      ); }
+.border.ne { top   : 0px; height: 5px; width: 5px; right: 0px; cursor:ne-resize; background: linear-gradient( 45deg, #fff0, #0008, #000); }
+.border.e  { top   : 5px; bottom: 5px; width: 5px; right: 0px; cursor: e-resize; background: linear-gradient( 90deg, #fff0, #0008      ); }
+.border.se { height: 5px; bottom: 0px; width: 5px; right: 0px; cursor:se-resize; background: linear-gradient(135deg, #fff0, #0008, #000); }
+.border.s  { height: 5px; bottom: 0px; left : 5px; right: 5px; cursor: s-resize; background: linear-gradient(180deg, #fff0, #0008      ); }
+.border.sw { height: 5px; bottom: 0px; left : 0px; width: 5px; cursor:sw-resize; background: linear-gradient(225deg, #fff0, #0008, #000); }
+.border.w  { top   : 5px; bottom: 5px; left : 0px; width: 5px; cursor: w-resize; background: linear-gradient(270deg, #fff0, #0008      ); }
+.border.nw { top   : 0px; height: 5px; left : 0px; width: 5px; cursor:nw-resize; background: linear-gradient(315deg, #fff0, #0008, #000); }
+#title {
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 30px;
+	background: #fff;
+}
+#title_text {
+	display: block;
+	top: 5px;
+	left: 60px;
+	width: calc(100% - 120px);
+	height: 22px;
+	overflow: hidden;
+	text-align: center;
+	line-height: 22px;
+	white-space: pre;
+	text-overflow: ellipsis;
+}
+#btnOpenFile, #btnClose {
+	top: 0;
+	height: 30px;
+	border: 0;
+	padding: 0 4px;
+	background: #fff;
+	line-height: 30px;
+	transition: 0.3s;
+}
+#btnOpenFile {
+	left: 0;
+	width: 55px;
+}
+#btnClose {
+	left: calc(100% - 45px);
+	width: 45px;
+	font-size: 18px;
+	font-weight: bold;
+}
+#btnOpenFile:hover {
+	background: #91C9F7;
+}
+#btnClose:hover {
+	background: rgb(232,17,35);
+	border-color: rgb(232,17,35);
+	color: #fff;
+}
 </style>
 </head>
-<body>
+<body class="borderless">
 	<video id="video" controls></video>
 	<div id="junkLayer">
 		동영상이 없을 경우 정크 플레이어로 동작합니다.<br />
 		<br />
-		우클릭 메뉴를 사용할 수 있습니다.<br />
-		<br />
 		<span id="viewJunkTime"></span>
 	</div>
+	<div id="title">
+		<span id="title_text">WebPlayer</span>
+		<button type="button" id="btnOpenFile">열기...</button>
+		<button type="button" id="btnClose">×</button>
+	</div>
+	<div class="border n "></div>
+	<div class="border ne"></div>
+	<div class="border  e"></div>
+	<div class="border se"></div>
+	<div class="border s "></div>
+	<div class="border sw"></div>
+	<div class="border  w"></div>
+	<div class="border nw"></div>
 </body>
 </html>

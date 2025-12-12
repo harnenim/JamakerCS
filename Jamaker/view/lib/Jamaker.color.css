@@ -14,6 +14,9 @@ html, body,
 button {
 	background: [background];
 }
+.hold > .col-sync-gradiant {
+	background: linear-gradient([background]00, [background]);
+}
 #tabSelector > .th.selected {
 	border-bottom-color: [background];
 }

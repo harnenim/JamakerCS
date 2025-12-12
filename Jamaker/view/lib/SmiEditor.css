@@ -78,6 +78,9 @@ body.classic-scrollbar .highlight-textarea > div {
 .hold > .col-sync {
 	background: #f0f0f0;
 }
+.hold > .col-sync-gradiant {
+	background: linear-gradient(#f0f0f000, #f0f0f0);
+}
 /* 홀드/에디터 테두리 색 */
 .highlight-textarea {
 	border-color: #aaaaaa;

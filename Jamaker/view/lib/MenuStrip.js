@@ -246,7 +246,8 @@ function MenuStrip(ol=null) {
 		}
 
 		lastKey = e.keyCode;
-		
+
+		if (!menustrip) return;
 		if (!e.shiftKey && !e.ctrlKey && e.altKey) {
 			const menu = menustrip.menuKeys[e.key];
 			if (menu) {

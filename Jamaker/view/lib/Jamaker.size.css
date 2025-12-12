@@ -97,8 +97,13 @@ label, #showFps {
 	line-height: 20px;
 }
 .hold > .col-sync,
+.hold > .col-sync-gradiant,
 .hold > .col-sync-cover {
 	width: calc(20px * 5);
+}
+.hold > .col-sync-gradiant {
+	top: calc(100% - 20px * 0.9);
+	height: calc(20px * 0.9);
 }
 .hold > .input {
 	left: calc(20px * 5);
