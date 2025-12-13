@@ -49,7 +49,7 @@ namespace Jamaker
         {
             progress.Set((double) range.start / origin.Count);
 
-            List<SyncShift> shifts = new List<SyncShift>();;
+            List<SyncShift> shifts = new List<SyncShift>();
             int start = range.start;
             int shift = range.shift;
             int limitOfOrigin = Math.Min(range.end, origin.Count);
