@@ -766,9 +766,7 @@ SmiEditor.activateKeyEvent = function() {
 	SmiEditor.keyEventActivated = true;
 	const funcSince = log("activateKeyEvent start");
 	
-	let lastKeyDown = 0;
 	$(document).on("keydown", function(e) {
-		lastKeyDown = e.keyCode;
 		const editor = SmiEditor.selected;
 		const hasFocus = editor && editor.input.is(":focus");
 		
@@ -1247,6 +1245,21 @@ SmiEditor.activateKeyEvent = function() {
 						if (e.altKey) {
 							
 						} else {
+							switch (key) {
+								case '~': key = '`'; break;
+								case '!': key = '1'; break;
+								case '@': key = '2'; break;
+								case '#': key = '3'; break;
+								case '$': key = '4'; break;
+								case '%': key = '5'; break;
+								case '^': key = '6'; break;
+								case '&': key = '7'; break;
+								case '*': key = '8'; break;
+								case '(': key = '9'; break;
+								case ')': key = '0'; break;
+								case '_': key = '-'; break;
+								case '+': key = '='; break;
+							}
 							f = SmiEditor.withCtrlShifts[key];
 						}
 					}

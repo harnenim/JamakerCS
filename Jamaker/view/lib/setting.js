@@ -427,6 +427,11 @@ window.DEFAULT_SETTING =
 			,	withRun: true // 함께 실행
 			,	withExit: true // 함께 종료
 			}
+		,	WebPlayer:
+			{	path: "WebPlayer.exe"
+			,	withRun: true
+			,	withExit: true
+			}
 		}
 	}
 };
