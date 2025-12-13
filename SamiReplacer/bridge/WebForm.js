@@ -43,12 +43,12 @@ WebForm.prototype.script = function(names, ...args) {
 	eval(script);
 }
 WebForm.prototype.alert = function(name, msg) {
-	const hwnd = this.getHwnd(name);
+	let hwnd = this.getHwnd(name);
 	if (hwnd.iframe) hwnd = hwnd.iframe.contentWindow;
 	hwnd._alert(msg);
 }
 WebForm.prototype.confirm = function(name, msg) {
-	const hwnd = this.getHwnd(name);
+	let hwnd = this.getHwnd(name);
 	if (hwnd.iframe) hwnd = hwnd.iframe.contentWindow;
 	if (hwnd._confirm(msg)) {
 		this.mainView.contentWindow.afterConfirmYes();
@@ -57,7 +57,7 @@ WebForm.prototype.confirm = function(name, msg) {
 	}
 }
 WebForm.prototype.prompt = function(name, msg, def) {
-	const hwnd = this.getHwnd(name);
+	let hwnd = this.getHwnd(name);
 	if (hwnd.iframe) hwnd = hwnd.iframe.contentWindow;
 	this.mainView.contentWindow.afterPrompt(hwnd._prompt(msg, def));
 }
@@ -129,32 +129,24 @@ WebForm.prototype.initAfterLoad = function() {
 };
 WebForm.prototype.beforeExit = (e) => {}
 
-function MenuStrip() {
-	const self = this;
-	this.view = $("<ol>").addClass("menustrip").css({
-			position: "absolute"
-		,	top: 0
-		,	left: 0
-		,	width: "100%"
-	}).on("click", "li", function(e) {
-		e.preventDefault();
-		const menu = $(this);
-		const submenu = menu.data("submenu");
-		if (submenu.hasClass("open")) {
-			submenu.removeClass("open");
+{
+	window.onloads = [];
+	window.ready = (fn) => {
+		if (window.onloads != null) {
+			window.onloads.push(fn);
+			if (window.onloads.length == 1) {
+				window.addEventListener("load", () => {
+					afterReady();
+				});
+			}
 		} else {
-			self.openMenu(menu, submenu);
+			try { fn(); } catch (e) {};
 		}
-	}).on("mouseover", "li", function() {
-		if ($(".submenu.open").length) {
-			self.openMenu($(this));
-		}
-	});
-	
-};
-MenuStrip.prototype.openMenu = function(menu, submenu) {
-	submenu = submenu ? submenu : menu.data("submenu");
-	$(".submenu.open").removeClass("open");
-	submenu.addClass("open").css({ left: menu.offset().left });
-	submenu.find("li:eq(0)").focus();
-};
+	}
+	window.afterReady = () => {
+		window.onloads && onloads.forEach((fn) => {
+			try { fn(); } catch (e) {};
+		});
+		window.onloads = null;
+	}
+}
