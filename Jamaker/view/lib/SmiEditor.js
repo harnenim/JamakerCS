@@ -693,11 +693,25 @@ SmiEditor.prototype.bindEvent = function() {
 		
 	}).on("blur", function() {
 		editor.showBlockArea();
+		
 	}).on("focus", function() {
-		editor.block.hide().empty();
+		const cursor = editor.block.hide().empty().data("cursor");
+		if (cursor) {
+			// 포커스 되찾을 때 블록지정 영역 유지
+			// 이때 history는 건드릴 필요 없음
+			editor.input[0].setSelectionRange(cursor[0], cursor[1]);
+		}
+		
 	}).on("contextmenu", function(e) {
 		if (SmiEditor.contextmenu) {
 			SmiEditor.contextmenu.open(e, SmiEditor.selected.input[0]);
+		}
+	});
+	$(window).on("blur", function() {
+		// <textarea>의 포커스는 유지한 채 윈도우 창이 비활성화되는 경우
+		if (SmiEditor.selected && (SmiEditor.selected.input[0] == document.activeElement)) {
+			// 블록지정 중복으로 보일 필요 없음
+			SmiEditor.selected.block.hide().empty();
 		}
 	});
 	
@@ -753,10 +767,11 @@ SmiEditor.prototype.bindEvent = function() {
 };
 SmiEditor.prototype.showBlockArea = function() {
 	const text = this.input.val();
-	const prev  = $("<span>").text(text.substring(0, this.input[0].selectionStart));
-	const block = $("<span>").text(text.substring(this.input[0].selectionStart, this.input[0].selectionEnd)).css({ background: "#7f7f7f" });
-	const next  = $("<span>").text(text.substring(this.input[0].selectionEnd));
-	this.block.empty().append(prev).append(block).append(next).show();
+	const cursor = this.getCursor();
+	const prev  = $("<span>").text(text.substring(0, cursor[0]));
+	const block = $("<span>").text(text.substring(cursor[0], cursor[1]).replaceAll("\n", " \n")).css({ background: "#7f7f7f" });
+	const next  = $("<span>").text(text.substring(cursor[1]));
+	this.block.empty().append(prev).append(block).append(next).data({ cursor: cursor }).show();
 }
 
 SmiEditor.selected = null;
