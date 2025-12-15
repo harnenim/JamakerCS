@@ -716,8 +716,8 @@ SmiEditor.prototype.bindEvent = function() {
 	});
 	
 	// 개발용 임시
-	this.input.on("keypress", function(e) {
-		//console.log(e.keyCode);
+	this.input.on("keydown", function(e) {
+//		console.log(e.key);
 	});
 	
 	this.input.on("mousedown", function(e) {
@@ -786,8 +786,8 @@ SmiEditor.activateKeyEvent = function() {
 		const hasFocus = editor && editor.input.is(":focus");
 		
 		if (!editor || !editor.act || editor.act.selected < 0) { // auto complete 작동 중엔 무시
-			switch (e.keyCode) {
-				case 33: { // PgUp
+			switch (e.key) {
+				case "PageUp": {
 					if (hasFocus) {
 						if (!e.shiftKey) {
 							// 크로뮴에서 횡스크롤이 오른쪽으로 튀는 버그 존재
@@ -797,7 +797,7 @@ SmiEditor.activateKeyEvent = function() {
 					}
 					break;
 				}
-				case 34: { // PgDn
+				case "PageDown": {
 					if (hasFocus) {
 						if (!e.shiftKey) {
 							// 크로뮴에서 횡스크롤이 오른쪽으로 튀는 버그 존재
@@ -807,7 +807,7 @@ SmiEditor.activateKeyEvent = function() {
 					}
 					break;
 				}
-				case 35: { // End
+				case "End": {
 					if (hasFocus) {
 						if (!e.ctrlKey) {
 							// 공백 줄일 경우 End키 이벤트 방지
@@ -824,7 +824,7 @@ SmiEditor.activateKeyEvent = function() {
 					}
 					break;
 				}
-				case 36: { // Home
+				case "Home": {
 					if (hasFocus) {
 						// 커서가 원래부터 맨 앞에 있는 경우엔 커서 이동이 없어서, 알아서 스크롤이 안 됨
 						editor.input.scrollLeft(0);
@@ -832,7 +832,7 @@ SmiEditor.activateKeyEvent = function() {
 					}
 					break;
 				}
-				case 38: { // ↑
+				case "ArrowUp": { // ↑
 					if (e.shiftKey) {
 						if (e.ctrlKey) {
 							if (e.altKey) {
@@ -886,7 +886,7 @@ SmiEditor.activateKeyEvent = function() {
 					}
 					return;
 				}
-				case 40: { // ↓
+				case "ArrowDown": { // ↓
 					if (e.shiftKey) {
 						if (e.ctrlKey) {
 							if (e.altKey) {
@@ -940,7 +940,7 @@ SmiEditor.activateKeyEvent = function() {
 					}
 					return;
 				}
-				case 37: { // ←
+				case "ArrowLeft": { // ←
 					if (e.shiftKey) {
 						if (e.ctrlKey) {
 							if (e.altKey) {
@@ -1016,7 +1016,7 @@ SmiEditor.activateKeyEvent = function() {
 					}
 					return;
 				}
-				case 39: { // →
+				case "ArrowRight": { // →
 					if (e.shiftKey) {
 						if (e.ctrlKey) {
 							if (e.altKey) {
@@ -1088,7 +1088,7 @@ SmiEditor.activateKeyEvent = function() {
 					}
 					return;
 				}
-				case 9: { // Tab
+				case "Tab": {
 					if (e.ctrlKey) { // Ctrl+Tab → 탭 전환
 						// 순정 SmiEditor엔 탭이 없음
 						// editor.js 등에서 추가 선언 필요함
@@ -1106,7 +1106,7 @@ SmiEditor.activateKeyEvent = function() {
 					}
 					break;
 				}
-				case 13: { // Enter
+				case "Enter": {
 					if (hasFocus) {
 						if (e.ctrlKey) { // Ctrl+Enter → <br>
 							e.preventDefault();
@@ -1118,7 +1118,7 @@ SmiEditor.activateKeyEvent = function() {
 					}
 					break;
 				}
-				case 8: { // Backspace
+				case "Backspace": {
 					if (hasFocus) {
 						if (e.ctrlKey) { // Ctrl+Backspace → 공백문자 그룹 삭제
 							const cursor = editor.getCursor();
@@ -1168,7 +1168,7 @@ SmiEditor.activateKeyEvent = function() {
 					}
 					break;
 				}
-				case 46: { // Delete
+				case "Delete": {
 					if (hasFocus) {
 						if (e.ctrlKey) { // Ctrl+Delete → 공백문자 그룹 삭제
 							const cursor = editor.getCursor();
@@ -1216,7 +1216,7 @@ SmiEditor.activateKeyEvent = function() {
 						}
 					}
 				}
-				case 116: { // F5
+				case "F5": {
 					if (e.shiftKey && !e.ctrlKey && !e.altKey) {
 						// Shift+F5: 가중치 없이 싱크 찍기
 						editor.insertSync(2);
@@ -1224,8 +1224,8 @@ SmiEditor.activateKeyEvent = function() {
 					}
 					break;
 				}
-				case 187:
-				case 189: {
+				case "-":
+				case "=": {
 					if (e.ctrlKey) {
 						// Ctrl + -/= 확대축소 방지
 						e.preventDefault();
@@ -1317,10 +1317,10 @@ SmiEditor.activateKeyEvent = function() {
 					const funcSince = log("단축키 실행 start");
 					const type = typeof f;
 					if (type == "function") {
-						log(e.keyCode + "(" + key + ") / func: " + f.name);
+						log(key + " / func: " + f.name);
 						f();
 					} else if (type == "string" && f.trim().length) {
-						log(e.keyCode + "(" + key + ") / func: " + f.split("\n")[0]);
+						log(key + " / func: " + f.split("\n")[0]);
 						eval("(() => { " + f + "// */\n})()"); // 내용물이 주석으로 끝날 수도 있음
 					}
 					log("단축키 실행 end", funcSince);

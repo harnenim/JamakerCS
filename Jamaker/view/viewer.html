@@ -227,8 +227,8 @@ $(() => {
 		e.preventDefault();
 	});
 	window.onkeydown = (e) => {
-		switch(e.keyCode) {
-			case 116: return false; // F5 새로고침 방지
+		switch(e.key) {
+			case "F5": return false; // F5 새로고침 방지
 		}
 	};
 	viewer = $("#viewer");
@@ -251,8 +251,8 @@ $(() => {
 });
 
 document.addEventListener("keydown", (e) => {
-	switch (e.keyCode) {
-		case 37: { // ←
+	switch (e.key) {
+		case "ArrowLeft": { // ←
 			if (!e.shiftKey && !e.ctrlKey && e.altKey) {
 				// 뒤로
 				e.preventDefault();
@@ -261,7 +261,7 @@ document.addEventListener("keydown", (e) => {
 			}
 			break;
 		}
-		case 39: { // →
+		case "ArrowRight": { // →
 			if (!e.shiftKey && !e.ctrlKey && e.altKey) {
 				// 앞으로
 				e.preventDefault();
@@ -270,17 +270,17 @@ document.addEventListener("keydown", (e) => {
 			}
 			break;
 		}
-		case 120: { // F9: 재생/일시정지
+		case "F9": { // F9: 재생/일시정지
 			e.preventDefault();
 			PlayerAPI.playOrPause();
 			break;
 		}
-		case 121: { // F10: 재생
+		case "F10": { // F10: 재생
 			e.preventDefault();
 			PlayerAPI.play();
 			break;
 		}
-		case 122: { // F11: 정지
+		case "F11": { // F11: 정지
 			e.preventDefault();
 			PlayerAPI.stop();
 			break;

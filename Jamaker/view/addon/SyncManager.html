@@ -554,8 +554,8 @@ ready(() => {
 	});
 	
 	$(document).on("keydown", function(e) {
-		switch (e.keyCode) {
-			case 38: { // ↑
+		switch (e.key) {
+			case "ArrowUp": {
 				e.preventDefault();
 				if (e.ctrlKey || selected == 0) {
 					$body.stop().animate({ scrollTop: $body.scrollTop() - (TY + 2) }, 200);
@@ -570,7 +570,7 @@ ready(() => {
 				}
 				break;
 			}
-			case 40: { // ↓
+			case "ArrowDown": {
 				e.preventDefault();
 				if (e.ctrlKey || selected == frameSyncs.length - 1) {
 					$body.stop().animate({ scrollTop: $body.scrollTop() + (TY + 2) }, 200);
@@ -585,21 +585,21 @@ ready(() => {
 				}
 				break;
 			}
-			case 37: { // ←
+			case "ArrowLeft": {
 				moveSync(-1);
 				break;
 			}
-			case 39: { // →
+			case "ArrowRight": {
 				moveSync(+1);
 				break;
 			}
-			case 46: { // Delete: 프레임 선택 취소
+			case "Delete": {
 				moveSync(0, true);
 				break;
 			}
-			case 81: { // Q
-				if (!shiftKey && ctrlKey && !altKey) {
-					origin.hold.moveToSync(-2000);
+			case "q": {
+				if (!e.shiftKey && e.ctrlKey && !e.altKey) {
+					opener.binder.moveTo(Number(frameSyncs[selected].find(".sync").text()) - 2000);
 				}
 				break;
 			}

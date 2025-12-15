@@ -46,18 +46,18 @@ ready(() => {
 	});
 	document.addEventListener("keydown", (e) => {
 		if (video && video.src) return; // 정크 플레이어에서만 동작
-		switch (e.keyCode) {
-			case 32: { // Spacebar
+		switch (e.key) {
+			case " ": {
 				playOrPause();
 				break;
 			}
-			case 37: { // ←
+			case "ArrowLeft": {
 				if (playStatus == 0) return;
 				let time = getTime() - 2000;
 				moveTo(time < 0 ? 0 : time);
 				break;
 			}
-			case 39: { // →
+			case "ArrowRight": {
 				if (playStatus == 0) return;
 				moveTo(getTime() + 2000);
 				break;

@@ -48,10 +48,11 @@ window.Frame = function(url, name, options, onload) {
 		$(self.iframe.contentDocument).on("mousedown", function() {
 			Frame.refreshOrder(self);
 		}).on("keydown", function(e) {
-			switch (e.keyCode) {
-				case 115: { // F4
+			switch (e.key) {
+				case "F4": {
 					if (e.altKey) {
 						// Alt+F4 최상위 창 종료 막기
+						e.stopPropagation();
 						e.preventDefault();
 						self.close();
 					}
@@ -239,8 +240,8 @@ $(() => {
 			$("#cover").hide();
 		}
 	}).on("keydown", function(e) {
-		switch (e.keyCode) {
-			case 27: { // Esc
+		switch (e.key) {
+			case "Escape": {
 				if (dragging.frame) { // 드래그 취소
 					dragging.frame.css({ // 위치 원상복구
 							top   : dragging.top

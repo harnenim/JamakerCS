@@ -1930,9 +1930,8 @@ function init(jsonSetting, isBackup=true) {
 	SmiEditor.activateKeyEvent();
 	
 	// Win+방향키 이벤트 직후 창 위치 초기화
-	const winKeyStatus = [0, 0];
 	$(window).on("keydown", function (e) {
-		if (e.keyCode == 27) { // ESC
+		if (e.key == "Escape") {
 			if (SmiEditor.selected) {
 				const hold = SmiEditor.selected;
 				if (hold.styleArea) {
@@ -1948,11 +1947,11 @@ function init(jsonSetting, isBackup=true) {
 		}
 	}).on("keyup", function (e) {
 		if (e.metaKey) {
-			switch (e.keyCode) {
-				case 37: // ←
-				case 38: // ↑
-				case 39: // →
-				{
+			// TODO: Win+방향키 이벤트 직후 창 위치 초기화 - 현재 동작 안 함
+			switch (e.key) {
+				case "ArrowLeft":
+				case "ArrowUp":
+				case "ArrowRight": {
 					setTimeout(() => {
 						moveWindowsToSetting();
 					}, 1);

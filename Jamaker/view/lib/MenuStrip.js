@@ -47,8 +47,8 @@ function MenuStrip(ol=null) {
 		const menu = e.target.closest(".menustrip li");
 		if (menu) {
 			e.stopPropagation();
-			switch (e.keyCode) {
-				case 37: { // ←
+			switch (e.key) {
+				case "ArrowLeft": {
 					let prev = menu.previousElementSibling;
 					if (!prev) {
 						prev = menustrip.view.lastChild;
@@ -60,7 +60,7 @@ function MenuStrip(ol=null) {
 					}
 					break;
 				}
-				case 39: { // →
+				case "ArrowRight": {
 					let next = menu.nextElementSibling;
 					if (!next) {
 						next = menustrip.view.firstChild;
@@ -72,21 +72,21 @@ function MenuStrip(ol=null) {
 					}
 					break;
 				}
-				case 38:   // ↑
-				case 40:   // ↓
-				case 13: { // Enter
+				case "ArrowUp":
+				case "ArrowDown":
+				case "Enter": {
 					// 방향키 이동으로 연 하위 메뉴에 포커스
 					menustrip.openMenu(menu, true);
 					break;
 				}
-				case 18:   // Alt
+				case "Alt":
 					lastKey = null; // 포커스 반환 직후 다시 Alt 메뉴 열리는 것 방지
-				case 27: { // Esc
+				case "Escape": {
 					menustrip.unfocus();
 					break;
 				}
-				case 9: // Tab
-				{	// 포커스 이동 방지
+				case "Tab": {
+					// 포커스 이동 방지
 					e.preventDefault();
 					break;
 				}
@@ -111,8 +111,8 @@ function MenuStrip(ol=null) {
 		const li = e.target.closest(".submenu.open li");
 		if (li) {
 			e.stopPropagation();
-			switch (e.keyCode) {
-				case 38: { // ↑
+			switch (e.key) {
+				case "ArrowUp": {
 					let prev = li;
 					do {
 						prev = prev.previousElementSibling;
@@ -124,7 +124,7 @@ function MenuStrip(ol=null) {
 					prev.focus();
 					break;
 				}
-				case 40: { // ↓
+				case "ArrowDown": {
 					let next = li;
 					do {
 						next = next.nextElementSibling;
@@ -136,7 +136,7 @@ function MenuStrip(ol=null) {
 					next.focus();
 					break;
 				}
-				case 37: { // ←
+				case "ArrowLeft": {
 					const menu = li.parentElement.owner;
 					if (menu) {
 						let prev = menu.previousElementSibling;
@@ -148,7 +148,7 @@ function MenuStrip(ol=null) {
 					}
 					break;
 				}
-				case 39: { // →
+				case "ArrowRight": {
 					const menu = li.parentElement.owner;
 					if (menu) {
 						let next = menu.nextElementSibling;
@@ -160,24 +160,24 @@ function MenuStrip(ol=null) {
 					}
 					break;
 				}
-				case 13: { // Enter
+				case "Enter": {
 					e.preventDefault(); // 포커스 반환 직후 키입력 방지
 					li.click();
 					break;
 				}
-				case 18: { // Alt
+				case "Atl": {
 					lastKey = null; // 포커스 반환 직후 다시 Alt 메뉴 열리는 것 방지
 					// 메뉴 닫고 포커스 반환
 					focusedMenu.unfocus();
 					break;
 				}
-				case 27: { // Esc
+				case "Escape": {
 					// 메뉴 닫기만 하고 상위 메뉴에 포커스
 					focusedMenu.close();
 					break;
 				}
-				case 9: // Tab
-				{	// 포커스 이동 방지
+				case "Tab": {
+					// 포커스 이동 방지
 					e.preventDefault();
 					break;
 				}
@@ -201,8 +201,8 @@ function MenuStrip(ol=null) {
 		const contextmenu = e.target.closest(".submenu.contextmenu");
 		if (contextmenu) {
 			e.stopPropagation();
-			switch (e.keyCode) {
-				case 38: { // ↑
+			switch (e.key) {
+				case "ArrowUp": {
 					// 하위 메뉴 마지막 항목에 포커스
 					const lis = contextmenu.childNodes;
 					for (let i = lis.length - 1; i >= 0; i--) {
@@ -213,7 +213,7 @@ function MenuStrip(ol=null) {
 					}
 					break;
 				}
-				case 40: { // ↓
+				case "ArrowDown": {
 					// 하위 메뉴 첫 항목에 포커스
 					const lis = contextmenu.childNodes;
 					for (let i = 0; i < lis.length; i++) {
@@ -224,12 +224,12 @@ function MenuStrip(ol=null) {
 					}
 					break;
 				}
-				case 27: { // Esc
+				case "Escape": {
 					focusedMenu.unfocus();
 					break;
 				}
-				case 9: // Tab
-				{	// 포커스 이동 방지
+				case "Tab": {
+					// 포커스 이동 방지
 					e.preventDefault();
 					break;
 				}
@@ -245,7 +245,7 @@ function MenuStrip(ol=null) {
 			return;
 		}
 
-		lastKey = e.keyCode;
+		lastKey = e.key;
 
 		if (!menustrip) return;
 		if (!e.shiftKey && !e.ctrlKey && e.altKey) {
@@ -262,9 +262,9 @@ function MenuStrip(ol=null) {
 	document.addEventListener("keyup", (e) => {
 		if (!menustrip) return;
 		e.stopPropagation();
-		if (e.keyCode == 18) {
+		if (e.key == "Alt") {
 			e.preventDefault(); // 이게 없으면 Alt+Spacebar 메뉴로 포커스됨
-			if (lastKey == 18) {
+			if (lastKey == "Alt") {
 				// 중간에 다른 키 누르지 않고, Alt만 눌렀다 뗀 경우
 				if (menustrip.opened) {
 					// 메뉴가 포커스 가지고 있었으면 반환

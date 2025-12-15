@@ -50,8 +50,8 @@ $(() => {
 		
 	}).on("keydown", function(e) {
 		if (e.ctrlKey) {
-			switch (e.keyCode) {
-				case 9: {
+			switch (e.key) {
+				case "Tab": {
 					// Ctrl+Tab 탭 전환
 					let index = setting.show;
 					if (e.shiftKey) {
@@ -62,21 +62,21 @@ $(() => {
 					show(index);
 					break;
 				}
-				case 49:
-				case 50:
-				case 51:
-				case 52:
-				case 53:
-				case 54:
-				case 55:
-				case 56: {
+				case "1":
+				case "2":
+				case "3":
+				case "4":
+				case "5":
+				case "6":
+				case "7":
+				case "8": {
 					// Ctrl + 숫자 탭 전환
-					show(e.keyCode - 49);
+					show(Number(e.key) - 1);
 				}
 			}
 		}
 	}).on("keyup", function(e) {
-		if (e.altKey && e.keyCode == 83) {
+		if (e.altKey && e.key == "s") {
 			// Alt+S 했을 땐 포커스 원위치
 			lastFocus && lastFocus.focus();
 		}
@@ -416,6 +416,7 @@ $(() => {
 			}
 		})();
 		
+		// TODO: 이쪽은 함부로 keyCode 걷어내기 힘듦...
 		tableCommand.on("click", "th.used, th.not-used, td:not(.fixed)", function() {
 			const data = $(this).data();
 			const keyCode = data.key.charCodeAt();

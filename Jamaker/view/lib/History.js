@@ -36,23 +36,23 @@ window.History = function(input, limit, doAfter, activateDefaultKeyEvent=true) {
 	if (activateDefaultKeyEvent) {
 		// 독립적인 라이브러리로 기능할 때 기본 키 입력 활성화
 		this.input.addEventListener("keydown", (e) => {
-			switch (e.keyCode) {
-				case 33: // PgUp
-				case 34: // PgDn
-				case 35: // End
-				case 36: // Home
-				case 38: // ↑
-				case 40: // ↓
-				case 37: // ←
-				case 39: // →
+			switch (e.key) {
+				case "PageUp":
+				case "PageDown":
+				case "End":
+				case "Home":
+				case "ArrowUp":
+				case "ArrowDown":
+				case "ArrowLeft":
+				case "ArrowRight":
 					history.logIfCursorMoved();
 					break;
-				case 90: { // Z
+				case "z": {
 					if (!e.ctrlKey || e.shiftKey || e.altKey)  break;
 					history.back();
 					break;
 				}
-				case 89: { // Y
+				case "y": {
 					if (!e.ctrlKey || e.shiftKey || e.altKey)  break;
 					history.forward();
 					break;

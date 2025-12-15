@@ -12,10 +12,11 @@ let styleSizePreset = "";
 
 $(document).on("keydown", function(e) {
 	if (e.ctrlKey) {
-		if (e.keyCode != 65/*A*/
-		 && e.keyCode != 67/*C*/
-		 && e.keyCode != 86/*V*/
-		 && e.keyCode != 88/*X*/) {
+		if (e.key != "a"
+		 && e.key != "c"
+		 && e.key != "v"
+		 && e.key != "x") {
+			// 기본 복붙 동작 제외하곤 차단
 			e.preventDefault();
 		}
 	}
@@ -56,7 +57,7 @@ ready(() => {
 		$(".button-replace-all").on("click", function() { binder.runReplaceAll(getParams()); });
 	}
 	$("textarea").on("keydown", function(e) {
-		if (e.keyCode == 13) { // Enter
+		if (e.key == "Enter") {
 			if (!e.shiftKey && !e.altKey) {
 				e.preventDefault();
 				if (e.ctrlKey) {

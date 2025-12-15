@@ -1,6 +1,6 @@
 document.addEventListener("keydown", function(e) {
-	switch (e.keyCode) {
-		case 27: { // Esc
+	switch (e.key) {
+		case "Escape": {
 			requestClose();
 			break;
 		}
