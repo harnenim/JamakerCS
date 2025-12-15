@@ -416,12 +416,11 @@ $(() => {
 			}
 		})();
 		
-		// TODO: 이쪽은 함부로 keyCode 걷어내기 힘듦...
 		tableCommand.on("click", "th.used, th.not-used, td:not(.fixed)", function() {
 			const data = $(this).data();
 			const keyCode = data.key.charCodeAt();
 			let keyName = (111 < keyCode && keyCode < 192) 
-			            ? ("F" + (keyCode - 111))
+			            ? ("F" + (keyCode - 111)) // pqrstuvwxyz{ -> Fn
 			            : data.key;
 			switch (data.with) {
 				case 0: {
@@ -458,19 +457,33 @@ $(() => {
 			e.preventDefault();
 			e.stopPropagation();
 			
-			let name = "";
-			let key = String.fromCharCode(e.keyCode);
-			let func = "";
-			switch (e.keyCode) {
-				case 192: key = '`'; break;
-				case 189: key = '-'; break;
-				case 187: key = '='; break;
+			let keyName = e.key.toUpperCase();
+			switch (keyName) {
+				case '~': keyName = '`'; break;
+				case '!': keyName = '1'; break;
+				case '@': keyName = '2'; break;
+				case '#': keyName = '3'; break;
+				case '$': keyName = '4'; break;
+				case '%': keyName = '5'; break;
+				case '^': keyName = '6'; break;
+				case '&': keyName = '7'; break;
+				case '*': keyName = '8'; break;
+				case '(': keyName = '9'; break;
+				case ')': keyName = '0'; break;
+				case '_': keyName = '-'; break;
+				case '+': keyName = '='; break;
 			}
+			let key = keyName;
+			if ((key[0] == "F") && (key.length > 1)) { // Fn -> pqrstuvwxyz{ 할당
+				key = String.fromCharCode(Number(key.substring(1)) + 111);
+			}
+			// 사실 F12는 안 쓰려고 했어서 p~z로 잡았었는데, F12로 확장하느라 {까지 써버림...
+			
+			let name = "";
+			let func = "";
 			
 			if (keys.indexOf(key) >= 0) {
-				let keyName = (111 < e.keyCode && e.keyCode < 124)
-				            ? ("F" + (e.keyCode - 111))
-				            : key;
+				let command = keyName;
 				const keyIndex = keyNames.indexOf(keyName);
 				const selector = "tr.key-" + (keyName=='`' ? 'ㄹ' : (keyName=='=' ? '＝' : keyName));
 				
@@ -481,11 +494,11 @@ $(() => {
 							
 						} else {
 							if (oSmiEditor.withCtrlShifts.reserved.indexOf(key) >= 0) {
-								keyName = "Ctrl + Shift + 예약키";
+								command = "Ctrl + Shift + 예약키";
 							} else {
 								func = tableCommand.find(selector + " > td:eq(3)").data("func");
 								name = "setting.command.withCtrlShifts[\"" + key + "\"]";
-								keyName = "Ctrl + Shift + " + keyName;
+								command = "Ctrl + Shift + " + keyName;
 							}
 						}
 					}
@@ -493,29 +506,29 @@ $(() => {
 					if (e.ctrlKey) {
 						if (e.altKey) {
 							if (oSmiEditor.withCtrlAlts.reserved.indexOf(key) >= 0) {
-								keyName = "Ctrl + Alt + 예약키";
+								command = "Ctrl + Alt + 예약키";
 							} else {
 								func = tableCommand.find(selector + " > td:eq(2)").data("func");
 								name = "setting.command.withCtrlAlts[\"" + key + "\"]";
-								keyName = "Ctrl + Alt + " + keyName;
+								command = "Ctrl + Alt + " + keyName;
 							}
 						} else {
 							if (oSmiEditor.withCtrls.reserved.indexOf(key) >= 0) {
-								keyName = "Ctrl + 예약키";
+								command = "Ctrl + 예약키";
 							} else {
 								func = tableCommand.find(selector + " > td:eq(0)").data("func");
 								name = "setting.command.withCtrls[\"" + key + "\"]";
-								keyName = "Ctrl + " + keyName;
+								command = "Ctrl + " + keyName;
 							}
 						}
 					} else {
 						if (e.altKey) {
 							if (oSmiEditor.withAlts.reserved.indexOf(key) >= 0) {
-								keyName = "Alt + 예약키";
+								command = "Alt + 예약키";
 							} else {
 								func = tableCommand.find(selector + " > td:eq(1)").data("func");
 								name = "setting.command.withAlts[\"" + key + "\"]";
-								keyName = "Alt + " + keyName;
+								command = "Alt + " + keyName;
 							}
 						} else {
 							func = tableCommand.find(selector + " > th:eq(0)").data("func");
@@ -524,14 +537,14 @@ $(() => {
 					}
 				}
 				
-				if (inputCommandKey.val() == keyName) {
+				if (inputCommandKey.val() == command) {
 					// 현재 작업 중인 것
 					return;
 				}
 				$("#areaTableCommand").scrollTop(keyIndex * 20);
 				checkSaved("cmd", () => {
 					inputCommandName.val(name);
-					inputCommandKey .val(keyName);
+					inputCommandKey .val(command);
 					inputCommandFunc.val(func);
 				});
 				
@@ -1602,7 +1615,7 @@ body {
 			</table>
 		</div>
 		<input type="hidden" id="inputCommandName" />
-		<label>조합 <input type="text" id="inputCommandKey" readonly style="width: 100px;" /> (← 여기를 선택한 상태에서 단축키를 입력할 수 있습니다.)</label>
+		<label>조합 <input type="text" id="inputCommandKey" readonly style="width: 104px;" /> (← 여기를 선택한 상태에서 단축키를 입력할 수 있습니다.)</label>
 		<br />
 		<textarea id="inputCommandFunc"></textarea>
 		
