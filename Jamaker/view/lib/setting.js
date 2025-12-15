@@ -1,6 +1,5 @@
 // 업데이트 메시지
-let checkVersion;
-{	checkVersion = (version) => {
+{	window.checkVersion = (version) => {
 		if (!version) version = "";
 		
 		const notify = [];

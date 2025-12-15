@@ -301,7 +301,7 @@ window.SmiEditor = function(text) {
 		editor.render([0, editor.lines.length]); // 실행취소일 땐 전체 갱신하도록
 	}, false);
 	setTimeout(() => {
-		if (SmiEditor.autoComplete.length) {
+		if (SmiEditor.autoComplete && window.AutoCompleteTextArea) {
 			editor.act = new AutoCompleteTextarea(editor.input[0], SmiEditor.autoComplete, () => {
 				editor.history.log();
 				editor.render();
@@ -339,7 +339,21 @@ SmiEditor.setSetting = (setting) => {
 		}
 		if (setting.autoComplete) {
 			for (let key in setting.autoComplete) {
-				SmiEditor.autoComplete[key] = setting.autoComplete[key];
+				const value = setting.autoComplete[key];
+				switch (key) { // keyCode 기반에서 key 기반으로 변경했지만, 설정은 특수문자 때문에 바꾸기 힘듦
+					case   "0": key = "-"; break;
+					case  "50": key = "@"; break;
+					case  "51": key = "#"; break;
+					case  "52": key = "$"; break;
+					case  "53": key = "%"; break;
+					case  "54": key = "^"; break;
+					case  "55": key = "&"; break;
+					case  "57": key = "("; break;
+					case  "48": key = ")"; break;
+					case "188": key = "<"; break;
+					case "190": key = ">"; break;
+				}
+				SmiEditor.autoComplete[key] = value;
 			}
 		}
 	}

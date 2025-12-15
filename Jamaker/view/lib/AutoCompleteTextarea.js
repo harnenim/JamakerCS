@@ -8,11 +8,11 @@ window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 	
 	this.sets = sets ? sets : [];
 	this.onSelect = onSelect;
-	if (this.sets.length) {
+	if (this.sets["-"]) {
 		// 일반 단어 자동완성은 정렬해서 표시
-		this.sets[0][1].sort();
+		this.sets["-"][1].sort();
 	} else {
-		this.sets[0] = ["", []];
+		this.sets["-"] = ["", []];
 	}
 	
 	if (!AutoCompleteTextarea.view) {
@@ -295,7 +295,7 @@ AutoCompleteTextarea.prototype.onCheck = function(e) {
 	const text = this.ta.value;
 	const pos = this.ta.selectionEnd - 1;
 	
-	const sets = this.sets[""+e.keyCode]; // TODO: 이 부분은 설정 갈아엎어야 함
+	const sets = this.sets[e.key];
 	if (sets && sets[0] == text[pos]) {
 		this.text = text;
 		this.pos = pos;
@@ -332,7 +332,7 @@ AutoCompleteTextarea.prototype.onCheckWord = function(e) {
 	this.text = text;
 	this.pos = start;
 	this.end = end;
-	this.open(this.sets[0][1]);
+	this.open(this.sets["-"][1]);
 	this.afterInput();
 }
 AutoCompleteTextarea.prototype.on = function(a, b) {
