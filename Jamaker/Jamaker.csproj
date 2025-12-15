@@ -178,7 +178,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="bridge\tempDir.html" />
-    <Content Include="bridge\player.html" />
     <Content Include="bridge\WebForm.js" />
     <Content Include="bridge\WebPlayer.html" />
     <Content Include="bridge\WebPlayerBridge.js" />

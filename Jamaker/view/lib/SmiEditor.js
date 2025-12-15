@@ -725,7 +725,7 @@ SmiEditor.prototype.bindEvent = function() {
 		// <textarea>의 포커스는 유지한 채 윈도우 창이 비활성화되는 경우
 		if (SmiEditor.selected && (SmiEditor.selected.input[0] == document.activeElement)) {
 			// 블록지정 중복으로 보일 필요 없음
-			SmiEditor.selected.block.hide().empty();
+			SmiEditor.selected.block.hide().empty().data({ cursor: null });
 		}
 	});
 	
