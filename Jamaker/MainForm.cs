@@ -31,7 +31,21 @@ namespace Jamaker
             Process[] processes = Process.GetProcessesByName(ProcName);
             if (processes.Length > 1)
             {
-                MessageBox.Show($"{ProcName}는 이미 실행 중입니다.");
+                if (args.Length > 0)
+                {
+                    string path = args[0];
+                    COPYUTF8STRUCT cds = new COPYUTF8STRUCT()
+                    {   dwData = new IntPtr(1000)
+                    ,   cbData = Encoding.UTF8.GetBytes(path).Length
+                    ,   lpData = path
+                    };
+                    int hwnd = (int)processes[0].MainWindowHandle;
+                    _ = WinAPI.SendMessage(hwnd, 0x004A/*WM_COPYDATA*/, hwnd, ref cds);
+                }
+                else
+                {
+                    MessageBox.Show($"{ProcName}는 이미 실행 중입니다.", "Jamaker");
+                }
                 Process.GetCurrentProcess().Kill();
             }
 
@@ -879,10 +893,31 @@ namespace Jamaker
         private AfterGetString afterGetFileName = null;
         protected override void WndProc(ref Message m)
         {
-            if (m.Msg == 0x0120/*WM_MENUCHAR*/)
+            const int WM_MENUCHAR = 0x0120;
+            const int WM_COPYDATA = 0x004A;
+
+            switch (m.Msg)
             {
-                m.Result = (IntPtr)(1 << 16);
-                return;
+                case WM_MENUCHAR:
+                    m.Result = (IntPtr)(1 << 16);
+                    return;
+                case WM_COPYDATA:
+                    try
+                    {
+                        byte[] buff = new byte[Marshal.ReadInt32(m.LParam, IntPtr.Size)];
+                        IntPtr dataPtr = Marshal.ReadIntPtr(m.LParam, IntPtr.Size * 2);
+                        Marshal.Copy(dataPtr, buff, 0, buff.Length);
+                        string receive = Encoding.UTF8.GetString(buff);
+                        if (receive.EndsWith(".smi")
+                         || receive.EndsWith(".sami")
+                         || receive.EndsWith(".jmk"))
+                        {
+                            LoadFile(receive);
+                            return;
+                        }
+                    }
+                    catch (Exception e) { Console.WriteLine(e); }
+                    break;
             }
             if (player != null)
             {
