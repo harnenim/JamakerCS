@@ -826,7 +826,9 @@ namespace Jamaker
                 FileInfo[] files = di.GetFiles();
                 foreach (FileInfo file in files)
                 {
-                    if (file.Name.ToUpper().EndsWith(".SMI"))
+                    if (file.Name.ToUpper().EndsWith(".SMI")
+                     || file.Name.ToUpper().EndsWith(".SAMI")
+                     || file.Name.ToUpper().EndsWith(".JMK"))
                     {
                         try
                         {

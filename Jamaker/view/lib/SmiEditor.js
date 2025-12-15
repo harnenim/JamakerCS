@@ -2050,12 +2050,13 @@ SmiEditor.highlightText = (text, state=null) => {
 	}
 	return previewLine.text(text);
 }
+SmiEditor.ROOT = "";
 SmiEditor.setHighlight = (SH, editors) => {
 	SmiEditor.useHighlight = SH && SH.parser;
 	SmiEditor.showColor = SH.color;
 	SmiEditor.showEnter = SH.enter;
 	if (SH.parser) {
-		$.ajax({url: "lib/highlight/parser/" + SH.parser + ".js"
+		$.ajax({url: SmiEditor.ROOT + "lib/highlight/parser/" + SH.parser + ".js"
 			,	dataType: "text"
 			,	success: (parser) => {
 					eval(parser);
@@ -2069,7 +2070,7 @@ SmiEditor.setHighlight = (SH, editors) => {
 						name = name.split("?")[0];
 					}
 					
-					$.ajax({url: "lib/highlight/styles/" + name + ".css"
+					$.ajax({url: SmiEditor.ROOT + "lib/highlight/styles/" + name + ".css"
 						,	dataType: "text"
 						,	success: (style) => {
 								// 문법 하이라이트 테마에 따른 커서 색상 추가

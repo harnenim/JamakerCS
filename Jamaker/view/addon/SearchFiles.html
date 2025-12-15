@@ -7,8 +7,10 @@
 	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/SubtitleObject.js"></script>
 	<script src="../lib/popup.js"></script>
+	<script src="../lib/History.js"></script>
 	<script src="../lib/SmiEditor.js"></script>
 	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
+	<link rel="stylesheet" type="text/css" href="../lib/SmiEditor.css" />
 	<script>
 windowName = "addon";
 
@@ -17,6 +19,7 @@ const FILE = "SearchFiles.txt";
 ready(() => {
 	const $form = $("form");
 	const $results = $("#results");
+	const $resizer = $("#resizer");
 	const $viewer = $("#viewer");
 	const $inputDir = $("#inputDir");
 	const $dirCurrent = $("#dirCurrent");
@@ -24,6 +27,8 @@ ready(() => {
 	const $dlSubDirs = $("#dlSubDirs");
 	const $dlLastDirs = $("#dlLastDirs");
 	const $dlLastQuerys = $("#dlLastQuerys");
+	const $editor = new SmiEditor();
+	$viewer.append($editor.area);
 	
 	const smiPath = opener.getCurrentTab().path;
 	if (smiPath) {
@@ -67,9 +72,12 @@ ready(() => {
 			}
 		}
 	}
+	
+	let ratio = 0.5;
+	
 	// 설정 저장
 	function saveLast() {
-		saveAddonSetting(FILE, lastDirs.join("\n") + "\n\n" + lastQuerys.join("\n"));
+		saveAddonSetting(FILE, lastDirs.join("\n") + "\n\n" + lastQuerys.join("\n") + "\n\n" + ratio);
 	}
 	
 	// 설정 저장된 것 가져오기
@@ -92,12 +100,26 @@ ready(() => {
 				if (line) {
 					lastQuerys.push(line);
 				} else {
+					i++;
 					break;
 				}
 			}
 			
 			refreshDatalist($dlLastDirs, lastDirs);
 			refreshDatalist($dlLastQuerys, lastQuerys);
+
+			for (; i < lines.length; i++) {
+				const line = lines[i];
+				if (line) {
+					try {
+						ratio = Number(line);
+						$results.css({ height: "calc(" + (100 * ratio) + "% - 32px)" });
+						$viewer.css({ height: "calc(" + (100 * (1 - ratio)) + "% - 32px)" });
+					} catch (e) {}
+				} else {
+					break;
+				}
+			}
 			
 			if (lastDirs.length) $("#inputDir").val(lastDirs[0]);
 		});
@@ -174,11 +196,45 @@ ready(() => {
 		const text = $file.data("text");
 		const line = $line.data("line");
 		const cursor = $line.data("pos");
-		$viewer.text(text);
-		$viewer[0].selectionStart = cursor;
-		$viewer[0].selectionEnd = cursor + query.length;
-		$viewer.scrollTop((line - 1.5) * 20);
-		$viewer.focus();
+		$editor.setText(text, [cursor, cursor + query.length]);
+		$editor.input.focus();
+	});
+	
+	let resizeFrom = null;
+	$resizer.on("mousedown", function(e) {
+		resizeFrom = { y: e.pageY, r: $results.height(), v: $viewer.height() };
+	});
+	$(document).on("mousemove", function(e) {
+		if (!resizeFrom) return;
+		
+		let moved = e.pageY - resizeFrom.y;
+		let r = resizeFrom.r + moved;
+		if (r < 50) {
+			r = 50;
+			moved = r - resizeFrom.r;
+		}
+		let v = resizeFrom.v - moved;
+		if (v < 50) {
+			v = 50;
+			moved = resizeFrom.v - v;
+			r = resizeFrom.r + moved;
+		}
+		$results.height(r);
+		$viewer.height(v);
+		
+	}).on("mouseup", function(e) {
+		if (!resizeFrom) return;
+		
+		resizeFrom = null;
+		ratio = ($results.height() + 32) / window.innerHeight;
+		$results.css({ height: "calc(" + (100 * ratio) + "% - 32px)" });
+		$viewer.css({ height: "calc(" + (100 * (1 - ratio)) + "% - 32px)" });
+		saveLast();
+	});
+	
+	SmiEditor.ROOT = "../";
+	SmiEditor.setHighlight(opener.setting.highlight, () => {
+		return [$editor];
 	});
 	
 	$inputQuery.focus();
@@ -201,7 +257,7 @@ label > input[type=text] { width: calc(100% - 90px); }
 button[type=submit] { width: 50px; }
 
 #results {
-	height: calc(50% - 30px);
+	height: calc(50% - 32px);
 	overflow-y: scroll;
 	border-top: 1px solid #000;
 }
@@ -228,11 +284,24 @@ button[type=submit] { width: 50px; }
 	background: #E8E8FF;
 }
 
-#viewer {
-	height: calc(50% - 30px);
+#resizer {
 	width: 100%;
-	white-space: pre;
-	line-height: 20px;
+	height: 4px;
+	cursor: n-resize;
+	background: #ccc;
+}
+
+#viewer {
+	position: relative;
+	height: calc(50% - 32px);
+	width: 100%;
+}
+.hold > .input {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
 }
 	</style>
 </head>
@@ -253,6 +322,7 @@ button[type=submit] { width: 50px; }
 			<datalist id="dlLastQuerys"></datalist>
 	</form>
 	<ol id="results"></ol>
-	<textarea id="viewer"></textarea>
+	<div id="resizer"></div>
+	<div id="viewer"></div>
 </body>
 </html>
