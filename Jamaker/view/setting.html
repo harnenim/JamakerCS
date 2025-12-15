@@ -764,6 +764,7 @@ $(() => {
 				resizeNewFile = true;
 			});
 			$(document).on("mousemove", function() {
+				if (!resizeNewFile) return;
 				editorNewFile.area.height(editorNewFile.input.outerHeight() + 2);
 			}).on("mouseup", function() {
 				resizeNewFile = false;

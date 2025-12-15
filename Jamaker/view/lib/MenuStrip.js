@@ -447,7 +447,10 @@ MenuStrip.prototype.openMenu = function(menu=null, withFocus=false) {
 		for (let i = 0; i < lis.length; i++) {
 			const li = lis[i];
 			if (li.classList.contains("line")) continue;
-			li.focus();
+			setTimeout(() => {
+				// 웹샘플에선 setTimeout 없으면 이벤트를 뺏기나...?
+				li.focus();
+			});
 			break;
 		}
 	} else {

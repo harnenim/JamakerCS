@@ -8,6 +8,12 @@
 <script src="WinAPI.js"></script>
 <script src="Binder.js"></script>
 <script>
+Binder.prototype.startResizeWindow = function(type) {
+	this._.startResizeWindow(type);
+}
+Binder.prototype.setTime = function(time) {
+	this._.setTime(time);
+}
 Binder.prototype.openFileDialog = function() {
 	this._.openFileDialog();
 }
@@ -35,13 +41,13 @@ wndProc = function(m) {
 			return main.mainView.contentWindow.stop();
 		}
 		case POT_GET_CURRENT_TIME: {
-			return main.mainView.contentWindow.getTime();
+			return main.time;
 		}
 		case POT_SET_CURRENT_TIME: {
 			return main.mainView.contentWindow.moveTo(m.lParam);
 		}
 		case POT_GET_VIDEO_FPS   : {
-			return main.mainView.contentWindow.getFps();
+			return 0;
 		}
 		case 0x0010: {
 			window.close();
@@ -76,6 +82,16 @@ window.main = new WebForm();
 			
 			main.mainView.contentWindow.afterReady();
 		};
+	}
+}
+{
+	main.startResizeWindow = function(type) {
+		// 웹샘플에서는 창 조절 별도 구현 없이 기본 조작에 의존
+		main.script("endResize");
+	}
+	main.time = 0;
+	main.setTime = function(time) {
+		main.time = time;
 	}
 }
 {

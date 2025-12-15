@@ -27,10 +27,6 @@ Binder.prototype.setMenus = function(menus) {
 	this._.setMenus(JSON.parse(menus));
 }
 
-Binder.prototype.focusToMenu = function(keyCode) {
-	//this._.focusToMenu(keyCode);
-}
-
 Binder.prototype.repairSetting = function() {
 	this._.repairSetting();
 }
@@ -676,45 +672,6 @@ window.MB = 9;
 			this.script("init", this.strSettingJson);
 		}
 	};
-	ready(() => {
-		$(document).on("keydown", ".submenu.open li", function(e) {
-			const li = $(this);
-			switch (e.keyCode) {
-				case 38: { // ↑
-					li.prev().focus();
-					break;
-				}
-				case 40: { // ↓
-					li.next().focus();
-					break;
-				}
-				case 37: { // ←
-					li.parent().data("menu").prev().click();
-					break;
-				}
-				case 39: { // →
-					li.parent().data("menu").next().click();
-					break;
-				}
-				case 13: { // Enter
-					li.click();
-					break;
-				}
-			}
-		});
-		
-		$(document).on("keydown", editor.keyDownForMenu);
-	});
-	editor.keyDownForMenu = function(e) {
-		const key = String.fromCharCode(e.keyCode);
-		if (!e.shiftKey && !e.ctrlKey && e.altKey) {
-			const menu = editor.menuKeys[key];
-			if (menu) {
-				e.preventDefault();
-				editor.menustrip.openMenu(menu);
-			}
-		}
-	}
 }
 {	// 파일
 	const fileBuffers = [];
