@@ -136,8 +136,8 @@ ready(() => {
 		e.preventDefault();
 	});
 	window.onkeydown = (e) => {
-		switch(e.keyCode) {
-			case 116: return false; // F5 새로고침 방지
+		switch(e.key) {
+			case "F5": return false; // F5 새로고침 방지
 		}
 	};
 	window.addEventListener("mousewheel", (e) => {
