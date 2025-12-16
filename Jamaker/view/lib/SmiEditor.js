@@ -301,7 +301,7 @@ window.SmiEditor = function(text) {
 		editor.render([0, editor.lines.length]); // 실행취소일 땐 전체 갱신하도록
 	}, false);
 	setTimeout(() => {
-		if (SmiEditor.autoComplete && window.AutoCompleteTextArea) {
+		if (SmiEditor.autoComplete && window.AutoCompleteTextarea) {
 			editor.act = new AutoCompleteTextarea(editor.input[0], SmiEditor.autoComplete, () => {
 				editor.history.log();
 				editor.render();
