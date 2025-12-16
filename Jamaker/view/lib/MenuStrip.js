@@ -261,8 +261,8 @@ function MenuStrip(ol=null) {
 	});
 	document.addEventListener("keyup", (e) => {
 		if (!menustrip) return;
-		e.stopPropagation();
 		if (e.key == "Alt") {
+			e.stopPropagation();
 			e.preventDefault(); // 이게 없으면 Alt+Spacebar 메뉴로 포커스됨
 			if (lastKey == "Alt") {
 				// 중간에 다른 키 누르지 않고, Alt만 눌렀다 뗀 경우

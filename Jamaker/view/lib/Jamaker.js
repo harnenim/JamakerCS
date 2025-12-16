@@ -1947,7 +1947,7 @@ function init(jsonSetting, isBackup=true) {
 		}
 	}).on("keyup", function (e) {
 		if (e.metaKey) {
-			// TODO: Win+방향키 이벤트 직후 창 위치 초기화 - 현재 동작 안 함
+			// Win+방향키 이벤트 직후 창 위치 초기화
 			switch (e.key) {
 				case "ArrowLeft":
 				case "ArrowUp":
