@@ -241,7 +241,7 @@ window.SmiEditor = function(text) {
 		this.hArea = $("<div class='input highlight-textarea hljs" + (SmiEditor.useHighlight ? "" : " nonactive") + "'>");
 		{	const inner = $("<div>");
 			inner.append(this.hview = $("<div>"));
-			inner.append(this.block = $("<p>").css({ display: "none", position: "absolute", color: "transparent", opacity: 0.5 }));
+			inner.append(this.block = $("<p>").css({ display: "none", position: "absolute", color: "transparent" }));
 			this.hArea.append(inner);
 		}
 		this.hArea.append(this.input = $("<textarea spellcheck='false'>"));
@@ -783,7 +783,7 @@ SmiEditor.prototype.showBlockArea = function() {
 	const text = this.input.val();
 	const cursor = this.getCursor();
 	const prev  = $("<span>").text(text.substring(0, cursor[0]));
-	const block = $("<span>").text(text.substring(cursor[0], cursor[1]).replaceAll("\n", " \n")).css({ background: "#7f7f7f" });
+	const block = $("<span>").text(text.substring(cursor[0], cursor[1]).replaceAll("\n", " \n")).css({ background: "#a7a7a7a7", color: "#000" });
 	const next  = $("<span>").text(text.substring(cursor[1]));
 	this.block.empty().append(prev).append(block).append(next).data({ cursor: cursor }).show();
 }
