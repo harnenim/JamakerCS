@@ -330,6 +330,11 @@ function MenuStrip(ol=null) {
 	});
 	window.menustrip = null;
 	window.focusedMenu = null;
+	
+	// 비활성창일 때 메뉴 닫기
+	window.addEventListener("blur", (e) => {
+		focusedMenu && focusedMenu.unfocus();
+	});
 }
 
 // 메뉴 재생성
