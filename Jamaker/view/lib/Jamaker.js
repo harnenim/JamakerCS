@@ -4483,7 +4483,7 @@ function generateSmiFromAss(keepHoldsAss=true) {
 SmiEditor.Finder1._open = SmiEditor.Finder1.open;
 SmiEditor.Finder1.open = function(isReplace=false) {
 	this._open(isReplace);
-	const ratio = DPI ? DPI : 1;
+	const ratio = (DPI ? DPI : 1) * setting.size;
 	const w = 440 * ratio;
 	const h = 220 * ratio;
 	const x = Math.ceil((setting.window.x + (setting.window.width  / 2)) - (w / 2));
@@ -4492,12 +4492,14 @@ SmiEditor.Finder1.open = function(isReplace=false) {
 };
 SmiEditor.Finder1._onloadFind = SmiEditor.Finder1.onloadFind;
 SmiEditor.Finder1.onloadFind = function(isReplace) {
-	if (setting && setting.color) {
-		if (this.window.setColor) {
+	if (setting && setting.size && setting.color) {
+		if (this.window.setSize) {
+			this.window.setSize(setting.size);
 			this.window.setColor(setting.color);
 		} else if (this.window.iframe
 		        && this.window.iframe.contentWindow
-		        && this.window.iframe.contentWindow.setColor) {
+		        && this.window.iframe.contentWindow.setSize) {
+			this.window.iframe.contentWindow.setSize(setting.size);
 			this.window.iframe.contentWindow.setColor(setting.color);
 		}
 	}

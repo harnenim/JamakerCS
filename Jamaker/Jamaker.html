@@ -362,7 +362,7 @@ window.MB = 9;
 				}
 				
 				//hwnd.binder = editor.binder;
-				hwnd.onload = function() {
+				(hwnd.iframe ? hwnd.iframe.contentWindow : hwnd).onload = function() {
 					//hwnd.binder = editor.binder;
 					setTimeout(function() {
 						if (target == "finder") {
@@ -377,7 +377,7 @@ window.MB = 9;
 								viewer.setLines(editor.viewerLines);
 							}
 						}
-					}, 1);
+					}, 100);
 				};
 			}
 		}
