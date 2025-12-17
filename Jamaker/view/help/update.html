@@ -14,48 +14,46 @@ ready(() => {
 		? /* C# 프로그램에서 서버 호출 */ "https://harnenim.github.io/Jamaker/updates.json?" + Math.random()
 		: /* 웹버전 내부에서 로컬 호출 */ "../../updates.json"
 		;
-	$.ajax({url : url
-		,	success: (updates) => {
-				let isLatest = true;
-				const log = [];
-				const files = [];
-				for (let i = 0; i < updates.length; i++) {
-					const update = updates[i];
-					if (update.version > opener.setting.version) {
-						isLatest = false;
-						for (let j = 0; j < update.files.length; j++) {
-							const file = update.files[j];
-							if (files.indexOf(file) < 0) {
-								files.push(file);
-							}
-						}
-						log.push("===========================");
-					} else {
-						log.push("---------------------------");
+	fetch(url).then(async (response) => {
+		const updates = await response.json();
+		let isLatest = true;
+		const log = [];
+		const files = [];
+		for (let i = 0; i < updates.length; i++) {
+			const update = updates[i];
+			if (update.version > opener.setting.version) {
+				isLatest = false;
+				for (let j = 0; j < update.files.length; j++) {
+					const file = update.files[j];
+					if (files.indexOf(file) < 0) {
+						files.push(file);
 					}
-					log.push("");
-					log.push("　" + update.version);
-					log.push("");
-					for (let j = 0; j < update.comment.length; j++) {
-						log.push("　" + update.comment[j]);
-					}
-					log.push("");
-					log.push("");
 				}
-				document.getElementById("taLog").value = log.join("\n");
-				const btn = document.getElementById("btnUpdate");
-				if (isLatest) {
-					btn.innerText = "현재 최신 버전입니다.";
-					btn.disabled = true;
-				} else {
-					btn.innerText = (updates[0].version + "으로 업데이트");
-					btn.disabled = false;
-				}
+				log.push("===========================");
+			} else {
+				log.push("---------------------------");
 			}
-		,	error: (e) => {
-				alert("업데이트 확인 실패");
-				console.log(e);
+			log.push("");
+			log.push("　" + update.version);
+			log.push("");
+			for (let j = 0; j < update.comment.length; j++) {
+				log.push("　" + update.comment[j]);
 			}
+			log.push("");
+			log.push("");
+		}
+		document.getElementById("taLog").value = log.join("\n");
+		const btn = document.getElementById("btnUpdate");
+		if (isLatest) {
+			btn.innerText = "현재 최신 버전입니다.";
+			btn.disabled = true;
+		} else {
+			btn.innerText = (updates[0].version + "으로 업데이트");
+			btn.disabled = false;
+		}
+	}).catch((e) => {
+        alert("업데이트 확인 실패");
+		console.log(e);
 	});
 	
 	document.getElementById("btnUpdate").addEventListener("click", () => {
