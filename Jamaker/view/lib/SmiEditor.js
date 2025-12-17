@@ -2071,33 +2071,29 @@ SmiEditor.setHighlight = (SH, editors) => {
 	SmiEditor.showColor = SH.color;
 	SmiEditor.showEnter = SH.enter;
 	if (SH.parser) {
-		$.ajax({url: SmiEditor.ROOT + "lib/highlight/parser/" + SH.parser + ".js"
-			,	dataType: "text"
-			,	success: (parser) => {
-					eval(parser);
+		fetch(SmiEditor.ROOT + "lib/highlight/parser/" + SH.parser + ".js").then(async (response) => {
+			let parser = await response.text();
+			eval(parser);
 					
-					let name = SH.style;
-					let isDark = false;
-					if (name.endsWith("-dark") || (name.indexOf("-dark-") > 0)) {
-						isDark = true;
-					} else if (name.endsWith("?dark")) {
-						isDark = true;
-						name = name.split("?")[0];
-					}
+			let name = SH.style;
+			let isDark = false;
+			if (name.endsWith("-dark") || (name.indexOf("-dark-") > 0)) {
+				isDark = true;
+			} else if (name.endsWith("?dark")) {
+				isDark = true;
+				name = name.split("?")[0];
+			}
 					
-					$.ajax({url: SmiEditor.ROOT + "lib/highlight/styles/" + name + ".css"
-						,	dataType: "text"
-						,	success: (style) => {
-								// 문법 하이라이트 테마에 따른 커서 색상 추가
-								SmiEditor.highlightCss
-									= ".hljs { color: unset; }\n"
-									+ ".hold textarea { caret-color: " + (isDark ? "#fff" : "#000") + "; }\n"
-									+ style
-									+ ".hljs-sync { opacity: " + SH.sync + " }\n";
-								SmiEditor.refreshHighlight(editors);
-							}
-					});
-				}
+			fetch(SmiEditor.ROOT + "lib/highlight/styles/" + name + ".css").then(async (response) => {
+				let style = await response.text();
+				// 문법 하이라이트 테마에 따른 커서 색상 추가
+				SmiEditor.highlightCss
+					= ".hljs { color: unset; }\n"
+					+ ".hold textarea { caret-color: " + (isDark ? "#fff" : "#000") + "; }\n"
+					+ style
+					+ ".hljs-sync { opacity: " + SH.sync + " }\n";
+				SmiEditor.refreshHighlight(editors);
+			});
 		});
 	} else {
 		SmiEditor.afterRefreshHighlight(editors);

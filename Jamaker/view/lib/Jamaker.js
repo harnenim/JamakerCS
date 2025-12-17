@@ -2043,71 +2043,69 @@ function setSetting(setting, initial=false) {
 			c.fill();
 			disabled = SmiEditor.canvas.toDataURL();
 		}
-		$.ajax({url: "lib/Jamaker.color.css"
-			,	dataType: "text"
-			,	success: (preset) => {
-					let $style = $("#styleColor");
-					if (!$style.length) {
-						$("head").append($style = $("<style id='styleColor'>"));
-					}
-					
-					if (button.length) {
-						preset = preset.replaceAll("[button]", button).replaceAll("[buttonDisabled]", disabled);
-						$("body").addClass("classic-scrollbar");
+		fetch("lib/Jamaker.color.css").then(async (response) => {
+			let preset = await response.text();
+			let $style = $("#styleColor");
+			if (!$style.length) {
+				$("head").append($style = $("<style id='styleColor'>"));
+			}
+			
+			if (button.length) {
+				preset = preset.replaceAll("[button]", button).replaceAll("[buttonDisabled]", disabled);
+				$("body").addClass("classic-scrollbar");
+			} else {
+				$("body").removeClass("classic-scrollbar");
+			}
+			
+			for (let name in setting.color) {
+				preset = preset.replaceAll("[" + name + "]", setting.color[name]);
+			}
+			function setStyleWithHighlight() {
+				// 문법 하이라이트 배경색 가져오기
+				let editorHL = setting.color.editor;
+				if (setting.highlight && setting.highlight.parser) {
+					let hljs = $(".hljs");
+					if (hljs.length) {
+						hljs = hljs[0];
 					} else {
-						$("body").removeClass("classic-scrollbar");
-					}
-					
-					for (let name in setting.color) {
-						preset = preset.replaceAll("[" + name + "]", setting.color[name]);
-					}
-					function setStyleWithHighlight() {
-						// 문법 하이라이트 배경색 가져오기
-						let editorHL = setting.color.editor;
-						if (setting.highlight && setting.highlight.parser) {
-							let hljs = $(".hljs");
-							if (hljs.length) {
-								hljs = hljs[0];
-							} else {
-								if (window.tempHljs) {
-									hljs = window.tempHljs;
-								} else {
-									hljs = document.createElement("div");
-									hljs.classList.add("hljs");
-									hljs.style.display = "none";
-									document.body.append(hljs);
-								}
-							}
-							try {
-								const rgb = getComputedStyle(hljs).backgroundColor;
-								const rgbMatch = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/);
-								if (rgbMatch) {
-									editorHL = "#" + Color.hex(rgbMatch[1]) + Color.hex(rgbMatch[2]) + Color.hex(rgbMatch[3]);
-								}
-							} catch (e) {}
+						if (window.tempHljs) {
+							hljs = window.tempHljs;
+						} else {
+							hljs = document.createElement("div");
+							hljs.classList.add("hljs");
+							hljs.style.display = "none";
+							document.body.append(hljs);
 						}
-						$style.html(preset.replaceAll("[editorHL]", editorHL));
 					}
-					
-					if (initial || (JSON.stringify(oldSetting.highlight) != JSON.stringify(setting.highlight))) {
-						// 문법 하이라이트 양식 바뀌었을 때만 재생성
-						// 문법 하이라이트 세팅 중에 내용이 바뀔 수 있어서
-						// 에디터 목록을 만들어서 넘기지 않고, 함수 형태로 넘김
-						SmiEditor.setHighlight(setting.highlight, () => {
-							const editors = [];
-							for (let i = 0; i < tabs.length; i++) {
-								for (let j = 0; j < tabs[i].holds.length; j++) {
-									editors.push(tabs[i].holds[j]);
-								}
-							}
-							setStyleWithHighlight();
-							
-							return editors;
-						});
-					} else {
-						setStyleWithHighlight()
-					}
+					try {
+						const rgb = getComputedStyle(hljs).backgroundColor;
+						const rgbMatch = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/);
+						if (rgbMatch) {
+							editorHL = "#" + Color.hex(rgbMatch[1]) + Color.hex(rgbMatch[2]) + Color.hex(rgbMatch[3]);
+						}
+					} catch (e) {}
 				}
+				$style.html(preset.replaceAll("[editorHL]", editorHL));
+			}
+			
+			if (initial || (JSON.stringify(oldSetting.highlight) != JSON.stringify(setting.highlight))) {
+				// 문법 하이라이트 양식 바뀌었을 때만 재생성
+				// 문법 하이라이트 세팅 중에 내용이 바뀔 수 있어서
+				// 에디터 목록을 만들어서 넘기지 않고, 함수 형태로 넘김
+				SmiEditor.setHighlight(setting.highlight, () => {
+					const editors = [];
+					for (let i = 0; i < tabs.length; i++) {
+						for (let j = 0; j < tabs[i].holds.length; j++) {
+							editors.push(tabs[i].holds[j]);
+						}
+					}
+					setStyleWithHighlight();
+					
+					return editors;
+				});
+			} else {
+				setStyleWithHighlight()
+			}
 		});
 		
 		if (SmiEditor.Finder && SmiEditor.Finder.window) {
@@ -2124,27 +2122,25 @@ function setSetting(setting, initial=false) {
 		}
 	}
 	if (initial || (oldSetting.size != setting.size)) {
-		$.ajax({url: "lib/Jamaker.size.css"
-			,	dataType: "text"
-				,	success: (preset) => {
-					preset = preset.replaceAll("20px", (LH = (20 * setting.size)) + "px");
-					
-					let $style = $("#styleSize");
-					if (!$style.length) {
-						$("head").append($style = $("<style id='styleSize'>"));
-					}
-					$style.html(preset);
-					
-					for (let i = 0; i < tabs.length; i++) {
-						const holds = tabs[i].holds;
-						for (let j = 0; j < holds.length; j++) {
-							holds[j].input.scroll();
-							if (holds[j].act) {
-								holds[j].act.resize();
-							}
-						}
+		fetch("lib/Jamaker.size.css").then(async (response) => {
+			let preset = await response.text();
+			preset = preset.replaceAll("20px", (LH = (20 * setting.size)) + "px");
+			
+			let $style = $("#styleSize");
+			if (!$style.length) {
+				$("head").append($style = $("<style id='styleSize'>"));
+			}
+			$style.html(preset);
+			
+			for (let i = 0; i < tabs.length; i++) {
+				const holds = tabs[i].holds;
+				for (let j = 0; j < holds.length; j++) {
+					holds[j].input.scroll();
+					if (holds[j].act) {
+						holds[j].act.resize();
 					}
 				}
+			}
 		});
 		
 		// 찾기/바꾸기 내재화했을 경우
@@ -2941,17 +2937,12 @@ function loadFkf(fkfName) {
 	log("loadFkf start: " + fkfName);
 	// C# 파일 객체를 직접 js 쪽에 전달할 수 없으므로, 정해진 경로의 파일을 ajax 형태로 가져옴
 	// base64 거치는 방법도 있긴 한데, 어차피 캐시를 재활용하는 경우라면 한 번만 거치는 게 나음
-	const req = new XMLHttpRequest();
-	req.open("GET", "../temp/fkf/" + encodeURIComponent(fkfName));
-	req.responseType = "arraybuffer";
-	req.onload = (e) => {
-		afterLoadFkfFile(req.response);
-	}
-	req.onerror = (e) => {
+	fetch("../temp/fkf/" + encodeURIComponent(fkfName)).then(async (response) => {
+		afterLoadFkfFile(await response.arrayBuffer());
+	}).catch(() => {
 		// 실패했어도 프로그레스바는 없애줌
 		Progress.set("#forFrameSync", 0);
-	}
-	req.send();
+	});
 }
 // 웹버전 샘플에서 fkf 파일 드래그로 열었을 경우
 function loadFkfFile(file) {
