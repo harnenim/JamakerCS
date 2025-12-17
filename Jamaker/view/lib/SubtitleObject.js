@@ -629,15 +629,15 @@ window.Subtitle = {
 	,	inner: 2
 	,	split: 3
 	}
-,	$tmp: document.createElement("span")
+,	_tmp: document.createElement("span")
 };
 function htmlToText(html) {
-	Subtitle.$tmp.innerHTML = html;
-	return Subtitle.$tmp.innerText;
+	Subtitle._tmp.innerHTML = html;
+	return Subtitle._tmp.innerText;
 }
 function textToHtml(text) {
-	Subtitle.$tmp.innerText = text;
-	return Subtitle.$tmp.innerHTML;
+	Subtitle._tmp.innerText = text;
+	return Subtitle._tmp.innerHTML;
 }
 window.SyncType = Subtitle.SyncType;
 
@@ -733,7 +733,7 @@ Subtitle.Width =
 				this.div.style.whiteSpace = "pre";
 				document.body.append(this.div);
 			}
-			for (name in font) {
+			for (let name in font) {
 				this.div.style[name] = font[name];
 			}
 			this.div.innerText = input;

@@ -25,7 +25,7 @@ setColor = function(color) {
 	$("#styleColorAppend").html(preset);;
 }
 
-$(() => {
+ready(() => {
 	const setting = JSON.parse(JSON.stringify(opener.setting));
 	const oSmiEditor = opener.SmiEditor;
 	

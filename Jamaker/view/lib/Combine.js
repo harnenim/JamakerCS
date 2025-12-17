@@ -202,14 +202,14 @@ window.Combine = {
 			Combine.checker = document.createElement("span");
 			Combine.checker.classList.add("width-checker");
 			document.body.append(Combine.checker);
-			const $style = document.createElement("style");
-			$style.innerHTML = "\n"
+			const _style = document.createElement("style");
+			_style.innerHTML = "\n"
 				+ "	.width-checker, .width-checker * {\n"
 				+ "	white-space: pre;\n"
 				+ "	font-size: 144px;\n"
 				+ "	font-weight: bold;\n"
 				+ "}";
-			document.head.append($style);
+			document.head.append(_style);
 		}
 		Combine.checker.setAttribute("style", Combine.css);
 		Combine.checker.style.display = "inline-block";
