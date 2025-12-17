@@ -208,7 +208,6 @@
     <Content Include="view\addon\Nico.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="view\addon\Normalizer.html" />
     <Content Include="view\addon\SearchFiles.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -218,8 +217,6 @@
     <Content Include="view\addon\Speed.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="view\addon\SpellCheck.html" />
-    <Content Include="view\addon\SpellCheckTest.html" />
     <Content Include="view\addon\SyncManager.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
