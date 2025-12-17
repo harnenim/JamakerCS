@@ -151,17 +151,14 @@ if (opener) {
 }
 
 function setColor(color) {
-	$.ajax({url: "lib/popup.color.css"
-		,	dataType: "text"
-		,	success: (preset) => {
-				for (let name in color) {
-					preset = preset.replaceAll("["+name+"]", color[name]);
-				}
-				
-				if (!window.$style) {
-					document.head.append($style = document.createElement("style"));
-				}
-				$style.innerHTML = preset;
-			}
+	fetch("lib/popup.color.css").then(async (response) => {
+		let preset = await response.text();
+		for (let name in color) {
+			preset = preset.replaceAll("[" + name + "]", color[name]);
+		}
+		if (!window.$style) {
+			document.head.append($style = document.createElement("style"));
+		}
+		$style.innerHTML = preset;
 	});
 }
