@@ -1137,7 +1137,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			}
 			
 			// ASS 주석에 [TEXT] 있을 경우 넣을 내용물 ([SMI]는 후처리 필요해서 빼둠)
-			let smiText = Subtitle.$tmp.html(smi.text.replaceAll(/<br>/gi, "\\N")).text();
+			let smiText = htmlToText(smi.text.replaceAll(/<br>/gi, "\\N"));
 			while (smiText.indexOf("\\N　\\N") >= 0) { smiText = smiText.replaceAll("\\N　\\N", "\\N"); }
 			while (smiText.indexOf("\\N\\N"  ) >= 0) { smiText = smiText.replaceAll("\\N\\N"  , "\\N"); }
 			
@@ -4435,7 +4435,7 @@ function generateSmiFromAss(keepHoldsAss=true) {
 						keepAss = false;
 					}
 				} else {
-					text = Subtitle.$tmp.html(text.replaceAll("{", "<a ").replaceAll("}", ">")).text();
+					text = htmlToText(text.replaceAll("{", "<a ").replaceAll("}", ">"));
 				}
 				if (!text.trim()) {
 					continue;
@@ -4665,9 +4665,9 @@ function extSubmit(method, url, values, withoutTag=true) {
 			
 			// 맞춤법 검사기 같은 데에 보내기 전에 태그 탈출 처리
 			if (withoutTag) {
-				Subtitle.$tmp.html(value.replaceAll(/<br>/gi, " "));
-				Subtitle.$tmp.find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
-				value = Subtitle.$tmp.text();
+				Subtitle.$tmp.innerHTML = value.replaceAll(/<br>/gi, " ");
+				$(Subtitle.$tmp).find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
+				value = Subtitle.$tmp.innerText;
 				value = value.replaceAll("​", "").replaceAll("　", " ").replaceAll(" ", " ");
 				while (value.indexOf("  ") >= 0) {
 					value = value.replaceAll("  ", " ");
@@ -4732,9 +4732,9 @@ function extSubmitSpeller() {
 		}
 		
 		// 태그 탈출 처리
-		Subtitle.$tmp.html(value.replaceAll(/<br>/gi, " "));
-		Subtitle.$tmp.find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
-		value = Subtitle.$tmp.text();
+		Subtitle.$tmp.innerHTML = value.replaceAll(/<br>/gi, " ");
+		$(Subtitle.$tmp).find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
+		value = Subtitle.$tmp.innerText;
 		value = value.replaceAll("​", "").replaceAll("　", " ").replaceAll(" ", " ");
 		while (value.indexOf("  ") >= 0) {
 			value = value.replaceAll("  ", " ");

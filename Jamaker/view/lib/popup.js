@@ -158,11 +158,10 @@ function setColor(color) {
 					preset = preset.replaceAll("["+name+"]", color[name]);
 				}
 				
-				let $style = $("#styleColor");
-				if (!$style.length) {
-					$("head").append($style = $("<style id='styleColor'>"));
+				if (!window.$style) {
+					document.head.append($style = document.createElement("style"));
 				}
-				$style.html(preset);
+				$style.innerHTML = preset;
 			}
 	});
 }

@@ -63,11 +63,11 @@ WebForm.prototype.prompt = function(name, msg, def) {
 }
 
 WebForm.prototype.showDragging = function(id) {
-	this.layerForDrag.show();
+	this.layerForDrag.style.display = "block";
 	this.script("showDragging");
 }
 WebForm.prototype.hideDragging = function() {
-	this.layerForDrag.hide();
+	this.layerForDrag.style.display = "none";
 	this.script("hideDragging");
 }
 WebForm.prototype.droppedFiles = null;
@@ -77,39 +77,39 @@ WebForm.prototype.drop = function(x, y) {
 
 WebForm.prototype.super_initializeComponent =
 WebForm.prototype.initializeComponent = function() {
-	$("body").append(this.mainView = $("<iframe>").css({
-			position: "absolute"
-		,	top: 0
-		,	left: 0
-		,	width: "100%"
-		,	height: "100%"
-		,	border: 0
-	})[0]);
+	this.mainView = document.createElement("iframe");
+	this.mainView.style.position = "absolute";
+	this.mainView.style.top = 0;
+	this.mainView.style.left = 0;
+	this.mainView.style.width = "100%";
+	this.mainView.style.height = "100%";
+	this.mainView.style.border = 0;
+	document.body.append(this.mainView);
 	
-	$("body").append(this.layerForDrag = $("<div>").css({
-			position: "fixed"
-		,	top: 0
-		,	left: 0
-		,	right: 0
-		,	bottom: 0
-		,	background: "rgba(127,127,127,0)"
-	}).hide());
+	this.layerForDrag = document.createElement("div");
+	this.layerForDrag.style.position = "fixed";
+	this.layerForDrag.style.top = 0;
+	this.layerForDrag.style.left = 0;
+	this.layerForDrag.style.right = 0;
+	this.layerForDrag.style.bottom = 0;
+	this.layerForDrag.style.background = "rgba(127,127,127,0)";
+	this.layerForDrag.style.display = "none";
+	document.body.append(this.layerForDrag);
 
 	const self = this;
 	document.addEventListener("dragenter", (e) => {
 		e.preventDefault();
 		self.showDragging();
 	});
-	const layerForDrag = self.layerForDrag[0];
-	layerForDrag.addEventListener("dragleave", (e) => {
+	this.layerForDrag.addEventListener("dragleave", (e) => {
 		e.preventDefault();
 		self.hideDragging();
 	});
-	layerForDrag.addEventListener("dragover", (e) => {
+	this.layerForDrag.addEventListener("dragover", (e) => {
 		e.preventDefault();
 		self.script("dragover", e.offsetX, e.offsetY);
 	});
-	layerForDrag.addEventListener("drop", async (e) => {
+	this.layerForDrag.addEventListener("drop", async (e) => {
 		e.preventDefault();
 		if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
 			self.droppedFiles = e.dataTransfer.files;
@@ -117,7 +117,7 @@ WebForm.prototype.initializeComponent = function() {
 		self.hideDragging();
 		await self.drop(e.offsetX, e.offsetY);
 	});
-	layerForDrag.addEventListener("click", async (e) => {
+	this.layerForDrag.addEventListener("click", async (e) => {
         // 레이어가 클릭됨 -> 드래그 끝났는데 안 사라진 상태
 		self.hideDragging();
 	});

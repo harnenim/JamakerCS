@@ -2,10 +2,8 @@
 <head>
 <meta charset="utf-8">
 <title>미리보기</title>
-<script src="lib/jquery-3.2.1.min.js"></script>
 <script src="lib/SubtitleObject.js"></script>
 <script>
-let title = document.getElementsByTagName("title")[0];
 let lastTab = null;
 let time = 0;
 const showText = [];
@@ -14,9 +12,10 @@ const indexes = [];
 const normalizedLines = [];
 const normalizedIndex = [];
 
-$span = $("<span>");
 function htmlToText(html) {
-	return $span.html(html).text();
+	if (!window.$span) $span = document.createElement("span");
+	$span.innerHTML = html;
+	return $span.innerText;
 }
 
 let style = null;
@@ -24,9 +23,9 @@ let setting = {}
 function setSetting(jsonSetting) {
 	setting = JSON.parse(jsonSetting);
 	if (style == null) {
-		$("head").append(style = $("<style>"));
+		document.head.append(style = document.createElement("style"));
 	}
-	style.html("#viewer {\nfont-size: calc(" + setting.viewer.size + "vw / 5.86);\n" + setting.viewer.css + "}");
+	style.innerHTML = ("#viewer {\nfont-size: calc(" + setting.viewer.size + "vw / 5.86);\n" + setting.viewer.css + "}");
 }
 let lines = [[],[],[]];
 let viewer = null;
@@ -38,16 +37,13 @@ function setLines(newLines) {
 	let receiveTime = time;
 	time = -1;
 	if (viewer) {
-		viewer.empty();
+		viewer.innerHTML = "";
 		viewers = [];
 		for (let i = 0; i < lines.length; i++) {
-			viewer.append(viewers[i] = $("<div>"));
+			viewer.append(viewers[i] = document.createElement("div"));
 		}
 	}
 	refreshTime(receiveTime, true); // 내용 바꿀 땐 시간 표시는 갱신 X
-}
-function setTitle(text) {
-	title.innerText = text;
 }
 let titleTime = -1;
 function refreshTime(receiveTime, withoutTitle) {
@@ -57,7 +53,7 @@ function refreshTime(receiveTime, withoutTitle) {
 			let ms = h % 1000; h = (h - ms) / 1000;
 			let s  = h %   60; h = (h -  s) /   60;
 			let m  = h %   60; h = (h -  m) /   60;
-			setTitle("미리보기 - " + h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms);
+			document.title = ("미리보기 - " + h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms);
 		}
 		titleTime = receiveTime;
 		
@@ -69,7 +65,7 @@ function refreshTime(receiveTime, withoutTitle) {
 		if (receiveTime < time || time < 0) {
 			// 역방향 탐색일 경우 초기화
 			indexes[hold] = -1;
-			viewers[hold].empty();
+			viewers[hold].innerHTML = "";
 		}
 		// 현재 시간 이전의 가장 마지막 싱크 찾기
 		let index = indexes[hold];
@@ -192,35 +188,39 @@ function setTextToView(text, hold) {
 		text = "";
 	}
 	
-	let viewer = viewers[hold].html(text);
+	let viewer = viewers[hold];
+	viewer.innerHTML = text;
 	
 	// 폰트에 따른 보정
-	viewer.find("font").each(function() {
-		const $font = $(this);
-		if ($font.parents("rt").length) return; // 후리가나 건너뛰기
-		
-		let face = $font.attr("face");
+	resizeChildNodes(viewer);
+	if (hasLine[hold]) {
+		viewer.classList.add("has-line");
+	} else {
+		viewer.classList.remove("has-line");
+	}
+}
+function resizeChildNodes(node) {
+	if (!node.tagName) return; // 문자열
+	if (node.tagName == "RT") return; // 후리가나 건너뛰기
+	if (node.tagName == "FONT") {
+		let face = node.getAttribute("face");
 		if (face) {
-			$font.css({ fontFamily: face });
-		} else {
-			face = $font.css("font-family");
+			node.style.fontFamily = face;
 		}
-		let size = $font.attr("size");
+		let size = node.getAttribute("size");
 		if (face || size) {
+			face = getComputedStyle(node).fontFamily;
 			let ratio = (face.indexOf("맑은 고딕") >= 0) ? 5.86 : 4.58;
 			if (!size) size = opener.setting.viewer.size;
-			$font.css({ fontSize: 'calc(' + size + 'vw / ' + ratio + ')' });
+			node.style.fontSize = ('calc(' + size + 'vw / ' + ratio + ')');
 		}
-	});
-	if (hasLine[hold]) {
-		viewer.addClass("has-line");
-	} else {
-		viewer.removeClass("has-line");
+	}
+	if (node.childNodes && node.childNodes.length) {
+		node.childNodes.forEach(resizeChildNodes);
 	}
 }
 
-//window.addEventListener("load", () => {
-$(() => {
+window.addEventListener("load", () => {
 	// 우클릭 방지
 	document.addEventListener("contextmenu", (e) => {
 		// TODO: 우클릭 메뉴 뭐라도 만들까?
@@ -231,23 +231,25 @@ $(() => {
 			case "F5": return false; // F5 새로고침 방지
 		}
 	};
-	viewer = $("#viewer");
+	viewer = document.getElementById("viewer");
 	
-	if (opener) { // 웹브라우저 샘플 실행 시
-		window.PlayerAPI = opener.SmiEditor.PlayerAPI;
-		opener.binder.updateViewerSetting();
-		opener.SmiEditor.Viewer.refresh();
-		
-	} else if (window.binder && binder.onloadViewer) {
-		window.PlayerAPI = {
-				playOrPause: (    ) => { binder.playOrPause(); }
-			,	play       : (    ) => { binder.play(); }
-			,	stop       : (    ) => { binder.stop(); }
-			,	moveTo     : (time) => { binder.moveTo(time); }
-			,	move       : (move) => { binder.moveTo(time + move); }
-		};
-		binder.onloadViewer();
-	}
+	setTimeout(() => { // 초기화 이후 동작하도록 딜레이 줌
+		if (opener) {
+			window.PlayerAPI = opener.SmiEditor.PlayerAPI;
+			opener.binder.updateViewerSetting();
+			opener.SmiEditor.Viewer.refresh();
+			
+		} else if (window.binder && binder.onloadViewer) {
+			window.PlayerAPI = {
+					playOrPause: (    ) => { binder.playOrPause(); }
+				,	play       : (    ) => { binder.play(); }
+				,	stop       : (    ) => { binder.stop(); }
+				,	moveTo     : (time) => { binder.moveTo(time); }
+				,	move       : (move) => { binder.moveTo(time + move); }
+			};
+			binder.onloadViewer();
+		}
+	}, 100);
 });
 
 document.addEventListener("keydown", (e) => {

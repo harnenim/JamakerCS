@@ -10,9 +10,9 @@
 	<script>
 windowName = "help";
 ready(() => {
-	$("#version").text(opener.setting.version);
-	if (opener.Subtitle.video.ffmpeg ) { $("#ffmpeg" ).text(opener.Subtitle.video.ffmpeg ); } else { $("#ffmpeg" ).css({ color: "#888" }); }
-	if (opener.Subtitle.video.ffprobe) { $("#ffprobe").text(opener.Subtitle.video.ffprobe); } else { $("#ffprobe").css({ color: "#888" }); }
+	document.getElementById("version").innerText = (opener.setting.version);
+	if (opener.Subtitle.video.ffmpeg ) { document.getElementById("ffmpeg" ).innerText = (opener.Subtitle.video.ffmpeg ); } else { document.getElementById("ffmpeg" ).style.color = "#888"; }
+	if (opener.Subtitle.video.ffprobe) { document.getElementById("ffprobe").innerText = (opener.Subtitle.video.ffprobe); } else { document.getElementById("ffprobe").style.color = "#888"; }
 });
 	</script>
 	<style>

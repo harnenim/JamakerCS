@@ -629,8 +629,16 @@ window.Subtitle = {
 	,	inner: 2
 	,	split: 3
 	}
-,	$tmp: $("<a>")
+,	$tmp: document.createElement("span")
 };
+function htmlToText(html) {
+	Subtitle.$tmp.innerHTML = html;
+	return Subtitle.$tmp.innerText;
+}
+function textToHtml(text) {
+	Subtitle.$tmp.innerText = text;
+	return Subtitle.$tmp.innerHTML;
+}
 window.SyncType = Subtitle.SyncType;
 
 Subtitle.video = {
@@ -718,15 +726,18 @@ Subtitle.Width =
 		if (typeof input == "string") {
 			if (!font) font = this.DEFAULT_FONT;
 			if (!this.div) {
-				$("body").append(this.div = $("<div>").css({
-						position: "absolute"
-					,	top: -100
-					,	height: 100
-					,	whiteSpace: "pre"
-				}));
+				this.div = document.createElement("div");
+				this.div.style.position = "absolute";
+				this.div.style.top = "-100px";
+				this.div.style.height = "100px";
+				this.div.style.whiteSpace = "pre";
+				document.body.append(this.div);
 			}
-			this.div.css(font).text(input);
-			return this.div.width();
+			for (name in font) {
+				this.div.style[name] = font[name];
+			}
+			this.div.innerText = input;
+			return this.div.clientWidth;
 		} else {
 			let width = 0;
 			for (let i = 0; i < input.length; i++) {
@@ -920,7 +931,7 @@ Attr.prototype.toHtml = function() {
 	if (this.fn != null && this.fn.length > 0) css += "font-family: '" + this.fn + "';";
 	if (this.fc != null && this.fc.length > 0) css += "color: #" + this.fc + ";";
 	return "<span" + (css.length > 0 ? " style=\"" + css + "\"" : "") + ">"
-		+ Subtitle.$tmp.text(text).html().replaceAll(" ", "&nbsp;").replaceAll("\n", "​<br>​")
+		+ Subtitle.textToHtml(text).replaceAll(" ", "&nbsp;").replaceAll("\n", "​<br>​")
 		+ "</span>";
 }
 Attr.toHtml = (attrs) => {
@@ -1773,7 +1784,7 @@ AssEvent.fromSync = function(sync, style=null) {
 					lines = lines.split("\\N");
 					const pureLines = [];
 					for (let i = 0; i < lines.length; i++) {
-						let pureLine = Subtitle.$tmp.html(lines[i].replaceAll("{", "<span ").replaceAll("}", ">")).text();
+						let pureLine = htmlToText(lines[i].replaceAll("{", "<span ").replaceAll("}", ">"));
 						if (pureLine.startsWith("-")) {
 							pureLines.push({ i: i, text: pureLine });
 						}
@@ -1781,7 +1792,7 @@ AssEvent.fromSync = function(sync, style=null) {
 					if (pureLines.length == 0) {
 						// 반각 줄표 없으면 전각 줄표로 재확인
 						for (let i = 0; i < lines.length; i++) {
-							let pureLine = Subtitle.$tmp.html(lines[i].replaceAll("{", "<span ").replaceAll("}", ">")).text();
+							let pureLine = htmlToText(lines[i].replaceAll("{", "<span ").replaceAll("}", ">"));
 							if (pureLine.startsWith("－")) {
 								pureLines.push({ i: i, text: pureLine });
 							}
@@ -2976,20 +2987,19 @@ Smi.toAttrs = (text) => {
 			}
 		}
 	}
-	const a = Subtitle.$tmp;
 	for (let i = 0; i < result.length; i++) {
 		// &amp; 같은 문자 처리
 		if (result[i].attrs) {
 			let subAttrs = result[i].attrs;
 			for (let j = 0; j < subAttrs.length; j++) {
-				subAttrs[j].text = a.html(subAttrs[j].text).text();
+				subAttrs[j].text = htmlToText(subAttrs[j].text);
 			}
 			subAttrs = result[i].furigana;
 			for (let j = 0; j < subAttrs.length; j++) {
-				subAttrs[j].text = a.html(subAttrs[j].text).text();
+				subAttrs[j].text = htmlToText(subAttrs[j].text);
 			}
 		} else {
-			result[i].text = a.html(result[i].text).text();
+			result[i].text = htmlToText(result[i].text);
 		}
 	}
 	
@@ -4248,7 +4258,7 @@ SmiFile.prototype.normalize = function(withComment=false, fps=null) {
 	if (preset) {
 		for (let i = 0; i < smis.length; i++) {
 			const smi = smis[i];
-			if (Subtitle.$tmp.html(smi.text).text().replaceAll("　", " ").trim()) {
+			if (htmlToText(smi.text).replaceAll("　", " ").trim()) {
 				smi.text = preset.join(smi.text);
 				// 태그 재구성
 				smi.fromAttrs(smi.toAttrs(false));

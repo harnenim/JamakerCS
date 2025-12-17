@@ -755,7 +755,7 @@ window.MB = 9;
 			const paths = path.replaceAll("\\", "/").split("/");
 			title = paths[paths.length - 1] + " - Jamaker";
 		}
-		$("title").text(title);
+		document.title = title;
 	}
 	editor.checkLoadVideoFile = function() { /* native */ }
 	editor.loadVideoFile = function(path) { /* native */ }
@@ -938,16 +938,10 @@ window.MB = 9;
 	editor.initializeComponent = function() {
 		this.super_initializeComponent();
 		
-		this.layerForDrag.css({
-				padding: 80
-			,	textAlign: "center"
-			,	fontSize: 20
-		}).html("웹 간이 버전에서 드래그로 열 경우<br />저장 파일을 재지정해 줘야 합니다.");
-		/*
-		$("body").append((this.menustrip = new MenuStrip()).view);
-		this.mainView.style.top = "20px";
-		this.mainView.style.height = "calc(100% - 20px)";
-		*/
+		this.layerForDrag.style.padding = "80px";
+		this.layerForDrag.style.textAlign = "center";
+		this.layerForDrag.style.fontSize = "20px";
+		this.layerForDrag.innerHTML = "웹 간이 버전에서 드래그로 열 경우<br />저장 파일을 재지정해 줘야 합니다.";
 	}
 }
 ready(() => {

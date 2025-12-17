@@ -10,8 +10,6 @@
 	<script>
 windowName = "help";
 ready(() => {
-	$("#version").text(opener.setting.version);
-	
 	const url = (opener && opener.binder && (!opener.binder._ || (typeof opener.binder._ == "function")))
 		? /* C# 프로그램에서 서버 호출 */ "https://harnenim.github.io/Jamaker/updates.json?" + Math.random()
 		: /* 웹버전 내부에서 로컬 호출 */ "../../updates.json"
@@ -44,11 +42,14 @@ ready(() => {
 					log.push("");
 					log.push("");
 				}
-				$("#taLog").text(log.join("\n"));
+				document.getElementById("taLog").innerText = log.join("\n");
+				const btn = document.getElementById("btnUpdate");
 				if (isLatest) {
-					$("#btnUpdate").text("현재 최신 버전입니다.").attr({ disabled: true });
+					btn.innerText = "현재 최신 버전입니다.";
+					btn.disabled = true;
 				} else {
-					$("#btnUpdate").text(updates[0].version + "으로 업데이트").attr({ disabled: false });
+					btn.innerText = (updates[0].version + "으로 업데이트");
+					btn.disabled = false;
 				}
 			}
 		,	error: (e) => {
@@ -57,7 +58,7 @@ ready(() => {
 			}
 	});
 	
-	$("#btnUpdate").on("click", function() {
+	document.getElementById("btnUpdate").addEventListener("click", () => {
 		alert("업데이트 기능은 추후 지원 예정입니다.");
 	});
 });
