@@ -141,9 +141,9 @@ window.Combine = {
 		}
 	}
 	
-	function toText(html, checker) {
+	function toText(html) {
 		// RUBY태그 없애고 계산
-		return checker.html(html.replaceAll("<RT", "<!--RT").replaceAll("</RT>", "</RT-->")).text();
+		return htmlToText(html.replaceAll("<RT", "<!--RT").replaceAll("</RT>", "</RT-->"));
 	}
 	function isClear(attr, br=null) {
 		// 공백문자가 들어가도 무관한 속성
@@ -154,7 +154,7 @@ window.Combine = {
 		    && !attr.typing // 타이핑 같은 건 결합 전에 사라져야 함
 		    && !attr.furigana;
 	}
-	function getWidth(smi, checker) {
+	function getWidth(smi) {
 		// 태그 밖의 공백문자 치환
 		{	const tags = smi.split("<");
 			for (let i = 1; i < tags.length; i++) {
@@ -165,11 +165,12 @@ window.Combine = {
 			}
 			smi = tags.join("<");
 		}
-		const width = checker.html(smi).width();
+		Combine.checker.innerHTML = smi;
+		const width = Combine.checker.clientWidth;
 		if (LOG) console.log(width, smi);
 		return width;
 	}
-	function getAttrWidth(attrs, checker, withFs=false) {
+	function getAttrWidth(attrs, withFs=false) {
 		const cAttrs = [];
 		function append(attr) {
 			const cAttr = new Attr(attr, attr.text.replaceAll("&nbsp;", " "), true);
@@ -191,22 +192,27 @@ window.Combine = {
 				append(attrs[i]);
 			}
 		}
-		const width = checker.html(Smi.fromAttr(cAttrs, Combine.defaultSize).replaceAll("\n", "<br>")).width();
+		Combine.checker.innerHTML = Smi.fromAttr(cAttrs, Combine.defaultSize).replaceAll("\n", "<br>");
+		const width = Combine.checker.clientWidth;
 		if (LOG) console.log(width, attrs);
 		return width;
 	}
-	function getChecker() {
+	function initChecker() {
 		if (!Combine.checker) {
-			$("body").append(Combine.checker = $("<span class='width-checker'>"));
-			$("style").append($("<style>").html("\n"
-				+ ".width-checker, .width-checker * {\n"
-				+ "white-space: pre;\n"
-				+ "font-size: 144px;\n"
-				+ "font-weight: bold;\n"
-			));
+			Combine.checker = document.createElement("span");
+			Combine.checker.classList.add("width-checker");
+			document.body.append(Combine.checker);
+			const $style = document.createElement("style");
+			$style.innerHTML = "\n"
+				+ "	.width-checker, .width-checker * {\n"
+				+ "	white-space: pre;\n"
+				+ "	font-size: 144px;\n"
+				+ "	font-weight: bold;\n"
+				+ "}";
+			document.head.append($style);
 		}
-		Combine.checker.attr({ style: Combine.css });
-		return Combine.checker.show();
+		Combine.checker.setAttribute("style", Combine.css);
+		Combine.checker.style.display = "inline-block";
 	}
 	
 	function getSyncLine(sync, type) {
@@ -219,7 +225,7 @@ window.Combine = {
 		return line;
 	}
 	
-	function parse(text, checker) {
+	function parse(text) {
 		const smis = new SmiFile(text).body;
 		smis.push(new Smi(99999999, SyncType.normal, "&nbsp;"));
 		
@@ -243,8 +249,8 @@ window.Combine = {
 				const lineCount = smi.text.split(/<br>/gi).length;
 				
 				const attrs = smi.toAttrs(false);
-				const defaultWidth = getAttrWidth(attrs, checker);
-				const sizedWidth   = getAttrWidth(attrs, checker, true);
+				const defaultWidth = getAttrWidth(attrs);
+				const sizedWidth   = getAttrWidth(attrs, true);
 				syncs.push(last = [smi.start, smi.syncType, 0, 0, smi.text, attrs, lineCount, defaultWidth, sizedWidth]);
 			}
 		}
@@ -256,10 +262,9 @@ window.Combine = {
 		
 		// 결합 로직 돌아갈 때 문법 하이라이트가 있으면 성능 저하됨
 		// ... 지금은 개선해서 큰 저하 없을지도?
-		const hljs = $(".hljs").hide();
-		const checker = getChecker();
-		const upperSyncs = parse(inputUpper, checker);
-		const lowerSyncs = parse(inputLower, checker);
+		initChecker();
+		const upperSyncs = parse(inputUpper);
+		const lowerSyncs = parse(inputLower);
 		
 		const groups = [];
 		{
@@ -629,7 +634,7 @@ window.Combine = {
 									} else {
 										padsAttrs.push(new Attr()); // 종료태그 필수
 									}
-									width = getAttrWidth(padsAttrs, checker, withFontSize);
+									width = getAttrWidth(padsAttrs, withFontSize);
 									if (LOG) console.log(padsAttrs, width);
 									
 									if (width == groupMaxWidth || checkThinSpace) {
@@ -747,8 +752,8 @@ window.Combine = {
 				}
 			}
 		}
-		checker.text("").hide();
-		hljs.show();
+		Combine.checker.innerText = "";
+		Combine.checker.display = "none";
 		
 		const lines = [];
 		let lastSync = 0;
