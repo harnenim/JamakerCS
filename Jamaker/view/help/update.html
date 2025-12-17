@@ -42,7 +42,7 @@ ready(() => {
 					log.push("");
 					log.push("");
 				}
-				document.getElementById("taLog").innerText = log.join("\n");
+				document.getElementById("taLog").value = log.join("\n");
 				const btn = document.getElementById("btnUpdate");
 				if (isLatest) {
 					btn.innerText = "현재 최신 버전입니다.";
