@@ -12,7 +12,6 @@ C# 껍데기를 거치지 않고 웹브라우저에서 돌아가도록 만든 �
 
 -->
 <link rel="stylesheet" type="text/css" href="bridge/WebForm.css" />
-<script src="view/lib/jquery-3.2.1.min.js"></script>
 <script src="bridge/WinAPI.js"></script>
 <script src="bridge/Binder.js"></script>
 <script src="bridge/WebPlayerBridge.js"></script>
@@ -576,14 +575,12 @@ window.MB = 9;
 			this.strSettingJson = setting
 		}
 		this.strBridgeList = playerDlls;
-		$.ajax({url: "view/lib/highlight/list.txt"
-			,	dataType: "text"
-			,	success: (highlights) => {
-					editor.strHighlights = highlights;
-					if (afterSuccess) {
-						afterSuccess();
-					}
-				}
+		fetch("view/lib/highlight/list.txt").then(async (response) => {
+            const highlights = await response.text();
+            editor.strHighlights = highlights;
+            if (afterSuccess) {
+                afterSuccess();
+            }
 		});
 	}
 	editor.repairSetting = function() {
@@ -637,14 +634,11 @@ window.MB = 9;
 		// C#에선 addon 로딩되면 eval 실행
 	}
 	editor.loadAddonSetting = function(path) {
-		$.ajax({"url" : "setting/addon_" + path
-			,	"dataType": "text"
-			,	"success": (setting) => {
-					editor.mainView.contentWindow.afterLoadAddonSetting(setting.replaceAll("\r\n", "\n"));
-				}
-			,	"error": () => {
-					editor.mainView.contentWindow.afterLoadAddonSetting("");
-				}
+		fetch("setting/addon_" + path).then(async (response) => {
+			const setting = await response.text();
+			editor.mainView.contentWindow.afterLoadAddonSetting(setting.replaceAll("\r\n", "\n"));
+        }).catch(() => {
+            editor.mainView.contentWindow.afterLoadAddonSetting("");
 		});
 	}
 	editor.saveAddonSetting = function(path, text) {
