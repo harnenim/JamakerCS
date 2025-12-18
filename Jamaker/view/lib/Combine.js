@@ -753,7 +753,7 @@ window.Combine = {
 			}
 		}
 		Combine.checker.innerText = "";
-		Combine.checker.display = "none";
+		Combine.checker.style.display = "none";
 		
 		const lines = [];
 		let lastSync = 0;
