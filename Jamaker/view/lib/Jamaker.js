@@ -4656,9 +4656,9 @@ function extSubmit(method, url, values, withoutTag=true) {
 			
 			// 맞춤법 검사기 같은 데에 보내기 전에 태그 탈출 처리
 			if (withoutTag) {
-				Subtitle.$tmp.innerHTML = value.replaceAll(/<br>/gi, " ");
-				$(Subtitle.$tmp).find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
-				value = Subtitle.$tmp.innerText;
+				Subtitle._tmp.innerHTML = value.replaceAll(/<br>/gi, " ");
+				$(Subtitle._tmp).find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
+				value = Subtitle._tmp.innerText;
 				value = value.replaceAll("​", "").replaceAll("　", " ").replaceAll(" ", " ");
 				while (value.indexOf("  ") >= 0) {
 					value = value.replaceAll("  ", " ");
@@ -4723,9 +4723,9 @@ function extSubmitSpeller() {
 		}
 		
 		// 태그 탈출 처리
-		Subtitle.$tmp.innerHTML = value.replaceAll(/<br>/gi, " ");
-		$(Subtitle.$tmp).find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
-		value = Subtitle.$tmp.innerText;
+		Subtitle._tmp.innerHTML = value.replaceAll(/<br>/gi, " ");
+		$(Subtitle._tmp).find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
+		value = Subtitle._tmp.innerText;
 		value = value.replaceAll("​", "").replaceAll("　", " ").replaceAll(" ", " ");
 		while (value.indexOf("  ") >= 0) {
 			value = value.replaceAll("  ", " ");
