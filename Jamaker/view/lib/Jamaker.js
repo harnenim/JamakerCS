@@ -59,9 +59,8 @@ window.Tab = function(text, path) {
 			
 			assHold.area.empty().addClass("ass-hold").append(SmiEditor.assHoldPreset.clone());
 			this.holdArea.append(assHold.area);
-			const assEditorArea = assHold.area.find(".ass-editor");
 			
-			assHold.assEditor = new AssEditor(assEditorArea);
+			assHold.assEditor = new AssEditor(assHold.area.find(".ass-editor")[0]);
 			assHold.assEditor.onUpdate = function() {
 				if (this.isSaved) {
 					assHold.selector.removeClass("not-saved");

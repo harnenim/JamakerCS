@@ -22,14 +22,14 @@ setColor = function(color) {
 	for (let name in color) {
 		preset = preset.replaceAll("["+name+"]", color[name]);
 	}
-	$("#styleColorAppend").html(preset);;
+	document.getElementById("styleColorAppend").innerHTML = preset;
 }
 
 ready(() => {
 	const setting = JSON.parse(JSON.stringify(opener.setting));
 	const oSmiEditor = opener.SmiEditor;
 	
-	styleColorAppendPreset = $("#styleColorAppend").html();
+	styleColorAppendPreset = document.getElementById("styleColorAppend").innerHTML;
 	setColor(setting.color);
 	SmiEditor.scrollShow = setting.scrollShow;
 	
@@ -37,18 +37,28 @@ ready(() => {
 	
 	// 전역에서 접근 가능해야 함
 	window.show = function(index) {
-		$("#settingNav > a.selected").removeClass("selected");
-		$("#settingNav > a:eq(" + index + ")").addClass("selected");
-		$("#settingArea > form.selected").removeClass("selected");
-		opened = $("#settingArea > form:eq(" + index + ")").addClass("selected").attr("id");
+		let el;
+		if (el = document.querySelector("#settingNav > a.selected"))     el.classList.remove("selected");
+		if (el = document.querySelectorAll("#settingNav > a")[index])    el.classList.add   ("selected");
+		if (el = document.querySelector("#settingArea > form.selected")) el.classList.remove("selected");
+		opened = null;
+		if (el = document.querySelectorAll("#settingArea > form")[index]) {
+			el.classList.add("selected");
+			opened = el.id;
+		}
 		// 지역변수 setting도 건드려야 함
 		opener.setting.show = setting.show = index;
 		lastFocus = null;
 	}
-	$(document).on("focus", "input,textarea", function(e) {
-		lastFocus = $(this);
+	document.addEventListener("focus", function(e) {
+		let input = e.target.closest("input");
+		if (!input) input = e.target.closest("textarea");
+		if (input) {
+			lastFocus = input;
+		}
 		
-	}).on("keydown", function(e) {
+	});
+	document.addEventListener("keydown", (e) => {
 		if (e.ctrlKey) {
 			switch (e.key) {
 				case "Tab": {
@@ -75,7 +85,8 @@ ready(() => {
 				}
 			}
 		}
-	}).on("keyup", function(e) {
+	});
+	document.addEventListener("keyup", (e) => {
 		if (e.altKey && e.key == "s") {
 			// Alt+S 했을 땐 포커스 원위치
 			lastFocus && lastFocus.focus();
@@ -121,53 +132,68 @@ ready(() => {
 		}
 	}
 	
-	function refresh(form, setting) {
-		form.find("input[type=text][name],input[type=number][name],input[type=color][name],input[type=range][name],textarea[name]").each((_, el) => {
-			const input = $(el);
-			let name = input.attr("name");
-			if (name.indexOf("what") > 0) {
-				name = name.replaceAll("what", setting.player.control.dll);
-			}
-			const value = eval("setting['" + name.replaceAll("_", "']['") + "']");
-			if (typeof value == "number" || typeof value == "string") {
-				input.val(value);
-			} else if (value && value.join) {
-				input.val(value.join("\n"));
+	function refresh(formID, setting) {
+		form = document.getElementById(formID);
+		[...form.querySelectorAll("input")].concat([...form.querySelectorAll("textarea")]).forEach((el) => {
+			let name = el.name;
+			if (!name) return;
+			
+			if ((el.type == "text")
+			 || (el.type == "number")
+			 || (el.type == "color")
+			 || (el.type == "range")
+			 || (el.tagName == "TEXTAREA")
+			) {
+				if (name.indexOf("what") > 0) {
+					name = name.replaceAll("what", setting.player.control.dll);
+				}
+				const value = eval("setting['" + name.replaceAll("_", "']['") + "']");
+				if (typeof value == "number" || typeof value == "string") {
+					el.value = value;
+				} else if (value && value.join) {
+					el.value = value.join("\n");
+				}
+			} else if (el.type == "checkbox") {
+				if (name.indexOf("what")) {
+					name = name.replaceAll("what", setting.player.control.dll);
+				}
+				el.checked = eval("setting['" + name.replaceAll("_", "']['") + "']");
 			}
 		});
-		form.find("input[type=checkbox][name]").each((_, el) => {
-			const input = $(el);
-			let name = input.attr("name");
-			if (name.indexOf("what")) {
-				name = name.replaceAll("what", setting.player.control.dll);
-			}
-			input.prop("checked", eval("setting['" + name.replaceAll("_", "']['") + "']"));
-		});
-		form.find("select[name]").each((_, el) => {
-			const select = $(el);
-			const name = select.attr("name");
-			const value = eval("setting." + name.replaceAll("_", "."));
-			select.data({value: value});
+		[...form.querySelectorAll("select")].forEach((el) => {
+			const name = el.name;
+			if (!name) return;
+
+			el.setAttribute("data-value", el.value = eval("setting." + name.replaceAll("_", ".")));
 		});
 	}
 	
-	const fieldEditor = $("#fieldEditor");
-	const fieldViewer = $("#fieldViewer");
-	const fieldPlayer = $("#fieldPlayer");
+	const fieldEditor = document.getElementById("fieldEditor");
+	const fieldViewer = document.getElementById("fieldViewer");
+	const fieldPlayer = document.getElementById("fieldPlayer");
 	
-	const tableCommand = $("#tableCommand");
-	const inputCommandName = $("#inputCommandName");
-	const inputCommandKey  = $("#inputCommandKey" );
-	const inputCommandFunc = $("#inputCommandFunc");
+	const tableCommand = document.getElementById("tableCommand");
+	const inputCommandName = document.getElementById("inputCommandName");
+	const inputCommandKey  = document.getElementById("inputCommandKey" );
+	const inputCommandFunc = document.getElementById("inputCommandFunc");
+	
+	const $fieldEditor      = $(fieldEditor     );
+	const $fieldViewer      = $(fieldViewer     );
+	const $fieldPlayer      = $(fieldPlayer     );
+	const $tableCommand     = $(tableCommand    );
+	const $inputCommandName = $(inputCommandName);
+	const $inputCommandKey  = $(inputCommandKey );
+	const $inputCommandFunc = $(inputCommandFunc);
 	
 	{	// 창
 		(refreshFuncs["window"] = (setting) => {
-			refresh($("#window"), setting);
+			refresh("window", setting);
 			
 			// 값에 맞춰 fieldset 이동
-			const editor = [setting.window       , fieldEditor];
-			const viewer = [setting.viewer.window, fieldViewer];
-			const player = [setting.player.window, fieldPlayer];
+			// TODO: 배열[1] 결국 사용 안 했나...?
+			const editor = [setting.window       , $fieldEditor];
+			const viewer = [setting.viewer.window, $fieldViewer];
+			const player = [setting.player.window, $fieldPlayer];
 			
 			{
 				const ecss = {};
@@ -230,9 +256,9 @@ ready(() => {
 						}
 					}
 				}
-				fieldEditor.css(ecss);
-				fieldViewer.css(vcss);
-				fieldPlayer.css(pcss);
+				$fieldEditor.css(ecss);
+				$fieldViewer.css(vcss);
+				$fieldPlayer.css(pcss);
 			}
 			
 			setSaved("window"
@@ -243,20 +269,20 @@ ready(() => {
 		})(setting);
 		
 		submitFuncs["window"] = () => {
-			setting.window.x             = Number($("input[name=window_x]"            ).val());
-			setting.window.y             = Number($("input[name=window_y]"            ).val());
-			setting.window.width         = Number($("input[name=window_width]"        ).val());
-			setting.window.height        = Number($("input[name=window_height]"       ).val());
-			setting.viewer.window.x      = Number($("input[name=viewer_window_x]"     ).val());
-			setting.viewer.window.y      = Number($("input[name=viewer_window_y]"     ).val());
-			setting.viewer.window.width  = Number($("input[name=viewer_window_width]" ).val());
-			setting.viewer.window.height = Number($("input[name=viewer_window_height]").val());
-			setting.player.window.x      = Number($("input[name=player_window_x]"     ).val());
-			setting.player.window.y      = Number($("input[name=player_window_y]"     ).val());
-			setting.player.window.width  = Number($("input[name=player_window_width]" ).val());
-			setting.player.window.height = Number($("input[name=player_window_height]").val());
-			setting.player.window.use    = $("input[name=player_window_use]").prop("checked");
-			setting.window.follow        = $("input[name=window_follow]").prop("checked");
+			setting.window.x             = Number(document.querySelector("input[name=window_x]"            ).value);
+			setting.window.y             = Number(document.querySelector("input[name=window_y]"            ).value);
+			setting.window.width         = Number(document.querySelector("input[name=window_width]"        ).value);
+			setting.window.height        = Number(document.querySelector("input[name=window_height]"       ).value);
+			setting.viewer.window.x      = Number(document.querySelector("input[name=viewer_window_x]"     ).value);
+			setting.viewer.window.y      = Number(document.querySelector("input[name=viewer_window_y]"     ).value);
+			setting.viewer.window.width  = Number(document.querySelector("input[name=viewer_window_width]" ).value);
+			setting.viewer.window.height = Number(document.querySelector("input[name=viewer_window_height]").value);
+			setting.player.window.x      = Number(document.querySelector("input[name=player_window_x]"     ).value);
+			setting.player.window.y      = Number(document.querySelector("input[name=player_window_y]"     ).value);
+			setting.player.window.width  = Number(document.querySelector("input[name=player_window_width]" ).value);
+			setting.player.window.height = Number(document.querySelector("input[name=player_window_height]").value);
+			setting.player.window.use    = document.querySelector("input[name=player_window_use]").checked;
+			setting.window.follow        = document.querySelector("input[name=window_follow]").checked;
 			opener.setSetting(setting);
 			opener.saveSetting();
 			opener.moveWindowsToSetting();
@@ -266,7 +292,7 @@ ready(() => {
 			refreshFuncs["window"](setting);
 		};
 		
-		$("#btnGetWindows").on("click", function() {
+		document.getElementById("btnGetWindows").addEventListener("click", () => {
 			opener.binder.getWindows(JSON.stringify(["editor", "viewer", "player"]));
 		});
 		// C#에서 Script("afterGetWindow", object[] { "editor", x, y, w, h });
@@ -274,41 +300,41 @@ ready(() => {
 			const name = (id == "editor")
 			           ? "window"
 			           : (id + "_window");
-			$("input[name=" + name + "_x]"     ).val(x);
-			$("input[name=" + name + "_y]"     ).val(y);
-			$("input[name=" + name + "_width]" ).val(w);
-			$("input[name=" + name + "_height]").val(h);
+			document.querySelector("input[name=" + name + "_x]"     ).value = x;
+			document.querySelector("input[name=" + name + "_y]"     ).value = y;
+			document.querySelector("input[name=" + name + "_width]" ).value = w;
+			document.querySelector("input[name=" + name + "_height]").value = h;
 		};
 	}
 	
 	{	// 싱크
 		(refreshFuncs["sync"] = (setting) => {
-			refresh($("#sync"), setting);
+			refresh("sync", setting);
 			setSaved("sync", (JSON.stringify(setting.sync) == JSON.stringify(opener.setting.sync)));
 		})(setting);
 		
 		submitFuncs["sync"] = () => {
-			const preset = $("input[name=sync_preset]").val();
+			const preset = document.querySelector("input[name=sync_preset]").value;
 			
 			// TODO: 프리셋 양식 오류 검증 필요?
 			//       차라리 설정을 없앨까?
 			// <Sync Start={sync}><P Class={lang}{type}>
 			
-			setting.sync.insert   = Number($("input[name=sync_insert]").val());
-			setting.sync.update   = Number($("input[name=sync_update]").val());
-			setting.sync.weight   = Number($("input[name=sync_weight]").val());
-			setting.sync.unit     = Number($("input[name=sync_unit]"  ).val());
-			setting.sync.move     = Number($("input[name=sync_move]"  ).val());
-			setting.sync.lang     = $("input[name=sync_lang]"  ).val();
+			setting.sync.insert   = Number(document.querySelector("input[name=sync_insert]").value);
+			setting.sync.update   = Number(document.querySelector("input[name=sync_update]").value);
+			setting.sync.weight   = Number(document.querySelector("input[name=sync_weight]").value);
+			setting.sync.unit     = Number(document.querySelector("input[name=sync_unit]"  ).value);
+			setting.sync.move     = Number(document.querySelector("input[name=sync_move]"  ).value);
+			setting.sync.lang     = document.querySelector("input[name=sync_lang]"  ).value;
 			setting.sync.preset   = preset;
-			setting.sync.frame    = $("input[name=sync_frame]" ).prop("checked");
-			setting.sync.kframe   = $("input[name=sync_kframe]").prop("checked");
-			setting.sync.kLimit   = Number($("input[name=sync_kLimit]").val());
-			setting.sync.holds    = $("input[name=sync_holds]").prop("checked");
-			setting.sync.width    = Number($("input[name=sync_width]" ).val());
-			setting.sync.height   = Number($("input[name=sync_height]").val());
-			setting.sync.uiWidth  = Number($("input[name=sync_uiWidth]" ).val());
-			setting.sync.uiHeight = Number($("input[name=sync_uiHeight]").val());
+			setting.sync.frame    = document.querySelector("input[name=sync_frame]" ).checked;
+			setting.sync.kframe   = document.querySelector("input[name=sync_kframe]").checked;
+			setting.sync.kLimit   = Number(document.querySelector("input[name=sync_kLimit]").value);
+			setting.sync.holds    = document.querySelector("input[name=sync_holds]").checked;
+			setting.sync.width    = Number(document.querySelector("input[name=sync_width]" ).value);
+			setting.sync.height   = Number(document.querySelector("input[name=sync_height]").value);
+			setting.sync.uiWidth  = Number(document.querySelector("input[name=sync_uiWidth]" ).value);
+			setting.sync.uiHeight = Number(document.querySelector("input[name=sync_uiHeight]").value);
 			opener.setSetting(setting);
 			opener.saveSetting();
 		};
@@ -321,18 +347,18 @@ ready(() => {
 			if (setting == opener.setting) {
 				checkSaved("cmd", () => {
 					setSaved("cmd", true);
-					inputCommandName.val("");
-					inputCommandKey .val("");
-					inputCommandFunc.val("");
+					inputCommandName.value = "";
+					inputCommandKey .value = "";
+					inputCommandFunc.value = "";
 				});
 				
 			} else {
 				confirm("현재 값은 복원할 수 없습니다.", () => {
 					opener.setting.command = opener.deepCopyObj(setting.command);
 					setSaved("cmd", true);
-					inputCommandName.val("");
-					inputCommandKey .val("");
-					inputCommandFunc.val("");
+					inputCommandName.value = "";
+					inputCommandKey .value = "";
+					inputCommandFunc.value = "";
 					refreshTableCommand();
 					opener.setSetting(opener.setting);
 					opener.saveSetting();
@@ -340,40 +366,40 @@ ready(() => {
 			}
 		};
 		
-		const tbody = tableCommand.find("tbody");
+		const $tbody = $tableCommand.find("tbody");
 		const withs = ["withCtrls", "withAlts", "withCtrlAlts", "withCtrlShifts"];
 		const keys = "pqrstuvwxyz{ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=";
 		const keyNames = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"].concat("ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=".split(""));
 		(refreshTableCommand = () => {
-			tbody.empty();
+			$tbody.empty();
 			for (let i = 0; i < keys.length; i++) {
 				const key = keys[i];
 				const keyName = (i < 12)
 				              ? ("F" + (i + 1))
 				              : key;
-				const th = $("<th>").text(keyName);
+				const $th = $("<th>").text(keyName);
 				if (i < 12) {
 					let func = setting.command.fn[key];
 					if (!func || !func.trim()) {
 						func = "";
-						th.addClass("not-used");
+						$th.addClass("not-used");
 					} else {
 						let label = func.trim();
 						if (label.substring(0, 2) == "/*") {
 							label = label.substring(2).split("*/")[0].trim();
 						}
-						th.addClass("used").attr({ title: label });
+						$th.addClass("used").attr({ title: label });
 					}
-					th.data({
+					$th.data({
 							"name": "setting.command.fn['" + key + "']"
 						,	"key" : key
 						,	"func": func
 					});
 				}
-				const tr = $("<tr>").addClass("key-" + (keyName=='`' ? 'ㄹ' : (keyName=='=' ? '＝' : keyName))).append(th);
+				const $tr = $("<tr>").addClass("key-" + (keyName=='`' ? 'ㄹ' : (keyName=='=' ? '＝' : keyName))).append($th);
 				for (let j = 0; j < withs.length; j++) {
 					const w = withs[j];
-					const td = $("<td>");
+					const $td = $("<td>");
 					if (oSmiEditor[w].reserved.indexOf(key) >= 0) {
 						let func = oSmiEditor[w][key];
 						let label = func;
@@ -391,7 +417,7 @@ ready(() => {
 							label = "시스템 단축키";
 						}
 						label = "예약: " + label;
-						td.addClass("fixed").text(label);
+						$td.addClass("fixed").text(label);
 					} else {
 						let func = setting.command[w][key];
 						if (!func || !func.trim()) {
@@ -401,23 +427,28 @@ ready(() => {
 							if (label.substring(0, 2) == "/*") {
 								label = label.substring(2).split("*/")[0].trim();
 							}
-							td.addClass("used").text(label);
+							$td.addClass("used").text(label);
 						}
-						td.data({
+						$td.data({
 								"name": "setting.command." + w + "['" + key + "']"
 							,	"with": j
 							,	"key" : key
 							,	"func": func
 						});
 					}
-					tr.append(td);
+					$tr.append($td);
 				}
-				tbody.append(tr);
+				$tbody.append($tr);
 			}
 		})();
 		
-		tableCommand.on("click", "th.used, th.not-used, td:not(.fixed)", function() {
-			const data = $(this).data();
+		tableCommand.addEventListener("click", (e) => {
+			let td = e.target.closest("th.used");
+			if (!td) td = e.target.closest("th.not-used");
+			if (!td) td = e.target.closest("td:not(.fixed)");
+			if (!td) return;
+			
+			const data = $(td).data();
 			const keyCode = data.key.charCodeAt();
 			let keyName = (111 < keyCode && keyCode < 192) 
 			            ? ("F" + (keyCode - 111)) // pqrstuvwxyz{ -> Fn
@@ -441,19 +472,19 @@ ready(() => {
 				}
 			}
 			
-			if (inputCommandKey.val() == keyName) {
+			if ($inputCommandKey.val() == keyName) {
 				// 현재 작업 중인 것
 				return;
 			}
 			checkSaved("cmd", () => {
 				setSaved("cmd", true);
-				inputCommandName.val(data.name);
-				inputCommandKey .val(keyName);
-				inputCommandFunc.val(data.func);
+				inputCommandName.value = data.name;
+				inputCommandKey .value = keyName;
+				inputCommandFunc.value = data.func;
 			});
 		});
 		
-		inputCommandKey.on("keydown", function(e) {
+		inputCommandKey.addEventListener("keydown", (e) => {
 			e.preventDefault();
 			e.stopPropagation();
 			
@@ -496,7 +527,7 @@ ready(() => {
 							if (oSmiEditor.withCtrlShifts.reserved.indexOf(key) >= 0) {
 								command = "Ctrl + Shift + 예약키";
 							} else {
-								func = tableCommand.find(selector + " > td:eq(3)").data("func");
+								func = $tableCommand.find(selector + " > td:eq(3)").data("func");
 								name = "setting.command.withCtrlShifts[\"" + key + "\"]";
 								command = "Ctrl + Shift + " + keyName;
 							}
@@ -508,7 +539,7 @@ ready(() => {
 							if (oSmiEditor.withCtrlAlts.reserved.indexOf(key) >= 0) {
 								command = "Ctrl + Alt + 예약키";
 							} else {
-								func = tableCommand.find(selector + " > td:eq(2)").data("func");
+								func = $tableCommand.find(selector + " > td:eq(2)").data("func");
 								name = "setting.command.withCtrlAlts[\"" + key + "\"]";
 								command = "Ctrl + Alt + " + keyName;
 							}
@@ -516,7 +547,7 @@ ready(() => {
 							if (oSmiEditor.withCtrls.reserved.indexOf(key) >= 0) {
 								command = "Ctrl + 예약키";
 							} else {
-								func = tableCommand.find(selector + " > td:eq(0)").data("func");
+								func = $tableCommand.find(selector + " > td:eq(0)").data("func");
 								name = "setting.command.withCtrls[\"" + key + "\"]";
 								command = "Ctrl + " + keyName;
 							}
@@ -526,26 +557,26 @@ ready(() => {
 							if (oSmiEditor.withAlts.reserved.indexOf(key) >= 0) {
 								command = "Alt + 예약키";
 							} else {
-								func = tableCommand.find(selector + " > td:eq(1)").data("func");
+								func = $tableCommand.find(selector + " > td:eq(1)").data("func");
 								name = "setting.command.withAlts[\"" + key + "\"]";
 								command = "Alt + " + keyName;
 							}
 						} else {
-							func = tableCommand.find(selector + " > th:eq(0)").data("func");
+							func = $tableCommand.find(selector + " > th:eq(0)").data("func");
 							name = "setting.fn[\"" + key + "\"]";
 						}
 					}
 				}
 				
-				if (inputCommandKey.val() == command) {
+				if (inputCommandKey.value == command) {
 					// 현재 작업 중인 것
 					return;
 				}
-				$("#areaTableCommand").scrollTop(keyIndex * 20);
+				document.getElementById("areaTableCommand").scrollTop = (keyIndex * 20);
 				checkSaved("cmd", () => {
-					inputCommandName.val(name);
-					inputCommandKey .val(command);
-					inputCommandFunc.val(func);
+					inputCommandName.value = name;
+					inputCommandKey .value = command;
+					inputCommandFunc.value = func;
 				});
 				
 			} else {
@@ -575,27 +606,30 @@ ready(() => {
 			}
 		});
 		
-		inputCommandFunc.bind("input propertychange", function() {
-			if (inputCommandKey.val().length > 1) { // 한 글자인 경우 단축키 조합 아님
+		inputCommandFunc.addEventListener("input", (e) => {
+			if (inputCommandKey.value.length > 1) { // 한 글자인 경우 단축키 조합 아님
 				setSaved("cmd", false);
 			} else {
 				// 입력 차단
-				inputCommandFunc.val("");
+				inputCommandFunc.value;
 			}
 		});
 		
-		$("#areaFunctions").on("click", "li", function() {
-			const func = inputCommandFunc.val();
-			inputCommandFunc.val((func ? func + "\n" : "") + $(this).data("input"));
-			if (inputCommandName.val()) {
-				setSaved("cmd", false);
+		document.getElementById("areaFunctions").addEventListener("click", (e) => {
+			const li = e.target.closest("li");
+			if (li) {
+				const func = inputCommandFunc.value;
+				inputCommandFunc.value = (func ? func + "\n" : "") + $(li).data("input");
+				if (inputCommandName.value) {
+					setSaved("cmd", false);
+				}
 			}
 		});
 		
 		submitFuncs["cmd"] = () => {
-			const name = inputCommandName.val();
+			const name = inputCommandName.value;
 			if (name) {
-				let func = inputCommandFunc.val();
+				let func = inputCommandFunc.value;
 				if (func.trim().length == 0) {
 					func = " ";
 				}
@@ -610,15 +644,14 @@ ready(() => {
 	
 	{	// 자동완성
 		(refreshFuncs["ac"] = (setting) => {
-			refresh($("#ac"), setting);
+			refresh("ac", setting);
 			setSaved("ac", (JSON.stringify(setting.autoComplete) == JSON.stringify(opener.setting.autoComplete)));
 		})(setting);
 		
 		submitFuncs["ac"] = () => {
-			$("#ac").find("textarea").each((_, el) => {
-				const textarea = $(el);
-				const name = "setting['" + textarea.attr("name").replaceAll("_", "']['") + "']";
-				let value = textarea.val();
+			[...document.getElementById("ac").getElementsByTagName("textarea")].forEach((textarea) => {
+				const name = "setting['" + textarea.name.replaceAll("_", "']['") + "']";
+				let value = textarea.value;
 				if (value) {
 					value = value.split("\n");
 				} else {
@@ -634,26 +667,27 @@ ready(() => {
 	{	// 자동치환
 		saved.replace = { status: true, name: "자동치환 설정" };
 		
-		const replaceList = $("#replaceList");
+		const replaceList = document.getElementById("replaceList");
+		const $replaceList = $(replaceList);
 		
 		function appendReplace(item) {
 			if (!item) {
 				item = { from: "", to: "", use: true };
 			}
-			replaceList.append(
-				$("<li>")
-					.append($("<input type='text' name='from'>").val(item.from))
-					.append("→")
-					.append($("<input type='text' name='to'>"  ).val(item.to))
-					.append($("<input type='checkbox' name='use'>").prop("checked", item.use))
-					.append($("<button type='button' class='prev'>").text("∧"))
-					.append($("<button type='button' class='next'>").text("∨"))
-					.append($("<button type='button' class='remove'>").text("✕"))
-			);
+			const li = document.createElement("li");
+			let tmp;
+			li.append(tmp = document.createElement("input" )); tmp.type = "text"; tmp.name = "from"; tmp.value = item.from;
+			li.append("→")
+			li.append(tmp = document.createElement("input" )); tmp.type = "text"; tmp.name = "to"  ; tmp.value = item.to  ;
+			li.append(tmp = document.createElement("input" )); tmp.type = "checkbox"; tmp.name = "use"; tmp.checked = item.use;
+			li.append(tmp = document.createElement("button")); tmp.type = "button"; tmp.classList.add("prev"  ); tmp.innerText = "∧";
+			li.append(tmp = document.createElement("button")); tmp.type = "button"; tmp.classList.add("next"  ); tmp.innerText = "∨";
+			li.append(tmp = document.createElement("button")); tmp.type = "button"; tmp.classList.add("remove"); tmp.innerText = "✕";
+			$replaceList.append(li);
 		}
 		(refreshFuncs["replace"] = (setting) => {
-			refresh($("#replace"), setting);
-			replaceList.empty();
+			refresh("replace", setting);
+			$replaceList.empty();
 			for (let i = 0; i < setting.replace.length; i++) {
 				appendReplace(setting.replace[i]);
 			}
@@ -663,51 +697,55 @@ ready(() => {
 			);
 		})(setting);
 		
-		$("#replace > .add-replace").on("click", function() {
+		document.querySelector("#replace > .add-replace").addEventListener("click", () => {
 			appendReplace();
 			setSaved("replace", false);
 		});
 		
-		replaceList.on("click", "li > button.prev", function() {
-			const li = $(this).parent();
-			const prev = li.prev();
-			if (prev.length) {
-				prev.before(li);
-				setSaved("replace", false);
+		replaceList.addEventListener("click", (e) => {
+			let btn;
+			if (btn = e.target.closest("li > button.prev")) {
+				const li = btn.parentNode;
+				const prev = li.previousSibling;
+				if (prev) {
+					prev.before(li);
+					setSaved("replace", false);
+				}
 			}
-		});
-		replaceList.on("click", "li > button.next", function() {
-			const li = $(this).parent();
-			const next = li.next();
-			if (next.length) {
-				next.after(li);
-				setSaved("replace", false);
+			
+			if (btn = e.target.closest("li > button.next")) {
+				const li = btn.parentNode;
+				const next = li.nextSibling;
+				if (next) {
+					next.after(li);
+					setSaved("replace", false);
+				}
 			}
-		});
-		replaceList.on("click", "li > button.remove", function() {
-			const li = $(this).parent();
-			confirm("삭제하시겠습니까?", function() {
-				li.remove();
-				setSaved("replace", false);
-			});
+			
+			if (btn = e.target.closest("li > button.remove")) {
+				const li = btn.parentNode;
+				confirm("삭제하시겠습니까?", function() {
+					li.remove();
+					setSaved("replace", false);
+				});
+			}
 		});
 		
 		submitFuncs["replace"] = () => {
 			const replaces = [];
 			
-			replaceList.find("li").each((_, el) => {
-				const li = $(el);
+			[...replaceList.getElementsByTagName("li")].forEach((li) => {
 				const item = {
-						from: li.find("input[name=from]").val()
-					,	to  : li.find("input[name=to]").val()
-					,	use : li.find("input[name=use]").prop("checked")
+						from: li.querySelector("input[name=from]").value
+					,	to  : li.querySelector("input[name=to]").value
+					,	use : li.querySelector("input[name=use]").checked
 				};
 				if (item.from && item.to) {
 					replaces.push(item);
 				}
 			});
 			
-			setting.saveWithNormalize = $("input[name=saveWithNormalize]").prop("checked");
+			setting.saveWithNormalize = document.querySelector("input[name=saveWithNormalize]").checked;
 			setting.replace = replaces;
 			setSaved("replace", true);
 			opener.setSetting(setting);
@@ -718,86 +756,96 @@ ready(() => {
 	{	// 스타일
 		saved.style = { status: true, name: "스타일 설정" };
 		
-		const presetUl = $("#style_color_preset ul");
-		presetUl.on("click", "li span", function() {
-			const color = setting.colorPreset[$(this).parent().data("key")];
-			for (let name in color) {
-				$("input[name=color_" + name + "]").val(color[name]);
+		const presetUl = document.querySelector("#style_color_preset ul");
+		const $presetUl = $(presetUl);
+		presetUl.addEventListener("click", (e) => {
+			let el;
+			if (el = e.target.closest("li span")) {
+				const color = setting.colorPreset[$(el.parentNode).data("key")];
+				for (let name in color) {
+					document.querySelector("input[name=color_" + name + "]").value = color[name];
+				}
 			}
-		}).on("click", "li button", function() {
-			const key = $(this).parent().data("key");
-			confirm("삭제하시겠습니까?", () => {
-				delete(setting.colorPreset[key]);
-				refreshPreset(setting);
-			});
+			if (el = e.target.closest("li button")) {
+				const key = $(el.parentNode).data("key");
+				confirm("삭제하시겠습니까?", () => {
+					delete(setting.colorPreset[key]);
+					refreshPreset(setting);
+				});
+			}
 		});
-		$("#btnAddPreset").on("click", () => {
+		document.getElementById("btnAddPreset").addEventListener("click", () => {
 			const name = prompt("프리셋 이름을 입력하세요.");
 			if (!name) {
 				alert("이름이 입력되지 않았습니다.");
+				return;
 			}
 			const color = {};
-			color.background = $("input[name=color_background]").val();
-			color.selector   = $("input[name=color_selector]"  ).val();
-			color.border     = $("input[name=color_border]"    ).val();
-			color.tab        = $("input[name=color_tab]"       ).val();
-			color.tabBorder  = $("input[name=color_tabBorder]" ).val();
-			color.editor     = $("input[name=color_editor]"    ).val();
-			color.text       = $("input[name=color_text]"      ).val();
-			color.hover      = $("input[name=color_hover]"     ).val();
-			color.notSaved   = $("input[name=color_notSaved]"  ).val();
-			color.syncBorder = $("input[name=color_syncBorder]").val();
-			color.syncError  = $("input[name=color_syncError]" ).val();
-			color.syncEqual  = $("input[name=color_syncEqual]" ).val();
+			color.background = document.querySelector("input[name=color_background]").value;
+			color.selector   = document.querySelector("input[name=color_selector]"  ).value;
+			color.border     = document.querySelector("input[name=color_border]"    ).value;
+			color.tab        = document.querySelector("input[name=color_tab]"       ).value;
+			color.tabBorder  = document.querySelector("input[name=color_tabBorder]" ).value;
+			color.editor     = document.querySelector("input[name=color_editor]"    ).value;
+			color.text       = document.querySelector("input[name=color_text]"      ).value;
+			color.hover      = document.querySelector("input[name=color_hover]"     ).value;
+			color.notSaved   = document.querySelector("input[name=color_notSaved]"  ).value;
+			color.syncBorder = document.querySelector("input[name=color_syncBorder]").value;
+			color.syncError  = document.querySelector("input[name=color_syncError]" ).value;
+			color.syncEqual  = document.querySelector("input[name=color_syncEqual]" ).value;
 			setting.colorPreset[name] = color;
 			refreshPreset(setting);
 		});
 		function refreshPreset(setting) {
-			presetUl.empty();
+			presetUl.innerHTML = "";
 			for (let key in setting.colorPreset) {
 				const li = $("<li>").data({ key: key });
 				li.append($("<span>").text(key)).append($("<button>").attr({ type: "button" }).text("×"));
-				presetUl.append(li);
+				$presetUl.append(li);
 			}
 		}
 		
 		function refreshHighlight() {
 			SmiEditor.setHighlight({
-					parser: $("select[name=highlight_parser]").val()
-				,	style : $("select[name=highlight_style]").val()
-				,	enter : $("input[name=highlight_enter]").prop("checked")
-				,	color : $("input[name=highlight_color]").prop("checked")
-				,	sync  : Number($("input[name=highlight_sync]").val())
+					parser: document.querySelector("select[name=highlight_parser]").value
+				,	style : document.querySelector("select[name=highlight_style]" ).value
+				,	enter : document.querySelector("input[name=highlight_enter]").checked
+				,	color : document.querySelector("input[name=highlight_color]").checked
+				,	sync  : Number(document.querySelector("input[name=highlight_sync]").value)
 			}, [editorNewFile]);
 		}
 		const editorNewFile = new SmiEditor();
-		const labelNewFile = $("#areaNewFile").append(editorNewFile.area.height(400));
+		$("#areaNewFile").append(editorNewFile.area.height(400));
 		{	// textarea resize
 			let resizeNewFile = false;
-			editorNewFile.input.attr({ name: "newFile" }).height(398).on("mousedown", function() {
+			editorNewFile.input[0].name = "newFile";
+			editorNewFile.input[0].style.height = "398px";
+			editorNewFile.input[0].addEventListener("mousedown", () => {
 				resizeNewFile = true;
 			});
-			$(document).on("mousemove", function() {
+			document.addEventListener("mousemove", () => {
 				if (!resizeNewFile) return;
-				editorNewFile.area.height(editorNewFile.input.outerHeight() + 2);
-			}).on("mouseup", function() {
+				editorNewFile.area.height(editorNewFile.input[0].offsetHeight + 2);
+			});
+			document.addEventListener("mouseup", () => {
 				resizeNewFile = false;
 			});
 		}
 		
-		$("input[name=defStyle_OutlineColour], input[name=defStyle_BackColour]").each(function() {
-			const $input = $(this);
-			$input.next().val($input.val().toUpperCase());
-		}).on("input propertychange", function () {
-			const $input = $(this);
-			$input.next().val($input.val().toUpperCase());
+		[document.querySelector("input[name=defStyle_OutlineColour]"), document.querySelector("input[name=defStyle_BackColour]")].forEach((el) => {
+			el.nextSibling.value = el.value.toUpperCase();
+			el.addEventListener("input", () => {
+				el.nextSibling.value = el.value.toUpperCase();
+			});
 		});
-		$("input.color").on("input propertychange", function () {
-			const $input = $(this);
-			const color = $input.val();
+		document.addEventListener("input", (e) => {
+			const input = e.target.closest("input.color");
+			if (!input) return;
+
+			const color = input.value;
 			if (color.startsWith("#") && color.length == 7) {
 				if (isFinite("0x" + color.substring(1))) {
-					$input = $input.prev().val(color);
+					input.previousSibling.value = color;
 				} else {
 					return;
 				}
@@ -806,8 +854,30 @@ ready(() => {
 			}
 		});
 		
+		let selectParser = document.querySelector("select[name=highlight_parser]");
+		let selectStyle  = document.querySelector("select[name=highlight_style]" );
+		let selectSize   = document.querySelector("select[name=size]");
+		if (opener.highlights) {
+			for (let i = 0; i < opener.highlights.length; i++) {
+				const item = opener.highlights[i].trim();
+				if (item.length) {
+					const split = item.split(":");
+					const value = split[0].trim();
+					let name = (split.length > 1) ? split[1].trim() : value;
+					if (name.indexOf("?")) name = name.split("?")[0];
+					
+					const opt = document.createElement("option");
+					opt.value = value;
+					opt.innerText = name;
+					selectStyle.append(opt);
+				}
+			}
+			selectParser.value = setting.highlight.parser;
+			selectStyle .value = setting.highlight.style;
+		}
+		
 		(refreshFuncs["style"] = (setting) => {
-			refresh($("#style"), setting);
+			refresh("style", setting);
 			refreshPreset(setting);
 			setSaved("style"
 				,  (setting.useTab == opener.setting.useTab)
@@ -822,74 +892,63 @@ ready(() => {
 			refreshHighlight();
 		})(setting);
 		
-		let selectParser = $("select[name=highlight_parser]");
-		let selectStyle  = $("select[name=highlight_style]" );
-		let selectSize   = $("select[name=size]");
-		if (opener.highlights) {
-			for (let i = 0; i < opener.highlights.length; i++) {
-				const item = opener.highlights[i].trim();
-				if (item.length) {
-					const split = item.split(":");
-					const value = split[0].trim();
-					let name = (split.length > 1) ? split[1].trim() : value;
-					if (name.indexOf("?")) name = name.split("?")[0];
-					selectStyle.append($("<option>").val(value).text(name));
-				}
+		document.addEventListener("change", (e) => {
+			let el = e.target.closest("select[name=highlight_parser]");
+			if (!el) el = e.target.closest("select[name=highlight_style]");
+			if (!el) el = e.target.closest("input[name=highlight_enter]");
+			if (!el) el = e.target.closest("input[name=highlight_color]");
+			if (el) {
+				refreshHighlight();
 			}
-			selectParser.find("option[value='" + setting.highlight.parser + "']").prop("selected", true);
-			selectStyle .find("option[value='" + setting.highlight.style  + "']").prop("selected", true);
-		}
-		$([	"select[name=highlight_parser]"
-		,	"select[name=highlight_style]"
-		,	"input[name=highlight_enter]"
-		,	"input[name=highlight_color]"].join(",")).on("change", function() {
-			refreshHighlight();
 		});
-		selectParser.on("change", function() {
-			if (selectParser.val()) {
-				$("#style_highlight_setting").removeClass("disabled").find("input, select[name=highlight_style]").attr({ disabled: false });
+		selectParser.addEventListener("change", () => {
+			const shs = document.getElementById("style_highlight_setting");
+			const inputs = [].concat(shs.querySelectorAll("input")).concat(shs.querySelectorAll("select[name=highlight_style]"));
+			if (selectParser.value) {
+				shs.classList.remove("disabled");
+				inputs.forEach((el) => { el.disabled = false; });
 			} else {
-				$("#style_highlight_setting").addClass   ("disabled").find("input, select[name=highlight_style]").attr({ disabled: true  });
+				shs.classList.add("disabled");
+				inputs.forEach((el) => { el.disabled = true; });
 			}
-		}).change();
+		});
+		$(selectParser).change();
 		
-		selectSize.find("option[value='" + selectSize.data("value") + "']").prop("selected", true);
-		
-		$("#style").on("input propertychange", function() {
+		document.getElementById("style").addEventListener("input", () => {
 			setSaved("style", false);
 		});
 		
 		submitFuncs["style"] = () => {
-			setting.size             = $("select[name=size]").val();
-			setting.useTab           = $("input[name=useTab]").prop("checked");
+			setting.size             = document.querySelector("select[name=size]").value;
+			setting.useTab           = document.querySelector("input[name=useTab]").checked;
 			
-			setting.highlight.parser = $("select[name=highlight_parser]").val();
-			setting.highlight.style  = $("select[name=highlight_style]").val();
-			setting.highlight.enter  = $("input[name=highlight_enter]").prop("checked");
-			setting.highlight.color  = $("input[name=highlight_color]").prop("checked");
-			setting.highlight.sync   = Number($("input[name=highlight_sync]").val());
+			setting.highlight.parser = document.querySelector("select[name=highlight_parser]").value;
+			setting.highlight.style  = document.querySelector("select[name=highlight_style]").value;
+			setting.highlight.enter  = document.querySelector("input[name=highlight_enter]").checked;
+			setting.highlight.color  = document.querySelector("input[name=highlight_color]").checked;
+			setting.highlight.sync   = Number(document.querySelector("input[name=highlight_sync]").value);
 			
-			setting.scrollMargin     = Number($("input[name=scrollMargin]").val());
-			setting.scrollShow       = Number($("input[name=scrollShow]").val());
+			setting.scrollMargin     = Number(document.querySelector("input[name=scrollMargin]").value);
+			setting.scrollShow       = Number(document.querySelector("input[name=scrollShow]").value);
 			
-			setting.viewer.useAlign  = $("input[name=viewer_useAlign]").prop("checked");
-//			setting.viewer.size      = $("input[name=viewer_size]").val();
-			setting.viewer.css       = $("textarea[name=viewer_css]").val();
+			setting.viewer.useAlign  = document.querySelector("input[name=viewer_useAlign]").checked;
+//			setting.viewer.size      = document.querySelector("input[name=viewer_size]").value;
+			setting.viewer.css       = document.querySelector("textarea[name=viewer_css]").value;
 			
-			setting.newFile          = $("textarea[name=newFile]"   ).val();
+			setting.newFile          = document.querySelector("textarea[name=newFile]"   ).value;
 			
-			setting.color.background = $("input[name=color_background]").val();
-			setting.color.selector   = $("input[name=color_selector]"  ).val();
-			setting.color.border     = $("input[name=color_border]"    ).val();
-			setting.color.tab        = $("input[name=color_tab]"       ).val();
-			setting.color.tabBorder  = $("input[name=color_tabBorder]" ).val();
-			setting.color.editor     = $("input[name=color_editor]"    ).val();
-			setting.color.text       = $("input[name=color_text]"      ).val();
-			setting.color.hover      = $("input[name=color_hover]"     ).val();
-			setting.color.notSaved   = $("input[name=color_notSaved]"  ).val();
-			setting.color.syncBorder = $("input[name=color_syncBorder]").val();
-			setting.color.syncError  = $("input[name=color_syncError]" ).val();
-			setting.color.syncEqual  = $("input[name=color_syncEqual]" ).val();
+			setting.color.background = document.querySelector("input[name=color_background]").value;
+			setting.color.selector   = document.querySelector("input[name=color_selector]"  ).value;
+			setting.color.border     = document.querySelector("input[name=color_border]"    ).value;
+			setting.color.tab        = document.querySelector("input[name=color_tab]"       ).value;
+			setting.color.tabBorder  = document.querySelector("input[name=color_tabBorder]" ).value;
+			setting.color.editor     = document.querySelector("input[name=color_editor]"    ).value;
+			setting.color.text       = document.querySelector("input[name=color_text]"      ).value;
+			setting.color.hover      = document.querySelector("input[name=color_hover]"     ).value;
+			setting.color.notSaved   = document.querySelector("input[name=color_notSaved]"  ).value;
+			setting.color.syncBorder = document.querySelector("input[name=color_syncBorder]").value;
+			setting.color.syncError  = document.querySelector("input[name=color_syncError]" ).value;
+			setting.color.syncEqual  = document.querySelector("input[name=color_syncEqual]" ).value;
 			
 			const defaultHolds = [];
 			{
@@ -909,21 +968,20 @@ ready(() => {
 					}
 				}
 			}
-			setting.defStyle.Fontname        = $("input[name=defStyle_Fontname]"     ).val();
-			setting.defStyle.Fontsize = Number($("input[name=defStyle_Fontsize]"     ).val());
-			setting.defStyle.Bold            = $("input[name=defStyle_Bold]"         ).prop("checked");
-			setting.defStyle.OutlineColour   = $("input[name=defStyle_OutlineColour]").val();
-			setting.defStyle.Outline  = Number($("input[name=defStyle_Outline]"      ).val());
-			setting.defStyle.BackColour      = $("input[name=defStyle_BackColour]"   ).val();
-			setting.defStyle.Shadow   = Number($("input[name=defStyle_Shadow]"       ).val());
-			setting.defStyle.MarginL = setting.defStyle.MarginR = Number($("input[name=defStyle_MarginL]").val());
-			setting.defStyle.MarginV  = Number($("input[name=defStyle_MarginV]"      ).val());
+			setting.defStyle.Fontname        = document.querySelector("input[name=defStyle_Fontname]"     ).value;
+			setting.defStyle.Fontsize = Number(document.querySelector("input[name=defStyle_Fontsize]"     ).value);
+			setting.defStyle.Bold            = document.querySelector("input[name=defStyle_Bold]"         ).checked;
+			setting.defStyle.OutlineColour   = document.querySelector("input[name=defStyle_OutlineColour]").value;
+			setting.defStyle.Outline  = Number(document.querySelector("input[name=defStyle_Outline]"      ).value);
+			setting.defStyle.BackColour      = document.querySelector("input[name=defStyle_BackColour]"   ).value;
+			setting.defStyle.Shadow   = Number(document.querySelector("input[name=defStyle_Shadow]"       ).value);
+			setting.defStyle.MarginL = setting.defStyle.MarginR = Number(document.querySelector("input[name=defStyle_MarginL]").value);
+			setting.defStyle.MarginV  = Number(document.querySelector("input[name=defStyle_MarginV]"      ).value);
 			if (!setting.defStyle.Fontname) {
-				$("input[name=defStyle_Fontname]").val(setting.defStyle.Fontname = "맑은 고딕");
+				document.querySelector("input[name=defStyle_Fontname]").value = setting.defStyle.Fontname = "맑은 고딕";
 			}
 			setting.viewer.size = setting.defStyle.Fontsize / 80 * 18;
 			
-			refreshHighlight();
 			setSaved("style", true);
 			opener.setSetting(setting);
 			opener.saveSetting();
@@ -938,23 +996,25 @@ ready(() => {
 	
 	{	// 플레이어
 		(refreshFuncs["player"] = (setting) => {
-			refresh($("#player"), setting);
+			refresh("player", setting);
 			setSaved("player"
 				,  (setting.exts == opener.setting.exts)
 				&& (JSON.stringify(setting.player.control) == JSON.stringify(opener.setting.player.control))
 			);
 		})(setting);
 		
-		const select = $("select[name=player_control_dll]");
+		const select = document.querySelector("select[name=player_control_dll]");
 		if (opener.playerDlls) {
 			for (let i = 0; i < opener.playerDlls.length; i++) {
 				const dll = opener.playerDlls[i].split(":");
-				select.append($("<option>").val(dll[0].trim()).text(dll[1].trim()));
+				const opt = document.createElement("option");
+				opt.value = dll[0].trim();
+				opt.innerText = dll[1].trim();
+				select.append(opt);
 			}
-			select.find("option[value='" + select.data("value") + "']").prop("selected", true);
 		}
-		select.on("change", function() {
-			const dll = select.val();
+		select.addEventListener("change", (e) => {
+			const dll = select.value;
 			let dllSetting = setting.player.control[dll];
 			if (!dllSetting) {
 				dllSetting = {
@@ -963,29 +1023,28 @@ ready(() => {
 					,	withExit: true
 				};
 			}
-			$("input[name=player_control_what_path]"    ).val(dllSetting.path);
-			$("input[name=player_control_what_withRun]" ).prop("checked", dllSetting.withRun);
-			$("input[name=player_control_what_withExit]").prop("checked", dllSetting.withExit);
+			document.querySelector("input[name=player_control_what_path]"    ).value = dllSetting.path;
+			document.querySelector("input[name=player_control_what_withRun]" ).checked = dllSetting.withRun;
+			document.querySelector("input[name=player_control_what_withExit]").checked = dllSetting.withExit;
 		});
 		
-		$("#btnPlayerPath").on("click", function() {
+		document.getElementById("btnPlayerPath").addEventListener("click", () => {
 			opener.binder.selectPlayerPath();
 		});
 		opener.afterSelectPlayerPath = (path) => {
-			$("input[name=player_control_what_path]").val(path);
+			document.querySelector("input[name=player_control_what_path]").value = path;
 		};
 		
 		submitFuncs["player"] = () => {
-			setting.player.exts = $("input[name=player_exts]").val();
-			const dll = setting.player.control.dll = select.val();
+			setting.player.exts = document.querySelector("input[name=player_exts]").value;
+			const dll = setting.player.control.dll = select.value;
 			let dllSetting = setting.player.control[dll];
 			if (!dllSetting) {
 				dllSetting = setting.player.control[dll] = {};
 			}
-			dllSetting.path     = $("input[name=player_control_what_path]"    ).val();
-			dllSetting.auto     = $("input[name=player_control_what_auto]"    ).prop("checked");
-			dllSetting.withRun  = $("input[name=player_control_what_withRun]" ).prop("checked");
-			dllSetting.withExit = $("input[name=player_control_what_withExit]").prop("checked");
+			dllSetting.path     = document.querySelector("input[name=player_control_what_path]"    ).value;
+			dllSetting.withRun  = document.querySelector("input[name=player_control_what_withRun]" ).checked;
+			dllSetting.withExit = document.querySelector("input[name=player_control_what_withExit]").checked;
 			opener.setSetting(setting);
 			opener.saveSetting();
 			opener.binder.setVideoExts(setting.player.exts);
@@ -995,7 +1054,8 @@ ready(() => {
 	{	// 메뉴
 		saved.menu = { status: true, name: "메뉴 설정" };
 		
-		const menuList = $("#menuList");
+		const menuList = document.getElementById("menuList");
+		const $menuList = $(menuList);
 		
 		function appendMenu(menus) {
 			if (!menus) menus = [""];
@@ -1021,7 +1081,7 @@ ready(() => {
 			fieldset.append($("<button type='button' class='add-menu'>").text("추가"));
 			
 			const li = $("<li>").append(fieldset);
-			menuList.append(li);
+			$menuList.append(li);
 			return li;
 		}
 		function appendSubMenu(ol, name, func) {
@@ -1038,83 +1098,92 @@ ready(() => {
 			return li;
 		}
 		(refreshFuncs["menu"] = (setting) => {
-			menuList.empty();
+			$menuList.empty();
 			for (let i = 0; i < setting.menu.length; i++) {
 				appendMenu(setting.menu[i]);
 			}
 			setSaved("menu", (JSON.stringify(setting.menu) == JSON.stringify(opener.setting.menu)));
 		})(setting);
 		
-		$("#menu > .add-menu").on("click", function() {
-			appendMenu().find("input:eq(0)").focus();
-			setSaved("menu", false);
-		});
-		
-		menuList.on("click", ".add-menu", function() {
-			appendSubMenu($(this).parent().find("ol")).find("input:eq(0)").focus();
-			setSaved("menu", false);
-		});
-		
-		menuList.on("click", "legend > button.prev", function() {
-			const btn = $(this);
-			const menu = btn.parents("li");
-			const prev = menu.prev();
-			if (prev.length) {
-				prev.before(menu);
-				setSaved("menu", false);
-				btn.focus();
+		const menu = document.getElementById("menu");
+		menu.addEventListener("click", (e) => {
+			let el;
+			if (el = e.target.closest(".add-menu")) {
+				if (el.parentNode == menu) {
+					appendMenu().find("input:eq(0)").focus();
+					setSaved("menu", false);
+				} else {
+					appendSubMenu($(el).parent().find("ol")).find("input:eq(0)").focus();
+					setSaved("menu", false);
+				}
+				return;
 			}
-		});
-		menuList.on("click", "legend > button.next", function() {
-			const btn = $(this);
-			const menu = btn.parents("li");
-			const next = menu.next();
-			if (next.length) {
-				next.after(menu);
-				setSaved("menu", false);
-				btn.focus();
+			if (el = e.target.closest("legend > button.prev")) {
+				const btn = $(el);
+				const menu = btn.parents("li");
+				const prev = menu.prev();
+				if (prev.length) {
+					prev.before(menu);
+					setSaved("menu", false);
+					btn.focus();
+				}
+				return;
 			}
-		});
-		menuList.on("click", "legend > button.remove", function() {
-			const menu = $(this).parents("li");
-			confirm("삭제하시겠습니까?", () => {
-				menu.remove();
-				setSaved("menu", false);
-			});
-		});
-		
-		menuList.on("click", "ol > li > button.prev", function() {
-			const btn = $(this);
-			const subMenu = btn.parent();
-			const prev = subMenu.prev();
-			if (prev.length) {
-				prev.before(subMenu);
-				setSaved("menu", false);
-				btn.focus();
+			if (el = e.target.closest("legend > button.next")) {
+				const btn = $(el);
+				const menu = btn.parents("li");
+				const next = menu.next();
+				if (next.length) {
+					next.after(menu);
+					setSaved("menu", false);
+					btn.focus();
+				}
+				return;
 			}
-		});
-		menuList.on("click", "ol > li > button.next", function() {
-			const btn = $(this);
-			const subMenu = btn.parent();
-			const next = subMenu.next();
-			if (next.length) {
-				next.after(subMenu);
-				setSaved("menu", false);
-				btn.focus();
+			if (el = e.target.closest("legend > button.remove")) {
+				const menu = $(el).parents("li");
+				confirm("삭제하시겠습니까?", () => {
+					menu.remove();
+					setSaved("menu", false);
+				});
+				return;
 			}
-		});
-		menuList.on("click", "ol > li > button.remove", function() {
-			const subMenu = $(this).parent();
-			confirm("삭제하시겠습니까?", () => {
-				subMenu.remove();
-				setSaved("menu", false);
-			});
+			if (el = e.target.closest("ol > li > button.prev")) {
+				const btn = $(el);
+				const subMenu = btn.parent();
+				const prev = subMenu.prev();
+				if (prev.length) {
+					prev.before(subMenu);
+					setSaved("menu", false);
+					btn.focus();
+				}
+				return;
+			}
+			if (el = e.target.closest("ol > li > button.next")) {
+				const btn = $(el);
+				const subMenu = btn.parent();
+				const next = subMenu.next();
+				if (next.length) {
+					next.after(subMenu);
+					setSaved("menu", false);
+					btn.focus();
+				}
+				return;
+			}
+			if (el = e.target.closest("ol > li > button.remove")) {
+				const subMenu = $(el).parent();
+				confirm("삭제하시겠습니까?", () => {
+					subMenu.remove();
+					setSaved("menu", false);
+				});
+				return;
+			}
 		});
 		
 		submitFuncs["menu"] = () => {
 			const menus = [];
 			
-			menuList.find("fieldset").each((_, el) => {
+			$menuList.find("fieldset").each((_, el) => {
 				const fieldset = $(el);
 				const menu = [fieldset.find("legend > input").val()];
 				
@@ -1135,33 +1204,35 @@ ready(() => {
 		};
 	}
 	
-	$("#btnLoadSetting").on("click", function() {
+	document.getElementById("btnLoadSetting").addEventListener("click", () => {
 		const refreshFunc = refreshFuncs[opened];
 		if (refreshFunc) {
 			refreshFunc(setting);
 		}
 	});
 	
-	$("#btnLoadDefault").on("click", function() {
+	document.getElementById("btnLoadDefault").addEventListener("click", () => {
 		const refreshFunc = refreshFuncs[opened];
 		if (refreshFunc) {
 			refreshFunc(opener.DEFAULT_SETTING);
 		}
 	});
 	
-	$("#btnSubmit").on("click", function() {
+	document.getElementById("btnSubmit").addEventListener("click", () => {
 		const submitFunc = submitFuncs[opened];
 		if (submitFunc) submitFunc();
 	});
 	
-	$("form").each((_, el) => {
-		const form = $(el);
-		form.attr({ novalidate: true });
-		form.on("submit", function(e) {
+	[...document.getElementsByTagName("form")].forEach((form) => {
+		form.novalidate = true;
+		form.onsubmit = function(e) {
 			e.preventDefault();
-			submitFuncs[form.attr("id")]();
-		});
-		form.append($("<button type='submit'>").hide());
+			submitFuncs[form.id]();
+		};
+		const btn = document.createElement("button");
+		btn.type = "submit";
+		btn.style.display = "none";
+		form.append(btn);
 	});
 	
 	show(opener.setting.show ? opener.setting.show : 0);

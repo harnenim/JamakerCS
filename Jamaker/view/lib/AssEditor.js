@@ -1,20 +1,36 @@
-window.AssEditor = function(view, events=[], frameSyncs=null) {
-	this.view = (view ? view : (view = $("<div>"))).addClass("ass-editor").data({ obj: this });
+window.AssEditor = function(view=null, events=[], frameSyncs=null) {
+	this.view = view ? view : (view = document.createElement("div"));
+	view.classList.add("ass-editor");
+	view.obj = this;
+	
 	this.savedSyncs = [];
 	this.setEvents(events, frameSyncs, true);
 	this.update();
 	
 	const self = this;
-	this.view.on("input propertychange", "input, textarea", function() {
-		$(this).parent().data("obj").update();
-	}).on("focus", "input, textarea", function() {
-		view.find(".item.focus").removeClass("focus");
-		$(this).parent().addClass("focus");
-	}).on("click", "button", function() {
-		const item = $(this).parent();
-		confirm("삭제하시겠습니까?", function() {
-			self.removeEvent(item.data("obj"));
-		});
+	this.view.addEventListener("input", (e) => {
+		let input = e.target.closest("input");
+		if (!input) input = e.target.closest("textarea");
+		if (input) {
+			input.parentNode.obj.update();
+		}
+	});
+	this.view.addEventListener("focus", (e) => {
+		let input = e.target.closest("input");
+		if (!input) input = e.target.closest("textarea");
+		if (input) {
+			view.querySelector(".item.focus").classList.remove("focus");
+			input.parentNode.classList.add("focus");
+		}
+	});
+	this.view.addEventListener("click", (e) => {
+		let btn = e.target.closest("button");
+		if (btn) {
+			const item = btn.parentNode;
+			confirm("삭제하시겠습니까?", () => {
+				self.removeEvent(item.obj);
+			});
+		}
 	});
 }
 AssEditor.FormatToEdit = ["Layer", "Style", "Text"];
@@ -25,7 +41,7 @@ AssEditor.FormatSimple = ["Layer", "Style", "Text"];
 
 AssEditor.prototype.setEvents = function(events=[], frameSyncs=null, isInit=false) {
 	this.syncs = [];
-	this.view.empty();
+	this.view.innerHTML = "";
 	this.addEvents(events, frameSyncs, false);
 	if (isInit) {
 		this.savedSyncs = this.syncs.slice(0);
@@ -129,12 +145,12 @@ AssEditor.prototype.update = function() {
 			}
 		}
 		if (!sorted) {
-			const input = this.view.find(":focus");
+			const focused = this.view.querySelector(":focus");
 			this.syncs = sorts;
 			for (let i = 0; i < sorts.length; i++) {
 				this.view.append(sorts[i].view);
 			}
-			input.focus();
+			focused && focused.focus();
 		}
 	}
 	if (this.onUpdate) {
@@ -202,13 +218,15 @@ AssEditor.prototype.setSaved = function() {
 }
 
 AssEditor.Item = function(info) {
-	const view = this.view = $("<div>").addClass("item").data({ obj: this });
-	view.append(this.inputStart = $("<input>").attr({ type: "number"  , name: "start"      }).val(info.start));
-	view.append(this.checkStart = $("<input>").attr({ type: "checkbox", name: "startFrame", title: "시작싱크 화면 맞춤" }).prop("checked", info.startFrame));
-	view.append(this.inputEnd   = $("<input>").attr({ type: "number"  , name: "end"        }).val(info.end));
-	view.append(this.checkEnd   = $("<input>").attr({ type: "checkbox", name: "endFrame"  , title: "종료싱크 화면 맞춤" }).prop("checked", info.endFrame  ));
-	view.append(this.inputText  = $("<textarea>").attr({ name: "text", spellcheck: "false" }).val(info.scripts.join("\n")));
-	view.append(this.btnDelete  = $("<button>").attr({ type: "button" }).text("×"));
+	const view = this.view = document.createElement("div");
+	view.classList.add("item");
+	view.obj = this;
+	view.append(this.inputStart = document.createElement("input"   )); this.inputStart.type = "number"  ;  this.inputStart.name = "start"     ; this.inputStart.value = info.start;
+	view.append(this.checkStart = document.createElement("input"   )); this.checkStart.type = "checkbox";  this.checkStart.name = "startFrame"; this.checkStart.title = "시작싱크 화면 맞춤"; this.checkStart.checked = info.startFrame;
+	view.append(this.inputEnd   = document.createElement("input"   )); this.inputEnd  .type = "number"  ;  this.inputEnd  .name = "end"       ; this.inputEnd.value = info.end;
+	view.append(this.checkEnd   = document.createElement("input"   )); this.checkEnd  .type = "checkbox";  this.checkEnd  .name = "endFrame"  ; this.checkEnd.title = "종료싱크 화면 맞춤"; this.checkEnd.checked = info.endFrame;
+	view.append(this.inputText  = document.createElement("textarea")); this.inputText .spellcheck = false; this.inputText .name = "text"      ; this.inputText.value = info.scripts.join("\n");
+	view.append(this.btnDelete  = document.createElement("button"  )); this.btnDelete .type = "button";    this.btnDelete.innerText = "×";
 	
 	const item = this;
 	this.Start = info.Start;
@@ -220,11 +238,11 @@ AssEditor.Item = function(info) {
 AssEditor.Item.prototype.getText = function(start="", end="") {
 	const fixed = !!start;
 	if (!fixed) {
-		start = this.start = Number(this.inputStart.val());
-		end   = this.end   = Number(this.inputEnd  .val());
+		start = this.start = Number(this.inputStart.value);
+		end   = this.end   = Number(this.inputEnd  .value);
 	}
 	
-	const lines = this.inputText.val().split("\n");
+	const lines = this.inputText.value.split("\n");
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
 		const cols = line.split(",");
@@ -249,28 +267,24 @@ AssEditor.Item.prototype.update = function() {
 }
 AssEditor.Item.prototype.getFrameSyncs = function() {
 	const syncs = [];
-	if (this.checkStart.prop("checked")) {
-		syncs.push(Number(this.inputStart.val()));
-	}
-	if (this.checkEnd.prop("checked")) {
-		syncs.push(Number(this.inputEnd  .val()));
-	}
+	if (this.checkStart.checked) syncs.push(Number(this.inputStart.value));
+	if (this.checkEnd  .checked) syncs.push(Number(this.inputEnd  .value));
 	return syncs;
 }
 AssEditor.Item.prototype.setSaved = function() {
 	this.savedText = this.getText();
 }
 AssEditor.Item.prototype.toAssText = function() {
-	this.Start = AssEvent.toAssTime(this.start = Number(this.inputStart.val()), true);
-	this.End   = AssEvent.toAssTime(this.end   = Number(this.inputEnd  .val()), true);
+	this.Start = AssEvent.toAssTime(this.start = Number(this.inputStart.value), true);
+	this.End   = AssEvent.toAssTime(this.end   = Number(this.inputEnd  .value), true);
 	return this.getText(this.Start, this.End);
 }
 AssEditor.Item.prototype.toEvents = function() {
-	this.Start = AssEvent.toAssTime(this.start = Number(this.inputStart.val()), true);
-	this.End   = AssEvent.toAssTime(this.end   = Number(this.inputEnd  .val()), true);
+	this.Start = AssEvent.toAssTime(this.start = Number(this.inputStart.value), true);
+	this.End   = AssEvent.toAssTime(this.end   = Number(this.inputEnd  .value), true);
 	
 	const events = [];
-	const lines = this.inputText.val().split("\n");
+	const lines = this.inputText.value.split("\n");
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
 		const cols = line.split(",");

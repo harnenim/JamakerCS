@@ -157,7 +157,9 @@ function setColor(color) {
 			preset = preset.replaceAll("[" + name + "]", color[name]);
 		}
 		if (!window._style) {
-			document.head.append(_style = document.createElement("style"));
+			if (!(_style = document.getElementById("styleColor"))) {
+				document.head.append(_style = document.createElement("style"));
+			}
 		}
 		_style.innerHTML = preset;
 	});

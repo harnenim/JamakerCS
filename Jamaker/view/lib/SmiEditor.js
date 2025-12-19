@@ -165,6 +165,7 @@ Line.prototype.render = function(index, last={ sync: 0, state: null }) {
 	this.renderHighlight(last);
 	return this;
 };
+// TODO: codemirror 적용 시 사라질 부분이므로 jquery 정리 작업에서 예외
 Line.prototype.renderHighlight = function(last, forced=false) {
 	if (SmiEditor.useHighlight) {
 		if (!forced && this.VIEW && this.VIEW.data("state") == last.state) {
@@ -706,9 +707,11 @@ SmiEditor.prototype.bindEvent = function() {
 		}
 		
 	}).on("blur", function() {
+		// TODO: codemirror 적용 시 사라질 부분이므로 jquery 정리 작업에서 예외
 		editor.showBlockArea();
 		
 	}).on("focus", function() {
+		// TODO: codemirror 적용 시 사라질 부분이므로 jquery 정리 작업에서 예외
 		const cursor = editor.block.hide().empty().data("cursor");
 		if (cursor) {
 			// 포커스 되찾을 때 블록지정 영역 유지
@@ -722,6 +725,7 @@ SmiEditor.prototype.bindEvent = function() {
 		}
 	});
 	$(window).on("blur", function() {
+		// TODO: codemirror 적용 시 사라질 부분이므로 jquery 정리 작업에서 예외
 		// <textarea>의 포커스는 유지한 채 윈도우 창이 비활성화되는 경우
 		if (SmiEditor.selected && (SmiEditor.selected.input[0] == document.activeElement)) {
 			// 블록지정 중복으로 보일 필요 없음
@@ -779,6 +783,7 @@ SmiEditor.prototype.bindEvent = function() {
 		});
 	}
 };
+//TODO: codemirror 적용 시 사라질 부분이므로 jquery 정리 작업에서 예외
 SmiEditor.prototype.showBlockArea = function() {
 	const text = this.input.val();
 	const cursor = this.getCursor();
@@ -2074,7 +2079,7 @@ SmiEditor.setHighlight = (SH, editors) => {
 		fetch(SmiEditor.ROOT + "lib/highlight/parser/" + SH.parser + ".js").then(async (response) => {
 			let parser = await response.text();
 			eval(parser);
-					
+			
 			let name = SH.style;
 			let isDark = false;
 			if (name.endsWith("-dark") || (name.indexOf("-dark-") > 0)) {
@@ -2083,7 +2088,7 @@ SmiEditor.setHighlight = (SH, editors) => {
 				isDark = true;
 				name = name.split("?")[0];
 			}
-					
+			
 			fetch(SmiEditor.ROOT + "lib/highlight/styles/" + name + ".css").then(async (response) => {
 				let style = await response.text();
 				// 문법 하이라이트 테마에 따른 커서 색상 추가

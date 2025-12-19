@@ -13,9 +13,9 @@ const normalizedLines = [];
 const normalizedIndex = [];
 
 function htmlToText(html) {
-    if (!window._tmp) _tmp = document.createElement("span");
-    _tmp.innerHTML = html;
-    return _tmp.innerText;
+	if (!window._tmp) _tmp = document.createElement("span");
+	_tmp.innerHTML = html;
+	return _tmp.innerText;
 }
 
 let style = null;
