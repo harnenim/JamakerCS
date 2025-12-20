@@ -177,23 +177,14 @@ ready(() => {
 	const inputCommandKey  = document.getElementById("inputCommandKey" );
 	const inputCommandFunc = document.getElementById("inputCommandFunc");
 	
-	const $fieldEditor      = $(fieldEditor     );
-	const $fieldViewer      = $(fieldViewer     );
-	const $fieldPlayer      = $(fieldPlayer     );
-	const $tableCommand     = $(tableCommand    );
-	const $inputCommandName = $(inputCommandName);
-	const $inputCommandKey  = $(inputCommandKey );
-	const $inputCommandFunc = $(inputCommandFunc);
-	
 	{	// 창
 		(refreshFuncs["window"] = (setting) => {
 			refresh("window", setting);
 			
 			// 값에 맞춰 fieldset 이동
-			// TODO: 배열[1] 결국 사용 안 했나...?
-			const editor = [setting.window       , $fieldEditor];
-			const viewer = [setting.viewer.window, $fieldViewer];
-			const player = [setting.player.window, $fieldPlayer];
+			const editor = setting.window;
+			const viewer = setting.viewer.window;
+			const player = setting.player.window;
 			
 			{
 				const ecss = {};
@@ -216,30 +207,30 @@ ready(() => {
 				}
 				
 				const targetXY = [
-					[	[ editor[0].x, (x) => { setLeft(ecss, x); } ]
-					,	[ editor[0].x + editor[0].width, (x) => { setRight(ecss, x); } ]
-					,	[ viewer[0].x, (x) => { setLeft(vcss, x); } ]
-					,	[ viewer[0].x + viewer[0].width, (x) => { setRight(vcss, x); } ]
-					,	[ player[0].x, (x) => { setLeft(pcss, x); } ]
-					,	[ player[0].x + player[0].width, (x) => { setRight(pcss, x); } ]
+					[	{ p: editor.x, f: (x) => { setLeft(ecss, x); } }
+					,	{ p: editor.x + editor.width, f: (x) => { setRight(ecss, x); } }
+					,	{ p: viewer.x, f: (x) => { setLeft(vcss, x); } }
+					,	{ p: viewer.x + viewer.width, f: (x) => { setRight(vcss, x); } }
+					,	{ p: player.x, f: (x) => { setLeft(pcss, x); } }
+					,	{ p: player.x + player.width, f: (x) => { setRight(pcss, x); } }
 					]
-				,	[	[ editor[0].y, (y) => { setTop(ecss, y); } ]
-					,	[ editor[0].y + editor[0].height, (y) => { setBottom(ecss, y); } ]
-					,	[ viewer[0].y, (y) => { setTop(vcss, y); } ]
-					,	[ viewer[0].y + viewer[0].height, (y) => { setBottom(vcss, y); } ]
-					,	[ player[0].y, (y) => { setTop(pcss, y); } ]
-					,	[ player[0].y + player[0].height, (y) => { setBottom(pcss, y); } ]
+				,	[	{ p: editor.y, f: (y) => { setTop(ecss, y); } }
+					,	{ p: editor.y + editor.height, f: (y) => { setBottom(ecss, y); } }
+					,	{ p: viewer.y, f: (y) => { setTop(vcss, y); } }
+					,	{ p: viewer.y + viewer.height, f: (y) => { setBottom(vcss, y); } }
+					,	{ p: player.y, f: (y) => { setTop(pcss, y); } }
+					,	{ p: player.y + player.height, f: (y) => { setBottom(pcss, y); } }
 					]
 				];
 				for (let xy = 0; xy < 2; xy++) {
 					const targets = targetXY[xy];
-					targets.sort((a, b) => { return a[0] - b[0]; });
+					targets.sort((a, b) => { return a.p - b.p; });
 					
 					let last = [targets[0]];
 					const ps = [last];
 					for (let i = 1; i < targets.length; i++) {
 						const curr = targets[i];
-						if (curr[0] == last[0][0]) {
+						if (curr.p == last[0].p) {
 							last.push(curr);
 						} else {
 							last = [curr];
@@ -252,13 +243,13 @@ ready(() => {
 					for (let i = 0; i < ps.length; i++) {
 						const curr = ps[i];
 						for (let j = 0; j < curr.length; j++) {
-							curr[j][1](getPos(i));
+							curr[j].f(getPos(i));
 						}
 					}
 				}
-				$fieldEditor.css(ecss);
-				$fieldViewer.css(vcss);
-				$fieldPlayer.css(pcss);
+				$(fieldEditor).css(ecss);
+				$(fieldViewer).css(vcss);
+				$(fieldPlayer).css(pcss);
 			}
 			
 			setSaved("window"
@@ -365,41 +356,43 @@ ready(() => {
 				});
 			}
 		};
-		
-		const $tbody = $tableCommand.find("tbody");
+
+		const tbody = tableCommand.querySelector("tbody");
 		const withs = ["withCtrls", "withAlts", "withCtrlAlts", "withCtrlShifts"];
 		const keys = "pqrstuvwxyz{ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=";
 		const keyNames = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"].concat("ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=".split(""));
 		(refreshTableCommand = () => {
-			$tbody.empty();
+			tbody.innerHTML = "";
 			for (let i = 0; i < keys.length; i++) {
 				const key = keys[i];
 				const keyName = (i < 12)
 				              ? ("F" + (i + 1))
 				              : key;
-				const $th = $("<th>").text(keyName);
+				const th = document.createElement("th");
+				th.innerText = keyName;
 				if (i < 12) {
 					let func = setting.command.fn[key];
 					if (!func || !func.trim()) {
 						func = "";
-						$th.addClass("not-used");
+						th.classList.add("not-used");
 					} else {
 						let label = func.trim();
 						if (label.substring(0, 2) == "/*") {
 							label = label.substring(2).split("*/")[0].trim();
 						}
-						$th.addClass("used").attr({ title: label });
+						th.classList.add("used");
+						th.title = label;
 					}
-					$th.data({
-							"name": "setting.command.fn['" + key + "']"
-						,	"key" : key
-						,	"func": func
-					});
+					th.setAttribute("data-name", "setting.command.fn['" + key + "']");
+					th.setAttribute("data-key" , key);
+					th.setAttribute("data-func", func);
 				}
-				const $tr = $("<tr>").addClass("key-" + (keyName=='`' ? 'ㄹ' : (keyName=='=' ? '＝' : keyName))).append($th);
+				const tr = document.createElement("tr");
+				tr.classList.add("key-" + (keyName == '`' ? 'ㄹ' : (keyName == '=' ? '＝' : keyName)));
+				tr.append(th);
 				for (let j = 0; j < withs.length; j++) {
 					const w = withs[j];
-					const $td = $("<td>");
+					const td = document.createElement("td");
 					if (oSmiEditor[w].reserved.indexOf(key) >= 0) {
 						let func = oSmiEditor[w][key];
 						let label = func;
@@ -417,7 +410,8 @@ ready(() => {
 							label = "시스템 단축키";
 						}
 						label = "예약: " + label;
-						$td.addClass("fixed").text(label);
+						td.classList.add("fixed");
+						td.innerText = label;
 					} else {
 						let func = setting.command[w][key];
 						if (!func || !func.trim()) {
@@ -427,18 +421,17 @@ ready(() => {
 							if (label.substring(0, 2) == "/*") {
 								label = label.substring(2).split("*/")[0].trim();
 							}
-							$td.addClass("used").text(label);
+							td.classList.add("used");
+							td.innerText = label;
 						}
-						$td.data({
-								"name": "setting.command." + w + "['" + key + "']"
-							,	"with": j
-							,	"key" : key
-							,	"func": func
-						});
+						td.setAttribute("data-name", "setting.command." + w + "['" + key + "']");
+						td.setAttribute("data-with", j);
+						td.setAttribute("data-key" , key);
+						td.setAttribute("data-func", func);
 					}
-					$tr.append($td);
+					tr.append(td);
 				}
-				$tbody.append($tr);
+				tbody.append(tr);
 			}
 		})();
 		
@@ -448,7 +441,12 @@ ready(() => {
 			if (!td) td = e.target.closest("td:not(.fixed)");
 			if (!td) return;
 			
-			const data = $(td).data();
+			const data = {
+				name: td.getAttribute("data-name")
+			,	with: td.getAttribute("data-with")
+			,	key : td.getAttribute("data-key" )
+			,	func: td.getAttribute("data-func")
+			};
 			const keyCode = data.key.charCodeAt();
 			let keyName = (111 < keyCode && keyCode < 192) 
 			            ? ("F" + (keyCode - 111)) // pqrstuvwxyz{ -> Fn
@@ -472,7 +470,7 @@ ready(() => {
 				}
 			}
 			
-			if ($inputCommandKey.val() == keyName) {
+			if (inputCommandKey.value == keyName) {
 				// 현재 작업 중인 것
 				return;
 			}
@@ -527,7 +525,7 @@ ready(() => {
 							if (oSmiEditor.withCtrlShifts.reserved.indexOf(key) >= 0) {
 								command = "Ctrl + Shift + 예약키";
 							} else {
-								func = $tableCommand.find(selector + " > td:eq(3)").data("func");
+								func = tableCommand.querySelectorAll(selector + " > td")[3].getAttribute("data-func");
 								name = "setting.command.withCtrlShifts[\"" + key + "\"]";
 								command = "Ctrl + Shift + " + keyName;
 							}
@@ -539,7 +537,7 @@ ready(() => {
 							if (oSmiEditor.withCtrlAlts.reserved.indexOf(key) >= 0) {
 								command = "Ctrl + Alt + 예약키";
 							} else {
-								func = $tableCommand.find(selector + " > td:eq(2)").data("func");
+								func = tableCommand.querySelectorAll(selector + " > td")[2].getAttribute("data-func");
 								name = "setting.command.withCtrlAlts[\"" + key + "\"]";
 								command = "Ctrl + Alt + " + keyName;
 							}
@@ -547,7 +545,7 @@ ready(() => {
 							if (oSmiEditor.withCtrls.reserved.indexOf(key) >= 0) {
 								command = "Ctrl + 예약키";
 							} else {
-								func = $tableCommand.find(selector + " > td:eq(0)").data("func");
+								func = tableCommand.querySelectorAll(selector + " > td")[0].getAttribute("data-func");
 								name = "setting.command.withCtrls[\"" + key + "\"]";
 								command = "Ctrl + " + keyName;
 							}
@@ -557,12 +555,12 @@ ready(() => {
 							if (oSmiEditor.withAlts.reserved.indexOf(key) >= 0) {
 								command = "Alt + 예약키";
 							} else {
-								func = $tableCommand.find(selector + " > td:eq(1)").data("func");
+								func = tableCommand.querySelectorAll(selector + " > td")[1].getAttribute("data-func");
 								name = "setting.command.withAlts[\"" + key + "\"]";
 								command = "Alt + " + keyName;
 							}
 						} else {
-							func = $tableCommand.find(selector + " > th:eq(0)").data("func");
+							func = tableCommand.querySelectorAll(selector + " > th")[0].getAttribute("data-func");
 							name = "setting.fn[\"" + key + "\"]";
 						}
 					}
@@ -619,7 +617,7 @@ ready(() => {
 			const li = e.target.closest("li");
 			if (li) {
 				const func = inputCommandFunc.value;
-				inputCommandFunc.value = (func ? func + "\n" : "") + $(li).data("input");
+				inputCommandFunc.value = (func ? func + "\n" : "") + li.getAttribute("data-input");
 				if (inputCommandName.value) {
 					setSaved("cmd", false);
 				}
@@ -668,7 +666,6 @@ ready(() => {
 		saved.replace = { status: true, name: "자동치환 설정" };
 		
 		const replaceList = document.getElementById("replaceList");
-		const $replaceList = $(replaceList);
 		
 		function appendReplace(item) {
 			if (!item) {
@@ -683,11 +680,11 @@ ready(() => {
 			li.append(tmp = document.createElement("button")); tmp.type = "button"; tmp.classList.add("prev"  ); tmp.innerText = "∧";
 			li.append(tmp = document.createElement("button")); tmp.type = "button"; tmp.classList.add("next"  ); tmp.innerText = "∨";
 			li.append(tmp = document.createElement("button")); tmp.type = "button"; tmp.classList.add("remove"); tmp.innerText = "✕";
-			$replaceList.append(li);
+			replaceList.append(li);
 		}
 		(refreshFuncs["replace"] = (setting) => {
 			refresh("replace", setting);
-			$replaceList.empty();
+			replaceList.innerHTML = "";
 			for (let i = 0; i < setting.replace.length; i++) {
 				appendReplace(setting.replace[i]);
 			}
@@ -757,17 +754,16 @@ ready(() => {
 		saved.style = { status: true, name: "스타일 설정" };
 		
 		const presetUl = document.querySelector("#style_color_preset ul");
-		const $presetUl = $(presetUl);
 		presetUl.addEventListener("click", (e) => {
 			let el;
 			if (el = e.target.closest("li span")) {
-				const color = setting.colorPreset[$(el.parentNode).data("key")];
+				const color = setting.colorPreset[el.parentNode.getAttribute("data-key")];
 				for (let name in color) {
 					document.querySelector("input[name=color_" + name + "]").value = color[name];
 				}
 			}
 			if (el = e.target.closest("li button")) {
-				const key = $(el.parentNode).data("key");
+				const key = el.parentNode.getAttribute("data-key");
 				confirm("삭제하시겠습니까?", () => {
 					delete(setting.colorPreset[key]);
 					refreshPreset(setting);
@@ -799,9 +795,12 @@ ready(() => {
 		function refreshPreset(setting) {
 			presetUl.innerHTML = "";
 			for (let key in setting.colorPreset) {
-				const li = $("<li>").data({ key: key });
-				li.append($("<span>").text(key)).append($("<button>").attr({ type: "button" }).text("×"));
-				$presetUl.append(li);
+				const li = document.createElement("li");
+				li.setAttribute("data-key", key);
+				let tmp;
+				li.append(tmp = document.createElement("span")); tmp.innerText = key;
+				li.append(tmp = document.createElement("button")); tmp.innerText = "×"; tmp.type = "button";
+				presetUl.append(li);
 			}
 		}
 		
@@ -815,8 +814,9 @@ ready(() => {
 			}, [editorNewFile]);
 		}
 		const editorNewFile = new SmiEditor();
-		$("#areaNewFile").append(editorNewFile.area.height(400));
+		document.getElementById("areaNewFile").append(editorNewFile.area[0]);
 		{	// textarea resize
+			editorNewFile.area.height(400);
 			let resizeNewFile = false;
 			editorNewFile.input[0].name = "newFile";
 			editorNewFile.input[0].style.height = "398px";
@@ -912,7 +912,7 @@ ready(() => {
 				inputs.forEach((el) => { el.disabled = true; });
 			}
 		});
-		$(selectParser).change();
+		selectParser.dispatchEvent(new Event("change", { bubbles: true }));
 		
 		document.getElementById("style").addEventListener("input", () => {
 			setSaved("style", false);
@@ -932,7 +932,6 @@ ready(() => {
 			setting.scrollShow       = Number(document.querySelector("input[name=scrollShow]").value);
 			
 			setting.viewer.useAlign  = document.querySelector("input[name=viewer_useAlign]").checked;
-//			setting.viewer.size      = document.querySelector("input[name=viewer_size]").value;
 			setting.viewer.css       = document.querySelector("textarea[name=viewer_css]").value;
 			
 			setting.newFile          = document.querySelector("textarea[name=newFile]"   ).value;
@@ -1060,45 +1059,45 @@ ready(() => {
 		function appendMenu(menus) {
 			if (!menus) menus = [""];
 			
-			const fieldset = $("<fieldset>");
-			const legend = $("<legend>")
-				.append($("<input type='text'>").val(menus[0]))
-				.append($("<button type='button' class='prev'>").text("∧"))
-				.append($("<button type='button' class='next'>").text("∨"))
-				.append($("<button type='button' class='remove'>").text("✕"));
-			fieldset.append(legend);
+			const $fieldset = $("<fieldset>");
+			const $legend = $("<legend>");
+			$legend.append($("<input type='text'>").val(menus[0]));
+			$legend.append($("<button type='button' class='prev'>").text("∧"));
+			$legend.append($("<button type='button' class='next'>").text("∨"));
+			$legend.append($("<button type='button' class='remove'>").text("✕"));
+			$fieldset.append($legend);
 			
-			const ol = $("<ol>");
-			fieldset.append(ol);
+			const $ol = $("<ol>");
+			$fieldset.append($ol);
 			
 			for (let j = 1; j < menus.length; j++) {
 				const menu = menus[j].split("|");
 				const name = menu[0];
 				const func = menu.slice(1).join("|");
-				appendSubMenu(ol, name, func);
+				appendSubMenu($ol, name, func);
 			}
 			
-			fieldset.append($("<button type='button' class='add-menu'>").text("추가"));
+			$fieldset.append($("<button type='button' class='add-menu'>").text("추가"));
 			
-			const li = $("<li>").append(fieldset);
+			const li = $("<li>").append($fieldset);
 			$menuList.append(li);
 			return li;
 		}
-		function appendSubMenu(ol, name, func) {
-			if (!ol) return;
+		function appendSubMenu($ol, name, func) {
+			if (!$ol) return;
 			if (!name) name = "";
 			if (!func) func = "";
-			const li = $("<li>")
+			const $li = $("<li>")
 					.append($("<input type='text' placeholder='이름을 비우면 구분선이 됩니다.'>").val(name))
 					.append($("<button type='button' class='prev'>").text("∧"))
 					.append($("<button type='button' class='next'>").text("∨"))
 					.append($("<input type='text' class='menu-func'>").val(func))
 					.append($("<button type='button' class='remove'>").text("✕"));
-			ol.append(li);
-			return li;
+			$ol.append($li);
+			return $li;
 		}
 		(refreshFuncs["menu"] = (setting) => {
-			$menuList.empty();
+			menuList.innerHTML = "";
 			for (let i = 0; i < setting.menu.length; i++) {
 				appendMenu(setting.menu[i]);
 			}
@@ -1113,30 +1112,28 @@ ready(() => {
 					appendMenu().find("input:eq(0)").focus();
 					setSaved("menu", false);
 				} else {
-					appendSubMenu($(el).parent().find("ol")).find("input:eq(0)").focus();
+					appendSubMenu($(el.parentNode.querySelector("ol"))).find("input:eq(0)").focus();
 					setSaved("menu", false);
 				}
 				return;
 			}
 			if (el = e.target.closest("legend > button.prev")) {
-				const btn = $(el);
-				const menu = btn.parents("li");
-				const prev = menu.prev();
-				if (prev.length) {
+				const menu = $(el).parents("li")[0];
+				const prev = menu.previousSibling;
+				if (prev) {
 					prev.before(menu);
 					setSaved("menu", false);
-					btn.focus();
+					el.focus();
 				}
 				return;
 			}
 			if (el = e.target.closest("legend > button.next")) {
-				const btn = $(el);
-				const menu = btn.parents("li");
-				const next = menu.next();
-				if (next.length) {
+				const menu = $(el).parents("li")[0];
+				const next = menu.nextSibling;
+				if (next) {
 					next.after(menu);
 					setSaved("menu", false);
-					btn.focus();
+					el.focus();
 				}
 				return;
 			}
@@ -1149,29 +1146,27 @@ ready(() => {
 				return;
 			}
 			if (el = e.target.closest("ol > li > button.prev")) {
-				const btn = $(el);
-				const subMenu = btn.parent();
-				const prev = subMenu.prev();
-				if (prev.length) {
+				const subMenu = el.parentNode;
+				const prev = subMenu.previousSibling;
+				if (prev) {
 					prev.before(subMenu);
 					setSaved("menu", false);
-					btn.focus();
+					el.focus();
 				}
 				return;
 			}
 			if (el = e.target.closest("ol > li > button.next")) {
-				const btn = $(el);
-				const subMenu = btn.parent();
-				const next = subMenu.next();
-				if (next.length) {
+				const subMenu = el.parentNode;
+				const next = subMenu.nextSibling;
+				if (next) {
 					next.after(subMenu);
 					setSaved("menu", false);
-					btn.focus();
+					el.focus();
 				}
 				return;
 			}
 			if (el = e.target.closest("ol > li > button.remove")) {
-				const subMenu = $(el).parent();
+				const subMenu = el.parentNode;
 				confirm("삭제하시겠습니까?", () => {
 					subMenu.remove();
 					setSaved("menu", false);
@@ -1183,11 +1178,11 @@ ready(() => {
 		submitFuncs["menu"] = () => {
 			const menus = [];
 			
-			$menuList.find("fieldset").each((_, el) => {
-				const fieldset = $(el);
-				const menu = [fieldset.find("legend > input").val()];
+			[...menuList.querySelectorAll("fieldset")].forEach((el) => {
+				const $fieldset = $(el);
+				const menu = [$fieldset.find("legend > input").val()];
 				
-				fieldset.find("li").each((_, el) => {
+				$fieldset.find("li").each((_, el) => {
 					const inputs = $(el).find("input");
 					menu.push(inputs[0].value + "|" + inputs[1].value);
 				});
@@ -1491,10 +1486,10 @@ fieldset ol button,
 #style_ass input[type=text],
 #style_ass input[type=number],
 #style_ass input[type=color] {
-    height: 22px;
+	height: 22px;
 }
 #style_ass input[type=text].color {
-    width: 60px;
+	width: 60px;
 }
 
 body.classic-scrollbar ::-webkit-scrollbar,
