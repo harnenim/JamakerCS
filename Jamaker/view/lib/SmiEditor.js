@@ -361,7 +361,7 @@ SmiEditor.setSetting = (setting) => {
 	}
 	SmiEditor.scrollShow = setting.scrollShow;
 	
-	{	// AutoComplete
+	if (window.AutoComplete) { // AutoComplete 라이브러리 가져왔을 때만 생성
 		for (let key in SmiEditor.autoComplete) {
 			delete SmiEditor.autoComplete[key];
 		}
@@ -444,8 +444,8 @@ SmiEditor.setSetting = (setting) => {
 			}
 		}
 	}
-	
-	{	// contextmenu
+
+	if (window.ContextMenu) { // ContextMenu 라이브러리 가져왔을 때만 생성
 		if (SmiEditor.contextmenu) {
 			SmiEditor.contextmenu.remove();
 		}
@@ -1388,7 +1388,6 @@ SmiEditor.prototype.setCursor = function(start, end) {
 }
 SmiEditor.scrollMargin = 3.5;
 SmiEditor.prototype.scrollToCursor = function(lineNo) {
-	console.log("scrollToCursor", lineNo);
 	let left = 0;
 	if (typeof lineNo == "undefined") {
 		const linesBeforeCursor = this.input.value.substring(0, this.input.selectionEnd).split("\n");
@@ -2157,7 +2156,6 @@ SmiEditor.afterRefreshHighlight = (editors) => {
 	if (typeof editors == "function") {
 		editors = editors();
 	}
-	console.log("afterRefreshHighlight", editors);
 	for (let i = 0; i < editors.length; i++) {
 		editors[i].refreshHighlight();
 	}

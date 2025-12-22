@@ -290,12 +290,12 @@ ready(() => {
 		const editor = new SmiEditor(tmp.val());
 		tmp.remove();
 		
-		$("body").prepend(editor.input.attr({ id: "input" }));
+		$("body").prepend(editor.$input.attr({ id: "input" }));
 		SmiEditor.selected = editor;
 	}
 	SmiEditor.activateKeyEvent();
 	
-	LH = Number(SmiEditor.selected.input.css("line-height").split("px")[0]);
+	LH = Number(SmiEditor.selected.$input.css("line-height").split("px")[0]);
 	
 	$("#btnDevide").on("click", devide);
 	devide();
