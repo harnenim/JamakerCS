@@ -21,7 +21,7 @@ const M = [null, "", "_", "~"]; // 모드에 따른 파일명 끝 표시
 
 ready(() => {
 	if (opener && opener.tabs && opener.tabs.length) {
-		tab = opener.tabs[opener.tab];
+		tab = opener.tabs[opener.tabIndex];
 		Subtitle.video = opener.Subtitle.video;
 	} else {
 		alert("작업 대상이 없습니다.");
@@ -532,7 +532,7 @@ ready(() => {
 			// 에디터에 적용
 			const text = (prev ? prev + "\n" : "") + result.toText() + (next ? "\n" + next : "");
 			// 현재 커서 위치를 기반으로 다시 맞춤
-			const selectedLine = origin.hold.input.val().substring(0, origin.hold.input[0].selectionEnd).split("\n").length;
+			const selectedLine = origin.hold.input.value.substring(0, origin.hold.input.selectionEnd).split("\n").length;
 			const cursor = text.split("\n").slice(0, selectedLine - 1).join("\n").length + 1;
 			origin.hold.history.log();
 			origin.hold.setText(text, [cursor]);

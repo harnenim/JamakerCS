@@ -111,7 +111,6 @@ window.Tab = function(text, path) {
 				const popup = document.getElementById("assSplitHoldSelectorPopup");
 				popup.innerHTML = "";
 				let el;
-				const $popup = $(popup);
 				for (let i = 0; i < styleList.length; i++) {
 					const style = styleList[i];
 					popup.append(el = document.createElement("button"));
@@ -2702,7 +2701,7 @@ function saveFile(asNew, isExport) {
 			               : currentTab.getSaveText(setting.saveWithNormalize, true, (exporting = isExport) ? -1 : 1);
 			
 			const saveFrom = log("binder.save start");
-			binder.save(tab, saveText, path, 0);
+			binder.save(tabIndex, saveText, path, 0);
 			log("binder.save end", saveFrom);
 			
 			if (withSmi || withSrt) {
@@ -2710,7 +2709,7 @@ function saveFile(asNew, isExport) {
 				
 				if (withSmi) {
 					const saveSmiFrom = log("binder.save smi start");
-					binder.save(tab, smiText, smiPath, 1);
+					binder.save(tabIndex, smiText, smiPath, 1);
 					log("binder.save smi end", saveSmiFrom);
 				}
 				if (withSrt) {
@@ -2721,7 +2720,7 @@ function saveFile(asNew, isExport) {
 					// 홀드 결합 이전의 원본 그대로 SRT 자막을 만들면 홀드 상하 배치가 섞여버림
 					const syncs = new SmiFile(smiText).toSyncs();
 					const srtFile = new SrtFile().fromSyncs(syncs);
-					binder.save(tab, srtFile.toText(), srtPath, 3);
+					binder.save(tabIndex, srtFile.toText(), srtPath, 3);
 					const saveSrtFrom = log("binder.save srt start");
 					
 					log("binder.save srt end", saveSrtFrom);
@@ -2732,7 +2731,7 @@ function saveFile(asNew, isExport) {
 					const assText = currentTab.toAss().toText();
 					
 					const saveAssFrom = log("binder.save ass start");
-					binder.save(tab, assText, assPath, 2);
+					binder.save(tabIndex, assText, assPath, 2);
 					log("binder.save ass end", saveAssFrom);
 					
 			    } else {
@@ -2788,7 +2787,7 @@ function afterSaveFile(tabIndex, path) { // 저장 도중에 탭 전환할 수 �
 	currentTab.assHold.assEditor.setSaved();
 	currentTab.path = path;
 	const title = path ? ((path.length > 14) ? ("..." + path.substring(path.length - 14, path.length - 4)) : path.substring(0, path.length - 4)) : "새 문서";
-	$("#tabSelector .th:eq(" + tab + ") span").text(title).attr({ title: path });
+	$("#tabSelector .th:eq(" + tabIndex + ") span").text(title).attr({ title: path });
 	currentTab.holdEdited = false;
 	currentTab.savedHolds = currentTab.holds.slice(0);
 	
@@ -3027,7 +3026,7 @@ function afterSetFkf() {
 function loadAssFile(path, text, target=-1) {
 	if (target < 0) {
 		// 탭이 지정 안 된 경우..는 없어야 맞음
-		target = tab;
+		target = tabIndex;
 	}
 	const currentTab = tabs[target];
 	if (!currentTab || !currentTab.withAss) {
@@ -3168,12 +3167,10 @@ function loadAssFile(path, text, target=-1) {
 			const style = part.body[i];
 			const genStyle = styles[style.Name];
 			if (genStyle) {
-				let styleChanged = false;
 				for (let j = 0; j < part.format.length; j++) {
 					const f = part.format[j];
 					if (style[f] != genStyle[f]) {
 						changedStyles.push(style);
-						styleChanged = true;
 						break;
 					}
 				}

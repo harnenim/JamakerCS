@@ -978,7 +978,7 @@ if (SmiFile) {
 		let originBody = [];
 		
 		// .text 동기화 안 끝났을 가능성 고려, 현재 값 다시 불러옴
-		const main = new SmiFile(origHolds[0].input ? origHolds[0].input.val() : origHolds[0].text);
+		const main = new SmiFile(origHolds[0].input ? origHolds[0].input.value : origHolds[0].text);
 		{	// 메인 홀드 스타일 저장
 			const style = SmiFile.toSaveStyle(origHolds[0].style);
 			if (style) {
@@ -998,7 +998,7 @@ if (SmiFile) {
 			const imports = [];
 			for (let hi = 0; hi < holdsWithoutMain.length; hi++) {
 				const hold = holdsWithoutMain[hi];
-				const holdText = hold.input ? hold.input.val() : hold.text; // .text 동기화 안 끝났을 가능성 고려, 현재 값 다시 불러옴
+				const holdText = hold.input ? hold.input.value : hold.text; // .text 동기화 안 끝났을 가능성 고려, 현재 값 다시 불러옴
 				let text = holdText;
 				hold.exportName = hold.name;
 				if (hold.style) {
@@ -1196,7 +1196,7 @@ if (SmiFile) {
 				if (hold.imported) {
 					continue;
 				}
-				const holdText = hold.input ? hold.input.val() : hold.text;
+				const holdText = hold.input ? hold.input.value : hold.text;
 				let text = holdText;
 				if (hold.style) {
 					const style = (typeof hold.style == "string") ? hold.style : SmiFile.toSaveStyle(hold.style);
