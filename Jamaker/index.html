@@ -15,7 +15,7 @@ C# 껍데기를 거치지 않고 웹브라우저에서 돌아가도록 만든 �
 <script src="view/lib/Frame.js"></script>
 <link rel="stylesheet" type="text/css" href="view/lib/Frame.css" />
 <script>
-$(() => {
+window.addEventListener("load", (() => {
 	const fEditor = new Frame("Jamaker.html", "editor", "", () => {
 		fEditor.frame.find(".button").remove();
 		fEditor.frame.find("h3").css({ width: "100%" });

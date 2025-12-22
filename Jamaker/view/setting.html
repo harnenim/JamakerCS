@@ -207,18 +207,18 @@ ready(() => {
 				}
 				
 				const targetXY = [
-					[	{ p: editor.x, f: (x) => { setLeft(ecss, x); } }
-					,	{ p: editor.x + editor.width, f: (x) => { setRight(ecss, x); } }
-					,	{ p: viewer.x, f: (x) => { setLeft(vcss, x); } }
-					,	{ p: viewer.x + viewer.width, f: (x) => { setRight(vcss, x); } }
-					,	{ p: player.x, f: (x) => { setLeft(pcss, x); } }
-					,	{ p: player.x + player.width, f: (x) => { setRight(pcss, x); } }
+					[	{ p: editor.x                , f: (x) => { setLeft  (ecss, x); } }
+					,	{ p: editor.x + editor.width , f: (x) => { setRight (ecss, x); } }
+					,	{ p: viewer.x                , f: (x) => { setLeft  (vcss, x); } }
+					,	{ p: viewer.x + viewer.width , f: (x) => { setRight (vcss, x); } }
+					,	{ p: player.x                , f: (x) => { setLeft  (pcss, x); } }
+					,	{ p: player.x + player.width , f: (x) => { setRight (pcss, x); } }
 					]
-				,	[	{ p: editor.y, f: (y) => { setTop(ecss, y); } }
+				,	[	{ p: editor.y                , f: (y) => { setTop   (ecss, y); } }
 					,	{ p: editor.y + editor.height, f: (y) => { setBottom(ecss, y); } }
-					,	{ p: viewer.y, f: (y) => { setTop(vcss, y); } }
+					,	{ p: viewer.y                , f: (y) => { setTop   (vcss, y); } }
 					,	{ p: viewer.y + viewer.height, f: (y) => { setBottom(vcss, y); } }
-					,	{ p: player.y, f: (y) => { setTop(pcss, y); } }
+					,	{ p: player.y                , f: (y) => { setTop   (pcss, y); } }
 					,	{ p: player.y + player.height, f: (y) => { setBottom(pcss, y); } }
 					]
 				];
@@ -247,9 +247,11 @@ ready(() => {
 						}
 					}
 				}
-				$(fieldEditor).css(ecss);
-				$(fieldViewer).css(vcss);
-				$(fieldPlayer).css(pcss);
+				for (key in ecss) {
+					fieldEditor.style[key] = ecss[key];
+					fieldViewer.style[key] = vcss[key];
+					fieldPlayer.style[key] = pcss[key];
+				}
 			}
 			
 			setSaved("window"
@@ -814,18 +816,18 @@ ready(() => {
 			}, [editorNewFile]);
 		}
 		const editorNewFile = new SmiEditor();
-		document.getElementById("areaNewFile").append(editorNewFile.area[0]);
+		document.getElementById("areaNewFile").append(editorNewFile.area);
 		{	// textarea resize
-			editorNewFile.area.height(400);
+			editorNewFile.area.style.height = "400px";
 			let resizeNewFile = false;
-			editorNewFile.input[0].name = "newFile";
-			editorNewFile.input[0].style.height = "398px";
-			editorNewFile.input[0].addEventListener("mousedown", () => {
+			editorNewFile.input.name = "newFile";
+			editorNewFile.input.style.height = "398px";
+			editorNewFile.input.addEventListener("mousedown", () => {
 				resizeNewFile = true;
 			});
 			document.addEventListener("mousemove", () => {
 				if (!resizeNewFile) return;
-				editorNewFile.area.height(editorNewFile.input[0].offsetHeight + 2);
+				editorNewFile.area.style.height = (editorNewFile.input.offsetHeight + 2) + "px";
 			});
 			document.addEventListener("mouseup", () => {
 				resizeNewFile = false;
@@ -1054,47 +1056,96 @@ ready(() => {
 		saved.menu = { status: true, name: "메뉴 설정" };
 		
 		const menuList = document.getElementById("menuList");
-		const $menuList = $(menuList);
 		
 		function appendMenu(menus) {
 			if (!menus) menus = [""];
 			
-			const $fieldset = $("<fieldset>");
-			const $legend = $("<legend>");
-			$legend.append($("<input type='text'>").val(menus[0]));
-			$legend.append($("<button type='button' class='prev'>").text("∧"));
-			$legend.append($("<button type='button' class='next'>").text("∨"));
-			$legend.append($("<button type='button' class='remove'>").text("✕"));
-			$fieldset.append($legend);
+			const fieldset = document.createElement("fieldset");
+			const legend = document.createElement("legend");
+			{	let tmp = document.createElement("input");
+				tmp.type = "text";
+				tmp.value = menus[0];
+				legend.append(tmp);
+			}
+			{	let tmp = document.createElement("button");
+				tmp.type = "button";
+				tmp.classList.add("prev");
+				tmp.innerText = "∧";
+				legend.append(tmp);
+			}
+			{	let tmp = document.createElement("button");
+				tmp.type = "button";
+				tmp.classList.add("next");
+				tmp.innerText = "∨";
+				legend.append(tmp);
+			}
+			{	let tmp = document.createElement("button");
+				tmp.type = "button";
+				tmp.classList.add("remove");
+				tmp.innerText = "✕";
+				legend.append(tmp);
+			}
+			fieldset.append(legend);
 			
-			const $ol = $("<ol>");
-			$fieldset.append($ol);
+			const ol = document.createElement("ol");
+			fieldset.append(ol);
 			
 			for (let j = 1; j < menus.length; j++) {
 				const menu = menus[j].split("|");
 				const name = menu[0];
 				const func = menu.slice(1).join("|");
-				appendSubMenu($ol, name, func);
+				appendSubMenu(ol, name, func);
 			}
 			
-			$fieldset.append($("<button type='button' class='add-menu'>").text("추가"));
+			{	let tmp = document.createElement("button");
+				tmp.type = "button";
+				tmp.classList.add("add-menu");
+				tmp.innerText = "추가";
+				fieldset.append(tmp);
+			}
 			
-			const li = $("<li>").append($fieldset);
-			$menuList.append(li);
+			const li = document.createElement("li");
+			li.append(fieldset);
+			menuList.append(li);
 			return li;
 		}
-		function appendSubMenu($ol, name, func) {
-			if (!$ol) return;
+		function appendSubMenu(ol, name, func) {
+			if (!ol) return;
 			if (!name) name = "";
 			if (!func) func = "";
-			const $li = $("<li>")
-					.append($("<input type='text' placeholder='이름을 비우면 구분선이 됩니다.'>").val(name))
-					.append($("<button type='button' class='prev'>").text("∧"))
-					.append($("<button type='button' class='next'>").text("∨"))
-					.append($("<input type='text' class='menu-func'>").val(func))
-					.append($("<button type='button' class='remove'>").text("✕"));
-			$ol.append($li);
-			return $li;
+			const li = document.createElement("li");
+			{	let tmp = document.createElement("input");
+				tmp.type = "text";
+				tmp.placeholder = "이름을 비우면 구분선이 됩니다.";
+				tmp.value = name;
+				li.append(tmp);
+			}
+			{	let tmp = document.createElement("button");
+				tmp.type = "button";
+				tmp.classList.add("prev");
+				tmp.innerText = "∧";
+				li.append(tmp);
+			}
+			{	let tmp = document.createElement("button");
+				tmp.type = "button";
+				tmp.classList.add("next");
+				tmp.innerText = "∨";
+				li.append(tmp);
+			}
+			{	let tmp = document.createElement("input");
+				tmp.type = "text";
+				tmp.classList.add("menu-func");
+				tmp.value = func;
+				li.append(tmp);
+			}
+			{	let tmp = document.createElement("button");
+				tmp.type = "button";
+				tmp.classList.add("remove");
+				tmp.innerText = "✕";
+				li.append(tmp);
+			}
+			ol.append(li);
+			return li;
 		}
 		(refreshFuncs["menu"] = (setting) => {
 			menuList.innerHTML = "";
@@ -1109,16 +1160,16 @@ ready(() => {
 			let el;
 			if (el = e.target.closest(".add-menu")) {
 				if (el.parentNode == menu) {
-					appendMenu().find("input:eq(0)").focus();
+					appendMenu().querySelector("input").focus();
 					setSaved("menu", false);
 				} else {
-					appendSubMenu($(el.parentNode.querySelector("ol"))).find("input:eq(0)").focus();
+					appendSubMenu(el.parentNode.querySelector("ol")).querySelector("input").focus();
 					setSaved("menu", false);
 				}
 				return;
 			}
 			if (el = e.target.closest("legend > button.prev")) {
-				const menu = $(el).parents("li")[0];
+				const menu = el.parentNode.parentNode.parentNode;
 				const prev = menu.previousSibling;
 				if (prev) {
 					prev.before(menu);
@@ -1128,7 +1179,7 @@ ready(() => {
 				return;
 			}
 			if (el = e.target.closest("legend > button.next")) {
-				const menu = $(el).parents("li")[0];
+				const menu = el.parentNode.parentNode.parentNode;
 				const next = menu.nextSibling;
 				if (next) {
 					next.after(menu);
@@ -1138,7 +1189,7 @@ ready(() => {
 				return;
 			}
 			if (el = e.target.closest("legend > button.remove")) {
-				const menu = $(el).parents("li");
+				const menu = el.parentNode.parentNode.parentNode;
 				confirm("삭제하시겠습니까?", () => {
 					menu.remove();
 					setSaved("menu", false);
@@ -1178,12 +1229,11 @@ ready(() => {
 		submitFuncs["menu"] = () => {
 			const menus = [];
 			
-			[...menuList.querySelectorAll("fieldset")].forEach((el) => {
-				const $fieldset = $(el);
-				const menu = [$fieldset.find("legend > input").val()];
+			[...menuList.querySelectorAll("fieldset")].forEach((fieldset) => {
+				const menu = [fieldset.querySelector("legend > input").value];
 				
-				$fieldset.find("li").each((_, el) => {
-					const inputs = $(el).find("input");
+				[...fieldset.querySelectorAll("li")].forEach((li) => {
+					const inputs = li.querySelectorAll("input");
 					menu.push(inputs[0].value + "|" + inputs[1].value);
 				});
 				menus.push(menu);
