@@ -2870,8 +2870,9 @@ function afterSaveFile(tabIndex, path) { // 저장 도중에 탭 전환할 수 �
 	currentTab.assHold.assEditor.setSaved();
 	currentTab.path = path;
 	const title = path ? ((path.length > 14) ? ("..." + path.substring(path.length - 14, path.length - 4)) : path.substring(0, path.length - 4)) : "새 문서";
-	const span = document.getElementById("tabSelector").querySelector(".th")[tabIndex].querySelector("span");
-	span.innerText = span.title = path;
+	const span = document.getElementById("tabSelector").querySelectorAll(".th")[tabIndex].querySelector("span");
+	span.innerText = path;
+	span.title = title;
 	currentTab.holdEdited = false;
 	currentTab.savedHolds = currentTab.holds.slice(0);
 	

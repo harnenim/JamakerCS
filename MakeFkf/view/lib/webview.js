@@ -38,6 +38,31 @@ prompt = (msg, after, def) => {
 	binder.prompt(windowName, msg, def);
 }
 
+{	const dataMap = new WeakMap();
+	window.eData = (el=null, key=null, value=null) => {
+		if (!el) return null;
+		
+		let map = dataMap.get(el);
+		if (!map) {
+			dataMap.set(el, map = {});
+		}
+		if (key != null) {
+			if (typeof key == "string") {
+				if (value == null) {
+					return map[key];
+				}
+				map[key] = value;
+			} else if (typeof key == "object") {
+				const paramMap = key;
+				for (key in paramMap) {
+					map[key] = paramMap[key];
+				}
+			}
+		}
+		return map;
+	}
+}
+
 // JSON.stringify 보기 좋게 커스터마이징
 function stringify(obj, depth=0, pad=2, isChild=false) {
 	let str = "";
@@ -165,7 +190,7 @@ ready(() => {
 	
 	if (window.binder) {
 		setTimeout(() => {
-			binder.initAfterLoad(document.getElementsByTagName("title")[0].innerText);
+			binder.initAfterLoad(document.title);
 		}, 1);
 	}
 	{	const cover = document.createElement("div");
