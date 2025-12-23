@@ -70,10 +70,8 @@ function convertValue(value) {
 }
 function submit(method, url, values) {
 	const form = document.getElementsByTagName("form")[0];
-	form.attr({
-			action: url
-		,	method: method
-	});
+	form.action = url;
+	form.method = method;
 	for (let key in values) {
 		const input = document.createElement("input");
 		input.type = "hidden";
