@@ -82,6 +82,31 @@ confirm = (msg, yes, no) => {
 	}
 }
 
+{	const dataMap = new WeakMap();
+	window.eData = (el=null, key=null, value=null) => {
+		if (!el) return null;
+		
+		let map = dataMap.get(el);
+		if (!map) {
+			dataMap.set(el, map = {});
+		}
+		if (key != null) {
+			if (typeof key == "string") {
+				if (value == null) {
+					return map[key];
+				}
+				map[key] = value;
+			} else if (typeof key == "object") {
+				const paramMap = key;
+				for (key in paramMap) {
+					map[key] = paramMap[key];
+				}
+			}
+		}
+		return map;
+	}
+}
+
 {
 	window.onloads = [];
 	window.ready = (fn) => {

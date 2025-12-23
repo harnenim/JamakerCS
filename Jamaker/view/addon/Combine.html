@@ -4,7 +4,6 @@
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>겹치는 싱크 결합</title>
-	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/popup.js"></script>
 	<script src="../lib/setting.js"></script>
 	<script src="../lib/AutoCompleteTextarea.js"></script>
@@ -29,22 +28,21 @@ ready(() => {
 let style = null;
 function setSetting(setting) {
 	if (style == null) {
-		$("head").append(style = $("<style>"));
+		document.head.append(style = document.createElement("style"));
 	}
-	style.html("#preview {\n" + setting.viewer.css + "\nfont-size: calc(" + setting.viewer.size + "vw / 5.86);\n}");
-	Combine.css = { font: $("#preview").css("font") };
+	style.innerHTML = ("#preview {\n" + setting.viewer.css + "\nfont-size: calc(" + setting.viewer.size + "vw / 5.86);\n}");
+	Combine.css = { font: getComputedStyle(document.getElementById("preview")).font };
 }
 
 ready(() => {
-	//$("#preview").css(defaultCss);
 	setSetting(setting);
 	
-	$("#btnCombine").on("click", function() {
+	document.getElementById("btnCombine").addEventListener("click", () => {
 		// [[시작,종료,대사,줄수], ...]
 		// {lines:[시작,종료,위,아래], maxLines:[1,1]}//, maxWidth: 100
 		
-		const lines = Combine.combine($("#inputUpper").val(), $("#inputLower").val());
-		$("#output").val(lines.join("\n"));
+		const lines = Combine.combine(document.getElementById("inputUpper").value, document.getElementById("inputLower").value);
+		document.getElementById("output").value = lines.join("\n");
 		
 		// preview 돌리기
 		const list = [];
@@ -107,17 +105,19 @@ ready(() => {
 	if (setting) {
 		SmiEditor.setSetting(setting);
 	}
-	const inputUpper = $("#inputUpper");
-	const inputLower = $("#inputLower");
-	const upper = new SmiEditor(inputUpper.val());
-	const lower = new SmiEditor(inputLower.val());
+	const inputUpper = document.getElementById("inputUpper");
+	const inputLower = document.getElementById("inputLower");
+	const upper = new SmiEditor(inputUpper.value);
+	const lower = new SmiEditor(inputLower.value);
 	inputUpper.remove();
 	inputLower.remove();
+	upper.input.id = "inputUpper";
+	lower.input.id = "inputLower";
 	
-	$("body").prepend(lower.input.attr("id", "inputLower"));
-	$("body").prepend(upper.input.attr("id", "inputUpper"));
-	upper.input.on("focus", function() { SmiEditor.selected = upper; });
-	lower.input.on("focus", function() { SmiEditor.selected = lower; });
+	document.body.prepend(lower.input);
+	document.body.prepend(upper.input);
+	upper.input.addEventListener("focus", () => { SmiEditor.selected = upper; });
+	lower.input.addEventListener("focus", () => { SmiEditor.selected = lower; });
 	SmiEditor.activateKeyEvent();
 	
 	LH = Number(upper.input.css("line-height").split("px")[0]);
@@ -128,13 +128,13 @@ function setPreview(list) {
 		clearInterval(refreshPreview);
 	}
 	
-	const preview = $("#preview");
+	const preview = document.getElementById("preview");
 	let i = 0;
 	refreshPreview = setInterval(() => {
 		while (i >= list.length) {
 			i -= list.length;
 		}
-		preview.html(list[i++]);
+		preview.innerHTML = list[i++];
 	}, 333);
 }
 	</script>

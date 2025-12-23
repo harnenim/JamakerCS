@@ -4,7 +4,6 @@
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>Make FKF</title>
-	<script src="lib/jquery-3.2.1.min.js"></script>
 	<script src="lib/webview.js"></script>
 	<script src="lib/ListView.js"></script>
 	<link rel="stylesheet" type="text/css" href="lib/webview.css" />
@@ -19,11 +18,11 @@ let listFiles;
 let isProcessing = false;
 function showProcessing() {
 	isProcessing = true;
-	//$("#processing").show();
+	//document.getElementById("processing").style.display = "block";
 	listFiles.lock = true;
 }
 function hideProcessing() {
-	//$("#processing").hide();
+	//document.getElementById("processing").style.display = "none";;
 	isProcessing = false;
 	listFiles.lock = false;
 }
@@ -46,36 +45,32 @@ function drop(x, y) {
 	binder.addFilesByDrag();
 }
 
-function setProgress(index, ratio) {
-	["#listFiles li:eq(" + index + ")", ratio, "calc((100vw - 19px) * [ratio])"]
-}
 function scrollTo(index) {
-	const li = $(listFiles.area).find("li:eq(" + index + ")");
-	const offsetTop = li.offset().top;
-	const top = $(listFiles.area).scrollTop() + offsetTop - 1;
+	const li = listFiles.area.querySelectorAll("li")[index];
+	const offsetTop = li.offsetTop - listFiles.area.scrollTop;
 	if (offsetTop < 0) {
-		$(listFiles.area).scrollTop(top);
+		listFiles.area.scrollTop = (li.offsetTop - 1);
 	} else {
-		const bottom = top + li.height();
-		const limit = $(listFiles.area).height() - 19;
+		const bottom = li.offsetTop - 1 + li.clientHeight;
+		const limit = listFiles.area.clientHeight - 19;
 		if (bottom > limit) {
-			$(listFiles.area).scrollTop(bottom - limit);
+			listFiles.area.scrollTop = (bottom - limit);
 		}
 	}
 }
 
 ready(() => {
-	listFiles = new ListView($("#listFiles"));
+	listFiles = new ListView(document.getElementById("listFiles"));
 	
 	document.addEventListener("dragenter", (e) => {
 		e.preventDefault();
 		binder.showDragging();
 	});
-	$("#cover").on("click", function(e) {
+	document.getElementById("cover").addEventListener("click", () => {
 		binder.hideDragging();
 	});
 	
-	$("#btnMakeFkfs").on("click", function() {
+	document.getElementById("btnMakeFkfs").addEventListener("click", () => {
 		const files = [];
 		for (let i = 0; i < listFiles.list.length; i++) {
 			files.push(listFiles.list[i].value);
@@ -84,8 +79,10 @@ ready(() => {
 			alert("작업할 파일이 없습니다.");
 			return;
 		}
-		$(listFiles.area).find(".progress-bar").css({ width: 0 });
-		$(listFiles.area).scrollLeft(0);
+		[...listFiles.area.querySelectorAll(".progress-bar")].forEach((el) => {
+			el.style.width = 0;
+		});
+		listFiles.area.scrollLeft = 0;
 		binder.makeFkfs(JSON.stringify(files));
 	});
 });

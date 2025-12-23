@@ -4,7 +4,6 @@
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>재생 속도 조절</title>
-	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/popup.js"></script>
 	<script src="../lib/setting.js"></script>
 	<script src="../lib/SubtitleObject.js"></script>
@@ -22,24 +21,29 @@ ready(() => {
 let style = null;
 function setSetting(setting) {
 	if (style == null) {
-		$("head").append(style = $("<style>"));
+		document.head.append(style = document.createElement("style"));
 	}
-	style.html("#preview {\n" + setting.viewer.css + "}");
+	style.innerHTML = ("#preview {\n" + setting.viewer.css + "}");
 }
 
 const editor = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
 
 function convert() {
-	const isSmi = $("input[name=type][value=SMI]").prop("checked");
-	const inputSpeed  = $("#inputSpeed" ).val();
-	const outputSpeed = $("#outputSpeed").val();
+	let isSmi = false;
+	[...document.querySelectorAll("input[name=type]")].forEach((el) => {
+		if (el.value == "SMI") {
+			isSmi = el.checked;
+		}
+	});
+	const inputSpeed  = document.getElementById("inputSpeed" ).value;
+	const outputSpeed = document.getElementById("outputSpeed").value;
 	
 	if (!isFinite(inputSpeed) || !isFinite(outputSpeed)) {
 		alert("FPS 값이 잘못됐습니다.");
 		return;
 	}
 	
-	const inputLines = $("#input").val().split("\n");
+	const inputLines = document.getElementById("input").value.split("\n");
 	const outputLines = [];
 	
 	if (isSmi) {
@@ -174,15 +178,15 @@ function convert() {
 		}
 	}
 	
-	$("#output").val(outputLines.join("\n"));
-	$("#input").scroll();
+	document.getElementById("output").value = outputLines.join("\n");
+	document.getElementById("input").dispatchEvent(new Event("scroll", { bubbles: true }));
 }
 
 ready(() => {
-	$("#btnConvert").on("click", convert);
+	document.getElementById("btnConvert").addEventListener("click", convert);
 	
 	if (!opener) {
-		$("#inputSpeed").val(24);
+		document.getElementById("inputSpeed").value = 24;
 		return;
 	}
 	if (!editor) {
@@ -200,12 +204,13 @@ ready(() => {
 		start = editor.text.substring(0, range[0]).split("\n").length - 1;
 		end   = editor.text.substring(0, range[1]).split("\n").length;
 	}
-	$("#input").val(linesToText(editor.lines.slice(start, end)));
-	$("#inputSpeed").val(opener.Subtitle.video.FR / 1000);
+	document.getElementById("input").value = linesToText(editor.lines.slice(start, end));
+	document.getElementById("inputSpeed").value = (opener.Subtitle.video.FR / 1000);
 	
-	const textareas = $("#input,#output").on("scroll", function() {
-		textareas.scrollTop($(this).scrollTop());
-	});
+	const input  = document.getElementById("input" );
+	const output = document.getElementById("output");
+	input .addEventListener("scroll", () => { output.scrollTop = input.scrollTop; });
+	output.addEventListener("scroll", () => { input.scrollTop = output.scrollTop; });
 });
 	</script>
 	<style>

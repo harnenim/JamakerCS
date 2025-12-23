@@ -4,7 +4,6 @@
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>싱크 유지 텍스트 대체</title>
-	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/popup.js"></script>
 	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
 	<script>
@@ -38,13 +37,13 @@ function init() {
 		origin.end = origin.text.split("\n").length;
 	}
 	
-	$("#inputSync").val(origin.text.split("\n").slice(origin.start, origin.end).join("\n"));
+	document.getElementById("inputSync").value = origin.text.split("\n").slice(origin.start, origin.end).join("\n");
 	resizeTextarea();
 }
 
 function fusion() {
-	const syncs = $("#inputSync").val().split("\n");
-	const texts = $("#inputText").val().split("\n");
+	const syncs = document.getElementById("inputSync").value.split("\n");
+	const texts = document.getElementById("inputText").value.split("\n");
 	const result = [];
 	const end = Math.min(syncs.length, texts.length * 2);
 	let i = 0;
@@ -80,11 +79,11 @@ function fusion() {
 			result.push(texts[(i-1)/2]);
 		}
 	}
-	$("#output").val(result.join("\n"));
+	document.getElementById("output").value = result.join("\n");
 }
 
 function apply() {
-	let text = $("#output").val();
+	let text = document.getElementById("output").value;
 	while (text.indexOf("\n\n") >= 0) {
 		text = text.replaceAll("\n\n", "\n");
 	}
@@ -103,18 +102,18 @@ function apply() {
 
 function resizeTextarea() {
 	const height = Math.max(
-			$("#inputSync").val().split("\n").length
-		,	$("#inputText").val().split("\n").length * 2
+			document.getElementById("inputSync").value.split("\n").length
+		,	document.getElementById("inputText").value.split("\n").length * 2
 	) * 16;
-	$("textarea").height(height);
+	[...document.getElementsByTagName("textarea")].forEach((el) => { el.style.height = height + "px"; });
 }
 
 ready(() => {
 	init();
-	$("#btnFusion").on("click", fusion);
-	$("#btnApply" ).on("click", apply );
+	document.getElementById("btnFusion").addEventListener("click", fusion);
+	document.getElementById("btnApply" ).addEventListener("click", apply );
 	
-	$("textarea").on("input propertychange", function() {
+	document.body.addEventListener("input", () => {
 		resizeTextarea();
 	});
 });

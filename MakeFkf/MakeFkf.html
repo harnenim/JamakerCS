@@ -25,9 +25,9 @@ window.main = new WebForm();
 		let offset = localStorage.getItem("offset.MakeFkf");
 		if (offset) {
 			offset = offset.split(",");
-			const top = Number(offset[0]);
-			const left = Number(offset[1]);
-			const width = Number(offset[2]);
+			const top    = Number(offset[0]);
+			const left   = Number(offset[1]);
+			const width  = Number(offset[2]);
 			const height = Number(offset[3]);
 			WinAPI.MoveWindow(window, left, top, width, height);
 		}

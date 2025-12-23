@@ -4,15 +4,14 @@
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>텍스트 일괄 치환</title>
-	<script src="lib/jquery-3.2.1.min.js"></script>
 	<script src="lib/webview.js"></script>
 	<script src="lib/ListView.js"></script>
 	<link rel="stylesheet" type="text/css" href="lib/webview.css" />
 	<link rel="stylesheet" type="text/css" href="lib/ListView.css" />
 	<script>
 function setTextareaHeight(obj) {
-	const lineCount = obj.val().split("\n").length;
-	obj.css("height", 4 + 14 * lineCount);
+	const lineCount = obj.value.split("\n").length;
+	obj.style.height = (4 + 14 * lineCount) + "px";
 }
 
 let listFiles;
@@ -33,15 +32,15 @@ function init(jsonSetting) {
 	if (!setting.filters) setting.filters = "*.txt, *.smi, *.ass";
 	if (!setting.replacers) setting.replacers = [];
 	
-	inputFilters.val(setting.filters ? setting.filters : "*.txt, *.smi, *.ass");
+	inputFilters.value = (setting.filters ? setting.filters : "*.txt, *.smi, *.ass");
 	if (setting.replacers && setting.replacers.length) {
-		listReplacer.empty();
+		listReplacer.innerHTML = "";
 		for (let i = 0; i < setting.replacers.length; i++) {
 			const item = setting.replacers[i];
-			const li = listReplacer.data("preset").clone();
-			li.find("[name=use]").prop("checked", item.use);
-			setTextareaHeight(li.find("[name=from]").val(item.from));
-			setTextareaHeight(li.find("[name=to]"  ).val(item.to));
+			const li = listReplacer.preset.cloneNode(true);
+			li.querySelector("[name=use]").checked = item.use;
+			{ let ta = li.querySelector("[name=from]"); ta.value = item.from; setTextareaHeight(ta); }
+			{ let ta = li.querySelector("[name=to]"  ); ta.value = item.to  ; setTextareaHeight(ta); }
 			listReplacer.append(li);
 		}
 	}
@@ -50,7 +49,7 @@ function init(jsonSetting) {
 }
 
 function addFile(file) {
-	const filters = inputFilters.val().replaceAll(",", ";").split(";");
+	const filters = inputFilters.value.replaceAll(",", ";").split(";");
 	for (let i = 0; i < filters.length; i++) {
 		const regex = new RegExp("^" + filters[i].trim().replaceAll(".", "\\.").replaceAll("*", ".*") + "$");
 		if (regex.test(file)) {
@@ -61,29 +60,41 @@ function addFile(file) {
 }
 
 function findDragArea(x, y) {
-	const ids = ["#listFiles", "#areaRight"];
+	const ids = ["listFiles", "areaRight"];
 	for (let i = 0; i < ids.length; i++) {
 		const id = ids[i];
-		const area = $(id);
-		if (x >= area.offset().left && y >= area.offset().top && x <= area.offset().left + area.outerWidth() && y <= area.offset().top + area.outerHeight()) {
+		const area = document.getElementById(id);
+		if (x >= area.offsetLeft && y >= area.offsetTop && x <= area.offsetLeft + area.offsetWidth && y <= area.offsetTop + area.offsetHeight) {
 			return id;
 		}
 	}
-	return "#none";
+	return null;
 }
+let hovering = null;
 function dragover(x, y) {
-	const area = findDragArea(x, y);
-	$(".hover").removeClass("hover");
-	$(area).addClass("hover");
+	if (hovering) {
+		hovering.classList.remove("hover");
+	}
+	let area = findDragArea(x, y);
+	if (area) {
+		area = document.getElementById(area);
+		if (area) {
+			area.classList.add("hover");
+			hovering = area;
+		}
+	}
 }
 function drop(x, y) {
-	$(".hover").removeClass("hover");
+	if (hovering) {
+		hovering.classList.remove("hover");
+		hovering = null;
+	}
 	switch (findDragArea(x, y)) {
-		case "#listFiles": {
+		case "listFiles": {
 			binder.addFilesByDrag();
 			break;
 		}
-		case "#areaRight": {
+		case "areaRight": {
 			binder.loadSettingByDrag();
 			break;
 		}
@@ -91,33 +102,33 @@ function drop(x, y) {
 }
 
 function addReplacer(replacer) {
-	const li = listReplacer.data("preset").clone();
-	li.find("[name=use]").prop("checked", replacer.use);
-	setTextareaHeight(li.find("[name=from]").val(replacer.from));
-	setTextareaHeight(li.find("[name=to]"  ).val(replacer.to  ));
+	const li = listReplacer.preset.cloneNode(true);
+	li.querySelector("[name=use]").checked = replacer.use;
+	{ let ta = li.querySelector("[name=from]"); ta.value = replacer.from; setTextareaHeight(ta); }
+	{ let ta = li.querySelector("[name=to]"  ); ta.value = replacer.to  ; setTextareaHeight(ta); }
 	listReplacer.append(li);
 }
 function getSetting() {
 	const replacers = [];
-	listReplacer.find("li").each((_, el) => {
-		const li = $(el);
-		const from = li.find("[name=from]").val();
+	[...listReplacer.querySelectorAll("li")].forEach((li) => {
+		const from = li.querySelector("[name=from]").value;
 		if (from == "") return;
-		const to = li.find("[name=to]").val();
-		const use = li.find("[name=use]").prop("checked");
+		const to  = li.querySelector("[name=to]").value;
+		const use = li.querySelector("[name=use]").checked;
 		replacers.push({ use: use, from: from, to: to });
 	});
-	return stringify({ filters: inputFilters.val(), replacers: replacers });
+	return stringify({ filters: inputFilters.value, replacers: replacers });
 }
 
 function selectView(index) {
-	$(".view").hide();
-	$(".view:eq("+index+")").show();
+	[...document.getElementsByClassName("view")].forEach((view, i) => {
+		view.style.display = (i == index) ? "block" : "none";
+	})
 }
 function showPreview(source, replaced) {
 	selectView(1);
-	$("#view1left" ).html(source  .replaceAll("\n", "<br />"));
-	$("#view1right").html(replaced.replaceAll("\n", "<br />"));
+	document.getElementById("view1left" ).innerHTML = (source  .replaceAll("\n", "<br />"));
+	document.getElementById("view1right").innerHTML = (replaced.replaceAll("\n", "<br />"));
 }
 function beforeExit() {
 	binder.exitAfterSaveSetting(getSetting());
@@ -126,12 +137,11 @@ function beforeExit() {
 function getReplacers() {
 	const froms = [];
 	const tos = [];
-	listReplacer.find("li").each((_, el) => {
-		const li = $(el);
-		if (!li.find("[name=use]").prop("checked")) return;
-		const from = li.find("[name=from]").val();
+	[...listReplacer.querySelectorAll("li")].forEach((li) => {
+		if (!li.querySelector("[name=use]").checked) return;
+		const from = li.querySelector("[name=from]").value;
 		if (from == "") return;
-		const to = li.find("[name=to]").val();
+		const to = li.querySelector("[name=to]").value;
 		froms.push(from);
 		tos.push(to);
 	});
@@ -139,7 +149,7 @@ function getReplacers() {
 }
 
 ready(() => {
-	listFiles = new ListView($("#listFiles"));
+	listFiles = new ListView(document.getElementById("listFiles"));
 	listFiles.run = (item) => {
 		const replacers = getReplacers();
 		if (replacers.froms.length == 0) {
@@ -149,26 +159,32 @@ ready(() => {
 		binder.compare(item.value, JSON.stringify(replacers.froms), JSON.stringify(replacers.tos));
 	}
 	
-	inputFilters = $("#inputFilters");
-	listReplacer = $("#listReplacer");
+	inputFilters = document.getElementById("inputFilters");
+	listReplacer = document.getElementById("listReplacer");
 	{
-		const preset = listReplacer.find("li.preset");
-		listReplacer.data("preset", preset.clone(true));
+		const preset = listReplacer.querySelector("li.preset");
+		listReplacer.preset = preset.cloneNode(true);
 		preset.remove();
 	}
 	
-	listReplacer.on("keyup", "textarea", function () {
-		setTextareaHeight($(this));
+	listReplacer.addEventListener("keyup", (e) => {
+		const textarea = e.target.closest("textarea");
+		if (textarea) {
+			setTextareaHeight(textarea);
+		}
 	});
 	
-	listReplacer.on("click", ".btnDeleteReplacer", function() {
-		$(this).parents("li").remove();
+	listReplacer.addEventListener("click", (e) => {
+		const btn = e.target.closest(".btnDeleteReplacer");
+		if (btn) {
+			btn.parentNode.remove();
+		}
 	});
-	$("#btnAddReplacer").on("click", function() {
+	document.getElementById("btnAddReplacer").addEventListener("click", () => {
 		addReplacer({ use: true, from: "", to: "" });
 	});
 	
-	$("#btnReplace").on("click", function() {
+	document.getElementById("btnReplace").addEventListener("click", () => {
 		const files = [];
 		for (let i = 0; i < listFiles.list.length; i++) {
 			files.push(listFiles.list[i].value);
@@ -184,10 +200,10 @@ ready(() => {
 		}
 		binder.replace(JSON.stringify(files), JSON.stringify(replacers.froms), JSON.stringify(replacers.tos));
 	});
-	$("#btnImportSetting").on("click", function() {
+	document.getElementById("btnImportSetting").addEventListener("click", function() {
 		binder.importSetting();
 	});
-	$("#btnExportSetting").on("click", function() {
+	document.getElementById("btnExportSetting").addEventListener("click", function() {
 		binder.exportSetting(getSetting());
 	});
 	
@@ -195,12 +211,14 @@ ready(() => {
 		e.preventDefault();
 		binder.showDragging();
 	});
-	$("#cover").on("click", function(e) {
+	document.getElementById("cover").addEventListener("click", () => {
 		binder.hideDragging();
 	});
 	
-	$("#view1left, #view1right").on("click", function() {
-		selectView(0);
+	[document.getElementById("view1left"), document.getElementById("view1right")].forEach((el) => {
+		el.addEventListener("click", () => {
+			selectView(0);
+		});
 	});
 	selectView(0);
 });

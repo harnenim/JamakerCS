@@ -37,7 +37,7 @@ function init() {
 		end = origin.text.split("\n").length;
 	}
 	
-	$("#input").val(origin.text.split("\n").slice(start, end).join("\n"));
+	document.getElementById("input").value = origin.text.split("\n").slice(start, end).join("\n");
 }
 
 function smiTrim(text, prev="", next="") {
@@ -76,7 +76,7 @@ function smiTrim(text, prev="", next="") {
 function devide() {
 	const syncs = [];
 	
-	{	const lines = $("#input").val().split("\n");
+	{	const lines = document.getElementById("input").value.split("\n");
 		let lastSync = null;
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
@@ -106,7 +106,7 @@ function devide() {
 		const lines = syncs[i].text.join(" ").split(/<br>/gi);
 		for (let j = 0; j < lines.length; j++) {
 			const line = lines[j];
-			const text = smiTrim($("<span>").html(line).text());
+			const text = smiTrim(htmlToText(line));
 			lines[j] = (text == "" || text == "　") ? null : smiTrim(line);
 		}
 		syncs[i].text = lines;
@@ -278,26 +278,27 @@ function devide() {
 		}
 	}
 	
-	$("#outputUpper").val(upper.join("\n"));
-	$("#outputLower").val(lower.join("\n"));
+	document.getElementById("outputUpper").value = upper.join("\n");
+	document.getElementById("outputLower").value = lower.join("\n");
 }
 
 ready(() => {
 	init();
 	
 	SmiEditor.setSetting(opener ? opener.setting : { autoComplete: {}, hlghlight: {} });
-	{	const tmp = $("#input");
-		const editor = new SmiEditor(tmp.val());
+	{	const tmp = document.getElementById("input");
+		const editor = new SmiEditor(tmp.value);
 		tmp.remove();
 		
-		$("body").prepend(editor.$input.attr({ id: "input" }));
+		editor.input.id = "input";
+		document.body.prepend(editor.input);
 		SmiEditor.selected = editor;
 	}
 	SmiEditor.activateKeyEvent();
 	
-	LH = Number(SmiEditor.selected.$input.css("line-height").split("px")[0]);
+	LH = Number(getComputedStyle(SmiEditor.selected.input).lineHeight.split("px")[0]);
 	
-	$("#btnDevide").on("click", devide);
+	document.getElementById("btnDevide").addEventListener("click", devide);
 	devide();
 });
 	</script>

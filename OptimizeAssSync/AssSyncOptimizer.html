@@ -14,8 +14,8 @@ Binder.prototype.dropFiles = function() {
 Binder.prototype.setVideoFile = function(path) {
 	this._.checkAndMakeFkf(path);
 }
-Binder.prototype.saveFile = function(text) {
-	this._.saveFile(text);
+Binder.prototype.save = function(text) {
+	this._.save(text);
 }
 </script>
 <script src="bridge/WebForm.js"></script>
@@ -123,7 +123,7 @@ const main = new WebForm();
 				if (hasVideo) continue;
 				hasVideo = true;
 				main.script("setVideoFile", file.name);
-				main.script("setFkfFile", file);
+				main.mainView.contentWindow.setFkfFile(file);
 			}
 		}
 		this.droppedFiles = null;
@@ -132,7 +132,7 @@ const main = new WebForm();
 		// C# ffmpeg 작업
 		// Progress.set("#labelVideo", 0.8)
 	}
-	main.saveFile = function(name, text) {
+	main.save = function(name, text) {
 		// C#에서 구현
 	}
 }

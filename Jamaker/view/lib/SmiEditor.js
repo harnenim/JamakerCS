@@ -259,7 +259,7 @@ window.SmiEditor = function(text) {
 		}
 		{	this.hArea.append(el = document.createElement("div"));
 			el.append(this.hview = document.createElement("div"));
-			el.append(this.block = document.createElement("p"));
+			el.append(this.block = document.createElement("p")); // TODO: codemirror 적용 시 삭제
 			this.block.style.display = "none";
 			this.block.style.position = "absolute";
 			this.block.style.color = "transparent";
@@ -267,14 +267,8 @@ window.SmiEditor = function(text) {
 		this.hArea.append(this.input = document.createElement("textarea"));
 		this.input.spellcheck = false;
 	}
-	this.$area         = $(this.area        );
-	this.$colSync      = $(this.colSync     );
-	this.$colSyncCover = $(this.colSyncCover);
-	this.$colSyncSizer = $(this.colSyncSizer);
-	this.$hArea        = $(this.hArea       );
-	this.$hview        = $(this.hview       );
-	this.$block        = $(this.block       );
-	this.$input        = $(this.input       );
+	this.$block = $(this.block);
+	this.$input = $(this.input);
 	
 	if (text) {
 		text = text.replaceAll("\r\n", "\n");
@@ -444,7 +438,7 @@ SmiEditor.setSetting = (setting) => {
 			}
 		}
 	}
-
+	
 	if (window.ContextMenu) { // ContextMenu 라이브러리 가져왔을 때만 생성
 		if (SmiEditor.contextmenu) {
 			SmiEditor.contextmenu.remove();
@@ -653,7 +647,7 @@ SmiEditor.prototype.bindEvent = function() {
 			
 			// 현재 스크롤에서 보이는 범위 찾기
 			const showFrom = Math.floor(scrollTop / LH);
-			const showEnd  = Math.ceil((scrollTop + editor.$input.outerHeight()) / LH);
+			const showEnd  = Math.ceil((scrollTop + editor.input.offsetHeight) / LH);
 			
 			const toAppendLefts = [];
 			const toRemoveLefts = [];
@@ -788,7 +782,6 @@ SmiEditor.prototype.bindEvent = function() {
 				return;
 			}
 			editor.input.scrollTop = editor.colSync.scrollTop;
-			
 		});
 		this.colSync.addEventListener("wheel", (e) => {
 			// Ctrl+휠 싱크 조절 동작
@@ -800,8 +793,8 @@ SmiEditor.prototype.bindEvent = function() {
 				return;
 			}
 			editor.moveSyncLine(sync.getAttribute("data-index"), (e.deltaY < 0));
-			
-		});
+		}, { passive: true });
+		
 		this.colSync.title = "Ctrl+휠로 개별 싱크를 조절할 수 있습니다.";
 		
 		// 싱크 조절 버튼 기능

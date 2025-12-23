@@ -5,7 +5,7 @@ window.menustrip = null;
 window.tabs = [];
 window.tabIndex = 0;
 window.closingTab = null;
-window.$tabToCloseAfterRun = null;
+window.tabToCloseAfterRun = null;
 
 window.autoSaveTemp = null;
 
@@ -24,15 +24,11 @@ function refreshTime(now) {
 		}
 	}
 }
-window.showFps = null;
 
 window.Tab = function(text, path) {
 	this.area = SmiEditor.tabPreset.cloneNode(true);
 	this.holdSelector = this.area.querySelector(".hold-selector");
 	this.holdArea     = this.area.querySelector(".holds");
-	this.$area         = $(this.area        );
-	this.$holdSelector = $(this.holdSelector);
-	this.$holdArea     = $(this.holdArea    );
 	this.holds = [];
 	this.holdIndex = 0;
 	this.lastHold = 1;
@@ -58,8 +54,7 @@ window.Tab = function(text, path) {
 			this.holdSelector.append(assHold.selector = document.createElement("div"));
 			assHold.selector.classList.add("selector");
 			assHold.selector.classList.add("ass-only");
-			assHold.selector.dataHold = assHold;
-			assHold.$selector = $(assHold.selector).data({ hold: assHold });
+			eData(assHold.selector, { hold: assHold });
 			{	const holdName = document.createElement("div");
 				holdName.classList.add("hold-name");
 				const span = document.createElement("span");
@@ -73,7 +68,7 @@ window.Tab = function(text, path) {
 			assHold.area.innerHTML = "";
 			assHold.area.classList.add("ass-hold");
 			assHold.area.append(SmiEditor.assHoldPreset.cloneNode(true));
-			this.$holdArea.append(assHold.area);
+			this.holdArea.append(assHold.area);
 			
 			assHold.assEditor = new AssEditor(assHold.area.querySelector(".ass-editor"));
 			assHold.assEditor.onUpdate = function() {
@@ -115,8 +110,7 @@ window.Tab = function(text, path) {
 					const style = styleList[i];
 					popup.append(el = document.createElement("button"));
 					el.innerText = (style.name + " (" + style.events.length + "개)");
-					el.dataTab = tab;
-					el.dataStyle = style.name;
+					eData(el, { tab: tab, style: style.name });
 				}
 				popup.append(el = document.createElement("button"));
 				el.innerText = "취소";
@@ -136,7 +130,7 @@ window.Tab = function(text, path) {
 				if (part.name == "Events") continue;
 				editAssFile.parts.push(part);
 			}
-			this.$area.find(".tab-ass-appends textarea").val(editAssFile.toText());
+			this.area.querySelector(".tab-ass-appends textarea").value = editAssFile.toText();
 			
 			const info = this.assFile.getInfo();
 			if (info) {
@@ -163,87 +157,100 @@ window.Tab = function(text, path) {
 	}
 	this.savedHolds = this.holds.slice(0);
 	
-	this.$holdSelector.on("click", ".selector", function() {
-		tab.selectHold($(this).data("hold"));
-		
-	}).on("dblclick", ".hold-name", function(e) {
-		e.stopPropagation();
-		$(this).parents(".selector").data("hold").rename();
-		
-	}).on("click", ".btn-hold-remove", function(e) {
-		e.stopPropagation();
-		const hold = $(this).parents(".selector").data("hold");
-		confirm("삭제하시겠습니까?", () => {
-			const index = tab.holds.indexOf(hold);
-			
-			if (tab.holdIndex == index) {
-				// 선택된 걸 삭제하는 경우 메인 홀드로 먼저 이동
-				//tab.holds[0].$selector.click();
-				tab.selectHold(tab.holds[0]);
-			} else if (tab.holdIndex > index) {
-				// 선택된 게 삭제 대상보다 뒤에 있을 경우 번호 당김
-				tab.holdIndex--;
-			}
-			
-			{	// 홀드명 겹치는 게 남는지 확인
-				let exist = false;
-				for (let i = 0; i < tab.holds.length; i++) {
-					if (tab.holds[i] == hold) continue;
-					if (tab.holds[i].name == hold.name) {
-						exist = true;
-						break;
+	this.holdSelector.addEventListener("click", (e) => {
+		let el;
+		if (el = e.target.closest(".btn-hold-remove")) {
+			const hold = eData(el.parentNode.parentNode).hold;
+			confirm("삭제하시겠습니까?", () => {
+				const index = tab.holds.indexOf(hold);
+				
+				if (tab.holdIndex == index) {
+					// 선택된 걸 삭제하는 경우 메인 홀드로 먼저 이동
+					tab.selectHold(tab.holds[0]);
+				} else if (tab.holdIndex > index) {
+					// 선택된 게 삭제 대상보다 뒤에 있을 경우 번호 당김
+					tab.holdIndex--;
+				}
+				
+				{	// 홀드명 겹치는 게 남는지 확인
+					let exist = false;
+					for (let i = 0; i < tab.holds.length; i++) {
+						if (tab.holds[i] == hold) continue;
+						if (tab.holds[i].name == hold.name) {
+							exist = true;
+							break;
+						}
+					}
+					if (!exist) {
+						// 없으면 ASS 추가 스크립트에 홀드 스타일 넣기
+						const style = SmiFile.toAssStyle(hold.style);
+						style.Name = hold.name;
+						
+						const appendFile = new AssFile(tab.area.querySelector(".tab-ass-appends textarea").value);
+						appendFile.getStyles().body.push(style);
+						tab.area.querySelector(".tab-ass-appends textarea").value = appendFile.toText();
 					}
 				}
-				if (!exist) {
-					// 없으면 ASS 추가 스크립트에 홀드 스타일 넣기
-					const style = SmiFile.toAssStyle(hold.style);
-					style.Name = hold.name;
-					
-					const appendFile = new AssFile(tab.$area.find(".tab-ass-appends textarea").val());
-					appendFile.getStyles().body.push(style);
-					tab.$area.find(".tab-ass-appends textarea").val(appendFile.toText());
-				}
+				
+				tab.holds.splice(index, 1);
+				hold.selector.remove();
+				hold.area.remove();
+				delete hold;
+				
+				tab.holdEdited = true;
+				tab.updateHoldSelector();
+				tab.onChangeSaved();
+				SmiEditor.Viewer.refresh();
+			});
+			return;
+		}
+
+		if (el = e.target.closest(".btn-hold-upper")) {
+			const hold = eData(el.parentNode.parentNode).hold;
+			if (hold.pos == -1) {
+				hold.pos = 1;
+			} else {
+				hold.pos++;
 			}
-			
-			tab.holds.splice(index, 1);
-			hold.$selector.remove();
-			hold.area.remove();
-			delete hold;
-			
-			tab.holdEdited = true;
 			tab.updateHoldSelector();
-			tab.onChangeSaved();
+			hold.afterChangeSaved(hold.isSaved());
 			SmiEditor.Viewer.refresh();
-		});
-		
-	}).on("click", ".btn-hold-upper", function(e) {
-		e.stopPropagation();
-		const hold = $(this).parents(".selector").data("hold");
-		if (hold.pos == -1) {
-			hold.pos = 1;
-		} else {
-			hold.pos++;
+			return;
 		}
-		tab.updateHoldSelector();
-		hold.afterChangeSaved(hold.isSaved());
-		SmiEditor.Viewer.refresh();
 		
-	}).on("click", ".btn-hold-lower", function(e) {
-		e.stopPropagation();
-		const hold = $(this).parents(".selector").data("hold");
-		if (hold.pos == 1) {
-			hold.pos = -1;
-		} else {
-			hold.pos--;
+		if (el = e.target.closest(".btn-hold-lower")) {
+			const hold = eData(el.parentNode.parentNode).hold;
+			if (hold.pos == 1) {
+				hold.pos = -1;
+			} else {
+				hold.pos--;
+			}
+			tab.updateHoldSelector();
+			hold.afterChangeSaved(hold.isSaved());
+			SmiEditor.Viewer.refresh();
+			return;
 		}
-		tab.updateHoldSelector();
-		hold.afterChangeSaved(hold.isSaved());
-		SmiEditor.Viewer.refresh();
+		
+		if (el = e.target.closest(".selector")) {
+			tab.selectHold(eData(el).hold);
+			return;
+		}
+	});
+	this.holdSelector.addEventListener("dblclick", (e) => {
+		const el = e.target.closest(".hold-name");
+		if (!el) return;
+		
+		e.stopPropagation();
+		eData(el.parentNode).hold.rename();
+		
 	});
 	
-	this.$area.on("click", ".btn-hold-style", function(e) {
-		const hold = $(this).data("hold");
-		hold.$area.addClass("style");
+	this.area.addEventListener("click", (e) => {
+		const el = e.target.closest(".btn-hold-style");
+		if (!el) return;
+		
+		const hold = eData(el).hold;
+		hold.area.classList.add("style");
 	});
 };
 window.getCurrentTab = function() {
@@ -259,9 +266,18 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	}
 	const hold = new SmiEditor(info.text);
 	this.holds.push(hold);
-	this.$holdSelector.append(hold.$selector = $("<div class='selector'>").data({ hold: hold }));
-	hold.$selector.append($("<div class='hold-name'>").append($("<span>").text(hold.name = hold.savedName = info.name)));
-	hold.$selector.attr({ title: hold.name });
+	this.holdSelector.append(hold.selector = document.createElement("div"));
+	hold.selector.classList.add("selector");
+	hold.selector.title = info.name;
+	eData(hold.selector, { hold: hold });
+	{	const holdName = document.createElement("div");
+		holdName.classList.add("hold-name");
+		const span = document.createElement("span");
+		span.innerText = hold.name = hold.savedName = info.name;
+		holdName.append(span);
+		hold.selector.append(holdName);
+	}
+	
 	hold.owner = this;
 	hold.pos   = hold.savedPos   = info.pos;
 	
@@ -275,8 +291,9 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	hold.updateTimeRange();
 	
 	if (isMain) {
-		hold.$area.addClass("main");
-		hold.$selector.addClass("main selected");
+		hold.area.classList.add("main");
+		hold.selector.classList.add("main");
+		hold.selector.classList.add("selected");
 		const tab = this;
 		hold.afterRender = function() {
 			const match = /<sami( [^>]*)*>/gi.exec(this.text);
@@ -302,99 +319,143 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 			if (tab.withAss != withAss) {
 				if (withAss) {
 					tab.withAss = true;
-					tab.$area.addClass("ass");
+					tab.area.classList.add("ass");
 					tab.updateHoldSelector();
 				} else {
 					tab.withAss = false;
-					tab.$area.removeClass("ass");
+					tab.area.classList.remove("ass");
 					tab.updateHoldSelector();
 				}
 			}
 		}
 		
 	} else {
-		const $btnArea = $("<div class='area-btn-hold'>");
-		hold.$selector.append($btnArea);
-		$btnArea.append($("<button type='button' class='btn-hold-remove' title='삭제'>"));
-		$btnArea.append($("<button type='button' class='btn-hold-upper'  title='위로(Ctrl+Alt+↑)'>"));
-		$btnArea.append($("<button type='button' class='btn-hold-lower'  title='아래로(Ctrl+Alt+↓)'>"));
+		const btnArea = document.createElement("div");
+		btnArea.classList.add("area-btn-hold");
+		{	const btn = document.createElement("button");
+			btn.type = "button";
+			btn.classList.add("btn-hold-remove");
+			btn.title = "삭제";
+			btnArea.append(btn);
+		}
+		{	const btn = document.createElement("button");
+			btn.type = "button";
+			btn.classList.add("btn-hold-upper");
+			btn.title = "위로(Ctrl+Alt+↑)";
+			btnArea.append(btn);
+		}
+		{	const btn = document.createElement("button");
+			btn.type = "button";
+			btn.classList.add("btn-hold-lower");
+			btn.title = "아래로(Ctrl+Alt+↓)";
+			btnArea.append(btn);
+		}
+		hold.selector.append(btnArea);
+		
 		// 홀드 생성 직후에 숨기면 스크롤바 렌더링이 문제 생김
 		// 최초 로딩 시 메인 홀드만 보이는 상태에서 사용상 문제는 없음
-		//hold.$area.hide();
+		//hold.area.style.display = "none";
 	}
 	{
-		hold.$area.append($("<button type='button' class='btn-hold-style' title='홀드 공통 스타일 설정'>").text("스타일").data({ hold: hold }));
+		{	const btn = document.createElement("button");
+			btn.type = "button";
+			btn.classList.add("btn-hold-style");
+			btn.title = "홀드 공통 스타일 설정";
+			btn.innerText = "스타일";
+			hold.area.append(btn);
+			eData(btn, { hold: hold });
+		}
 		
-		hold.$area.append(hold.$styleArea = $("<div class='hold-style-area'>"));
+		hold.area.append(hold.styleArea = document.createElement("div"));
+		hold.styleArea.classList.add("hold-style-area");
 		{
 			const styleEditor = SmiEditor.stylePreset.cloneNode(true);
-			const $styleEditor = $(styleEditor);
-			hold.$styleArea.append(styleEditor);
+			hold.styleArea.append(styleEditor);
 			
-			const $preview = hold.$preview = $styleEditor.find(".hold-style-preview");
+			const preview = hold.preview = styleEditor.querySelector(".hold-style-preview");
 			
-			$styleEditor.on("input propertychange", "input[type=text], input[type=color]", function () {
-				let $input = $(this);
-				if ($input.hasClass("hold-style-preview-color")) {
-					$preview.css({ background: $input.val() });
-					return;
-				}
-				if ($input.hasClass("color")) {
-					const color = $input.val();
-					if (color.startsWith("#") && color.length == 7) {
-						if (isFinite("0x" + color.substring(1))) {
-							$input = $input.prev().val(color);
+			styleEditor.addEventListener("input", (e) => {
+				let input = e.target.closest("input[type=text]");
+				if (!input) input = e.target.closest("input[type=color]");
+				if (input) {
+					if (input.classList.contains("hold-style-preview-color")) {
+						preview.style.background = input.value;
+						return;
+					}
+					if (input.classList.contains("color")) {
+						const color = input.value;
+						if (color.startsWith("#") && color.length == 7) {
+							if (isFinite("0x" + color.substring(1))) {
+								(input = input.previousSibling).value = color;
+							} else {
+								return;
+							}
 						} else {
 							return;
 						}
+					}
+					let value = input.value;
+					if (input.type == "color") {
+						input.nextSibling.value = value = value.toUpperCase();
+					}
+					hold.style[input.name] = value;
+					hold.refreshStyle();
+					return;
+				}
+				input = e.target.closest("input[type=number]");
+				if (!input) input = e.target.closest("input[type=range]");
+				if (input) {
+					let value = input.value;
+					if (isFinite(value)) {
+						value = Number(value);
 					} else {
-						return;
+						value = 0;
+					}
+					hold.style[input.name] = value;
+					hold.refreshStyle();
+					return;
+				}
+			});
+			styleEditor.addEventListener("change", (e) => {
+				let input = e.target.closest("input[type=checkbox]");
+				if (input) {
+					hold.style[input.name] = input.checked;
+					hold.refreshStyle();
+					return;
+				}
+				input = e.target.closest("input[type=radio]");
+				if (input) {
+					hold.style[input.name] = input.value;
+					hold.refreshStyle();
+					return;
+				}
+			});
+			styleEditor.addEventListener("keyup", (e) => {
+				const pm = preview.querySelector(".hold-style-preview-main");
+				const po = preview.querySelector(".hold-style-preview-outline");
+				const ps = preview.querySelector(".hold-style-preview-shadow");
+				po.innerText = ps.innerText = pm.innerText;
+				if (pm.querySelector("div")) {
+					pm.innerText = pm.innerText;
+				}
+			});
+			styleEditor.addEventListener("click", (e) => {
+				const btn = e.target.closest("button.hold-style-preview-toggle");
+				if (btn) {
+					if (preview.classList.contains("script")) {
+						preview.classList.remove  ("script");
+					} else {
+						preview.classList.add     ("script");
 					}
 				}
-				let value = $input.val();
-				if ($input.attr("type") == "color") {
-					$input.next().val(value = value.toUpperCase());
-				}
-				const name = $input.attr("name");
-				hold.style[name] = value;
-				hold.refreshStyle();
-				
-			}).on("input propertychange", "input[type=number], input[type=range]", function () {
-				const $input = $(this);
-				const name = $input.attr("name");
-				let value = $input.val();
-				if (isFinite(value)) {
-					value = Number(value);
-				} else {
-					value = 0;
-				}
-				hold.style[name] = value;
-				hold.refreshStyle();
-				
-			}).on("change", "input[type=checkbox]", function () {
-				const $input = $(this);
-				const name = $input.attr("name");
-				hold.style[name] = $input.prop("checked");
-				hold.refreshStyle();
-				
-			}).on("change", "input[type=radio]", function () {
-				const $input = $(this);
-				hold.style[$input.attr("name")] = $input.val();
-				hold.refreshStyle();
-				
-			}).on("keyup", function() {
-				const $main = $preview.find(".hold-style-preview-main");
-				const text = $main.text();
-				$preview.find(".hold-style-preview-outline, .hold-style-preview-shadow").text(text);
-				if ($main.children().length) $main.text(text);
-				
-			}).on("click", "button.hold-style-preview-toggle", function() {
-				$preview.toggleClass("script");
 			});
-			$preview.find(".hold-style-preview-outline, .hold-style-preview-shadow").text($preview.find(".hold-style-preview-main").text());
+			const sampleText = preview.querySelector(".hold-style-preview-main").innerText;
+			[preview.querySelector(".hold-style-preview-outline"), preview.querySelector(".hold-style-preview-shadow")].forEach((el) => {
+				el.innerText = sampleText;
+			});
 			
-			$styleEditor.find(".btn-close-popup").on("click", function() {
-				hold.$area.removeClass("style");
+			styleEditor.querySelector(".btn-close-popup").addEventListener("click", () => {
+				hold.area.classList.remove("style");
 				if (SmiEditor.Viewer.window) {
 					SmiEditor.Viewer.refresh();
 				}
@@ -404,7 +465,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 		}
 	}
 	
-	this.$holdArea.append(hold.$area);
+	this.holdArea.append(hold.area);
 	this.updateHoldSelector();
 	if (asActive) {
 		this.selectHold(hold);
@@ -418,35 +479,35 @@ SmiEditor.prototype.setStyle = function(style) {
 		style.Fontname = "";
 	}
 	this.style = style;
-	const area = this.$styleArea.find(".hold-style");
+	const area = this.styleArea.querySelector(".hold-style");
 	
-	area.find("input[name=PrimaryColour]").val(style.PrimaryColour).next().val(style.PrimaryColour);
-	area.find("input[name=Italic]   ").prop("checked", style.Italic);
-	area.find("input[name=Underline]").prop("checked", style.Underline);
-	area.find("input[name=StrikeOut]").prop("checked", style.StrikeOut);
+	{ const input = area.querySelector("input[name=PrimaryColour]"); input.value = input.nextSibling.value = style.PrimaryColour; }
+	area.querySelector("input[name=Italic]   ").checked = style.Italic;
+	area.querySelector("input[name=Underline]").checked = style.Underline;
+	area.querySelector("input[name=StrikeOut]").checked = style.StrikeOut;
 	
-	area.find("input[name=Fontname]").val(style.Fontname);
-	area.find("input[name=output][value=" + style.output + "]").click();
-	area.find("input[name=Fontsize]").val(style.Fontsize);
-	area.find("input[name=Bold]    ").prop("checked", style.Bold);
-	area.find("input[name=SecondaryColour]").val(style.SecondaryColour).next().val(style.SecondaryColour);
-	area.find("input[name=OutlineColour]  ").val(style.OutlineColour  ).next().val(style.OutlineColour  );
-	area.find("input[name=BackColour]     ").val(style.BackColour     ).next().val(style.BackColour     );
-	area.find("input[name=PrimaryOpacity]  ").val(style.PrimaryOpacity  );
-	area.find("input[name=SecondaryOpacity]").val(style.SecondaryOpacity);
-	area.find("input[name=OutlineOpacity]  ").val(style.OutlineOpacity  );
-	area.find("input[name=BackOpacity]     ").val(style.BackOpacity     );
-	area.find("input[name=ScaleX]     ").val(style.ScaleX     );
-	area.find("input[name=ScaleY]     ").val(style.ScaleY     );
-	area.find("input[name=Spacing]    ").val(style.Spacing    );
-	area.find("input[name=Angle]      ").val(style.Angle      );
-	area.find("input[name=BorderStyle]").prop("checked", style.BorderStyle);
-	area.find("input[name=Outline]    ").val(style.Outline    );
-	area.find("input[name=Shadow]     ").val(style.Shadow     );
-	area.find("input[name=Alignment][value=" + style.Alignment + "]").click();
-	area.find("input[name=MarginL]").val(style.MarginL);
-	area.find("input[name=MarginR]").val(style.MarginR);
-	area.find("input[name=MarginV]").val(style.MarginV);
+	area.querySelector("input[name=Fontname]").value = style.Fontname;
+	[...area.querySelectorAll("input[name=output]")].forEach((el) => { if (el.value == style.output) el.click(); });
+	area.querySelector("input[name=Fontsize]").value = style.Fontsize;
+	area.querySelector("input[name=Bold]    ").checked = style.Bold;
+	{ const input = area.querySelector("input[name=SecondaryColour]"); input.value = input.nextSibling.value = style.SecondaryColour; }
+	{ const input = area.querySelector("input[name=OutlineColour]"  ); input.value = input.nextSibling.value = style.OutlineColour  ; }
+	{ const input = area.querySelector("input[name=BackColour]"     ); input.value = input.nextSibling.value = style.BackColour     ; }
+	area.querySelector("input[name=PrimaryOpacity]  ").value = style.PrimaryOpacity  ;
+	area.querySelector("input[name=SecondaryOpacity]").value = style.SecondaryOpacity;
+	area.querySelector("input[name=OutlineOpacity]  ").value = style.OutlineOpacity  ;
+	area.querySelector("input[name=BackOpacity]     ").value = style.BackOpacity     ;
+	area.querySelector("input[name=ScaleX]     ").value   = style.ScaleX ;
+	area.querySelector("input[name=ScaleY]     ").value   = style.ScaleY ;
+	area.querySelector("input[name=Spacing]    ").value   = style.Spacing;
+	area.querySelector("input[name=Angle]      ").value   = style.Angle  ;
+	area.querySelector("input[name=BorderStyle]").checked = style.BorderStyle;
+	area.querySelector("input[name=Outline]    ").value   = style.Outline;
+	area.querySelector("input[name=Shadow]     ").value   = style.Shadow ;
+	[...area.querySelectorAll("input[name=Alignment]")].forEach((el) => { if (el.value == style.Alignment) el.click(); });
+	area.querySelector("input[name=MarginL]").value = style.MarginL;
+	area.querySelector("input[name=MarginR]").value = style.MarginR;
+	area.querySelector("input[name=MarginV]").value = style.MarginV;
 	
 	this.refreshStyle();
 }
@@ -472,15 +533,29 @@ SmiEditor.prototype.refreshStyle = function() {
 	css.letterSpacing = (style.Fontsize * style.Spacing / 100) + "px";
 	css.rotate = -style.Angle + "deg";
 	
-	this.$preview.find(".hold-style-preview-main").css(css);
+	{	const pm = this.preview.querySelector(".hold-style-preview-main");
+		for (name in css) {
+			pm.style[name] = css[name];
+		}
+	}
 	
 	css["-webkit-text-stroke"] = (style.Outline * 3) + "px " + style.OutlineColour + (256 + style.OutlineOpacity).toString(16).substring(1);
-	this.$preview.find(".hold-style-preview-outline").css(css);
+	
+	{	const po = this.preview.querySelector(".hold-style-preview-outline");
+		for (name in css) {
+			po.style[name] = css[name];
+		}
+	}
 	
 	css.color = style.BackColour + (256 + style.BackOpacity).toString(16).substring(1);
 	css["-webkit-text-stroke"] = (style.Outline * 3) + "px " + style.BackColour + (256 + style.BackOpacity).toString(16).substring(1);
 	css.top = css.left = "calc(50% + " + style.Shadow + "px)";
-	this.$preview.find(".hold-style-preview-shadow").css(css);
+	
+	{	const ps = this.preview.querySelector(".hold-style-preview-shadow");
+		for (name in css) {
+			ps.style[name] = css[name];
+		}
+	}
 	
 	{	// ASS 스크립트 미리보기
 		if (!this.assStyle) {
@@ -490,7 +565,7 @@ SmiEditor.prototype.refreshStyle = function() {
 		const style = SmiFile.toAssStyle(this.style);
 		style.Name = this.name;
 		this.assStyle.body[0] = style;
-		this.$preview.find("textarea[name=script]").val(this.assStyle.toText() + "\n"); // 블록지정 편의성을 위해 줄바꿈 추가
+		this.preview.querySelector("textarea[name=script]").value = (this.assStyle.toText() + "\n"); // 블록지정 편의성을 위해 줄바꿈 추가
 	}
 	
 	this.afterChangeSaved(this.isSaved());
@@ -500,8 +575,8 @@ SmiEditor.prototype.refreshStyle = function() {
 
 SmiEditor.prototype._historyForward = SmiEditor.prototype.historyForward;
 SmiEditor.prototype.historyForward = function(e) {
-	if (this.$area.hasClass("style")
-	 || this.$area.hasClass("ass")) {
+	if (this.area.classList.contains("style")
+	 || this.area.classList.contains("ass")) {
 		// 스타일/ASS 편집기에선 기본 동작
 		return;
 	}
@@ -509,8 +584,8 @@ SmiEditor.prototype.historyForward = function(e) {
 }
 SmiEditor.prototype._historyBack = SmiEditor.prototype.historyBack;
 SmiEditor.prototype.historyBack = function(e) {
-	if (this.$area.hasClass("style")
-	 || this.$area.hasClass("ass")) {
+	if (this.area.classList.contains("style")
+	 || this.area.classList.contains("ass")) {
 		// 스타일/ASS 편집기에선 기본 동작
 		return;
 	}
@@ -520,23 +595,23 @@ SmiEditor.prototype.historyBack = function(e) {
 SmiEditor.prototype._insertSync = SmiEditor.prototype.insertSync;
 SmiEditor.prototype.insertSync = function(mode=0) {
 	// 스타일 편집일 때 무시
-	if (this.$area.hasClass("style")) return;
+	if (this.area.classList.contains("style")) return;
 	
 	// ASS 편집일 때 동작
-	if (this.isAssHold || this.$area.hasClass("ass")) {
+	if (this.isAssHold || this.area.classList.contains("ass")) {
 		// 선택된 객체 찾기
-		const $item = $(document.activeElement).parents(".item");
-		if (!$item.length) return;
-		const item = $item.data("obj");
+		const itemView = document.activeElement.closest(".item");
+		if (!itemView) return;
+		const item = eData(itemView).item;
 		if (!item) return;
 		
 		// 가중치 없는 싱크
 		const sync = SmiEditor.getSyncTime("!", true);
 		
 		if (mode == 0) {
-			item.inputStart.val(sync);
+			item.inputStart.value = sync;
 		} else {
-			item.inputEnd.val(sync);
+			item.inputEnd.value = sync;
 		}
 		item.update();
 		
@@ -549,7 +624,7 @@ SmiEditor.prototype.insertSync = function(mode=0) {
 SmiEditor.prototype._reSync = SmiEditor.prototype.reSync;
 SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 	// 스타일 편집일 때 무시
-	if (this.$area.hasClass("style")) return;
+	if (this.area.classList.contains("style")) return;
 	
 	// ASS 편집일 때 동작
 	if (this.isAssHold) {
@@ -569,13 +644,13 @@ SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 	if (this.assEditor) {
 		for (let i = 0; i < this.assEditor.syncs.length; i++) {
 			const item = this.assEditor.syncs[i];
-			const start = Number(item.inputStart.val());
-			const end   = Number(item.inputEnd  .val());
+			const start = Number(item.inputStart.value);
+			const end   = Number(item.inputEnd  .value);
 			if (end >= originSync) {
 				const add = sync - originSync
-				item.inputEnd.val(end + add);
+				item.inputEnd.value = (end + add);
 				if (start >= originSync) {
-					item.inputStart.val(start + add);
+					item.inputStart.value = (start + add);
 				}
 				item.update();
 			}
@@ -585,10 +660,10 @@ SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 SmiEditor.prototype._toggleSyncType = SmiEditor.prototype.toggleSyncType;
 SmiEditor.prototype.toggleSyncType = function() {
 	// 스타일 편집일 때 무시
-	if (this.$area.hasClass("style")) return;
+	if (this.area.classList.contains("style")) return;
 	/*
 	// ASS 편집일 때 무시
-	if (this.$area.hasClass("ass")) return;
+	if (this.area.classList.contains("ass")) return;
 	*/
 	// SMI 에디터 동작
 	this._toggleSyncType();
@@ -596,18 +671,18 @@ SmiEditor.prototype.toggleSyncType = function() {
 SmiEditor.prototype._moveToSync = SmiEditor.prototype.moveToSync;
 SmiEditor.prototype.moveToSync = function(add=0) {
 	// 스타일 편집일 때 무시
-	if (this.$area.hasClass("style")) return;
+	if (this.area.classList.contains("style")) return;
 	
 	// ASS 편집일 때 동작
 	if (this.isAssHold) {
 		// 선택된 객체 찾기
-		const $item = $(document.activeElement).parents(".item");
-		if (!$item.length) return;
-		const item = $item.data("obj");
+		const itemView = document.activeElement.closest(".item");
+		if (!itemView) return;
+		const item = eData(itemView).item;
 		if (!item) return;
 		
 		SmiEditor.PlayerAPI.play();
-		SmiEditor.PlayerAPI.moveTo(Number(item.inputStart.val()) + add);
+		SmiEditor.PlayerAPI.moveTo(Number(item.inputStart.value) + add);
 		
 		return;
 	}
@@ -618,8 +693,8 @@ SmiEditor.prototype.moveToSync = function(add=0) {
 SmiEditor.prototype._getText = SmiEditor.prototype.getText;
 SmiEditor.prototype.getText = function(forced) {
 	if (!forced) {
-		if (this.$area.hasClass("style")
-		 || this.$area.hasClass("ass")) {
+		if (this.area.classList.contains("style")
+		 || this.area.classList.contains("ass")) {
 			alert("SMI 에디터 모드가 아닙니다.");
 			throw new Error("SMI 에디터 모드 아님");
 			return;
@@ -629,8 +704,8 @@ SmiEditor.prototype.getText = function(forced) {
 }
 SmiEditor.prototype._setText = SmiEditor.prototype.setText;
 SmiEditor.prototype.setText = function(text, selection) {
-	if (this.$area.hasClass("style")
-	 || this.$area.hasClass("ass")) {
+	if (this.area.classList.contains("style")
+	 || this.area.classList.contains("ass")) {
 		alert("SMI 에디터 모드가 아닙니다.");
 		return;
 	}
@@ -638,8 +713,8 @@ SmiEditor.prototype.setText = function(text, selection) {
 }
 SmiEditor.prototype._getLine = SmiEditor.prototype.getLine;
 SmiEditor.prototype.getLine = function() {
-	if (this.$area.hasClass("style")
-	 || this.$area.hasClass("ass")) {
+	if (this.area.classList.contains("style")
+	 || this.area.classList.contains("ass")) {
 		alert("SMI 에디터 모드가 아닙니다.");
 		throw new Error("SMI 에디터 모드 아님");
 		return;
@@ -648,8 +723,8 @@ SmiEditor.prototype.getLine = function() {
 }
 SmiEditor.prototype._setLine = SmiEditor.prototype.setLine;
 SmiEditor.prototype.setLine = function(text, selection) {
-	if (this.$area.hasClass("style")
-	 || this.$area.hasClass("ass")) {
+	if (this.area.classList.contains("style")
+	 || this.area.classList.contains("ass")) {
 		alert("SMI 에디터 모드가 아닙니다.");
 		return;
 	}
@@ -657,14 +732,15 @@ SmiEditor.prototype.setLine = function(text, selection) {
 }
 SmiEditor.prototype._inputText = SmiEditor.prototype.inputText;
 SmiEditor.prototype.inputText = function(text) {
-	if (this.$area.hasClass("ass")) {
+	if (this.area.classList.contains("ass")) {
 		alert("SMI 에디터 모드가 아닙니다.");
 		return;
 	}
-	if (this.$area.hasClass("style")) {
+	if (this.area.classList.contains("style")) {
 		if (text.length == 7 && text.startsWith("#")) {
 			this.style.PrimaryColour = text;
-			this.$area.find("input[name=PrimaryColour]").val(text).next().val(text);
+			const input = this.area.querySelector("input[name=PrimaryColour]");
+			input.value = input.nextSibling.value = text;
 			this.refreshStyle();
 		} else {
 			alert("SMI 에디터 모드가 아닙니다.");
@@ -676,8 +752,8 @@ SmiEditor.prototype.inputText = function(text) {
 }
 SmiEditor.prototype._tagging = SmiEditor.prototype.tagging;
 SmiEditor.prototype.tagging = function(input, standCursor) {
-	if (this.$area.hasClass("style")
-	 || this.$area.hasClass("ass")) {
+	if (this.area.classList.contains("style")
+	 || this.area.classList.contains("ass")) {
 		alert("SMI 에디터 모드가 아닙니다.");
 		return;
 	}
@@ -686,11 +762,11 @@ SmiEditor.prototype.tagging = function(input, standCursor) {
 
 Tab.prototype.updateHoldSelector = function() {
 	if (!this.withAss && this.holds.length <= 1) {
-		this.$area.removeClass("with-hold");
+		this.area.classList.remove("with-hold");
 		refreshPaddingBottom();
 		return;
 	}
-	this.$area.addClass("with-hold");
+	this.area.classList.add("with-hold");
 	refreshPaddingBottom();
 	
 	let BEGIN = 1;
@@ -700,7 +776,7 @@ Tab.prototype.updateHoldSelector = function() {
 	for (let i = 0; i < this.holds.length; i++) {
 		const hold = this.holds[i];
 		if (i > 0) {
-			hold.$selector.find(".hold-name span").text(i + "." + hold.name);
+			hold.selector.querySelector(".hold-name span").innerText = (i + "." + hold.name);
 		}
 		timers.push({ time: hold.start, holds: [{ index: i, type: BEGIN }] });
 		timers.push({ time: hold.end  , holds: [{ index: i, type: END   }] });
@@ -767,7 +843,7 @@ Tab.prototype.updateHoldSelector = function() {
 			const hold = this.holds[selector.index];
 			if (selector.type == BEGIN) {
 				// 홀드 시작
-				hold.$selector.css({ left: rate + "%" });
+				hold.selector.style.left = (rate + "%");
 				
 				// 홀드끼리 영역 겹칠 경우 보완 필요
 				let pos = hold.pos;
@@ -794,11 +870,11 @@ Tab.prototype.updateHoldSelector = function() {
 					}
 					top = 60 - top;
 				}
-				hold.$selector.css({ top: top + "%" });
+				hold.selector.style.top = (top + "%");
 				
 			} else {
 				// 홀드 끝
-				hold.$selector.css({ right: (100 - rate) + "%" });
+				hold.selector.style.right = ((100 - rate) + "%");
 				
 				// 홀드 위치 사용 중 해제
 				for (let pos in posStatus) {
@@ -825,10 +901,10 @@ Tab.prototype.selectHold = function(hold) {
 	}
 	SmiEditor.selected = hold;
 	
-	this.$holdSelector.find(".selector").removeClass("selected");
-	this.$holdArea.find(".hold").hide();
-	hold.$selector.addClass("selected");
-	hold.$area.show();
+	[...this.holdSelector.querySelectorAll(".selected")].forEach((el) => { el.classList.remove("selected"); });
+	[...this.holdArea.getElementsByClassName("hold")].forEach((el) => { el.style.display = "none"; });
+	hold.selector.classList.add("selected");
+	hold.area.style.display = "block";
 	hold.input.focus();
 	hold.input.dispatchEvent(new Event("scroll", { bubbles: true }));
 	if ((this.holdIndex = index) != 0) {
@@ -967,7 +1043,7 @@ Tab.prototype.getAdditionalToAss = function(forSmi=false) {
 	info.set("VideoInfo", videoPath);
 	info.set("FrameSyncs", frameSyncs.join(","));
 	
-	let appends = this.$area.find(".tab-ass-appends textarea").val();
+	let appends = this.area.querySelector(".tab-ass-appends textarea").value;
 	if (appends.trim().length) {
 		const appendFile = new AssFile(appends);
 		for (let i = 0; i < appendFile.parts.length; i++) {
@@ -1029,13 +1105,15 @@ Tab.prototype.getSaveText = function(withNormalize=true, withCombine=true, withC
 }
 Tab.prototype.onChangeSaved = function(hold) {
 	if (this.isSaved()) {
-		this.$area.removeClass("tmp-saved").removeClass("not-saved");
+		this.area.classList.remove("tmp-saved");
+		this.area.classList.remove("not-saved");
 		for (let i = 0; i < this.holds.length; i++) {
-			this.holds[i].$selector.removeClass("not-saved");
+			this.holds[i].selector.classList.remove("not-saved");
 		}
-		this.assHold.$selector.removeClass("not-saved");
+		this.assHold.selector.classList.remove("not-saved");
 	} else {
-		this.$area.removeClass("tmp-saved").addClass("not-saved");
+		this.area.classList.remove("tmp-saved");
+		this.area.classList.add   ("not-saved");
 	}
 	
 	if (hold) {
@@ -1484,11 +1562,11 @@ SmiEditor.prototype.isSaved = function() {
 };
 SmiEditor.prototype.onChangeSaved = function(saved) {
 	// 홀드 저장 여부 표시
-	if (this.$selector) {
+	if (this.selector) {
 		if (saved) {
-			this.$selector.removeClass("not-saved");
+			this.selector.classList.remove("not-saved");
 		} else {
-			this.$selector.addClass("not-saved");
+			this.selector.classList.add   ("not-saved");
 		}
 	}
 	
@@ -1523,15 +1601,15 @@ SmiEditor.prototype.rename = function() {
 			alert("예약어입니다.");
 			return;
 		}
-		hold.$selector.find(".hold-name > span").text(hold.owner.holds.indexOf(hold) + "." + (hold.name = input));
-		hold.$selector.attr({ title: hold.name });
+		hold.selector.querySelector(".hold-name > span").innerText = (hold.owner.holds.indexOf(hold) + "." + (hold.name = input));
+		hold.selector.title = hold.name;
 		hold.afterChangeSaved(hold.isSaved());
 	}, hold.name);
 }
 SmiEditor.selectTab = function(index=-1) {
-	const $tabSelector = $("#tabSelector");
+	const tabSelector = document.getElementById("tabSelector");
 	if (index < 0) {
-		const selectedTab = $tabSelector.find(".selected").data("tab");
+		const selectedTab = eData(tabSelector.querySelector(".selected")).tab;
 		if (selectedTab) {
 			// 다음 탭 선택
 			index = (tabs.indexOf(selectedTab) + 1) % tabs.length;
@@ -1541,11 +1619,11 @@ SmiEditor.selectTab = function(index=-1) {
 	}
 	
 	const currentTab = tabs[tabIndex = index];
-	$tabSelector.find(".selected").removeClass("selected");
-	currentTab.$th.addClass("selected").data("tab");
+	[...tabSelector.querySelectorAll(".selected")].forEach((el) => { el.classList.remove("selected"); });
+	currentTab.th.classList.add("selected");
 	
-	$("#editor > .tab").hide();
-	currentTab.$area.show();
+	document.querySelector("#editor > .tab").style.display = "none";
+	currentTab.area.style.display = "block";
 	if (_for_video_) { // 동영상 파일명으로 자막 파일을 연 경우 동영상 열기 불필요
 		_for_video_ = false;
 		binder.setPath(currentTab.path);
@@ -1633,19 +1711,19 @@ function init(jsonSetting, isBackup=true) {
 	if (!SmiEditor.tabPreset) {
 		const preset = document.getElementById("tabPreset");
 		SmiEditor.tabPreset = preset.cloneNode(true);
-		SmiEditor.tabPreset.id = null;
+		SmiEditor.tabPreset.removeAttribute("id");
 		preset.remove();
 	}
 	if (!SmiEditor.assHoldPreset) {
 		const preset = document.getElementById("assHoldPreset");
 		SmiEditor.assHoldPreset = preset.cloneNode(true);
-		SmiEditor.assHoldPreset.id = null;
+		SmiEditor.assHoldPreset.removeAttribute("id");
 		preset.remove();
 	}
 	if (!SmiEditor.stylePreset) {
 		const preset = document.getElementById("holdStylePreset");
 		SmiEditor.stylePreset = preset.cloneNode(true);
-		SmiEditor.stylePreset.id = null;
+		SmiEditor.stylePreset.removeAttribute("id");
 		preset.remove();
 	}
 	
@@ -1809,144 +1887,143 @@ function init(jsonSetting, isBackup=true) {
 		saveSetting();
 	}
 	
-	const $btnAddHold = $("#btnAddHold").on("click", function() {
+	document.getElementById("btnAddHold").addEventListener("click", () => {
 		if (tabs.length == 0) return;
 		tabs[tabIndex].addHold();
 	});
-	const $inputWeight = $("#inputWeight").on("input propertychange", function() {
-		const weight = $inputWeight.val();
+	const inputWeight = document.getElementById("inputWeight");
+	inputWeight.addEventListener("input", () => {
+		const weight = inputWeight.value;
 		if (isFinite(weight)) {
 			SmiEditor.sync.weight = setting.sync.weight = Number(weight);
 		} else {
 			alert("숫자를 입력하세요.");
-			const cursor = $inputWeight[0].selectionEnd - 1;
-			$inputWeight.val(SmiEditor.sync.weight);
-			$inputWeight[0].setSelectionRange(cursor, cursor);
+			const cursor = inputWeight.selectionEnd - 1;
+			inputWeight.value = SmiEditor.sync.weight;
+			inputWeight.setSelectionRange(cursor, cursor);
 		}
 	});
-	const $inputUnit = $("#inputUnit").on("input propertychange", function() {
-		const unit = $inputUnit.val();
+	const inputUnit = document.getElementById("inputUnit");
+	inputUnit.addEventListener("input", () => {
+		const unit = inputUnit.value;
 		if (isFinite(unit)) {
 			SmiEditor.sync.unit = setting.sync.unit = Number(unit);
 		} else {
 			alert("숫자를 입력하세요.");
-			const cursor = $inputUnit[0].selectionEnd - 1;
-			$inputUnit.val(SmiEditor.sync.unit);
-			$inputUnit[0].setSelectionRange(cursor, cursor);
+			const cursor = inputUnit.selectionEnd - 1;
+			inputUnit.value = SmiEditor.sync.unit;
+			inputUnit.setSelectionRange(cursor, cursor);
 		}
 	});
-	const $btnMoveToBack = $("#btnMoveToBack").on("click", function() {
+	document.getElementById("btnMoveToBack").addEventListener("click", () => {
 		if (tabs.length == 0) return;
 		tabs[tabIndex].holds[tabs[tabIndex].holdIndex].moveSync(false);
 		tabs[tabIndex].holds[tabs[tabIndex].holdIndex].input.focus();
 	});
-	const $btnMoveToForward = $("#btnMoveToForward").on("click", function() {
+	document.getElementById("btnMoveToForward").addEventListener("click", () => {
 		if (tabs.length == 0) return;
 		tabs[tabIndex].holds[tabs[tabIndex].holdIndex].moveSync(true);
 		tabs[tabIndex].holds[tabs[tabIndex].holdIndex].input.focus();
 	});
-	
-	const $checkAutoFindSync = $("#checkAutoFindSync").on("click", function() {
-		autoFindSync = $(this).prop("checked");
+
+	const checkAutoFindSync = document.getElementById("checkAutoFindSync");
+	checkAutoFindSync.addEventListener("click", () => {
+		autoFindSync = checkAutoFindSync.checked;
 		if (tabs.length == 0) return;
 		tabs[tabIndex].holds[tabs[tabIndex].holdIndex].input.focus();
 	});
-	const $checkTrustKeyframe = $("#checkTrustKeyframe").on("click", function() {
-		if (SmiEditor.trustKeyFrame = $(this).prop("checked")) {
-			$("#editor").addClass("trust-keyframe");
+	const checkTrustKeyframe = document.getElementById("checkTrustKeyframe");
+	checkTrustKeyframe.addEventListener("click", () => {
+		if (SmiEditor.trustKeyFrame = checkTrustKeyframe.checked) {
+			document.getElementById("editor").classList.add   ("trust-keyframe");
 		} else {
-			$("#editor").removeClass("trust-keyframe");
+			document.getElementById("editor").classList.remove("trust-keyframe");
 		}
 		if (tabs.length == 0) return;
 	});
 	
-	const $btnNewTab = $("#btnNewTab").on("click", function() {
+	document.getElementById("btnNewTab").addEventListener("click", () => {
 		openNewTab();
 	});
 	
-	const $tabSelector = $("#tabSelector").on("click", ".th:not(#btnNewTab)", function() {
-		const $th = $(this);
-		if ($th[0] == closingTab) {
-			return;
+	const tabSelector = document.getElementById("tabSelector");
+	tabSelector.addEventListener("click", (e) => {
+		let el;
+		if (el = e.target.closest(".th")) {
+			if ((el == closingTab) || e.target.closest("#btnNewTab")) {
+				return;
+			}
+			
+			const currentTab = eData(el).tab;
+			if (currentTab) {
+				SmiEditor.selectTab(tabs.indexOf(currentTab));
+			}
 		}
-		
-		const currentTab = $th.data("tab");
-		if (currentTab) {
-			SmiEditor.selectTab(tabs.indexOf(currentTab));
-		}
-		
-	});
-	$tabSelector.on("click", ".btn-close-tab", function(e) {
-		e.preventDefault();
-		
-		const $th = $(this).parent();
-		closingTab = $th[0]; // 탭 선택 이벤트 방지... e.preventDefault()로 안 되네...
-		
-		let saved = true;
-		{	const currentTab = $th.data("tab");
+
+		if (el = e.target.closest(".btn-close-tab")) {
+			e.preventDefault();
+			
+			const th = closingTab = el.parentNode; // 탭 선택 이벤트 방지... e.preventDefault()로 안 되네...
+			
+			let saved = true;
+			{	const currentTab = eData(th).tab;
 			for (let i = 0; i < currentTab.holds.length; i++) {
 				if (currentTab.holds[i].input.value != currentTab.holds[i].saved) {
 					saved = false;
 					break;
 				}
 			}
-		}
-		confirm((!saved ? "저장되지 않았습니다.\n" : "") + "탭을 닫으시겠습니까?", () => {
-			const index = closeTab($th);
-			
-			setTimeout(() => {
-				if (tabs.length) {
-					if ($("#tabSelector .th.selected").length == 0) {
-						// 선택돼있던 탭을 닫았을 경우 다른 탭 선택
-						tabIndex = Math.min(index, tabs.length - 1);
-					} else {
-						// 비활성 탭을 닫았을 경우
-						if (index < tabIndex) {
-							// 닫힌 탭보다 뒤면 1씩 당겨서 재선택
-							tabIndex--;
+			}
+			confirm((!saved ? "저장되지 않았습니다.\n" : "") + "탭을 닫으시겠습니까?", () => {
+				const index = closeTab(th);
+				
+				setTimeout(() => {
+					if (tabs.length) {
+						if (tabSelector.querySelector(".th.selected")) {
+							// 선택돼있던 탭을 닫았을 경우 다른 탭 선택
+							tabIndex = Math.min(index, tabs.length - 1);
+						} else {
+							// 비활성 탭을 닫았을 경우
+							if (index < tabIndex) {
+								// 닫힌 탭보다 뒤면 1씩 당겨서 재선택
+								tabIndex--;
+							}
 						}
+						tabSelector.querySelectorAll(".th")[tabIndex].click();
 					}
-					$("#tabSelector .th:eq(" + tabIndex + ")").click();
-				}
-				closingTab = null;
-			}, 1);
-			
-		}, () => {
-			setTimeout(() => {
-				closingTab = null;
-			}, 1);
-		});
-	});
-	
-	$("#editor").on("click", "button.tab-ass-btn", function() {
-		const $btn = $(this);
-		const $tab = $btn.parents(".tab");
-		const currentTab = tabs[tabIndex];
-		if ($tab.hasClass("edit-ass")) {
-			$tab.removeClass("edit-ass");
-			SmiEditor.selected = currentTab.holds[currentTab.holdIndex];
-		} else {
-			$tab.addClass("edit-ass");
-			(SmiEditor.selected = currentTab.assHold).input.focus();
+					closingTab = null;
+				}, 1);
+				
+			}, () => {
+				setTimeout(() => {
+					closingTab = null;
+				}, 1);
+			});
 		}
 	});
 	
-	$("#assSplitHoldSelectorPopup").on("click", "button", function() {
-		const btn = this;
-		if (btn.dataTab && btn.dataStyle) {
-			splitHold(btn.dataTab, btn.dataStyle);
+	document.getElementById("assSplitHoldSelectorPopup").addEventListener("click", (e) => {
+		const btn = e.target.closest("button");
+		if (btn) {
+			const data = eData(btn);
+			if (data.tab && data.style) {
+				splitHold(data.tab, data.style);
+			}
+			document.getElementById("assSplitHoldSelector").style.display = "none";
 		}
-		$("#assSplitHoldSelector").hide();
 	});
 	
 	// ::-webkit-scrollbar에 대해 CefSharp에서 커서 모양이 안 바뀜
 	// ... 라이브러리 버그? 업데이트하면 달라지나?
-	$("body").on("mousemove", "textarea", function(e) {
-		const hoverScroll = (this.clientWidth <= e.offsetX) || (this.clientHeight <= e.offsetY);
-		if (hoverScroll) {
-			this.classList.add("hover-scroll");
-		} else {
-			this.classList.remove("hover-scroll");
+	// 결과적으로 다른 용도로도 이게 쓰임
+	document.body.addEventListener("mousemove", (e) => {
+		const textarea = e.target.closest("textarea");
+		if (textarea) {
+			if ((textarea.clientWidth <= e.offsetX) || (textarea.clientHeight <= e.offsetY)) {
+				textarea.classList.add   ("hover-scroll");
+			} else {
+				textarea.classList.remove("hover-scroll");
+			}
 		}
 	});
 	
@@ -1957,10 +2034,10 @@ function init(jsonSetting, isBackup=true) {
 		if (e.key == "Escape") {
 			if (SmiEditor.selected) {
 				const hold = SmiEditor.selected;
-				if (hold.$styleArea) {
+				if (hold.styleArea) {
 					// SMI 홀드 스타일 창 닫기
-					if (hold.$area.hasClass("style")) {
-						hold.$area.removeClass("style");
+					if (hold.area.classList.contains("style")) {
+						hold.area.classList.remove("style");
 						if (SmiEditor.Viewer.window) {
 							SmiEditor.Viewer.refresh();
 						}
@@ -2005,9 +2082,9 @@ function setSetting(setting, initial=false) {
 	
 	// 탭 on/off 먼저 해야 height값 계산 가능
 	if (setting.useTab) {
-		$("body").addClass("use-tab");
+		document.body.classList.add   ("use-tab");
 	} else {
-		$("body").removeClass("use-tab");
+		document.body.classList.remove("use-tab");
 	}
 	
 	SmiEditor.setSetting(setting);
@@ -2069,16 +2146,17 @@ function setSetting(setting, initial=false) {
 		}
 		fetch("lib/Jamaker.color.css").then(async (response) => {
 			let preset = await response.text();
-			let $style = $("#styleColor");
-			if (!$style.length) {
-				$("head").append($style = $("<style id='styleColor'>"));
+			let styleColor = document.getElementById("styleColor");
+			if (!styleColor) {
+				document.head.append(styleColor = document.createElement("style"));
+				styleColor.id = "styleColor";
 			}
 			
 			if (button.length) {
 				preset = preset.replaceAll("[button]", button).replaceAll("[buttonDisabled]", disabled);
-				$("body").addClass("classic-scrollbar");
+				document.body.classList.add   ("classic-scrollbar");
 			} else {
-				$("body").removeClass("classic-scrollbar");
+				document.body.classList.remove("classic-scrollbar");
 			}
 			
 			for (let name in setting.color) {
@@ -2109,7 +2187,7 @@ function setSetting(setting, initial=false) {
 						}
 					} catch (e) {}
 				}
-				$style.html(preset.replaceAll("[editorHL]", editorHL));
+				styleColor.innerHTML = preset.replaceAll("[editorHL]", editorHL);
 			}
 			
 			if (initial || (JSON.stringify(oldSetting.highlight) != JSON.stringify(setting.highlight))) {
@@ -2148,13 +2226,13 @@ function setSetting(setting, initial=false) {
 	if (initial || (oldSetting.size != setting.size)) {
 		fetch("lib/Jamaker.size.css").then(async (response) => {
 			let preset = await response.text();
-			preset = preset.replaceAll("20px", (LH = (20 * setting.size)) + "px");
-			
-			let $style = $("#styleSize");
-			if (!$style.length) {
-				$("head").append($style = $("<style id='styleSize'>"));
+
+			let styleSize = document.getElementById("styleSize");
+			if (!styleSize) {
+				document.head.append(styleSize = document.createElement("style"));
+				styleSize.id = "styleSize";
 			}
-			$style.html(preset);
+			styleSize.innerHTML = preset.replaceAll("20px", (LH = (20 * setting.size)) + "px");
 			
 			for (let i = 0; i < tabs.length; i++) {
 				const holds = tabs[i].holds;
@@ -2202,12 +2280,12 @@ function setSetting(setting, initial=false) {
 	SmiEditor.withCtrls.reserved += "NOSs";
 	
 	// 가중치 등
-	$("#inputWeight").val(setting.sync.weight);
-	$("#inputUnit"  ).val(setting.sync.unit  );
+	document.getElementById("inputWeight").value = setting.sync.weight;
+	document.getElementById("inputUnit"  ).value = setting.sync.unit  ;
 	if (setting.sync.frame) {
-		$(".for-frame-sync").show();
+		document.getElementById("forFrameSync").style.display = "inline";
 	} else {
-		$(".for-frame-sync").hide();
+		document.getElementById("forFrameSync").style.display = "none";
 	}
 	
 	SmiEditor.scrollMargin = setting.scrollMargin;
@@ -2343,15 +2421,18 @@ function saveSetting() {
 }
 function refreshPaddingBottom() {
 	// 에디터 하단 여백 재조정
-	const holdTop = tabs.length ? Number(tabs[tabIndex].$area.find(".holds").css("top").split("px")[0]) : 0;
-	const padding = $("#editor").height() - holdTop - LH;
+	const holdTop = tabs.length ? Number(tabs[tabIndex].area.querySelector(".holds").offsetTop) : 0;
+	const padding = document.getElementById("editor").offsetHeight - holdTop - LH;
 	const append = "\n#editor .input textarea { padding-bottom: " + (padding - 2 - SB) + "px; }"
 	             + "\n.hold > .col-sync > div:first-child { height: " + (padding - 1) + "px; }";
-	let $style = $("#stylePaddingBottom");
-	if (!$style.length) {
-		$("head").append($style = $("<style id='stylePaddingBottom'>"));
+	
+	let stylePaddingBottom = document.getElementById("stylePaddingBottom");
+	if (!stylePaddingBottom) {
+		document.head.append(stylePaddingBottom = document.createElement("style"));
+		stylePaddingBottom.id = "stylePaddingBottom";
 	}
-	$style.html(append);
+	stylePaddingBottom.innerHTML = append;
+	
 	if (SmiEditor.selected) {
 		SmiEditor.selected.input.dispatchEvent(new Event("scroll", { bubbles: true }));
 	}
@@ -2372,31 +2453,33 @@ function openHelp(name) {
 }
 
 function runIfCanOpenNewTab(func) {
-	$tabToCloseAfterRun = null;
+	tabToCloseAfterRun = null;
 	if (!setting.useTab) {
 		// 탭 미사용 -> 현재 파일 닫기
 		if (tabs.length) {
 			const currentTab = tabs[0];
+			const tabSelector = document.getElementById("tabSelector");
+			const firstTh = (tabSelector.childNodes.length > 1) ? tabSelector.childNodes[0] : null;
 			for (let i = 0; i < currentTab.holds.length; i++) {
 				if (!currentTab.isSaved()) {
 					confirm("현재 파일을 닫을까요?", () => {
-						$tabToCloseAfterRun = $("#tabSelector > .th:not(#btnNewTab)");
+						tabToCloseAfterRun = firstTh;
 						func();
 					});
 					return;
 				}
 			}
-			$tabToCloseAfterRun = $("#tabSelector > .th:not(#btnNewTab)");
+			tabToCloseAfterRun = firstTh;
 		}
 	}
 	if (func) func();
 }
-function closeTab($th) {
-	const targetTab = $th.data("tab");
+function closeTab(th) {
+	const targetTab = eData(th).tab;
 	const index = tabs.indexOf(targetTab);
 	tabs.splice(index, 1);
-	targetTab.$area.remove();
-	$th.remove();
+	targetTab.area.remove();
+	th.remove();
 	delete targetTab;
 	
 	SmiEditor.selected = null;
@@ -2405,19 +2488,19 @@ function closeTab($th) {
 }
 function closeCurrentTab() {
 	if (setting.useTab && tabs.length && tabs[tabIndex]) {
-		$("#tabSelector .th:eq(" + tabIndex + ") .btn-close-tab").click();
+		document.getElementById("tabSelector").querySelector(".th")[tabIndex].querySelector(".btn-close-tab").click();
 	}
 }
 
 function newFile() {
-	$("#assSplitHoldSelector").hide();
+	document.getElementById("assSplitHoldSelector").style.display = "none";
 	runIfCanOpenNewTab(openNewTab);
 }
 
 function openFile(path, text, forVideo, confirmed=false) {
 	const funcSince = log("openFile start");
-	
-	$("#assSplitHoldSelector").hide();
+
+	document.getElementById("assSplitHoldSelector").style.display = "none"
 	
 	if (path && path.toLowerCase().endsWith(".ass")) {
 		// 연동 ASS 파일 열기
@@ -2633,8 +2716,8 @@ function saveFile(asNew, isExport) {
 							}
 							alert("같은 이름의 홀드끼리 스타일이 일치하지 않습니다.\n임의로 이름을 변경합니다.\n" + from + " -> " + to);
 							hold.name = to;
-							hold.$selector.find(".hold-name > span").text(hold.owner.holds.indexOf(hold) + "." + hold.name);
-							hold.$selector.attr({ title: hold.name });
+							hold.selector.querySelector(".hold-name > span").innerText = (hold.owner.holds.indexOf(hold) + "." + hold.name);
+							hold.selector.title = hold.name;
 							hold.afterChangeSaved(hold.isSaved());
 							smiStyles[hold.name] = saveStyle;
 						}
@@ -2662,7 +2745,7 @@ function saveFile(asNew, isExport) {
 					if (part.name == "Events") continue;
 					appendWithoutEvents.parts.push(part);
 				}
-				currentTab.$area.find(".tab-ass-appends textarea").val(appendWithoutEvents.toText());
+				currentTab.area.querySelector(".tab-ass-appends textarea").value = appendWithoutEvents.toText();
 			}
 		}
 		
@@ -2787,7 +2870,8 @@ function afterSaveFile(tabIndex, path) { // 저장 도중에 탭 전환할 수 �
 	currentTab.assHold.assEditor.setSaved();
 	currentTab.path = path;
 	const title = path ? ((path.length > 14) ? ("..." + path.substring(path.length - 14, path.length - 4)) : path.substring(0, path.length - 4)) : "새 문서";
-	$("#tabSelector .th:eq(" + tabIndex + ") span").text(title).attr({ title: path });
+	const span = document.getElementById("tabSelector").querySelector(".th")[tabIndex].querySelector("span");
+	span.innerText = span.title = path;
 	currentTab.holdEdited = false;
 	currentTab.savedHolds = currentTab.holds.slice(0);
 	
@@ -2835,16 +2919,16 @@ function saveTemp() {
 		for (let i = 0; i < currentTab.holds.length; i++) {
 			currentTab.holds[i].tempSavedText = texts[i];
 		}
-		currentTab.$area.addClass("tmp-saved");
+		currentTab.area.classList.add("tmp-saved");
 	}
 	log("saveTemp end", funcSince);
 }
 
 let _for_video_ = false;
 function openNewTab(text, path, forVideo) {
-	if ($tabToCloseAfterRun) {
-		closeTab($tabToCloseAfterRun);
-		$tabToCloseAfterRun = null;
+	if (tabToCloseAfterRun) {
+		closeTab(tabToCloseAfterRun);
+		tabToCloseAfterRun = null;
 	}
 	if (tabs.length >= 4) {
 		alert("탭은 4개까지 열 수 있습니다.");
@@ -2865,14 +2949,26 @@ function openNewTab(text, path, forVideo) {
 	
 	const tab = new Tab(text ? text : setting.newFile, path);
 	tabs.push(tab);
-	$("#editor").append(tab.$area);
+	document.getElementById("editor").append(tab.area);
 	
-	const $th = $("<div class='th'>").append($("<span>").text(title)).attr({ title: path });
-	$th.append($("<button type='button' class='btn-close-tab'>").text("×"));
-	$("#btnNewTab").before($th);
+	const th = tab.th = document.createElement("div");
+	th.classList.add("th");
+	th.title = path;
+	{	const span = document.createElement("span");
+		span.innerText = title;
+		th.append(span);
+	}
+	{	const button = document.createElement("button");
+		button.type = "button";
+		button.classList.add("btn-close-tab");
+		button.innerText = "×";
+		th.append(button);
+	}
+	document.getElementById("btnNewTab").before(th);
 	
 	_for_video_ = forVideo;
-	(tab.$th = $th).data("tab", tab).click();
+	eData(th, { tab: tab });
+	th.click();
 	
 	if (path && path.indexOf(":")) { // 웹버전에선 온전한 파일 경로를 얻지 못해 콜론 없음
 		let withAss = false;
@@ -2916,8 +3012,8 @@ function setVideo(path) {
 	Subtitle.video.fs = [];
 	Subtitle.video.kfs = [];
 	Subtitle.video.aegisubSyncs = null;
-	$("#forFrameSync").addClass("disabled");
-	$("#checkTrustKeyframe").attr({ disabled: true });
+	document.getElementById("forFrameSync").classList.add("disabled");
+	document.getElementById("checkTrustKeyframe").disabled = true;
 	
 	// 동영상 파일이 열려있을 때만 프레임 분석 진행
 	const ext = path.toLowerCase();
@@ -2951,10 +3047,7 @@ function setVideoInfo(w=1920, h=1080, fr=23976) {
 		fr = 23975.7; // 일부 영상 버그
 	}
 	Subtitle.video.FL = 1000000 / (Subtitle.video.FR = fr);
-	if (showFps == null) {
-		showFps = $("#showFps");
-	}
-	showFps.text((Math.round(fr*10)/10000) + " fps");
+//	document.getElementById("showFps").innerText((Math.round(fr*10)/10000) + " fps");
 }
 // C# 쪽에서 호출 - requestFrames
 function loadFkf(fkfName) {
@@ -3010,8 +3103,8 @@ function afterSetFkf() {
 	Subtitle.video.aegisubSyncs = null
 	
 	// 키프레임 신뢰 기능 활성화
-	$("#forFrameSync").removeClass("disabled");
-	$("#checkTrustKeyframe").attr({ disabled: false });
+	document.getElementById("forFrameSync").classList.remove("disabled");
+	document.getElementById("checkTrustKeyframe").disabled = false;
 	Progress.set("#forFrameSync", 0);
 	
 	for (let i = 0; i < tabs.length; i++) {
@@ -3130,7 +3223,7 @@ function loadAssFile(path, text, target=-1) {
 	funcSince = log("loadAssFile - 정렬완료", funcSince);
 	
 	// 불일치 부분 확인 및 보정
-	const appendFile = new AssFile(currentTab.$area.find(".tab-ass-appends textarea").val());
+	const appendFile = new AssFile(currentTab.area.querySelector(".tab-ass-appends textarea").value);
 	{
 		const stylePart = appendFile.getStyles();
 		appendFile.parts.length = 0;
@@ -3532,7 +3625,7 @@ function loadAssFile(path, text, target=-1) {
 					if (part.name == "Events") continue;
 					appendWithoutEvents.parts.push(part);
 				}
-				currentTab.$area.find(".tab-ass-appends textarea").val(appendWithoutEvents.toText());
+				currentTab.area.querySelector(".tab-ass-appends textarea").value = appendWithoutEvents.toText();
 				
 				if (addCount + delCount) {
 					// 스크립트는 홀드별로 분할해서 넣어야 함
@@ -3899,7 +3992,7 @@ function loadAssFile(path, text, target=-1) {
 					if (part.name == "Events") continue;
 					appendWithoutEvents.parts.push(part);
 				}
-				currentTab.$area.find(".tab-ass-appends textarea").val(appendWithoutEvents.toText());
+				currentTab.area.querySelector(".tab-ass-appends textarea").value = appendWithoutEvents.toText();
 				
 				log("추가 정보 검토 end", funcSince);
 			});
@@ -3925,7 +4018,7 @@ function splitHold(tab, styleName) {
 	}
 	if (style == Subtitle.DefaultStyle) {
 		// ASS 추가 스크립트에서 찾기
-		const appendFile = new AssFile(tab.$area.find(".tab-ass-appends textarea").val());
+		const appendFile = new AssFile(tab.area.querySelector(".tab-ass-appends textarea").value);
 		const styles = appendFile.getStyles();
 		for (let i = 0; i < styles.body.length; i++) {
 			if (styles.body[i].Name == styleName) {
@@ -3960,7 +4053,7 @@ function splitHold(tab, styleName) {
 				break;
 			}
 		}
-		tab.$area.find(".tab-ass-appends textarea").val(appendFile.toText());
+		tab.area.querySelector(".tab-ass-appends textarea").value = appendFile.toText();
 	}
 	if (style == Subtitle.DefaultStyle) {
 		// 못 찾았을 경우
@@ -4158,8 +4251,8 @@ function fitSyncsToFrame(frameSyncOnly=false, add=0) {
 		}
 		
 		// 키프레임 신뢰 기능 활성화
-		$("#forFrameSync").removeClass("disabled");
-		$("#checkTrustKeyframe").attr({ disabled: false });
+		document.getElementById("forFrameSync").classList.remove("disabled");
+		document.getElementById("checkTrustKeyframe").disabled = false;
 		Progress.set("#forFrameSync", 0);
 		
 		for (let i = 0; i < tabs.length; i++) {
@@ -4184,10 +4277,10 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 	if (this.isAssHold) {
 		for (let i = 0; i < this.assEditor.syncs.length; i++) {
 			const item = this.assEditor.syncs[i];
-			let sync = Subtitle.findSync(Number(item.inputStart.val()) + add);
-			if (sync != null) item.inputStart.val(sync == 0 ? 1 : sync);
-			sync = Subtitle.findSync(Number(item.inputEnd.val()) + add);
-			if (sync != null) item.inputEnd.val(sync == 0 ? 1 : sync);
+			let sync = Subtitle.findSync(Number(item.inputStart.value) + add);
+			if (sync != null) item.inputStart.value = (sync == 0 ? 1 : sync);
+			sync = Subtitle.findSync(Number(item.inputEnd.value) + add);
+			if (sync != null) item.inputEnd.value = (sync == 0 ? 1 : sync);
 		}
 		this.assEditor.update();
 	} else {
@@ -4200,9 +4293,9 @@ SmiEditor.focusRequired = function() {
 	const editor = SmiEditor.selected;
 	const hasFocus = editor && (editor.input == document.activeElement);
 	if (!hasFocus && editor) {
-		if (editor.$area.hasClass("style")) {
+		if (editor.area.classList.contains("style")) {
 			// 스타일 편집 중일 때 포커스 이동 방지
-		} else if (editor.$area.hasClass("ass")) {
+		} else if (editor.area.classList.contains("ass")) {
 			// ASS 편집 중일 때 포커스 이동 방지
 		} else {
 			return true;
@@ -4679,7 +4772,7 @@ function extSubmit(method, url, values, withoutTag=true) {
 			// 맞춤법 검사기 같은 데에 보내기 전에 태그 탈출 처리
 			if (withoutTag) {
 				Subtitle._tmp.innerHTML = value.replaceAll(/<br>/gi, " ");
-				$(Subtitle._tmp).find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
+				[...Subtitle._tmp.querySelectorAll("style")].forEach((el) => { el.innerHTML = ""; }); // <STYLE> 태그 내의 주석은 innerText로 잡힘
 				value = Subtitle._tmp.innerText;
 				value = value.replaceAll("​", "").replaceAll("　", " ").replaceAll(" ", " ");
 				while (value.indexOf("  ") >= 0) {
@@ -4746,7 +4839,7 @@ function extSubmitSpeller() {
 		
 		// 태그 탈출 처리
 		Subtitle._tmp.innerHTML = value.replaceAll(/<br>/gi, " ");
-		$(Subtitle._tmp).find("style").html(""); // <STYLE> 태그 내의 주석은 innerText로 잡힘
+		[...Subtitle._tmp.querySelectorAll("style")].forEach((el) => { el.innerHTML = ""; }); // <STYLE> 태그 내의 주석은 innerText로 잡힘
 		value = Subtitle._tmp.innerText;
 		value = value.replaceAll("​", "").replaceAll("　", " ").replaceAll(" ", " ");
 		while (value.indexOf("  ") >= 0) {

@@ -4,7 +4,6 @@
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>Auto Sync Shift</title>
-	<script src="lib/jquery-3.2.1.min.js"></script>
 	<script src="lib/webview.js"></script>
 	<script src="lib/SubtitleObject.js"></script>
 	<script src="lib/Combine.js"></script>
@@ -12,37 +11,45 @@
 	<script>
 let isProcessing = false;
 function showProcessing(text) {
-	isProcessing = true;
-	$("#processing").show().find("span").text(text ? text : "작업 중…");
+	isProcessing = document.getElementById("processing");
+	isProcessing.style.display = "block";
+	isProcessing.querySelector("span").innerText = (text ? text : "작업 중…");
 }
 function hideProcessing() {
-	$("#processing").hide();
-	isProcessing = false;
+	if (isProcessing) {
+		isProcessing.style.display = "none";
+		isProcessing = null;
+	}
 }
 function showAudioSelector(list, isOrigin, withSaveSkf, trustKf) {
 	list = list.split("|");
-	const sa = $("#selectAudio").show();
-	const ol = sa.find(".list").empty();
+	const sa = document.getElementById("selectAudio");
+	sa.style.display = "block";
+	const ol = sa.querySelector(".list");
+	ol.innerHTML = "";
 	for (let i = 0; i < list.length; i++) {
-		ol.append($("<li>").text(list[i]));
+		const li = document.createElement("li");
+		li.innerText = list[i];
+		ol.append(li);
 	}
-	sa.data({
-			isOrigin: isOrigin
-		,	withSaveSkf: withSaveSkf
-		,	trustKf: trustKf
-	});
+	sa.isOrigin    = isOrigin   ;
+	sa.withSaveSkf = withSaveSkf;
+	sa.trustKf     = trustKf    ;
 }
 ready(() => {
-	const sa = $("#selectAudio");
-	sa.find(".list").on("click", "li", function() {
-		binder.selectAudio($(this).text().split("ː")[0], sa.data("isOrigin"), sa.data("withSaveSkf"), sa.data("trustKf"));
-		sa.hide();
+	const sa = document.getElementById("selectAudio");
+	sa.querySelector(".list").addEventListener("click", (e) => {
+		const li = e.target.closest("li");
+		if (li) {
+			binder.selectAudio(li.innerText.split("ː")[0], sa.isOrigin, sa.withSaveSkf, satrustKf);
+			sa.style.display = "none";
+		}
 	});
 });
 	</script>
 	<script>
-let $fieldOrigin;
-let $fieldTarget;
+let fieldOrigin;
+let fieldTarget;
 const operation = { type: null, input: [] };
 
 function syncText(sync) {
@@ -54,73 +61,88 @@ function syncText(sync) {
 }
 
 ready(() => {
-	$(".preset").each((_, el) => {
-		const preset = $(el);
-		preset.parent().data("preset", preset.clone().removeClass("preset"));
-		preset.remove();
+	[...document.getElementsByClassName("preset")].forEach((el) => {
+		(el.parentNode.preset = el.cloneNode(true)).classList.remove("preset");
+		el.remove();
 	});
-	$fieldOrigin = $("#fieldOrigin");
-	$fieldTarget = $("#fieldTarget");
+	fieldOrigin = document.getElementById("fieldOrigin");
+	fieldTarget = document.getElementById("fieldTarget");
 	
-	$("#btnAddRangeList").on("click", () => { addRange (); });
-	$("#btnAddShiftList").on("click", () => { addShift (); });
+	document.getElementById("btnAddRangeList").addEventListener("click", () => { addRange (); });
+	document.getElementById("btnAddShiftList").addEventListener("click", () => { addShift (); });
 	
-	$("#btnCalc"        ).on("click", () => { calcShift(); });
-	$("#btnApply"       ).on("click", () => { apply    (); });
-	$("#btnSave"        ).on("click", () => { save     (); });
-	$("#btnApplySave"   ).on("click", () => { applySave(); });
+	document.getElementById("btnCalc"        ).addEventListener("click", () => { calcShift(); });
+	document.getElementById("btnApply"       ).addEventListener("click", () => { apply    (); });
+	document.getElementById("btnSave"        ).addEventListener("click", () => { save     (); });
+	document.getElementById("btnApplySave"   ).addEventListener("click", () => { applySave(); });
 	
 	function findSyncLine(sync) {
 		let result = null;
-		$fieldOrigin.find(".preview-body").children().each((_, el) => {
-			if (sync <= $(el).data("item").ms) {
-				result = $(el);
-				return false;
+		[...fieldOrigin.querySelector(".preview-body").children].forEach((el) => {
+			if (result) return;
+			if (sync <= el.item.ms) {
+				result = el;
 			}
 		});
 		return result;
 	}
-	$("#originVideo button").on("click", function() {
-		binder.openFileDialog(10, $("#chkSaveSkfOrigin").prop("checked"), false);
+	document.querySelector("#originVideo button").addEventListener("click", () => {
+		binder.openFileDialog(10, document.getElementById("chkSaveSkfOrigin").checked, false);
 	});
-	$("#originSub button").on("click", function() {
-		binder.openFileDialog(11, $("#chkSaveSkfOrigin").prop("checked"), false);
+	document.querySelector("#originSub   button").addEventListener("click", () => {
+		binder.openFileDialog(11, document.getElementById("chkSaveSkfOrigin").checked, false);
 	});
-	$("#targetVideo button").on("click", function() {
-		binder.openFileDialog(20, $("#chkSaveSkfTarget").prop("checked"), $("#chkTrustKfTarget").prop("checked"));
+	document.querySelector("#targetVideo button").addEventListener("click", () => {
+		binder.openFileDialog(20, document.getElementById("chkSaveSkfTarget").checked, document.getElementById("chkTrustKfTarget").checked);
 	});
-	$("#rangeList, #shiftList").on("mouseover", "input.start, input.end", function() {
-		$fieldOrigin.find(".hover").removeClass("hover");
-		const line = findSyncLine($(this).val());
-		if (!line) return;
-		
-		line.addClass("hover");
-		
-	}).on("mouseout", "input.start, input.end", function() {
-		$fieldOrigin.find(".hover").removeClass("hover");
-		
-	}).on("dblclick", "input.start, input.end", function() {
-		const line = findSyncLine($(this).val());
-		if (!line) return;
-		
-		const body = $fieldOrigin.find(".preview-body");
-		body.scrollTop(body.scrollTop() + line.offset().top - body.offset().top - 100);
-		
-	}).on("click", "button.remove", function() {
-		$(this).parent().remove();
+	[document.getElementById("rangeList"), document.getElementById("shiftList")].forEach((view) => {
+		view.addEventListener("mouseover", (e) => {
+			const input = e.target.closest("input");
+			if (!input) return;
+
+			let hovering = fieldOrigin.querySelector(".hover");
+			if (hovering) hovering.classList.remove("hover");
+			const line = findSyncLine(Number(input.value));
+			if (!line) return;
+			
+			line.classList.add("hover");
+		});
+		view.addEventListener("mouseout", (e) => {
+			const input = e.target.closest("input");
+			if (!input) return;
+
+			let hovering = fieldOrigin.querySelector(".hover");
+			if (hovering) hovering.classList.remove("hover");
+		});
+		view.addEventListener("dblclick", (e) => {
+			const input = e.target.closest("input");
+			if (!input) return;
+			
+			const line = findSyncLine(Number(input.value));
+			if (!line) return;
+			
+			const body = fieldOrigin.querySelector(".preview-body");
+			body.scrollTop = (line.offsetTop - body.offsetTop - 100);
+		});
+		view.addEventListener("click", (e) => {
+			const btn = e.target.closest("button.remove");
+			if (!btn) return;
+			
+			btn.parentNode.remove();
+		});
 	});
-	$fieldOrigin.find(".preview-body").on("scroll", function() {
-		$fieldTarget.find(".preview-body").scrollTop($(this).scrollTop());
+	fieldOrigin.querySelector(".preview-body").addEventListener("scroll", function() {
+		fieldTarget.querySelector(".preview-body").scrollTop = this.scrollTop;
 	});
-	$fieldTarget.find(".preview-body").on("scroll", function() {
-		$fieldOrigin.find(".preview-body").scrollTop($(this).scrollTop());
+	fieldTarget.querySelector(".preview-body").addEventListener("scroll", function() {
+		fieldOrigin.querySelector(".preview-body").scrollTop = this.scrollTop;
 	});
 	
 	document.addEventListener("dragenter", function(e) {
 		e.preventDefault();
 		binder.showDragging();
 	});
-	$("#cover").on("click", function(e) {
+	document.getElementById("cover").addEventListener("click", function(e) {
 		binder.hideDragging();
 	});
 });
@@ -129,44 +151,57 @@ function findDragArea(x, y) {
 	if (isProcessing) {
 		return null;
 	}
-	const center = $(document.body).width() / 2
+	const center = document.body.clientWidth / 2
 	if (x < center - 66) {
-		return $fieldOrigin;
+		return fieldOrigin;
 	}
 	if (x > center + 66) {
-		return $fieldTarget;
+		return fieldTarget;
 	}
 }
+let hovering = null;
 function dragover(x, y) {
-	$(".hover").removeClass("hover");
-	const area = findDragArea(x, y);
+	if (hovering) {
+		hovering.classList.remove("hover");
+	}
+	let area = findDragArea(x, y);
 	if (area) {
-		area.addClass("hover");
+		area = document.getElementById(area);
+		if (area) {
+			area.classList.add("hover");
+			hovering = area;
+		}
 	}
 }
 function drop(x, y) {
-	$(".hover").removeClass("hover");
+	if (hovering) {
+		hovering.classList.remove("hover");
+		hovering = null;
+	}
 	const area = findDragArea(x, y);
-	if (area == $fieldOrigin) {
-		binder.dropOriginFile($("#chkSaveSkfOrigin").prop("checked"));
-	} else if (area == $fieldTarget) {
-		binder.dropTargetFile($("#chkSaveSkfTarget").prop("checked"), $("#chkTrustKfTarget").prop("checked"));
+	if (area == fieldOrigin) {
+		binder.dropOriginFile(document.getElementById("chkSaveSkfOrigin").checked);
+	} else if (area == fieldTarget) {
+		binder.dropTargetFile(document.getElementById("chkSaveSkfTarget").checked, document.getElementById("chkTrustKfTarget").checked);
 	}
 }
 
 function setOriginVideoFile(path) {
-	$("#originVideo input").val(path);
-	$("#originVideo").attr({ title: path });
+	const form = document.getElementById("originVideo");
+	form.querySelector("input").value = path;
+	form.title = path;
 }
 function setTargetVideoFile(path) {
-	$("#targetVideo input").val(path);
-	$("#targetVideo").attr({ title: path });
+	const form = document.getElementById("targetVideo");
+	form.querySelector("input").value = path;
+	form.title = path;
 }
 function setOriginSubtitleFile(path, text) {
-	$("#originSub input").val(path);
-	$("#originSub").attr({ title: path });
+	const form = document.getElementById("originSub");
+	form.querySelector("input").value = path;
+	form.title = path;
 	
-	const separators = $("#inputSeparator").val().split("\n");
+	const separators = document.getElementById("inputSeparator").value.split("\n");
 	for (let i = 0; i < separators.length; i++) {
 		const separator = separators[i].trim();
 		if (separator.length == 0) {
@@ -184,14 +219,14 @@ function setOriginSubtitleFile(path, text) {
 		return false;
 	}
 	
-	let maxBlank = $("#inputMaxBlank").val();
+	let maxBlank = document.getElementById("inputMaxBlank").value;
 	if (isFinite(maxBlank)) {
 		maxBlank = Number(maxBlank) * 1000;
 	} else {
 		maxBlank = 999999999;
 		setTimeout(() => {
 			alert("공백 시간은 숫자여야 합니다.");
-			$("#inputMaxBlank").val(maxBlank = 30);
+			document.getElementById("inputMaxBlank").value = maxBlank = 30;
 		}, 1);
 	}
 	
@@ -247,7 +282,7 @@ function setOriginSubtitleFile(path, text) {
 		}
 	}
 	
-	$("#rangeList .list-body").empty();
+	document.querySelector("#rangeList .list-body").innerHTML = "";
 	for (let j = 0; j < ranges.length; j++) {
 		const range = ranges[j];
 		if (range[1] < range[0] + 10000) {
@@ -258,15 +293,16 @@ function setOriginSubtitleFile(path, text) {
 	}
 }
 function refreshPreview(isTarget=false) {
-	const $preview = isTarget ? $fieldTarget.find(".preview-body") : $fieldOrigin.find(".preview-body");
-	$preview.empty();
-	const $preset = $preview.data("preset");
+	const preview = isTarget ? fieldTarget.querySelector(".preview-body") : fieldOrigin.querySelector(".preview-body");
+	preview.innerHTML = "";
+	const preset = preview.preset;
 	function getLine(item, sync, text) {
-		const $line = $preset.clone().data({ item: item });
-		$line.find(".sync").text(sync);
-		$line.find(".time").text(syncText(sync));
-		$line.find(".text").empty().html(text);
-		return $line;
+		const line = preset.cloneNode(true);
+		line.item = item;
+		line.querySelector(".sync").innerText = sync;
+		line.querySelector(".time").innerText = syncText(sync);
+		line.querySelector(".text").innerHTML = text;
+		return line;
 	}
 	
 	let body = (isTarget ? operation.target : operation.origin).body;
@@ -312,11 +348,11 @@ function refreshPreview(isTarget=false) {
 				item.me = item.ms + 1000;
 				
 				// 줄바꿈, &nbsp; 등 처리
-				const $line = getLine(item, item.start, text.join("").replaceAll("\n", "<br />").replaceAll("&", "&amp;"));
-				item.previewText = $line.text();
+				const line = getLine(item, item.start, text.join("").replaceAll("\n", "<br />").replaceAll("&", "&amp;"));
+				item.previewText = line.innerText;
 				body.push(item);
 				
-				if ($line.find(".text").text().replaceAll("&nbsp;", " ").trim().length) {
+				if (line.querySelector(".text").innerText.replaceAll("&nbsp;", " ").trim().length) {
 					last = item;
 				} else {
 					last = {};
@@ -324,35 +360,35 @@ function refreshPreview(isTarget=false) {
 				
 				// 화면 싱크 강조
 				if (item.syncType) {
-					$line.addClass("type" + item.syncType);
+					line.classList.add("type" + item.syncType);
 				}
 				
 				// 싱크 역전 오류
 				if (item.ms < lastSync) {
-					$line.addClass("error");
+					line.classList.add("error");
 					errCount++;
 				}
 				lastSync = item.ms;
-				$preview.append($line);
+				preview.append(line);
 			}
 			break;
 		}
 		case "srt": {
 			for (let i = 0; i < body.length; i++) {
 				const item = body[i];
-				const $line = getLine(item, item.start, item.text.replaceAll("\n", "<br />"));
-				item.previewText = $line.text();
+				const line = getLine(item, item.start, item.text.replaceAll("\n", "<br />"));
+				item.previewText = line.innerText;
 				
 				// ms 단위 표현
 				item.ms = item.start;
 				item.me = item.end;
 				
 				if (item.ms < lastSync) {
-					$line.addClass("error");
+					line.classList.add("error");
 					errCount++;
 				}
 				lastSync = item.ms;
-				$preview.append($line);
+				preview.append(line);
 			}
 			break;
 		}
@@ -385,16 +421,16 @@ function refreshPreview(isTarget=false) {
 				}
 				
 				// 줄바꿈 처리
-				const $line = getLine(item, item.ms, text.replaceAll("\\N", "<br />"));
-				item.previewText = $line.text();
+				const line = getLine(item, item.ms, text.replaceAll("\\N", "<br />"));
+				item.previewText = line.innerText;
 				
 				// 싱크 역전 오류
 				if (item.start < lastSync) {
-					$line.addClass("error");
+					line.classList.add("error");
 					errCount++;
 				}
 				lastSync = item.start;
-				$preview.append($line);
+				preview.append(line);
 			}
 			break;
 		}
@@ -409,30 +445,30 @@ function refreshPreview(isTarget=false) {
 
 function init(setting) {
 	setting = JSON.parse(setting);
-	$("#chkSaveSkfOrigin").prop("checked", setting.saveSkf.origin);
-	$("#chkSaveSkfTarget").prop("checked", setting.saveSkf.target);
-//	$("#chkTrustKfTarget").prop("checked", setting.saveSkf.withKf);
-	$("#inputSeparator").val(setting.separators);
-	$("#inputMaxBlank").val(isFinite(setting.maxBlank) ? setting.maxBlank : 30);
+	document.getElementById("chkSaveSkfOrigin").checked = setting.saveSkf.origin;
+	document.getElementById("chkSaveSkfTarget").checked = setting.saveSkf.target;
+//	document.getElementById("chkTrustKfTarget").checked = setting.saveSkf.withKf;
+	document.getElementById("inputSeparator").value = setting.separators;
+	document.getElementById("inputMaxBlank").value = (isFinite(setting.maxBlank) ? setting.maxBlank : 30);
 	binder.initOriginFiles(setting.saveSkf.origin);
 }
 function addRange(range=[0,0]) {
-	let body = $("#rangeList .list-body");
-	let item = body.data("preset").clone();
-	item.find("input.start").val(range[0]);
-	item.find("input.end"  ).val(range[1]);
+	let body = document.querySelector("#rangeList .list-body");
+	let item = body.preset.cloneNode(true);
+	item.querySelector("input.start").value = range[0];
+	item.querySelector("input.end"  ).value = range[1];
 	body.append(item);
 }
 function addShift(start=0, shift=0) {
-	let body = $("#shiftList .list-body");
-	let item = body.data("preset").clone();
-	item.find("input.start").val(start);
-	item.find("input.shift").val(shift);
+	let body = document.querySelector("#shiftList .list-body");
+	let item = body.preset.cloneNode(true);
+	item.querySelector("input.start").value = start;
+	item.querySelector("input.shift").value = shift;
 	body.append(item);
 }
 function refreshRangeAfterReadOriginVideoFile(length) {
-	let body = $("#rangeList .list-body");
-	if (body.children().length) {
+	let body = document.querySelector("#rangeList .list-body");
+	if (body.children.length) {
 		// smi 파일로 채워지거나 했으면 건너뛰기
 		return;
 	}
@@ -445,9 +481,8 @@ function calcShift() {
 		let last = -1;
 		let isCorrect = true;
 		let alertNumber = false;
-		$("#rangeList .list-body > div").each((_, el) => {
-			const item = $(el);
-			let start = item.find("input.start").val();
+		[...document.querySelectorAll("#rangeList .list-body > div")].forEach((item) => {
+			let start = item.querySelector("input.start").value;
 			if (isFinite(start)) {
 				start = Number(start);
 			} else {
@@ -457,7 +492,7 @@ function calcShift() {
 			if (start < last) {
 				return isCorrect = false;
 			}
-			let end = item.find("input.end").val();
+			let end = item.querySelector("input.end").value;
 			if (isFinite(end)) {
 				end = Number(end);
 			} else {
@@ -480,22 +515,21 @@ function calcShift() {
 	}
 	const shifts = [];
 	let last = -1;
-	$("#shiftList .list-body > div").each((_, el) => {
-		const item = $(el);
-		const start = item.find("input.start").val();
+	[...document.querySelectorAll("#shiftList .list-body > div")].forEach((item) => {
+		const start = item.querySelector("input.start").value;
 		if (!isFinite(start)) {
 			return;
 		}
 		if (start <= last) {
 			return;
 		}
-		const shift = item.find("input.start").val();
+		const shift = item.querySelector("input.start").value;
 		if (!isFinite(shift)) {
 			return;
 		}
 		shifts.push(Number(start) + ":" + Number(shift));
 	});
-	$("#shiftList .list-body").empty();
+	document.querySelector("#shiftList .list-body").innerHTML = "";
 	binder.calcShift(ranges.join("|"), shifts.join("|"));
 }
 
@@ -506,11 +540,10 @@ function setKfs(strKfs) {
 
 function apply() {
 	const shifts = [];
-	$("#shiftList .list-body > div").each((_, el) => {
-		const item = $(el);
+	[...document.querySelectorAll("#shiftList .list-body > div")].forEach((item) => {
 		shifts.push({
-				start: Number(item.find("input.start").val())
-			,	shift: Number(item.find("input.shift").val())
+				start: Number(item.querySelector("input.start").value)
+			,	shift: Number(item.querySelector("input.shift").value)
 		});
 	});
 	if (shifts.length == 0) {
@@ -518,7 +551,7 @@ function apply() {
 		shifts.push({ start: 0, shift: 0 });
 	}
 	
-	const withKf = kfs.length > 2 && $("#chkTrustKfTarget").prop("checked");
+	const withKf = kfs.length > 2 && document.getElementById("chkTrustKfTarget").checked;
 	
 	function getShiftIndex(sync) {
 		for (let i = 1; i < shifts.length; i++) { // 몇 개 안 되니까 그냥 루프 돌림
@@ -712,7 +745,7 @@ function apply() {
 					,	style: holdInfo.style
 				});
 			}
-			const withCombine = (operation.type == "smi") && !$("#chkCombine").prop("checked");
+			const withCombine = (operation.type == "smi") && !document.getElementById("chkCombine").checked;
 			operation.output = SmiFile.holdsToText(holds, withCombine, withCombine) + assFoot;
 			refreshPreview(true);
 			break;
@@ -754,7 +787,7 @@ function apply() {
 		}
 	}
 	
-	$fieldOrigin.find(".preview-body").scroll();
+	fieldOrigin.querySelector(".preview-body").dispatchEvent(new Event("scroll", { bubbles: true }));
 }
 function save() {
 	if (!operation.output || operation.output.length == 0) {
@@ -770,14 +803,14 @@ function applySave() {
 function beforeExit() {
 	let setting = {
 			saveSkf: {
-					origin: $("#chkSaveSkfOrigin").prop("checked")
-				,	target: $("#chkSaveSkfTarget").prop("checked")
-				,	withKf: $("#chkTrustKfTarget").prop("checked")
+					origin: document.getElementById("chkSaveSkfOrigin").checked
+				,	target: document.getElementById("chkSaveSkfTarget").checked
+				,	withKf: document.getElementById("chkTrustKfTarget").checked
 			}
-		,	separators: $("#inputSeparator").val()
+		,	separators: document.getElementById("inputSeparator").value
 		,	maxBlank: 30
 	};
-	try { setting.maxBlank = Number($("#inputMaxBlank" ).val()); } catch (e) { }
+	try { setting.maxBlank = Number(document.getElementById("inputMaxBlank").value); } catch (e) { }
 	
 	binder.exitAfterSaveSetting(JSON.stringify(setting));
 }

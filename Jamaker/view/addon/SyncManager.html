@@ -46,8 +46,8 @@ ready(() => {
     const TX = (opener.setting.sync.uiWidth  ? opener.setting.sync.uiWidth  : 96);
     const TY = (opener.setting.sync.uiHeight ? opener.setting.sync.uiHeight : 54);
     {
-	    const $styleSize = $("#styleSize");
-	    $styleSize.html($styleSize.html().replaceAll("96px", TX + "px").replaceAll("54px", TY + "px"));
+	    const styleSize = document.getElementById("styleSize");
+	    styleSize.innerHTML = styleSize.innerHTML.replaceAll("96px", TX + "px").replaceAll("54px", TY + "px");
     }
 	
 	{

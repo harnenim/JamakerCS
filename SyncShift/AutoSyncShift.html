@@ -104,7 +104,7 @@ window.main = new WebForm();
 	}
 }
 {
-	main.saveSetting = async function(setting) {
+	main.exitAfterSaveSetting = async function(setting) {
 		// C#에서 진행
 	}
 }
@@ -199,14 +199,6 @@ window.main = new WebForm();
 		if (type % 10 == 0) {
 			// 동영상 혹은 skf 파일
 			setting = { types: [{ description: '동영상 혹은 skf 파일', accept: { 'video/*': ['.avi', '.mkv', '.mp4', '.ts', '.m2ts', '.skf'] } }] };
-		} else {
-			$.ajax({url: "view/LookBack.ass"
-				, dataType: "text"
-				, success: function(text) {
-					main.script("setOriginSubtitleFile", "LookBack.ass", text);
-				}
-			})
-			return;
 		}
 		const fb = await window.showOpenFilePicker(setting);
 		if (fb && fb[0]) {

@@ -17,58 +17,66 @@ windowName = "addon";
 const FILE = "SearchFiles.txt";
 
 ready(() => {
-	const $form = $("form");
-	const $results = $("#results");
-	const $resizer = $("#resizer");
-	const $viewer = $("#viewer");
-	const $inputDir = $("#inputDir");
-	const $dirCurrent = $("#dirCurrent");
-	const $inputQuery = $("#inputQuery");
-	const $dlSubDirs = $("#dlSubDirs");
-	const $dlLastDirs = $("#dlLastDirs");
-	const $dlLastQuerys = $("#dlLastQuerys");
-	const $editor = new SmiEditor();
-	$viewer.append($editor.area);
+	const form = document.getElementsByTagName("form")[0];
+	const results      = document.getElementById("results"     );
+	const resizer      = document.getElementById("resizer"     );
+	const viewer       = document.getElementById("viewer"      );
+	const inputDir     = document.getElementById("inputDir"    );
+	const dirCurrent   = document.getElementById("dirCurrent"  );
+	const inputQuery   = document.getElementById("inputQuery"  );
+	const dlSubDirs    = document.getElementById("dlSubDirs"   );
+	const dlLastDirs   = document.getElementById("dlLastDirs"  );
+	const dlLastQuerys = document.getElementById("dlLastQuerys");
+	const editor = new SmiEditor();
+	viewer.append(editor.area);
 	
 	const smiPath = opener.getCurrentTab().path;
 	if (smiPath) {
 		const dirs = smiPath.replaceAll("/", "\\").split("\\");
-		$dirCurrent.text(dirs.slice(0, dirs.length - 1).join("\\"));
-		$("#labelCurrent input[name=dir]").click();
+		dirCurrent.innerText = dirs.slice(0, dirs.length - 1).join("\\");
+		document.getElementById("labelCurrent").querySelector("input[name=dir]").click();
 	} else {
-		$dirCurrent.text("(없음)");
-		$("#labelCurrent").addClass("disabled");
-		$("#labelCurrent input[name=dir]").attr("disabled", true);
-		$("#labelInput   input[name=dir]").click();
+		dirCurrent.innerText = "(없음)";
+		document.getElementById("labelCurrent").classList.add("disabled");
+		document.getElementById("labelCurrent").querySelector("input[name=dir]").disabled = true;
+		document.getElementById("labelInput").querySelector("input[name=dir]").click();
 	}
 	
 	const lastDirs = [];
 	const lastQuerys = [];
 	// <datalist> 다시 그리기
-	function refreshDatalist($dl, list) {
-		$dl.empty();
+	function refreshDatalist(dl, list) {
+		if (dl.length) dl = dl[0];
+		dl.innerHTML = "";
 		for (let i = 0; i < list.length; i++) {
 			const item = list[i];
-			$dl.append($("<option>").attr({ label: item, value: item }));
+			const option = document.createElement("option");
+			option.label = item;
+			option.value = item;
+			dl.append(option);
 		}
 	}
 	// 항목 입력 시 목록 갱신
-	function updateDatalist($dl, list, item) {
+	function updateDatalist(dl, list, item) {
 		const index = list.indexOf(item);
 		if (index == 0) return;
 		
+		if (dl.length) dl = dl[0];
 		if (index > 0) {
 			list.splice(index, 1);
-			$dl.prepend($dl.children()[index]);
+			dl.prepend(dl.children[index]);
 		} else {
-			$dl.prepend($("<option>").attr({ label: item, value: item }));
+			const option = document.createElement("option");
+			option.label = item;
+			option.value = item;
+			dl.append(option);
 		}
 		list.splice(0, 0, item);
 		if (list.length > 20) {
 			list.length = 20;
 			let last = null;
-			while (last = $dl.children()[20]) {
-				$(last).remove();
+			while (last = dl.children[20]) {
+				last.remove();
 			}
 		}
 	}
@@ -105,65 +113,66 @@ ready(() => {
 				}
 			}
 			
-			refreshDatalist($dlLastDirs, lastDirs);
-			refreshDatalist($dlLastQuerys, lastQuerys);
+			refreshDatalist(dlLastDirs, lastDirs);
+			refreshDatalist(dlLastQuerys, lastQuerys);
 
 			for (; i < lines.length; i++) {
 				const line = lines[i];
 				if (line) {
 					try {
 						ratio = Number(line);
-						$results.css({ height: "calc(" + (100 * ratio) + "% - 32px)" });
-						$viewer.css({ height: "calc(" + (100 * (1 - ratio)) + "% - 32px)" });
+						results.style.height = "calc(" + (100 * ratio) + "% - 32px)";
+						viewer.style.height = "calc(" + (100 * (1 - ratio)) + "% - 32px)";
 					} catch (e) {}
 				} else {
 					break;
 				}
 			}
 			
-			if (lastDirs.length) $("#inputDir").val(lastDirs[0]);
+			if (lastDirs.length) document.getElementById("inputDir").value = lastDirs[0];
 		});
 	}
 	
-	$inputDir.on("input propertychange", () => {
-		const value = $inputDir.val().replaceAll("/", "\\");
+	inputDir.addEventListener("input", () => {
+		const value = inputDir.value.replaceAll("/", "\\");
 		if (value) {
-			$inputDir.attr({ list: "dlSubDirs" });
+			inputDir.list = "dlSubDirs";
 			const index = value.lastIndexOf("\\");
 			if (index > 0) {
 				opener.binder.getSubDirs(value.substring(0, index));
 			} else {
-				$dlSubDirs.empty();
+				dlSubDirs.innerHTML = "";
 			}
 		} else {
 			// 입력된 게 없으면 최근 사용한 목록
-			$inputDir.attr({ list: "dlLastDirs" });
+			inputDir.list = "dlLastDirs";
 		}
-	}).on("focus", () => {
-		$inputDir.parent().find("input[type=radio]").prop("checked", true);
+	});
+	inputDir.addEventListener("focus", () => {
+		inputDir.parentNode.querySelector("input[type=radio]").checked = true;
 	});
 	opener.afterGetSubDirs = function(dirs) {
-		refreshDatalist($dlSubDirs, dirs.split("\n"));
+		refreshDatalist(dlSubDirs, dirs.split("\n"));
 	}
 	
 	let query = "test";
 	let dir = "";
-	$form.on("submit", function() {
-		query = $inputQuery.val();
+	form.addEventListener("submit", (e) => {
+		e.preventDefault();
+		
+		query = inputQuery.value;
 		if (!query) {
 			alert("검색어를 입력해 주세요.");
 			return false;
 		}
-		dir = ($("input[name=dir]:checked").val() == "current") ? $dirCurrent.text() : $inputDir.val();
+		dir = (document.querySelector("input[name=dir]:checked").value == "current") ? dirCurrent.innerText : inputDir.value;
 		
-		updateDatalist($dlLastDirs, lastDirs, dir);
-		updateDatalist($dlLastQuerys, lastQuerys, query);
+		updateDatalist(dlLastDirs, lastDirs, dir);
+		updateDatalist(dlLastQuerys, lastQuerys, query);
 		saveLast();
 		
-		$results.empty();
+		results.innerHTML = "";
 		opener.binder.searchFiles(dir, query);
-		
-		return false;
 	});
 	
 	opener.afterFound = function(name, text) {
@@ -187,24 +196,27 @@ ready(() => {
 			offset += line.length + 1;
 		}
 		
-		$results.append($file);
+		results.append($file[0]);
 	}
 	
-	$results.on("click", "li.line", function() {
-		const $line = $(this);
+	results.addEventListener("click", (e) => {
+		const li = e.target.closest("li.line");
+		if (!li) return;
+		
+		const $line = $(li);
 		const $file = $line.parent().parent();
 		const text = $file.data("text");
 		const line = $line.data("line");
 		const cursor = $line.data("pos");
-		$editor.setText(text, [cursor, cursor + query.length]);
-		$editor.input.focus();
+		editor.setText(text, [cursor, cursor + query.length]);
+		editor.input.focus();
 	});
 	
 	let resizeFrom = null;
-	$resizer.on("mousedown", function(e) {
-		resizeFrom = { y: e.pageY, r: $results.height(), v: $viewer.height() };
+	resizer.addEventListener("mousedown", (e) => {
+		resizeFrom = { y: e.pageY, r: results.offsetHeight, v: viewer.offsetHeight };
 	});
-	$(document).on("mousemove", function(e) {
+	document.addEventListener("mousemove", (e) => {
 		if (!resizeFrom) return;
 		
 		let moved = e.pageY - resizeFrom.y;
@@ -219,25 +231,26 @@ ready(() => {
 			moved = resizeFrom.v - v;
 			r = resizeFrom.r + moved;
 		}
-		$results.height(r);
-		$viewer.height(v);
+		results.style.height = r + "px";
+		viewer .style.height = v + "px";
 		
-	}).on("mouseup", function(e) {
+	});
+	document.addEventListener("mouseup", (e) => {
 		if (!resizeFrom) return;
 		
 		resizeFrom = null;
-		ratio = ($results.height() + 32) / window.innerHeight;
-		$results.css({ height: "calc(" + (100 * ratio) + "% - 32px)" });
-		$viewer.css({ height: "calc(" + (100 * (1 - ratio)) + "% - 32px)" });
+		ratio = (results.offsetHeight + 32) / window.innerHeight;
+		results.style.height = "calc(" + (100 *      ratio ) + "% - 32px)";
+		viewer .style.height = "calc(" + (100 * (1 - ratio)) + "% - 32px)";
 		saveLast();
 	});
 	
 	SmiEditor.ROOT = "../";
 	SmiEditor.setHighlight(opener.setting.highlight, () => {
-		return [$editor];
+		return [editor];
 	});
 	
-	$inputQuery.focus();
+	inputQuery.focus();
 });
 	</script>
 	<style>

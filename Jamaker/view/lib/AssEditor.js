@@ -1,7 +1,7 @@
 window.AssEditor = function(view=null, events=[], frameSyncs=null) {
 	this.view = view ? view : (view = document.createElement("div"));
 	view.classList.add("ass-editor");
-	view.obj = this;
+	eData(view, { editor: this });
 	
 	this.savedSyncs = [];
 	this.setEvents(events, frameSyncs, true);
@@ -12,7 +12,7 @@ window.AssEditor = function(view=null, events=[], frameSyncs=null) {
 		let input = e.target.closest("input");
 		if (!input) input = e.target.closest("textarea");
 		if (input) {
-			input.parentNode.obj.update();
+			eData(input.parentNode).item.update();
 		}
 	});
 	this.view.addEventListener("focus", (e) => {
@@ -28,7 +28,7 @@ window.AssEditor = function(view=null, events=[], frameSyncs=null) {
 		if (btn) {
 			const item = btn.parentNode;
 			confirm("삭제하시겠습니까?", () => {
-				self.removeEvent(item.obj);
+				self.removeEvent(eData(item).item);
 			});
 		}
 	});
@@ -220,7 +220,7 @@ AssEditor.prototype.setSaved = function() {
 AssEditor.Item = function(info) {
 	const view = this.view = document.createElement("div");
 	view.classList.add("item");
-	view.obj = this;
+	eData(view, { item: this });
 	view.append(this.inputStart = document.createElement("input"   )); this.inputStart.type = "number"  ;  this.inputStart.name = "start"     ; this.inputStart.value = info.start;
 	view.append(this.checkStart = document.createElement("input"   )); this.checkStart.type = "checkbox";  this.checkStart.name = "startFrame"; this.checkStart.title = "시작싱크 화면 맞춤"; this.checkStart.checked = info.startFrame;
 	view.append(this.inputEnd   = document.createElement("input"   )); this.inputEnd  .type = "number"  ;  this.inputEnd  .name = "end"       ; this.inputEnd.value = info.end;

@@ -4,7 +4,6 @@
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>ASS 싱크 보정기</title>
-	<script src="lib/jquery-3.2.1.min.js"></script>
 	<script src="lib/webview.js"></script>
 	<script src="lib/SubtitleObject.js"></script>
 	<link rel="stylesheet" type="text/css" href="lib/webview.css" />
@@ -19,9 +18,9 @@ function drop(x, y) {
 }
 
 function setAssFile(name, text) {
-	$labelAss.find("span").text(name);
-	$origin.val(text);
-	$result.val("");
+	labelAss.querySelector("span").innerText = name;
+	origin.value = text;
+	result.value = "";
 	
 	const lines = text.split("\n");
 	let isAPG = false;
@@ -47,8 +46,8 @@ function setAssFile(name, text) {
 	}
 }
 function setVideoFile(name) {
-	$labelVideo.addClass("disabled");
-	$labelVideo.find("span").text(name);
+	labelVideo.classList.add("disabled");
+	labelVideo.querySelector("span").innerText = name;
 	fs = [];
 }
 function setFkfFile(file) {
@@ -88,12 +87,12 @@ function afterLoadFkfFile(buffer) {
 	}
 	HFL = fs[fs.length - 1] / fs.length / 2
 	
-	$labelVideo.removeClass("disabled");
+	labelVideo.classList.remove("disabled");
 }
 
 function optimize() {
-	const origin = $origin.val();
-	if (!origin) {
+	const originScript = origin.value;
+	if (!originScript) {
 		alert("자막 정보가 없습니다.");
 		return;
 	}
@@ -102,7 +101,7 @@ function optimize() {
 		return;
 	}
 	
-	const ass = new AssFile(origin);
+	const ass = new AssFile(originScript);
 	const events = ass.getEvents().body;
 	for (let i = 0; i < events.length; i++) {
 		events[i].optimizeSync();
@@ -147,43 +146,43 @@ function optimize() {
 		return cmp;
 	});
 	
-	const result = ass.toText();
-	$result.val(result);
+	const resultScript = ass.toText();
+	result.value = resultScript;
 }
 
 function save() {
-	const text = $result.val();
+	const text = result.value;
 	if (text) {
-		binder.save($labelAss.find("span").text(), text);
+		binder.save(labelAss.querySelector("span").innerText, text);
 	} else {
 		alert("변환 결과물이 없습니다.");
 	}
 }
 
-let $labelAss = null;
-let $labelVideo = null;
-let $origin = null;
-let $result = null;
+let labelAss = null;
+let labelVideo = null;
+let origin = null;
+let result = null;
 
 ready(() => {
 	document.addEventListener("dragenter", (e) => {
 		e.preventDefault();
 		binder.showDragging();
 	});
-	$("#cover").on("click", () => {
+	document.getElementById("cover").addEventListener("click", () => {
 		binder.hideDragging();
 	});
 	
-	$labelAss = $("#labelAss");
-	$labelVideo = $("#labelVideo");
-	$origin = $("#origin");
-	$result = $("#result");
+	labelAss   = document.getElementById("labelAss"  );
+	labelVideo = document.getElementById("labelVideo");
+	origin     = document.getElementById("origin"    );
+	result     = document.getElementById("result"    );
 	
-	$("#btnOptimize").on("click", () => {
+	document.getElementById("btnOptimize").addEventListener("click", () => {
 		optimize();
 	});
 	
-	$("#btnSave").on("click", () => {
+	document.getElementById("btnSave").addEventListener("click", () => {
 		save();
 	});
 });

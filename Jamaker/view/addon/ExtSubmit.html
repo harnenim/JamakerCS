@@ -4,7 +4,6 @@
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>외부 검색</title>
-	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/popup.js"></script>
 	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
 	<script>
@@ -70,16 +69,19 @@ function convertValue(value) {
 	return value;
 }
 function submit(method, url, values) {
-	const form = $("form");
+	const form = document.getElementsByTagName("form")[0];
 	form.attr({
 			action: url
 		,	method: method
 	});
 	for (let key in values) {
-		let value = convertValue(values[key]);
-		form.append($("<input>").attr({"type": "hidden", "name": key, "value": value}));
+		const input = document.createElement("input");
+		input.type = "hidden";
+		input.name = key;
+		input.value = convertValue(values[key]);
+		form.append(input);
 	}
-	form[0].submit();
+	form.submit();
 }
 	</script>
 	<style>

@@ -4,7 +4,6 @@
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>화면 싱크 매니저 (구버전)</title><!-- 웹샘플에서 작업이 필요할 때를 위해 남겨둠 -->
-	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/SubtitleObject.js"></script>
 	<script src="../lib/popup.js"></script>
 	<script src="../lib/SmiEditor.js"></script>
@@ -168,7 +167,7 @@ function splitOrigin() {
 		const sync = syncs[i];
 		if (sync.end == 0) sync.end = 35999999; // 마지막 싱크는 종료 시간이 없을 수 있음
 		if (sync.startType == 2) {
-			let text = $("<span>").html(sync.lines.join("\\N").replaceAll(/<br>/gi,"\\N")).text().trim();
+			let text = htmlToText(sync.lines.join("\\N").replaceAll(/<br>/gi,"\\N")).trim();
 			if (requiredEnd) { // []
 				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.end   - add) + "," + smi2assTime(sync.end   + add) + ",［）,,0000,0000,0000,,&nbsp;");
 				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.start - add) + "," + smi2assTime(sync.start + add) + ",［）,,0000,0000,0000,," + text);
@@ -188,16 +187,16 @@ function splitOrigin() {
 			
 		} else {
 			if (requiredEnd) { // (]
-				let text = $("<span>").html(sync.lines.join("\\N").replaceAll(/<br>/gi, "\\N")).text().trim();
+				let text = htmlToText(sync.lines.join("\\N").replaceAll(/<br>/gi, "\\N")).trim();
 				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.end - add) + "," + smi2assTime(sync.end + add) + ",［）,,0000,0000,0000,,&nbsp;");
 				requiredEnd = false;
 			}
 		}
 	}
 	
-	$("#originBasicSmi").val(forBasic);
-	$("#originFrameAss").val(forFrameAss.join("\n"));
-	$("#originFrameSmi").val(forFrameSmi.join("\n"));
+	document.getElementById("originBasicSmi").value = forBasic;
+	document.getElementById("originFrameAss").value = forFrameAss.join("\n");
+	document.getElementById("originFrameSmi").value = forFrameSmi.join("\n");
 	
 	return true;
 }
@@ -206,7 +205,7 @@ function frameAssToSmi() {
 	// Aegisub용으로 반프레임 보정
 	const add = Math.floor((Subtitle.video.FL / 2) + 0.5);
 	
-	const origLines = $("#originFrameAss").val().split("\n").sort(); // 순서 섞어서 작업한 것 시간 순 정렬
+	const origLines = document.getElementById("originFrameAss").value.split("\n").sort(); // 순서 섞어서 작업한 것 시간 순 정렬
 	let last = 0;
 	const lines = [];
 	for (let i = 0; i < origLines.length; i++) {
@@ -237,17 +236,17 @@ function frameAssToSmi() {
 	if (last) {
 		lines.push("&nbsp;");
 	}
-	$("#targetFrameSmi").val(lines.join("\n"));
+	document.getElementById("targetFrameSmi").value = lines.join("\n");
 	
 	checkDiff();
 }
 
 function joinFrame() {
-	const resultFrameSmi = $("#resultFrameSmi");
+	const resultFrameSmi = document.getElementById("resultFrameSmi");
 	const checked = checkDiff();
 	if (!checked) {
 		alert("오차가 큽니다");
-		resultFrameSmi.val("");
+		resultFrameSmi.value = "";
 		return;
 	}
 
@@ -270,23 +269,22 @@ function joinFrame() {
 		}
 	}
 	
-	resultFrameSmi.val(lines.join("\n"));
+	resultFrameSmi.value = lines.join("\n");
 }
 
 function checkDiff() {
-	const originFrameSmi = $("#originFrameSmi");
-	const targetFrameSmi = $("#targetFrameSmi");
+	const originFrameSmi = document.getElementById("originFrameSmi");
+	const targetFrameSmi = document.getElementById("targetFrameSmi");
 	
-	const originLines = originFrameSmi.val().split("\n");
-	const targetLines = targetFrameSmi.val().split("\n");
+	const originLines = originFrameSmi.value.split("\n");
+	const targetLines = targetFrameSmi.value.split("\n");
 	
 	const height = Math.max(originLines.length, targetLines.length) * 14 + 4;
-	originFrameSmi.css({ height: height });
-	targetFrameSmi.css({ height: height });
+	originFrameSmi.style.height = targetFrameSmi.style.height = height + "px";
 
 	if (originLines.length != targetLines.length) {
 		if (targetLines[0].length > 0) {
-			$("#checker").empty(); // 오차 경고는 없애줌
+			document.getElementById("checker").innerHTML = ""; // 오차 경고는 없애줌
 			alert("줄 수가 안 맞습니다.");
 		}
 		return false;
@@ -305,12 +303,13 @@ function checkDiff() {
 		if (sync) {
 			targetLines[i] = sync;
 		} else {
-			targetLines[i] = $("<span>").html(line).text().trim();
+			targetLines[i] = htmlToText(line).trim();
 		}
 	}
 	
 	let joinnable = true;
-	const areaChecker = $("#checker").empty();
+	const checker = document.getElementById("checker");
+	checker.innerHTML = "";
 	if (targetLines.length > 1) {
 		for (let i = 0; i < Math.min(originLines.length, targetLines.length); i++) {
 			if (isFinite(originLines[i]) && isFinite(targetLines[i])) {
@@ -322,14 +321,14 @@ function checkDiff() {
 					}
 					// 싱크 오차 과다 경고
 					const alpha = Math.min(0.5, ((dist - 100) / 1000));
-					areaChecker.append($("<div>").css({
-							position: "absolute"
-						,	top: i * 14
-						,	left: 0
-						,	width: "100%"
-						,	height: "14px"
-						,	background: "rgba(255, 0, 0, " + alpha + ")"
-					}));
+					const div = document.createElement("div");
+					div.style.position   = "absolute";
+					div.style.top        = (i * 14) + "px";
+					div.style.left       = 0;
+					div.style.width      = "100%";
+					div.style.height     = "14px";
+					div.style.background = "rgba(255, 0, 0, " + alpha + ")";
+					checker.append(div);
 				}
 				// 일반 싱크와 충돌 검사
 				let count = 0;
@@ -339,14 +338,14 @@ function checkDiff() {
 						if ((originLines[i] < line.SYNC && line.SYNC < targetLines[i])
 						 || (targetLines[i] < line.SYNC && line.SYNC < originLines[i])) {
 							joinnable = false;
-							areaChecker.append($("<div>").css({
-									position: "absolute"
-								,	top: i * 14
-								,	left: 0
-								,	width: "100%"
-								,	height: "14px"
-								,	background: "rgba(255, 0, 0, 1)"
-							}));
+							const div = document.createElement("div");
+							div.style.position   = "absolute";
+							div.style.top        = (i * 14) + "px";
+							div.style.left       = 0;
+							div.style.width      = "100%";
+							div.style.height     = "14px";
+							div.style.background = "rgba(255, 0, 0, 1)";
+							checker.append(div);
 							if (count++ < 5) {
 								alert("기존 싱크(" + originLines[i] + ")와 바꿀 싱크(" + targetLines[i] + ") 사이에\n다른 일반 싱크가 있습니다.");
 							} else {
@@ -358,16 +357,16 @@ function checkDiff() {
 				}
 				
 			} else {
-				if ($("<span>").html(originLines[i]).text().trim() != targetLines[i]) {
+				if (htmlToText(originLines[i]).trim() != targetLines[i]) {
 					// 텍스트 오차 경고
-					areaChecker.append($("<div>").css({
-							position: "absolute"
-						,	top: i * 14
-						,	left: 0
-						,	width: "100%"
-						,	height: "14px"
-						,	background: "rgba(255, 255, 0, 0.3)"
-					}));
+					const div = document.createElement("div");
+					div.style.position   = "absolute";
+					div.style.top        = (i * 14) + "px";
+					div.style.left       = 0;
+					div.style.width      = "100%";
+					div.style.height     = "14px";
+					div.style.background = "rgba(255, 255, 0, 0.3)";
+					checker.append(div);
 				}
 			}
 		}
@@ -377,8 +376,8 @@ function checkDiff() {
 }
 
 function apply() {
-	const basicText = $("#originBasicSmi").val();
-	const frameText = $("#resultFrameSmi").val();
+	const basicText = document.getElementById("originBasicSmi").value;
+	const frameText = document.getElementById("resultFrameSmi").value;
 	let lines = [];
 	
 	if (frameText.length == 0) {
@@ -512,28 +511,32 @@ ready(() => {
 	}
 	
 	if (splitOrigin()) {
-		$("#btnFrameAssToSmi").on("click", frameAssToSmi);
+		document.getElementById("btnFrameAssToSmi").addEventListener("click", frameAssToSmi);
 		
-		$("#btnJoinFrame").on("click", joinFrame);
+		document.getElementById("btnJoinFrame").addEventListener("click", joinFrame);
 		
 		// 마지막 입력 1초 후 체크
 		let checkOnChange = null;
-		$("#originFrameSmi, #targetFrameSmi").on("input propertychange", function() {
-			const current = checkOnChange = setTimeout(() => {
-				if (checkOnChange == current) {
-					checkDiff();
-				}
-			}, 1000);
+		[document.getElementById("originFrameSmi"), document.getElementById("targetFrameSmi")].forEach((el) => {
+			el.addEventListener("input", () => {
+				const current = checkOnChange = setTimeout(() => {
+					if (checkOnChange == current) {
+						checkDiff();
+					}
+				}, 1000);
+			});
 		});
 		checkDiff();
 		
-		$("#btnApply").on("click", apply);
+		document.getElementById("btnApply").addEventListener("click", apply);
 		
-		const originFrameAss = $("#originFrameAss");
-		const text = originFrameAss.val();
+		const originFrameAss = document.getElementById("originFrameAss");
+		const text = originFrameAss.value;
 		setTimeout(() => { // textarea 렌더링 후 confirm 보여주기 위한 딜레이
-			originFrameAss[0].select();
-			originFrameAss.focus().scrollTop(0).scrollLeft(0);
+			originFrameAss.select();
+			originFrameAss.focus();
+			originFrameAss.scrollTop = 0;
+			originFrameAss.scrollLeft = 0;
 			confirm("작업할 내역을 복사하시겠습니까?\nAegisub에서 작업이 필요합니다.", () => {
 				if (opener && opener.binder && !opener.binder._) {
 					// C# 프로그램에서 호출

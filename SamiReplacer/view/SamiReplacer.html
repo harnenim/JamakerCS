@@ -4,7 +4,6 @@
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>SAMI 자막 내용 일괄 치환</title>
-	<script src="lib/jquery-3.2.1.min.js"></script>
 	<script src="lib/webview.js"></script>
 	<script src="lib/ListView.js"></script>
 	<script src="lib/SubtitleObject.js"></script>
@@ -17,8 +16,8 @@ let listFiles;
 function init(jsonSetting) {
 	try {
 		const setting = JSON.parse(jsonSetting);
-		$("#vFrom").val(setting.from);
-		$("#vTo"  ).val(setting.to  );
+		document.getElementById("vFrom").value = setting.from;
+		document.getElementById("vTo"  ).value = setting.to  ;
 	} catch (e) {
 		alert("설정 파일이 잘못됐습니다.");
 	}
@@ -35,16 +34,20 @@ function addFile(file) {
 }
 
 function selectView(index) {
-	$(".view").hide();
-	$(".view:eq(" + index + ")").show();
+	[...document.getElementsByClassName("view")].forEach((view, i) => {
+		view.style.display = (i == index) ? "block" : "none";
+	})
 }
 function showPreview(source, replaced) {
 	selectView(1);
-	$("#view1left" ).html(source  .replaceAll("\n", "<br />"));
-	$("#view1right").html(replaced.replaceAll("\n", "<br />"));
+	document.getElementById("view1left" ).innerHTML = (source  .replaceAll("\n", "<br />"));
+	document.getElementById("view1right").innerHTML = (replaced.replaceAll("\n", "<br />"));
 }
 function beforeExit() {
-	binder.exitAfterSaveSetting(JSON.stringify({ from: $("#vFrom").val(), to: $("#vTo").val() }));
+	binder.exitAfterSaveSetting(JSON.stringify({
+			from: document.getElementById("vFrom").value
+		,	to  : document.getElementById("vTo"  ).value
+	}));
 }
 
 let originRange = null;
@@ -140,20 +143,20 @@ function replace(index, text) {
 }
 
 ready(() => {
-	listFiles = new ListView($("#listFiles"));
+	listFiles = new ListView(document.getElementById("listFiles"));
 	listFiles.run = function(item) {
-		const from = $("#vFrom").val();
+		const from = document.getElementById("vFrom").value;
 		if (from.length == 0) {
 			alert("변환할 내용이 없습니다.");
 			return;
 		}
-		const to = $("#vTo").val();
+		const to = document.getElementById("vTo").value;
 		originRange = new SmiFile(from).body;
 		targetRange = new SmiFile(to  ).body;
 		binder.compare(item.value);
 	}
 	
-	$("#btnReplace").on("click", function() {
+	document.getElementById("btnReplace").addEventListener("click", function() {
 		const files = [];
 		for (let i = 0; i < listFiles.list.length; i++) {
 			files.push(listFiles.list[i].value);
@@ -162,12 +165,12 @@ ready(() => {
 			alert("변환할 파일이 없습니다.");
 			return;
 		}
-		const from = $("#vFrom").val();
+		const from = document.getElementById("vFrom").value;
 		if (from.length == 0) {
 			alert("변환할 내용이 없습니다.");
 			return;
 		}
-		const to = $("#vTo").val();
+		const to = document.getElementById("vTo").value;
 		originRange = new SmiFile(from).body;
 		targetRange = new SmiFile(to  ).body;
 		hasNewFrameSync = false;
@@ -202,12 +205,14 @@ ready(() => {
 		e.preventDefault();
 		binder.showDragging();
 	});
-	$("#cover").on("click", function(e) {
+	document.getElementById("cover").addEventListener("click", function(e) {
 		binder.hideDragging();
 	});
 	
-	$("#view1left, #view1right").on("click", function() {
-		selectView(0);
+	[document.getElementById("view1left"), document.getElementById("view1right")].forEach((el) => {
+		el.addEventListener("click", () => {
+			selectView(0);
+		});
 	});
 	selectView(0);
 });
