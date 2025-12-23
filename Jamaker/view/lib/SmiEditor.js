@@ -355,7 +355,7 @@ SmiEditor.setSetting = (setting) => {
 	}
 	SmiEditor.scrollShow = setting.scrollShow;
 	
-	if (window.AutoComplete) { // AutoComplete 라이브러리 가져왔을 때만 생성
+	if (window.AutoCompleteTextarea) { // AutoComplete 라이브러리 가져왔을 때만 생성
 		for (let key in SmiEditor.autoComplete) {
 			delete SmiEditor.autoComplete[key];
 		}
