@@ -1,3 +1,5 @@
+import "./SubtitleObject.js";
+
 window.Combine = {
 	css: 'font-family: 맑은 고딕;'
 ,	defaultSize: 18 // TODO: 설정에서 바뀌도록... 하려면 서브 프로그램에서도 설정을 불러와야 하는데...

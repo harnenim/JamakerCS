@@ -1,3 +1,11 @@
+{
+	const src = document.currentScript.src;
+	const link = document.createElement("link");
+	link.rel = "stylesheet";
+	link.href = src.substring(0, src.length - 2) + "css";
+	document.head.append(link);
+}
+
 document.addEventListener("keydown", function(e) {
 	switch (e.key) {
 		case "Escape": {

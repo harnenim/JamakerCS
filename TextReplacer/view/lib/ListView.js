@@ -1,4 +1,12 @@
-﻿window.ListView = function(div) {
+﻿{
+	const src = document.currentScript.src;
+	const link = document.createElement("link");
+	link.rel = "stylesheet";
+	link.href = src.substring(0, src.length - 2) + "css";
+	document.head.append(link);
+}
+
+window.ListView = function(div) {
 	const self = this;
 	
 	this.area = div.length ? div[0] : div; // jQuery일 경우 0번 객체 선택

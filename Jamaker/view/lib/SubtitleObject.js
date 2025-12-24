@@ -531,25 +531,25 @@ Typing.prototype.typeKeyboard = function(c) {
 			
 			// 앞 글자 종성을 초성으로 가져오기
 			switch ((this.typing.charCodeAt() - 44032/*'가'*/) % 28) {
-				case 00/*가-가*/: break;
-				case 01/*각-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 01); this.typing = String.fromCharCode(44032 + Typing.nCho('ㄱ') * 588 + (c.charCodeAt() - 12623) * 28); return;
-				case 02/*갂-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 02); this.typing = String.fromCharCode(44032 + Typing.nCho('ㄲ') * 588 + (c.charCodeAt() - 12623) * 28); return;
-				case 03/*갃-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 02); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅅ') * 588 + (c.charCodeAt() - 12623) * 28); return;
-				case 04/*간-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 04); this.typing = String.fromCharCode(44032 + Typing.nCho('ㄴ') * 588 + (c.charCodeAt() - 12623) * 28); return;
-				case 05/*갅-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 01); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅈ') * 588 + (c.charCodeAt() - 12623) * 28); return;
-				case 06/*갆-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 02); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅎ') * 588 + (c.charCodeAt() - 12623) * 28); return;
-				case 07/*갇-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 07); this.typing = String.fromCharCode(44032 + Typing.nCho('ㄷ') * 588 + (c.charCodeAt() - 12623) * 28); return;
-				case 08/*갈-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 08); this.typing = String.fromCharCode(44032 + Typing.nCho('ㄹ') * 588 + (c.charCodeAt() - 12623) * 28); return;
-				case 09/*갉-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 01); this.typing = String.fromCharCode(44032 + Typing.nCho('ㄱ') * 588 + (c.charCodeAt() - 12623) * 28); return;
-				case 10/*갊-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 02); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅁ') * 588 + (c.charCodeAt() - 12623) * 28); return;
-				case 11/*갋-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 03); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅂ') * 588 + (c.charCodeAt() - 12623) * 28); return;
-				case 12/*갌-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 04); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅅ') * 588 + (c.charCodeAt() - 12623) * 28); return;
-				case 13/*갍-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 05); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅌ') * 588 + (c.charCodeAt() - 12623) * 28); return;
-				case 14/*갎-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 06); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅍ') * 588 + (c.charCodeAt() - 12623) * 28); return;
-				case 15/*갏-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 07); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅎ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case  0/*가-가*/: break;
+				case  1/*각-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  1); this.typing = String.fromCharCode(44032 + Typing.nCho('ㄱ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case  2/*갂-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  2); this.typing = String.fromCharCode(44032 + Typing.nCho('ㄲ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case  3/*갃-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  2); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅅ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case  4/*간-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  4); this.typing = String.fromCharCode(44032 + Typing.nCho('ㄴ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case  5/*갅-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  1); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅈ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case  6/*갆-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  2); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅎ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case  7/*갇-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  7); this.typing = String.fromCharCode(44032 + Typing.nCho('ㄷ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case  8/*갈-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  8); this.typing = String.fromCharCode(44032 + Typing.nCho('ㄹ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case  9/*갉-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  1); this.typing = String.fromCharCode(44032 + Typing.nCho('ㄱ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case 10/*갊-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  2); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅁ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case 11/*갋-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  3); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅂ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case 12/*갌-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  4); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅅ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case 13/*갍-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  5); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅌ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case 14/*갎-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  6); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅍ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case 15/*갏-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  7); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅎ') * 588 + (c.charCodeAt() - 12623) * 28); return;
 				case 16/*감-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 16); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅁ') * 588 + (c.charCodeAt() - 12623) * 28); return;
 				case 17/*갑-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 17); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅂ') * 588 + (c.charCodeAt() - 12623) * 28); return;
-				case 18/*값-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 01); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅅ') * 588 + (c.charCodeAt() - 12623) * 28); return;
+				case 18/*값-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() -  1); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅅ') * 588 + (c.charCodeAt() - 12623) * 28); return;
 				case 19/*갓-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 19); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅅ') * 588 + (c.charCodeAt() - 12623) * 28); return;
 				case 20/*갔-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 20); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅆ') * 588 + (c.charCodeAt() - 12623) * 28); return;
 				case 21/*강-가*/: this.typed += String.fromCharCode(this.typing.charCodeAt() - 21); this.typing = String.fromCharCode(44032 + Typing.nCho('ㅇ') * 588 + (c.charCodeAt() - 12623) * 28); return;
@@ -631,11 +631,11 @@ window.Subtitle = {
 	}
 ,	_tmp: document.createElement("span")
 };
-function htmlToText(html) {
+window.htmlToText = function(html) {
 	Subtitle._tmp.innerHTML = html;
 	return Subtitle._tmp.innerText;
 }
-function textToHtml(text) {
+window.textToHtml = function(text) {
 	Subtitle._tmp.innerText = text;
 	return Subtitle._tmp.innerHTML;
 }
@@ -1082,7 +1082,7 @@ AssEvent.fromAssTime = (assTime, toFrameSync=false) => {
 	}
 	return time;
 }
-function intPadding(value, length = 2) {
+window.intPadding = function(value, length = 2) {
 	value = "" + value;
 	while (value.length < length) {
 		value = "0" + value;
@@ -2228,7 +2228,7 @@ Smi.prototype.isEmpty = function() {
 	return (this.text.replaceAll("&nbsp;", "").trim().length == 0);
 }
 
-function sToAttrColor(soColor) {
+window.sToAttrColor = function(soColor) {
 	if (typeof soColor != 'string') {
 		return "FFFFFF";
 	}
@@ -4047,7 +4047,7 @@ SmiFile.prototype.fromSyncs = function(syncs) {
 
 // DefaultStyle는 상수
 // Subtitle.DefaultStyle는 변수
-const DefaultStyle = {
+window.DefaultStyle = {
 		Fontname: ""
 	,	Fontsize: 80
 	,	PrimaryColour  : "#FFFFFF"

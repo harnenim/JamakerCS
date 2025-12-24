@@ -6,16 +6,11 @@
 	<title>겹치는 싱크 결합</title>
 	<script src="../lib/popup.js"></script>
 	<script src="../lib/setting.js"></script>
-	<script src="../lib/AutoCompleteTextarea.js"></script>
-	<script src="../lib/SubtitleObject.js"></script>
-	<script src="../lib/Combine.js"></script>
-	<script src="../lib/History.js"></script>
-	<script src="../lib/SmiEditor.js"></script>
-	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
-	<link rel="stylesheet" type="text/css" href="../lib/AutoCompleteTextarea.css" />
+	<script src="../lib/Combine.js" type="module"></script>
+	<script src="../lib/SmiEditor.js" type="module"></script>
 	<script>
 windowName = "addon";
-if (LOG == undefined) {
+if (!window.LOG) {
 	LOG = false;
 }
 

@@ -4,12 +4,9 @@
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>니코동 효과</title>
-	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/popup.js"></script>
 	<script src="../lib/setting.js"></script>
-	<script src="../lib/SubtitleObject.js"></script>
-	<script src="../lib/SmiEditor.js"></script>
-	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
+	<script src="../lib/SmiEditor.js" type="module"></script>
 	<style>
 body > * {
 	position: absolute;
@@ -36,22 +33,26 @@ ready(() => {
 let style = null;
 function setSetting(setting) {
 	if (style == null) {
-		$("head").append(style = $("<style>"));
+		document.head.append(style = document.createElement("style"));
 	}
-	style.html("#preview {\n" + setting.viewer.css + "}");
+	style.innerHTML = ("#preview {\n" + setting.viewer.css + "}");
 }
 
 function getWidth(smi, css) {
 	if (!css) {
 		// 가능하면 미리보기 폰트 설정을 따라감
 		//css = defaultCss;
-		css = { font: $("#preview").css("font") };
+		css = { font: getComputedStyle(document.getElementById("preview")).font };
 	}
 	// RUBY태그 문법이 미묘하게 달라서 가공 필요
 	smi = smi.replaceAll("<RP", "<!--RP").replaceAll("</RP>", "</RP-->");
-	const checker = $("<span>").css(css).html(smi);
-	$("body").append(checker);
-	const width = checker.width();
+	const checker = document.createElement("span");
+	for (let key in css) {
+		checker.style[key] = css[key];
+	}
+	checker.innerHTML = smi;
+	document.body.append(checker);
+	const width = checker.cliendWidth;
 	checker.remove();
 	return width;
 }
@@ -161,27 +162,31 @@ input[type=number] {
 	</style>
 	<script>
 ready(() => {
-	const list = $("#list");
-	$("#addLine").on("click", function() {
-		list.append(
-			$("<div>").addClass("line")
-				.append($("<input>" ).attr("type", "number").addClass("line" ).val("1"))
-				.append($("<input>" ).attr("type", "number").addClass("start").val("1000"))
-				.append($("<input>" ).attr("type", "number").addClass("end"  ).val("2000"))
-				.append($("<input>" ).attr("type", "text"  ).addClass("color").val("#ffffff"))
-				.append($("<input>" ).attr("type", "text"  ).addClass("text" ))
-				.append($("<button>").attr("type", "button").addClass("removeLine").text("✕"))
-		);
+	const list = document.getElementById("list");
+	document.getElementById("addLine").addEventListener("click", () => {
+		const line = document.createElement("div");
+		line.classList.add("line");
+		let el;
+		line.append(el = document.createElement("input" )); el.type = "number"; el.classList.add("line" ); el.value = 1;
+		line.append(el = document.createElement("input" )); el.type = "number"; el.classList.add("start"); el.value = 1000;
+		line.append(el = document.createElement("input" )); el.type = "number"; el.classList.add("end"  ); el.value = 2000;
+		line.append(el = document.createElement("input" )); el.type = "text"  ; el.classList.add("color"); el.value = "#ffffff";
+		line.append(el = document.createElement("input" )); el.type = "text"  ; el.classList.add("text" );
+		line.append(el = document.createElement("button")); el.type = "button"; el.classList.add("removeLine"); el.innerText = "✕";
+		list.append(line);
 	});
-	list.on("click", ".removeLine", function() {
-		const line = $(this).parent();
-		confirm("삭제하시겠습니까?", () => {
-			line.remove();
-		});
+	list.addEventListener("click", (e) => {
+		const btn = e.target.closest(".removeLine");
+		if (btn) {
+			const line = btn.parentNode;
+			confirm("삭제하시겠습니까?", () => {
+				line.remove();
+			});
+		}
 	});
 	
-	$("#btnNico").on("click", function() {
-		const width = Number($("#width input").val());
+	document.getElementById("btnNico").addEventListener("click", () => {
+		const width = Number(document.getElementById("width").querySelector("input").value);
 		let emptyLine = "";
 		for (let i = 0; i < width; i++) { emptyLine += " "; }
 		const targetWidth = getWidth(nbsp(emptyLine));
@@ -189,14 +194,13 @@ ready(() => {
 		const requiredSyncs = {};
 		let lineCount = 0;
 		const items = [];
-		list.children().each((_, el) => {
-			const line = $(el);
+		[...list.children].forEach((line) => {
 			const item = {
-					line : Number(line.find(".line" ).val()) - 1
-				,	start: Number(line.find(".start").val())
-				,	end  : Number(line.find(".end"  ).val())
-				,	color:        line.find(".color").val()
-				,	text :        line.find(".text" ).val()
+					line : Number(line.querySelector(".line" ).value) - 1
+				,	start: Number(line.querySelector(".start").value)
+				,	end  : Number(line.querySelector(".end"  ).value)
+				,	color:        line.querySelector(".color").value
+				,	text :        line.querySelector(".text" ).value
 				,	skips: []
 				,	syncs: []
 			};
@@ -497,7 +501,7 @@ ready(() => {
 			previewLines.push(text);
 		}
 		
-		$("#output").val(result.join("\n"));
+		document.getElementById("output").value = result.join("\n");
 		
 		// preview 돌리기
 		for (let i = 0; i < previewLines.length; i++) {
@@ -554,13 +558,13 @@ function setPreview(list) {
 		clearInterval(refreshPreview);
 	}
 	
-	const preview = $("#preview");
+	const preview = document.getElementById("preview");
 	let i = 0;
 	refreshPreview = setInterval(() => {
 		while (i >= list.length) {
 			i -= list.length;
 		}
-		preview.html(list[i++]);
+		preview.innerHTML = (list[i++]);
 	}, FL);
 }
 	</script>

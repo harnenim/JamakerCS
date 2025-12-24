@@ -171,13 +171,11 @@ window.eData = (el=null, key=null, value=null) => {
 }
 
 ready(() => {
-	console.log(1);
 	if (loadAddonSetting) {
 		loadAddonSetting(KANJI_FILE, (text) => {
 			afterLoadKanji(savedKanjiList = text);
 		});
 	}
-	console.log(2);
 	
 	const inputLyrics = document.getElementById("inputLyrics");
 	const inputDivider = document.getElementById("inputDivider");
@@ -206,7 +204,6 @@ ready(() => {
 	const formKanji = document.getElementById("formKanji");
 	const inputKanji = document.getElementById("inputKanji"); // 첫 줄은 기본값 버전이므로 제외
 	const btnApplyKanji = document.getElementById("btnApplyKanji");
-	console.log(3);
 	
 	const lefts = [	null
 		,	"  30%"
@@ -227,7 +224,7 @@ ready(() => {
 		const btn = e.target.closest(".button.active");
 		if (!btn) return;
 		
-		const newStep = $(btn).data("step");
+		const newStep = Number(btn.dataset.step);
 		if (newStep > step && !validates[step]()) {
 			alert("입력값이 불완전합니다.");
 			if (step == 3) {
@@ -237,12 +234,34 @@ ready(() => {
 		}
 		step = newStep;
 		
-		$("#total").css("left", lefts[step]).find(".button").removeClass("hide").removeClass("active");
-		$("input, textarea, button").attr("tabindex", -1);
-		$("#page" + step).find(".button").addClass("hide");
-		$("#page" + step).find("input, textarea, button").attr("tabindex", "");
-		$("#page" + (step - 1)).find(".button").addClass("active");
-		$("#page" + (step + 1)).find(".button").addClass("active");
+		{	const total = document.getElementById("total");
+			total.style.left = lefts[step];
+			[...total.querySelectorAll(".button")].forEach((el) => {
+				el.classList.remove("hide");
+				el.classList.remove("active");
+			});
+		}
+		[...document.getElementsByTagName("input")]
+		.concat([...document.getElementsByTagName("textarea")])
+		.concat([...document.getElementsByTagName("button")]).forEach((el) => {
+			el.tabIndex = -1;
+		});
+		{	const page = document.getElementById("page" + step);
+			page.querySelectorAll(".button").forEach((el) => {
+				el.classList.add("hide");
+			});
+			[...page.getElementsByTagName("input")]
+			.concat([...page.getElementsByTagName("textarea")])
+			.concat([...page.getElementsByTagName("button")]).forEach((el) => {
+				el.tabIndex = "";
+			});
+		}
+		document.querySelectorAll(`#page${step-1} .button`).forEach((el) => {
+			el.classList.add("active");
+		});
+		document.querySelectorAll(`#page${step+1} .button`).forEach((el) => {
+			el.classList.add("active");
+		});
 		if (runs[step]) runs[step]();
 	});
 	
@@ -347,7 +366,7 @@ ready(() => {
 			const orig = inputOrig.value.trim().split("\n");
 			const read = inputRead.value.trim().split("\n");
 			const tran = inputTran.value.trim().split("\n");
-			
+
 			{	// Step 1 역방향 적용
 				const lines = [];
 				for (let i = 0; i < orig.length; i++) {
@@ -376,14 +395,18 @@ ready(() => {
 			}
 			
 			{	// Step 3 비우고 재생성
-				const $area = $("#page3 > div:first-child").empty();
+				const area = document.getElementById("page3").children[0];
+				area.innerHTML = "";
 				for (let i = 0; i < orig.length; i++) {
 					const o = orig[i];
 					const r = read[i];
 					const t = tran[i];
-					const $line = $("<div>").addClass("line").addClass("line-"+i).data("line", i);
-					refreshLine($line, o, r, t);
-					$area.append($line);
+					const line = document.createElement("div");
+					line.classList.add("line");
+					line.classList.add(`line-${i}`);
+					eData(line, { line: i });
+					refreshLine(line, o, r, t);
+					area.append(line);
 				}
 			}
 		}
@@ -410,10 +433,10 @@ ready(() => {
 		})
 	}
 	
-	function refreshLine($line, o, r, t) {
+	function refreshLine(line, o, r, t) {
 		let sumO = 0;
 		let sumR = 0;
-		$line.empty();
+		line.innerHTML = "";
 		
 		// 최종 결과물: [[문자,모라(,입력란)],[문자,모라(,입력란)], ...]
 		// ort: 1-원문, 2-원문/번역, 3-원문/독음/번역
@@ -435,13 +458,17 @@ ready(() => {
 					oLine.append(input);
 				}
 			}
-			$line.data("oc", oc).data("rc", oc).append(oLine);
+			eData(line, { oc: oc, rc: oc });
+			line.append(oLine);
 			
-			$line.data("tc", t);
+			eData(line, { tc: t });
 			if (r == t) {
-				$line.data("ort", 1);
+				eData(line, { ort: 1 });
 			} else {
-				$line.data("ort", 2).append($("<p>").text(t));
+				eData(line, { ort: 2 });
+				const p = document.createElement("p");
+				p.innerText = t;
+				line.append(p);
 			}
 			
 		} else {
@@ -552,30 +579,56 @@ ready(() => {
 					}
 				}
 				
-				const $tr0 = $("<tr>"), $tr1 = $("<tr>");
+				const tr0 = document.createElement("tr");
+				const tr1 = document.createElement("tr");
 				for (let j = 0; j < oc.length; j++) {
 					let c = oc[j][0];
 					if (typeof(c) != "string") {
 						c = "<ruby>"+c[0]+"<rt>"+c[1]+"</rt></ruby>";
 					}
-					$tr0.append($("<td>").append(c));
+					{	const td = document.createElement("td");
+						td.innerHTML = c;
+						tr0.append(td);
+					}
+					const len = oc[j][1];
 					if (oc[j][2]) { // 음절 입력
-						$tr1.append($("<td>").append($("<input type='text'>").val(oc[j][1])));
+						const td = document.createElement("td");
+						const input = document.createElement("input");
+						input.type = "text";
+						input.value = len;
+						td.append(input);
+						tr1.append(td);
 					} else {
-						const len = oc[j][1];
-						$tr1.append($("<td>").text(len>1 ? len : len==1 ? "-" : " ").append($("<input type='hidden'>").val(len)));
+						const td = document.createElement("td");
+						td.innerText = ((len > 1) ? len : (len == 1 ? "-" : " "));
+						const input = document.createElement("input");
+						input.type = "hidden";
+						input.value = len;
+						td.append(input);
+						tr1.append(td);
 					}
 					sumO += oc[j][1];
 				}
-				$tr0.append($("<td rowspan='2' class='sum'>").text(sumO));
+				{	const td = document.createElement("td");
+					td.rowspan = 2;
+					td.classList.add("sum");
+					td.innerText = sumO;
+					tr0.append(td);
+				}
 				
-				$line.data("oc", oc).append($("<table>").append($tr0).append($tr1));
+				eData(line, { oc: oc });
+				{	const table = document.createElement("table");
+					table.append(tr0);
+					table.append(tr1);
+					line.append(table);
+				}
 			}
 			
 			{	// 읽기
 				const rc = [];
-			
-				const $tr0 = $("<tr>"), $tr1 = $("<tr>");
+				
+				const tr0 = document.createElement("tr");
+				const tr1 = document.createElement("tr");
 				
 				const 가 = '가'.charCodeAt();
 				const 아 = '아'.charCodeAt();
@@ -586,7 +639,10 @@ ready(() => {
 				for (let j = 0; j < r.length; j++) {
 					let c = r[j];
 					let cc = c.charCodeAt();
-					$tr0.append($("<td>").text(c));
+					{	const td = document.createElement("td");
+						td.innerHTML = c;
+						tr0.append(td);
+					}
 					if (가<=cc && cc<=힣) {
 						const batchim = (cc-가) % 28;
 						if (아<=cc && cc<=잏) {
@@ -600,13 +656,26 @@ ready(() => {
 									len = (lm == cm) ? 1 : 2; // 앞 글자와 모음 같을 경우: 1일 가능성이 큼
 								}
 								rc.push([c, len]);
-								$tr1.append($("<td>").append($("<input type='text'>").val(len)));
+								{	const td = document.createElement("td");
+									const input = document.createElement("input");
+									input.type = "text";
+									input.value = len;
+									td.append(input);
+									tr1.append(td);
+								}
 								sumR += len;
 								
 							} else {
 								// 받침 없음: 1 고정
 								rc.push([c, 1]);
-								$tr1.append($("<td>").text("-").append($("<input type='hidden'>").val(1)));
+								{	const td = document.createElement("td");
+									const input = document.createElement("input");
+									input.type = "hidden";
+									input.value = 1;
+									td.innerText = "-";
+									td.append(input);
+									tr1.append(td);
+								}
 								sumR++;
 							}
 						} else {
@@ -614,12 +683,25 @@ ready(() => {
 							if (batchim) {
 								// 받침 존재: 거의 확실하게 2
 								rc.push([c, 2]);
-								$tr1.append($("<td>").append($("<input type='text'>").val(2)));
+								{	const td = document.createElement("td");
+									const input = document.createElement("input");
+									input.type = "text";
+									input.value = 2;
+									td.append(input);
+									tr1.append(td);
+								}
 								sumR += 2;
 							} else {
 								// 받침 없으면 1 고정
 								rc.push([c, 1]);
-								$tr1.append($("<td>").text("-").append($("<input type='hidden'>").val(1)));
+								{	const td = document.createElement("td");
+									const input = document.createElement("input");
+									input.type = "hidden";
+									input.value = 1;
+									td.innerText = "-";
+									td.append(input);
+									tr1.append(td);
+								}
 								sumR++;
 							}
 						}
@@ -627,38 +709,70 @@ ready(() => {
 						if (c == ' ' || c == '　' || c == '\t') {
 							// 공백 문자 0 고정
 							rc.push([c, 0]);
-							$tr1.append($("<td>").append("&nbsp;<input type='hidden' value='0' />"));
-							
+							{	const td = document.createElement("td");
+								const input = document.createElement("input");
+								input.type = "hidden";
+								input.value = 0;
+								td.innerText = " ";
+								td.append(input);
+								tr1.append(td);
+							}
 						} else if (('a'<=c && c<='z') || ('A'<=c && c<='Z')) {
 							// 알파벳일 경우 1 고정
 							rc.push([c, 1]);
-							$tr1.append($("<td>").text("-").append("<input type='hidden' value='1' />"));
+							{	const td = document.createElement("td");
+								const input = document.createElement("input");
+								input.type = "hidden";
+								input.value = 1;
+								td.innerText = "-";
+								td.append(input);
+								tr1.append(td);
+							}
 							sumR++;
 							
 						} else {
 							rc.push([c, 1]);
-							$tr1.append($("<td>").append($("<input type='text'>").val(1)));
+							{	const td = document.createElement("td");
+								const input = document.createElement("input");
+								input.type = "text";
+								input.value = 1;
+								td.append(input);
+								tr1.append(td);
+							}
 							sumR++;
 						}
 					}
 					last = cc;
 				}
-				$tr0.append($("<td rowspan='2' class='sum'>").text(sumR));
+				{	const td = document.createElement("td");
+					td.rowspan = 2;
+					td.classList.add("sum");
+					td.innerText = sumR;
+					tr0.append(td);
+				}
 				
-				$line.data("rc", rc).append($("<table>").append($tr0).append($tr1));
+				eData(line, { rc: rc });
+				{	const table = document.createElement("table");
+					table.append(tr0);
+					table.append(tr1);
+					line.append(table);
+				}
 			}
 			
 			{	// 번역
-				$line.data("tc", t).append($("<p>").text(t));
+				eData(line, { tc: t });
+				const p = document.createElement("p");
+				p.innerText = t;
+				line.append(p);
 			}
 			
-			$line.data("ort", 3);
+			eData(line, { ort: 3 });
 		}
 		
 		if (sumO == sumR) {
-			$line.removeClass("error");
+			line.classList.remove("error");
 		} else {
-			$line.addClass("error");
+			line.classList.add   ("error");
 		}
 	}
 	
@@ -678,7 +792,7 @@ ready(() => {
 		const tran = inputTran.value.trim().split("\n");
 		
 		// Step 3 해당 줄 갱신
-		refreshLine($("#page3 .line-"+i)
+		refreshLine(document.getElementById("page3").querySelector(".line-"+i)
 			,	orig[i] = inputLineO.value
 			,	read[i] = inputLineR.value
 			,	tran[i] = inputLineT.value
@@ -719,26 +833,26 @@ ready(() => {
 			
 			result.length = 0;
 			
-			$("#page3 .line").each((_, el) => {
-				const $line = $(el);
-				let ort = $line.data("ort");
-				let oc = $line.data("oc");
-				let rc = $line.data("rc");
-				let tc = $line.data("tc");
+			document.getElementById("page3").querySelectorAll(".line").forEach((line) => {
+				const lineData = eData(line);
+				let ort = lineData.ort;
+				let oc  = lineData.oc ;
+				let rc  = lineData.rc ;
+				let tc  = lineData.tc ;
 				
 				let length = 0;
 				
-				if ($line.children().length == 1) {
+				if (line.children.length == 1) {
 					for (let i = 0; i < oc.length; i++) {
 						length += oc[i][1];
 					}
 				} else {
 					// oc, rc의 음절 값을 입력된 값으로 대체
-					$line.find("table:eq(0) input").each((i, el) => {
-						length += (oc[i][1] = Number($(el).val()));
+					line.querySelector   ("table")   .querySelectorAll("input").forEach((el, i) => {
+						length += (oc[i][1] = Number(el.value));
 					});
-					$line.find("table:eq(1) input").each((i, el) => {
-						rc[i][1] = Number($(el).val());
+					line.querySelectorAll("table")[1].querySelectorAll("input").forEach((el, i) => {
+						rc[i][1] = Number(el.value);
 					});
 				}
 				
@@ -876,32 +990,36 @@ ready(() => {
 			}, 1000);
 		}
 		
-		$("#page3").on("keyup", "input", function() {
+		document.getElementById("page3").addEventListener("keyup", (e) => {
+			const input = e.target.closest("input");
+			if (!input) return;
+			
 			// 입력 있을 경우 음절 수 재계산
-			const $input = $(this);
-			const $table = $input.parents("table");
+			const table = input.closest("table");
 			let sum = 0;
-			$table.find("input").each((_, el) => {
-				sum += Number($(el).val());
+			table.querySelectorAll("input").forEach((el) => {
+				sum += Number(el.value);
 			});
-			$table.find(".sum").text(sum);
+			table.querySelector(".sum").innerText = sum;
 			
 			// 원문/독음 따로일 경우 음절 수 맞는지 확인
-			const $line = $input.parents(".line");
-			const $tables = $line.find("table");
-			if ($tables.length == 2) {
-				if ($($tables[0]).find(".sum").text() == $($tables[1]).find(".sum").text()) {
-					$line.removeClass("error");
+			const line = input.closest(".line");
+			const tables = line.querySelectorAll("table");
+			if (tables.length == 2) {
+				if (tables[0].querySelector(".sum").innerText == tables[1].querySelector(".sum").innerText) {
+					line.classList.remove("error");
 				} else {
-					$line.addClass("error");
+					line.classList.add   ("error");
 				}
 			}
 			runAfterCheck();
 		});
-		
-		$("#page3").on("click", ".sum", function() {
+
+		document.getElementById("page3").addEventListener("click", (e) => {
+			const el = e.target.closest(".sum");
+			if (!el) return;
 			// 해당 줄 텍스트 편집
-			openEditLine($(this).parents(".line").data("line"));
+			openEditLine(eData(el.closest(".line")).line);
 		});
 		formEditLine.addEventListener("click", (e) => {
 			if (e.target.closest("button")) {
@@ -1111,11 +1229,17 @@ ready(() => {
 			}, 1000);
 		}
 		
-		$("#page4").on("click", "input", function() {
+		const page4 = document.getElementById("page4");
+		page4.addEventListener("click", (el) => {
+			if (!el.target.closest("input")) return;
 			runAfterCheck();
-		}).on("keyup", "input", function() {
+		});
+		page4.addEventListener("keyup", (el) => {
+			if (!el.target.closest("input")) return;
 			runAfterCheck();
-		}).on("change", "input", function() {
+		});
+		page4.addEventListener("change", (el) => {
+			if (!el.target.closest("input")) return;
 			runAfterCheck();
 		});
 		

@@ -232,6 +232,9 @@ input, textarea {
 	border-width: 1px 0 0 1px;
 	overflow: hidden;
 }
+.highlight-textarea * {
+	white-space: pre;
+}
 
 .input .hover-scroll { cursor: default; }
 

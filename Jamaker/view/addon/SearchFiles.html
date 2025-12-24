@@ -5,12 +5,8 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>여러 SMI 파일에서 찾기</title>
 	<script src="../lib/jquery-3.2.1.min.js"></script>
-	<script src="../lib/SubtitleObject.js"></script>
 	<script src="../lib/popup.js"></script>
-	<script src="../lib/History.js"></script>
-	<script src="../lib/SmiEditor.js"></script>
-	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
-	<link rel="stylesheet" type="text/css" href="../lib/SmiEditor.css" />
+	<script src="../lib/SmiEditor.js" type="module"></script>
 	<script>
 windowName = "addon";
 
@@ -176,9 +172,15 @@ ready(() => {
 	});
 	
 	opener.afterFound = function(name, text) {
-		const $file = $("<li>").addClass("file").data({ text: text });
-		const $ol = $("<ol>");
-		$file.append($("<h3>").text(name)).append($ol);
+		const file = document.createElement("li");
+		file.classList.add("file");
+		eData(file, { text: text });
+		const ol = document.createElement("ol");
+		{	const h3 = document.createElement("h3");
+			h3.innerText = name;
+			file.append(h3);
+		}
+		file.append(ol);
 		
 		const lines = text.split("\n");
 		let offset = 0;
@@ -190,25 +192,26 @@ ready(() => {
 				continue;
 			}
 			
-			const $line = $("<li>").addClass("line").text(line).data({ line: i, pos: offset + index });
-			$ol.append($line.html("Line " + (i + 1) + ": " + $line.html().replaceAll(query, "<b>" + query + "</b>")));
+			const li = document.createElement("li");
+			li.classList.add("line");
+			li.innerText = line;
+			li.innerHTML = ("Line " + (i + 1) + ": " + li.innerHTML.replaceAll(query, "<b>" + query + "</b>"));
+			eData(li, { line: i, pos: offset + index });
+			ol.append(li);
 			
 			offset += line.length + 1;
 		}
 		
-		results.append($file[0]);
+		results.append(file);
 	}
 	
 	results.addEventListener("click", (e) => {
 		const li = e.target.closest("li.line");
 		if (!li) return;
 		
-		const $line = $(li);
-		const $file = $line.parent().parent();
-		const text = $file.data("text");
-		const line = $line.data("line");
-		const cursor = $line.data("pos");
-		editor.setText(text, [cursor, cursor + query.length]);
+		const file = li.parentNode.parentNode;
+		const cursor = eData(li).pos;
+		editor.setText(eData(file).text, [cursor, cursor + query.length]);
 		editor.input.focus();
 	});
 	

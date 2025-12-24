@@ -1,3 +1,16 @@
+import "./MenuStrip.js";
+import "./AutoCompleteTextarea.js";
+import "./Combine.js";
+import "./SmiEditor.js";
+import "./AssEditor.js";
+
+{
+	const link = document.createElement("link");
+	link.rel = "stylesheet";
+	link.href = new URL("./Jamaker.css", import.meta.url).href;
+	document.head.append(link);
+}
+
 window.time = 0;
 
 window.menustrip = null;
@@ -12,7 +25,7 @@ window.autoSaveTemp = null;
 window.autoFindSync = false;
 
 // C# 쪽에서 호출
-function refreshTime(now) {
+window.refreshTime = function(now) {
 	if (time != now) {
 		time = now;
 		if (autoFindSync && tabs.length && tabs[tabIndex]) {
@@ -52,8 +65,7 @@ window.Tab = function(text, path) {
 			assHold.isAssHold = true;
 			
 			this.holdSelector.append(assHold.selector = document.createElement("div"));
-			assHold.selector.classList.add("selector");
-			assHold.selector.classList.add("ass-only");
+			assHold.selector.classList.add("selector", "ass-only");
 			eData(assHold.selector, { hold: assHold });
 			{	const holdName = document.createElement("div");
 				holdName.classList.add("hold-name");
@@ -195,7 +207,6 @@ window.Tab = function(text, path) {
 				tab.holds.splice(index, 1);
 				hold.selector.remove();
 				hold.area.remove();
-				delete hold;
 				
 				tab.holdEdited = true;
 				tab.updateHoldSelector();
@@ -292,8 +303,7 @@ Tab.prototype.addHold = function(info, isMain=false, asActive=true) {
 	
 	if (isMain) {
 		hold.area.classList.add("main");
-		hold.selector.classList.add("main");
-		hold.selector.classList.add("selected");
+		hold.selector.classList.add("main", "selected");
 		const tab = this;
 		hold.afterRender = function() {
 			const match = /<sami( [^>]*)*>/gi.exec(this.text);
@@ -1650,7 +1660,7 @@ window.onresize = function() {
 	}
 }
 
-function deepCopyObj(obj) {
+window.deepCopyObj = function(obj) {
 	if (obj && typeof obj == "object") {
 		if (Array.isArray(obj)) {
 			return JSON.parse(JSON.stringify(obj));
@@ -1666,7 +1676,7 @@ function deepCopyObj(obj) {
 		return obj;
 	}
 }
-function setDefault(target, dflt) {
+window.setDefault = function(target, dflt) {
 	let count = 0; // 변동 개수... 쓸 일이 있으려나?
 	for (let key in dflt) {
 		if (typeof dflt[key] == "object") {
@@ -1705,7 +1715,7 @@ function setDefault(target, dflt) {
 }
 
 // C# 쪽에서 호출
-function init(jsonSetting, isBackup=true) {
+window.init = function(jsonSetting, isBackup=true) {
 	const funcSince = log("init start");
 	
 	if (!SmiEditor.tabPreset) {
@@ -2075,7 +2085,7 @@ function init(jsonSetting, isBackup=true) {
 	binder.afterInit(setting.useTab ? 4 : 1);
 }
 
-function setSetting(setting, initial=false) {
+window.setSetting = function(setting, initial=false) {
 	const funcSince = log("setSetting start");
 	
 	const oldSetting = window.setting;
@@ -2355,7 +2365,7 @@ function setSetting(setting, initial=false) {
 	
 	log("setSetting end", funcSince);
 }
-function moveWindowsToSetting() {
+window.moveWindowsToSetting = function() {
 	binder.moveWindow("editor"
 			, setting.window.x
 			, setting.window.y
@@ -2384,7 +2394,7 @@ function moveWindowsToSetting() {
 }
 
 // C# 쪽에서 호출
-function setDpiBy(width) {
+window.setDpiBy = function(width) {
 	// C#에서 보내준 창 크기와 js에서 구한 브라우저 크기의 불일치를 이용해 DPI 배율을 구함
 	setTimeout(() => {
 		DPI = (width + 8) / (window.outerWidth + 10);
@@ -2394,14 +2404,14 @@ function setDpiBy(width) {
 window.playerDlls = [];
 window.highlights = [];
 // C# 쪽에서 호출
-function setPlayerDlls(dlls) {
+window.setPlayerDlls = function(dlls) {
 	playerDlls = dlls.split("\n");
 }
-function setHighlights(list) {
+window.setHighlights = function(list) {
 	highlights = list.split("\n");
 }
 
-function openSetting() {
+window.openSetting = function() {
 	SmiEditor.settingWindow = window.open("setting.html", "setting", "scrollbars=no,location=no,resizable=no,width=1,height=1");
 	binder.moveWindow("setting"
 			, (setting.window.x < setting.player.window.x && setting.window.width < 880)
@@ -2414,12 +2424,12 @@ function openSetting() {
 	binder.focus("setting");
 	return SmiEditor.settingWindow;
 }
-function saveSetting() {
+window.saveSetting = function() {
 	if (window.binder) {
 		binder.saveSetting(stringify(setting));
 	}
 }
-function refreshPaddingBottom() {
+window.refreshPaddingBottom = function() {
 	// 에디터 하단 여백 재조정
 	const holdTop = tabs.length ? Number(tabs[tabIndex].area.querySelector(".holds").offsetTop) : 0;
 	const padding = document.getElementById("editor").offsetHeight - holdTop - LH;
@@ -2438,7 +2448,7 @@ function refreshPaddingBottom() {
 	}
 }
 
-function openHelp(name) {
+window.openHelp = function(name) {
 	const url = (name.substring(0, 4) == "http") ? name : "help/" + name.replaceAll("..", "").replaceAll(":", "") + ".html";
 	SmiEditor.helpWindow = window.open(url, "help", "scrollbars=no,location=no,resizable=no,width=1,height=1");
 	binder.moveWindow("help"
@@ -2452,7 +2462,7 @@ function openHelp(name) {
 	binder.focus("help");
 }
 
-function runIfCanOpenNewTab(func) {
+window.runIfCanOpenNewTab = function(func) {
 	tabToCloseAfterRun = null;
 	if (!setting.useTab) {
 		// 탭 미사용 -> 현재 파일 닫기
@@ -2474,30 +2484,29 @@ function runIfCanOpenNewTab(func) {
 	}
 	if (func) func();
 }
-function closeTab(th) {
+window.closeTab = function(th) {
 	const targetTab = eData(th).tab;
 	const index = tabs.indexOf(targetTab);
 	tabs.splice(index, 1);
 	targetTab.area.remove();
 	th.remove();
-	delete targetTab;
 	
 	SmiEditor.selected = null;
 	SmiEditor.Viewer.refresh();
 	return index;
 }
-function closeCurrentTab() {
+window.closeCurrentTab = function() {
 	if (setting.useTab && tabs.length && tabs[tabIndex]) {
 		document.getElementById("tabSelector").querySelector(".th")[tabIndex].querySelector(".btn-close-tab").click();
 	}
 }
 
-function newFile() {
+window.newFile = function() {
 	document.getElementById("assSplitHoldSelector").style.display = "none";
 	runIfCanOpenNewTab(openNewTab);
 }
 
-function openFile(path, text, forVideo, confirmed=false) {
+window.openFile = function(path, text, forVideo, confirmed=false) {
 	const funcSince = log("openFile start");
 
 	document.getElementById("assSplitHoldSelector").style.display = "none"
@@ -2523,7 +2532,7 @@ function openFile(path, text, forVideo, confirmed=false) {
 		});
 	}
 }
-function openFileForVideo() {
+window.openFileForVideo = function() {
 	runIfCanOpenNewTab(() => {
 		// C#에서 동영상의 자막 파일 탐색
 		binder.openFileForVideo();
@@ -2532,7 +2541,7 @@ function openFileForVideo() {
 
 let lastSave = 0; // 과도한 저장(Ctrl+S가 눌리거나 한 경우) 중복 실행 방지용
 let exporting = false;
-function saveFile(asNew, isExport) {
+window.saveFile = function(asNew, isExport) {
 	const now = new Date().getTime();
 	if (lastSave > (now - 5000)) {
 		// 중복 실행인 경우 실행하지 않음
@@ -2845,7 +2854,7 @@ function saveFile(asNew, isExport) {
 }
 
 // 저장 후 C# 쪽에서 호출
-function afterSaveFile(tabIndex, path) { // 저장 도중에 탭 전환할 수 있어서 파라미터로 유지함
+window.afterSaveFile = function(tabIndex, path) { // 저장 도중에 탭 전환할 수 있어서 파라미터로 유지함
 	const funcSince = log("afterSaveFile start");
 	
 	const currentTab = tabs[tabIndex];
@@ -2882,21 +2891,21 @@ function afterSaveFile(tabIndex, path) { // 저장 도중에 탭 전환할 수 �
 	log("afterSaveFile end", funcSince);
 }
 // 웹버전에서만 활용
-function afterSaveSmiFile(tabIndex, path) {
+window.afterSaveSmiFile = function(tabIndex, path) {
 	tabs[tabIndex].smiPath = path;
 }
 // 웹버전에서만 활용
-function afterSaveAssFile(tabIndex, path) {
+window.afterSaveAssFile = function(tabIndex, path) {
 	tabs[tabIndex].assPath = path;
 }
 // 웹버전에서만 활용
-function afterSaveSrtFile(tabIndex, path) {
+window.afterSaveSrtFile = function(tabIndex, path) {
 	tabs[tabIndex].srtPath = path;
 }
 
 // TODO: 임시 저장은 현재 탭에서만 동작 중
 //       모든 탭에 대해 진행할 필요가 있는지?
-function saveTemp() {
+window.saveTemp = function() {
 	const currentTab = tabs[tabIndex];
 	if (!currentTab) {
 		return;
@@ -2926,7 +2935,7 @@ function saveTemp() {
 }
 
 let _for_video_ = false;
-function openNewTab(text, path, forVideo) {
+window.openNewTab = function(text, path, forVideo) {
 	if (tabToCloseAfterRun) {
 		closeTab(tabToCloseAfterRun);
 		tabToCloseAfterRun = null;
@@ -2991,12 +3000,12 @@ function openNewTab(text, path, forVideo) {
 	return tab;
 }
 // C# 쪽에서 호출
-function setFFmpegVersion(ffmpeg, ffprobe) {
+window.setFFmpegVersion = function(ffmpeg, ffprobe) {
 	Subtitle.video.ffmpeg = ffmpeg;
 	Subtitle.video.ffprobe = ffprobe;
 }
 // C# 쪽에서 호출
-function confirmLoadVideo(path) {
+window.confirmLoadVideo = function(path) {
 	setTimeout(() => {
 		confirm("동영상 파일을 같이 열까요?\n" + path, function() {
 			binder.loadVideoFile(path);
@@ -3005,7 +3014,7 @@ function confirmLoadVideo(path) {
 }
 
 // C# 쪽에서 호출
-function setVideo(path) {
+window.setVideo = function(path) {
 	if (Subtitle.video.path == path) return;
 	log("setVideo: " + path);
 	
@@ -3036,7 +3045,7 @@ function setVideo(path) {
 	}
 }
 // C# 쪽에서 호출 - requestFrames
-function setVideoInfo(w=1920, h=1080, fr=23976) {
+window.setVideoInfo = function(w=1920, h=1080, fr=23976) {
 	log("setVideoInfo: " + w + ", " + h);
 	
 	Subtitle.video.width = w;
@@ -3051,7 +3060,7 @@ function setVideoInfo(w=1920, h=1080, fr=23976) {
 //	document.getElementById("showFps").innerText((Math.round(fr*10)/10000) + " fps");
 }
 // C# 쪽에서 호출 - requestFrames
-function loadFkf(fkfName) {
+window.loadFkf = function(fkfName) {
 	log("loadFkf start: " + fkfName);
 	// C# 파일 객체를 직접 js 쪽에 전달할 수 없으므로, 정해진 경로의 파일을 ajax 형태로 가져옴
 	// base64 거치는 방법도 있긴 한데, 어차피 캐시를 재활용하는 경우라면 한 번만 거치는 게 나음
@@ -3063,7 +3072,7 @@ function loadFkf(fkfName) {
 	});
 }
 // 웹버전 샘플에서 fkf 파일 드래그로 열었을 경우
-function loadFkfFile(file) {
+window.loadFkfFile = function(file) {
 	log("loadFkfFile start");
 	const fr = new FileReader();
 	fr.onload = function(e) {
@@ -3071,7 +3080,7 @@ function loadFkfFile(file) {
 	}
 	fr.readAsArrayBuffer(file);
 }
-function afterLoadFkfFile(buffer) {
+window.afterLoadFkfFile = function(buffer) {
 	log("afterLoadFkfFile");
 	
 	const fkf = new Int32Array(buffer);
@@ -3099,7 +3108,7 @@ function afterLoadFkfFile(buffer) {
 	afterSetFkf();
 }
 // 웹샘플에서 필요해서 분리
-function afterSetFkf() {
+window.afterSetFkf = function() {
 	const funcSince = log("afterSetFkf start");
 	Subtitle.video.aegisubSyncs = null
 	
@@ -3117,7 +3126,7 @@ function afterSetFkf() {
 	log("afterSetFkf end", funcSince);
 }
 
-function loadAssFile(path, text, target=-1) {
+window.loadAssFile = function(path, text, target=-1) {
 	if (target < 0) {
 		// 탭이 지정 안 된 경우..는 없어야 맞음
 		target = tabIndex;
@@ -4001,7 +4010,7 @@ function loadAssFile(path, text, target=-1) {
 	}
 }
 // C#과 연관 없지만 기능이 ASS 전용 스크립트 처리와 비슷해서 이쪽에 구현
-function splitHold(tab, styleName) {
+window.splitHold = function(tab, styleName) {
 	const funcSince = log("splitHold start");
 	
 	let holdName = styleName;
@@ -4204,7 +4213,7 @@ function splitHold(tab, styleName) {
 }
 
 // 종료 전 C# 쪽에서 호출
-function beforeExit() {
+window.beforeExit = function() {
 	let saved = true;
 	for (let i = 0; i < tabs.length; i++) {
 		for (let j = 0; j < tabs[i].holds.length; j++) {
@@ -4220,13 +4229,13 @@ function beforeExit() {
 		confirm("저장되지 않은 파일이 있습니다.\n종료하시겠습니까?", doExit);
 	}
 }
-function doExit() {
+window.doExit = function() {
 	saveSetting(); // 창 위치 최신값으로 저장
 	binder.doExit(setting.player.window.use
 		, setting.player.control[setting.player.control.dll].withExit);
 }
 
-function srt2smi(text) {
+window.srt2smi = function(text) {
 	const funcSince = log("srt2smi start");
 	const result = new SmiFile().fromSync(new SrtFile(text).toSyncs()).toText();
 	log("srt2smi end", funcSince);
@@ -4238,7 +4247,7 @@ function srt2smi(text) {
  * add: 과거 반프레임 보정치 안 넣었던 것들을 위해 추가
  * ... 아마도 나만 쓸 기능 같아서 기본 설정엔 안 넣음
  */
-function fitSyncsToFrame(frameSyncOnly=false, add=0) {
+window.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 	if (!Subtitle.video.fs.length) {
 		//*
 		return;
@@ -4305,7 +4314,7 @@ SmiEditor.focusRequired = function() {
 	return false;
 }
 
-function generateSmiFromAss(keepHoldsAss=true) {
+window.generateSmiFromAss = function(keepHoldsAss=true) {
 	const origins = [];
 	
 	const tab = tabs[tabIndex];
@@ -4721,8 +4730,8 @@ SmiEditor.Addon = {
 			}
 		}
 };
-function openAddon(name, target) { SmiEditor.Addon.open(name, target); }
-function extSubmit(method, url, values, withoutTag=true) {
+window.openAddon = function(name, target) { SmiEditor.Addon.open(name, target); }
+window.extSubmit = function(method, url, values, withoutTag=true) {
 	if (typeof values == "string") {
 		let name = values;
 		let editor = SmiEditor.selected;
@@ -4792,7 +4801,7 @@ function extSubmit(method, url, values, withoutTag=true) {
 		SmiEditor.Addon.openExtSubmit(method, url, params);
 	}
 }
-function extSubmitSpeller() {
+window.extSubmitSpeller = function() {
 	let editor = SmiEditor.selected;
 	if (editor) {
 		const text = editor.getText();

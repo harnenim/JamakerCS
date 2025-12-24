@@ -5,11 +5,7 @@
 <title>설정</title>
 <script src="lib/jquery-3.2.1.min.js"></script>
 <script src="lib/popup.js"></script>
-<script src="lib/History.js"></script>
-<script src="lib/SubtitleObject.js"></script>
-<script src="lib/SmiEditor.js"></script>
-<link rel="stylesheet" type="text/css" href="lib/popup.css" />
-<link rel="stylesheet" type="text/css" href="lib/SmiEditor.css" />
+<script src="lib/SmiEditor.js" type="module"></script>
 <script>
 windowName = "setting";
 
@@ -454,19 +450,19 @@ ready(() => {
 			            ? ("F" + (keyCode - 111)) // pqrstuvwxyz{ -> Fn
 			            : data.key;
 			switch (data.with) {
-				case 0: {
+				case "0": {
 					keyName = "Ctrl + " + keyName;
 					break;
 				}
-				case 1: {
+				case "1": {
 					keyName = "Alt + " + keyName;
 					break;
 				}
-				case 2: {
+				case "2": {
 					keyName = "Ctrl + Alt + " + keyName;
 					break;
 				}
-				case 3: {
+				case "3": {
 					keyName = "Ctrl + Shift + " + keyName;
 					break;
 				}

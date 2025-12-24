@@ -1,4 +1,11 @@
-function MenuStrip(ol=null) {
+{
+	const link = document.createElement("link");
+	link.rel = "stylesheet";
+	link.href = new URL("./MenuStrip.css", import.meta.url).href;
+	document.head.append(link);
+}
+
+window.MenuStrip = function(ol=null) {
 	const self = this;
 	if (window.menustrip) return; // 한 윈도우에 하나만 존재하는 쪽으로
 	window.menustrip = this;
@@ -395,10 +402,10 @@ MenuStrip.createSubMenu = function(menus=[]) {
 		
 		if (subLi.innerText = menu.name) {
 			subLi.func = menu.func;
-			index = menu.name.indexOf("&");
+			const index = menu.name.indexOf("&");
 			if (index > 0) {
 				if (menu.name.length > index + 1) {
-					menuKey = menu.name[index + 1];
+					const menuKey = menu.name[index + 1];
 					if (('A' <= menuKey && menuKey <= 'Z') || ('0' <= menuKey && menuKey <= '9')) {
 						subLi.innerHTML = (menu.name.substring(0, index) + "<u>" + menuKey.toUpperCase() + "</u>" + menu.name.substring(index + 2));
 						menuKeys[menuKey.toLowerCase()] = subLi;
@@ -485,7 +492,7 @@ MenuStrip.prototype.unfocus = function(withReturnFocus=true) {
 	}
 };
 
-function ContextMenu(menus=[]) {
+window.ContextMenu = function(menus=[]) {
 	const submenu = MenuStrip.createSubMenu(menus);
 	this.menuKeys = submenu.menuKeys;
 	this.view = submenu.view;

@@ -4,10 +4,8 @@
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>화면 싱크 매니저</title>
-	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/SubtitleObject.js"></script>
 	<script src="../lib/popup.js"></script>
-	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
 	<script>
 windowName = "addon";
 
@@ -40,7 +38,7 @@ ready(() => {
 	 && opener.binder._
 	 && (typeof opener.binder._ != "function") // WebView2에서는 선언 안 했어도 function을 반환함
 	) {
-		alert("웹샘플에서는 실제 렌더링이 진행되지 않습니다.\n필요 시 SyncManager 대신 구버전 SyncManager0을 활용할 수 있습니다.");
+//		alert("웹샘플에서는 실제 렌더링이 진행되지 않습니다.\n필요 시 SyncManager 대신 구버전 SyncManager0을 활용할 수 있습니다.");
 	}
     
     const TX = (opener.setting.sync.uiWidth  ? opener.setting.sync.uiWidth  : 96);
@@ -129,19 +127,23 @@ ready(() => {
 	const trustKeyFrame = opener.SmiEditor.trustKeyFrame;
 	const renderFromKeyframe = Subtitle.video.path && Subtitle.video.path.endsWith(".m2ts");
 	
-	const $body = $("body");
-	const $tbody = $("#editor tbody").empty();
-	const $framesStorage = $("<div>"); // 객체 remove 하면 data가 날아가서 여기에 보관함
+	const tbody = document.getElementById("editor").querySelector("tbody");
+	tbody.innerHTML = "";
+	const framesStorage = document.createElement("div");
+	
 	const frameSyncs = [];
 	
-	function setFrames($frames, frameIndex, flag) {
+	function setFrames(frames, frameIndex, flag) {
 		for (let j = -RANGE; j < RANGE; j++) {
 			const imgIndex = frameIndex + j;
-			const $img = $("<img>").addClass("frame img" + imgIndex + flag).css({ left: (j * (TX + 2)) }).data({ index: imgIndex, offset: j });
+			const img = document.createElement("img");
+			img.classList.add("frame", "img" + imgIndex + flag);
+			img.style.left = (j * (TX + 2)) + "px";
+			eData(img, { index: imgIndex, offset: j });
 			if (trustKeyFrame && Subtitle.findSync(fs[imgIndex], kfs, false)) {
-				$img.addClass("keyframe");
+				img.classList.add("keyframe");
 			}
-			$frames.append($img);
+			frames.append(img);
 		}
 	}
 	
@@ -176,17 +178,24 @@ ready(() => {
 					}
 				}
 				
-				const $tr = $("<tr>").data({ oi: oi, smi: smi, origin: smi.start });
+				const tr = document.createElement("tr");
+				eData(tr, { oi: oi, smi: smi, origin: smi.start });
+				
+				const sync = document.createElement("td");
+				sync.classList.add("sync");
 				
 				if (smi.syncType == Subtitle.SyncType.frame) {
 					const frameIndex = Subtitle.findSyncIndex(smi.start, fs);
-					const $frames = $("<div>").addClass("frames");
-					const $sync = $("<td>").addClass("sync");
-					setSync($sync, ((frameIndex < fs.length) ? fs[frameIndex] : 99999999));
-					$framesStorage.append($frames);
-					$tr.addClass("fs").append($("<td>")).append($sync);
-					frameSyncs.push($tr);
 					
+					const frames = document.createElement("div");
+					frames.classList.add("frames");
+					
+					setSync(sync, ((frameIndex < fs.length) ? fs[frameIndex] : 99999999));
+					framesStorage.append(frames);
+					tr.classList.add("fs");
+					tr.append(document.createElement("td"), sync);
+					frameSyncs.push(tr);
+
 					let flag = "";
 					if (fade == 1) {
 						// 페이드인 시작 이미지 밝게
@@ -201,16 +210,23 @@ ready(() => {
 						// 페이드인 종료 이미지 어둡게
 						flag = "d";
 					}
-					$tr.data({ index: (lastIndex = frameSyncs.length - 1), $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
+					eData(tr, { index: (lastIndex = frameSyncs.length - 1), frames: frames, frameIndex: frameIndex, offset: 0, flag: flag });
 					count = 0;
 					
-					setFrames($frames, frameIndex, flag);
+					setFrames(frames, frameIndex, flag);
 					
 				} else {
-					$tr.append($("<td>")).append($("<td>").addClass("sync").text(smi.syncType == Subtitle.SyncType.inner ? "~" : smi.start));
-					$tr.data({ index: (frameSyncs.length - 1) + (++count / 10000) }); // 10000개를 넘어갈 일은 없을 것
+					sync.innerText = (smi.syncType == Subtitle.SyncType.inner ? "~" : smi.start);
+					tr.append(document.createElement("td"), sync);
+					eData(tr, { index: (frameSyncs.length - 1) + (++count / 10000) }); // 10000개를 넘어갈 일은 없을 것
 				}
-				$tbody.append($tr.append($("<td>").text(smi.text.replaceAll("\n", "")).attr("title", smi.text)));
+				{
+					const td = document.createElement("td");
+					td.innerText = smi.text.replaceAll("\n", "");
+					td.title = smi.text;
+					tr.append(td);
+					tbody.append(tr);
+				}
 				
 				lastFade = fade;
 			}
@@ -219,62 +235,85 @@ ready(() => {
 			// ASS
 			for (let i = 0; i < origin.assBody.length; i++) {
 				const ass = origin.assBody[i];
-				let start = Number(ass.inputStart.val());
-				let end   = Number(ass.inputEnd  .val());
+				let start = Number(ass.inputStart.value);
+				let end   = Number(ass.inputEnd  .value);
 				
 				{	// start
-					const $tr = $("<tr>").data({ ass: ass, type: "start", origin: start });
+					const tr = document.createElement("tr");
+					eData(tr, { ass: ass, type: "start", origin: start });
 					
-					if (ass.checkStart.prop("checked")) {
+					const sync = document.createElement("td");
+					sync.classList.add("sync");
+					
+					if (ass.checkStart.checked) {
 						const frameIndex = Subtitle.findSyncIndex(start, fs);
-						const $frames = $("<div>").addClass("frames");
-						const $sync = $("<td>").addClass("sync");
-						setSync($sync, ((frameIndex < fs.length) ? fs[frameIndex] : 99999999));
-						$framesStorage.append($frames);
-						$tr.addClass("fs").append($("<td>")).append($sync);
-						frameSyncs.push($tr);
+						
+						const frames = document.createElement("div");
+						frames.classList.add("frames");
+						
+						setSync(sync, ((frameIndex < fs.length) ? fs[frameIndex] : 99999999));
+						framesStorage.append(frames);
+						tr.classList.add("fs");
+						tr.append(document.createElement("td"), sync);
+						frameSyncs.push(tr);
 						
 						// TODO: 페이드는?
 						let flag = "";
 						
-						$tr.data({ index: (lastIndex = frameSyncs.length - 1), $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
+						eData(tr, { index: (lastIndex = frameSyncs.length - 1), frames: frames, frameIndex: frameIndex, offset: 0, flag: flag });
 						count = 0;
 						
-						setFrames($frames, frameIndex, flag);
+						setFrames(frames, frameIndex, flag);
 						
 					} else {
-						$tr.append($("<td>")).append($("<td>").addClass("sync").text(start));
-						$tr.data({ index: (frameSyncs.length - 1) + (++count / 1000) }); // 1000개를 넘어갈 일은 없을 것
+						sync.innerText = start;
+						tr.append(document.createElement("td"), sync);
+						eData(tr, { index: (frameSyncs.length - 1) + (++count / 1000) }); // 1000개를 넘어갈 일은 없을 것
 					}
-					const assText = ass.inputText.val();
-					$tbody.append($tr.append($("<td>").attr({ rowspan: 2 }).text(assText).attr("title", assText.replaceAll("{", "\n{").replaceAll("}", "}\n"))));
+					{
+						const assText = ass.inputText.value;
+						const td = document.createElement("td");
+						td.rowSpan = 2;
+						td.innerText = assText.replaceAll("\n", "");
+						td.title = assText.replaceAll("{", "\n{").replaceAll("}", "}\n");
+						tr.append(td);
+						tbody.append(tr);
+					}
 				}
 				
 				{	// end
-					const $tr = $("<tr>").data({ ass: ass, type: "end", origin: end });
+					const tr = document.createElement("tr");
+					eData(tr, { ass: ass, type: "end", origin: end });
 					
-					if (ass.checkEnd.prop("checked")) {
+					const sync = document.createElement("td");
+					sync.classList.add("sync");
+					
+					if (ass.checkEnd.checked) {
 						const frameIndex = Subtitle.findSyncIndex(end, fs);
-						const $frames = $("<div>").addClass("frames");
-						const $sync = $("<td>").addClass("sync");
-						setSync($sync, ((frameIndex < fs.length) ? fs[frameIndex] : 99999999));
-						$framesStorage.append($frames);
-						$tr.addClass("fs").append($("<td>")).append($sync);
-						frameSyncs.push($tr);
+
+						const frames = document.createElement("div");
+						frames.classList.add("frames");
+						
+						setSync(sync, ((frameIndex < fs.length) ? fs[frameIndex] : 99999999));
+						framesStorage.append(frames);
+						tr.classList.add("fs");
+						tr.append(document.createElement("td"), sync);
+						frameSyncs.push(tr);
 						
 						// TODO: 페이드는?
 						let flag = "";
 						
-						$tr.data({ index:(lastIndex = frameSyncs.length - 1), $frames: $frames, frameIndex: frameIndex, offset: 0, flag: flag });
+						eData(tr, { index:(lastIndex = frameSyncs.length - 1), frames: frames, frameIndex: frameIndex, offset: 0, flag: flag });
 						count = 0;
 						
-						setFrames($frames, frameIndex, flag);
+						setFrames(frames, frameIndex, flag);
 						
 					} else {
-						$tr.append($("<td>")).append($("<td>").addClass("sync").text(end));
-						$tr.data({ index: lastIndex + (++count / 10000) }); // 10000개를 넘어갈 일은 없을 것
+						sync.innerText = end;
+						tr.append(document.createElement("td"), sync);
+						eData(tr, { index: lastIndex + (++count / 10000) }); // 10000개를 넘어갈 일은 없을 것
 					}
-					$tbody.append($tr);
+					tbody.append(tr);
 				}
 			}
 		}
@@ -282,9 +321,8 @@ ready(() => {
 	
 	function renderThumbnails() {
 		const datas = [];
-		$tbody.find("tr.fs").each(function() {
-			const $tr = $(this);
-			datas.push($tr.data());
+		[...tbody.querySelectorAll("tr.fs")].forEach((tr) => {
+			datas.push(eData(tr));
 		});
 		// ASS 지원하면서 정렬 기능이 필요해짐
 		datas.sort((a, b) => {
@@ -324,28 +362,28 @@ ready(() => {
 				});
 			}
 			
-			let $imgs = data.$frames.children();
-			for (let i = 0; i < $imgs.length; i++) {
-				$imgs[i] = $($imgs[i]);
-			}
+			let imgs = [...data.frames.children];
 			for (let j = data.offset - RANGE; j < data.offset + RANGE; j++) {
 				const imgIndex = data.frameIndex + j;
 				const cName = "img" + imgIndex + data.flag;
-				if (data.$frames.find("." + cName).length == 0) {
-					const $img = $("<img>").addClass("frame " + cName).css({ left: (j * (TX + 2)) }).data({ index: imgIndex, offset: j });
+				if (!data.frames.querySelector("." + cName)) {
+					const img = document.createElement("img");
+					img.classList.add("frame", cName);
+					img.style.left = (j * (TX + 2)) + "px";
+					eData(img, { index: imgIndex, offset: j });
 					if (trustKeyFrame && Subtitle.findSync(fs[imgIndex], kfs, false)) {
-						$img.addClass("keyframe");
+						img.classList.add("keyframe");
 					}
-					$imgs.push($img);
+					imgs.push(img);
 				}
 			}
-			$imgs.sort((a, b) => {
-				const v = a.data("index") - b.data("index");
+			imgs.sort((a, b) => {
+				const v = eData(a).index - eData(b).index;
 				return (v > 0) ? 1 : ((v < 0) ? -1 : 0);
 			});
-			for (let i = 0; i < $imgs.length; i++) {
-				data.$frames.append($imgs[i]);
-			}
+			imgs.forEach((img) => {
+				data.frames.append(img);
+			});
 		};
 		if (renderList.length == 0) {
 			return false;
@@ -375,27 +413,44 @@ ready(() => {
 	// 렌더링 중일 때 색깔 넣어줌
 	opener.startRenderThumbnails = function(begin, end, flag) {
 		for (let i = begin; i < end; i++) {
-			$tbody.find("img.img" + i + flag).addClass("rendering");
-			$framesStorage.find("img.img" + i + flag).addClass("rendering");
+			let img = tbody.querySelector("img.img" + i + flag);
+			if (!img) {
+				img = framesStorage.querySelector("img.img" + i + flag);
+			}
+			if (img) {
+				img.classList.add("rendering");
+			}
 		}
-		$body.scroll();
+		document.body.dispatchEvent(new Event("scroll", { bubbles: true }));
 	}
 	opener.startCompareThumbnails = function (begin, end, flag) {
 		for (let i = begin; i < end; i++) {
-			$tbody.find("img.img" + i + flag).removeClass("rendering").addClass("comparing");
-			$framesStorage.find("img.img" + i + flag).removeClass("rendering").addClass("comparing");
+			let img = tbody.querySelector("img.img" + i + flag);
+			if (!img) {
+				img = framesStorage.querySelector("img.img" + i + flag);
+			}
+			if (img) {
+				img.classList.remove("rendering");
+				img.classList.add("comparing");
+			}
 		}
-		$body.scroll();
+		document.body.dispatchEvent(new Event("scroll", { bubbles: true }));
 	}
 	
 	// 렌더링 완료 후 이미지 세팅
 	// 미리 값을 넣어주면 삭제되지 않은 다른 영상 섬네일 가져올 수 있음
 	opener.afterRenderThumbnails = function(begin, end, flag) {
 		for (let i = begin; i < end; i++) {
-			$tbody.find("img.img" + i + flag).data({ img: i + flag });
-			$framesStorage.find("img.img" + i + flag).data({ img: i + flag });
+			let img = tbody.querySelector("img.img" + i + flag);
+			if (!img) {
+				img = framesStorage.querySelector("img.img" + i + flag);
+			}
+			if (img) {
+				img.classList.remove("comparing");
+				eData(img, { img: i + flag });
+			}
 		}
-		$body.scroll();
+		document.body.dispatchEvent(new Event("scroll", { bubbles: true }));
 	}
 	// 차이 비교값... 현재 쓰이지 않음...
 	const diffs = {};
@@ -404,48 +459,56 @@ ready(() => {
 	}
 	
 	window.selected = -1;
-	function select(index, $tr=null) {
+	function select(index, tr=null) {
 		if (selected == index) return;
 		
-		const byKeyboard = ($tr === true);
+		const byKeyboard = (tr === true);
 		let scrollMargin = 30;
 		
 		if (byKeyboard) {
-			$tr = null;
+			tr = null;
 			scrollMargin = opener.setting.scrollMargin * 30;
 		}
 		
 		selected = index;
-		if ($tr == null) {
-			$tr = frameSyncs[selected];
+		if (tr == null) {
+			tr = frameSyncs[selected];
 		}
 		
-		$tbody.find("tr.selected").removeClass("selected");
-		$tr.addClass("selected");
+		tbody.querySelector("tr.selected")?.classList.remove("selected");
+		tr.classList.add("selected");
 		
-		const offset = $tr.offset();
-		if (offset.top < (byKeyboard ? scrollMargin : 0)) {
-			$body.stop().animate({ scrollTop: $body.scrollTop() + offset.top - scrollMargin }, 200);
+		const offsetTop = tr.offsetTop - document.body.scrollTop;
+		if (offsetTop < (byKeyboard ? scrollMargin : 0)) {
+			document.body.scrollTo({
+					top: tr.offsetTop - scrollMargin
+				,	left: 0
+				,	behavior: "smooth"
+			});
 		} else {
-			const bottom = offset.top + TY + 2;
-			const margin = $body.height() - bottom;
+			const bottom = offsetTop + TY + 2;
+			const margin = document.body.clientHeight - bottom;
 			if (margin < (byKeyboard ? scrollMargin : 0)) {
-				$body.stop().animate({ scrollTop: $body.scrollTop() - margin + scrollMargin }, 200);
+				document.body.scrollTo({
+						top: document.body.scrollTop - margin + scrollMargin
+					,	left: 0
+					,	behavior: "smooth"
+				});
 			}
 		}
 	}
-	function setSync($td, sync) {
-		$td.text(sync == 0 ? 1 : sync);
+	function setSync(td, sync) {
+		td.innerText = (sync == 0 ? 1 : sync);
 		if (!trustKeyFrame) return;
 		if (Subtitle.findSync(sync, kfs, false)) {
-			$td.addClass("keyframe");
+			td.classList.add   ("keyframe");
 		} else {
-			$td.removeClass("keyframe");
+			td.classList.remove("keyframe");
 		}
 	}
 	function moveSync(direction, isOffset=false) {
-		const $tr = frameSyncs[selected];
-		const data = $tr.data();
+		const tr = frameSyncs[selected];
+		const data = eData(tr);
 		
 		const offset = isOffset ? direction : (data.offset + direction);
 		//if (offset < -12 || offset >= 12) return;
@@ -453,10 +516,10 @@ ready(() => {
 		const index = data.frameIndex + offset;
 		if (index < 0) return;
 		
-		$tr.data({ offset: offset });
-		data.$frames.css({ left: "calc(50% - " + (offset * (TX + 2)) + "px)" });
+		eData(tr, { offset: offset });
+		data.frames.style.left = ("calc(50% - " + (offset * (TX + 2)) + "px)");
 		
-		setSync($tr.find("td.sync"), fs[index]);
+		setSync(tr.querySelector("td.sync"), fs[index]);
 	}
 	
 	function apply() {
@@ -465,22 +528,21 @@ ready(() => {
 			smis[oi] = [];
 		}
 		let countSmi = 0;
-		$tbody.find("tr").each(function() {
-			const $tr = $(this);
-			const data = $tr.data();
+		[...tbody.querySelectorAll("tr")].forEach((tr) => {
+			const data = eData(tr);
 			if (data.smi) {
-				if ($tr.hasClass("fs")) {
-					data.smi.start = Number($tr.find(".sync").text());
+				if (tr.classList.contains("fs")) {
+					data.smi.start = Number(tr.querySelector(".sync").innerText);
 				}
 				smis[data.oi].push(data.smi);
 				countSmi++;
 				
-			} else if (data.ass && $tr.hasClass("fs")) {
-				const sync = Number($tr.find(".sync").text());
+			} else if (data.ass && tr.classList.contains("fs")) {
+				const sync = Number(tr.querySelector(".sync").innerText);
 				if (data.type == "start") {
-					data.ass.inputStart.val(sync);
+					data.ass.inputStart.value = sync;
 				} else if (data.type == "end") {
-					data.ass.inputEnd.val(sync);
+					data.ass.inputEnd.value = sync;
 				}
 				data.ass.update();
 			}
@@ -539,26 +601,34 @@ ready(() => {
 		}
 	}
 	
-	$tbody.on("click", "tr", function(e) {
-		const $tr = $(this);
-		select($tr.data("index"), $tr);
-		
-	}).on("dblclick", "tr.fs", function(e) {
-		// 에디터 해당 싱크로 이동
-		opener.SmiEditor.selected.findSync(Number($(this).find("td.sync").text()) + 1);
-		
-	}).on("click", "img.frame", function(e) {
-		const $img = $(this);
-		select($img.parents("tr").data("index"));
-		moveSync($img.data("offset"), true);
+	tbody.addEventListener("click", (e) => {
+		let el;
+		if (el = e.target.closest("tr")) {
+			select(eData(el).index, el);
+		}
+		if (el = e.target.closest("img.frame")) {
+			select(eData(el.closest("tr")).index);
+			moveSync(eData(el).offset, true);
+		}
+	});
+	tbody.addEventListener("dblclick", (e) => {
+		const tr = e.target.closest("tr.fs");
+		if (tr) {
+			// 에디터 해당 싱크로 이동
+			opener.SmiEditor.selected.findSync(Number(tr.querySelector("td.sync").innerText) + 1);
+		}
 	});
 	
-	$(document).on("keydown", function(e) {
+	document.addEventListener("keydown", (e) => {
 		switch (e.key) {
 			case "ArrowUp": {
 				e.preventDefault();
 				if (e.ctrlKey || selected == 0) {
-					$body.stop().animate({ scrollTop: $body.scrollTop() - (TY + 2) }, 200);
+					document.body.scrollTo({
+							top: document.body.scrollTop - (TY + 2)
+						,	left: 0
+						,	behavior: "smooth"
+					});
 					break;
 				}
 				if (selected > 0) {
@@ -573,7 +643,11 @@ ready(() => {
 			case "ArrowDown": {
 				e.preventDefault();
 				if (e.ctrlKey || selected == frameSyncs.length - 1) {
-					$body.stop().animate({ scrollTop: $body.scrollTop() + (TY + 2) }, 200);
+					document.body.scrollTo({
+							top: document.body.scrollTop + (TY + 2)
+						,	left: 0
+						,	behavior: "smooth"
+					});
 					break;
 				}
 				if (selected < frameSyncs.length - 1) {
@@ -599,113 +673,121 @@ ready(() => {
 			}
 			case "q": {
 				if (!e.shiftKey && e.ctrlKey && !e.altKey) {
-					opener.binder.moveTo(Number(frameSyncs[selected].find(".sync").text()) - 2000);
+					opener.binder.moveTo(Number(frameSyncs[selected].querySelector(".sync").innerText) - 2000);
 				}
 				break;
 			}
 		}
-	}).on("keydown", "input[name=mode]", function(e) {
-		// 모드 선택 후에도 방향키 조작은 원래대로 동작해야 함
-		e.preventDefault();
+	});
+	document.addEventListener("keydown", (e) => {
+		if (e.target.closest("input[name=mode]")) {
+			// 모드 선택 후에도 방향키 조작은 원래대로 동작해야 함
+			e.preventDefault();
+		}
 	});
 	
-	$tbody.on("load", "image", function() {
-		// 이미지 로딩 성공 후엔 추가 갱신 없도록 함
-		$(this).data({ img: null });
+	tbody.addEventListener("load", function(e) {
+		if (e.target.closest("img")) {
+			// 이미지 로딩 성공 후엔 추가 갱신 없도록 함
+			eData(this, { img: null });
+		}
 	});
-	function refreshImages($imgs) {
-		$imgs.each(function () {
-			const $img = $(this);
-			const img = $img.data("img");
-			if (img) {
-				$img.attr({ src: "../../temp/thumbnails/" + fileSeq + "_" + img + M[mode] + ".jpg" });
+	function refreshImages(imgs) {
+		[...imgs].forEach(function (img) {
+			const imgKey = eData(img).img;
+			if (imgKey) {
+				img.src = ("../../temp/thumbnails/" + fileSeq + "_" + imgKey + M[mode] + ".jpg");
 			}
 		});
 	}
-	function showFrames($tr) {
-		const showing = $tr.hasClass("showing");
-		const $frames = $tr.data("$frames");
-		refreshImages($frames.find("img"));
+	function showFrames(tr) {
+		const showing = tr.classList.contains("showing");
+		const frames = eData(tr).frames;
+		refreshImages(frames.querySelectorAll("img"));
 		if (!showing) {
-			$tr.addClass("showing").find("td:eq(0)").append($frames);
+			tr.classList.add("showing");
+			tr.querySelector("td").append(frames);
 		}
 	}
-	function hideFrames($tr) {
-		if ($tr.hasClass("showing")) {
-			$tr.removeClass("showing");
+	function hideFrames(tr) {
+		if (tr.classList.contains("showing")) {
+			tr.classList.remove("showing");
 		}
-		const $frames = $tr.data("$frames");
-		$framesStorage.append($frames);
+		framesStorage.append(eData(tr).frames);
 	}
-	$(window).on("resize", function(e) {
-		$("body").scroll();
+	window.addEventListener("resize", (e) => {
+		document.body.dispatchEvent(new Event("scroll", { bubbles: true }));
 	});
-	$("body").on("scroll", function(e) {
+	document.body.addEventListener("scroll", (e) => {
 		let status = -1;
-		$("#editor tbody tr.fs").each(function() {
-			const $tr = $(this);
+		[...document.querySelectorAll("#editor tbody tr.fs")].forEach((tr) => {
 			
 			if (status < 1) {
-				const offset = $tr.offset();
+				const offsetTop = tr.offsetTop - document.body.scrollTop; 
 				
 				if (status < 0) {
-					if (offset.top + TY + 2 < 0) {
+					if (offsetTop + TY + 2 < 0) {
 						// 위쪽에 있어서 안 보임
-						hideFrames($tr);
+						hideFrames(tr);
 						return;
 					}
 				}
-				if (offset.top > $body.height()) {
+				if (offsetTop > document.body.clientHeight) {
 					// 아래쪽에 있어서 안 보임
-					hideFrames($tr);
+					hideFrames(tr);
 					return;
 				}
 				
-				showFrames($tr);
+				showFrames(tr);
 				
 			} else {
 				// 아래쪽에 있어서 안 보임
-				hideFrames($tr);
+				hideFrames(tr);
 			}
 		});
-	}).scroll();
+	});
+	document.body.dispatchEvent(new Event("scroll", { bubbles: true }));
 	
-	$("#inputShift").on("keydown", function(e) {
+	document.getElementById("inputShift").addEventListener("keydown", (e) => {
 		// 가중치 입력 중엔 방향키 조작 차단
 		e.stopPropagation();
 	});
 	
-	$("#formShift").on("submit", function() {
-		const shift = Number($("#inputShift").val());
-		$("#editor tbody tr.fs").each(function () {
-			const $tr = $(this);
-			const data = $tr.data();
+	const form = document.getElementById("formShift");
+	form.addEventListener("submit", (e) => {
+		e.preventDefault();
+		
+		const shift = Number(document.getElementById("inputShift").value);
+		[...document.querySelectorAll("#editor tbody tr.fs")].forEach((tr) => {
+			const data = eData(tr);
 			const frameIndex = Subtitle.findSyncIndex(data.origin, fs);
 			const shiftIndex = Subtitle.findSyncIndex(data.origin + shift, fs);
 			const offset = shiftIndex - frameIndex;
-			$tr.data({ offset: offset });
-			$tr.data("$frames").css({ left: "calc(" + (-(TX + 2) * offset) + "px + 50%" });
-			setSync($tr.find("td.sync"), fs[shiftIndex]);
+			eData(tr, { offset: offset });
+			data.frames.style.left = ("calc(" + (-(TX + 2) * offset) + "px + 50%");
+			setSync(tr.querySelector("td.sync"), fs[shiftIndex]);
 		});
-		return false;
-	}).on("click", "input[name=mode]", function() {
-		mode = $("input[name=mode]:checked").val();
-		refreshImages($tbody.find("img"));
-		for (let i = 1; i <= 3; i++) {
-			if (i == mode) {
-				$body.addClass("mode" + i);
-			} else {
-				$body.removeClass("mode" + i);
+	});
+	form.addEventListener("click", (e) => {
+		if (e.target.closest("input[name=mode]")) {
+			mode = form.querySelector("input[name=mode]:checked").value;
+			refreshImages(tbody.querySelectorAll("img"));
+			for (let i = 1; i <= 3; i++) {
+				if (i == mode) {
+					document.body.classList.add   ("mode" + i);
+				} else {
+					document.body.classList.remove("mode" + i);
+				}
 			}
 		}
 	});
 	
-	$("#btnApply").on("click", function() {
+	document.getElementById("btnApply").addEventListener("click", () => {
 		apply();
 		// 조정한 타이밍에 맞춰서 추가 렌더링
 		renderThumbnails();
 	});
-	$("#btnSet").on("click", function () {
+	document.getElementById("btnSet").addEventListener("click", () => {
 		apply();
 		window.close();
 	});

@@ -1,24 +1,34 @@
-const LOG = true; // 배포 시 false
+import "./History.js";
+import "./SubtitleObject.js";
 
-let LH = 20; // LineHeight
-let SB = 16; // ScrollBarWidth ... TODO: 자동으로 구해지도록?
+{
+	const link = document.createElement("link");
+	link.rel = "stylesheet";
+	link.href = new URL("./SmiEditor.css", import.meta.url).href;
+	document.head.append(link);
+}
+
+window.LOG = true; // 배포 시 false
+
+window.LH = 20; // LineHeight
+window.SB = 16; // ScrollBarWidth ... TODO: 자동으로 구해지도록?
 
 // 배열로 개발했던 것들 레거시 지원
-const LINE = {
+window.LINE = {
 		TEXT: "TEXT"
 	,	SYNC: "SYNC"
 	,	TYPE: "TYPE"
 	,	LEFT: "LEFT"
 	,	VIEW: "VIEW"
 };
-const TYPE = {
+window.TYPE = {
 		TEXT: null
 	,	BASIC: 1
 	,	FRAME: 2
 	,	RANGE: 3
 };
-const TIDs = [null, "", " ", "	"];
-function linesToText(lines) {
+window.TIDs = [null, "", " ", "	"];
+window.linesToText = function(lines) {
 	const textLines = [];
 	for (let i = 0; i < lines.length; i++) {
 		textLines.push(lines[i].TEXT);
@@ -26,7 +36,7 @@ function linesToText(lines) {
 	return textLines.join("\n");
 }
 
-//TODO: Line 객체 통째로 codemirror 적용 시 사라질 부분이므로 jquery 정리 작업에서 예외
+// TODO: Line 객체 통째로 codemirror 적용 시 사라질 부분이므로 jquery 정리 작업에서 예외
 window.Line = function(text="", sync=0, type=TYPE.TEXT) {
 	// TODO: 처음에 객체 변수명이 아니라, 배열 번호 상수로 만들어서 대문자로 해놔서
 	// 고칠 때도 대문자를 따라가 버렸는데, 변수명은 소문자로 바꾸는 게 맞나...
@@ -251,9 +261,7 @@ window.SmiEditor = function(text) {
 		this.colSyncCover.classList.add("col-sync-cover");
 	}
 	{	this.area.append(this.hArea = document.createElement("div"));
-		this.hArea.classList.add("input");
-		this.hArea.classList.add("highlight-textarea");
-		this.hArea.classList.add("hljs");
+		this.hArea.classList.add("input", "highlight-textarea", "hljs");
 		if (!SmiEditor.useHighlight) {
 			this.hArea.classList.add("nonactive");
 		}
@@ -2070,9 +2078,7 @@ SmiEditor.prototype.render = function(range=null) {
 						self.input.classList.add("scrollRight");
 					}
 				} else {
-					self.input.classList.add("disable-scroll-x");
-					self.input.classList.add("scrollLeft");
-					self.input.classList.add("scrollRight");
+					self.input.classList.add("disable-scroll-x", "scrollLeft", "scrollRight");
 				}
 				if (self.afterRender) {
 					self.afterRender();

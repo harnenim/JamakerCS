@@ -1,3 +1,12 @@
+import "./jquery-3.2.1.min.js";
+
+{
+	const link = document.createElement("link");
+	link.rel = "stylesheet";
+	link.href = new URL("./Frame.css", import.meta.url).href;
+	document.head.append(link);
+}
+
 window.Frame = function(url, name, options, onload) {
 	const frame = this.frame = Frame.preset.clone().data("obj", this);
 	$("body").append(frame);
@@ -60,7 +69,7 @@ window.Frame = function(url, name, options, onload) {
 				}
 			}
 		}).find("iframe").each((_, el) => {
-			subIframe = el;
+			const subIframe = el;
 			/*
 			subIframe.contentWindow.onload = function() {
 				console.log("이게 안 잡히나...?");
@@ -144,8 +153,9 @@ Frame.open = (url, name, options, opener) => {
 	return popup;
 };
 
+window.$ = jQuery;
+Frame.preset = $("<div class='window-frame resizable'>");
 $(() => {
-	Frame.preset = $("<div class='window-frame resizable'>");
 	{
 		const fr = $("<div class='fr'>");
 		const fhead = $("<div class='fhead'>");

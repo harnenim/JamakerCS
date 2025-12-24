@@ -1,3 +1,12 @@
+import "./SubtitleObject.js";
+
+{
+	const link = document.createElement("link");
+	link.rel = "stylesheet";
+	link.href = new URL("./AssEditor.css", import.meta.url).href;
+	document.head.append(link);
+}
+
 window.AssEditor = function(view=null, events=[], frameSyncs=null) {
 	this.view = view ? view : (view = document.createElement("div"));
 	view.classList.add("ass-editor");

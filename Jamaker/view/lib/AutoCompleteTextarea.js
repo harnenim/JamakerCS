@@ -1,3 +1,10 @@
+{
+	const link = document.createElement("link");
+	link.rel = "stylesheet";
+	link.href = new URL("./AutoCompleteTextarea.css", import.meta.url).href;
+	document.head.append(link);
+}
+
 window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 	if (ta.length) { // jQuery인 경우
 		ta.ac = this;
@@ -142,13 +149,14 @@ AutoCompleteTextarea.prototype.setPos = function() {
 	}
 	
 	// 오른쪽에 넘칠 경우 맞춤
-	css.left = Math.min(css.left, offset.left + this.ta.clientWidth - this.SB - AutoCompleteTextarea.view.clientWidth);
+	css.left = Math.max(0, Math.min(css.left, offset.left + this.ta.clientWidth - this.SB - AutoCompleteTextarea.view.clientWidth));
 	
 	AutoCompleteTextarea.view.style.top  = css.top  + "px";
 	AutoCompleteTextarea.view.style.left = css.left + "px";
 }
 AutoCompleteTextarea.prototype.getOffset = function() {
-	const offset = this.ta.getBoundingClientRect();
+	let offset = this.ta.getBoundingClientRect();
+	offset = { top: offset.top, left: offset.left };
 	const css = getComputedStyle(this.ta);
 	offset.top  += Number(css.paddingTop .split("px")[0]);
 	offset.left += Number(css.paddingLeft.split("px")[0]);

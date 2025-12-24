@@ -1,3 +1,11 @@
+{
+	const src = document.currentScript.src;
+	const link = document.createElement("link");
+	link.rel = "stylesheet";
+	link.href = src.substring(0, src.length - 2) + "css";
+	document.head.append(link);
+}
+
 let showDrag = false;
 function setShowDrag(dragging) {
 	showDrag = dragging;
@@ -120,9 +128,9 @@ function dragover(x, y) {}
 function drop(x, y) {}
 function beforeExit() {}
 
-let DPI = 1;
+window.DPI = 1;
 function setDpi(dpi) {
-	DPI = dpi;
+	window.DPI = dpi;
 }
 
 {
@@ -253,8 +261,7 @@ window.Progress = function() {
 		this.inner.style.background = "#fff";
 		this.inner.append(this.bar);
 	}
-	this.div.append(this.inner);
-	this.div.append(this.text);
+	this.div.append(this.inner, this.text);
 	document.body.append(this.div);
 	this.last = 0;
 };
