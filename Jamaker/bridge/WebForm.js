@@ -15,16 +15,8 @@ WebForm.prototype.focusWindow = function(target) {
 }
 
 WebForm.prototype.script = function(names, ...args) {
-	/*
-	const func = eval("this.mainView.contentWindow." + names);
-	if (p) {
-		return func(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9]);
-	} else {
-		return func();
-	}
-	*/
 	// WebView2에선 eval 가능한 형태로 넘겨야 함
-	let script = "this.mainView.contentWindow." + names + "(";
+	let script = `this.mainView.contentWindow.${names}(`;
 	for (let i = 0; i < args.length; i++) {
 		if (i > 0) {
 			script += ',';

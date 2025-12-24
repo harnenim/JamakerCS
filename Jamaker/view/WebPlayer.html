@@ -145,7 +145,7 @@ function showJunkTime(time) {
 	const ms = h % 1000; h = (h - ms) / 1000;
 	const s  = h %   60; h = (h -  s) /   60;
 	const m  = h %   60; h = (h -  m) /   60;
-	viewJunkTime.innerText = h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms;
+	viewJunkTime.innerText = `${h}:${m>9?"":"0"}${m}:${s>9?"":"0"}${s}:${ms>99?"":"0"}${ms>9?"":"0"}${ms}`;
 }
 
 window.endResize = function() {

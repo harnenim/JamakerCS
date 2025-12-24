@@ -143,7 +143,7 @@ ready(() => {
 				if (name.indexOf("what") > 0) {
 					name = name.replaceAll("what", setting.player.control.dll);
 				}
-				const value = eval("setting['" + name.replaceAll("_", "']['") + "']");
+				const value = eval(`setting['${ name.replaceAll("_", "']['") }']`);
 				if (typeof value == "number" || typeof value == "string") {
 					el.value = value;
 				} else if (value && value.join) {
@@ -153,7 +153,7 @@ ready(() => {
 				if (name.indexOf("what")) {
 					name = name.replaceAll("what", setting.player.control.dll);
 				}
-				el.checked = eval("setting['" + name.replaceAll("_", "']['") + "']");
+				el.checked = eval(`setting['${ name.replaceAll("_", "']['") }']`);
 			}
 		});
 		[...form.querySelectorAll("select")].forEach((el) => {
@@ -289,10 +289,10 @@ ready(() => {
 			const name = (id == "editor")
 			           ? "window"
 			           : (id + "_window");
-			document.querySelector("input[name=" + name + "_x]"     ).value = x;
-			document.querySelector("input[name=" + name + "_y]"     ).value = y;
-			document.querySelector("input[name=" + name + "_width]" ).value = w;
-			document.querySelector("input[name=" + name + "_height]").value = h;
+			document.querySelector(`input[name=${name}_x]`     ).value = x;
+			document.querySelector(`input[name=${name}_y]`     ).value = y;
+			document.querySelector(`input[name=${name}_width]` ).value = w;
+			document.querySelector(`input[name=${name}_height]`).value = h;
 		};
 	}
 	
@@ -381,7 +381,7 @@ ready(() => {
 						th.classList.add("used");
 						th.title = label;
 					}
-					th.setAttribute("data-name", "setting.command.fn['" + key + "']");
+					th.setAttribute("data-name", `setting.command.fn['${ key }']`);
 					th.setAttribute("data-key" , key);
 					th.setAttribute("data-func", func);
 				}
@@ -422,7 +422,7 @@ ready(() => {
 							td.classList.add("used");
 							td.innerText = label;
 						}
-						td.setAttribute("data-name", "setting.command." + w + "['" + key + "']");
+						td.setAttribute("data-name", `setting.command.${w}['${key}']`);
 						td.setAttribute("data-with", j);
 						td.setAttribute("data-key" , key);
 						td.setAttribute("data-func", func);
@@ -523,8 +523,8 @@ ready(() => {
 							if (oSmiEditor.withCtrlShifts.reserved.indexOf(key) >= 0) {
 								command = "Ctrl + Shift + 예약키";
 							} else {
-								func = tableCommand.querySelectorAll(selector + " > td")[3].getAttribute("data-func");
-								name = "setting.command.withCtrlShifts[\"" + key + "\"]";
+								func = tableCommand.querySelectorAll(`${selector} > td`)[3].getAttribute("data-func");
+								name = `setting.command.withCtrlShifts["${key}"]`;
 								command = "Ctrl + Shift + " + keyName;
 							}
 						}
@@ -535,16 +535,16 @@ ready(() => {
 							if (oSmiEditor.withCtrlAlts.reserved.indexOf(key) >= 0) {
 								command = "Ctrl + Alt + 예약키";
 							} else {
-								func = tableCommand.querySelectorAll(selector + " > td")[2].getAttribute("data-func");
-								name = "setting.command.withCtrlAlts[\"" + key + "\"]";
+								func = tableCommand.querySelectorAll(`${selector} > td`)[2].getAttribute("data-func");
+								name = `setting.command.withCtrlAlts["${key}"]`;
 								command = "Ctrl + Alt + " + keyName;
 							}
 						} else {
 							if (oSmiEditor.withCtrls.reserved.indexOf(key) >= 0) {
 								command = "Ctrl + 예약키";
 							} else {
-								func = tableCommand.querySelectorAll(selector + " > td")[0].getAttribute("data-func");
-								name = "setting.command.withCtrls[\"" + key + "\"]";
+								func = tableCommand.querySelectorAll(`${selector} > td`)[0].getAttribute("data-func");
+								name = `setting.command.withCtrls["${key}"]`;
 								command = "Ctrl + " + keyName;
 							}
 						}
@@ -553,13 +553,13 @@ ready(() => {
 							if (oSmiEditor.withAlts.reserved.indexOf(key) >= 0) {
 								command = "Alt + 예약키";
 							} else {
-								func = tableCommand.querySelectorAll(selector + " > td")[1].getAttribute("data-func");
-								name = "setting.command.withAlts[\"" + key + "\"]";
+								func = tableCommand.querySelectorAll(`${selector} > td`)[1].getAttribute("data-func");
+								name = `setting.command.withAlts["${key}"]`;
 								command = "Alt + " + keyName;
 							}
 						} else {
-							func = tableCommand.querySelectorAll(selector + " > th")[0].getAttribute("data-func");
-							name = "setting.fn[\"" + key + "\"]";
+							func = tableCommand.querySelectorAll(`${selector} > th`)[0].getAttribute("data-func");
+							name = `setting.fn["${key}"]`;
 						}
 					}
 				}
@@ -629,7 +629,7 @@ ready(() => {
 				if (func.trim().length == 0) {
 					func = " ";
 				}
-				eval(name + " = func;");
+				eval(`${name} = func;`);
 				setSaved("cmd", true);
 				refreshTableCommand();
 				opener.setSetting(setting);
@@ -646,14 +646,14 @@ ready(() => {
 		
 		submitFuncs["ac"] = () => {
 			[...document.getElementById("ac").getElementsByTagName("textarea")].forEach((textarea) => {
-				const name = "setting['" + textarea.name.replaceAll("_", "']['") + "']";
+				const name = `setting['${ textarea.name.replaceAll("_", "']['") }']`;
 				let value = textarea.value;
 				if (value) {
 					value = value.split("\n");
 				} else {
 					value = [];
 				}
-				eval(name + " = value");
+				eval(`${name} = value`);
 			});
 			opener.setSetting(setting);
 			opener.saveSetting();
@@ -757,7 +757,7 @@ ready(() => {
 			if (el = e.target.closest("li span")) {
 				const color = setting.colorPreset[el.parentNode.getAttribute("data-key")];
 				for (let name in color) {
-					document.querySelector("input[name=color_" + name + "]").value = color[name];
+					document.querySelector(`input[name=color_${name}]`).value = color[name];
 				}
 			}
 			if (el = e.target.closest("li button")) {
@@ -823,7 +823,7 @@ ready(() => {
 			});
 			document.addEventListener("mousemove", () => {
 				if (!resizeNewFile) return;
-				editorNewFile.area.style.height = (editorNewFile.input.offsetHeight + 2) + "px";
+				editorNewFile.area.style.height = `${ editorNewFile.input.offsetHeight + 2 }px`;
 			});
 			document.addEventListener("mouseup", () => {
 				resizeNewFile = false;

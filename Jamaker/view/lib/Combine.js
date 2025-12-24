@@ -222,7 +222,7 @@ window.Combine = {
 		if (window.SmiEditor) {
 			line = SmiEditor.makeSyncLine(sync, type + 1);
 		} else {
-			line = "<Sync Start=" + sync + "><P Class=KRCC" + Smi.TypeParser[type] + ">";
+			line = `<Sync Start=${sync}><P Class=KRCC${ Smi.TypeParser[type] }>`;
 		}
 		return line;
 	}
@@ -984,7 +984,7 @@ if (SmiFile) {
 		{	// 메인 홀드 스타일 저장
 			const style = SmiFile.toSaveStyle(origHolds[0].style);
 			if (style) {
-				main.footer += "\n<!-- Style\n" + style + "\n-->";
+				main.footer += `\n<!-- Style\n${style}\n-->`;
 			}
 		}
 		
@@ -1006,14 +1006,14 @@ if (SmiFile) {
 				if (hold.style) {
 					const style = SmiFile.toSaveStyle(hold.style);
 					if (style) {
-						text = "<!-- Style\n" + style + "\n-->\n" + text;
+						text = `<!-- Style\n${style}\n-->\n` + text;
 					}
 					if (hold.style.output != 3) {
 						// 출력 선택
 						hold.exportName += "|" + hold.style.output;
 					}
 				}
-				result[hold.resultIndex = (hi + 1)] = "<!-- Hold=" + hold.pos + "|" + hold.exportName + "\n" + text.replaceAll("<", "<​").replaceAll(">", "​>") + "\n-->";
+				result[hold.resultIndex = (hi + 1)] = `<!-- Hold=${hold.pos}|${hold.exportName}\n${text.replaceAll("<", "<​").replaceAll(">", "​>")}\n-->`;
 				hold.imported = false;
 				hold.afterMain = false;
 				
@@ -1032,7 +1032,6 @@ if (SmiFile) {
 					// 스타일 적용 필요하면 내포 홀드 처리하지 않음
 					const style = hold.saveStyle = SmiFile.toSaveStyle(hold.style);
 					if (style) {
-						//text = "<!-- Style\n" + style + "\n-->\n" + text;
 						// ASS용 스타일은 내포 홀드 처리함. SMI용 스타일이 적용된 경우만 제외
 						if (hold.style.PrimaryColour != "#FFFFFF") continue;
 						if (hold.style.Italic   ) continue;
@@ -1150,7 +1149,7 @@ if (SmiFile) {
 				lastStart = hold.start;
 				
 				if (withComment > 0) {
-					importBody[0].text = "<!-- End=" + holdEnd + "\nHold=" + hold.pos + "|" + hold.exportName
+					importBody[0].text = `<!-- End=${holdEnd}\nHold=${hold.pos}|${hold.exportName}`
 						+ (hold.saveStyle ? "\n" + hold.saveStyle : "")
 						+ "\n-->\n" + importBody[0].text;
 				}
@@ -1203,7 +1202,7 @@ if (SmiFile) {
 				if (hold.style) {
 					const style = (typeof hold.style == "string") ? hold.style : SmiFile.toSaveStyle(hold.style);
 					if (style) {
-						text = "<!-- Style\n" + style + "\n-->\n" + text;
+						text = "<!-- Style\n${style}\n-->\n" + text;
 					}
 				}
 				const smi = holdSmis[hi] = new SmiFile(text);
@@ -1465,7 +1464,7 @@ if (SmiFile) {
 					origin.body = originBody.slice(log.from[0], log.from[1]);
 					let comment = origin.toText().trim();
 					
-					main.body[log.to[0]].text = "<!-- End=" + log.end + "\n" + (comment.replaceAll("<", "<​").replaceAll(">", "​>")) + "\n-->\n" + main.body[log.to[0]].text;
+					main.body[log.to[0]].text = `<!-- End=${log.end}\n${ comment.replaceAll("<", "<​").replaceAll(">", "​>") }\n-->\n` + main.body[log.to[0]].text;
 				}
 			}
 		}
