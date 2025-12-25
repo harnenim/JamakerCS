@@ -104,7 +104,7 @@ function resizeTextarea() {
 			document.getElementById("inputSync").value.split("\n").length
 		,	document.getElementById("inputText").value.split("\n").length * 2
 	) * 16;
-	[...document.getElementsByTagName("textarea")].forEach((el) => { el.style.height = height + "px"; });
+	[...document.getElementsByTagName("textarea")].forEach((el) => { el.style.height = `${height}px`; });
 }
 
 ready(() => {

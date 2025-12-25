@@ -187,7 +187,7 @@ function setColor(color) {
 	fetch("lib/popup.color.css").then(async (response) => {
 		let preset = await response.text();
 		for (let name in color) {
-			preset = preset.replaceAll("[" + name + "]", color[name]);
+			preset = preset.replaceAll(`[${name}]`, color[name]);
 		}
 		if (!window._style) {
 			if (!(_style = document.getElementById("styleColor"))) {

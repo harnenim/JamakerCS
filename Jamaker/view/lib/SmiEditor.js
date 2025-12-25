@@ -152,7 +152,7 @@ Line.prototype.render = function(index, last={ sync: 0, state: null }) {
 		const ms = h % 1000; h = (h - ms) / 1000;
 		const s  = h %   60; h = (h -  s) /   60;
 		const m  = h %   60; h = (h -  m) /   60;
-		const syncText = (h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms);
+		const syncText = `${h}:${(m>9?"":"0")+m}:${(s>9?"":"0")+s}:${(ms>99?"":"0")+(ms>9?"":"0")+ms}`;
 		
 		if (this.LEFT == null) {
 			(this.LEFT = $("<div>")).append($("<span>"));
@@ -203,7 +203,7 @@ Line.prototype.renderHighlight = function(last, forced=false) {
 							// 그라데이션 색상
 							$value.addClass("hljs-color").css({
 									borderColor: "transparent"
-								,	borderImage: "linear-gradient(to right, " + color.substring(0,7) + " 0%, " + color.substring(8,15) + " 100%)"
+								,	borderImage: `linear-gradient(to right, ${ color.substring(0,7) } 0%, ${ color.substring(8,15) } 100%)`
 								,	borderImageSlice: "1"
 							});
 							
@@ -1354,11 +1354,11 @@ SmiEditor.activateKeyEvent = function() {
 					const funcSince = log("단축키 실행 start");
 					const type = typeof f;
 					if (type == "function") {
-						log(key + " / func: " + f.name);
+						log(`${key} / func: ${f.name}`);
 						f();
 					} else if (type == "string" && f.trim().length) {
-						log(key + " / func: " + f.split("\n")[0]);
-						eval("(() => { " + f + "// */\n})()"); // 내용물이 주석으로 끝날 수도 있음
+						log(`${key} / func: ${f.split("\n")[0]}`);
+						eval(`(() => { ${ f }// */\n})()`); // 내용물이 주석으로 끝날 수도 있음
 					}
 					log("단축키 실행 end", funcSince);
 				}
@@ -1914,7 +1914,7 @@ SmiEditor.prototype.tagging = function(tag, fromCursor) {
 	
 	let index = tag.indexOf(" ");
 	if (index < 0) index = tag.indexOf(">");
-	const closer = "</" + tag.substring(1, index) + ">";
+	const closer = `</${ tag.substring(1, index) }>`;
 	
 	const line = this.getLine();
 	if (line.selection[0] == line.selection[1]) {
@@ -2111,7 +2111,7 @@ SmiEditor.setHighlight = (SH, editors) => {
 	SmiEditor.showColor = SH.color;
 	SmiEditor.showEnter = SH.enter;
 	if (SH.parser) {
-		fetch(SmiEditor.ROOT + "lib/highlight/parser/" + SH.parser + ".js").then(async (response) => {
+		fetch(SmiEditor.ROOT + `lib/highlight/parser/${ SH.parser }.js`).then(async (response) => {
 			let parser = await response.text();
 			eval(parser);
 			
@@ -2124,14 +2124,14 @@ SmiEditor.setHighlight = (SH, editors) => {
 				name = name.split("?")[0];
 			}
 			
-			fetch(SmiEditor.ROOT + "lib/highlight/styles/" + name + ".css").then(async (response) => {
+			fetch(SmiEditor.ROOT + `lib/highlight/styles/${ name }.css`).then(async (response) => {
 				let style = await response.text();
 				// 문법 하이라이트 테마에 따른 커서 색상 추가
 				SmiEditor.highlightCss
 					= ".hljs { color: unset; }\n"
-					+ ".hold textarea { caret-color: " + (isDark ? "#fff" : "#000") + "; }\n"
+					+ `.hold textarea { caret-color: ${ (isDark ? "#fff" : "#000") }; }\n`
 					+ style
-					+ ".hljs-sync { opacity: " + SH.sync + " }\n";
+					+ `.hljs-sync { opacity: ${ SH.sync } }\n`;
 				SmiEditor.refreshHighlight(editors);
 			});
 		});
@@ -2414,7 +2414,7 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 				let ms = h % 1000; h = (h - ms) / 1000;
 				let s  = h %   60; h = (h -  s) /   60;
 				let m  = h %   60; h = (h -  m) /   60;
-				colSync.find("span").html(h + ":" + (m>9?"":"0")+m + ":" + (s>9?"":"0")+s + ":" + (ms>99?"":"0")+(ms>9?"":"0")+ms + "<br />");
+				colSync.find("span").html(`${h}:${(m>9?"":"0")+m}:${(s>9?"":"0")+s}:${(ms>99?"":"0")+(ms>9?"":"0")+ms}<br />`);
 				
 				// 키프레임 됐을 때 업데이트
 				const kSync = Subtitle.findSync(line.SYNC, Subtitle.video.kfs);
@@ -3523,7 +3523,7 @@ if (window.AutoCompleteTextarea) {
 			}
 			const newList = [];
 			for (let i = tags.length - 1; i >= 0; i--) {
-				const item = "</" + tags[i] + ">";
+				const item = `</${tags[i]}>`;
 				if (newList.indexOf(item) < 0) { // 중복 제외
 					newList.push(item);
 				}

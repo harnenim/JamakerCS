@@ -25,7 +25,7 @@ function setSetting(setting) {
 	if (style == null) {
 		document.head.append(style = document.createElement("style"));
 	}
-	style.innerHTML = ("#preview {\n" + setting.viewer.css + "\nfont-size: calc(" + setting.viewer.size + "vw / 5.86);\n}");
+	style.innerHTML = (`#preview {\n${ setting.viewer.css }\nfont-size: calc(${ setting.viewer.size }vw / 5.86);\n}`);
 	Combine.css = { font: getComputedStyle(document.getElementById("preview")).font };
 }
 

@@ -21,7 +21,7 @@ function setSetting(setting) {
 	if (style == null) {
 		document.head.append(style = document.createElement("style"));
 	}
-	style.innerHTML = ("#preview {\n" + setting.viewer.css + "}");
+	style.innerHTML = (`#preview {\n${ setting.viewer.css }}`);
 }
 
 const editor = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
@@ -38,15 +38,15 @@ function shakeSync(lines, index, size) {
 	
 	// 좌우로 흔들기
 	// 플레이어에서 사이즈 미지원해도 좌우로는 흔들리도록
-	const LRmin = "<font size=\"" + (3 * size) + "\"></font>";
-	const LRmid = "<font size=\"" + (3 * size) + "\"> </font>";
-	const LRmax = "<font size=\"" + (3 * size) + "\">  </font>";
+	const LRmin = `<font size="${ 3 * size }"></font>`;
+	const LRmid = `<font size="${ 3 * size }"> </font>`;
+	const LRmax = `<font size="${ 3 * size }">  </font>`;
 	
 	// 상하로 흔들기
 	// 플레이어에서 사이즈 미지원하면 상하로 흔들리지 않음
-	const TBmin = "<font size=\"" + (0 * size) + "\">　</font>";
-	const TBmid = "<font size=\"" + (1 * size) + "\">　</font>";
-	const TBmax = "<font size=\"" + (2 * size) + "\">　</font>";
+	const TBmin = `<font size="${ 0 * size }">　</font>`;
+	const TBmid = `<font size="${ 1 * size }">　</font>`;
+	const TBmax = `<font size="${ 2 * size }">　</font>`;
 	
 	{	// 좌우로 흔들기
 		// 플레이어에서 사이즈 미지원해도 좌우로는 흔들리도록

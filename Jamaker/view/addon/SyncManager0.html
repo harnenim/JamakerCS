@@ -167,8 +167,8 @@ function splitOrigin() {
 		if (sync.startType == 2) {
 			let text = htmlToText(sync.lines.join("\\N").replaceAll(/<br>/gi,"\\N")).trim();
 			if (requiredEnd) { // []
-				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.end   - add) + "," + smi2assTime(sync.end   + add) + ",［）,,0000,0000,0000,,&nbsp;");
-				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.start - add) + "," + smi2assTime(sync.start + add) + ",［）,,0000,0000,0000,," + text);
+				forFrameAss.unshift(`Dialogue: 0,${ smi2assTime(sync.end   - add) },${ smi2assTime(sync.end   + add) },［）,,0000,0000,0000,,&nbsp;`);
+				forFrameAss.unshift(`Dialogue: 0,${ smi2assTime(sync.start - add) },${ smi2assTime(sync.start + add) },［）,,0000,0000,0000,,${text}`);
 				requiredEnd = false;
 				
 			} else { // [)
@@ -176,7 +176,7 @@ function splitOrigin() {
 					text = "&nbsp;";
 				}
 				if (text.length) {
-					forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.start - add) + "," + smi2assTime(sync.start + add) + ",［）,,0000,0000,0000,," + text);
+					forFrameAss.unshift(`Dialogue: 0,${ smi2assTime(sync.start - add) },${ smi2assTime(sync.start + add) },［）,,0000,0000,0000,,${text}`);
 					
 				} else { // 공백 싱크: 앞 싱크의 종료싱크 처리 필요
 					requiredEnd = true;
@@ -186,7 +186,7 @@ function splitOrigin() {
 		} else {
 			if (requiredEnd) { // (]
 				let text = htmlToText(sync.lines.join("\\N").replaceAll(/<br>/gi, "\\N")).trim();
-				forFrameAss.unshift("Dialogue: 0," + smi2assTime(sync.end - add) + "," + smi2assTime(sync.end + add) + ",［）,,0000,0000,0000,,&nbsp;");
+				forFrameAss.unshift(`Dialogue: 0,${ smi2assTime(sync.end - add) },${ smi2assTime(sync.end + add) },［）,,0000,0000,0000,,&nbsp;`);
 				requiredEnd = false;
 			}
 		}
@@ -325,7 +325,7 @@ function checkDiff() {
 					div.style.left       = 0;
 					div.style.width      = "100%";
 					div.style.height     = "14px";
-					div.style.background = "rgba(255, 0, 0, " + alpha + ")";
+					div.style.background = `rgba(255, 0, 0, ${alpha})`;
 					checker.append(div);
 				}
 				// 일반 싱크와 충돌 검사
@@ -345,7 +345,7 @@ function checkDiff() {
 							div.style.background = "rgba(255, 0, 0, 1)";
 							checker.append(div);
 							if (count++ < 5) {
-								alert("기존 싱크(" + originLines[i] + ")와 바꿀 싱크(" + targetLines[i] + ") 사이에\n다른 일반 싱크가 있습니다.");
+								alert(`기존 싱크(${originLines[i]})와 바꿀 싱크(${targetLines[i]}) 사이에\n다른 일반 싱크가 있습니다.`);
 							} else {
 								alert("싱크 충돌 확인을 중단합니다.");
 								break;

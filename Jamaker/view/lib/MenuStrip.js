@@ -325,7 +325,7 @@ window.MenuStrip = function(ol=null) {
 			if (li.classList.contains("line") || li.classList.contains("disable")) return;
 
 			// 하위 메뉴 클릭하면 메뉴 닫고 실행
-			eval("(() => { " + li.func + "// */\n})()"); // 내용물이 주석으로 끝날 수도 있음
+			eval(`(() => { ${ li.func }// */\n})()`); // 내용물이 주석으로 끝날 수도 있음
 			focusedMenu.unfocus();
 			return;
 		}
@@ -365,10 +365,10 @@ MenuStrip.prototype.setMenus = function(menus) {
 		const text = menuLi.innerText = list[0];
 		let index = text.indexOf("&");
 		if (index > 0) {
-			if (text.length > index + 1) {
+			if (text.length > index + 1) { // TODO: 여기도 서브메뉴처럼, 단축키가 맨 끝에 괄호가 아닌 경우에도 동작하도록 수정 필요
 				menuKey = text[text.length-2];
 				if (('A' <= menuKey && menuKey <= 'Z') || ('0' <= menuKey && menuKey <= '9')) {
-					menuLi.innerHTML = (text.substring(0, text.length - 3) + "<u>"+menuKey.toUpperCase()+"</u>)");
+					menuLi.innerHTML = (text.substring(0, text.length - 3) + `<u>${ menuKey.toUpperCase() }</u>)`);
 					this.menuKeys[menuKey.toLowerCase()] = menuLi;
 				}
 			}
@@ -407,7 +407,7 @@ MenuStrip.createSubMenu = function(menus=[]) {
 				if (menu.name.length > index + 1) {
 					const menuKey = menu.name[index + 1];
 					if (('A' <= menuKey && menuKey <= 'Z') || ('0' <= menuKey && menuKey <= '9')) {
-						subLi.innerHTML = (menu.name.substring(0, index) + "<u>" + menuKey.toUpperCase() + "</u>" + menu.name.substring(index + 2));
+						subLi.innerHTML = (menu.name.substring(0, index) + `<u>${ menuKey.toUpperCase() }</u>` + menu.name.substring(index + 2));
 						menuKeys[menuKey.toLowerCase()] = subLi;
 					}
 				}

@@ -306,7 +306,6 @@ AutoCompleteTextarea.prototype.onCheck = function(e) {
 	const pos = this.ta.selectionEnd - 1;
 	
 	const sets = this.sets[text[pos]];
-	console.log(text[pos], sets);
 	if (sets && sets[0] == text[pos]) {
 		this.text = text;
 		this.pos = pos;

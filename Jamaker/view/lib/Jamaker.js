@@ -5,8 +5,12 @@ import "./SmiEditor.js";
 import "./AssEditor.js";
 
 {
-	document.head.querySelector(`link[href="${ new URL("./webview.css", import.meta.url).href }"`)?.remove();
-
+	document.head.querySelectorAll("link").forEach((el) => {
+		if (el.href.endsWith("/webview.css")) {
+			el.remove();
+		}
+	});
+	
 	const link = document.createElement("link");
 	link.rel = "stylesheet";
 	link.href = new URL("./Jamaker.css", import.meta.url).href;
@@ -123,7 +127,7 @@ window.Tab = function(text, path) {
 				for (let i = 0; i < styleList.length; i++) {
 					const style = styleList[i];
 					popup.append(el = document.createElement("button"));
-					el.innerText = (style.name + " (" + style.events.length + "개)");
+					el.innerText = (`${style.name} (${ style.events.length }개)`);
 					eData(el, { tab: tab, style: style.name });
 				}
 				popup.append(el = document.createElement("button"));
@@ -541,7 +545,7 @@ SmiEditor.prototype.refreshStyle = function() {
 	css.fontSize = style.Fontsize + "px";
 	css.fontWeight = style.Bold ? "bold" : "";
 	
-	css.transform = "scale(" + (style.ScaleX / 200) + "," + (style.ScaleY / 200) + ")";
+	css.transform = `scale(${ style.ScaleX / 200 },${ style.ScaleY / 200 })`;
 	css.letterSpacing = (style.Fontsize * style.Spacing / 100) + "px";
 	css.rotate = -style.Angle + "deg";
 	
@@ -561,7 +565,7 @@ SmiEditor.prototype.refreshStyle = function() {
 	
 	css.color = style.BackColour + (256 + style.BackOpacity).toString(16).substring(1);
 	css["-webkit-text-stroke"] = (style.Outline * 3) + "px " + style.BackColour + (256 + style.BackOpacity).toString(16).substring(1);
-	css.top = css.left = "calc(50% + " + style.Shadow + "px)";
+	css.top = css.left = `calc(50% + ${ style.Shadow }px)`;
 	
 	{	const ps = this.preview.querySelector(".hold-style-preview-shadow");
 		for (name in css) {
@@ -788,7 +792,7 @@ Tab.prototype.updateHoldSelector = function() {
 	for (let i = 0; i < this.holds.length; i++) {
 		const hold = this.holds[i];
 		if (i > 0) {
-			hold.selector.querySelector(".hold-name span").innerText = (i + "." + hold.name);
+			hold.selector.querySelector(".hold-name span").innerText = (`${i}.${hold.name}`);
 		}
 		timers.push({ time: hold.start, holds: [{ index: i, type: BEGIN }] });
 		timers.push({ time: hold.end  , holds: [{ index: i, type: END   }] });
@@ -855,7 +859,7 @@ Tab.prototype.updateHoldSelector = function() {
 			const hold = this.holds[selector.index];
 			if (selector.type == BEGIN) {
 				// 홀드 시작
-				hold.selector.style.left = (rate + "%");
+				hold.selector.style.left = `${rate}%`;
 				
 				// 홀드끼리 영역 겹칠 경우 보완 필요
 				let pos = hold.pos;
@@ -882,11 +886,11 @@ Tab.prototype.updateHoldSelector = function() {
 					}
 					top = 60 - top;
 				}
-				hold.selector.style.top = (top + "%");
+				hold.selector.style.top = `${top}%`;
 				
 			} else {
 				// 홀드 끝
-				hold.selector.style.right = ((100 - rate) + "%");
+				hold.selector.style.right = `${ 100 - rate }%`;
 				
 				// 홀드 위치 사용 중 해제
 				for (let pos in posStatus) {
@@ -1099,7 +1103,7 @@ Tab.prototype.getAdditionalToAss = function(forSmi=false) {
 		assFile.getEvents().format = AssEditor.FormatToSave;
 		const assText = assFile.toText();
 		if (assText) {
-			return "\n<!-- ASS\n" + assText + "\n-->";
+			return `\n<!-- ASS\n${ assText }\n-->`;
 		} else {
 			return "";
 		}
@@ -1776,7 +1780,7 @@ window.init = function(jsonSetting, isBackup=true) {
 					
 					css[i][1] = aCss.substring(0, begin) + "/* " + aCss.substring(begin, end) + " font-size 비활성화 */" + aCss.substring(end);
 				}
-				css[i] = (css[i][0] ? ("/* " + css[i][0] + " */") : "") + css[i][1];
+				css[i] = (css[i][0] ? `/* ${ css[i][0] } */` : "") + css[i][1];
 			}
 			
 			setting.viewer.css = css.join("");
@@ -1843,7 +1847,7 @@ window.init = function(jsonSetting, isBackup=true) {
 											let dMenuFunc = dMenu1.substring(dLen + 1);
 											if (sMenuFunc != dMenuFunc) {
 												// 기능이 바뀐 경우
-												sMenuFunc = dMenuFunc + " /* " + DEFAULT_SETTING.version + " 이전: " + sMenuFunc.replaceAll("*/", "*​/") + " */";
+												sMenuFunc = dMenuFunc + ` /* ${ DEFAULT_SETTING.version } 이전: ${ sMenuFunc.replaceAll("*/", "*​/") } */`;
 												updated = true;
 											}
 											if (updated) {
@@ -2172,7 +2176,7 @@ window.setSetting = function(setting, initial=false) {
 			}
 			
 			for (let name in setting.color) {
-				preset = preset.replaceAll("[" + name + "]", setting.color[name]);
+				preset = preset.replaceAll(`[${name}]`, setting.color[name]);
 			}
 			function setStyleWithHighlight() {
 				// 문법 하이라이트 배경색 가져오기
@@ -2435,8 +2439,8 @@ window.refreshPaddingBottom = function() {
 	// 에디터 하단 여백 재조정
 	const holdTop = tabs.length ? Number(tabs[tabIndex].area.querySelector(".holds").offsetTop) : 0;
 	const padding = document.getElementById("editor").offsetHeight - holdTop - LH;
-	const append = "\n#editor .input textarea { padding-bottom: " + (padding - 2 - SB) + "px; }"
-	             + "\n.hold > .col-sync > div:first-child { height: " + (padding - 1) + "px; }";
+	const append = `\n#editor .input textarea { padding-bottom: ${ padding - 2 - SB }px; }`
+	             + `\n.hold > .col-sync > div:first-child { height: ${ padding - 1 }px; }`;
 	
 	let stylePaddingBottom = document.getElementById("stylePaddingBottom");
 	if (!stylePaddingBottom) {
@@ -2451,7 +2455,7 @@ window.refreshPaddingBottom = function() {
 }
 
 window.openHelp = function(name) {
-	const url = (name.substring(0, 4) == "http") ? name : "help/" + name.replaceAll("..", "").replaceAll(":", "") + ".html";
+	const url = (name.substring(0, 4) == "http") ? name : `help/${ name.replaceAll("..", "").replaceAll(":", "") }.html`;
 	SmiEditor.helpWindow = window.open(url, "help", "scrollbars=no,location=no,resizable=no,width=1,height=1");
 	binder.moveWindow("help"
 			, (setting.window.x < setting.player.window.x && setting.window.width < 880)
@@ -2708,7 +2712,7 @@ window.saveFile = function(asNew, isExport) {
 				if (assStyle) {
 					// ASS 스타일이 있으면 따라감
 					if (SmiFile.toSaveStyle(assStyle) != saveStyle) {
-						alert("ASS 추가 스크립트에서 설정한 스타일과 홀드의 스타일이 다릅니다.\n[" + hold.name + "] 홀드 스타일을 수정합니다.");
+						alert(`ASS 추가 스크립트에서 설정한 스타일과 홀드의 스타일이 다릅니다.\n[${hold.name}] 홀드 스타일을 수정합니다.`);
 						hold.setStyle(assStyle);
 					}
 					assStyle.orig.hasHold = true;
@@ -2725,7 +2729,7 @@ window.saveFile = function(asNew, isExport) {
 									break;
 								}
 							}
-							alert("같은 이름의 홀드끼리 스타일이 일치하지 않습니다.\n임의로 이름을 변경합니다.\n" + from + " -> " + to);
+							alert(`같은 이름의 홀드끼리 스타일이 일치하지 않습니다.\n임의로 이름을 변경합니다.\n${from} -> ${to}`);
 							hold.name = to;
 							hold.selector.querySelector(".hold-name > span").innerText = (hold.owner.holds.indexOf(hold) + "." + hold.name);
 							hold.selector.title = hold.name;
@@ -3048,7 +3052,7 @@ window.setVideo = function(path) {
 }
 // C# 쪽에서 호출 - requestFrames
 window.setVideoInfo = function(w=1920, h=1080, fr=23976) {
-	log("setVideoInfo: " + w + ", " + h);
+	log(`setVideoInfo: ${w}, ${h}`);
 	
 	Subtitle.video.width = w;
 	Subtitle.video.height = h;
@@ -3059,7 +3063,7 @@ window.setVideoInfo = function(w=1920, h=1080, fr=23976) {
 		fr = 23975.7; // 일부 영상 버그
 	}
 	Subtitle.video.FL = 1000000 / (Subtitle.video.FR = fr);
-//	document.getElementById("showFps").innerText((Math.round(fr*10)/10000) + " fps");
+//	document.getElementById("showFps").innerText = (Math.round(fr*10)/10000) + " fps";
 }
 // C# 쪽에서 호출 - requestFrames
 window.loadFkf = function(fkfName) {
@@ -3337,9 +3341,9 @@ window.loadAssFile = function(path, text, target=-1) {
 					if (frontTag) {
 						// 앞으로 가져온 태그가 있을 경우
 						if (assText.startsWith("{\\")) {
-							assText = "{" + frontTag + assText.substring(1);
+							assText = `{${frontTag}` + assText.substring(1);
 						} else {
-							assText = "{" + frontTag + "}" + assText;
+							assText = `{${frontTag}}` + assText;
 						}
 						// 끄트머리가 공백문자면 태그 없어도 중괄호 필요함
 						if (assText.endsWith("　")
@@ -3574,12 +3578,12 @@ window.loadAssFile = function(path, text, target=-1) {
 		funcSince = log("loadAssFile - 비교 완료", funcSince);
 		
 		if (changedStyles.length + addCount + delCount > 0) {
-			let msg = "스타일 수정 내역이 " + changedStyles.length + "건 있습니다. 적용하시겠습니까?";
+			let msg = `스타일 수정 내역이 ${ changedStyles.length }건 있습니다. 적용하시겠습니까?`;
 			if (addCount + delCount) {
 				let countMsg = [];
-				if (addCount) countMsg.push("추가 " + addCount + "건");
-				if (delCount) countMsg.push("삭제 " + addCount + "건");
-				msg = "스크립트/태그 " + countMsg.join(", ") + "이 있습니다. 적용하시겠습니까?\n"
+				if (addCount) countMsg.push(`추가 ${addCount}건`);
+				if (delCount) countMsg.push(`삭제 ${addCount}건`);
+				msg = `스크립트/태그 ${ countMsg.join(", ") }이 있습니다. 적용하시겠습니까?\n`
 				    + "자막에 맞는 동영상 파일이 열려있어야 정상적인 결과를 얻을 수 있습니다.\n\n"
 				    + "수정되지 않은 부분에도 레이어 재계산 등이 있을 수 있습니다.";
 			}
@@ -4193,7 +4197,7 @@ window.splitHold = function(tab, styleName) {
 				smi.assComments.sort((a, b) => {
 					return Number(a.split(",")[0]) - Number(b.split(",")[0]);
 				});
-				smi.text = "<!-- ASS\n" + smi.assComments.join("\n") + "\n-->";
+				smi.text = `<!-- ASS\n${ smi.assComments.join("\n") }\n-->`;
 				
 			} else {
 				smi.text = "&nbsp;";
@@ -4569,16 +4573,16 @@ window.generateSmiFromAss = function(keepHoldsAss=true) {
 			if (keepAss) {
 				// SMI로 구현 성공했어도 ASS 원형을 유지
 				// 완전히 변환해보니 ASS 스크립트 유지한 채로 SMI 결과물을 함부로 수정하기 힘들어짐
-				smiText = "<!-- ASS\n" + assComment + "\nEND\n-->\n" + smiText;
+				smiText = `<!-- ASS\n${ assComment }\nEND\n-->\n` + smiText;
 				
 			} else {
 				if (isPure) { // 순수 SMI만으로 구현 가능
 					if (assTexts.length > 1) {
 						// SMI로 구현 성공했지만 건너뛴 추가 스크립트가 있었을 경우
-						smiText = "<!-- ASS\n" + assTexts.slice(0, assTexts.length - 1).join("\n") + "\n-->\n" + smiText;
+						smiText = `<!-- ASS\n${ assTexts.slice(0, assTexts.length - 1).join("\n") }\n-->\n` + smiText;
 					}
 				} else {
-					smiText = "<!-- ASS\n" + assComment + "\nEND\n-->\n" + smiText;
+					smiText = `<!-- ASS\n${ assComment }\nEND\n-->\n` + smiText;
 				}
 			}
 			item.text = smiText;
@@ -4662,7 +4666,7 @@ SmiEditor.Addon = {
 		windows: {}
 	,	open: function(name, target="addon") {
 			binder.setAfterInitAddon("");
-			const url = (name.substring(0, 4) == "http") ? name : "addon/" + name.replaceAll("..", "").replaceAll(":", "") + ".html";
+			const url = (name.substring(0, 4) == "http") ? name : `addon/${ name.replaceAll("..", "").replaceAll(":", "") }.html`;
 			this.windows[target] = window.open(url, target, "scrollbars=no,location=no,width=1,height=1");
 			setTimeout(() => { // 웹버전에서 딜레이 안 주면 위치를 못 잡는 경우가 있음
 				SmiEditor.Addon.moveWindowToSetting(target);
@@ -4867,7 +4871,7 @@ window.extSubmitSpeller = function() {
 			+	"	const ta = document.getElementsByTagName('textarea')[0];\n"
 			+	"	if (ta) clearInterval(window.checker);\n"
 			+	"	else return;\n"
-			+	"	ta.value = " + JSON.stringify(value) + ";\n"
+			+	`	ta.value = ${ JSON.stringify(value) };\n`
 			+	"	ta.dispatchEvent(new Event('input', { bubbles: true }));\n"
 			+	"	setTimeout(() => { document.getElementsByTagName('button')[3].click(); });\n"
 			+	"}, 100);"

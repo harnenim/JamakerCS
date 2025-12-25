@@ -187,7 +187,7 @@ window.DEFAULT_SETTING =
 			   + '			let ruby = block.substring(0, divIndex);\n'
 			   + '			let rt   = block.substring(divIndex + 1, endIndex);\n'
 			   + '			let left = block.substring(endIndex + 1);\n'
-			   + '			blocks[i] = "<RUBY>" + ruby + "<RT><RP>(</RP>" + rt + "<RP>)</RP></RT></RUBY>" + left;\n'
+			   + '			blocks[i] = `<RUBY>${ruby}<RT><RP>(</RP>${rt}<RP>)</RP></RT></RUBY>${left}`;\n'
 			   + '		} else {\n'
 			   + '			blocks[i] = "[" + blocks[i];\n'
 			   + '		}\n'

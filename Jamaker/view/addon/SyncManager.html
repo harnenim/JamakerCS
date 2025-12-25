@@ -517,7 +517,7 @@ ready(() => {
 		if (index < 0) return;
 		
 		eData(tr, { offset: offset });
-		data.frames.style.left = ("calc(50% - " + (offset * (TX + 2)) + "px)");
+		data.frames.style.left = (`calc(50% - ${ offset * (TX + 2) }px)`);
 		
 		setSync(tr.querySelector("td.sync"), fs[index]);
 	}
@@ -696,7 +696,7 @@ ready(() => {
 		[...imgs].forEach(function (img) {
 			const imgKey = eData(img).img;
 			if (imgKey) {
-				img.src = ("../../temp/thumbnails/" + fileSeq + "_" + imgKey + M[mode] + ".jpg");
+				img.src = (`../../temp/thumbnails/${fileSeq}_${imgKey}${M[mode]}.jpg`);
 			}
 		});
 	}
@@ -764,7 +764,7 @@ ready(() => {
 			const shiftIndex = Subtitle.findSyncIndex(data.origin + shift, fs);
 			const offset = shiftIndex - frameIndex;
 			eData(tr, { offset: offset });
-			data.frames.style.left = ("calc(" + (-(TX + 2) * offset) + "px + 50%");
+			data.frames.style.left = (`calc(${ -(TX + 2) * offset }px + 50%`);
 			setSync(tr.querySelector("td.sync"), fs[shiftIndex]);
 		});
 	});

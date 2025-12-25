@@ -600,7 +600,7 @@ Typing.prototype.outputWithNoCursor = function() {
 	return this.typed + this.typing;
 }
 Typing.prototype.outputWithCursor = function() {
-	return this.typed + "<U>" + this.typing + "</U>";
+	return this.typed + `<U>${this.typing}</U>`;
 }
 Typing.prototype.outputWithCursorOnlyHangeul = function() {
 	if ((this.typing >= 'ㄱ' && this.typing <= 'ㅎ')
@@ -927,10 +927,10 @@ Attr.prototype.toHtml = function() {
 	if ( this.u && !this.s) css += "text-decoration: underline;";
 	if (!this.u &&  this.s) css += "text-decoration: line-through;";
 	if ( this.u &&  this.s) css += "text-decoration: line-through underline;";
-	if (this.fs > 0) css += "font-size: " + fs + "px; line-height: " + (11 + 4 * this.fs) + "px;";
-	if (this.fn != null && this.fn.length > 0) css += "font-family: '" + this.fn + "';";
-	if (this.fc != null && this.fc.length > 0) css += "color: #" + this.fc + ";";
-	return "<span" + (css.length > 0 ? " style=\"" + css + "\"" : "") + ">"
+	if (this.fs > 0) css += `font-size: ${fs}px; line-height: ${ 11 + 4 * this.fs }px;`;
+	if (this.fn != null && this.fn.length > 0) css += `font-family: '${this.fn}';`;
+	if (this.fc != null && this.fc.length > 0) css += `color: #${this.fc};`;
+	return `<span${ (css.length > 0 ? ` style="${css}"` : "") }>`
 		+ Subtitle.textToHtml(text).replaceAll(" ", "&nbsp;").replaceAll("\n", "​<br>​")
 		+ "</span>";
 }
@@ -1071,7 +1071,7 @@ AssEvent.toAssTime = (time=0, fromFrameSync=false) => {
 	const m = Math.floor( time /   60000) % 60;
 	const s = Math.floor( time /    1000) % 60;
 	const ds= Math.floor((time % 1000) / 10);
-	const result = h + ":" + intPadding(m) + ":" + intPadding(s) + "." + intPadding(ds);
+	const result = `${h}:${intPadding(m)}:${intPadding(s)}.${intPadding(ds)}`;
 	return result;
 }
 AssEvent.fromAssTime = (assTime, toFrameSync=false) => {
@@ -1082,7 +1082,7 @@ AssEvent.fromAssTime = (assTime, toFrameSync=false) => {
 	}
 	return time;
 }
-window.intPadding = function(value, length = 2) {
+window.intPadding = function(value, length=2) {
 	value = "" + value;
 	while (value.length < length) {
 		value = "0" + value;
@@ -1453,7 +1453,7 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 					assEnd = i;
 				} else {
 					// 의도적으로 구분함, 최종 단계에서 제거
-					text += "{\\ass1}" + attr.ass + "{\\ass0}";
+					text += `{\\ass1}${attr.ass}{\\ass0}`;
 				}
 			}
 		}
@@ -1485,9 +1485,9 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 		if      (!last.s &&  attr.s) text += "{\\s1}";
 		else if ( last.s && !attr.s) text += "{\\s0}";
 		
-		if (last.fn != attr.fn) text += "{\\fn" + (attr.fn ? attr.fn : "") + "}";
+		if (last.fn != attr.fn) text += `{\\fn${ attr.fn ? attr.fn : "" }}`;
 		
-		if (last.fs != attr.fs) text += "{\\fs" + (attr.fs ? (Math.round(attr.fs / 18 * 800) / 10) : "") + "}";
+		if (last.fs != attr.fs) text += `{\\fs${ attr.fs ? (Math.round(attr.fs / 18 * 800) / 10) : "" }}`;
 		
 		if (attr.fc.length == 15 && attr.fc[0] == '#' && attr.fc[7] == '~' && attr.fc[8] == '#') {
 			// 그라데이션 분할
@@ -1497,13 +1497,13 @@ AssEvent.inFromAttrs = (attrs, checkFurigana=true, checkFade=true, checkAss=true
 			
 			let attrText = "";
 			for (let k = 0; k < attr.text.length; k++) {
-				attrText += "{\\c" + color.ass(k, attr.text.length - 1) + "}" + attr.text[k];
+				attrText += `{\\c${ color.ass(k, attr.text.length - 1) }}` + attr.text[k];
 			}
 			attr.text = attrText;
 			
 		} else {
 			if (last.fc != attr.fc) {
-				text += "{\\c" + AssEvent.colorFromAttr(attr.fc) + "}";
+				text += `{\\c${ AssEvent.colorFromAttr(attr.fc) }}`;
 			}
 		}
 		
@@ -1753,7 +1753,7 @@ AssEvent.fromSync = function(sync, style=null) {
 					// 강제로 pos 태그 잡혀있으면 추가 적용하지 않음
 					// an 태그로 정렬 바꾼 경우에도 적용하지 않음
 				} else {
-					text = "{\\pos(" + x + "," + y + ")}" + text;
+					text = `{\\pos(${x},${y})}` + text;
 				}
 			}
 		}
@@ -1810,8 +1810,8 @@ AssEvent.fromSync = function(sync, style=null) {
 						for (let i = 0; i < pureLines.length; i++) {
 							const add = (maxWidth - pureLines[i].width);
 							if (add) {
-								lines[pureLines[i].i] += "{\\fscx" + Math.floor(add / oneWidth * 100) + "}　{"
-									+ ((pureLines[i].i < lines.length - 1) ? "\\fscx" : "") + "}"; // 마지막 줄이면 {}으로 끝내기
+								lines[pureLines[i].i] += `{\\fscx${ Math.floor(add / oneWidth * 100) }}　{${
+									((pureLines[i].i < lines.length - 1) ? "\\fscx" : "") }}`; // 마지막 줄이면 {}으로 끝내기
 							}
 						}
 						text = lines.join("\\N");
@@ -2213,9 +2213,9 @@ TypeParser[SyncType.split] = "  ";
 Smi.prototype.toTxt = // 처음에 함수명 잘못 지은 걸 레거시 호환으로 일단 유지함
 Smi.prototype.toText = function() {
 	if (this.syncType == SyncType.comment) { // Normalize 시에만 존재
-		return "<!--" + this.text + "-->";
+		return `<!--${ this.text }-->`;
 	}
-	return "<Sync Start=" + this.start + "><P Class=KRCC" + TypeParser[this.syncType] + ">\n" + this.text;
+	return `<Sync Start=${this.start}><P Class=KRCC${ TypeParser[this.syncType] }>\n` + this.text;
 }
 Smi.smi2txt = (smis) => {
 	let result = "";
@@ -3183,8 +3183,8 @@ Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true, forConvert=f
 		}
 		
 		if (tag) {
-			let opener = "<" + tag + ">";
-			let closer = "</" + tag + ">";
+			let opener = `<${tag}>`;
+			let closer = `</${tag}>`;
 			
 			switch (tag) {
 				case "S": {
@@ -3213,18 +3213,18 @@ Smi.fromAttrs = (attrs, fontSize=0, checkRuby=true, checkFont=true, forConvert=f
 						switch (key) {
 							case "fs"    : {
 								if (fontSize) {
-									opener += " style=\"font-size: " + (attr.fs / fontSize * 100) + "%;\"";
+									opener += ` style="font-size: ${ attr.fs / fontSize * 100 }%;"`;
 								} else {
-									opener += " size=\"" + attr.fs + "\"";
+									opener += ` size="${ attr.fs }"`;
 								}
 								break;
 							}
-							case "fn"    : { opener += " face=\""   + attr.fn + "\""; break; }
-							case "fc"    : { opener += " color=\""  + Smi.colorFromAttr(attr.fc) + "\""; break; }
-							case "fade"  : { opener += " fade=\""   + (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) + "\""; break; }
-							case "shake" : { opener += " shake=\""  + attr.shake.ms + "," + attr.shake.size + "\""; break; }
-							case "typing": { opener += " typing=\"" + Typing.Mode.toString[attr.typing.mode] + "(" + attr.typing.start + "," + attr.typing.end + ") " + Typing.Cursor.toString[attr.typing.cursor] + "\""; break; }
-							case "ass"   : { opener += " ass=\""    + attr.ass + "\""; break; }
+							case "fn"    : { opener += ` face="${   attr.fn }"`; break; }
+							case "fc"    : { opener += ` color="${  Smi.colorFromAttr(attr.fc) }"`; break; }
+							case "fade"  : { opener += ` fade="${   (attr.fade == 1 ? "in" : (attr.fade == -1 ? "out" : attr.fade)) }"`; break; }
+							case "shake" : { opener += ` shake="${  attr.shake.ms },${ attr.shake.size }"`; break; }
+							case "typing": { opener += ` typing="${ Typing.Mode.toString[attr.typing.mode] }(${ attr.typing.start },${ attr.typing.end }) ${ Typing.Cursor.toString[attr.typing.cursor] }"`; break; }
+							case "ass"   : { opener += ` ass="${    attr.ass }"`; break; }
 						}
 					}
 					opener += ">";
@@ -3356,7 +3356,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 	if (end < 0) {
 		// 종료태그 없는 경우, 그라데이션만 동작
 		if (hasGradation && withComment) {
-			smi.text = "<!-- End=999999999\n" + smiText.replaceAll("<", "<​").replaceAll(">", "​>") + "\n-->\n" + smi.text;
+			smi.text = `<!-- End=999999999\n${ smiText.replaceAll("<", "<​").replaceAll(">", "​>") }\n-->\n` + smi.text;
 		}
 		return [smi];
 	}
@@ -3470,16 +3470,16 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 		
 		// 좌우로 흔들기
 		// 플레이어에서 사이즈 미지원해도 좌우로는 흔들리도록
-		const LRmin = "<font size=\"" + (3 * shake.size) + "\"></font>";
-		const LRmid = "<font size=\"" + (3 * shake.size) + "\"> </font>";
-		const LRmax = "<font size=\"" + (3 * shake.size) + "\">  </font>";
+		const LRmin = `<font size="${ 3 * shake.size }"></font>`;
+		const LRmid = `<font size="${ 3 * shake.size }"> </font>`;
+		const LRmax = `<font size="${ 3 * shake.size }">  </font>`;
 		
 		// 상하로 흔들기
 		// 플레이어에서 사이즈 미지원하면 상하로 흔들리지 않음
 		// size 0은 리스크가 있으므로 +1
-		const TBmin = "<font size=\"" + (0 * shake.size + 1) + "\">　</font>";
-		const TBmid = "<font size=\"" + (1 * shake.size + 1) + "\">　</font>";
-		const TBmax = "<font size=\"" + (2 * shake.size + 1) + "\">　</font>";
+		const TBmin = `<font size="${ 0 * shake.size + 1 }">　</font>`;
+		const TBmid = `<font size="${ 1 * shake.size + 1 }">　</font>`;
+		const TBmax = `<font size="${ 2 * shake.size + 1 }">　</font>`;
 		
 		for (let j = 0; j < count; j++) {
 			/*
@@ -3538,7 +3538,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 			smis.push(new Smi((start * (count - j) + end * (j)) / count, (j == 0 ? smi.syncType : SyncType.inner), text));
 		}
 		if (withComment) {
-			smis[0].text = "<!-- End=" + end + "\n" + smiText.replaceAll("<", "<​").replaceAll(">", "​>") + "\n-->\n" + smis[0].text;
+			smis[0].text = `<!-- End=${end}\n${ smiText.replaceAll("<", "<​").replaceAll(">", "​>") }\n-->\n` + smis[0].text;
 		}
 		
 	} else if (hasTyping) {
@@ -3695,7 +3695,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 			realJ++;
 		}
 		if (withComment) {
-			smis[0].text = "<!-- End=" + end + "\n" + smiText.replaceAll("<", "<​").replaceAll(">", "​>") + "\n-->\n" + smis[0].text;
+			smis[0].text = `<!-- End=${end}\n${ smiText.replaceAll("<", "<​").replaceAll(">", "​>") }\n-->\n` + smis[0].text;
 		}
 		
 	} else if (!forConvert && hasFade) {
@@ -3742,7 +3742,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 		}
 		if (withComment) {
 			if (smis.length) {
-				smis[0].text = "<!-- End=" + end + "\n" + smiText.replaceAll("<", "<​").replaceAll(">", "​>") + "\n-->\n" + smis[0].text;
+				smis[0].text = `<!-- End=${end}\n${ smiText.replaceAll("<", "<​").replaceAll(">", "​>") }\n-->\n` + smis[0].text;
 			} else {
 				// 싱크 길이가 1프레임 미만이면 변환결과가 없을 수도 있음
 			}
@@ -3754,7 +3754,7 @@ Smi.prototype.normalize = function(end, forConvert=false, withComment=false, fps
 			this.text = smi.text;
 			// 주석 추가
 			if (withComment) {
-				this.text = "<!-- End=" + end + "\n" + smiText.replaceAll("<", "<​").replaceAll(">", "​>") + "\n-->\n" + this.text;
+				this.text = `<!-- End=${end}\n${ smiText.replaceAll("<", "<​").replaceAll(">", "​>") }\n-->\n` + this.text;
 			}
 		}
 		smis.push(this);
@@ -4224,14 +4224,14 @@ SmiFile.styleToSmi = function(style) {
 		/* SMI에선 적용하지 않기로 함
 		if (style.Fontname) {
 			const fs = style.Fontname.startsWith("@") ? style.Fontname.substring(1) : style.Fontname;
-			font.push("face=\"" + fs + "\"");
+			font.push(`face="${fs}"`);
 		}
 		*/
 		if (style.PrimaryColour != Subtitle.DefaultStyle.PrimaryColour && style.PrimaryColour != "#000000") {
-			font.push("color=\"" + style.PrimaryColour + "\"");
+			font.push(`color="${ style.PrimaryColour }"`);
 		}
 		if (font.length) {
-			opener = "<font " + font.join(" ") + ">";
+			opener = `<font ${ font.join(" ") }>`;
 			closer = "</font>";
 		}
 	}
@@ -4484,7 +4484,7 @@ Srt.toSrtTime = (time=0) => {
 	const m = Math.floor(time / 60000) % 60;
 	const s = Math.floor(time / 1000) % 60;
 	const ms= Math.floor(time % 1000);
-	return intPadding(h) + ":" + intPadding(m) + ":" + intPadding(s) + "," + intPadding(ms, 3);
+	return `${intPadding(h)}:${intPadding(m)}:${intPadding(s)},${intPadding(ms, 3)}`;
 }
 
 window.SrtFile = Subtitle.SrtFile = function(text) {

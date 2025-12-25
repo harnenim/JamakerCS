@@ -117,8 +117,8 @@ ready(() => {
 				if (line) {
 					try {
 						ratio = Number(line);
-						results.style.height = "calc(" + (100 * ratio) + "% - 32px)";
-						viewer.style.height = "calc(" + (100 * (1 - ratio)) + "% - 32px)";
+						results.style.height = `calc(${ 100 * ratio }% - 32px)`;
+						viewer.style.height = `calc(${ (100 * (1 - ratio)) }% - 32px)`;
 					} catch (e) {}
 				} else {
 					break;
@@ -195,7 +195,7 @@ ready(() => {
 			const li = document.createElement("li");
 			li.classList.add("line");
 			li.innerText = line;
-			li.innerHTML = ("Line " + (i + 1) + ": " + li.innerHTML.replaceAll(query, "<b>" + query + "</b>"));
+			li.innerHTML = (`Line ${i+1}: ` + li.innerHTML.replaceAll(query, `<b>${query}</b>`));
 			eData(li, { line: i, pos: offset + index });
 			ol.append(li);
 			
@@ -243,8 +243,8 @@ ready(() => {
 		
 		resizeFrom = null;
 		ratio = (results.offsetHeight + 32) / window.innerHeight;
-		results.style.height = "calc(" + (100 *      ratio ) + "% - 32px)";
-		viewer .style.height = "calc(" + (100 * (1 - ratio)) + "% - 32px)";
+		results.style.height = `calc(${ 100 *      ratio  }% - 32px)`;
+		viewer .style.height = `calc(${ 100 * (1 - ratio) }% - 32px)`;
 		saveLast();
 	});
 	

@@ -21,7 +21,7 @@ function setSetting(setting) {
 	if (style == null) {
 		document.head.append(style = document.createElement("style"));
 	}
-	style.innerHTML = ("#preview {\n" + setting.viewer.css + "}");
+	style.innerHTML = (`#preview {\n${ setting.viewer.css }}`);
 }
 
 const editor = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
@@ -151,7 +151,7 @@ function convert() {
 			const m = Math.floor(time / 60);
 			const s = time % 60;
 			
-			time = (h + ":" + (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s);
+			time = `${h}:${ m<10 ? "0" : "" }${m}:${ s < 10 ? "0" : "" }${s}`);
 			
 			switch (time.length) {
 				case  7: time = time + ".00"; break;

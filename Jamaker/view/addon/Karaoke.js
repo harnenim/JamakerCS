@@ -1,3 +1,9 @@
+document.head.querySelectorAll("link").forEach((el) => {
+	if (el.href.endsWith("/popup.css")) {
+		el.remove();
+	}
+});
+
 const DEFAULT_LIST = ("2023.03.27"
 	+ "\n五里霧中1112\n混凝土006\n春夏冬004\n真っ赤111\n夜明け111\n真実22\n往来22\n並行22\n曖昧22\n頂戴22\n血管22\n抑制22\n運命22\n衝動22\n逃亡22\n毎日22"
 	+ "\n窮屈22\n条件22\n後悔22\n稲妻22\n朝食22\n東京22\n体温22\n彩り31\n着信22\n完成22\n自覚12\n自分12\n無情12\n期待12\n未来12\n脳裏21\n深紅21\n笑顔12"
@@ -1080,9 +1086,9 @@ ready(() => {
 				const color = colorCode(i==0 ? to : from);
 				for (let j = 0; j < lineI.length; j++) {
 					if (typeof(lineI[j]) == "string") {
-						result[i] += "<FONT color=\""+color+"\">" + lineI[j] + "</FONT>";
+						result[i] += `<FONT color="${color}">${lineI[j]}</FONT>`;
 					} else {
-						result[i] += "<RUBY><FONT color=\""+color+"\">" + lineI[j][0] + "</FONT><RT><FONT color=\""+color+"\">" + lineI[j][1] + "</FONT></RT></RUBY>";
+						result[i] += `<RUBY><FONT color="${color}">${lineI[j][0]}</FONT><RT><FONT color="${color}">${lineI[j][1]}</FONT></RT></RUBY>`;
 					}
 				}
 			}
@@ -1100,7 +1106,7 @@ ready(() => {
 					,	Math.floor((from[1]*(gl-gi) + to[1]*gi) / gl)
 					,	Math.floor((from[2]*(gl-gi) + to[2]*gi) / gl)
 				];
-				result[1] = "<FONT color=\""+colorCode(color)+"\">" + gc + "</FONT>";
+				result[1] = `<FONT color="${colorCode(color)}">${gc}</FONT>`;
 				
 			} else {
 				// RUBY 태그 처리
@@ -1111,8 +1117,8 @@ ready(() => {
 					const r1 = r % 1;
 					if (r1 == 0) {
 						//글자 수 딱 떨어질 때
-						ruby[i] = "<FONT color=\""+colorCode(to  )+"\">" + gc[i].substring(0, r) + "</FONT>"
-						        + "<FONT color=\""+colorCode(from)+"\">" + gc[i].substring(r   ) + "</FONT>";
+						ruby[i] = `<FONT color="${colorCode(to  )}">${ gc[i].substring(0, r) }</FONT>`
+						        + `<FONT color="${colorCode(from)}">${ gc[i].substring(r   ) }</FONT>`;
 						
 					} else {
 						// 중간 색이 필요할 때
@@ -1124,18 +1130,18 @@ ready(() => {
 						const j = Math.floor(r);
 						ruby[i] = "";
 						if (j > 0) {
-							ruby[i] += "<FONT color=\""+colorCode(to   )+"\">" + gc[i].substring(0, j  ) + "</FONT>";
+							ruby[i] += `<FONT color="${ colorCode(to   ) }">${ gc[i].substring(0, j  ) }</FONT>`;
 						}
 						{
-							ruby[i] += "<FONT color=\""+colorCode(color)+"\">" + gc[i].substring(j, j+1) + "</FONT>";
+							ruby[i] += `<FONT color="${ colorCode(color) }">${ gc[i].substring(j, j+1) }</FONT>`;
 						}
 						if (j+1 < gc[i].length) {
-							ruby[i] += "<FONT color=\""+colorCode(from )+"\">" + gc[i].substring(j+1   ) + "</FONT>";
+							ruby[i] += `<FONT color="${ colorCode(from ) }">${ gc[i].substring(j+1   ) }</FONT>`;
 						}
 					}
 				}
 				
-				result[1] = "<RUBY>" + ruby[0] + "<RT>" + ruby[1] + "</RT></RUBY>";
+				result[1] = `<RUBY>${ruby[0]}<RT>${ruby[1]}</RT></RUBY>`;
 			}
 		}
 		return result.join("");
@@ -1192,7 +1198,7 @@ ready(() => {
 								break;
 							case "T":
 								if (line[0] > 1) {
-									sync.push("<FONT color=\""+colorCode(tColor)+"\">" + line[2] + "</FONT>");
+									sync.push(`<FONT color="${ colorCode(tColor) }">${line[2]}</FONT>`);
 								}
 								break;
 							case "t":
@@ -1204,13 +1210,13 @@ ready(() => {
 					}
 					if (line[0] == 3 && preset.substring(0,2) == "rO") {
 						// 원문 위에 독음 RUBY 태그
-						sync = ["<RUBY>" + sync[1] + "<RT>" + sync[0] + "</RT></RUBY>", sync[2]]; 
+						sync = [`<RUBY>${sync[1]}<RT>${sync[0]}</RT></RUBY>`, sync[2]]; 
 					}
 					html.push(sync.join("<br>"));
 				}
 			}
 			
-			preview.innerHTML = ("<p>" + html.join("</p><p>") + "</p>");
+			preview.innerHTML = (`<p>${ html.join("</p><p>") }</p>`);
 			output.value = html.join("\n").replaceAll("<RT>", "<RP>(</RP><RT>").replaceAll("</RT>", "</RT><RP>)</RP>");
 		}
 		runs[4] = run;
