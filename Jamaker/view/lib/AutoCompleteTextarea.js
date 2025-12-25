@@ -60,7 +60,9 @@ window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 		// else가 아닌 이유: 자동완성 닫았다 다시 열 수도 있음
 		if (ta.ac.selected < 0) {
 			if (!e.ctrlKey && !e.altKey) {
-				ta.ac.onCheck(e);
+				if (e.key.length == 1) {
+					ta.ac.onCheck(e);
+				}
 			} else if (e.ctrlKey && (e.key == " ")) { // Ctrl+SpaceBar
 				ta.ac.openedByCtrl = true;
 				ta.ac.onCheckWord();
@@ -303,7 +305,8 @@ AutoCompleteTextarea.prototype.onCheck = function(e) {
 	const text = this.ta.value;
 	const pos = this.ta.selectionEnd - 1;
 	
-	const sets = this.sets[e.key];
+	const sets = this.sets[text[pos]];
+	console.log(text[pos], sets);
 	if (sets && sets[0] == text[pos]) {
 		this.text = text;
 		this.pos = pos;
@@ -311,7 +314,7 @@ AutoCompleteTextarea.prototype.onCheck = function(e) {
 		this.open(AutoCompleteTextarea.getList(text, pos, sets[1]));
 	}
 }
-AutoCompleteTextarea.getList = function(text, pos, list) {
+AutoCompleteTextarea.getList = function(text, pos, list) { // override용 추가 파라미터
 	return list;
 }
 AutoCompleteTextarea.wordBreaker = " \t\r\n()<>[]{},.`'\"?!;:/\\";
