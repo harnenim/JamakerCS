@@ -276,7 +276,7 @@ Progress.prototype.set = function (value, total) {
 		this.last = now;
 	}
 	this.bar.style.width = `calc(${ ratio * 100 }%)`;
-	this.text.innerText = (`${value}/${total}`);
+	this.text.innerText = `${value}/${total}`;
 	this.div.style.display = "block";
 }
 Progress.prototype.hide = function() {
