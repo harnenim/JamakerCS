@@ -655,7 +655,7 @@ SmiEditor.prototype.bindEvent = function() {
 			
 			// 현재 스크롤에서 보이는 범위 찾기
 			const showFrom = Math.floor(scrollTop / LH);
-			const showEnd  = Math.ceil((scrollTop + editor.input.offsetHeight) / LH);
+			const showEnd  = Math.ceil((scrollTop + parseFloat(getComputedStyle(editor.input).height)) / LH);
 			
 			const toAppendLefts = [];
 			const toRemoveLefts = [];
@@ -673,7 +673,7 @@ SmiEditor.prototype.bindEvent = function() {
 			const a = Math.max(0, showFrom);
 			const b = Math.min(showEnd, editor.lines.length);
 			for (let i = a; i < b; i++) {
-				const css = { top: (i * LH) + "px" };
+				const css = { top: `${i * LH}px` };
 				const $left = editor.lines[i].LEFT;
 				if ($left != null) {
 					const rIndex = toRemoveLefts.indexOf($left[0]);

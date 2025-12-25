@@ -291,7 +291,7 @@ ready(() => {
 	}
 	SmiEditor.activateKeyEvent();
 	
-	LH = Number(getComputedStyle(SmiEditor.selected.input).lineHeight.split("px")[0]);
+	LH = Number(parseFloat(getComputedStyle(SmiEditor.selected.input).lineHeight));
 	
 	document.getElementById("btnDevide").addEventListener("click", devide);
 	devide();

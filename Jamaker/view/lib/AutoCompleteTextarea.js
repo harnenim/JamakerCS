@@ -78,7 +78,7 @@ AutoCompleteTextarea.prototype.resize = function() {
 	AutoCompleteTextarea.view.style.fontSize   = this.font.fontSize   = font.fontSize  ;
 	AutoCompleteTextarea.view.style.fontWeight = this.font.fontWeight = font.fontWeight;
 	AutoCompleteTextarea.view.style.lineHeight = this.font.lineHeight = font.lineHeight;
-	this.LH = Number(font.lineHeight.split("px")[0]);
+	this.LH = parseFloat(font.lineHeight);
 }
 // 선택
 AutoCompleteTextarea.prototype.select = function(index) {
@@ -158,8 +158,8 @@ AutoCompleteTextarea.prototype.getOffset = function() {
 	let offset = this.ta.getBoundingClientRect();
 	offset = { top: offset.top, left: offset.left };
 	const css = getComputedStyle(this.ta);
-	offset.top  += Number(css.paddingTop .split("px")[0]);
-	offset.left += Number(css.paddingLeft.split("px")[0]);
+	offset.top  += parseFloat(css.paddingTop);
+	offset.left += parseFloat(css.paddingLeft);
 	return offset;
 }
 AutoCompleteTextarea.prototype.onKeydown = function(e) {

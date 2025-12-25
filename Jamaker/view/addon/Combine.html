@@ -115,7 +115,7 @@ ready(() => {
 	lower.input.addEventListener("focus", () => { SmiEditor.selected = lower; });
 	SmiEditor.activateKeyEvent();
 	
-	LH = Number(upper.input.css("line-height").split("px")[0]);
+	LH = Number(parseFloat(getComputedStyle(upper.input).lineHeight));
 });
 let refreshPreview = 0;
 function setPreview(list) {

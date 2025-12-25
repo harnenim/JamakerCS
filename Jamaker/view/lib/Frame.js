@@ -23,10 +23,10 @@ window.Frame = function(url, name, options, onload) {
 		frame.css({ top: y, left: x });
 	}
 	this.getOffset = function(offset) {
-		offset.top    = Number(frame.css("top"   ).split("px")[0]);
-		offset.left   = Number(frame.css("left"  ).split("px")[0]);
-		offset.right  = Number(frame.css("width" ).split("px")[0]) + offset.left;
-		offset.bottom = Number(frame.css("height").split("px")[0]) + offset.top ;
+		offset.top    = parseFloat(frame.css("top"   ));
+		offset.left   = parseFloat(frame.css("left"  ));
+		offset.right  = parseFloat(frame.css("width" )) + offset.left;
+		offset.bottom = parseFloat(frame.css("height")) + offset.top ;
 	}
 	this.focus = function() {
 		this.iframe.focus();
@@ -207,10 +207,10 @@ $(() => {
 		}
 		frame.find(".cover").show();
 		dragging.frame = frame;
-		dragging.top    = Number(frame.css("top"   ).split("px")[0]);
-		dragging.left   = Number(frame.css("left"  ).split("px")[0]);
-		dragging.width  = Number(frame.css("width" ).split("px")[0]);
-		dragging.height = Number(frame.css("height").split("px")[0]);
+		dragging.top    = parseFloat(frame.css("top"   ));
+		dragging.left   = parseFloat(frame.css("left"  ));
+		dragging.width  = parseFloat(frame.css("width" ));
+		dragging.height = parseFloat(frame.css("height"));
 		dragging.x = e.clientX;
 		dragging.y = e.clientY;
 		$("#cover").show();
