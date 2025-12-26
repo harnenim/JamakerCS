@@ -1,0 +1,24 @@
+@charset "utf-8";
+
+.act-select {
+	position: fixed;
+	list-style: none;
+	max-height: 200px;
+	overflow-y: scroll;
+	padding: 0;
+	opacity: 0.9;
+	border: 1px solid #888;
+}
+.act-select > li {
+	white-space: pre;
+}
+.act-select {
+	border-color: #888;
+	background: #fff;
+	color: #000;
+}
+.act-select > li.selected,
+.act-select > li:hover {
+	background: #acf;
+	color: #000;
+}

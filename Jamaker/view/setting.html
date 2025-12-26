@@ -159,7 +159,8 @@ ready(() => {
 		[...form.querySelectorAll("select")].forEach((el) => {
 			const name = el.name;
 			if (!name) return;
-
+			
+			// <option>이 아직 없을 수 있으므로 data로 넣어둠
 			el.setAttribute("data-value", el.value = eval("setting." + name.replaceAll("_", ".")));
 		});
 	}
@@ -870,8 +871,8 @@ ready(() => {
 					selectStyle.append(opt);
 				}
 			}
-			selectParser.value = setting.highlight.parser;
-			selectStyle .value = setting.highlight.style;
+			selectParser.value = selectParser.dataset.value;
+			selectStyle .value = selectStyle .dataset.value;
 		}
 		
 		(refreshFuncs["style"] = (setting) => {
@@ -1008,7 +1009,8 @@ ready(() => {
 				opt.value = dll[0].trim();
 				opt.innerText = dll[1].trim();
 				select.append(opt);
-			}
+            }
+            select.value = select.dataset.value;
 		}
 		select.addEventListener("change", (e) => {
 			const dll = select.value;
