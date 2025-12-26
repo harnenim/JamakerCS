@@ -1760,20 +1760,22 @@ SmiEditor.prototype.reSync = function(sync, limitRange=false) {
 	
 	let withEveryHolds = SmiEditor.sync.holds;
 	
+	let cursor = 0;
 	let lineNo = 0;
 	let limitLine = this.lines.length;
 	if (CM) {
-		const cursor = this.cm.getCursor("start");
+		cursor = this.cm.getCursor("start");
 		lineNo = cursor.line;
 		
-		const endCursor = this.cm.getCursor("end");
+		cursor = this.cm.indexFromPos(cursor);
+		const endCursor = this.cm.indexFromPos(this.cm.getCursor("end"));
 		if (limitRange && endCursor > cursor) {
 			limitLine = endCursor.line;
 			withEveryHolds = false;
 		}
 	}
 	{
-		const cursor = this.input.selectionStart;
+		cursor = this.input.selectionStart;
 		lineNo = this.input.value.substring(0, cursor).split("\n").length - 1;
 		
 		const endCursor = this.input.selectionEnd;
@@ -1995,12 +1997,14 @@ SmiEditor.prototype.toggleSyncType = function() {
 	this.history.log();
 	
 	const text = CM ? this.cm.getValue() : this.input.value;
+	let cursor = 0;
 	let lineNo = 0;
 	if (CM) {
+		cursor = this.cm.indexFromPos(this.cm.getCursor());
 		lineNo = this.cm.getCursor().line;
 	}
 	{
-		let cursor = this.input.selectionEnd;
+		cursor = this.input.selectionEnd;
 		lineNo = text.substring(0, cursor).split("\n").length - 1;
 	}
 	

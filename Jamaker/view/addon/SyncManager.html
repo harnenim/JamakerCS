@@ -413,26 +413,22 @@ ready(() => {
 	// 렌더링 중일 때 색깔 넣어줌
 	opener.startRenderThumbnails = function(begin, end, flag) {
 		for (let i = begin; i < end; i++) {
-			let img = tbody.querySelector("img.img" + i + flag);
-			if (!img) {
-				img = framesStorage.querySelector("img.img" + i + flag);
-			}
-			if (img) {
+			const imgs = [...tbody.querySelectorAll(`img.img${i}${flag}`)];
+			imgs.push(...framesStorage.querySelectorAll(`img.img${i}${flag}`));
+            imgs.forEach((img) => {
 				img.classList.add("rendering");
-			}
+			});
 		}
 		document.body.dispatchEvent(new Event("scroll", { bubbles: true }));
 	}
 	opener.startCompareThumbnails = function (begin, end, flag) {
-		for (let i = begin; i < end; i++) {
-			let img = tbody.querySelector("img.img" + i + flag);
-			if (!img) {
-				img = framesStorage.querySelector("img.img" + i + flag);
-			}
-			if (img) {
+        for (let i = begin; i < end; i++) {
+            const imgs = [...tbody.querySelectorAll(`img.img${i}${flag}`)];
+            imgs.push(...framesStorage.querySelectorAll(`img.img${i}${flag}`));
+			imgs.forEach((img) => {
 				img.classList.remove("rendering");
 				img.classList.add("comparing");
-			}
+			});
 		}
 		document.body.dispatchEvent(new Event("scroll", { bubbles: true }));
 	}
@@ -440,15 +436,13 @@ ready(() => {
 	// 렌더링 완료 후 이미지 세팅
 	// 미리 값을 넣어주면 삭제되지 않은 다른 영상 섬네일 가져올 수 있음
 	opener.afterRenderThumbnails = function(begin, end, flag) {
-		for (let i = begin; i < end; i++) {
-			let img = tbody.querySelector("img.img" + i + flag);
-			if (!img) {
-				img = framesStorage.querySelector("img.img" + i + flag);
-			}
-			if (img) {
+        for (let i = begin; i < end; i++) {
+            const imgs = [...tbody.querySelectorAll(`img.img${i}${flag}`)];
+            imgs.push(...framesStorage.querySelectorAll(`img.img${i}${flag}`));
+			imgs.forEach((img) => {
 				img.classList.remove("comparing");
 				eData(img, { img: i + flag });
-			}
+			});
 		}
 		document.body.dispatchEvent(new Event("scroll", { bubbles: true }));
 	}
