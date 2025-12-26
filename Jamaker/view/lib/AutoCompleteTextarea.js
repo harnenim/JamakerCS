@@ -60,9 +60,7 @@ window.AutoCompleteTextarea = function(ta, sets, onSelect) {
 		// else가 아닌 이유: 자동완성 닫았다 다시 열 수도 있음
 		if (ta.ac.selected < 0) {
 			if (!e.ctrlKey && !e.altKey) {
-				if (e.key.length == 1) {
-					ta.ac.onCheck(e);
-				}
+				ta.ac.onCheck(e);
 			} else if (e.ctrlKey && (e.key == " ")) { // Ctrl+SpaceBar
 				ta.ac.openedByCtrl = true;
 				ta.ac.onCheckWord();
@@ -301,12 +299,21 @@ AutoCompleteTextarea.prototype.afterInput = function() {
 		this.close();
 	}
 }
-AutoCompleteTextarea.prototype.onCheck = function(e) {
+const normalKeys = "`1234567890-=\\[];',./";
+const shiftKeys  = "~!@#$%^&*()_+|{}:\"<>?";
+AutoCompleteTextarea.prototype.onCheck = function (e) {
+	if (e.key.length != 1) return;
 	const text = this.ta.value;
 	const pos = this.ta.selectionEnd - 1;
+	const c = text[pos];
+	if (c != e.key) {
+		const index = normalKeys.indexOf(e.key);
+		if (index < 0) return;
+		if (c != shiftKeys[index]) return;
+	}
 	
-	const sets = this.sets[text[pos]];
-	if (sets && sets[0] == text[pos]) {
+	const sets = this.sets[c];
+	if (sets && sets[0] == c) {
 		this.text = text;
 		this.pos = pos;
 		this.end = pos + 1;
