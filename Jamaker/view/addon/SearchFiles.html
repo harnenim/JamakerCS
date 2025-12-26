@@ -4,8 +4,8 @@
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>여러 SMI 파일에서 찾기</title>
-	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/popup.js"></script>
+	<script src="../lib/Combine.js" type="module"></script>
 	<script src="../lib/SmiEditor.js" type="module"></script>
 	<script>
 windowName = "addon";
@@ -172,6 +172,10 @@ ready(() => {
 	});
 	
 	opener.afterFound = function(name, text) {
+		const holds = SmiFile.textToHolds(text);
+		const assFoot = (holds[0].ass ? `\n<!-- ASS\n${ holds[0].ass }\n-->` : "");
+		text = SmiFile.holdsToText(holds, false, false) + assFoot;
+		
 		const file = document.createElement("li");
 		file.classList.add("file");
 		eData(file, { text: text });

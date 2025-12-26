@@ -105,7 +105,8 @@ label, #showFps {
 	top: calc(100% - 20px * 0.9);
 	height: calc(20px * 0.9);
 }
-.hold > .input {
+.hold > .input,
+.hold > .CodeMirror {
 	left: calc(20px * 5);
 }
 
@@ -292,3 +293,8 @@ body.classic-scrollbar .hljs ::-webkit-scrollbar-button { width: calc(20px * 0.8
 body.classic-scrollbar .hljs ::-webkit-scrollbar-button:end { background-position-y: calc(20px * 0.8 + 1px); }
 body.classic-scrollbar .hljs ::-webkit-scrollbar-button:horizontal { background-position-x: calc(20px * 0.8 + 1px); }
 body:not(.classic-scrollbar) .hljs ::-webkit-scrollbar-thumb { border-radius: calc(20px * 0.7 - 4px); border: 4px solid transparent; }
+body .CodeMirror ::-webkit-scrollbar,
+body.classic-scrollbar .CodeMirror ::-webkit-scrollbar-button { width: calc(20px * 0.8 + 1px); height: calc(20px * 0.8 + 1px); }
+body.classic-scrollbar .CodeMirror ::-webkit-scrollbar-button:end { background-position-y: calc(20px * 0.8 + 1px); }
+body.classic-scrollbar .CodeMirror ::-webkit-scrollbar-button:horizontal { background-position-x: calc(20px * 0.8 + 1px); }
+body:not(.classic-scrollbar) .CodeMirror ::-webkit-scrollbar-thumb { border-radius: calc(20px * 0.7 - 4px); border: 4px solid transparent; }

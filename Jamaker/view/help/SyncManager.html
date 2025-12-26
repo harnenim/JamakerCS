@@ -6,24 +6,30 @@
 	<title>화면 싱크 매니저 도움말</title>
 	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/popup.js"></script>
-	<link rel="stylesheet" type="text/css" href="../lib/popup.css" />
 	<script>
 windowName = "help";
 
 ready(() => {
-	$("#comment").on("mouseover", "li", function() {
-		$(".area.select").removeClass("select");
-		const area = (""+$(this).data("area")).split("-");
+	const cmt = document.getElementById("comment");
+	cmt.addEventListener("mouseover", (e) => {
+		let li = e.target.closest("li");
+		if (!li) return;
+		
+		let tmp = document.querySelector(".area.select");
+		if (tmp) tmp.classList.remove("select");
+		
+		const area = li.getAttribute("data-area").split("-");
 		for (let i = 0; i < area[0].length; i++) {
-			$("#preview_" + area[0][i]).addClass("input");
+			document.getElementById(`preview_${area[0][i]}`).classList.add("input");
 		}
 		if (area.length < 2) return;
 		for (let i = 0; i < area[1].length; i++) {
-			$("#preview_" + area[1][i]).addClass("output");
+			document.getElementById(`preview_${area[1][i]}`).classList.add("output");
 		}
-	}).on("mouseout", function() {
-		$(".area.input" ).removeClass("input" );
-		$(".area.output").removeClass("output");
+	});
+	cmt.addEventListener("mouseout", () => {
+		[...document.querySelectorAll(".area.input" )].forEach((area) => { area.classList.remove("input" ); });
+		[...document.querySelectorAll(".area.output")].forEach((area) => { area.classList.remove("output"); });
 	});
 });
 	</script>

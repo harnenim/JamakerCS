@@ -1019,11 +1019,11 @@ Color.prototype.get = function(value, total) {
 	return Color.hex(color[0]) + Color.hex(color[1]) + Color.hex(color[2]);
 }
 Color.prototype.smi = function(value, total) {
-	return "#" + this.get(value, total);
+	return `#${this.get(value, total)}`;
 }
 Color.prototype.ass = function(value, total) {
 	const color = this.getColor(value, total);
-	return "&H" + Color.hex(color[2]) + Color.hex(color[1]) + Color.hex(color[0]) + "&";
+	return `&H${ Color.hex(color[2]) }${ Color.hex(color[1]) }${ Color.hex(color[0]) }&`;
 }
 
 Subtitle.optimizeSync = (time=0, fromFrameSync=false) => {
@@ -1083,18 +1083,18 @@ AssEvent.fromAssTime = (assTime, toFrameSync=false) => {
 	return time;
 }
 window.intPadding = function(value, length=2) {
-	value = "" + value;
+	value = `${value}`;
 	while (value.length < length) {
-		value = "0" + value;
+		value = `0${value}`;
 	}
 	return value;
 }
 
 AssEvent.sColorFromAttr = (soColor) => {
-	return soColor.length == 6 ? "&H" + soColor.substring(4, 6) + soColor.substring(2, 4) + soColor.substring(0, 2) + "&" : soColor;
+	return soColor.length == 6 ? `&H${ soColor.substring(4, 6) }${ soColor.substring(2, 4) }${ soColor.substring(0, 2) }&` : soColor;
 }
 AssEvent.colorToAttr = (soColor) => {
-	return "" + soColor.substring(6, 8) + soColor.substring(4, 6) + soColor.substring(2, 4);
+	return `${ soColor.substring(6, 8) }${ soColor.substring(4, 6) }${ soColor.substring(2, 4) }`;
 }
 AssEvent.colorFromAttr = (attrColor) => {
 	return AssEvent.sColorFromAttr(attrColor);

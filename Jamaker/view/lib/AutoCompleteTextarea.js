@@ -1,7 +1,7 @@
 {
 	const link = document.createElement("link");
 	link.rel = "stylesheet";
-	link.href = new URL("./AutoCompleteTextarea.css", import.meta.url).href;
+	link.href = new URL("./AutoComplete.css", import.meta.url).href;
 	document.head.append(link);
 }
 

@@ -154,6 +154,27 @@ body.classic-scrollbar .input .scrollLeft::-webkit-scrollbar-button:horizontal:s
 body.classic-scrollbar .input .scrollRight::-webkit-scrollbar-button:horizontal:end { background-image: url('[buttonDisabled]'); }
 body.classic-scrollbar .input .disable-scroll-x::-webkit-scrollbar-thumb:horizontal { background: [background]; }
 
+.CodeMirror ::-webkit-scrollbar-thumb:hover { background-color: [border]; }
+.CodeMirror ::-webkit-scrollbar-corner,
+.CodeMirror ::-webkit-scrollbar-track:horizontal { background: linear-gradient([editorHL]00, [editorHL]af, [editorHL]ff); }
+.CodeMirror .hover-scroll::-webkit-scrollbar-thumb,
+.CodeMirror .scrolling::-webkit-scrollbar-thumb { background-color: [tabBorder]7f; }
+.CodeMirror .hover-scroll::-webkit-scrollbar-corner,
+.CodeMirror .scrolling::-webkit-scrollbar-corner { background: [tab]; }
+
+body.classic-scrollbar .CodeMirror ::-webkit-scrollbar { background: #8080801f; }
+body.classic-scrollbar .CodeMirror ::-webkit-scrollbar-corner { background: [tab]; }
+body.classic-scrollbar .CodeMirror ::-webkit-scrollbar-button,
+body.classic-scrollbar .CodeMirror ::-webkit-scrollbar-track { background: transparent; }
+body.classic-scrollbar .CodeMirror ::-webkit-scrollbar-thumb { background: [selector]; border-color: [background]; }
+body.classic-scrollbar .CodeMirror ::-webkit-scrollbar-thumb:hover { background: [border]; }
+body.classic-scrollbar .CodeMirror ::-webkit-scrollbar-button { background-image: url('[button]'); }
+body.classic-scrollbar .CodeMirror .scrollTop::-webkit-scrollbar-button:vertical:start,
+body.classic-scrollbar .CodeMirror .scrollBottom::-webkit-scrollbar-button:vertical:end,
+body.classic-scrollbar .CodeMirror .scrollLeft::-webkit-scrollbar-button:horizontal:start,
+body.classic-scrollbar .CodeMirror .scrollRight::-webkit-scrollbar-button:horizontal:end { background-image: url('[buttonDisabled]'); }
+body.classic-scrollbar .CodeMirror .disable-scroll-x::-webkit-scrollbar-thumb:horizontal { background: [background]; }
+
 /* 싱크 구분 색 */
 .sync,.sync > span { border-color: [syncBorder]; }
 .sync.error > span { background: [syncError]; }

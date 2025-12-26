@@ -149,16 +149,10 @@ function convert() {
 			const h = Math.floor(time / 3600);
 			time = time % 3600;
 			const m = Math.floor(time / 60);
-			const s = time % 60;
+			const s = Math.floor(time % 60);
+			const ds = Math.floor((time * 100) % 100);
 			
-			time = `${h}:${ m<10 ? "0" : "" }${m}:${ s < 10 ? "0" : "" }${s}`);
-			
-			switch (time.length) {
-				case  7: time = time + ".00"; break;
-				case  9: time = time +   "0"; break;
-				default: time = time.substring(0, 10);
-			}
-			return time;
+			return `${h}:${intPadding(m)}:${intPadding(s)}.${intPadding(ds)}`;
 		}
 		
 		for (let i = 0; i < inputLines.length; i++) {

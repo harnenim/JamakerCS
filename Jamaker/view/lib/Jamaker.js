@@ -921,8 +921,15 @@ Tab.prototype.selectHold = function(hold) {
 	[...this.holdArea.getElementsByClassName("hold")].forEach((el) => { el.style.display = "none"; });
 	hold.selector.classList.add("selected");
 	hold.area.style.display = "block";
-	hold.input.focus();
-	hold.input.dispatchEvent(new Event("scroll", { bubbles: true }));
+	if (CM) {
+		hold.cm.refresh();
+		hold.cm.focus();
+		hold.cm.getWrapperElement().dispatchEvent(new CustomEvent("cm-scroll", { bubbles: true }));
+	}
+	{
+		hold.input.focus();
+		hold.input.dispatchEvent(new Event("scroll", { bubbles: true }));
+	}
 	if ((this.holdIndex = index) != 0) {
 		this.lastHold = this.holdIndex;
 	}
@@ -951,6 +958,9 @@ Tab.prototype.replaceBeforeSave = function() {
 	
 	for (let i = 0; i < this.holds.length; i++) {
 		let text = this.holds[i].input.value; // .text 동기화 실패 가능성 고려, 현재 값 다시 불러옴
+		if (CM) {
+			text = this.holds[i].cm.getValue();
+		}
 		let changed = false;
 		
 		// 커서 기준 3개로 나눠서 치환
@@ -1572,7 +1582,7 @@ SmiEditor.prototype.isSaved = function() {
 		return (this.savedName  == this.name )
 			&& (this.savedPos   == this.pos  )
 			&& (this.savedStyle == SmiFile.toSaveStyle(this.style))
-			&& (this.saved == this.input.value
+			&& (this.saved == (CM ? this.cm.getValue() : this.input.value)
 		);
 	}
 };
@@ -1649,8 +1659,16 @@ SmiEditor.selectTab = function(index=-1) {
 		binder.setPath("");
 	}
 	SmiEditor.selected = currentTab.holds[currentTab.holdIndex];
+	if (CM) {
+		setTimeout(() => { SmiEditor.selected.cm.refresh(); }, 100);
+		SmiEditor.selected.cm.getWrapperElement().dispatchEvent(new CustomEvent("cm-scroll", { bubbles: true }));
+	}
 	SmiEditor.Viewer.refresh();
-	SmiEditor.selected.input.focus();
+	if (CM) {
+		SmiEditor.selected.cm.focus();
+	} else {
+		SmiEditor.selected.input.focus();
+	}
 	
 	// 탭에 따라 홀드 여부 다를 수 있음
 	refreshPaddingBottom();
@@ -1934,19 +1952,19 @@ window.init = function(jsonSetting, isBackup=true) {
 	document.getElementById("btnMoveToBack").addEventListener("click", () => {
 		if (tabs.length == 0) return;
 		tabs[tabIndex].holds[tabs[tabIndex].holdIndex].moveSync(false);
-		tabs[tabIndex].holds[tabs[tabIndex].holdIndex].input.focus();
+		tabs[tabIndex].holds[tabs[tabIndex].holdIndex][CM ? "cm" : "input"].focus();
 	});
 	document.getElementById("btnMoveToForward").addEventListener("click", () => {
 		if (tabs.length == 0) return;
 		tabs[tabIndex].holds[tabs[tabIndex].holdIndex].moveSync(true);
-		tabs[tabIndex].holds[tabs[tabIndex].holdIndex].input.focus();
+		tabs[tabIndex].holds[tabs[tabIndex].holdIndex][CM ? "cm" : "input"].focus();
 	});
 
 	const checkAutoFindSync = document.getElementById("checkAutoFindSync");
 	checkAutoFindSync.addEventListener("click", () => {
 		autoFindSync = checkAutoFindSync.checked;
 		if (tabs.length == 0) return;
-		tabs[tabIndex].holds[tabs[tabIndex].holdIndex].input.focus();
+		tabs[tabIndex].holds[tabs[tabIndex].holdIndex][CM ? "cm" : "input"].focus();
 	});
 	const checkTrustKeyframe = document.getElementById("checkTrustKeyframe");
 	checkTrustKeyframe.addEventListener("click", () => {
@@ -1983,12 +2001,19 @@ window.init = function(jsonSetting, isBackup=true) {
 			
 			let saved = true;
 			{	const currentTab = eData(th).tab;
-			for (let i = 0; i < currentTab.holds.length; i++) {
-				if (currentTab.holds[i].input.value != currentTab.holds[i].saved) {
-					saved = false;
-					break;
+				for (let i = 0; i < currentTab.holds.length; i++) {
+					if (CM) {
+						if (currentTab.holds[i].cm.getValue() != currentTab.holds[i].saved) {
+							saved = false;
+							break;
+						}
+					} else {
+						if (currentTab.holds[i].input.value != currentTab.holds[i].saved) {
+							saved = false;
+							break;
+						}
+					}
 				}
-			}
 			}
 			confirm((!saved ? "저장되지 않았습니다.\n" : "") + "탭을 닫으시겠습니까?", () => {
 				const index = closeTab(th);

@@ -82,8 +82,14 @@ body.classic-scrollbar .highlight-textarea > div {
 	background: linear-gradient(#f0f0f000, #f0f0f0);
 }
 /* 홀드/에디터 테두리 색 */
-.highlight-textarea {
+.highlight-textarea,
+.CodeMirror {
 	border-color: #aaaaaa;
+}
+.hold .CodeMirror-lines,
+.hold .CodeMirror pre.CodeMirror-line,
+.hold .CodeMirror pre.CodeMirror-line-like {
+	padding: 0;
 }
 
 /* 에디터 배경 색 */

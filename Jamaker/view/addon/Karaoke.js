@@ -1039,14 +1039,14 @@ ready(() => {
 	}
 	function numberToHex(c) {
 		if (0 <= c && c < 16) {
-			return "0" + c.toString(16);
+			return `0${ c.toString(16) }`;
 		} else if (16 <= c && c < 256) {
 			return c.toString(16);
 		}
 		return "00";
 	}
 	function colorCode(color) {
-		return "#" + numberToHex(color[0]) + numberToHex(color[1]) + numberToHex(color[2]);
+		return `#${ numberToHex(color[0]) }${ numberToHex(color[1]) }${ numberToHex(color[2]) }`;
 	}
 	/**
 	 * line: [활성,중간,비활성]

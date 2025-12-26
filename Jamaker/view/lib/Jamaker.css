@@ -200,10 +200,12 @@ input, textarea {
 	height: 100%;
 }
 .hold > *,
-.hold > *.input {
+.hold > *.input,
+.hold > *.CodeMirror {
 	position: absolute;
 	top: 0;
 	bottom: 0;
+	height: auto;
 }
 .hold * {
 	font-family: '맑은 고딕';
@@ -225,12 +227,16 @@ input, textarea {
 	background: transparent;
 	display: none;
 }
-.hold > .input {
+.hold > .input,
+.hold > .CodeMirror {
 	right: 0;
 }
 .highlight-textarea {
 	border-width: 1px 0 0 1px;
 	overflow: hidden;
+}
+.CodeMirror {
+	border-width: 1px 0 0 1px;
 }
 .highlight-textarea * {
 	white-space: pre;
@@ -252,6 +258,33 @@ input, textarea {
 .input ::-webkit-scrollbar-track:horizontal { background: linear-gradient(#ffffff3f, #ffffffff); }
 .input .scrolling::-webkit-scrollbar-thumb { background-color: #8888887f; }
 .input .scrolling::-webkit-scrollbar-corner { background: #dddddd; }
+
+.CodeMirror-scroll {
+	margin: 0 !important;
+	padding: 0 !important;
+}
+.CodeMirror-sizer {
+	margin-right: 0 !important;
+	border-right-width: 0 !important;
+}
+.CodeMirror ::-webkit-scrollbar {
+	width: 16px;
+	height: 16px;
+}
+.CodeMirror ::-webkit-scrollbar-thumb { background-clip: content-box; }
+.CodeMirror ::-webkit-scrollbar-button { width: 0; height: 0; }
+.CodeMirror ::-webkit-scrollbar,
+.CodeMirror ::-webkit-scrollbar-corner,
+.CodeMirror ::-webkit-scrollbar-button,
+.CodeMirror ::-webkit-scrollbar-track,
+.CodeMirror ::-webkit-scrollbar-thumb { background-color: transparent; }
+
+/* 색상 설정 따로 넣기 전에도 기본값은 있어야 함 */
+.CodeMirror ::-webkit-scrollbar-thumb:hover { background-color: #aaaaaa; }
+.CodeMirror ::-webkit-scrollbar-corner,
+.CodeMirror ::-webkit-scrollbar-track:horizontal { background: linear-gradient(#ffffff3f, #ffffffff); }
+.CodeMirror .scrolling::-webkit-scrollbar-thumb { background-color: #8888887f; }
+.CodeMirror .scrolling::-webkit-scrollbar-corner { background: #dddddd; }
 
 .classic-scrollbar ::-webkit-scrollbar-button,
 .classic-scrollbar ::-webkit-scrollbar-track,
@@ -378,7 +411,8 @@ input, textarea {
 .hold > .col-sync-cover {
 	width: calc(20px * 5);
 }
-.hold > .input {
+.hold > .input,
+.hold > .CodeMirror {
 	left: calc(20px * 5);
 }
 

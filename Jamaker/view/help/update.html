@@ -46,7 +46,7 @@ ready(() => {
 			btn.innerText = "현재 최신 버전입니다.";
 			btn.disabled = true;
 		} else {
-			btn.innerText = (updates[0].version + "으로 업데이트");
+			btn.innerText = `${ updates[0].version }으로 업데이트`;
 			btn.disabled = false;
 		}
 	}).catch((e) => {

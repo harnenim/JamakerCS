@@ -19,7 +19,7 @@ function smi2assTime(ms) {
 	const m = Math.floor(ms / 60000) % 60;
 	const s = Math.floor(ms / 1000) % 60;
 	const ds= Math.floor(ms / 10) % 100;
-	return h + ":" + (m<10?"0":"")+m + ":" + (s<10?"0":"")+s + "." + (ds<10?"0":"")+ds;
+	return `${h}:${intPadding(m)}:${intPadding(s)}.${intPadding(ds)}`;
 }
 function ass2smiTime(time) {
 	const vs = time.split(":");

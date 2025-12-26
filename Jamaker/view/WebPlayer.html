@@ -13,6 +13,7 @@ let openWithPlay = false;
 const junk = { time: 0, play: null };
 
 ready(() => {
+	
 	video = document.getElementById("video");
 	video.onplaying = function() { playStatus = 2; }
 	video.onpause = function() { playStatus = 1; }
@@ -66,72 +67,75 @@ ready(() => {
 	setInterval(() => {
 		binder.setTime(getTime());
 	}, 5);
-	
-	document.addEventListener("mouseover", (e) => {
-		const title = e.target.closest("#title");
-		if (title) {
-			document.body.classList.add("hover");
-			return;
-		}
-		const border = e.target.closest(".border");
-		if (border) {
-			document.body.classList.add("hover");
-			return;
-		}
-	});
-	document.addEventListener("mouseout", (e) => {
-		const title = e.target.closest("#title");
-		if (title) {
-			document.body.classList.remove("hover");
-			return;
-		}
-		const border = e.target.closest(".border");
-		if (border) {
-			document.body.classList.remove("hover");
-			return;
-		}
-	});
-	{
-		const HTCAPTION = 2;
-		const HTLEFT        = 10;
-		const HTRIGHT       = 11;
-		const HTTOP         = 12;
-		const HTTOPLEFT     = 13;
-		const HTTOPRIGHT    = 14;
-		const HTBOTTOM      = 15;
-		const HTBOTTOMLEFT  = 16;
-		const HTBOTTOMRIGHT = 17;
-		
-		document.addEventListener("mousedown", (e) => {
-			if (e.target.closest("button")) {
-				// 버튼 클릭은 이쪽에 들어오면 안 됨
+
+	if (window.binder && (!binder._ || (typeof binder._ == "function"))) {
+		// C#일 경우 별도 창틀 활성화
+		document.addEventListener("mouseover", (e) => {
+			const title = e.target.closest("#title");
+			if (title) {
+				document.body.classList.add("hover");
 				return;
 			}
-			
-			let type = 0;
-			if (e.target.closest("#title")) {
-				type = HTCAPTION;
-			} else {
-				const border = e.target.closest(".border");
-				if (border) {
-		            switch (border.classList[1])
-		            {
-		                case "nw": type =    HTTOPLEFT ; break;
-		                case "n" : type =    HTTOP     ; break;
-		                case "ne": type =    HTTOPRIGHT; break;
-		                case  "e": type =       HTRIGHT; break;
-		                case "se": type = HTBOTTOMRIGHT; break;
-		                case "s" : type = HTBOTTOM     ; break;
-		                case "sw": type = HTBOTTOMLEFT ; break;
-		                case  "w": type =       HTLEFT ; break;
-		            }
-				}
-			}
-			if (type) {
-				document.body.classList.add("moving");
-				binder.startResizeWindow(type);
+			const border = e.target.closest(".border");
+			if (border) {
+				document.body.classList.add("hover");
+				return;
 			}
 		});
+		document.addEventListener("mouseout", (e) => {
+			const title = e.target.closest("#title");
+			if (title) {
+				document.body.classList.remove("hover");
+				return;
+			}
+			const border = e.target.closest(".border");
+			if (border) {
+				document.body.classList.remove("hover");
+				return;
+			}
+		});
+		{
+			const HTCAPTION = 2;
+			const HTLEFT        = 10;
+			const HTRIGHT       = 11;
+			const HTTOP         = 12;
+			const HTTOPLEFT     = 13;
+			const HTTOPRIGHT    = 14;
+			const HTBOTTOM      = 15;
+			const HTBOTTOMLEFT  = 16;
+			const HTBOTTOMRIGHT = 17;
+			
+			document.addEventListener("mousedown", (e) => {
+				if (e.target.closest("button")) {
+					// 버튼 클릭은 이쪽에 들어오면 안 됨
+					return;
+				}
+				
+				let type = 0;
+				if (e.target.closest("#title")) {
+					type = HTCAPTION;
+				} else {
+					const border = e.target.closest(".border");
+					if (border) {
+			            switch (border.classList[1])
+			            {
+			                case "nw": type =    HTTOPLEFT ; break;
+			                case "n" : type =    HTTOP     ; break;
+			                case "ne": type =    HTTOPRIGHT; break;
+			                case  "e": type =       HTRIGHT; break;
+			                case "se": type = HTBOTTOMRIGHT; break;
+			                case "s" : type = HTBOTTOM     ; break;
+			                case "sw": type = HTBOTTOMLEFT ; break;
+			                case  "w": type =       HTLEFT ; break;
+			            }
+					}
+				}
+				if (type) {
+					document.body.classList.add("moving");
+					binder.startResizeWindow(type);
+				}
+			});
+		}
 	}
 	document.getElementById("btnOpenFile").addEventListener("click", (e) => {
 		binder.openFileDialog();
