@@ -173,8 +173,13 @@ ready(() => {
 	
 	opener.afterFound = function(name, text) {
 		const holds = SmiFile.textToHolds(text);
-		const assFoot = (holds[0].ass ? `\n<!-- ASS\n${ holds[0].ass }\n-->` : "");
-		text = SmiFile.holdsToText(holds, false, false) + assFoot;
+		const assFoot = (holds[0].ass ? `<!-- ASS\n${holds[0].ass}\n-->` : "");
+		const texts = [holds[0].toText()];
+		for (let i = 1; i < holds.length; i++) {
+            texts.push(holds[i].text);
+		}
+		holds.push(assFoot);
+		text = texts.join("\n───홀드───\n");
 		
 		const file = document.createElement("li");
 		file.classList.add("file");

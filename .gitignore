@@ -502,3 +502,9 @@ healthchecksdb
 /TextReplacer/view/lib/Jamaker.color.css
 /TextReplacer/view/lib/Jamaker.js
 /TextReplacer/view/lib/Jamaker.size.css
+/MakeFkf/view/lib/AutoComplete.css
+/MergeUpdates/view/lib/AutoComplete.css
+/OptimizeAssSync/view/lib/AutoComplete.css
+/SamiReplacer/view/lib/AutoComplete.css
+/SyncShift/view/lib/AutoComplete.css
+/TextReplacer/view/lib/AutoComplete.css
