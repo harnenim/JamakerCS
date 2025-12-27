@@ -102,7 +102,7 @@ function WebPlayerBridge() {
 						}
 						const self = this;
 						setTimeout(() => {
-							(self.window.iframe ? self.window.iframe.contentWindow : self.window).addEventListener("beforeunload", (e) => {
+							self.window.addEventListener("beforeunload", (e) => {
 								self.window = null;
 							});
 						}, 1000);
