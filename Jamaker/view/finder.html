@@ -31,17 +31,6 @@ function setSize(size) {
 }
 
 ready(() => {
-	if (window.binder) {
-		document.getElementById("btnFind"      ).addEventListener("click", () => { binder.runFind      (getParams()); });
-		document.getElementById("btnReplace"   ).addEventListener("click", () => { binder.runReplace   (getParams()); });
-		document.getElementById("btnReplaceAll").addEventListener("click", () => { binder.runReplaceAll(getParams()); });
-	} else {
-		if (opener && opener.SmiEditor && opener.SmiEditor.Finder) {
-			document.getElementById("btnFind"      ).addEventListener("click", () => { opener.SmiEditor.Finder.runFind      (getParams()); });
-			document.getElementById("btnReplace"   ).addEventListener("click", () => { opener.SmiEditor.Finder.runReplace   (getParams()); });
-			document.getElementById("btnReplaceAll").addEventListener("click", () => { opener.SmiEditor.Finder.runReplaceAll(getParams()); });
-		}
-	}
 	document.addEventListener("keydown", (e) => {
 		const textarea = e.target.closest("textarea");
 		if (textarea) {
@@ -76,17 +65,26 @@ ready(() => {
 	styleSizePreset = document.getElementById("styleSize").innerHTML;
 	
 	if (window.binder) {
+		document.getElementById("btnFind"      ).addEventListener("click", () => { binder.runFind      (getParams()); });
+		document.getElementById("btnReplace"   ).addEventListener("click", () => { binder.runReplace   (getParams()); });
+		document.getElementById("btnReplaceAll").addEventListener("click", () => { binder.runReplaceAll(getParams()); });
 		binder.onloadFinder();
 	} else {
 		if (opener) {
-			if (opener.SmiEditor.Finder.onload) {
+			if (opener.SmiEditor && opener.SmiEditor.Finder) {
+				document.getElementById("btnFind"      ).addEventListener("click", () => { opener.SmiEditor.Finder.runFind      (getParams()); });
+				document.getElementById("btnReplace"   ).addEventListener("click", () => { opener.SmiEditor.Finder.runReplace   (getParams()); });
+				document.getElementById("btnReplaceAll").addEventListener("click", () => { opener.SmiEditor.Finder.runReplaceAll(getParams()); });
 				opener.SmiEditor.Finder.onload();
 			}
 		} else {
 			setTimeout(() => {
 				// iframe 기반인 경우 opener가 나중에 생김
 				if (opener) {
-					if (opener.SmiEditor.Finder.onload) {
+					if (opener.SmiEditor && opener.SmiEditor.Finder) {
+						document.getElementById("btnFind"      ).addEventListener("click", () => { opener.SmiEditor.Finder.runFind      (getParams()); });
+						document.getElementById("btnReplace"   ).addEventListener("click", () => { opener.SmiEditor.Finder.runReplace   (getParams()); });
+						document.getElementById("btnReplaceAll").addEventListener("click", () => { opener.SmiEditor.Finder.runReplaceAll(getParams()); });
 						opener.SmiEditor.Finder.onload();
 					}
 				}

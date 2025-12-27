@@ -22,6 +22,18 @@ setColor = function(color) {
 }
 
 ready(() => {
+	if (opener) {
+		init();
+    } else {
+		setTimeout(() => {
+			// iframe 기반인 경우 opener가 나중에 생김
+			if (opener) {
+				init();
+			}
+		}, 1);
+	}
+});
+function init() {
 	const setting = JSON.parse(JSON.stringify(opener.setting));
 	const oSmiEditor = opener.SmiEditor;
 	
@@ -1279,7 +1291,7 @@ ready(() => {
 	});
 	
 	show(opener.setting.show ? opener.setting.show : 0);
-});
+};
 </script>
 <style>
 * {
