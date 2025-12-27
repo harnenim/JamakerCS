@@ -39,7 +39,7 @@ ready(() => {
 	sa.querySelector(".list").addEventListener("click", (e) => {
 		const li = e.target.closest("li");
 		if (li) {
-			binder.selectAudio(li.innerText.split("ː")[0], sa.isOrigin, sa.withSaveSkf, satrustKf);
+			binder.selectAudio(li.innerText.split("ː")[0], sa.isOrigin, sa.withSaveSkf, sa.trustKf);
 			sa.style.display = "none";
 		}
 	});
