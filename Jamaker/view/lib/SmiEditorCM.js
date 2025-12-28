@@ -1209,17 +1209,17 @@ SmiEditor.prototype.scrollToCursor = function(lineNo) {
 }
 // TODO: codemirror 쓰면 이 부분도 필요 없나?
 SmiEditor.prototype.getWidth = function(text) {
-	/*
 	let checker = SmiEditor.prototype.widthChecker;
 	if (!checker) {
-		$("body").append(checker = SmiEditor.prototype.widthChecker = $("<span>"));
-		checker.css({ "white-space": "pre" });
+		document.body.append(checker = SmiEditor.prototype.widthChecker = document.createElement("span"));
+		checker.style.whiteSpce = "pre";
 	}
-	checker.css({ font: this.$input.css("font") }).text(text).show();
-	const width = checker.width();
-	checker.hide();
+	checker.style.font = getComputedStyle(this.input).font;
+	checker.innerText = text;
+	checker.style.display = "inline";
+	const width = checker.clientWidth;
+	checker.style.display = "hidden";
 	return width;
-	*/
 }
 
 SmiEditor.prototype.fixScrollAroundEvent = function(scrollLeft) {
@@ -1482,7 +1482,6 @@ SmiEditor.prototype.insertSync = function(mode=0) {
 			} else if (prevLine.TEXT.trim() == "") {
 				cursor += 7 - prevLine.TEXT.length;
 				prevLine.TEXT = "&nbsp;";
-				prevLine.VIEW = null;
 				prevLine.render();
 			}
 		}
@@ -1755,9 +1754,6 @@ SmiEditor.prototype.render = function(range=null) {
 				break;
 			}
 		}
-		if (SmiEditor.useHighlight && remainedHead > 0) {
-			last.state = self.lines[remainedHead - 1].VIEW ? self.lines[remainedHead - 1].VIEW.data("next") : null;
-		}
 		
 		{	// 텍스트 바뀐 범위
 			for (let i = remainedHead; i < newTextLines.length - remainedFoot; i++) {
@@ -1838,11 +1834,12 @@ SmiEditor.prototype.render = function(range=null) {
 // TODO: 여기도 에디터 바꾸면 안 쓰일 듯?
 SmiEditor.highlightCss = ".hljs-sync: { color: #3F5FBF; }";
 SmiEditor.highlightText = (text, state=null) => {
-	const $previewLine = $("<span>");
+	const previewLine = document.createElement("span");
 	if (text.toUpperCase().startsWith("<SYNC ")) {
-		$previewLine.addClass("hljs-sync");
+		previewLine.classList.add("hljs-sync");
 	}
-	return $previewLine.text(text);
+	previewLine.innerText = text;
+	return previewLine;
 }
 SmiEditor.ROOT = "";
 SmiEditor.setHighlight = (SH, editors) => {
@@ -2072,7 +2069,6 @@ SmiEditor.prototype.renderByResync = function(range) {
 		for (let i = range[0]; i < range[1] + add; i++) {
 			const line = self.lines[i];
 			if (line.TYPE) { // 싱크 줄만 갱신
-				line.VIEW = null;
 				line.render(i, last);
 			}
 		}

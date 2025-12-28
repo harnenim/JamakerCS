@@ -1,8 +1,12 @@
 SmiEditor.highlightText = (text, state=null) => {
-	const previewLine = $("<span>").data({ state: state });
+	const previewLine = document.createElement("span");
+	eData(previewLine, { state: state });
 	if ((state == null || state == '!') && text.toUpperCase().startsWith("<SYNC ")) {
 		state = null; // 주석이었어도 싱크 줄에 오면 끊어줌
-		return previewLine.addClass("hljs-comment hljs-sync").text(text).data({ next: null });
+		previewLine.classList.add("hljs-comment", "hljs-sync");
+		previewLine.innerText = text;
+		eData(previewLine, { next: null });
+		return previewLine;
 	}
 	
 	/*
@@ -409,5 +413,7 @@ SmiEditor.highlightText = (text, state=null) => {
 		case 'C':
 			state = null;
 	}
-	return previewLine.html(html ? html : "").data({ next: state });
+	previewLine.innerHTML = (html ? html : "");
+	eData(previewLine, { next: state });
+	return previewLine;
 }

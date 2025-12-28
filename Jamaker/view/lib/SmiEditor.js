@@ -1,8 +1,6 @@
 import "./History.js";
 import "./SubtitleObject.js";
 
-import "./jquery-3.2.1.min.js";
-
 {
 	let link = document.createElement("link");
 	link.rel = "stylesheet";
@@ -180,22 +178,21 @@ Line.prototype.render = function(index, last={ sync: 0, state: null }) {
 };
 Line.prototype.renderHighlight = function(last, forced=false) {
 	if (SmiEditor.useHighlight) {
-		if (!forced && this.VIEW && this.VIEW.data("state") == last.state) {
+		if (!forced && this.VIEW && eData(this.VIEW).state == last.state) {
 			// 상태가 바뀌지 않음
 			return false;
 		}
-		const $view = this.VIEW = SmiEditor.highlightText(this.TEXT, last.state);
-		$view.attr({ "data-state": last.state, "data-next": (last.state = $view.data("next")) });
+		const view = this.VIEW = SmiEditor.highlightText(this.TEXT, last.state);
+		eData(view, { "data-state": last.state, "data-next": (last.state = eData(view).next) });
 		
 		// 색상 미리보기
 		if (SmiEditor.showColor) {
-			$view.find(".hljs-attr").each((_, el) => {
-				const $attr = $(el);
-				const attrName = $attr.text().trim().toLowerCase();
+			[...view.querySelectorAll(".hljs-attr")].forEach((attr) => {
+				const attrName = attr.innerText.trim().toLowerCase();
 				if (attrName == "color" || attrName == "fade") {
-					const $value = $attr.next();
-					if ($value.hasClass("hljs-value")) {
-						let color = $value.text();
+					const value = attr.nextSibling;
+					if (value.classList.contains("hljs-value")) {
+						let color = value.innerText;
 						if (color.startsWith('"') || color.startsWith("'")) {
 							color = color.substring(1, color.length - 1);
 						}
@@ -203,11 +200,10 @@ Line.prototype.renderHighlight = function(last, forced=false) {
 						
 						if (color.length == 15 && color[0] == '#' && color[7] == '~' && color[8] == '#') {
 							// 그라데이션 색상
-							$value.addClass("hljs-color").css({
-									borderColor: "transparent"
-								,	borderImage: `linear-gradient(to right, ${ color.substring(0,7) } 0%, ${ color.substring(8,15) } 100%)`
-								,	borderImageSlice: "1"
-							});
+							value.classList.add("hljs-color");
+							value.style.borderColor = "transparent";
+							value.style.borderImage = `linear-gradient(to right, ${ color.substring(0,7) } 0%, ${ color.substring(8,15) } 100%)`;
+							value.style.borderImageSlice = "1";
 							
 						} else {
 							if (!(color.length == 7 && color.startsWith("#"))) {
@@ -218,7 +214,8 @@ Line.prototype.renderHighlight = function(last, forced=false) {
 								color = "#" + hex;
 							}
 							
-							$value.addClass("hljs-color").css({ borderColor: color });
+							value.classList.add("hljs-color");
+							value.style.borderColor = color;
 						}
 					}
 				}
@@ -226,20 +223,25 @@ Line.prototype.renderHighlight = function(last, forced=false) {
 		}
 		
 		// 공백 싱크인 경우 싱크 투명도 따라감
-		{	const html = $view.html();
+		{	const html = view.innerHTML;
 			if (html.replaceAll("&amp;nbsp;", "").trim().length == 0) {
-				$view.html($("<span class='hljs-sync'>").html(html));
+				view.innerHTML = `<span class='hljs-sync'>${html}</span>`;
 			}
 		}
 		
 		// 줄바꿈 표시
 		if (SmiEditor.showEnter) {
-			$view.append($("<span class='hljs-comment enter'>").text("↵"));
+			view.append(showEnter.cloneNode(true));
 		}
 		
 		return true;
 	}
 	return false;
+}
+const showEnter = document.createElement("span");
+{
+	showEnter.classList.add("hljs-comment", "enter");
+	showEnter.innerText = "↵";
 }
 
 window.SmiEditor = function(text) {
@@ -276,8 +278,6 @@ window.SmiEditor = function(text) {
 		}
 		this.hArea.append(this.input = document.createElement("textarea"));
 		this.input.spellcheck = false;
-		this.$block = $(this.block);
-		this.$input = $(this.input);
 	}
 	
 	if (text) {
@@ -688,18 +688,18 @@ SmiEditor.prototype.bindEvent = function() {
 				left.style.top = top;
 			}
 			if (SmiEditor.useHighlight) {
-				const $view = editor.lines[i].VIEW;
-				if ($view != null) {
-					const rIndex = toRemoveViews.indexOf($view[0]);
+				const view = editor.lines[i].VIEW;
+				if (view) {
+					const rIndex = toRemoveViews.indexOf(view);
 					if (rIndex >= 0) {
 						// 기존에 있었는데 범위에 남아있음
 						toRemoveViews.splice(rIndex, 1);
 					} else {
 						// 기존에 없었는데 범위에 들어옴
-						toAppendViews.push($view[0]);
+						toAppendViews.push(view);
 					}
 					// 위치 계산은 새로 해줌
-					$view.css({ top: top });
+					view.style.top = top;
 				}
 			}
 		}
@@ -736,7 +736,10 @@ SmiEditor.prototype.bindEvent = function() {
 		editor.showBlockArea();
 	});
 	this.input.addEventListener("focus", () => {
-		const cursor = editor.$block.hide().empty().data("cursor");
+		const block = editor.block;
+		block.style.display = "none";
+		block.innerHTML = "";
+		const cursor = eData(block).cursor;
 		if (cursor) {
 			// 포커스 되찾을 때 블록지정 영역 유지
 			// 이때 history는 건드릴 필요 없음
@@ -748,7 +751,10 @@ SmiEditor.prototype.bindEvent = function() {
 		// <textarea>의 포커스는 유지한 채 윈도우 창이 비활성화되는 경우
 		if (SmiEditor.selected && (SmiEditor.selected.input == document.activeElement)) {
 			// 블록지정 중복으로 보일 필요 없음
-			SmiEditor.selected.$block.hide().empty().data({ cursor: null });
+			const block = SmiEditor.selected.block;
+			block.style.display = "none";
+			block.innerHTML = "";
+			eData(block, { cursor: null });
 		}
 	});
 	
@@ -813,14 +819,20 @@ SmiEditor.prototype.bindEvent = function() {
 		});
 	}
 };
-//TODO: codemirror 적용 시 사라질 부분이므로 jquery 정리 작업에서 예외
 SmiEditor.prototype.showBlockArea = function() {
 	const text = this.input.value;
 	const cursor = this.getCursor();
-	const $prev  = $("<span>").text(text.substring(0, cursor[0]));
-	const $block = $("<span>").text(text.substring(cursor[0], cursor[1]).replaceAll("\n", " \n")).css({ background: "#a7a7a7a7", color: "#000" });
-	const $next  = $("<span>").text(text.substring(cursor[1]));
-	this.$block.empty().append($prev).append($block).append($next).data({ cursor: cursor }).show();
+	const prev  = document.createElement("span");
+	const block = document.createElement("span");
+	const next  = document.createElement("span");
+	prev .innerText = text.substring(0, cursor[0]);
+	block.innerText = text.substring(cursor[0], cursor[1]).replaceAll("\n", " \n");
+	next .innerText = text.substring(cursor[1]);
+	block.style.background = "#a7a7a7a7";
+	block.style.color = "#000";
+	this.block.append(prev, block, next);
+	eData(this.block, { cursor: cursor });
+	this.block.display = "block";
 }
 
 SmiEditor.selected = null;
@@ -1416,12 +1428,14 @@ SmiEditor.prototype.scrollToCursor = function(lineNo) {
 SmiEditor.prototype.getWidth = function(text) {
 	let checker = SmiEditor.prototype.widthChecker;
 	if (!checker) {
-		$("body").append(checker = SmiEditor.prototype.widthChecker = $("<span>"));
-		checker.css({ "white-space": "pre" });
+		document.body.append(checker = SmiEditor.prototype.widthChecker = document.createElement("span"));
+		checker.style.whiteSpce = "pre";
 	}
-	checker.css({ font: this.$input.css("font") }).text(text).show();
-	const width = checker.width();
-	checker.hide();
+	checker.style.font = getComputedStyle(this.input).font;
+	checker.innerText = text;
+	checker.style.display = "inline";
+	const width = checker.clientWidth;
+	checker.style.display = "hidden";
 	return width;
 }
 
@@ -1457,7 +1471,7 @@ SmiEditor.prototype.setText = function(text, selection) {
 	} else {
 		this.setCursor(this.input.selectionStart);
 	}
-	if (this.$block.is(":visible")) {
+	if (this.block.style.display == "block") {
 		this.showBlockArea();
 	}
 	
@@ -2015,7 +2029,7 @@ SmiEditor.prototype.render = function(range=null) {
 			}
 		}
 		if (SmiEditor.useHighlight && remainedHead > 0) {
-			last.state = self.lines[remainedHead - 1].VIEW ? self.lines[remainedHead - 1].VIEW.data("next") : null;
+			last.state = self.lines[remainedHead - 1].VIEW ? eData(self.lines[remainedHead - 1].VIEW).next : null;
 		}
 		
 		{	// 텍스트 바뀐 범위
@@ -2100,11 +2114,12 @@ SmiEditor.prototype.render = function(range=null) {
 // TODO: 여기도 에디터 바꾸면 안 쓰일 듯?
 SmiEditor.highlightCss = ".hljs-sync: { color: #3F5FBF; }";
 SmiEditor.highlightText = (text, state=null) => {
-	const $previewLine = $("<span>");
+	const previewLine = document.createElement("span");
 	if (text.toUpperCase().startsWith("<SYNC ")) {
-		$previewLine.addClass("hljs-sync");
+		previewLine.classList.add("hljs-sync");
 	}
-	return $previewLine.text(text);
+	previewLine.innerText = text;
+	return previewLine;
 }
 SmiEditor.ROOT = "";
 SmiEditor.setHighlight = (SH, editors) => {
