@@ -190,8 +190,8 @@ Line.prototype.renderHighlight = function(last, forced=false) {
 			[...view.querySelectorAll(".hljs-attr")].forEach((attr) => {
 				const attrName = attr.innerText.trim().toLowerCase();
 				if (attrName == "color" || attrName == "fade") {
-					const value = attr.nextSibling;
-					if (value.classList.contains("hljs-value")) {
+					const value = attr.nextElementSibling;
+					if (value && value.classList.contains("hljs-value")) {
 						let color = value.innerText;
 						if (color.startsWith('"') || color.startsWith("'")) {
 							color = color.substring(1, color.length - 1);
@@ -1400,7 +1400,7 @@ SmiEditor.prototype.scrollToCursor = function(lineNo) {
 	}
 	let top = lineNo * LH;
 	const scrollMargin = SmiEditor.scrollMargin * LH;
-
+	
 	{	const scrollTop = this.input.scrollTop;
 		if (top < scrollTop + scrollMargin) { // 커서가 보이는 영역보다 위
 			this.input.scrollTop = (top - scrollMargin);
