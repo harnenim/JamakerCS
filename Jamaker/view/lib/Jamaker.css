@@ -259,6 +259,9 @@ input, textarea {
 .input .scrolling::-webkit-scrollbar-thumb { background-color: #8888887f; }
 .input .scrolling::-webkit-scrollbar-corner { background: #dddddd; }
 
+/*
+CodeMirror가 만든 스크롤바를 개조하는 게 나을 듯함
+
 .CodeMirror-scroll {
 	margin: 0 !important;
 	padding: 0 !important;
@@ -279,12 +282,13 @@ input, textarea {
 .CodeMirror ::-webkit-scrollbar-track,
 .CodeMirror ::-webkit-scrollbar-thumb { background-color: transparent; }
 
-/* 색상 설정 따로 넣기 전에도 기본값은 있어야 함 */
+/* 색상 설정 따로 넣기 전에도 기본값은 있어야 함
 .CodeMirror ::-webkit-scrollbar-thumb:hover { background-color: #aaaaaa; }
 .CodeMirror ::-webkit-scrollbar-corner,
 .CodeMirror ::-webkit-scrollbar-track:horizontal { background: linear-gradient(#ffffff3f, #ffffffff); }
 .CodeMirror .scrolling::-webkit-scrollbar-thumb { background-color: #8888887f; }
 .CodeMirror .scrolling::-webkit-scrollbar-corner { background: #dddddd; }
+*/
 
 .classic-scrollbar ::-webkit-scrollbar-button,
 .classic-scrollbar ::-webkit-scrollbar-track,

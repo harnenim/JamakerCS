@@ -40,7 +40,7 @@ body.classic-scrollbar .highlight-textarea > div {
 	display: block;
 	position: absolute;
 }
-.highlight-textarea > div span.enter {
+span.enter {
 	opacity: 0.5;
 	font-style: normal;
 	font-family: Arial; /* 특정 상황에서 폰트 유지 안 됨 */
@@ -103,6 +103,32 @@ body.classic-scrollbar .highlight-textarea > div {
 }
 .hljs-zw {
 	border-color: #000000;
+}
+
+/* 에디터 포커스 없을 때 블록지정 영역 */
+.block-area {
+	position: absolute;
+	color: transparent;
+	display: none;
+}
+.block-prev,
+.block-line {
+	float: left;
+	height: 20px;
+}
+.block-line {
+	clear: both;
+	background: #a7a7a7a7;
+	color: #000;
+}
+.block-prev + .block-line { clear: none; }
+
+.CodeMirror-selected {
+	background: Highlight !important;
+	right: auto;
+}
+.CodeMirror-selectedtext {
+	color: HighlightText !important;
 }
 
 /* 싱크 구분 색 */

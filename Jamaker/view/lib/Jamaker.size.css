@@ -129,6 +129,10 @@ label, #showFps {
 	height: 20px;
 }
 
+.block-prev, .block-line {
+	height: 20px;
+}
+
 .hold .hold-style-area > form,
 .hold .hold-ass-area > form {
 	top: calc(20px * 0.5);

@@ -1,9 +1,9 @@
-import "./History.js";
 import "./SubtitleObject.js";
 
 import "./highlight/codemirror.js";
-import "./highlight/scroll/scrollpastend.js";
-//import "./highlight/parsers/xml.js";
+import "./highlight/addon/scrollpastend.js";
+import "./highlight/addon/mark-selection.js";
+import "./highlight/sami.js";
 
 window.CM = true;
 
@@ -47,7 +47,6 @@ window.linesToText = function(lines) {
 	return textLines.join("\n");
 }
 
-// TODO: Line 객체 통째로 codemirror 적용 시 사라질 부분이므로 jquery 정리 작업에서 예외
 window.Line = function(text="", sync=0, type=TYPE.TEXT) {
 	// TODO: 처음에 객체 변수명이 아니라, 배열 번호 상수로 만들어서 대문자로 해놔서
 	// 고칠 때도 대문자를 따라가 버렸는데, 변수명은 소문자로 바꾸는 게 맞나...
@@ -145,22 +144,6 @@ Line.prototype.render = function(index, last={ sync: 0, state: null }) {
 	if (this.SYNC) { // 어차피 0이면 플레이어에서도 씹힘
 		const sync = this.SYNC;
 		
-		// 화면 싱크 체크
-		/*
-		let typeCss = "";
-		if (this.TYPE == TYPE.RANGE) {
-			typeCss = " range";
-		} else {
-			if (this.TYPE == TYPE.FRAME) {
-				typeCss = " frame";
-			} else {
-				typeCss = " normal";
-			}
-			if (Subtitle.findSync(sync, Subtitle.video.kfs, false)) {
-				typeCss += " keyframe";
-			}
-		}
-		*/
 		let h = sync;
 		const ms = h % 1000; h = (h - ms) / 1000;
 		const s  = h %   60; h = (h -  s) /   60;
@@ -170,12 +153,14 @@ Line.prototype.render = function(index, last={ sync: 0, state: null }) {
 		if (this.LEFT == null) {
 			(this.LEFT = document.createElement("div")).append(document.createElement("span"));
 		}
+		// 싱크 역전 체크
 		this.LEFT.classList.add("sync");
 		if (sync < last.sync) {
 			this.LEFT.classList.add("error");
 		} else if (sync == last.sync) {
 			this.LEFT.classList.add("equal");
 		}
+		// 화면 싱크 체크
 		if (this.TYPE == TYPE.RANGE) {
 			this.LEFT.classList.add("range");
 		} else {
@@ -202,6 +187,12 @@ Line.prototype.render = function(index, last={ sync: 0, state: null }) {
 	return this;
 };
 
+const showEnter = document.createElement("span");
+{
+	showEnter.classList.add("hljs-comment", "enter");
+	showEnter.innerText = "↵";
+}
+
 window.SmiEditor = function(text) {
 	const editor = this;
 	
@@ -222,20 +213,62 @@ window.SmiEditor = function(text) {
 	{	this.area.append(this.colSyncCover = document.createElement("div"));
 		this.colSyncCover.classList.add("col-sync-cover");
 	}
-	{	this.area.append(this.hArea = document.createElement("div"));
-		this.hArea.classList.add("input", "highlight-textarea", "hljs");
-		if (!SmiEditor.useHighlight) {
-			this.hArea.classList.add("nonactive");
-		}
-		{	this.hArea.append(el = document.createElement("div"));
-			el.append(this.hview = document.createElement("div"));
-		}
-		this.cm = CodeMirror(this.area, {
-				scrollbarStyle: null
+	{	this.cm = CodeMirror(this.area, {
+				dragDrop: false
 			,	scrollPastEnd: true
+			,	styleSelectedText: true
 		});
+		this.cm.getWrapperElement().classList.add("hljs");
 		this.cm.on("keydown", SmiEditor.cmKeydownHandler);
 	}
+	this.cm.on("renderLine", (cm, line, el) => {
+		let useHighlight = true;
+		const prs = el.children[0];
+
+		if (SmiEditor.parser) {
+			if (line.text.toUpperCase().startsWith("<SYNC ")) {
+				el.classList.add("hljs-sync");
+				if (SmiEditor.parser != "full") {
+					// 싱크 줄 문법 강조 제거
+					useHighlight = false;
+					prs.classList.add("hljs-comment");
+				}
+			} else if (line.text.replaceAll("&nbsp;", "").trim().length == 0) {
+				// 공백 싱크인 경우 싱크 투명도 따라감
+				prs.classList.add("hljs-sync");
+
+			} else {
+				if (SmiEditor.parser == "SyncOnly") {
+					// 싱크만 구분 - 문법 강조 제거
+					useHighlight = false;
+				}
+			}
+		} else {
+			useHighlight = false;
+		}
+		[...prs.querySelectorAll('span[class^="cm-"]')].forEach((span) => {
+			[...span.classList].forEach((cls) => {
+				if (cls.startsWith("cm-hljs-")) {
+					if (useHighlight) {
+						// hljs 적용
+						span.classList.remove(cls);
+						span.classList.add("hljs-" + cls.substring(8));
+					}
+				} else if (cls == "cm-invalidchar") {
+					// Zero-Width-Space 별도 표현
+					if (span.getAttribute("cm-text") == "​") {
+						span.classList.remove("cm-invalidchar");
+						span.classList.add("hljs-zw");
+						span.innerText = "​";
+					}
+				}
+			});
+		});
+
+		if (SmiEditor.showEnter) {
+			el.append(showEnter.cloneNode(true));
+		}
+	});
 	
 	if (text) {
 		text = text.replaceAll("\r\n", "\n");
@@ -709,7 +742,7 @@ SmiEditor.prototype.bindEvent = function() {
 	}
 };
 
-// TODO: 특수키는 codemirror에서 이벤트 별도 등록 필요
+// 특수키는 codemirror에서 이벤트 별도 등록 필요
 SmiEditor.cmKeydownHandler = (cm, e) => {
 	const editor = SmiEditor.selected;
 	switch (e.key) {
@@ -1206,20 +1239,6 @@ SmiEditor.prototype.scrollToCursor = function(lineNo) {
 	// 간헐적 에디터 외부 스크롤 버그 교정
 	this.area.scrollTop = 0;
 	*/
-}
-// TODO: codemirror 쓰면 이 부분도 필요 없나?
-SmiEditor.prototype.getWidth = function(text) {
-	let checker = SmiEditor.prototype.widthChecker;
-	if (!checker) {
-		document.body.append(checker = SmiEditor.prototype.widthChecker = document.createElement("span"));
-		checker.style.whiteSpce = "pre";
-	}
-	checker.style.font = getComputedStyle(this.input).font;
-	checker.innerText = text;
-	checker.style.display = "inline";
-	const width = checker.clientWidth;
-	checker.style.display = "hidden";
-	return width;
 }
 
 SmiEditor.prototype.fixScrollAroundEvent = function(scrollLeft) {
@@ -1846,30 +1865,27 @@ SmiEditor.setHighlight = (SH, editors) => {
 	SmiEditor.useHighlight = SH && SH.parser;
 	SmiEditor.showColor = SH.color;
 	SmiEditor.showEnter = SH.enter;
+	SmiEditor.parser = SH.parser;
+
 	if (SH.parser) {
-		fetch(SmiEditor.ROOT + `lib/highlight/parser/${ SH.parser }.js`).then(async (response) => {
-			let parser = await response.text();
-			eval(parser);
+		let name = SH.style;
+		let isDark = false;
+		if (name.endsWith("-dark") || (name.indexOf("-dark-") > 0)) {
+			isDark = true;
+		} else if (name.endsWith("?dark")) {
+			isDark = true;
+			name = name.split("?")[0];
+		}
 			
-			let name = SH.style;
-			let isDark = false;
-			if (name.endsWith("-dark") || (name.indexOf("-dark-") > 0)) {
-				isDark = true;
-			} else if (name.endsWith("?dark")) {
-				isDark = true;
-				name = name.split("?")[0];
-			}
-			
-			fetch(SmiEditor.ROOT + `lib/highlight/styles/${ name }.css`).then(async (response) => {
-				let style = await response.text();
-				// 문법 하이라이트 테마에 따른 커서 색상 추가
-				SmiEditor.highlightCss
-					= ".hljs { color: unset; }\n"
-					+ `.hold textarea { caret-color: ${ (isDark ? "#fff" : "#000") }; }\n`
-					+ style
-					+ `.hljs-sync { opacity: ${ SH.sync } }\n`;
-				SmiEditor.refreshHighlight(editors);
-			});
+		fetch(SmiEditor.ROOT + `lib/highlight/styles/${ name }.css`).then(async (response) => {
+			let style = await response.text();
+			// 문법 하이라이트 테마에 따른 커서 색상 추가
+			SmiEditor.highlightCss
+				= ".hljs { color: unset; }\n"
+				+ `.hold textarea { caret-color: ${ (isDark ? "#fff" : "#000") }; }\n`
+				+ style
+				+ `.hljs-sync { opacity: ${ SH.sync } }\n`;
+			SmiEditor.refreshHighlight(editors);
 		});
 	} else {
 		SmiEditor.afterRefreshHighlight(editors);
@@ -1896,13 +1912,7 @@ SmiEditor.afterRefreshHighlight = (editors) => {
 	}
 }
 SmiEditor.prototype.refreshHighlight = function () {
-	if (SmiEditor.useHighlight) {
-		this.hArea.classList.remove("nonactive");
-		const last = { state: null };
-		CodeMirror.signal(this.cm, "scroll", this.cm);
-	} else {
-		this.hArea.classList.add("nonactive");
-	}
+	SmiEditor.selected?.cm.refresh();
 }
 
 SmiEditor.prototype.moveLine = function(toNext) {

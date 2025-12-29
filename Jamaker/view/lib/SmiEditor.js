@@ -36,7 +36,6 @@ window.linesToText = function(lines) {
 	return textLines.join("\n");
 }
 
-// TODO: Line 객체 통째로 codemirror 적용 시 사라질 부분이므로 jquery 정리 작업에서 예외
 window.Line = function(text="", sync=0, type=TYPE.TEXT) {
 	// TODO: 처음에 객체 변수명이 아니라, 배열 번호 상수로 만들어서 대문자로 해놔서
 	// 고칠 때도 대문자를 따라가 버렸는데, 변수명은 소문자로 바꾸는 게 맞나...
@@ -134,7 +133,6 @@ Line.prototype.render = function(index, last={ sync: 0, state: null }) {
 	if (this.SYNC) { // 어차피 0이면 플레이어에서도 씹힘
 		const sync = this.SYNC;
 		
-		// 화면 싱크 체크
 		let h = sync;
 		const ms = h % 1000; h = (h - ms) / 1000;
 		const s  = h %   60; h = (h -  s) /   60;
@@ -144,12 +142,14 @@ Line.prototype.render = function(index, last={ sync: 0, state: null }) {
 		if (this.LEFT == null) {
 			(this.LEFT = document.createElement("div")).append(document.createElement("span"));
 		}
+		// 싱크 역전 체크
 		this.LEFT.classList.add("sync");
 		if (sync < last.sync) {
 			this.LEFT.classList.add("error");
 		} else if (sync == last.sync) {
 			this.LEFT.classList.add("equal");
 		}
+		// 화면 싱크 체크
 		if (this.TYPE == TYPE.RANGE) {
 			this.LEFT.classList.add("range");
 		} else {
@@ -271,10 +271,8 @@ window.SmiEditor = function(text) {
 		}
 		{	this.hArea.append(el = document.createElement("div"));
 			el.append(this.hview = document.createElement("div"));
-			el.append(this.block = document.createElement("p")); // TODO: codemirror 적용 시 삭제
-			this.block.style.display = "none";
-			this.block.style.position = "absolute";
-			this.block.style.color = "transparent";
+			el.append(this.block = document.createElement("div"));
+			this.block.classList.add("block-area");
 		}
 		this.hArea.append(this.input = document.createElement("textarea"));
 		this.input.spellcheck = false;
@@ -822,17 +820,30 @@ SmiEditor.prototype.bindEvent = function() {
 SmiEditor.prototype.showBlockArea = function() {
 	const text = this.input.value;
 	const cursor = this.getCursor();
-	const prev  = document.createElement("span");
-	const block = document.createElement("span");
-	const next  = document.createElement("span");
-	prev .innerText = text.substring(0, cursor[0]);
-	block.innerText = text.substring(cursor[0], cursor[1]).replaceAll("\n", " \n");
-	next .innerText = text.substring(cursor[1]);
-	block.style.background = "#a7a7a7a7";
-	block.style.color = "#000";
-	this.block.append(prev, block, next);
+	const prevLines  = text.substring(0, cursor[0]).split("\n");
+	const blockLines = text.substring(cursor[0], cursor[1]).split("\n");
+	
+	const lineHeight = parseFloat(getComputedStyle(this.input).lineHeight);
+	this.block.style.top = ((prevLines.length - 1) * lineHeight) + "px";
+	
+	const prev  = document.createElement("div");
+	prev.innerText = prevLines[prevLines.length - 1];
+	prev.classList.add("block-prev");
+	
+	let block = document.createElement("div");
+	block.innerText = blockLines[0] + " ";
+	block.classList.add("block-line");
+	this.block.append(prev, block);
+	
+	for (let i = 1; i < blockLines.length; i++) {
+		block = document.createElement("div");
+		block.innerText = blockLines[i] + (i == blockLines.length - 1 ? "" : " ");
+		block.classList.add("block-line");
+		this.block.append(block);
+	}
+	
 	eData(this.block, { cursor: cursor });
-	this.block.display = "block";
+	this.block.style.display = "block";
 }
 
 SmiEditor.selected = null;
@@ -1424,7 +1435,6 @@ SmiEditor.prototype.scrollToCursor = function(lineNo) {
 	// 간헐적 에디터 외부 스크롤 버그 교정
 	this.area.scrollTop = 0;
 }
-// TODO: codemirror 쓰면 이 부분도 필요 없나?
 SmiEditor.prototype.getWidth = function(text) {
 	let checker = SmiEditor.prototype.widthChecker;
 	if (!checker) {
@@ -1435,7 +1445,7 @@ SmiEditor.prototype.getWidth = function(text) {
 	checker.innerText = text;
 	checker.style.display = "inline";
 	const width = checker.clientWidth;
-	checker.style.display = "hidden";
+	checker.style.display = "none";
 	return width;
 }
 
