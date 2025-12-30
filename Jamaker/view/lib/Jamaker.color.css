@@ -155,15 +155,15 @@ body.classic-scrollbar .input .scrollRight::-webkit-scrollbar-button:horizontal:
 body.classic-scrollbar .input .disable-scroll-x::-webkit-scrollbar-thumb:horizontal { background: [background]; }
 
 .CodeMirror ::-webkit-scrollbar-thumb:hover { background-color: [border]; }
-.CodeMirror ::-webkit-scrollbar-corner,
+.CodeMirror .CodeMirror-scrollbar-filler,
 .CodeMirror ::-webkit-scrollbar-track:horizontal { background: linear-gradient([editorHL]00, [editorHL]af, [editorHL]ff); }
-.CodeMirror .hover-scroll::-webkit-scrollbar-thumb,
-.CodeMirror .scrolling::-webkit-scrollbar-thumb { background-color: [tabBorder]7f; }
-.CodeMirror .hover-scroll::-webkit-scrollbar-corner,
-.CodeMirror .scrolling::-webkit-scrollbar-corner { background: [tab]; }
+.CodeMirror.hover-scroll ::-webkit-scrollbar-thumb,
+.CodeMirror.scrolling ::-webkit-scrollbar-thumb { background-color: [tabBorder]7f; }
+.CodeMirror.hover-scroll .CodeMirror-scrollbar-filler,
+.CodeMirror.scrolling .CodeMirror-scrollbar-filler { background: [tab]; }
 
 body.classic-scrollbar .CodeMirror ::-webkit-scrollbar { background: #8080801f; }
-body.classic-scrollbar .CodeMirror ::-webkit-scrollbar-corner { background: [tab]; }
+body.classic-scrollbar .CodeMirror .CodeMirror-scrollbar-filler { background: [tab]; }
 body.classic-scrollbar .CodeMirror ::-webkit-scrollbar-button,
 body.classic-scrollbar .CodeMirror ::-webkit-scrollbar-track { background: transparent; }
 body.classic-scrollbar .CodeMirror ::-webkit-scrollbar-thumb { background: [selector]; border-color: [background]; }

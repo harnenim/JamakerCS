@@ -1,6 +1,10 @@
 import "./MenuStrip.js";
-import "./AutoCompleteTextarea.js";
 import "./Combine.js";
+/*
+import "./AutoCompleteTextarea.js";
+import "./SmiEditor.js";
+*/
+import "./AutoCompleteCodeMirror.js";
 import "./SmiEditorCM.js";
 import "./AssEditor.js";
 
@@ -921,14 +925,7 @@ Tab.prototype.selectHold = function(hold) {
 	[...this.holdArea.getElementsByClassName("hold")].forEach((el) => { el.style.display = "none"; });
 	hold.selector.classList.add("selected");
 	hold.area.style.display = "block";
-	if (window.CM) {
-		hold.cm.refresh();
-		hold.cm.focus();
-		CodeMirror.signal(SmiEditor.selected.cm, "scroll", SmiEditor.selected.cm);
-	} else {
-		hold.input.focus();
-		hold.input.dispatchEvent(new Event("scroll", { bubbles: true }));
-	}
+	hold.refresh();
 	if ((this.holdIndex = index) != 0) {
 		this.lastHold = this.holdIndex;
 	}
@@ -956,13 +953,7 @@ Tab.prototype.replaceBeforeSave = function() {
 	const funcSince = log("replaceBeforeSave start");
 	
 	for (let i = 0; i < this.holds.length; i++) {
-		let text = this.holds[i].text;
-		if (window.CM) {
-			// TODO: CodeMirror 전환 시 아예 자체 text를 없애고 이쪽에 의존하는 건?
-			text = this.holds[i].cm.getValue();
-		} else {
-			text = this.holds[i].input.value; // .text 동기화 실패 가능성 고려, 현재 값 다시 불러옴
-		}
+		let text = this.holds[i].getValue();
 		let changed = false;
 		
 		// 커서 기준 3개로 나눠서 치환
@@ -1214,7 +1205,7 @@ Tab.prototype.toAss = function(orderByEndSync=false) {
 			styles[name] = style;
 		}
 		
-		hold.smiFile = new SmiFile(hold.text);
+		hold.smiFile = new SmiFile(hold.getValue());
 		if (h == 0) {
 			// 메인 홀드에서 <title> 확인
 			const h0 = hold.smiFile.header.search(/<title>/gi);
@@ -1584,8 +1575,7 @@ SmiEditor.prototype.isSaved = function() {
 		return (this.savedName  == this.name )
 			&& (this.savedPos   == this.pos  )
 			&& (this.savedStyle == SmiFile.toSaveStyle(this.style))
-			&& (this.saved == (window.CM ? this.cm.getValue() : this.input.value)
-		);
+			&& (this.saved == this.getValue());
 	}
 };
 SmiEditor.prototype.onChangeSaved = function(saved) {
@@ -1660,17 +1650,8 @@ SmiEditor.selectTab = function(index=-1) {
 	} else {
 		binder.setPath("");
 	}
-	SmiEditor.selected = currentTab.holds[currentTab.holdIndex];
-	if (window.CM) {
-		setTimeout(() => { SmiEditor.selected.cm.refresh(); }, 100);
-		CodeMirror.signal(SmiEditor.selected.cm, "scroll", SmiEditor.selected.cm);
-	}
 	SmiEditor.Viewer.refresh();
-	if (window.CM) {
-		SmiEditor.selected.cm.focus();
-	} else {
-		SmiEditor.selected.input.focus();
-	}
+	currentTab.holds[currentTab.holdIndex].refresh();
 	
 	// 탭에 따라 홀드 여부 다를 수 있음
 	refreshPaddingBottom();
@@ -2004,16 +1985,9 @@ window.init = function(jsonSetting, isBackup=true) {
 			let saved = true;
 			{	const currentTab = eData(th).tab;
 				for (let i = 0; i < currentTab.holds.length; i++) {
-					if (window.CM) {
-						if (currentTab.holds[i].cm.getValue() != currentTab.holds[i].saved) {
-							saved = false;
-							break;
-						}
-					} else {
-						if (currentTab.holds[i].input.value != currentTab.holds[i].saved) {
-							saved = false;
-							break;
-						}
+					if (currentTab.holds[i].getValue() != currentTab.holds[i].saved) {
+						saved = false;
+						break;
 					}
 				}
 			}
@@ -2282,8 +2256,8 @@ window.setSetting = function(setting, initial=false) {
 					const holds = tabs[i].holds;
 					for (let j = 0; j < holds.length; j++) {
 						holds[j].input.dispatchEvent(new Event("scroll", { bubbles: true }));
-						if (holds[j].act) {
-							holds[j].act.resize();
+						if (holds[j].ac) {
+							holds[j].ac.resize();
 						}
 					}
 				}
@@ -2593,7 +2567,7 @@ window.saveFile = function(asNew, isExport) {
 		
 		for (let i = 0; i < currentTab.holds.length; i++) {
 			const hold = currentTab.holds[i];
-			hold.history.log();
+			hold.saveHistory();
 			
 			if (!syncError) {
 				for (let j = 0; j < hold.lines.length; j++) {
@@ -2878,9 +2852,9 @@ window.saveFile = function(asNew, isExport) {
 				currentTab.selectHold(hold);
 				
 				const lineNo = syncError[1];
-				const cursor = (lineNo ? hold.text.split("\n").slice(0, lineNo).join("\n").length + 1 : 0);
+				const cursor = (lineNo ? hold.getValue().split("\n").slice(0, lineNo).join("\n").length + 1 : 0);
 				hold.setCursor(cursor);
-				hold.scrollToCursor(lineNo);
+				if (hold.scrollToCursor) hold.scrollToCursor(lineNo);
 			});
 		} else {
 			saveAfterConfirm();
@@ -2903,7 +2877,7 @@ window.afterSaveFile = function(tabIndex, path) { // 저장 도중에 탭 전환
 		// afterSave 재정의도 삭제
 		// currentTab.holds[i].afterSave();
 		const hold = currentTab.holds[i];
-		hold.saved = window.CM ? hold.cm.getValue() : hold.input.value;
+		hold.saved = hold.getValue();
 		hold.savedPos = hold.pos;
 		hold.savedName = hold.name;
 		hold.savedStyle = SmiFile.toSaveStyle(hold.style);
@@ -2952,7 +2926,7 @@ window.saveTemp = function() {
 	let isChanged = false;
 	for (let i = 0; i < currentTab.holds.length; i++) {
 		const hold = currentTab.holds[i];
-		const text = texts[i] = window.CM ? hold.cm.getValue() : hold.input.value;
+		const text = texts[i] = hold.getValue();
 		if (text == hold.tempSavedText) {
 			continue;
 		}
@@ -3958,15 +3932,11 @@ window.loadAssFile = function(path, text, target=-1) {
 							}
 						}
 						
-						let cursor = 0;
-						if (window.CM) {
-							hold.cm.indexFromPos(hold.cm.getCursor("start"));
-						} else {
-							hold.input.selectionStart;
-						}
+						let cursor = hold.getCursor()[0];
 						let cursorSync = 0;
-						if (hold.text) {
-							for (let i = hold.text.substring(0, cursor).split("\n").length - 1; i > 0; i--) {
+						const holdText = hold.getValue();
+						if (holdText) {
+							for (let i = holdText.substring(0, cursor).split("\n").length - 1; i > 0; i--) {
 								const line = hold.lines[i];
 								if (line.TYPE) {
 									cursorSync = line.SYNC;
@@ -3975,12 +3945,7 @@ window.loadAssFile = function(path, text, target=-1) {
 							}
 						}
 						
-						const smiText = hold.smiFile.toText();
-						if (window.CM) {
-							hold.cm.setValue(smiText);
-						} else {
-							hold.input.value = smiText;
-						}
+						hold.setValue(hold.smiFile.toText());
 						hold.render();
 						
 						cursor = 0;
@@ -3995,7 +3960,7 @@ window.loadAssFile = function(path, text, target=-1) {
 						}
 						
 						hold.setCursor(cursor);
-						hold.scrollToCursor();
+						if (hold.scrollToCursor) hold.scrollToCursor();
 					}
 					
 					// SMI 에디터에 넣지 못한 내용물
@@ -4245,14 +4210,9 @@ window.splitHold = function(tab, styleName) {
 		
 		const smiFile = new SmiFile();
 		smiFile.body = body;
-		const smiText = smiFile.toText();
-		if (window.CM) {
-			hold.cm.setValue(smiText);
-		} else {
-			hold.input.value = smiText;
-		}
+		hold.setValue(smiFile.toText());
 		hold.setCursor(0);
-		hold.scrollToCursor();
+		if (hold.scrollToCursor) hold.scrollToCursor();
 		hold.render();
 	}
 	
@@ -4267,7 +4227,7 @@ window.beforeExit = function() {
 	for (let i = 0; i < tabs.length; i++) {
 		for (let j = 0; j < tabs[i].holds.length; j++) {
 			const hold = tabs[i].holds[j];
-			if (hold.saved != (window.CM ? hold.cm.getValue() : hold.input.value)) {
+			if (hold.saved != hold.getValue()) {
 				saved = false;
 				break;
 			}
@@ -4638,7 +4598,7 @@ window.generateSmiFromAss = function(keepHoldsAss=true) {
 		newLines.push(...nexts);
 		
 		const cursor = 0;
-		origin.hold.history.log();
+		origin.hold.saveHistory();
 		origin.hold.setText(newLines.join("\n"), [cursor]);
 	}
 	

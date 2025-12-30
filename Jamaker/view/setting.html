@@ -53,11 +53,13 @@ function init() {
 		if (el = document.querySelectorAll("#settingArea > form")[index]) {
 			el.classList.add("selected");
 			opened = el.id;
+			if (afterOpen[el.id]) afterOpen[el.id]();
 		}
 		// 지역변수 setting도 건드려야 함
 		opener.setting.show = setting.show = index;
 		lastFocus = null;
 	}
+	const afterOpen = {};
 	document.addEventListener("focus", function(e) {
 		let input = e.target.closest("input");
 		if (!input) input = e.target.closest("textarea");
@@ -824,23 +826,26 @@ function init() {
 				,	sync  : Number(document.querySelector("input[name=highlight_sync]").value)
 			}, [editorNewFile]);
 		}
-		const editorNewFile = new SmiEditor();
+		const editorNewFile = new SmiEditor(setting.newFile);
 		document.getElementById("areaNewFile").append(editorNewFile.area);
 		{	// textarea resize
 			editorNewFile.area.style.height = "400px";
-			let resizeNewFile = false;
-			editorNewFile.input.name = "newFile";
-			editorNewFile.input.style.height = "398px";
-			editorNewFile.input.addEventListener("mousedown", () => {
-				resizeNewFile = true;
-			});
-			document.addEventListener("mousemove", () => {
-				if (!resizeNewFile) return;
-				editorNewFile.area.style.height = `${ editorNewFile.input.offsetHeight + 2 }px`;
-			});
-			document.addEventListener("mouseup", () => {
-				resizeNewFile = false;
-			});
+			if (editorNewFile.input) {
+				let resizeNewFile = false;
+				editorNewFile.input.style.height = "398px";
+				editorNewFile.input.addEventListener("mousedown", () => {
+					resizeNewFile = true;
+				});
+				document.addEventListener("mousemove", () => {
+					if (!resizeNewFile) return;
+					editorNewFile.area.style.height = `${ editorNewFile.input.offsetHeight + 2 }px`;
+				});
+				document.addEventListener("mouseup", () => {
+					resizeNewFile = false;
+				});
+			} else {
+				editorNewFile.cm.getWrapperElement().style.height = "398px";
+			}
 		}
 		
 		[document.querySelector("input[name=defStyle_OutlineColour]"), document.querySelector("input[name=defStyle_BackColour]")].forEach((el) => {
@@ -929,6 +934,10 @@ function init() {
 			setSaved("style", false);
 		});
 		
+		afterOpen["style"] = () => {
+			editorNewFile.refresh();
+		}
+		
 		submitFuncs["style"] = () => {
 			setting.size             = document.querySelector("select[name=size]").value;
 			setting.useTab           = document.querySelector("input[name=useTab]").checked;
@@ -945,7 +954,7 @@ function init() {
 			setting.viewer.useAlign  = document.querySelector("input[name=viewer_useAlign]").checked;
 			setting.viewer.css       = document.querySelector("textarea[name=viewer_css]").value;
 			
-			setting.newFile          = document.querySelector("textarea[name=newFile]"   ).value;
+			setting.newFile          = editorNewFile.getValue();
 			
 			setting.color.background = document.querySelector("input[name=color_background]").value;
 			setting.color.selector   = document.querySelector("input[name=color_selector]"  ).value;
@@ -1528,11 +1537,13 @@ fieldset ol button,
 #areaNewFile .hold > .col-sync {
 	display: none;
 }
-#areaNewFile .hold > .input {
+#areaNewFile .hold > .input,
+#areaNewFile .hold > .CodeMirror {
 	left: 0;
 	height: 100%;
 }
-#areaNewFile .highlight-textarea {
+#areaNewFile .highlight-textarea,
+#areaNewFile .CodeMirror {
 	border: 1px solid #888;
 }
 #areaNewFile .highlight-textarea > textarea {
@@ -1636,6 +1647,8 @@ body {
 	border-color: [tabBorder];
 }
 </style>
+<style id="styleBeforeLoad"> body { display: none; } </style>
+<script> ready(() => { setTimeout(() => { document.getElementById("styleBeforeLoad").remove(); }, 1); }); </script>
 </head>
 <body>
 

@@ -162,6 +162,7 @@ Line.prototype.render = function(index, last={ sync: 0, state: null }) {
 				this.LEFT.classList.add("keyframe");
 			}
 		}
+		this.LEFT.setAttribute("data-index", index);
 		this.LEFT.children[0].innerText = syncText;
 		
 		last.sync = sync;
@@ -332,7 +333,7 @@ window.SmiEditor = function(text) {
 	}, false);
 	setTimeout(() => {
 		if (SmiEditor.autoComplete && window.AutoCompleteTextarea) {
-			editor.act = new AutoCompleteTextarea(editor.input, SmiEditor.autoComplete, () => {
+			editor.ac = new AutoCompleteTextarea(editor.input, SmiEditor.autoComplete, () => {
 				editor.history.log();
 				editor.render();
 			});
@@ -584,6 +585,14 @@ SmiEditor.getSyncTime = (sync, forKeyFrame=false, output={}) => { /* output: 리
 }
 SmiEditor.makeSyncLine = (time, type) => {
 	return SmiEditor.sync.preset.replaceAll("{sync}", Math.floor(time)).replaceAll("{lang}", SmiEditor.sync.lang).replaceAll("{type}", TIDs[type ? type : 1]);
+}
+
+SmiEditor.prototype.focus = function() {
+	(SmiEditor.selected = this).input.focus();
+}
+SmiEditor.prototype.refresh = function() {
+	this.focus();
+	this.input.dispatchEvent(new Event("scroll", { bubbles: true }));
 }
 
 SmiEditor.prototype.isSaved = function() {
@@ -858,7 +867,7 @@ SmiEditor.activateKeyEvent = function() {
 		const hasFocus = editor && (editor.input == document.activeElement);
 
 		// TODO: 새삼스럽지만, 단축키 기능 말고 방향키 같은 부분은 activateKeyEvent와 별도로 있었어야 했나...
-		if (!editor || !editor.act || editor.act.selected < 0) { // auto complete 작동 중엔 무시
+		if (!editor || !editor.ac || editor.ac.selected < 0) { // auto complete 작동 중엔 무시
 			switch (e.key) {
 				case "PageUp": {
 					if (hasFocus) {
@@ -1174,7 +1183,7 @@ SmiEditor.activateKeyEvent = function() {
 							e.preventDefault();
 							// 탭을 에디터에 입력하는 경우는 없다고 가정, 자동완성 기능으로 활용
 							// 탭문자는 중간 싱크에만 활용 - 중간 싱크는 자동 생성으로만 존재
-							editor.act.onCheckWord();
+							editor.ac.onCheckWord();
 						}
 					}
 					break;
@@ -1463,6 +1472,17 @@ SmiEditor.prototype.fixScrollAroundEvent = function(scrollLeft) {
 		// 스크롤 이동 필요하면 이동
 		editor.scrollToCursor();
 	}, 1);
+}
+
+SmiEditor.prototype.saveHistory = function () {
+	this.history.log();
+}
+
+SmiEditor.prototype.getValue = function() {
+	return this.input.value;
+}
+SmiEditor.prototype.setValue = function(value) {
+	this.input.value = value;
 }
 
 //사용자 정의 명령 지원
@@ -1905,7 +1925,7 @@ SmiEditor.prototype.findSync = function(target) {
 	if (!hasSync) {
 		return;
 	}
-	const cursor = (lineNo ? this.text.split("\n").slice(0, lineNo).join("\n").length + 1 : 0);
+	const cursor = (lineNo ? this.input.value.split("\n").slice(0, lineNo).join("\n").length + 1 : 0);
 	this.setCursor(cursor);
 	this.scrollToCursor(lineNo);
 }
@@ -2294,9 +2314,7 @@ SmiEditor.prototype.moveSync = function(toForward) {
 			}
 		}
 	}
-	this.text = linesToText(this.lines);
-	this.input.value = this.text;
-	const lines = this.text.split("\n");
+	const lines = (this.input.value = this.text = linesToText(this.lines)).split("\n");
 	if (range[0] < range[1]) { // 선택 영역이 있을 때
 		// 줄 전체 선택
 		let i = 0;
@@ -2337,14 +2355,44 @@ SmiEditor.prototype.renderByResync = function(range) {
 	setTimeout(() => {
 		const funcSince = log("renderByResync start");
 		
-		// 줄 수 변동량
-		let add = 0;
-		
 		const last = { sync: 0 };
-		for (let i = range[0] - 1; i >= 0; i--) {
+		for (let i = range[1] - 1; i >= range[0]; i--) {
 			if (self.lines[i].SYNC) {
 				last.sync = self.lines[i].SYNC;
 				break;
+			}
+		}
+		if (last.sync == 0) return; // 선택된 싱크 없음
+		
+		// 새로 그리기
+		for (let i = range[0]; i < range[1]; i++) {
+			const line = self.lines[i];
+			if (line.TYPE) { // 싱크 줄만 갱신
+				line.VIEW = null;
+				line.render(i, last);
+			}
+		}
+		
+		const prev = { sync: 0 };
+		for (let i = range[0] - 1; i >= 0; i--) {
+			if (self.lines[i].SYNC) {
+				prev.sync = self.lines[i].SYNC;
+				break;
+			}
+		}
+		let firstSyncLine = null;
+		for (let i = range[0]; i < range[1]; i++) {
+			if (self.lines[i].SYNC) {
+				firstSyncLine = self.lines[i];
+				break;
+			}
+		}
+		if (firstSyncLine && prev.sync) {
+			if (firstSyncLine.SYNC <= prev.sync) {
+				firstSyncLine.LEFT.classList.add(firstSyncLine.SYNC == prev.sync ? "equal" : "error");
+			} else {
+				firstSyncLine.LEFT.classList.remove("equal");
+				firstSyncLine.LEFT.classList.remove("error");
 			}
 		}
 		let nextSyncLine = null;
@@ -2354,16 +2402,6 @@ SmiEditor.prototype.renderByResync = function(range) {
 				break;
 			}
 		}
-		
-		// 새로 그리기
-		for (let i = range[0]; i < range[1] + add; i++) {
-			const line = self.lines[i];
-			if (line.TYPE) { // 싱크 줄만 갱신
-				line.VIEW = null;
-				line.render(i, last);
-			}
-		}
-		
 		if (nextSyncLine && last.sync) {
 			if (nextSyncLine.SYNC <= last.sync) {
 				nextSyncLine.LEFT.classList.add(nextSyncLine.SYNC == last.sync ? "equal" : "error");
@@ -2399,7 +2437,7 @@ SmiEditor.prototype.moveSyncLine = function(lineIndex, toForward) {
 	this.history.log();
 	
 	const line = this.lines[lineIndex];
-	const lines = this.text.split("\n");
+	const lines = this.input.value.split("\n");
 	const sync = line.SYNC + ((toForward ? 1 : -1) * SmiEditor.sync.unit);
 	lines[lineIndex] = SmiEditor.makeSyncLine(Math.max(1, sync), line.TYPE);
 	
@@ -2423,10 +2461,10 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 	const lines = JSON.parse(JSON.stringify(this.lines.slice(0)));
 	const cursor = this.getCursor();
 	const range = [0, lines.length];
-	const cursorLine = this.text.substring(0, cursor[0]).split("\n").length - 1;
+	const cursorLine = this.input.value.substring(0, cursor[0]).split("\n").length - 1;
 	if (cursor[0] < cursor[1]) {
 		range[0] = cursorLine;
-		range[1] = this.text.substring(0, cursor[1]).split("\n").length;
+		range[1] = this.input.value.substring(0, cursor[1]).split("\n").length;
 	}
 	
 	for (let i = range[0]; i < range[1]; i++) {
@@ -3247,7 +3285,7 @@ SmiEditor.prototype.getTransformText = function() {
 	//초기 상태 기억
 	const origin = SmiEditor.transforming;
 	origin.tab = this;
-	origin.text = this.text;
+	origin.text = this.input.value;
 	
 	let start = 0;
 	let end = origin.tab.lines.length;

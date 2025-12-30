@@ -352,6 +352,3 @@ AutoCompleteTextarea.prototype.onCheckWord = function(e) {
 	this.open(this.sets["-"][1]);
 	this.afterInput();
 }
-AutoCompleteTextarea.prototype.on = function(a, b) {
-	this.ta.on(a, b);
-}

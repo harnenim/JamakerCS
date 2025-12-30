@@ -6,6 +6,8 @@
 <script src="lib/webview.js"></script>
 <script src="lib/setting.js"></script>
 <script src="lib/Jamaker.js" type="module"></script>
+<style id="styleBeforeLoad"> body { display: none; } </style>
+<script> ready(() => { setTimeout(() => { document.getElementById("styleBeforeLoad").remove(); }, 1); }); </script>
 </head>
 <body id="body">
 	<div><!--

@@ -188,60 +188,6 @@ button {
 	display: block;
 }
 
-input, textarea {
-	border-width: 1px;
-	user-select: text;
-}
-
-.hold {
-	overflow: hidden;
-	position: relative;
-	width: 100%;
-	height: 100%;
-}
-.hold > *,
-.hold > *.input,
-.hold > *.CodeMirror {
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	height: auto;
-}
-.hold * {
-	font-family: '맑은 고딕';
-	outline: 0;
-}
-.hold > .col-sync,
-.hold > .col-sync-cover {
-	left: 0;
-	height: 100%;
-	text-align: center;
-	border: 1px solid transparent;
-}
-.hold > .col-sync {
-	overflow-y: scroll;
-}
-.hold > .col-sync::-webkit-scrollbar { width: 0; height: 0; }
-.hold > .col-sync-cover {
-	overflow: hidden;
-	background: transparent;
-	display: none;
-}
-.hold > .input,
-.hold > .CodeMirror {
-	right: 0;
-}
-.highlight-textarea {
-	border-width: 1px 0 0 1px;
-	overflow: hidden;
-}
-.CodeMirror {
-	border-width: 1px 0 0 1px;
-}
-.highlight-textarea * {
-	white-space: pre;
-}
-
 .input .hover-scroll { cursor: default; }
 
 .input ::-webkit-scrollbar-thumb { background-clip: content-box; }
@@ -259,21 +205,6 @@ input, textarea {
 .input .scrolling::-webkit-scrollbar-thumb { background-color: #8888887f; }
 .input .scrolling::-webkit-scrollbar-corner { background: #dddddd; }
 
-/*
-CodeMirror가 만든 스크롤바를 개조하는 게 나을 듯함
-
-.CodeMirror-scroll {
-	margin: 0 !important;
-	padding: 0 !important;
-}
-.CodeMirror-sizer {
-	margin-right: 0 !important;
-	border-right-width: 0 !important;
-}
-.CodeMirror ::-webkit-scrollbar {
-	width: 16px;
-	height: 16px;
-}
 .CodeMirror ::-webkit-scrollbar-thumb { background-clip: content-box; }
 .CodeMirror ::-webkit-scrollbar-button { width: 0; height: 0; }
 .CodeMirror ::-webkit-scrollbar,
@@ -282,13 +213,13 @@ CodeMirror가 만든 스크롤바를 개조하는 게 나을 듯함
 .CodeMirror ::-webkit-scrollbar-track,
 .CodeMirror ::-webkit-scrollbar-thumb { background-color: transparent; }
 
-/* 색상 설정 따로 넣기 전에도 기본값은 있어야 함
-.CodeMirror ::-webkit-scrollbar-thumb:hover { background-color: #aaaaaa; }
+/* 색상 설정 따로 넣기 전에도 기본값은 있어야 함 */
+.CodeMirror ::-webkit-scrollbar-thumb:hover,
+.CodeMirror.scrolling ::-webkit-scrollbar-thumb:hover { background-color: #aaaaaa; }
 .CodeMirror ::-webkit-scrollbar-corner,
 .CodeMirror ::-webkit-scrollbar-track:horizontal { background: linear-gradient(#ffffff3f, #ffffffff); }
-.CodeMirror .scrolling::-webkit-scrollbar-thumb { background-color: #8888887f; }
-.CodeMirror .scrolling::-webkit-scrollbar-corner { background: #dddddd; }
-*/
+.CodeMirror.scrolling ::-webkit-scrollbar-thumb { background-color: #8888887f; }
+.CodeMirror.scrolling ::-webkit-scrollbar-corner { background: #dddddd; }
 
 .classic-scrollbar ::-webkit-scrollbar-button,
 .classic-scrollbar ::-webkit-scrollbar-track,
@@ -405,19 +336,6 @@ CodeMirror가 만든 스크롤바를 개조하는 게 나을 듯함
 }
 .btn-hold-style:hover {
 	opacity: 1;
-}
-
-.hold * {
-	font-size: calc(20px * 0.7);
-	line-height: 20px;
-}
-.hold > .col-sync,
-.hold > .col-sync-cover {
-	width: calc(20px * 5);
-}
-.hold > .input,
-.hold > .CodeMirror {
-	left: calc(20px * 5);
 }
 
 .sync.frame { line-height: calc(20px - 1px); }
