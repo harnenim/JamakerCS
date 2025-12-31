@@ -6,12 +6,16 @@
 	<title>겹치는 싱크 분리</title>
 	<script src="../lib/jquery-3.2.1.min.js"></script>
 	<script src="../lib/popup.js"></script>
-	<script src="../lib/SmiEditor.js" type="module"></script>
+	<script src="../lib/SmiEditorCM.js" type="module"></script>
 	<script>
 windowName = "addon";
 
 // 초기 상태 기억
 let origin = null;
+
+let inputOrigin;
+let outputUpper;
+let outputLower;
 
 function init() {
 	if (opener && opener.SmiEditor.selected) {
@@ -21,6 +25,40 @@ function init() {
 		window.close();
 		return false;
 	}
+	
+	SmiEditor.setSetting({});
+	if (window.CM) {
+		SmiEditor.ROOT = "../";
+		SmiEditor.setHighlight(opener.setting.highlight);
+	}
+	
+	{	// 에디터 교체
+		const ta1 = document.getElementById("input");
+		const ta2 = document.getElementById("outputUpper");
+		const ta3 = document.getElementById("outputLower");
+		inputOrigin = new SmiEditor();
+		outputUpper = new SmiEditor();
+		outputLower = new SmiEditor();
+		
+		if (window.CM) {
+			let div;
+			ta1.after(div = document.createElement("div")); ta1.remove(); div.id = "outputLower"; div.append(outputLower.area);
+			ta2.after(div = document.createElement("div")); ta2.remove(); div.id = "outputUpper"; div.append(outputUpper.area);
+			ta3.after(div = document.createElement("div")); ta3.remove(); div.id = "input";       div.append(inputOrigin.area);
+			inputOrigin.cm.getInputField().addEventListener("focus", () => { SmiEditor.selected = inputOrigin; });
+			outputUpper.cm.getInputField().addEventListener("focus", () => { SmiEditor.selected = outputUpper; });
+			outputLower.cm.getInputField().addEventListener("focus", () => { SmiEditor.selected = outputLower; });
+		} else {
+			ta1.after(inputOrigin.input); ta1.remove(); inputOrigin.input.id = "input";
+			ta2.after(outputUpper.input); ta2.remove(); outputUpper.input.id = "outputLower";
+			ta3.after(outputLower.input); ta3.remove(); outputLower.input.id = "outputUpper";
+			inputOrigin.input.addEventListener("focus", () => { SmiEditor.selected = inputOrigin; });
+			outputUpper.input.addEventListener("focus", () => { SmiEditor.selected = outputUpper; });
+			outputLower.input.addEventListener("focus", () => { SmiEditor.selected = outputLower; });
+		}
+		SmiEditor.activateKeyEvent();
+	}
+	
 	let start = 0;
 	let end = 0;
 	
@@ -32,7 +70,7 @@ function init() {
 		end = origin.text.split("\n").length;
 	}
 	
-	document.getElementById("input").value = origin.text.split("\n").slice(start, end).join("\n");
+	inputOrigin.setValue(origin.text.split("\n").slice(start, end).join("\n"));
 }
 
 function smiTrim(text, prev="", next="") {
@@ -71,7 +109,7 @@ function smiTrim(text, prev="", next="") {
 function devide() {
 	const syncs = [];
 	
-	{	const lines = document.getElementById("input").value.split("\n");
+	{	const lines = inputOrigin.getValue().split("\n");
 		let lastSync = null;
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
@@ -273,26 +311,12 @@ function devide() {
 		}
 	}
 	
-	document.getElementById("outputUpper").value = upper.join("\n");
-	document.getElementById("outputLower").value = lower.join("\n");
+	outputUpper.setValue(upper.join("\n"));
+	outputLower.setValue(lower.join("\n"));
 }
 
 ready(() => {
 	init();
-	
-	SmiEditor.setSetting(opener ? opener.setting : { autoComplete: {}, hlghlight: {} });
-	{	const tmp = document.getElementById("input");
-		const editor = new SmiEditor(tmp.value);
-		tmp.remove();
-		
-		editor.input.id = "input";
-		document.body.prepend(editor.input);
-		SmiEditor.selected = editor;
-	}
-	SmiEditor.activateKeyEvent();
-	
-	LH = Number(parseFloat(getComputedStyle(SmiEditor.selected.input).lineHeight));
-	
 	document.getElementById("btnDevide").addEventListener("click", devide);
 	devide();
 });
@@ -302,26 +326,28 @@ body > * {
 	position: absolute;
 }
 
-textarea {
+#input,
+#outputUpper,
+#outputLower {
 	position: absolute;
 	width: calc(50% - 10px);
 	border-width: 0;
 }
 
-textarea#input {
+#input {
 	top: 0;
 	left: 0;
 	height: 100%;
 }
 
-textarea#outputUpper {
+#outputUpper {
 	top: 0;
 	left: calc(50% + 10px);
 	height: calc(50% - 1px);
-	border-bottom-width: 1px;
+	border-bottom: 1px solid #aaa;
 }
 
-textarea#outputLower {
+#outputLower {
 	top: 50%;
 	left: calc(50% + 10px);
 	height: 50%;

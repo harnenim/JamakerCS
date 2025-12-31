@@ -6,15 +6,9 @@
 	<title>흔들기 효과</title>
 	<script src="../lib/popup.js"></script>
 	<script src="../lib/setting.js"></script>
-	<script src="../lib/SmiEditor.js" type="module"></script>
+	<script src="../lib/SmiEditorCM.js" type="module"></script>
 	<script>
 windowName = "addon";
-
-ready(() => {
-	if (opener) {
-		setting = opener.setting;
-	}
-});
 
 let style = null;
 function setSetting(setting) {
@@ -22,9 +16,20 @@ function setSetting(setting) {
 		document.head.append(style = document.createElement("style"));
 	}
 	style.innerHTML = (`#preview {\n${ setting.viewer.css }}`);
+	
+	if (setting) {
+		SmiEditor.setSetting(setting);
+	}
+	
+	if (window.CM) {
+		SmiEditor.ROOT = "../";
+		SmiEditor.setHighlight(setting.highlight);
+	}
 }
 
-const editor = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
+let editor;
+let input;
+let output;
 
 function shakeSync(lines, index, size) {
 	/*
@@ -152,7 +157,7 @@ function shake() {
 		result.concat(...footer);
 	}
 	
-	document.getElementById("output").value = result.join("\n");
+	output.setValue(result.join("\n"));
 	
 	setPreview(previewList, speed);
 };
@@ -274,10 +279,13 @@ function apply() {
 }
 
 ready(() => {
+	editor = (opener && opener.SmiEditor) ? opener.SmiEditor.selected : null;
 	if (!editor) {
 		alert("작업 대상이 없습니다.");
 	}
 	
+	const setting = JSON.parse(JSON.stringify(opener.setting));
+	delete setting.command;
 	setSetting(setting);
 	
 	start = 0;
@@ -288,7 +296,30 @@ ready(() => {
 		start = editor.text.substring(0, range[0]).split("\n").length - 1;
 		end   = editor.text.substring(0, range[1]).split("\n").length;
 	}
-	document.getElementById("input").value = linesToText(editor.lines.slice(start, end));
+	
+	{	// 에디터 교체
+		const ta1 = document.getElementById("input");
+		const ta2 = document.getElementById("output");
+		input  = new SmiEditor(linesToText(editor.lines.slice(start, end)));
+		output = new SmiEditor(ta2.value);
+		
+		if (window.CM) {
+			let div;
+			ta1.after(div = document.createElement("div")); ta1.remove(); div.id = "input" ; div.append(input .area);
+			ta2.after(div = document.createElement("div")); ta2.remove(); div.id = "output"; div.append(output.area);
+			input .cm.getInputField().addEventListener("focus", () => { SmiEditor.selected = input ; });
+			output.cm.getInputField().addEventListener("focus", () => { SmiEditor.selected = output; });
+			input .cm.refresh();
+			output.cm.refresh();
+		} else {
+			ta1.after(input .input); ta1.remove(); input .input.id = "input";
+			ta2.after(output.input); ta2.remove(); output.input.id = "output";
+			input .input.addEventListener("focus", () => { SmiEditor.selected = input ; });
+			output.input.addEventListener("focus", () => { SmiEditor.selected = output; });
+		}
+		SmiEditor.activateKeyEvent();
+	}
+	
 	
 	document.getElementById("btnShake").addEventListener("click", shake);
 	document.getElementById("btnApply").addEventListener("click", apply);

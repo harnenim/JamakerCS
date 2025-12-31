@@ -6,7 +6,7 @@
 	<title>여러 SMI 파일에서 찾기</title>
 	<script src="../lib/popup.js"></script>
 	<script src="../lib/Combine.js" type="module"></script>
-	<script src="../lib/SmiEditor.js" type="module"></script>
+	<script src="../lib/SmiEditorCM.js" type="module"></script>
 	<script>
 windowName = "addon";
 
@@ -221,7 +221,7 @@ ready(() => {
 		const file = li.parentNode.parentNode;
 		const cursor = eData(li).pos;
 		editor.setText(eData(file).text, [cursor, cursor + query.length]);
-		editor.input.focus();
+		editor.focus();
 	});
 	
 	let resizeFrom = null;
@@ -320,19 +320,6 @@ button[type=submit] { width: 50px; }
 	position: relative;
 	height: calc(50% - 32px);
 	width: 100%;
-}
-#viewer > .col-sync,
-#viewer > .col-gradient,
-#viewer > .col-cover {
-	display: none;
-}
-#viewer > .hold > .input,
-#viewer > .hold > .CodeMirror {
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
 }
 	</style>
 </head>

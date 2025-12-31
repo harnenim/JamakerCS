@@ -554,7 +554,7 @@ SmiEditor.prototype.refreshStyle = function() {
 	css.rotate = -style.Angle + "deg";
 	
 	{	const pm = this.preview.querySelector(".hold-style-preview-main");
-		for (name in css) {
+		for (let name in css) {
 			pm.style[name] = css[name];
 		}
 	}
@@ -562,7 +562,7 @@ SmiEditor.prototype.refreshStyle = function() {
 	css["-webkit-text-stroke"] = (style.Outline * 3) + "px " + style.OutlineColour + (256 + style.OutlineOpacity).toString(16).substring(1);
 	
 	{	const po = this.preview.querySelector(".hold-style-preview-outline");
-		for (name in css) {
+		for (let name in css) {
 			po.style[name] = css[name];
 		}
 	}
@@ -572,7 +572,7 @@ SmiEditor.prototype.refreshStyle = function() {
 	css.top = css.left = `calc(50% + ${ style.Shadow }px)`;
 	
 	{	const ps = this.preview.querySelector(".hold-style-preview-shadow");
-		for (name in css) {
+		for (let name in css) {
 			ps.style[name] = css[name];
 		}
 	}
@@ -2567,7 +2567,7 @@ window.saveFile = function(asNew, isExport) {
 		
 		for (let i = 0; i < currentTab.holds.length; i++) {
 			const hold = currentTab.holds[i];
-			hold.saveHistory();
+			hold.remember();
 			
 			if (!syncError) {
 				for (let j = 0; j < hold.lines.length; j++) {
@@ -4285,6 +4285,15 @@ window.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 	}
 	
 	if (!tabs.length) return;
+	if (SmiEditor.selected) {
+		const cursor = SmiEditor.selected.getCursor();
+		if (cursor[0] != cursor[1]) {
+			// 블록지정 영역이 있을 경우 해당 홀드만 진행
+			SmiEditor.selected.fitSyncsToFrame();
+			return;
+		}
+	}
+	
 	const holds = tabs[tabIndex].holds;
 	
 	for (let i = 0; i < holds.length; i++) {
@@ -4598,7 +4607,7 @@ window.generateSmiFromAss = function(keepHoldsAss=true) {
 		newLines.push(...nexts);
 		
 		const cursor = 0;
-		origin.hold.saveHistory();
+		origin.hold.remember();
 		origin.hold.setText(newLines.join("\n"), [cursor]);
 	}
 	

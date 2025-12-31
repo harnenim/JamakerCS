@@ -289,6 +289,10 @@ button {
 	margin-bottom: 0;
 }
 
+.hold > .col-sync,
+.hold > .col-sync-cover {
+	display: block;
+}
 #editor.trust-keyframe .sync.keyframe { font-weight: bold; }
 .sync.frame > span { border-top-width: 1px; }
 .sync.range { opacity: 0.5; }

@@ -11,7 +11,9 @@
 })(function(CodeMirror) {
 "use strict";
 
-var htmlConfig = {
+// TODO: 원래 처음부터 만들려고 했는데, 그냥 기본 XML 코드 수정해서 쓰는 중...
+
+var samiConfig = {
 	autoSelfClosers: {'br': true},
 	implicitlyClosed: {'sync': true, 'p': true, 'font': true,
 		               'b': true, 'i': true, 'u': true, 's': true,
@@ -29,7 +31,7 @@ var htmlConfig = {
 CodeMirror.defineMode("sami", function(editorConf, config_) {
 	const indentUnit = editorConf.indentUnit
 	const config = {}
-	var defaults = htmlConfig;
+	var defaults = samiConfig;
 	for (var prop in defaults) config[prop] = defaults[prop]
 	for (var prop in config_) config[prop] = config_[prop]
 
@@ -63,7 +65,7 @@ CodeMirror.defineMode("sami", function(editorConf, config_) {
 			} else {
 				type = stream.eat("/") ? "closeTag" : "openTag";
 				state.tokenize = inTag;
-				return "hljs-tag hljs-bracket";
+				return "hljs-tag";
 			}
 		} else if (ch == "&") {
 			var ok;
@@ -89,7 +91,7 @@ CodeMirror.defineMode("sami", function(editorConf, config_) {
 		if (ch == ">" || (ch == "/" && stream.eat(">"))) {
 			state.tokenize = inText;
 			type = ch == ">" ? "endTag" : "selfcloseTag";
-			return "hljs-tag hljs-bracket";
+			return "hljs-tag";
 		} else if (ch == "=") {
 			type = "equals";
 			return null;
@@ -98,7 +100,7 @@ CodeMirror.defineMode("sami", function(editorConf, config_) {
 			state.state = baseState;
 			state.tagName = state.tagStart = null;
 			var next = state.tokenize(stream, state);
-			return (next ? next + " hljs-tag" : "hljs-tag"); // + " error";
+			return (next ? next + " hljs-name" : "hljs-name"); // + " error";
 		} else if (/[\'\"]/.test(ch)) {
 			state.tokenize = inAttribute(ch);
 			state.stringStartCol = stream.column();
@@ -200,10 +202,10 @@ CodeMirror.defineMode("sami", function(editorConf, config_) {
 	function tagNameState(type, stream, state) {
 		if (type == "word") {
 			state.tagName = stream.current();
-			setStyle = "hljs-tag";
+			setStyle = "hljs-name";
 			return attrState;
 		} else if (config.allowMissingTagName && type == "endTag") {
-			setStyle = "hljs-tag hljs-bracket";
+			setStyle = "hljs-tag";
 			return attrState(type, stream, state);
 		} else {
 //			setStyle = "error";
@@ -217,14 +219,14 @@ CodeMirror.defineMode("sami", function(editorConf, config_) {
 					config.implicitlyClosed.hasOwnProperty(lower(state.context.tagName)))
 				popContext(state);
 			if ((state.context && state.context.tagName == tagName) || config.matchClosing === false) {
-				setStyle = "hljs-tag";
+				setStyle = "hljs-name";
 				return closeState;
 			} else {
-				setStyle = "hljs-tag"; // error";
+				setStyle = "hljs-name"; // error";
 				return closeStateErr;
 			}
 		} else if (config.allowMissingTagName && type == "endTag") {
-			setStyle = "hljs-tag hljs-bracket";
+			setStyle = "hljs-tag";
 			return closeState(type, stream, state);
 		} else {
 //			setStyle = "error";

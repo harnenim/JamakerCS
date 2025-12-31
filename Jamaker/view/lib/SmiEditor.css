@@ -203,9 +203,11 @@ input, textarea {
 }
 .hold > .col-sync,
 .hold > .col-sync-cover {
+	display: none; /* 필요한 경우에만 보이도록 함 */
 	width: calc(20px * 5);
 }
 .hold > .input,
 .hold > .CodeMirror {
-	left: calc(20px * 5);
+/*	left: calc(20px * 5); */
+	left: 0;
 }

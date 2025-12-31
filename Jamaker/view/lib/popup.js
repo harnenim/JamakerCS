@@ -141,6 +141,11 @@ ready(() => {
 	document.addEventListener("contextmenu", (e) => {
 		e.preventDefault();
 	});
+	window.onkeydown = (e) => {
+		switch(e.key) {
+			case "F5": return false; // F5 새로고침 방지
+		}
+	};
 	[...document.getElementsByTagName("textarea")].forEach((input) => {
 		input.setAttribute("spellcheck", false);
 	});

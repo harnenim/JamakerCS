@@ -800,14 +800,12 @@ window.Combine = {
 						}
 						lines.push(text);
 							
+					} else if (line[LOWER]) {
+						// 아랫줄만 있을 때
+						lines.push(line[LOWER][TEXT]);
+							
 					} else {
-						if (line[LOWER]) {
-							// 아랫줄만 있을 때
-							lines.push(line[LOWER][TEXT]);
-								
-						} else {
-							// 그룹 내에서 둘 다 없을 수는 없음
-						}
+						// 그룹 내에서 둘 다 없을 수는 없음
 					}
 				}
 				if (line[ETIME] < 99999999) {

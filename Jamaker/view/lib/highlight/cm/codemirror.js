@@ -3224,6 +3224,7 @@
     var docLTR = doc.direction == "ltr";
 
     function add(left, top, width, bottom) {
+    	console.log("add", left, top, width, bottom);
       if (top < 0) { top = 0; }
       top = Math.round(top);
       bottom = Math.round(bottom);
@@ -3250,6 +3251,7 @@
         var ltr = dir == "ltr";
         var fromPos = coords(from, ltr ? "left" : "right");
         var toPos = coords(to - 1, ltr ? "right" : "left");
+        console.log("iterateBidiSections", from, to, dir, i, fromPos, toPos);
 
         var openStart = fromArg == null && from == 0, openEnd = toArg == null && to == lineLen;
         var first = i == 0, last = !order || i == order.length - 1;
@@ -3258,6 +3260,9 @@
           var openRight = (docLTR ? openEnd : openStart) && last;
           var left = openLeft ? leftSide : (ltr ? fromPos : toPos).left;
           var right = openRight ? rightSide : (ltr ? toPos : fromPos).right;
+/*
+          var right = (ltr ? toPos.right : fromPos.right);
+ */
           add(left, fromPos.top, right - left, fromPos.bottom);
         } else { // Multiple lines
           var topLeft, topRight, botLeft, botRight;
@@ -3303,6 +3308,14 @@
       }
       if (leftEnd.bottom < rightStart.top)
         { add(leftSide, leftEnd.bottom, null, rightStart.top); }
+      /*
+      for (let line = sFrom.line + 1; line < sTo.line; line++) {
+    	  console.log("line", line);
+    	  const lineText = getLine(doc, line);
+    	  const draw = drawForLine(line, 0, lineText.text.length + 1);
+    	  console.log(lineText, draw);
+      }
+      */
     }
 
     output.appendChild(fragment);
