@@ -514,3 +514,9 @@ healthchecksdb
 /SamiReplacer/view/lib/SmiEditorCM.js
 /SyncShift/view/lib/SmiEditorCM.js
 /TextReplacer/view/lib/SmiEditorCM.js
+/MakeFkf/view/lib/AutoCompleteCodeMirror.js
+/MergeUpdates/view/lib/AutoCompleteCodeMirror.js
+/OptimizeAssSync/view/lib/AutoCompleteCodeMirror.js
+/SamiReplacer/view/lib/AutoCompleteCodeMirror.js
+/SyncShift/view/lib/AutoCompleteCodeMirror.js
+/TextReplacer/view/lib/AutoCompleteCodeMirror.js
