@@ -588,9 +588,8 @@ ready(() => {
 			// 에디터에 적용
 			const text = (prev ? prev + "\n" : "") + result.toText() + (next ? "\n" + next : "");
 			// 현재 커서 위치를 기반으로 다시 맞춤
-			const selectedLine = origin.hold.input.value.substring(0, origin.hold.input.selectionEnd).split("\n").length;
+			const selectedLine = origin.hold.getValue().substring(0, origin.hold.getCursor[1]).split("\n").length;
 			const cursor = text.split("\n").slice(0, selectedLine - 1).join("\n").length + 1;
-			origin.hold.history.log();
 			origin.hold.setText(text, [cursor]);
 		}
 	}
