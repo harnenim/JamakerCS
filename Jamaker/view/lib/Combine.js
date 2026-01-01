@@ -1200,7 +1200,7 @@ if (SmiFile) {
 				if (hold.style) {
 					const style = (typeof hold.style == "string") ? hold.style : SmiFile.toSaveStyle(hold.style);
 					if (style) {
-						text = "<!-- Style\n${style}\n-->\n" + text;
+						text = `<!-- Style\n${style}\n-->\n` + text;
 					}
 				}
 				const smi = holdSmis[hi] = new SmiFile(text);

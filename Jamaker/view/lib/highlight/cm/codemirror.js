@@ -3224,7 +3224,6 @@
     var docLTR = doc.direction == "ltr";
 
     function add(left, top, width, bottom) {
-    	console.log("add", left, top, width, bottom);
       if (top < 0) { top = 0; }
       top = Math.round(top);
       bottom = Math.round(bottom);
@@ -3251,7 +3250,6 @@
         var ltr = dir == "ltr";
         var fromPos = coords(from, ltr ? "left" : "right");
         var toPos = coords(to - 1, ltr ? "right" : "left");
-        console.log("iterateBidiSections", from, to, dir, i, fromPos, toPos);
 
         var openStart = fromArg == null && from == 0, openEnd = toArg == null && to == lineLen;
         var first = i == 0, last = !order || i == order.length - 1;

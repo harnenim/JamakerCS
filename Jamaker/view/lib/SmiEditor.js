@@ -3652,6 +3652,8 @@ ready(() => {
 	SmiEditor.refreshHighlight();
 	
 	if (window.Frame) {
+		// TODO: 원래 CefSharp 프로젝트에서 팝업창 제어가 빈약할 때 iframe으로 띄우던 기능
+		//       추후 Finder2 통째로 삭제
 		SmiEditor.Finder = SmiEditor.Finder2;
 		SmiEditor.Finder.window = new Frame("finder.html", "finder", "", () => {
 			// 좌우 크기만 조절 가능

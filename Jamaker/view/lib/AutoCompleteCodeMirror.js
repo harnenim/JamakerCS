@@ -119,6 +119,7 @@ AutoCompleteCodeMirror.prototype.close = function() {
 // 커서 위치에 선택기 이동
 AutoCompleteCodeMirror.prototype.setPos = function() {
 	const wrapper = this.cm.getWrapperElement();
+	const scroll = this.cm.getScrollInfo();
 	const rect = wrapper.getBoundingClientRect();
 	const offset = { top: rect.top, left: rect.left };
 	{	const css = getComputedStyle(wrapper);
@@ -128,8 +129,8 @@ AutoCompleteCodeMirror.prototype.setPos = function() {
 
 	const coords = this.cm.cursorCoords(this.pos, "local");
 	
-	let top = offset.top + coords.top + this.LH - wrapper.scrollTop;
-	let left = coords.left - (wrapper.scrollLeft - offset.left);
+	let top = offset.top + coords.top + this.LH - scroll.top;
+	let left = coords.left - (scroll.left - offset.left);
 	
 	// 아래쪽에 넘칠 경우 맞춤
 	if (top + AutoCompleteCodeMirror.view.clientHeight > offset.top + wrapper.offsetHeight - this.SB) {
