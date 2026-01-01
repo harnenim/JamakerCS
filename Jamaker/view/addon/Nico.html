@@ -35,7 +35,7 @@ function setSetting(setting) {
 	if (style == null) {
 		document.head.append(style = document.createElement("style"));
 	}
-	style.innerHTML = (`#preview {\n${ setting.viewer.css }}`);
+	style.innerHTML = `#preview {\n${ setting.viewer.css }}`;
 }
 
 function getWidth(smi, css) {

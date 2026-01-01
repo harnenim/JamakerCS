@@ -4115,10 +4115,10 @@ window.splitHold = function(tab, styleName) {
 	
 	for (let i = 0; i < syncs.length; i++) {
 		const start = syncs[i];
-		body.push(smi = new Smi(start, (Subtitle.findSync(start, frameSyncs, false) ? SyncType.frame : SyncType.normal), ""));
+		body.push(new Smi(start, (Subtitle.findSync(start, frameSyncs, false) ? SyncType.frame : SyncType.normal), ""));
 	}
 	
-	ti = 0;
+	let ti = 0;
 	while (ti < list.length) {
 		let targets = [];
 		let hasStyle = false;
@@ -4424,7 +4424,6 @@ window.generateSmiFromAss = function(keepHoldsAss=true) {
 				let text = "";
 				
 				if (isFinite(ass[0])) {
-					layer = ass[0];
 					let type = null;
 					
 					if (ass.length >= 5) {
