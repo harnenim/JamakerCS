@@ -15,19 +15,14 @@ function setSetting(setting) {
 	if (style == null) {
 		document.head.append(style = document.createElement("style"));
 	}
-	style.innerHTML = (`#preview {\n${ setting.viewer.css }}`);
+    style.innerHTML = (`#preview {\n${setting.viewer.css}\nfont-size: calc(${setting.viewer.size}vw / 5.86);\n}`);
 	
 	if (setting) {
 		SmiEditor.setSetting(setting);
-	}
-	
-	if (window.CM) {
-		SmiEditor.ROOT = "../";
-		SmiEditor.setHighlight(setting.highlight);
+		SmiEditor.setHighlight(setting.highlight, [input, output]);
 	}
 }
 
-let editor;
 let input;
 let output;
 
@@ -284,10 +279,6 @@ ready(() => {
 		alert("작업 대상이 없습니다.");
 	}
 	
-	const setting = JSON.parse(JSON.stringify(opener.setting));
-	delete setting.command;
-	setSetting(setting);
-	
 	start = 0;
 	end = editor.lines.length;
 	
@@ -300,26 +291,14 @@ ready(() => {
 	{	// 에디터 교체
 		const ta1 = document.getElementById("input");
 		const ta2 = document.getElementById("output");
-		input  = new SmiEditor(linesToText(editor.lines.slice(start, end)));
-		output = new SmiEditor(ta2.value);
-		
-		if (window.CM) {
-			let div;
-			ta1.after(div = document.createElement("div")); ta1.remove(); div.id = "input" ; div.append(input .area);
-			ta2.after(div = document.createElement("div")); ta2.remove(); div.id = "output"; div.append(output.area);
-			input .cm.getInputField().addEventListener("focus", () => { SmiEditor.selected = input ; });
-			output.cm.getInputField().addEventListener("focus", () => { SmiEditor.selected = output; });
-			input .cm.refresh();
-			output.cm.refresh();
-		} else {
-			ta1.after(input .input); ta1.remove(); input .input.id = "input";
-			ta2.after(output.input); ta2.remove(); output.input.id = "output";
-			input .input.addEventListener("focus", () => { SmiEditor.selected = input ; });
-			output.input.addEventListener("focus", () => { SmiEditor.selected = output; });
-		}
+		input  = new SmiEditor(linesToText(editor.lines.slice(start, end)), ta1);
+		output = new SmiEditor(ta2.value, ta2);
 		SmiEditor.activateKeyEvent();
 	}
 	
+	const setting = JSON.parse(JSON.stringify(opener.setting));
+	delete setting.command;
+	setSetting(setting);
 	
 	document.getElementById("btnShake").addEventListener("click", shake);
 	document.getElementById("btnApply").addEventListener("click", apply);
@@ -389,8 +368,7 @@ ready(() => {
 	<button id="btnShake">＞</button>
 	<textarea id="output">
 현재 특수 태그로 흔들기 효과를 지원하고 있으나
-여러 싱크에 적용할 경우의 편의를 위해 남겨둔 기능입니다.
-	</textarea>
+여러 싱크에 적용할 경우의 편의를 위해 남겨둔 기능입니다.</textarea>
 	<button id="btnApply">적용</button>
 	<div id="preview"></div>
 </body>

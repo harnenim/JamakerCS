@@ -26,38 +26,17 @@ function init() {
 		return false;
 	}
 	
-	SmiEditor.setSetting({});
-	if (window.CM) {
-		SmiEditor.ROOT = "../";
-		SmiEditor.setHighlight(opener.setting.highlight);
-	}
-	
 	{	// 에디터 교체
-		const ta1 = document.getElementById("input");
-		const ta2 = document.getElementById("outputUpper");
-		const ta3 = document.getElementById("outputLower");
-		inputOrigin = new SmiEditor();
-		outputUpper = new SmiEditor();
-		outputLower = new SmiEditor();
-		
-		if (window.CM) {
-			let div;
-			ta1.after(div = document.createElement("div")); ta1.remove(); div.id = "outputLower"; div.append(outputLower.area);
-			ta2.after(div = document.createElement("div")); ta2.remove(); div.id = "outputUpper"; div.append(outputUpper.area);
-			ta3.after(div = document.createElement("div")); ta3.remove(); div.id = "input";       div.append(inputOrigin.area);
-			inputOrigin.cm.getInputField().addEventListener("focus", () => { SmiEditor.selected = inputOrigin; });
-			outputUpper.cm.getInputField().addEventListener("focus", () => { SmiEditor.selected = outputUpper; });
-			outputLower.cm.getInputField().addEventListener("focus", () => { SmiEditor.selected = outputLower; });
-		} else {
-			ta1.after(inputOrigin.input); ta1.remove(); inputOrigin.input.id = "input";
-			ta2.after(outputUpper.input); ta2.remove(); outputUpper.input.id = "outputLower";
-			ta3.after(outputLower.input); ta3.remove(); outputLower.input.id = "outputUpper";
-			inputOrigin.input.addEventListener("focus", () => { SmiEditor.selected = inputOrigin; });
-			outputUpper.input.addEventListener("focus", () => { SmiEditor.selected = outputUpper; });
-			outputLower.input.addEventListener("focus", () => { SmiEditor.selected = outputLower; });
-		}
+        inputOrigin = new SmiEditor("", document.getElementById("input"));
+        outputUpper = new SmiEditor("", document.getElementById("outputUpper"));
+        outputLower = new SmiEditor("", document.getElementById("outputLower"));
 		SmiEditor.activateKeyEvent();
-	}
+    }
+	
+    SmiEditor.setSetting({});
+    if (opener.setting) {
+        SmiEditor.setHighlight(opener.setting.highlight, [inputOrigin, outputUpper, outputLower]);
+    }
 	
 	let start = 0;
 	let end = 0;
@@ -332,6 +311,7 @@ body > * {
 	position: absolute;
 	width: calc(50% - 10px);
 	border-width: 0;
+	border-top: 1px solid #aaa;
 }
 
 #input {
@@ -344,7 +324,6 @@ body > * {
 	top: 0;
 	left: calc(50% + 10px);
 	height: calc(50% - 1px);
-	border-bottom: 1px solid #aaa;
 }
 
 #outputLower {

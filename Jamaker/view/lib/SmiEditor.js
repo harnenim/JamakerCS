@@ -248,7 +248,7 @@ const showEnter = document.createElement("span");
 	showEnter.innerText = "↵";
 }
 
-window.SmiEditor = function(text) {
+window.SmiEditor = function(text, replace) {
 	const editor = this;
 	
 	this.initialize = false;
@@ -342,6 +342,32 @@ window.SmiEditor = function(text) {
 			});
 		}
 	}, 1);
+	
+	if (replace) { // 부가기능 에디터 교체 시
+		/*
+		if (replace.id) {
+			this.input.id = replace.id;
+		}
+		if (replace.getAttribute("readonly")) {
+			this.input.setAttribute("readonly", true);
+		}
+		replace.after(this.input);
+		replace.remove();
+		*/
+		const div = document.createElement("div");
+		if (replace.id) {
+			div.id = replace.id;
+		}
+		if (replace.getAttribute("readonly")) {
+			this.input.setAttribute("readonly", true);
+		}
+		replace.after(div);
+		replace.remove();
+		div.append(this.area);
+
+		const self = this;
+		this.input.addEventListener("focus", () => { SmiEditor.selected = self; });
+	}
 };
 
 SmiEditor.log = window.log = (msg, since=0) => {
@@ -1395,8 +1421,10 @@ SmiEditor.activateKeyEvent = function() {
 };
 SmiEditor.focusRequired = function() {
 	const editor = SmiEditor.selected;
-	const hasFocus = editor && (editor.input == document.activeElement);
-	return (!hasFocus && editor);
+	return (editor && !editor.hasFocus());
+}
+SmiEditor.prototype.hasFocus = function() {
+	return (this.input == document.activeElement);
 }
 
 SmiEditor.prototype.historyForward = function() {
@@ -1486,6 +1514,7 @@ SmiEditor.prototype.getValue = function() {
 }
 SmiEditor.prototype.setValue = function(value) {
 	this.input.value = value;
+	this.render();
 }
 
 //사용자 정의 명령 지원
@@ -2158,13 +2187,12 @@ SmiEditor.highlightText = (text, state=null) => {
 	previewLine.innerText = text;
 	return previewLine;
 }
-SmiEditor.ROOT = "";
 SmiEditor.setHighlight = (SH, editors) => {
 	SmiEditor.useHighlight = SH && SH.parser;
 	SmiEditor.showColor = SH.color;
 	SmiEditor.showEnter = SH.enter;
 	if (SH.parser) {
-		fetch(SmiEditor.ROOT + `lib/highlight/parser/${ SH.parser }.js`).then(async (response) => {
+		fetch(new URL(`./highlight/parser/${SH.parser}.js`, import.meta.url).href).then(async (response) => {
 			let parser = await response.text();
 			eval(parser);
 			
@@ -2177,7 +2205,7 @@ SmiEditor.setHighlight = (SH, editors) => {
 				name = name.split("?")[0];
 			}
 			
-			fetch(SmiEditor.ROOT + `lib/highlight/styles/${ name }.css`).then(async (response) => {
+			fetch(new URL(`./highlight/styles/${name}.css`, import.meta.url).href).then(async (response) => {
 				let style = await response.text();
 				// 문법 하이라이트 테마에 따른 커서 색상 추가
 				SmiEditor.highlightCss
@@ -2210,7 +2238,9 @@ SmiEditor.afterRefreshHighlight = (editors) => {
 		editors = editors();
 	}
 	for (let i = 0; i < editors.length; i++) {
-		editors[i].refreshHighlight();
+		if (editors[i]) {
+			editors[i].refreshHighlight();
+		}
 	}
 }
 SmiEditor.prototype.refreshHighlight = function () {

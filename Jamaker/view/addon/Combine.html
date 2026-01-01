@@ -28,49 +28,25 @@ function setSetting(setting) {
 	
 	if (setting) {
 		SmiEditor.setSetting(setting);
-	}
-	
-	if (window.CM) {
-		SmiEditor.ROOT = "../";
-		SmiEditor.setHighlight(setting.highlight);
+		SmiEditor.setHighlight(setting.highlight, [upper, lower, output]);
 	}
 }
 
 ready(() => {
-	if (opener) {
-		const setting = JSON.parse(JSON.stringify(opener.setting));
-		delete setting.command;
-		setSetting(setting);
-	}
-	
 	{	// 에디터 교체
 		const inputUpper = document.getElementById("inputUpper");
 		const inputLower = document.getElementById("inputLower");
-		const outputOrig = document.getElementById("output");
-		upper  = new SmiEditor(inputUpper.value);
-		lower  = new SmiEditor(inputLower.value);
-		output = new SmiEditor();
-		
-		if (window.CM) {
-			let div;
-			inputUpper.after(div = document.createElement("div")); inputUpper.remove(); div.id = "inputUpper"; div.append(upper .area);
-			inputLower.after(div = document.createElement("div")); inputLower.remove(); div.id = "inputLower"; div.append(lower .area);
-			outputOrig.after(div = document.createElement("div")); outputOrig.remove(); div.id = "output";     div.append(output.area);
-			lower .cm.getInputField().addEventListener("focus", () => { SmiEditor.selected = lower ; });
-			upper .cm.getInputField().addEventListener("focus", () => { SmiEditor.selected = upper ; });
-			output.cm.getInputField().addEventListener("focus", () => { SmiEditor.selected = output; });
-			lower .cm.refresh();
-			upper .cm.refresh();
-		} else {
-			inputUpper.after(upper .input); inputUpper.remove(); upper .input.id = "inputUpper";
-			inputLower.after(lower .input); inputLower.remove(); lower .input.id = "inputLower";
-			outputOrig.after(output.input); outputOrig.remove(); output.input.id = "output";
-			upper .input.addEventListener("focus", () => { SmiEditor.selected = upper ; });
-			lower .input.addEventListener("focus", () => { SmiEditor.selected = lower ; });
-			output.input.addEventListener("focus", () => { SmiEditor.selected = output; });
-		}
+		upper  = new SmiEditor(inputUpper.value, inputUpper);
+		lower  = new SmiEditor(inputLower.value, inputLower);
+        output = new SmiEditor("", document.getElementById("output"));
 		SmiEditor.activateKeyEvent();
 	}
+	
+    if (opener) {
+        const setting = JSON.parse(JSON.stringify(opener.setting));
+        delete setting.command;
+        setSetting(setting);
+    }
 	
 	document.getElementById("btnCombine").addEventListener("click", () => {
 		const main = new SmiFile(Combine.combine(upper.getValue(), lower.getValue()).join("\n"));
@@ -206,12 +182,12 @@ body > * {
 	position: absolute;
 	width: calc(50% - 10px);
 	border-width: 0;
+	border-top: 1px solid #aaa;
 }
 #inputUpper {
 	top: 0;
 	left: 0;
 	height: calc(50% - 1px);
-	border-bottom: 1px solid #aaa;
 }
 #inputLower {
 	top: 50%;
@@ -235,7 +211,6 @@ body > * {
 	left: calc(50% + 10px);
 	width: calc(50% - 10px);
 	height: 200px;
-	border-bottom: 1px solid #000;
 	background: #000;
 	text-align: left;
 	white-space: pre;

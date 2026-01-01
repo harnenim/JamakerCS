@@ -600,7 +600,7 @@ SmiEditor.prototype.historyForward = function(e) {
 		// 스타일/ASS 편집기에선 기본 동작
 		return;
 	}
-	if (!window.CM) this.history.forward();
+	this._historyForward();
 }
 SmiEditor.prototype._historyBack = SmiEditor.prototype.historyBack;
 SmiEditor.prototype.historyBack = function(e) {
@@ -609,7 +609,7 @@ SmiEditor.prototype.historyBack = function(e) {
 		// 스타일/ASS 편집기에선 기본 동작
 		return;
 	}
-	if (!window.CM) this.history.back();
+		this._historyBack();
 }
 
 SmiEditor.prototype._insertSync = SmiEditor.prototype.insertSync;
@@ -1935,19 +1935,19 @@ window.init = function(jsonSetting, isBackup=true) {
 	document.getElementById("btnMoveToBack").addEventListener("click", () => {
 		if (tabs.length == 0) return;
 		tabs[tabIndex].holds[tabs[tabIndex].holdIndex].moveSync(false);
-		tabs[tabIndex].holds[tabs[tabIndex].holdIndex][window.CM ? "cm" : "input"].focus();
+		tabs[tabIndex].holds[tabs[tabIndex].holdIndex].focus();
 	});
 	document.getElementById("btnMoveToForward").addEventListener("click", () => {
 		if (tabs.length == 0) return;
 		tabs[tabIndex].holds[tabs[tabIndex].holdIndex].moveSync(true);
-		tabs[tabIndex].holds[tabs[tabIndex].holdIndex][window.CM ? "cm" : "input"].focus();
+		tabs[tabIndex].holds[tabs[tabIndex].holdIndex].focus();
 	});
 
 	const checkAutoFindSync = document.getElementById("checkAutoFindSync");
 	checkAutoFindSync.addEventListener("click", () => {
 		autoFindSync = checkAutoFindSync.checked;
 		if (tabs.length == 0) return;
-		tabs[tabIndex].holds[tabs[tabIndex].holdIndex][window.CM ? "cm" : "input"].focus();
+		tabs[tabIndex].holds[tabs[tabIndex].holdIndex].focus();
 	});
 	const checkTrustKeyframe = document.getElementById("checkTrustKeyframe");
 	checkTrustKeyframe.addEventListener("click", () => {
@@ -4320,8 +4320,7 @@ SmiEditor.prototype.fitSyncsToFrame = function(frameSyncOnly=false, add=0) {
 //포커스 요청 기준 재정의
 SmiEditor.focusRequired = function() {
 	const editor = SmiEditor.selected;
-	const hasFocus = editor && (window.CM ? editor.cm.hasFocus() : (editor.input == document.activeElement));
-	if (!hasFocus && editor) {
+	if (editor && !editor.hasFocus()) {
 		if (editor.area.classList.contains("style")) {
 			// 스타일 편집 중일 때 포커스 이동 방지
 		} else if (editor.area.classList.contains("ass")) {

@@ -198,7 +198,7 @@ const showEnter = document.createElement("span");
 	showEnter.innerText = "↵";
 }
 
-window.SmiEditor = function(text) {
+window.SmiEditor = function(text, replace) {
 	const editor = this;
 	
 	this.initialize = false;
@@ -384,6 +384,23 @@ window.SmiEditor = function(text) {
 			});
 		}
 	}, 1);
+	
+	if (replace) { // 부가기능 에디터 교체 시
+		const div = document.createElement("div");
+		if (replace.id) {
+			div.id = replace.id;
+		}
+		if (replace.getAttribute("readonly")) {
+			this.cm.setOption("readOnly", true);
+		}
+		replace.after(div);
+		replace.remove();
+		div.append(this.area);
+
+		const self = this;
+		this.cm.getInputField().addEventListener("focus", () => { SmiEditor.selected = self; });
+		this.cm.refresh();
+	}
 };
 
 SmiEditor.log = window.log = (msg, since=0) => {
@@ -622,6 +639,7 @@ SmiEditor.makeSyncLine = (time, type) => {
 SmiEditor.prototype.focus = function() {
 	(SmiEditor.selected = this).cm.focus();
 }
+
 SmiEditor.prototype.refresh = function() {
 	this.cm.refresh();
 	this.focus();
@@ -1232,8 +1250,10 @@ SmiEditor.activateKeyEvent = function() {
 };
 SmiEditor.focusRequired = function() {
 	const editor = SmiEditor.selected;
-	const hasFocus = editor && editor.cm.hasFocus();
-	return (!hasFocus && editor);
+	return (editor && !editor.hasFocus());
+}
+SmiEditor.prototype.hasFocus = function() {
+	return this.cm.hasFocus();
 }
 
 SmiEditor.prototype.historyForward = function() {
@@ -1597,7 +1617,6 @@ SmiEditor.prototype.removeSync = function() {
 		let lines = [];
 		let cnt = 0;
 		for (let i = lineRange[0]; i <= lineRange[1]; i++) {
-			console.log(this.lines[i]);
 			if (this.lines[i].SYNC) {
 				cnt++;
 			} else {
@@ -1865,7 +1884,6 @@ SmiEditor.highlightText = (text, state=null) => {
 	previewLine.innerText = text;
 	return previewLine;
 }
-SmiEditor.ROOT = "";
 SmiEditor.setHighlight = (SH, editors) => {
 	SmiEditor.useHighlight = SH && SH.parser;
 	SmiEditor.showColor = SH.color;
@@ -1881,7 +1899,7 @@ SmiEditor.setHighlight = (SH, editors) => {
 			isDark = true;
 			name = name.split("?")[0];
 		}
-		fetch(SmiEditor.ROOT + `lib/highlight/styles/${ name }.css`).then(async (response) => {
+		fetch(new URL(`./highlight/styles/${name}.css`, import.meta.url).href).then(async (response) => {
 			let style = await response.text();
 			// 문법 하이라이트 테마에 따른 커서 색상 추가
 			SmiEditor.highlightCss
@@ -1917,7 +1935,7 @@ SmiEditor.afterRefreshHighlight = (editors) => {
 	}
 }
 SmiEditor.prototype.refreshHighlight = function () {
-	SmiEditor.selected?.cm.refresh();
+	this.cm.refresh();
 }
 
 SmiEditor.prototype.moveLine = function(toNext) {
